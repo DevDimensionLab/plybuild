@@ -101,8 +101,16 @@ func deliveryRelease(s workflowState, c DeliveryCandidate) (*FileBinding, error)
 	if r.Kind != "PlyDeliveryOwnerRelease@1" || r.SchemaVersion != 1 || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.TaskID != c.TaskResult.TaskID || r.TaskResultID != c.TaskResult.ID || r.ResultOID != c.OID || r.ResultTree != c.Tree || r.SourceRef != c.TaskResult.SourceRef || r.SourceLocator != c.TaskResult.SourceLocator || r.OwnerClaim != s.Request.Delivery.OwnerClaim || r.SessionID != s.Result.SessionID || !plain(r.Reason, 1, 2000) || timeErr != nil {
 		return nil, workflowError(4, "owner_release_invalid: release differs from the exact native candidate or owner")
 	}
-	if r.Origin != "bound_owner_release" && r.Origin != "observed_provider_exit" || r.Origin == "bound_owner_release" && (r.InvokingExecutable == nil || r.ProviderExit != nil) || r.Origin == "observed_provider_exit" && (r.ProviderExit == nil || r.ProviderExit.PaneID != s.Result.Transport.PaneID || r.ProviderExit.TerminalID != s.Result.Transport.TerminalID) {
+	if r.Origin != "bound_owner_release" && r.Origin != "observed_provider_exit" && r.Origin != "automatic_delivery_completed" || (r.Origin == "bound_owner_release" || r.Origin == "automatic_delivery_completed") && (r.InvokingExecutable == nil || r.ProviderExit != nil) || r.Origin == "observed_provider_exit" && (r.ProviderExit == nil || r.ProviderExit.PaneID != s.Result.Transport.PaneID || r.ProviderExit.TerminalID != s.Result.Transport.TerminalID) {
 		return nil, workflowError(4, "owner_release_invalid: release provenance is incomplete")
+	}
+	if r.Origin == "automatic_delivery_completed" {
+		if _, observed, err := automaticIntegratedResult(s, c.TaskResult.ID); err != nil || !observed {
+			return nil, workflowError(4, "owner_release_invalid: automatic release lacks the exact observed local integration")
+		}
+		if a := s.Result.Delivery.Attempt; a != nil && a.State == "attempted" {
+			return nil, workflowError(4, "owner_release_invalid: automatic delivery effect remains unresolved")
+		}
 	}
 	for _, event := range s.Result.Delivery.Events {
 		if event.Kind == "ownership_release" && equal(event.Binding, b) {

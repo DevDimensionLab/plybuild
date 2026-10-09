@@ -223,6 +223,9 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		} else if agreement != nil && agreement.HumanOwnedIntegration() {
 			goal = replaceObjectMember(goal, "done_when", "Qualify the exact candidate, register Delivery and explicitly release source ownership to the human-started integration command. Stop before integration.")
 		}
+		if agreement != nil && agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA && !agreement.HumanOwnedIntegration() {
+			goal = replaceObjectMember(goal, "done_when", "The exact candidate passed its automatic acceptance and review, and authorized native local Epic integration and closure are observed.")
+		}
 		procedure := []canonicaljson.Value{deliveryObject(map[string]any{"id": "implement", "instruction": "Own design, tests, permitted delegation, review and local delivery. Preserve actual results and report task-requirements for each verified candidate. Human QA and integration are separate facts; never fabricate them.", "required_before": []string{}})}
 		if agreement != nil {
 			goal = replaceObjectMember(goal, "objective", "Deliver the selected goal and exact execution Spec within the frozen single Task delivery agreement.")
@@ -271,6 +274,9 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		fields := map[string]any{"publication_key": publicationKey, "activity_key": publicationKey, "goal": goal, "recipient": map[string]any{"principal_id": "delivery-owner", "principal_kind": "human_started_agent", "runtime_constraints": []string{"actual-runtime-authority-required"}}, "binding_request": map[string]any{"project_id": plan.Target.ProjectID, "repo_id": plan.Target.RepoID, "target_worktree": plan.WorktreePath, "target_ref": "refs/heads/" + plan.Branch, "expected_oid": plan.ParentOID, "status_policy": map[string]any{"mode": "clean"}}, "inputs": inputs, "authority": map[string]any{"allowed_effects": effects, "forbidden_effects": forbidden, "human_gates": []string{"human_task_qa"}}, "budget": deliveryBudget(nil), "procedure": procedure, "verifiers": []canonicaljson.Value{verifier}, "stop_conditions": deliveryStops(), "reporting": deliveryReporting(), "task_spec_binding": basis, "delivery_binding": map[string]any{"mode": "owner", "human_actor": humanActor, "owner_claim": ownerClaim, "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}}
 		if agreement != nil {
 			fields["delivery_binding"].(map[string]any)["agreement"] = agreement
+			if agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA {
+				fields["authority"].(map[string]any)["human_gates"] = []string{}
+			}
 		}
 		for k, v := range fields {
 			value = append(value, canonicaljson.Member{Name: k, Value: bridgeValue(v)})

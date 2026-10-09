@@ -83,6 +83,13 @@ func inventoryDeliveryUnknownAction(s workflowState, reason string) InventoryDel
 func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 	a := s.Result.NextAction
 	out := InventoryDeliveryAction{Actor: inventoryDeliveryActor(a.Actor), RecordedActor: a.Actor, Kind: "continue_delivery", Reason: a.Message, EvidenceIDs: []string{s.Result.RunID}}
+	if s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.AutomaticAcceptance() && !s.Request.Delivery.Agreement.HumanOwnedIntegration() && (s.Result.Delivery.Phase == "closing" || s.Result.Delivery.Phase == "completed") {
+		out.Kind = "continue_closeout"
+		if s.Result.Delivery.Phase == "completed" {
+			out.Kind = "delivery_completed"
+		}
+		return out
+	}
 	if s.Result.Delivery.OwnershipRelease != nil {
 		out.Actor, out.Kind = "human", "start_human_integration"
 		if s.Result.Delivery.HumanIntegration != nil && s.Result.Delivery.HumanIntegration.Accepted {
@@ -100,7 +107,7 @@ func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 		out.Kind = "delivery_stopped"
 	case "awaiting_human_qa":
 		out.Kind = "prepare_human_qa"
-	case "human_qa_passed", "integrating":
+	case "human_qa_passed", "automatic_acceptance_passed", "integrating":
 		out.Kind = "continue_integration"
 		if s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.Mode == workspace.DeliveryPullRequest {
 			out.Kind = "continue_pull_request"
@@ -332,7 +339,10 @@ func inventoryDeliveryEventIdentity(raw []byte, s workflowState, kind string) er
 	if err := json.Unmarshal(raw, &event); err != nil {
 		return err
 	}
-	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1", "ownership_release": "PlyDeliveryOwnerRelease@1", "human_integration": "PlyHumanIntegrationDecision@1"}[kind]
+	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1", "ownership_release": "PlyDeliveryOwnerRelease@1", "human_integration": "PlyHumanIntegrationDecision@1", "closeout": "PlyDeliveryCloseout@1"}[kind]
+	if kind == "verification" && s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.AutomaticAcceptance() {
+		expected = "PlyDeliveryVerification@2"
+	}
 	if expected == "" || event.Kind != expected || event.RunID != s.Result.RunID || event.RequestSHA256 != s.Result.RequestSHA256 {
 		return integrity("event kind, run or request binding differs")
 	}

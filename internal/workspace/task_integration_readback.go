@@ -14,6 +14,7 @@ type WorkspaceTaskIntegrationReadback struct {
 	Value          canonicaljson.Object
 	TaskResult     *TaskResultRecord
 	HumanQA        *TaskHumanQARecord
+	Acceptance     *DeliveryAcceptanceDecision
 	Classification string
 	GitChanged     *bool
 	RecoveryStatus string
@@ -88,6 +89,14 @@ func newIntegrationReadback(root string, registry WorkItemRegistry, ctx integrat
 		replaceReadbackMember(&readback, "schema_version", int64(2))
 		readback = append(readback, canonicaljson.Member{Name: "task_spec_relevance", Value: contentRefValue(guard)})
 	}
+	if plan.Acceptance != nil {
+		replaceReadbackMember(&readback, "kind", "WorkspaceTaskIntegrationReadback@3")
+		replaceReadbackMember(&readback, "schema_version", int64(3))
+		readback = append(readback, canonicaljson.Member{Name: "acceptance", Value: contentRefValue(plan.Acceptance)})
+		if ctx.QA.ID == "" {
+			replaceReadbackMember(&readback, "human_qa", nil)
+		}
+	}
 	parentOID := plan.Epic.ExpectedParentOID
 	if ctx.ParentObserved && ctx.ParentObservation.OID != "" {
 		parentOID = ctx.ParentObservation.OID
@@ -96,7 +105,11 @@ func newIntegrationReadback(root string, registry WorkItemRegistry, ctx integrat
 	} else if plan.ObservedParent.OID != "" {
 		parentOID = plan.ObservedParent.OID
 	}
-	return WorkspaceTaskIntegrationReadback{Value: readback, TaskResult: &ctx.Result, HumanQA: &ctx.QA, Classification: classification, GitChanged: changed, RecoveryStatus: recovery, NextAction: next, TaskID: ctx.Task.ID, ResultOID: ctx.Result.ResultOID, TechnicalGate: ctx.Result.TechnicalGate, HumanQAOutcome: ctx.QA.Outcome, EpicID: ctx.Epic.ID, ParentRef: ctx.Parent.Worktree.Ref, ParentOID: parentOID}
+	humanOutcome := ctx.QA.Outcome
+	if ctx.QA.ID == "" {
+		humanOutcome = "not_recorded"
+	}
+	return WorkspaceTaskIntegrationReadback{Value: readback, TaskResult: &ctx.Result, HumanQA: optionalHumanQA(ctx.QA), Acceptance: plan.Acceptance, Classification: classification, GitChanged: changed, RecoveryStatus: recovery, NextAction: next, TaskID: ctx.Task.ID, ResultOID: ctx.Result.ResultOID, TechnicalGate: ctx.Result.TechnicalGate, HumanQAOutcome: humanOutcome, EpicID: ctx.Epic.ID, ParentRef: ctx.Parent.Worktree.Ref, ParentOID: parentOID}
 }
 
 func integrationPersistedView(registry WorkItemRegistry, authority *IntegrationAuthority, intent *IntegrationIntent, attempt *IntegrationAttempt, result *IntegrationResult) canonicaljson.Value {
@@ -114,8 +127,10 @@ func buildTaskShowIntegrationReadback(d Dependencies, root string, projects Proj
 			id = out.TaskResult.ID
 		}
 		guard := taskResultSpecRelevance(d, root, projects, registry, task, id)
-		replaceReadbackMember(&out.Value, "kind", "WorkspaceTaskIntegrationReadback@2")
-		replaceReadbackMember(&out.Value, "schema_version", int64(2))
+		if out.Acceptance == nil {
+			replaceReadbackMember(&out.Value, "kind", "WorkspaceTaskIntegrationReadback@2")
+			replaceReadbackMember(&out.Value, "schema_version", int64(2))
+		}
 		if contentFields(out.Value)["task_spec_relevance"] == nil {
 			out.Value = append(out.Value, canonicaljson.Member{Name: "task_spec_relevance", Value: contentRefValue(guard)})
 		} else {
@@ -130,7 +145,15 @@ func buildTaskShowIntegrationReadback(d Dependencies, root string, projects Proj
 	if tr == nil {
 		return newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "blocked", IntegrationNextAction{Kind: "record_task_result", Reason: "Record one controlled Task result.", Argv: []string{"ply", "workspace", "task", "result", "record", string(task.ID), "--file", "<absolute-task-result.json>"}})
 	}
-	if qa == nil {
+	var automaticAuth *DeliveryAuthorization
+	if authority != nil && authority.Plan.Acceptance != nil {
+		automaticAuth = authority.Plan.DeliveryAuthorization
+	} else if d.HandoffEvidence != nil {
+		if evidence, err := d.HandoffEvidence.ReadTaskEvidence(taskResultEvidenceRequest(*tr)); err == nil && automaticIntegrationAuthorization(evidence.DeliveryAuthorization) {
+			automaticAuth = evidence.DeliveryAuthorization
+		}
+	}
+	if qa == nil && automaticAuth == nil {
 		r := newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "blocked", IntegrationNextAction{Kind: "record_human_qa", Reason: "Record human QA for the selected Task result.", Argv: []string{"ply", "workspace", "task", "qa", "record", string(task.ID), "--file", "<absolute-human-qa.json>"}})
 		r.TaskResult = tr
 		r.ResultOID = tr.ResultOID
@@ -138,9 +161,14 @@ func buildTaskShowIntegrationReadback(d Dependencies, root string, projects Proj
 		replaceReadbackMember(&r.Value, "task_result", taskResultCanonical(*tr))
 		return r
 	}
-	input := TaskIntegrationInput{TaskID: task.ID, TaskResultID: tr.ID, HumanQARecordID: qa.ID, ExpectedResultOID: tr.ResultOID, ExpectedParentOID: task.Worktree.ParentOID}
+	var qaID HumanQARecordID
+	if qa != nil {
+		qaID = qa.ID
+	}
+	input := TaskIntegrationInput{TaskID: task.ID, TaskResultID: tr.ID, HumanQARecordID: qaID, ExpectedResultOID: tr.ResultOID, ExpectedParentOID: task.Worktree.ParentOID, DeliveryAuthorization: automaticAuth}
 	if authority != nil {
 		input.RetryAfterResultID = authority.RetryAfterResultID
+		input.DeliveryOwner = authority.DeliveryOwner
 	}
 	var intent *IntegrationIntent
 	var attempt *IntegrationAttempt
@@ -160,9 +188,21 @@ func buildTaskShowIntegrationReadback(d Dependencies, root string, projects Proj
 	}
 	r := newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "blocked", IntegrationNextAction{Kind: "resolve_blocker", Reason: "Refresh the local repository observations before integration.", Argv: []string{}})
 	r.TaskResult, r.HumanQA = tr, qa
-	r.ResultOID, r.TechnicalGate, r.HumanQAOutcome = tr.ResultOID, tr.TechnicalGate, qa.Outcome
+	r.ResultOID, r.TechnicalGate = tr.ResultOID, tr.TechnicalGate
 	replaceReadbackMember(&r.Value, "task_result", taskResultCanonical(*tr))
-	replaceReadbackMember(&r.Value, "human_qa", taskHumanQACanonical(*qa))
+	if qa != nil {
+		r.HumanQAOutcome = qa.Outcome
+		replaceReadbackMember(&r.Value, "human_qa", taskHumanQACanonical(*qa))
+	}
+	if automaticAuth != nil {
+		latest, err := LatestTaskCandidateHumanQA(registry.HumanQARecords, *tr)
+		if err == nil {
+			decision, gateErr := EvaluateDeliveryAcceptance(&automaticAuth.Agreement, *tr, latest)
+			if gateErr == nil {
+				setIntegrationReadbackAcceptance(&r, decision)
+			}
+		}
+	}
 	return r
 }
 
@@ -186,12 +226,19 @@ func newPersistedIntegrationFallbackReadback(d Dependencies, root string, projec
 	readback.NextAction = next
 	readback.ResultOID = taskResult.ResultOID
 	readback.TechnicalGate = taskResult.TechnicalGate
-	readback.HumanQAOutcome = humanQA.Outcome
+	if humanQA != nil {
+		readback.HumanQAOutcome = humanQA.Outcome
+	}
 	if result != nil && result.BeforeObservation.OID != "" {
 		readback.ParentOID = result.BeforeObservation.OID
 	}
 	replaceReadbackMember(&readback.Value, "task_result", taskResultCanonical(*taskResult))
-	replaceReadbackMember(&readback.Value, "human_qa", taskHumanQACanonical(*humanQA))
+	if humanQA != nil {
+		replaceReadbackMember(&readback.Value, "human_qa", taskHumanQACanonical(*humanQA))
+	}
+	if authority.Plan.Acceptance != nil {
+		setIntegrationReadbackAcceptance(&readback, *authority.Plan.Acceptance)
+	}
 	replaceReadbackMember(&readback.Value, "authority", nullableStruct(authority))
 	replaceReadbackMember(&readback.Value, "intent", nullableStruct(intent))
 	replaceReadbackMember(&readback.Value, "attempt", nullableStruct(attempt))
@@ -306,6 +353,9 @@ func replaceReadbackMember(object *canonicaljson.Object, name string, value cano
 func integrationPlanNextAction(ctx integrationContext, plan WorkspaceTaskIntegrationPlan, digest string) IntegrationNextAction {
 	switch plan.Readiness {
 	case "ready":
+		if plan.Acceptance != nil {
+			return IntegrationNextAction{Kind: "apply_confirmed_plan", Reason: "Execute the preserved native Delivery for this automatically accepted candidate and exact local Epic target.", Argv: []string{}}
+		}
 		return IntegrationNextAction{Kind: "apply_confirmed_plan", Reason: "Apply the exact confirmed local fast-forward.", Argv: []string{"ply", "workspace", "task", "integrate", string(ctx.Task.ID), "--result", string(ctx.Result.ID), "--qa", string(ctx.QA.ID), "--expected-result-oid", ctx.Result.ResultOID, "--expected-parent-oid", ctx.Task.Worktree.ParentOID, "--apply", "--confirm", digest}}
 	case "already_integrated":
 		return IntegrationNextAction{Kind: "none", Reason: "The Task is already integrated.", Argv: []string{}}
@@ -314,6 +364,13 @@ func integrationPlanNextAction(ctx integrationContext, plan WorkspaceTaskIntegra
 	default:
 		return IntegrationNextAction{Kind: "resolve_blocker", Reason: "Resolve the named prerequisite before a new check.", Argv: []string{}}
 	}
+}
+
+func setIntegrationReadbackAcceptance(out *WorkspaceTaskIntegrationReadback, decision DeliveryAcceptanceDecision) {
+	out.Acceptance = &decision
+	replaceReadbackMember(&out.Value, "kind", "WorkspaceTaskIntegrationReadback@3")
+	replaceReadbackMember(&out.Value, "schema_version", int64(3))
+	out.Value = append(out.Value, canonicaljson.Member{Name: "acceptance", Value: contentRefValue(decision)})
 }
 
 func nullableStruct(v any) canonicaljson.Value {
@@ -439,13 +496,16 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 			if field.PkgPath != "" {
 				continue
 			}
-			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && field.Name == "DeliveryAuthorization" && v.Field(i).IsNil() {
+			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && (field.Name == "DeliveryAuthorization" || field.Name == "Acceptance") && v.Field(i).IsNil() {
 				continue
 			}
 			if t == reflect.TypeOf(DeliveryAgreement{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {
 				continue
 			}
 			if t == reflect.TypeOf(DeliveryAuthorization{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {
+				continue
+			}
+			if t == reflect.TypeOf(DeliveryAcceptanceDecision{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {
 				continue
 			}
 			if t == reflect.TypeOf(IntegrationAuthority{}) && field.Name == "DeliveryOwner" && v.Field(i).IsNil() {

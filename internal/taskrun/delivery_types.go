@@ -119,3 +119,13 @@ type DeliveryState struct {
 
 func deliveryEnv(kind string) Envelope   { return Envelope{"ply.workflow." + kind, 2} }
 func deliveryRun(r WorkflowRequest) bool { return r.SchemaVersion == 2 && r.Delivery != nil }
+
+func DeliveryLocalIntegrationBoundary(a *workspace.DeliveryAgreement) string {
+	if a != nil && (a.Mode == workspace.DeliveryPullRequest || a.HumanOwnedIntegration()) {
+		return "none"
+	}
+	if a != nil && a.AutomaticAcceptance() && !a.Acceptance.RequireHumanQA {
+		return "after_automatic_acceptance"
+	}
+	return "after_human_pass"
+}

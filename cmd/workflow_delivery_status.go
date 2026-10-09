@@ -40,6 +40,9 @@ func writeDeliveryStatus(out io.Writer, status *taskrun.DeliveryStatus) {
 	} else {
 		fmt.Fprintln(out, "Qualified candidate: none")
 	}
+	if a := status.Acceptance; a != nil {
+		fmt.Fprintf(out, "Acceptance: %s %s (current: %t) — %s\n", a.Mode, a.Outcome, a.Current, a.Reason)
+	}
 	if qa := status.HumanJudgment; qa != nil {
 		fmt.Fprintf(out, "Human judgment: %s for %s (current: %t)\n", qa.Outcome, short(qa.CandidateOID), qa.Current)
 	} else {

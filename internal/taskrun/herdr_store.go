@@ -386,6 +386,12 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			if status.Verification != nil {
 				status.Verification.InputsMatch = false
 			}
+			if status.Acceptance != nil {
+				status.Acceptance.Current = false
+				if status.Acceptance.Outcome == "pass" {
+					status.Acceptance.Outcome, status.Acceptance.Reason = "blocked", "The preserved candidate acceptance is not current: "+e.Error()
+				}
+			}
 		}
 		o.Round.State = "unknown"
 		if o.FinalReturn.State == "accepted" {
@@ -416,7 +422,7 @@ func deliveryCurrentCandidateQualified(s workflowState) bool {
 		return false
 	}
 	switch d.Phase {
-	case "awaiting_human_qa", "human_qa_passed", "integrating", "completed":
+	case "awaiting_human_qa", "human_qa_passed", "automatic_acceptance_passed", "integrating", "closing", "completed":
 	default:
 		return false
 	}

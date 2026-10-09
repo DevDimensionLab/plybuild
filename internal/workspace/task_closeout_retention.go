@@ -106,6 +106,10 @@ func ReadTaskRetainedEvidence(root string, id TaskID, originLocator, sha string)
 // manifests keep their original bytes and absolute references; the manifest maps
 // each origin to an immutable copy outside the source instead of rewriting it.
 func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, tr TaskResultRecord, in TaskCloseoutInput) ([]closeoutEvidence, error) {
+	snapshots, err := automaticCloseoutSnapshots(r, tr)
+	if err != nil {
+		return nil, err
+	}
 	entries := []closeoutEvidence{}
 	seen := map[string]string{}
 	total := 0
@@ -122,6 +126,11 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 			return fmt.Errorf("retention graph exceeds 4096 objects")
 		}
 		b, err := readCloseoutEvidence(path, sha)
+		if err != nil {
+			if preserved, ok := snapshots[path]; ok && preserved.sha == sha {
+				b, err = preserved.bytes, nil
+			}
+		}
 		if err != nil {
 			return err
 		}

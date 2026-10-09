@@ -48,7 +48,13 @@ func publishFile(path string, b []byte, replace bool) error {
 		return e
 	}
 	if !replace {
-		if old, e := readFile(path, 8<<20, true); e == nil {
+		// Idempotent publication must also work for bounded caller inputs such
+		// as private executable snapshots, which can exceed the JSON limit.
+		limit := 8 << 20
+		if len(b) > limit {
+			limit = len(b)
+		}
+		if old, e := readFile(path, limit, true); e == nil {
 			if bytes.Equal(old, b) {
 				return nil
 			}

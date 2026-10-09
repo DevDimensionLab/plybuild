@@ -431,6 +431,13 @@
       "items": {
         "$ref": "#/$defs/operation"
       }
+    },
+    "workflow_extensions": {
+      "type": "array",
+      "description": "Additive workflow operations with explicit effects. The original read catalog remains unchanged.",
+      "items": {
+        "$ref": "#/$defs/workflow_operation"
+      }
     }
   },
   "additionalProperties": true,
@@ -513,6 +520,73 @@
           "type": [
             "integer",
             "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "workflow_operation": {
+      "type": "object",
+      "required": [
+        "id",
+        "command",
+        "mode",
+        "selectors",
+        "formats",
+        "filters",
+        "filter_policy",
+        "result_schemas",
+        "effect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "mode": {
+          "type": "string"
+        },
+        "selectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "formats": {
+          "const": [
+            "text",
+            "json"
+          ],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filter_policy": {
+          "type": "string"
+        },
+        "result_schemas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/result_schema"
+          }
+        },
+        "effect": {
+          "type": "string",
+          "enum": [
+            "candidate_test_and_evidence",
+            "authorized_local_integration"
           ]
         }
       },

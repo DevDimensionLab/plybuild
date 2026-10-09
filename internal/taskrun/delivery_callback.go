@@ -3,7 +3,6 @@ package taskrun
 import (
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -263,24 +262,26 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 }
 
 type deliveryVerificationReceipt struct {
-	Kind               string      `json:"kind"`
-	SchemaVersion      int         `json:"schema_version"`
-	RunID              string      `json:"run_id"`
-	RequestSHA256      string      `json:"request_sha256"`
-	AttemptID          string      `json:"attempt_id"`
-	CandidateOID       string      `json:"candidate_oid"`
-	CandidateTree      string      `json:"candidate_tree"`
-	Argv               []string    `json:"argv"`
-	CWD                string      `json:"cwd"`
-	Acceptance         FileBinding `json:"acceptance"`
-	AcceptanceSnapshot FileBinding `json:"acceptance_snapshot"`
-	Review             FileBinding `json:"review"`
-	Exit               *int        `json:"exit"`
-	Stdout             FileBinding `json:"stdout"`
-	Stderr             FileBinding `json:"stderr"`
-	StartedAt          string      `json:"started_at"`
-	FinishedAt         string      `json:"finished_at"`
-	Error              string      `json:"error,omitempty"`
+	Kind               string                                             `json:"kind"`
+	SchemaVersion      int                                                `json:"schema_version"`
+	RunID              string                                             `json:"run_id"`
+	RequestSHA256      string                                             `json:"request_sha256"`
+	AttemptID          string                                             `json:"attempt_id"`
+	CandidateOID       string                                             `json:"candidate_oid"`
+	CandidateTree      string                                             `json:"candidate_tree"`
+	Argv               []string                                           `json:"argv"`
+	CWD                string                                             `json:"cwd"`
+	Acceptance         FileBinding                                        `json:"acceptance"`
+	AcceptanceSnapshot FileBinding                                        `json:"acceptance_snapshot"`
+	Review             FileBinding                                        `json:"review"`
+	Exit               *int                                               `json:"exit"`
+	Stdout             FileBinding                                        `json:"stdout"`
+	Stderr             FileBinding                                        `json:"stderr"`
+	StartedAt          string                                             `json:"started_at"`
+	FinishedAt         string                                             `json:"finished_at"`
+	Error              string                                             `json:"error,omitempty"`
+	Automatic          *workflowhandoff.AutomaticVerificationInstructions `json:"automatic,omitempty"`
+	Outcome            string                                             `json:"outcome,omitempty"`
 }
 
 func deliveryReadBinding(path string, max int) (FileBinding, []byte, error) {
@@ -292,7 +293,7 @@ func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath st
 	return workflowDeliveryVerify(d, root, id, contextPath, reviewPath, "")
 }
 
-func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, reuseAttempt string) (WorkflowRun, error) {
+func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, reuseAttempt string, binaryPaths ...string) (WorkflowRun, error) {
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
@@ -313,9 +314,15 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				return workflowError(4, "previous delivery effect is unresolved; it will not be replayed")
 			}
 			var e error
+			if e = recoverAutomaticResult(d, *current); e != nil {
+				return e
+			}
 			receipt, e = deliveryRecoverVerification(*current, reviewPath)
 			if e != nil {
 				return e
+			}
+			if len(binaryPaths) > 0 && binaryPaths[0] != "" && (receipt.Automatic == nil || receipt.Automatic.CandidateBinary.Locator != binaryPaths[0]) {
+				return workflowError(4, "receipt recovery must preserve the original candidate binary")
 			}
 			if reuseAttempt != "" {
 				if e = deliveryReusableVerification(d, *current, receipt); e != nil {
@@ -367,11 +374,18 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			return e
 		}
 		snapshot := FileBinding{filepath.Join(path, "acceptance.sh"), acceptance.SHA256}
+		receipt = deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: id, RequestSHA256: current.Result.RequestSHA256, AttemptID: attemptID, CandidateOID: x.OID, CandidateTree: x.Tree, Argv: []string{"/bin/sh", acceptance.Locator}, CWD: x.Locator, Acceptance: acceptance, Review: review, StartedAt: d.Now().UTC().Format(time.RFC3339Nano)}
+		receipt.AcceptanceSnapshot = snapshot
+		binary := ""
+		if len(binaryPaths) > 0 {
+			binary = binaryPaths[0]
+		}
+		if e = prepareAutomaticVerification(d, *current, &receipt, path, binary); e != nil {
+			return e
+		}
 		if e = d.writeOnce(snapshot.Locator, acceptanceRaw); e != nil {
 			return e
 		}
-		receipt = deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: id, RequestSHA256: current.Result.RequestSHA256, AttemptID: attemptID, CandidateOID: x.OID, CandidateTree: x.Tree, Argv: []string{"/bin/sh", acceptance.Locator}, CWD: x.Locator, Acceptance: acceptance, Review: review, StartedAt: d.Now().UTC().Format(time.RFC3339Nano)}
-		receipt.AcceptanceSnapshot = snapshot
 		if e = d.writeValue(filepath.Join(path, "attempt.json"), receipt); e != nil {
 			return e
 		}
@@ -392,23 +406,18 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			o, _ := WorkflowShow(d, root, id)
 			return o, e
 		}
-		var stdout, stderr workflowLimitedOutput
-		command := exec.Command(receipt.Argv[0], receipt.Argv[1:]...)
-		command.Dir, command.Stdout, command.Stderr = receipt.CWD, &stdout, &stderr
-		commandErr := command.Run()
-		if command.ProcessState != nil && command.ProcessState.Exited() {
-			receipt.Exit = ptr(command.ProcessState.ExitCode())
-		}
-		if commandErr != nil {
-			receipt.Error = commandErr.Error()
-		}
-		if stdout.overflow || stderr.overflow {
-			receipt.Error = "verifier output exceeded the preserved evidence limit"
-		}
-		receipt.FinishedAt = d.Now().UTC().Format(time.RFC3339Nano)
+		stdout, stderr, stopSignals := runDeliveryVerification(d, &receipt)
+		defer stopSignals()
+		publicationErr := d.fault("delivery_before_verification_receipt")
 		path := s.Result.Delivery.Attempt.Path
 		receipt.Stdout = FileBinding{filepath.Join(path, "stdout.txt"), hash(stdout.data)}
 		receipt.Stderr = FileBinding{filepath.Join(path, "stderr.txt"), hash(stderr.data)}
+		if e = preserveAutomaticResult(d, path, receipt, stdout.data, stderr.data); e != nil {
+			return deliveryReadback(d, root, id, e)
+		}
+		if publicationErr != nil && receipt.Automatic != nil {
+			return deliveryReadback(d, root, id, publicationErr)
+		}
 		if e = d.writeOnce(receipt.Stdout.Locator, stdout.data); e == nil {
 			e = d.writeOnce(receipt.Stderr.Locator, stderr.data)
 		}
@@ -419,6 +428,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			o, _ := WorkflowShow(d, root, id)
 			return o, e
 		}
+		if publicationErr != nil {
+			return deliveryReadback(d, root, id, publicationErr)
+		}
 	}
 	verification := FileBinding{filepath.Join(s.Result.Delivery.Attempt.Path, "verification.json"), digest(receipt)}
 	if e = d.fault("delivery_after_verification_receipt"); e != nil {
@@ -427,7 +439,11 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 	}
 	var candidate *workflowhandoff.DeliveryCandidateResult
 	if receipt.Exit != nil && *receipt.Exit == 0 && receipt.Error == "" {
-		if _, e = workflowBound(receipt.Acceptance, 4<<20); e == nil {
+		e = validateAutomaticReceipt(s, receipt, true)
+		if e == nil {
+			_, e = workflowBound(receipt.Acceptance, 4<<20)
+		}
+		if e == nil {
 			_, e = workflowBound(receipt.Review, 1<<20)
 		}
 		if e == nil {
@@ -492,7 +508,28 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			current.Result.Delivery.Phase = "awaiting_human_qa"
 			current.Result.TaskResultState = "candidate_qualified"
 			current.Result.NextAction = WorkflowAction{"recipient", "Prepare the exact installed candidate journey and request the human's actual product judgment; retain ownership of the same session."}
-			if a := current.Request.Delivery.Agreement; a != nil && a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest {
+			if a := current.Request.Delivery.Agreement; a != nil && a.AutomaticAcceptance() {
+				registry, err := d.Workspace.WorkItems.Snapshot(root)
+				if err != nil {
+					return err
+				}
+				qa, err := LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, c.TaskResult, a)
+				if err != nil {
+					return err
+				}
+				decision, err := workspace.EvaluateDeliveryAcceptance(a, c.TaskResult, qa)
+				if err != nil {
+					return err
+				}
+				if decision.Outcome == "pass" && !a.Acceptance.RequireHumanQA {
+					current.Result.Delivery.Phase = "automatic_acceptance_passed"
+					current.Result.NextAction = WorkflowAction{"recipient", "Automatic acceptance and review passed for this exact candidate. Complete its authorized native local Epic delivery; preserve machine evidence separately from human QA."}
+				} else if qa != nil && qa.Outcome != "pass" {
+					current.Result.Delivery.Phase = "working"
+					current.Result.NextAction = WorkflowAction{"recipient", decision.Reason + " Preserve that human answer and correct the candidate before continuing delivery."}
+				}
+			}
+			if a := current.Request.Delivery.Agreement; a != nil && a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest && (!a.AutomaticAcceptance() || current.Result.Delivery.Phase != "working") {
 				current.Result.NextAction = WorkflowAction{"recipient", "Register the exact Delivery and explicitly release source ownership with ply workflow execute release. The human starts ply integration; stop before integration."}
 			}
 		}
@@ -551,9 +588,10 @@ func deliveryRecoverVerification(s workflowState, reviewPath string) (deliveryVe
 	}
 	copy := receipt
 	copy.Exit, copy.Stdout, copy.Stderr, copy.FinishedAt, copy.Error = nil, FileBinding{}, FileBinding{}, "", ""
+	copy.Outcome = ""
 	started, startErr := time.Parse(time.RFC3339Nano, receipt.StartedAt)
 	finished, finishErr := time.Parse(time.RFC3339Nano, receipt.FinishedAt)
-	if !equal(initial, copy) || receipt.Kind != "PlyDeliveryVerification@1" || receipt.SchemaVersion != 1 || a.Path != filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", a.ID) || receipt.AttemptID != a.ID || receipt.CandidateOID != a.CandidateOID || receipt.CandidateTree != a.CandidateTree || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256 || receipt.Review.Locator != reviewPath || startErr != nil || finishErr != nil || finished.Before(started) {
+	if !equal(initial, copy) || !deliveryVerificationVersion(receipt) || a.Path != filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", a.ID) || receipt.AttemptID != a.ID || receipt.CandidateOID != a.CandidateOID || receipt.CandidateTree != a.CandidateTree || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256 || receipt.Review.Locator != reviewPath || startErr != nil || finishErr != nil || finished.Before(started) {
 		return receipt, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its reserved attempt, candidate or original review; preserve it and reverify changed inputs explicitly")
 	}
 	for _, event := range s.Result.Delivery.Events {

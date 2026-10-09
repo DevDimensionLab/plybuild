@@ -133,19 +133,31 @@ func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoff
 	// Historical technical evidence remains readable, but it cannot carry live
 	// delivery authority after correction, fail or a replacement candidate.
 	current := false
+	var candidate DeliveryCandidate
 	if ds := s.Result.Delivery; ds != nil {
-		if len(ds.Candidates) > 0 && (ds.Phase == "awaiting_human_qa" || ds.Phase == "human_qa_passed" || ds.Phase == "integrating" || ds.Phase == "completed") {
+		if len(ds.Candidates) > 0 && (ds.Phase == "awaiting_human_qa" || ds.Phase == "human_qa_passed" || ds.Phase == "automatic_acceptance_passed" || ds.Phase == "integrating" || ds.Phase == "closing" || ds.Phase == "completed") {
 			c := ds.Candidates[len(ds.Candidates)-1]
 			current = c.Handoff.Locator == request.HandoffLocator && c.Handoff.SHA256 == request.HandoffSHA256 && c.OID == h.Target.OID && c.Tree == h.Target.Tree
+			candidate = c
 		}
 		// Qualification reads its native evidence before appending TaskResult
 		// to workflow state. Only that exact in-flight verifier may bind it.
 		if attempt := ds.Attempt; ds.Phase == "verifying" && attempt != nil && attempt.Kind == "verification" && attempt.ID == h.Delivery.CandidateKey && attempt.CandidateOID == h.Target.OID && attempt.CandidateTree == h.Target.Tree {
 			current = true
+			candidate = DeliveryCandidate{Key: attempt.ID, OID: attempt.CandidateOID, Tree: attempt.CandidateTree}
+			if agreement := s.Request.Delivery.Agreement; agreement != nil && agreement.AutomaticAcceptance() {
+				candidate.Verification, _, err = deliveryReadBinding(filepath.Join(attempt.Path, "verification.json"), 4<<20)
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 	}
 	if !current {
 		return nil, nil
+	}
+	if err = validateAutomaticVerification(d, s, candidate); err != nil {
+		return nil, err
 	}
 	a, err := deliveryAuthorityState(d, s)
 	if err != nil {
@@ -177,10 +189,13 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	if !equal(c.TaskResult, result) || c.OID != result.ResultOID || c.Tree != result.ResultTree || c.TaskResult.SourceRef != agreement.SourceRef || s.Observed.Target.Ref != agreement.SourceRef {
 		return out, workflowError(4, "delivery does not name the exact current qualified TaskResult and source")
 	}
-	if s.Result.Delivery.Phase != "awaiting_human_qa" && s.Result.Delivery.Phase != "human_qa_passed" && s.Result.Delivery.Phase != "integrating" && s.Result.Delivery.Phase != "completed" {
+	if s.Result.Delivery.Phase != "awaiting_human_qa" && s.Result.Delivery.Phase != "human_qa_passed" && s.Result.Delivery.Phase != "automatic_acceptance_passed" && s.Result.Delivery.Phase != "integrating" && s.Result.Delivery.Phase != "closing" && s.Result.Delivery.Phase != "completed" {
 		return out, workflowError(4, "delivery candidate has not reached technical qualification")
 	}
 	if _, err = workflowBound(c.Verification, 4<<20); err != nil {
+		return out, err
+	}
+	if err = validateAutomaticVerification(d, s, c); err != nil {
 		return out, err
 	}
 	registry, err := d.Workspace.WorkItems.Snapshot(root)
@@ -219,7 +234,7 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	}
 	// Native QA can be recorded outside the original owner conversation. Reuse
 	// its exact candidate identity; never turn a technical pass into human pass.
-	c.HumanQA, err = LatestDeliveryHumanQA(registry.HumanQARecords, result.ID, c.OID, c.Tree)
+	c.HumanQA, err = LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, result, &agreement)
 	if err != nil {
 		return out, err
 	}
@@ -241,6 +256,15 @@ func LatestDeliveryHumanQA(records []workspace.TaskHumanQARecord, resultID works
 	return workspace.LatestTaskHumanQA(records, resultID, oid, tree)
 }
 
+// Automatic requalification cannot erase a human rejection of unchanged
+// candidate bytes. The returned QA keeps its original TaskResult identity.
+func LatestDeliveryAcceptanceHumanQA(records []workspace.TaskHumanQARecord, result workspace.TaskResultRecord, agreement *workspace.DeliveryAgreement) (*workspace.TaskHumanQARecord, error) {
+	if agreement != nil && agreement.AutomaticAcceptance() {
+		return workspace.LatestTaskCandidateHumanQA(records, result)
+	}
+	return LatestDeliveryHumanQA(records, result.ID, result.ResultOID, result.ResultTree)
+}
+
 func taskResultEvidenceRequest(r workspace.TaskResultRecord) workspace.TaskHandoffEvidenceRequest {
 	return workspace.TaskHandoffEvidenceRequest{ActivityID: r.ActivityID, RunID: r.RunID, HandoffID: r.HandoffID, HandoffLocator: r.HandoffLocator, HandoffSHA256: r.HandoffSHA256, StartReceiptID: r.StartReceiptID, StartReceiptLocator: r.StartReceiptLocator, StartReceiptSHA256: r.StartReceiptSHA256, TerminalResultID: r.TerminalResultID, TerminalResultLocator: r.TerminalResultLocator, TerminalResultSHA256: r.TerminalResultSHA256, InspectionSHA256: r.InspectionSHA256}
 }
@@ -260,21 +284,45 @@ func nativeDeliveryCandidate(d Dependencies, root, id string, resultID workspace
 	return ValidateDeliveryAuthority(d, root, id, c.TaskResult, *s.Request.Delivery.Agreement)
 }
 
-func requireDeliveryPass(a DeliveryAuthority) error {
-	qa := a.Candidate.HumanQA
-	if qa == nil || qa.Outcome != "pass" || qa.TaskResultID != a.Candidate.TaskResult.ID || qa.ResultOID != a.Candidate.OID || qa.ResultTree != a.Candidate.Tree {
-		return workflowError(4, "delivery requires actual human pass for this exact candidate")
+func deliveryAcceptance(a DeliveryAuthority) (workspace.DeliveryAcceptanceDecision, error) {
+	decision, err := workspace.EvaluateDeliveryAcceptance(&a.Agreement, a.Candidate.TaskResult, a.Candidate.HumanQA)
+	if err != nil {
+		return decision, err
 	}
-	for _, evidence := range qa.Evidence {
-		raw, err := workflowBound(FileBinding{evidence.Locator, evidence.SHA256}, 64<<20)
-		if err != nil {
-			return err
-		}
-		if int64(len(raw)) != evidence.SizeBytes {
-			return workflowError(4, "candidate human QA evidence size changed")
+	return decision, deliveryHumanEvidence(a.Candidate.HumanQA)
+}
+
+func deliveryHumanEvidence(qa *workspace.TaskHumanQARecord) error {
+	if qa != nil {
+		for _, evidence := range qa.Evidence {
+			raw, err := workflowBound(FileBinding{evidence.Locator, evidence.SHA256}, 64<<20)
+			if err != nil {
+				return err
+			}
+			if int64(len(raw)) != evidence.SizeBytes {
+				return workflowError(4, "candidate human QA evidence size changed")
+			}
 		}
 	}
 	return nil
+}
+
+func requireDeliveryPass(a DeliveryAuthority) error {
+	decision, err := deliveryAcceptance(a)
+	if err != nil {
+		return err
+	}
+	if decision.Outcome != "pass" {
+		return workflowError(4, "delivery acceptance is "+decision.Outcome+": "+decision.Reason)
+	}
+	return nil
+}
+
+func deliveryCandidateQAID(c DeliveryCandidate) workspace.HumanQARecordID {
+	if c.HumanQA == nil || c.HumanQA.TaskResultID != c.TaskResult.ID {
+		return ""
+	}
+	return c.HumanQA.ID
 }
 
 type PullRequestDeliveryObservation struct {
@@ -383,6 +431,9 @@ func CompleteLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.TaskResultID, qaID workspace.HumanQARecordID, human bool) (workflowhandoff.DeliveryIntegrationResult, error) {
 	var out workflowhandoff.DeliveryIntegrationResult
 	if !human {
+		if resumed, handled, err := ResumeAutomaticLocalDelivery(d, root, id, resultID); handled || err != nil {
+			return resumed, err
+		}
 		if e := CheckAgentDeliveryExecution(d, root, id); e != nil {
 			return out, e
 		}
@@ -400,7 +451,7 @@ func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 	if err = requireDeliveryPass(a); err != nil {
 		return out, err
 	}
-	if a.Agreement.Mode == workspace.DeliveryPullRequest || a.Candidate.HumanQA.ID != qaID {
+	if a.Agreement.Mode == workspace.DeliveryPullRequest || deliveryCandidateQAID(a.Candidate) != qaID {
 		return out, workflowError(4, "local delivery mode or candidate human QA differs")
 	}
 	// The reservation spans merge, queue and base effects. A released owner or
@@ -413,8 +464,11 @@ func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 		if e != nil {
 			return e
 		}
-		if !equal(current.Authorization, a.Authorization) || current.Candidate.HumanQA == nil || current.Candidate.HumanQA.ID != qaID {
+		if !equal(current.Authorization, a.Authorization) || deliveryCandidateQAID(current.Candidate) != qaID {
 			return workflowError(4, "delivery authority changed before effect reservation")
+		}
+		if e = requireDeliveryPass(current); e != nil {
+			return e
 		}
 		if s.Result.Delivery.Phase == "completed" && s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1].Integration != nil {
 			completed = true
@@ -469,6 +523,10 @@ func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 		s.Result.Delivery.Phase, s.Result.Round.State, s.Result.FinalReturn.State = "completed", "completed", "completed"
 		s.Result.FinalReturn.ReportSHA256 = &binding.SHA256
 		s.Result.NextAction = WorkflowAction{"user", fmt.Sprintf("The exact passed candidate is integrated locally in %s and the registered base is current.", a.Agreement.TargetRef)}
+		if !human && a.Agreement.AutomaticAcceptance() {
+			s.Result.Delivery.Phase, s.Result.Round.State, s.Result.FinalReturn.State = "closing", "closing", "closing"
+			s.Result.NextAction = WorkflowAction{"recipient", "Local integration, Task queue and Epic base are observed. Finish native Task closeout while retaining the source worktree and branch."}
+		}
 		return nil
 	})
 	if err == nil {
@@ -476,6 +534,13 @@ func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 	}
 	if err == nil && !out.Completed {
 		err = workflowError(5, "local delivery is not yet complete; preserved native state determines the next action")
+	}
+	if err == nil && !human && a.Agreement.AutomaticAcceptance() {
+		var handled bool
+		out, handled, err = ResumeAutomaticLocalDelivery(d, root, id, resultID)
+		if err == nil && !handled {
+			err = workflowError(4, "automatic local delivery completion evidence is unavailable")
+		}
 	}
 	return out, err
 }

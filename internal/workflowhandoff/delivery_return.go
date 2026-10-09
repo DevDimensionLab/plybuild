@@ -120,6 +120,7 @@ type DeliveryIntegrationResult struct {
 	Queue       workspace.WorkspaceTaskQueueReadback
 	Base        workspace.EpicBaseResult
 	Completed   bool
+	Closeout    *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
 }
 
 // IntegrateDeliveryCandidate reuses the native optimistic check/apply and
@@ -132,6 +133,12 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 	wd := workspace.WithTaskContentScope(*d.TaskWorkspace, workspace.TaskID(taskID))
 	wd.HandoffEvidence = NewTaskHandoffEvidenceReader(d)
 	in, e := workspace.ParseTaskIntegrationInput(taskID, string(resultID), string(qaID), resultOID, expectedParentOID, "", false, "")
+	if qaID == "" && owner.Authorization != nil && owner.Authorization.Agreement.AutomaticAcceptance() {
+		// The workspace check revalidates the frozen agreement and native evidence.
+		// An automatic candidate has no synthetic human QA identifier.
+		in = workspace.TaskIntegrationInput{TaskID: workspace.TaskID(taskID), TaskResultID: resultID, ExpectedResultOID: resultOID, ExpectedParentOID: expectedParentOID}
+		e = nil
+	}
 	if e != nil {
 		return out, e
 	}
@@ -184,7 +191,11 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 		return out, fmt.Errorf("integration is not observed complete: %s", out.Integration.Readback.Classification)
 	}
 	qt := workspace.QueueTargetInput{ProjectID: result.ProjectID, RepoID: result.RepoID, EpicID: out.Integration.Readback.EpicID}
-	out.Queue, e = CloseDeliveryTaskQueue(wd, qt, workspace.TaskID(taskID), owner.PreparationID, "Exact candidate integrated after recorded human pass.")
+	reason := "Exact candidate integrated after recorded human pass."
+	if owner.Authorization != nil && owner.Authorization.Agreement.AutomaticAcceptance() {
+		reason = "Exact candidate integrated after its agreed automatic acceptance."
+	}
+	out.Queue, e = CloseDeliveryTaskQueue(wd, qt, workspace.TaskID(taskID), owner.PreparationID, reason)
 	if e != nil {
 		return out, e
 	}

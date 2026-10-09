@@ -127,6 +127,12 @@ func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (Wo
 	if initialErr != nil {
 		return WorkflowRun{}, initialErr
 	}
+	if initial.Result.Delivery != nil && len(initial.Result.Delivery.Candidates) > 0 {
+		c := initial.Result.Delivery.Candidates[len(initial.Result.Delivery.Candidates)-1]
+		if _, handled, err := ResumeAutomaticLocalDelivery(d, root, id, c.TaskResult.ID); handled || err != nil {
+			return deliveryReadback(d, root, id, err)
+		}
+	}
 	if e := CheckAgentDeliveryExecution(d, root, id); e != nil {
 		return WorkflowRun{}, e
 	}
@@ -143,10 +149,11 @@ func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (Wo
 			}
 		}
 		c := initial.Result.Delivery.Candidates[len(initial.Result.Delivery.Candidates)-1]
-		if c.HumanQA == nil {
-			return WorkflowRun{}, workflowError(4, "local integration requires exact human pass")
+		a, e := nativeDeliveryCandidate(d, root, id, c.TaskResult.ID)
+		if e != nil {
+			return WorkflowRun{}, e
 		}
-		_, e := CompleteLocalDelivery(d, root, id, c.TaskResult.ID, c.HumanQA.ID)
+		_, e = CompleteLocalDelivery(d, root, id, c.TaskResult.ID, deliveryCandidateQAID(a.Candidate))
 		return deliveryReadback(d, root, id, e)
 	}
 	var state workflowState

@@ -18,8 +18,88 @@ agreements retain the behavior described below.
 | `local_branch_integration` | Explicitly selected local ref and worktree | Same local evidence and closure, including main/master without any remote |
 
 All three modes require meaningful tests, review, actual runtime authority and a
-human pass for the exact candidate. Registering a goal, queue entry or Delivery
+human pass for the exact candidate in historical v1/v2 agreements. New v3 local Epic
+agreements may select automatic acceptance below. Registering a goal, queue entry or Delivery
 does not supply these gates.
+
+## Explicit automatic acceptance for a new local Epic task
+
+Select agreement schema 3 when registering the Goal, before starting execution:
+
+```json
+{
+  "schema_version": 3,
+  "mode": "local_epic_integration",
+  "project_id": "product",
+  "repo_id": "product",
+  "epic_id": "development",
+  "target_ref": "refs/heads/development",
+  "target_worktree": "/absolute/workspace/product/development",
+  "acceptance": {
+    "schema_version": 1,
+    "mode": "automatic",
+    "responsible_actor": "the selected orchestrator",
+    "require_human_qa": false,
+    "timeout_seconds": 300
+  }
+}
+```
+
+The bound source ref is added during Task preparation. This choice travels through
+Goal, execution Spec, native mandate and Delivery; it cannot change an already
+started run. PRs and local main/master delivery cannot select this policy. V1/v2
+and absent policies retain their historical human gates. `require_human_qa: true`
+adds a real human judgment after automatic verification. Optional
+`integration_owner: human` preserves the separate human-started integration path.
+
+From the accepted owner's Task checkout, use its preserved control executable:
+
+```shell
+/absolute/ply-control workflow execute verify wfr_<id> \
+  --context /absolute/context.json --review /absolute/candidate-review.json \
+  --candidate-binary /absolute/private/built-candidate
+/absolute/ply-control workflow execute integrate wfr_<id> \
+  --context /absolute/context.json
+```
+
+`verify` executes the declared acceptance script against the clean committed
+candidate and applies the actual review. Automatic `PlyDeliveryVerification@2`
+records preserve the contract argv/cwd, actual `automatic.executed_argv`, script
+and executable snapshots, instruction digest, candidate OID/tree, responsible
+actor, actual executor/session, environment, timestamps, exit, output and
+`pass`, `fail` or `blocked`. `PLY_CANDIDATE_BINARY` names the preserved executable
+snapshot; `PLY_CANDIDATE_OID` and `PLY_CANDIDATE_TREE` name its candidate. Tests
+receive the recorded PATH, `LC_ALL=C`, and isolated HOME/TMPDIR. Provider secrets
+and the rest of the caller's environment are not inherited. Acceptance scripts
+must provision their local fixture within that declared environment. Candidate
+executables are limited to 64 MiB to fit native evidence retention; larger inputs
+are blocked before test execution.
+
+A passing invocation with valid review satisfies automatic acceptance without
+opening QA.txt, asking a human to start the script, or inventing a HumanQA record.
+Later actual human `fail` or `blocked` still vetoes the same candidate bytes;
+reverification alone cannot erase the answer. Changed candidates, scripts,
+reviews or executables need fresh acceptance before any new integration effect.
+
+A completed test result is preserved before candidate registration. Repeating
+an interrupted invocation recovers that receipt exactly once. `verify --reuse
+verify-<number>` explicitly requalifies a recorded successful attempt without
+running it again. Unknown or still-active attempts block competing execution;
+this version never automatically repeats an unknown test. Nonzero exit, timeout,
+start failure, missing inputs and interruption cannot qualify a candidate.
+
+Automatic local delivery reuses native Git, queue and Epic-base recovery. A
+confirmed no-effect integration may be retried through the same Delivery; an
+observed merge is reconciled without another merge. The owner is released only
+after the exact integration is observed, then native Task closeout preserves the
+worktree and branch (`keep=true`) and marks the lifecycle complete. Closeout
+failure stays visible independently of successful integration; resuming the
+same delivery completes closeout only. Removing retained resources remains a
+separate explicit native cleanup action.
+
+Text status and versioned JSON show acceptance separately from human judgment
+and final delivery. `ply capabilities` advertises the new CLI through additive
+`workflow_extensions`; historical read-catalog fields are unchanged.
 
 ## Record the agreement before starting
 
@@ -105,8 +185,8 @@ ply workflow delivery list --epic product-fixes --format json
 Registration validates native records and preserved bytes and causes no Git or PR
 effect. Repeating the same publication key and content returns the same ID.
 Different content under that key is a conflict. A new candidate uses a new key
-and may name its preceding Delivery in `predecessor_id`; it needs its own human
-pass. Optional `title` and `body` provide PR text; optional `metadata` supplies
+and may name its preceding Delivery in `predecessor_id`; it needs its own
+acceptance evidence under the frozen policy. Optional `title` and `body` provide PR text; optional `metadata` supplies
 explicit people choices for this Delivery.
 
 Check, show and list are read-only. Versioned JSON distinguishes registration,
@@ -117,8 +197,7 @@ history and next action. Registration does not promise a background execution.
 
 ## Execute and recover
 
-After the actual human has passed the exact candidate through its native QA
-callback:
+After the exact candidate satisfies its frozen automatic or human acceptance gate:
 
 ```shell
 ply workflow delivery execute dlv_<returned-id> --format json
@@ -126,7 +205,7 @@ ply workflow delivery show dlv_<returned-id> --format json
 ```
 
 Execution rechecks candidate/evidence integrity, the frozen mode and target,
-native runtime acceptance and candidate-bound human QA. Local execution also
+native runtime acceptance and candidate-bound acceptance. Local execution also
 requires the unchanged, clean registered parent. A moved parent or changed
 candidate blocks delivery; Ply does not silently rebase or reuse old QA.
 

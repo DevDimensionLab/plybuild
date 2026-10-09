@@ -1,7 +1,7 @@
 # Deliver a queued goal
 
 `ply workflow execute` gives one interactive implementor responsibility for a
-feature from its goal through an actual human product check and local return.
+feature from its goal through its frozen acceptance policy and local return.
 The planner records the desired result and design; the implementor chooses the
 detailed solution, tests, review and necessary corrections.
 
@@ -85,7 +85,8 @@ cannot pass verification.
 New structured delivery agreements travel through the goal, queue, preview and
 frozen execution inputs. They bind the actual Task source, target and permitted
 effects. `ply workflow delivery` registers and performs the resulting qualified
-candidate after its exact human pass. Historical goals without this field keep
+candidate after its exact automatic or human acceptance gate. New agreement v3
+can explicitly select [automatic local Epic acceptance](workflow-delivery.md#explicit-automatic-acceptance-for-a-new-local-epic-task). Historical goals without this field keep
 their original local return contract.
 
 ## Runtime and permissions
@@ -188,7 +189,8 @@ After a later candidate qualifies, resolved qualification failures remain in
 the saved event history; the current readback describes the qualified candidate.
 Current drift or a newer failed attempt still remains visible.
 
-The owner presents one installed product journey and preserves the actual human
+When the agreement requires human QA, the owner presents one installed product
+journey and preserves the actual human
 answer as `DeliveryHumanAttestation@1`. That record binds `task_id`,
 `task_result_id`, `result_oid`, `result_tree`, `outcome`, `actor_claim`,
 `start_surface`, UTC start/completion timestamps, `answer` and `observation`.
@@ -196,7 +198,8 @@ It is a local human attestation, not cryptographic identity proof. Silence,
 technical success or agent approval never supplies the answer. A fail permits
 correction and a new immutable candidate generation in the same session.
 
-Only a matching pass permits the owner to integrate the exact candidate into the
+Under historical human agreements, only a matching human pass permits the owner
+to integrate the exact candidate into the
 unchanged clean parent, advance that preparation and update the Epic base. This
 does not push, merge master, deploy, close tabs or delete worktrees. A candidate
 TaskResult alone does not release the delivery reservation.

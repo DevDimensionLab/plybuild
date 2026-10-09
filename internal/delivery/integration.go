@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // ValidateForIntegration revalidates the existing Delivery's native technical
@@ -41,7 +42,7 @@ func (s *Service) ValidateForIntegration(cwd, id string) (Receipt, taskrun.Deliv
 	if auth.RequestSHA256 != r.Manifest.RequestSHA256 || auth.MandateSHA256 != r.Manifest.MandateSHA256 || auth.PreparationID != r.Manifest.PreparationID || auth.ExpectedParentOID != r.Manifest.ExpectedParentOID {
 		return r, empty, fmt.Errorf("preserved native delivery authority changed")
 	}
-	r.HumanQA, err = taskrun.LatestDeliveryHumanQA(registry.HumanQARecords, result.ID, result.ResultOID, result.ResultTree)
+	r.HumanQA, err = taskrun.LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, result, &r.Manifest.Agreement)
 	if err != nil {
 		return r, empty, err
 	}
@@ -52,5 +53,10 @@ func (s *Service) ValidateForIntegration(cwd, id string) (Receipt, taskrun.Deliv
 			}
 		}
 	}
+	decision, err := workspace.EvaluateDeliveryAcceptance(&r.Manifest.Agreement, result, r.HumanQA)
+	if err != nil {
+		return r, empty, err
+	}
+	r.Acceptance = &decision
 	return r, auth, nil
 }

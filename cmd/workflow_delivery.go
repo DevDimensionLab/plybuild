@@ -27,7 +27,7 @@ func newWorkflowDeliveryCommand(service workflowDeliveryService) *cobra.Command 
 func newWorkflowDeliveryCommandWithFactory(factory func(string) workflowDeliveryService) *cobra.Command {
 	parent := &cobra.Command{
 		Use: "delivery", Short: "Register and deliver an exact verified Task candidate",
-		Long:    "Preserve a durable Delivery for the Task's frozen agreement: a pull request, local Epic integration, or explicitly selected local branch integration. Registration preserves references without Git or PR effects. Execution rechecks native authority, evidence and an actual human pass for the exact candidate. A pending Delivery requires another explicit invocation; no background worker is started.",
+		Long:    "Preserve a durable Delivery for the Task's frozen agreement: a pull request, local Epic integration, or explicitly selected local branch integration. Registration preserves references without Git or PR effects. Execution rechecks native authority, evidence and the frozen automatic or human acceptance gate for the exact candidate. A pending Delivery requires another explicit invocation; no background worker is started.",
 		Example: "  ply workflow delivery register --file /absolute/delivery.json --format json\n  ply workflow delivery check dlv_<digest>\n  ply workflow delivery execute dlv_<digest>\n  ply workflow delivery show dlv_<digest> --format json",
 		Args:    cobra.NoArgs,
 		RunE:    func(c *cobra.Command, _ []string) error { return c.Help() },
@@ -41,15 +41,15 @@ func newWorkflowDeliveryCommandWithFactory(factory func(string) workflowDelivery
 		}
 		short := map[string]string{
 			"register": "Register an exact technical candidate without delivery effects",
-			"check":    "Check the current candidate, authority and human gate without effects",
-			"execute":  "Perform or resume the frozen delivery after its exact human pass",
+			"check":    "Check the current candidate, authority and acceptance gate without effects",
+			"execute":  "Perform or resume the frozen delivery after its exact acceptance gate",
 			"show":     "Read a Delivery receipt and its preserved history",
 			"list":     "Find Deliveries by Task or Epic",
 			"metadata": "Preserve an explicit revision of PR people metadata",
 		}[verb]
 		detail := map[string]string{
 			"register": "Read a private ply.delivery.registration@1 JSON file. The native TaskResult and frozen workflow supply the candidate, Spec, agreement and authority. Reusing a publication key with identical content returns the same Delivery; changed content is a conflict. Registration is not completed delivery or human approval.",
-			"check":    "Read-only. Recheck the frozen candidate and evidence, actual runtime authority, exact target, and candidate-bound human QA. The receipt explains the next action. This command neither records human judgment nor publishes a branch or integrates code.",
+			"check":    "Read-only. Recheck the frozen candidate and evidence, actual runtime authority, exact target, and candidate-bound automatic acceptance or required human QA. The receipt explains the next action. This command neither records human judgment nor publishes a branch or integrates code.",
 			"execute":  "Recheck all gates and perform only the frozen mode and target. Pull requests publish only the source branch and stop before merge. Local modes update the exact registered local return and preserve queue/base evidence. After an interrupted effect, use this same ID to observe and resume it. Unknown outcomes stop blind repetition. PR merge, auto-merge, force-push, and target-branch push are excluded.",
 			"show":     "Read-only. Show the durable manifest, events, actual effect receipts, blockers and next action. A completed receipt preserves delivery-time observations; it does not assert the current state of a remote PR.",
 			"list":     "Read-only. Filter by the registered Task or Epic, or show all Deliveries in the containing workspace. Filters combine as exact matches. Reading never starts or resumes a Delivery.",

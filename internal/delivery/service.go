@@ -224,6 +224,12 @@ func (s *Service) buildManifest(d taskrun.Dependencies, root string, in Registra
 		return out, fmt.Errorf("PR title, body and people metadata do not belong to local delivery")
 	}
 	out = Manifest{Workspace: root, TaskID: task.ID, EpicID: task.ParentEpicID, ProjectID: task.ProjectID, RepoID: task.RepoID, Spec: basis, TaskResult: result, TaskResultSHA256: digest(result), Agreement: *agreement, WorkflowRunID: in.WorkflowRunID, RequestSHA256: auth.RequestSHA256, MandateSHA256: auth.MandateSHA256, PreparationID: auth.PreparationID, OwnerClaim: auth.OwnerClaim, ExpectedParentOID: auth.ExpectedParentOID, RequiredGates: []string{"native_technical_qualification", "preserved_review", "exact_candidate_human_pass", "frozen_delivery_authority", "exact_target"}}
+	if agreement.AutomaticAcceptance() {
+		out.RequiredGates[2] = "exact_candidate_automatic_pass"
+		if agreement.Acceptance.RequireHumanQA || agreement.HumanOwnedIntegration() {
+			out.RequiredGates = append(out.RequiredGates, "exact_candidate_human_pass")
+		}
+	}
 	// Independent publication keys still serialize on the actual candidate and
 	// effect target. Neither workflow ID nor TaskResult ID creates a new effect.
 	out.EffectKey = digest(struct{ Common, OID, Tree, Mode, TargetRef, TargetWorktree, Repository string }{result.GitCommonDir, result.ResultOID, result.ResultTree, agreement.Mode, agreement.TargetRef, agreement.TargetWorktree, strings.ToLower(agreement.GitHubRepository)})
@@ -271,6 +277,9 @@ func (s *Service) Register(cwd, file string) (Receipt, error) {
 		}
 		at := s.now()
 		out = Receipt{Kind: "ply.delivery.receipt", SchemaVersion: 1, ID: id, Registration: in, RegistrationSHA256: digest(in), Manifest: manifest, ManifestSHA256: digest(manifest), State: "registered", Reasons: []string{}, NextAction: "Run delivery check, then execute this Delivery ID after exact human pass; no background execution is scheduled.", CreatedAtUTC: at, UpdatedAtUTC: at, Events: []Event{}}
+		if manifest.Agreement.AutomaticAcceptance() {
+			out.NextAction = "Run delivery check, then execute this Delivery ID after its candidate-bound acceptance gates pass."
+		}
 		s.event(&out, "delivery.registered", "registered", "Preserved native candidate, evidence, frozen agreement and authority; no delivery effect.", "")
 		return s.save(root, &out)
 	})
@@ -302,7 +311,13 @@ func (s *Service) List(cwd, taskID, epicID string) (ListResult, error) {
 	return out, nil
 }
 
-func (s *Service) gate(d taskrun.Dependencies, root string, r *Receipt) (taskrun.DeliveryAuthority, error) {
+func (s *Service) gate(d taskrun.Dependencies, root string, r *Receipt) (_ taskrun.DeliveryAuthority, gateErr error) {
+	r.Acceptance = nil
+	defer func() {
+		if gateErr != nil && r.Manifest.Agreement.AutomaticAcceptance() {
+			r.Acceptance = &workspace.DeliveryAcceptanceDecision{Mode: "automatic", Outcome: "blocked", Reason: gateErr.Error(), TaskResultID: r.Manifest.TaskResult.ID, ResultOID: r.Manifest.TaskResult.ResultOID, ResultTree: r.Manifest.TaskResult.ResultTree, PolicySHA256: digest(*r.Manifest.Agreement.Acceptance)}
+		}
+	}()
 	var empty taskrun.DeliveryAuthority
 	registry, _, result, basis, e := registryCandidate(d, root, r.Manifest.TaskID, r.Manifest.TaskResult.ID)
 	if e != nil {
@@ -329,29 +344,40 @@ func (s *Service) gate(d taskrun.Dependencies, root string, r *Receipt) (taskrun
 	}
 	// A newer fail/blocked supersedes a prior answer for this exact result. QA
 	// for another result, commit or tree can never unlock the candidate.
-	r.HumanQA, e = taskrun.LatestDeliveryHumanQA(registry.HumanQARecords, result.ID, result.ResultOID, result.ResultTree)
+	r.HumanQA, e = taskrun.LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, result, &r.Manifest.Agreement)
 	if e != nil {
 		return empty, e
 	}
-	if r.HumanQA == nil {
-		r.State = "awaiting_human"
-		r.Reasons = []string{"No human answer is recorded for this exact TaskResult, commit and tree."}
-		r.NextAction = "Obtain and record the actual candidate-bound human answer, then explicitly execute this Delivery ID."
-		return auth, nil
-	}
-	for _, a := range r.HumanQA.Evidence {
-		if e = rehash(a.Locator, a.SHA256, a.SizeBytes); e != nil {
-			return empty, fmt.Errorf("human QA evidence: %w", e)
+	if r.HumanQA != nil {
+		for _, a := range r.HumanQA.Evidence {
+			if e = rehash(a.Locator, a.SHA256, a.SizeBytes); e != nil {
+				return empty, fmt.Errorf("human QA evidence: %w", e)
+			}
 		}
 	}
-	if r.HumanQA.Outcome != "pass" {
+	decision, e := workspace.EvaluateDeliveryAcceptance(&r.Manifest.Agreement, result, r.HumanQA)
+	if e != nil {
+		return empty, e
+	}
+	r.Acceptance = &decision
+	if decision.Outcome != "pass" {
 		r.State = "blocked"
-		r.Reasons = []string{"Exact candidate human QA is " + r.HumanQA.Outcome + "."}
-		r.NextAction = "Resolve the human findings; candidate changes require a new TaskResult and new human QA."
+		r.Reasons = []string{decision.Reason}
+		r.NextAction = "Resolve the recorded acceptance findings, then verify and review any changed candidate before delivery."
+		if r.HumanQA == nil && (!r.Manifest.Agreement.AutomaticAcceptance() || r.Manifest.Agreement.Acceptance.RequireHumanQA) {
+			r.State = "awaiting_human"
+			r.NextAction = "Obtain and record the actual candidate-bound human answer, then explicitly execute this Delivery ID."
+		}
 		return auth, nil
 	}
-	if auth.Candidate.HumanQA == nil || auth.Candidate.HumanQA.ID != r.HumanQA.ID {
+	if !reflect.DeepEqual(auth.Candidate.HumanQA, r.HumanQA) {
 		return empty, fmt.Errorf("human pass is not the exact answer preserved by the native workflow candidate")
+	}
+	if auth.Authorization.HumanIntegrationRequired || auth.Authorization.HumanIntegration != nil {
+		r.State = "blocked"
+		r.Reasons = []string{"human_integration_required: local delivery belongs to the explicitly selected human integration flow."}
+		r.NextAction = "Continue the explicit human integration plan for this candidate."
+		return auth, nil
 	}
 	r.State = "ready"
 	r.Reasons = []string{}
@@ -370,6 +396,32 @@ func (s *Service) Check(cwd, id string) (Receipt, error) {
 	}
 	if r.State == "delivered" {
 		return r, nil
+	}
+	if r.Manifest.Agreement.AutomaticAcceptance() {
+		observed, found, err := taskrun.ObserveAutomaticLocalDelivery(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID)
+		if found {
+			if err != nil && !observed.Completed {
+				r.State, r.Reasons, r.NextAction = "blocked", []string{err.Error()}, "Restore the exact native integration evidence before resuming closeout."
+				return r, nil
+			}
+			r.State, r.NativeClosed = "pending_closeout", false
+			r.Reasons = []string{"Local integration, queue closure and Epic base update are observed; native Task closeout remains pending."}
+			r.NextAction = "Execute this Delivery ID to resume native closeout while retaining the source worktree and branch. The Git integration will not be repeated."
+			if observed.Completed {
+				r.Local = &LocalReceipt{TargetRef: r.Manifest.Agreement.TargetRef, TargetWorktree: r.Manifest.Agreement.TargetWorktree, BeforeOID: r.Manifest.ExpectedParentOID, AfterOID: observed.Integration.Readback.ParentOID, Integration: observed.Integration.Readback, Base: observed.Base, Queue: observed.Queue, ObservedAtUTC: s.now(), Closeout: observed.Closeout}
+			}
+			if err != nil {
+				r.Reasons = append(r.Reasons, err.Error())
+			} else if observed.Closeout != nil && observed.Closeout.State == "complete" && observed.Closeout.LifecycleCompleted {
+				r.State, r.NativeClosed, r.Reasons = "ready", true, []string{}
+				r.NextAction = "Execute this Delivery ID to record the already observed native completion. The worktree and branch are retained; no integration will be repeated."
+			}
+			return r, nil
+		}
+		if err != nil {
+			r.State, r.Reasons, r.NextAction = "blocked", []string{err.Error()}, "Restore the preserved automatic delivery evidence before continuing."
+			return r, nil
+		}
 	}
 	auth, e := s.gate(d, root, &r)
 	if e != nil {
@@ -446,7 +498,14 @@ func readinessUnknown(r *Receipt, reason string) {
 }
 
 func integrationInput(r Receipt, a taskrun.DeliveryAuthority) workspace.TaskIntegrationInput {
-	return workspace.TaskIntegrationInput{TaskID: r.Manifest.TaskID, TaskResultID: r.Manifest.TaskResult.ID, HumanQARecordID: r.HumanQA.ID, ExpectedResultOID: r.Manifest.TaskResult.ResultOID, ExpectedParentOID: r.Manifest.ExpectedParentOID, DeliveryOwner: &workspace.DeliveryIntegrationOwner{RunID: a.RunID, RequestSHA256: a.RequestSHA256, ActorClaim: a.OwnerClaim, PreparationID: a.PreparationID}, DeliveryAuthorization: a.Authorization}
+	return workspace.TaskIntegrationInput{TaskID: r.Manifest.TaskID, TaskResultID: r.Manifest.TaskResult.ID, HumanQARecordID: deliveryQAID(r), ExpectedResultOID: r.Manifest.TaskResult.ResultOID, ExpectedParentOID: r.Manifest.ExpectedParentOID, DeliveryOwner: &workspace.DeliveryIntegrationOwner{RunID: a.RunID, RequestSHA256: a.RequestSHA256, ActorClaim: a.OwnerClaim, PreparationID: a.PreparationID}, DeliveryAuthorization: a.Authorization}
+}
+
+func deliveryQAID(r Receipt) workspace.HumanQARecordID {
+	if r.HumanQA == nil || r.HumanQA.TaskResultID != r.Manifest.TaskResult.ID {
+		return ""
+	}
+	return r.HumanQA.ID
 }
 func prTarget(r Receipt) PRTarget {
 	a := r.Manifest.Agreement

@@ -15,22 +15,23 @@ const (
 	IntegrationOwnerHuman = "human"
 )
 
-// DeliveryAgreement v1 describes one Task in one repository. Every mode requires
-// meaningful tests, review and actual human pass for the exact candidate. A PR
-// stops before merge; local delivery includes the native base and queue close.
+// DeliveryAgreement describes one Task in one repository. Historical versions
+// require actual human pass; v3 explicitly selects automatic local Epic acceptance.
+// A PR stops before merge; local delivery includes the native base and queue close.
 // Registering an agreement does not grant runtime authority.
 type DeliveryAgreement struct {
-	SchemaVersion    int       `yaml:"schema_version" json:"schema_version"`
-	Mode             string    `yaml:"mode" json:"mode"`
-	ProjectID        ProjectID `yaml:"project_id" json:"project_id"`
-	RepoID           RepoID    `yaml:"repo_id" json:"repo_id"`
-	EpicID           EpicID    `yaml:"epic_id" json:"epic_id"`
-	SourceRef        string    `yaml:"source_ref,omitempty" json:"source_ref,omitempty"`
-	TargetRef        string    `yaml:"target_ref" json:"target_ref"`
-	TargetWorktree   string    `yaml:"target_worktree,omitempty" json:"target_worktree,omitempty"`
-	GitHubRepository string    `yaml:"github_repository,omitempty" json:"github_repository,omitempty"`
-	Remote           string    `yaml:"remote,omitempty" json:"remote,omitempty"`
-	IntegrationOwner string    `yaml:"integration_owner,omitempty" json:"integration_owner,omitempty"`
+	SchemaVersion    int                       `yaml:"schema_version" json:"schema_version"`
+	Mode             string                    `yaml:"mode" json:"mode"`
+	ProjectID        ProjectID                 `yaml:"project_id" json:"project_id"`
+	RepoID           RepoID                    `yaml:"repo_id" json:"repo_id"`
+	EpicID           EpicID                    `yaml:"epic_id" json:"epic_id"`
+	SourceRef        string                    `yaml:"source_ref,omitempty" json:"source_ref,omitempty"`
+	TargetRef        string                    `yaml:"target_ref" json:"target_ref"`
+	TargetWorktree   string                    `yaml:"target_worktree,omitempty" json:"target_worktree,omitempty"`
+	GitHubRepository string                    `yaml:"github_repository,omitempty" json:"github_repository,omitempty"`
+	Remote           string                    `yaml:"remote,omitempty" json:"remote,omitempty"`
+	IntegrationOwner string                    `yaml:"integration_owner,omitempty" json:"integration_owner,omitempty"`
+	Acceptance       *DeliveryAcceptancePolicy `yaml:"acceptance,omitempty" json:"acceptance,omitempty"`
 }
 
 // DeliveryAuthorization is supplied by the validated native run evidence. An
@@ -67,11 +68,22 @@ var deliveryRepositoryPattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*/
 var deliveryRemotePattern = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`)
 
 func ValidateDeliveryAgreement(a DeliveryAgreement) error {
-	if a.SchemaVersion != 1 && a.SchemaVersion != 2 || contentSlug(string(a.ProjectID)) != nil || contentSlug(string(a.RepoID)) != nil || contentSlug(string(a.EpicID)) != nil {
-		return fmt.Errorf("delivery agreement requires schema_version 1 or 2 and exact project, repository and Epic")
+	if a.SchemaVersion < 1 || a.SchemaVersion > 3 || contentSlug(string(a.ProjectID)) != nil || contentSlug(string(a.RepoID)) != nil || contentSlug(string(a.EpicID)) != nil {
+		return fmt.Errorf("delivery agreement requires schema_version 1, 2 or 3 and exact project, repository and Epic")
 	}
 	if a.SchemaVersion == 1 && a.IntegrationOwner != "" || a.SchemaVersion == 2 && a.IntegrationOwner != IntegrationOwnerHuman {
 		return fmt.Errorf("delivery agreement v2 requires integration_owner human; v1 retains its historical owner")
+	}
+	if a.SchemaVersion < 3 && a.Acceptance != nil {
+		return fmt.Errorf("historical delivery agreements cannot acquire automatic acceptance")
+	}
+	if a.SchemaVersion == 3 {
+		if a.Mode != DeliveryLocalEpic || a.IntegrationOwner != "" && a.IntegrationOwner != IntegrationOwnerHuman || a.Acceptance == nil {
+			return fmt.Errorf("delivery agreement v3 requires explicit automatic local Epic acceptance and an optional human integration owner")
+		}
+		if err := validateDeliveryAcceptancePolicy(*a.Acceptance); err != nil {
+			return err
+		}
 	}
 	if !validFullBranchRef(a.TargetRef) || a.SourceRef != "" && (!validFullBranchRef(a.SourceRef) || a.SourceRef == a.TargetRef) {
 		return fmt.Errorf("delivery requires distinct full source and target branch refs")
@@ -120,6 +132,13 @@ func BindDeliveryAgreement(a DeliveryAgreement, target QueueTarget, sourceRef st
 func DeliveryAgreementDigest(a DeliveryAgreement) string { return queueDigest(a) }
 
 func (a DeliveryAgreement) RequiredGates() []string {
+	if a.AutomaticAcceptance() {
+		gates := []string{"meaningful_tests", "review", "exact_automatic_pass"}
+		if a.Acceptance.RequireHumanQA || a.HumanOwnedIntegration() {
+			gates = append(gates, "exact_human_pass")
+		}
+		return gates
+	}
 	return []string{"meaningful_tests", "review", "exact_human_pass"}
 }
 
@@ -134,7 +153,7 @@ func (a DeliveryAgreement) AllowedEffects() []string {
 }
 
 func (a DeliveryAgreement) HumanOwnedIntegration() bool {
-	return a.SchemaVersion == 2 && a.IntegrationOwner == IntegrationOwnerHuman
+	return (a.SchemaVersion == 2 || a.SchemaVersion == 3) && a.IntegrationOwner == IntegrationOwnerHuman
 }
 
 func (a DeliveryAgreement) StopAfter() string {
@@ -232,8 +251,15 @@ func validateIntegrationDelivery(d Dependencies, root string, r WorkItemRegistry
 		return workError(ErrorTaskIntegrationBlocked, "human integration decision differs from the exact candidate and QA", nil)
 	}
 	latestQA, e := LatestTaskHumanQA(r.HumanQARecords, result.ID, result.ResultOID, result.ResultTree)
-	if e != nil || latestQA == nil || latestQA.Outcome != "pass" || latestQA.ID != qaID {
-		return workError(ErrorTaskIntegrationBlocked, "delivery requires the latest unambiguous human pass for this exact candidate", e)
+	if agreement.AutomaticAcceptance() {
+		latestQA, e = LatestTaskCandidateHumanQA(r.HumanQARecords, result)
+	}
+	if e != nil {
+		return e
+	}
+	decision, e := EvaluateDeliveryAcceptance(agreement, result, latestQA)
+	if e != nil || decision.Outcome != "pass" || qaID != "" && (latestQA == nil || latestQA.ID != qaID) || qaID == "" && !agreement.AutomaticAcceptance() {
+		return workError(ErrorTaskIntegrationBlocked, "delivery acceptance is not satisfied for this exact candidate: "+decision.Reason, e)
 	}
 	bound, e := BindDeliveryAgreement(*agreement, target, result.SourceRef)
 	if e != nil || !contentTypedEqual(bound, *agreement) {

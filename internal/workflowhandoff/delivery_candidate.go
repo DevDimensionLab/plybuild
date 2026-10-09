@@ -2,6 +2,7 @@ package workflowhandoff
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -125,7 +126,11 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	if e != nil {
 		return out, e
 	}
-	acceptanceSnapshot, e := validateDeliveryVerification(d.Files, verification, in, stdout, stderr, reviewRaw)
+	agreement, e := deliveryAgreement(parent.Handoff.Value)
+	if e != nil {
+		return out, e
+	}
+	acceptanceSnapshot, e := validateDeliveryVerification(d.Files, verification, in, stdout, stderr, reviewRaw, agreement)
 	if e != nil {
 		return out, e
 	}
@@ -175,6 +180,10 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	} else if a != nil {
 		b := fields["delivery_binding"].(map[string]any)
 		b["agreement"], b["workflow_run_id"], b["request_sha256"] = a, in.RunID, in.RequestSHA256
+		if a.AutomaticAcceptance() && !a.Acceptance.RequireHumanQA {
+			fields["authority"].(map[string]any)["human_gates"] = []string{}
+			fields["goal"].(map[string]any)["done_when"] = "Native technical evidence records automatic acceptance and review for this exact candidate under the frozen policy."
+		}
 	}
 	for k, v := range fields {
 		draft = append(draft, canonicaljson.Member{Name: k, Value: bridgeValue(v)})
@@ -253,6 +262,9 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 		return objectString(artifacts[i].(canonicaljson.Object), "artifact_id") < objectString(artifacts[j].(canonicaljson.Object), "artifact_id")
 	})
 	report := deliveryObject(map[string]any{"outcome": "complete", "summary": in.Summary, "meaning": "This exact candidate passed the preserved acceptance invocation under its delivery owner and explicit technical review. Actual human QA is still required.", "stop_reasons": []canonicaljson.Value{}, "observed_effects": []canonicaljson.Value{}, "verifier_results": []canonicaljson.Value{deliveryObject(map[string]any{"verifier_id": in.VerifierID, "argv": in.Argv, "cwd": in.CWD, "exit": in.Exit, "bound_oid_or_sha256": in.CandidateOID, "stdout_artifact_id": "verifier-stdout", "stderr_artifact_id": "verifier-stderr"})}, "review": review, "artifacts": artifacts, "evidence_gaps": []canonicaljson.Value{}, "forbidden_effects_observed": []canonicaljson.Value{}})
+	if agreement != nil && agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA {
+		report = replaceObjectMember(report, "meaning", "This exact candidate passed the preserved automatic acceptance invocation and explicit review. This is machine evidence under the frozen policy, not human QA.")
+	}
 	reportRaw, e := canonicaljson.Marshal(report)
 	if e != nil {
 		return out, e
@@ -311,7 +323,7 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	return out, nil
 }
 
-func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandidateInput, stdout, stderr, review []byte) ([]byte, error) {
+func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandidateInput, stdout, stderr, review []byte, agreements ...*workspace.DeliveryAgreement) ([]byte, error) {
 	v, e := canonicaljson.DecodeStrict(raw)
 	if e != nil {
 		return nil, e
@@ -321,6 +333,12 @@ func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandi
 		return nil, fmt.Errorf("verification receipt must be an object")
 	}
 	keys := []string{"kind", "schema_version", "run_id", "request_sha256", "attempt_id", "candidate_oid", "candidate_tree", "argv", "cwd", "acceptance", "acceptance_snapshot", "review", "exit", "stdout", "stderr", "started_at", "finished_at"}
+	automatic := len(agreements) > 0 && agreements[0] != nil && agreements[0].AutomaticAcceptance()
+	wantKind, wantVersion := "PlyDeliveryVerification@1", int64(1)
+	if automatic {
+		keys = append(keys, "automatic", "outcome")
+		wantKind, wantVersion = "PlyDeliveryVerification@2", 2
+	}
 	if errorValue, found := objectMember(o, "error"); found {
 		keys = append(keys, "error")
 		if errorValue != "" {
@@ -333,7 +351,7 @@ func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandi
 	}
 	version, e := intField(m, "schema_version", "verification receipt")
 	exit, xe := intField(m, "exit", "verification receipt")
-	if e != nil || xe != nil || version != 1 || exit != 0 || objectMapString(m, "kind") != "PlyDeliveryVerification@1" || objectMapString(m, "candidate_oid") != in.CandidateOID || objectMapString(m, "candidate_tree") != in.CandidateTree || objectMapString(m, "cwd") != in.CWD || !canonicalEqual(m["argv"], bridgeValue(in.Argv)) || objectMapString(m, "request_sha256") != in.RequestSHA256 || objectMapString(m, "run_id") != in.RunID || objectMapString(m, "attempt_id") != in.CandidateKey {
+	if e != nil || xe != nil || version != wantVersion || exit != 0 || objectMapString(m, "kind") != wantKind || objectMapString(m, "candidate_oid") != in.CandidateOID || objectMapString(m, "candidate_tree") != in.CandidateTree || objectMapString(m, "cwd") != in.CWD || !canonicalEqual(m["argv"], bridgeValue(in.Argv)) || objectMapString(m, "request_sha256") != in.RequestSHA256 || objectMapString(m, "run_id") != in.RunID || objectMapString(m, "attempt_id") != in.CandidateKey {
 		return nil, fmt.Errorf("verification receipt differs from the observed candidate invocation")
 	}
 	start, se := time.Parse(time.RFC3339Nano, objectMapString(m, "started_at"))
@@ -370,6 +388,29 @@ func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandi
 	}
 	if len(in.Argv) != 2 || objectMapString(a, "locator") != in.Argv[1] || objectMapString(a, "sha256") != objectMapString(s, "sha256") {
 		return nil, fmt.Errorf("acceptance snapshot differs from the executed script")
+	}
+	if automatic {
+		var instructions AutomaticVerificationInstructions
+		raw, err := canonicaljson.Marshal(m["automatic"])
+		if err != nil {
+			return nil, err
+		}
+		if err = json.Unmarshal(raw, &instructions); err != nil {
+			return nil, err
+		}
+		if !canonicalEqual(m["automatic"], bridgeValue(instructions)) || objectMapString(m, "outcome") != "pass" {
+			return nil, fmt.Errorf("automatic verification requires exact instructions and a passed machine outcome")
+		}
+		if err = ValidateAutomaticInstructions(instructions, agreements[0], in.Argv, in.CWD, objectMapString(a, "sha256"), in.CandidateOID, in.CandidateTree); err != nil {
+			return nil, err
+		}
+		if instructions.ExecutedArgv[1] != objectMapString(s, "locator") {
+			return nil, fmt.Errorf("actual executed argv differs from preserved script")
+		}
+		binary, err := deliveryReadFile(files, instructions.CandidateBinarySnapshot.Locator, AutomaticCandidateBinaryLimit)
+		if err != nil || digestBytes(binary) != instructions.CandidateBinarySnapshot.SHA256 {
+			return nil, fmt.Errorf("automatic candidate binary changed or is unavailable: %v", err)
+		}
 	}
 	b, e := deliveryReadFile(files, objectMapString(s, "locator"), 4<<20)
 	if e != nil {

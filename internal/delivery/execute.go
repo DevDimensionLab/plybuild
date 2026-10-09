@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -34,6 +35,9 @@ func (s *Service) Execute(cwd, id string) (Receipt, error) {
 		defer func() { out = r }()
 		if r.State == "delivered" {
 			return nil
+		}
+		if handled, err := s.resumeAutomaticCloseout(d, root, &r); handled || err != nil {
+			return err
 		}
 		if e = taskrun.CheckAgentDeliveryExecution(d, root, r.Manifest.WorkflowRunID); e != nil {
 			return s.stop(root, &r, "blocked", e.Error(), "Continue the explicit human integration plan; the developer has no execution ownership.")
@@ -195,23 +199,73 @@ func (s *Service) executeLocal(d taskrun.Dependencies, root string, r *Receipt, 
 		}
 	}
 	// Native Check/Apply reconciles its own intent, attempt and observed Git effect.
-	result, e := taskrun.CompleteLocalDelivery(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID, r.HumanQA.ID)
-	if e != nil {
-		return s.stop(root, r, "unknown_effect", e.Error(), "Inspect native integration, queue and Epic base, then explicitly execute this Delivery ID to resume the preserved attempt.")
+	result, e := taskrun.CompleteLocalDelivery(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID, deliveryQAID(*r))
+	if e == nil {
+		if e = s.fault("after_local_effect"); e != nil {
+			return e
+		}
 	}
-	if e = s.fault("after_local_effect"); e != nil {
-		return e
+	return s.recordLocalCompletion(root, r, fx, result, e)
+}
+
+func (s *Service) resumeAutomaticCloseout(d taskrun.Dependencies, root string, r *Receipt) (bool, error) {
+	if !r.Manifest.Agreement.AutomaticAcceptance() || r.Manifest.Agreement.HumanOwnedIntegration() {
+		return false, nil
 	}
+	observed, found, observationErr := taskrun.ObserveAutomaticLocalDelivery(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID)
+	if !found || observationErr != nil && !observed.Completed {
+		return found, observationErr
+	}
+	fx, err := readEffect(root, r.Manifest.EffectKey)
+	if os.IsNotExist(err) {
+		fx = effect{Kind: "ply.delivery.effect", SchemaVersion: 1, Key: r.Manifest.EffectKey, OwnerDeliveryID: r.ID, LocalStarted: true}
+		if err = saveEffect(root, fx); err != nil {
+			return true, err
+		}
+	} else if err != nil {
+		return true, err
+	}
+	if fx.OwnerDeliveryID != r.ID {
+		owner, err := readReceipt(root, fx.OwnerDeliveryID)
+		if err != nil {
+			return true, err
+		}
+		if fx.Complete {
+			return true, s.reuseCompleted(root, r, &fx, owner)
+		}
+		return true, s.stop(root, r, "blocked", "This observed candidate/target belongs to Delivery "+owner.ID, "Resume that Delivery's native closeout; no competing owner is started.")
+	}
+	r.Attempts++
+	r.AttemptID = fmt.Sprintf("%s/attempt/%06d", r.ID, r.Attempts)
+	s.event(r, "delivery.attempt_started", r.AttemptID, "Resume native closeout for already observed local integration.", "")
+	if err = s.save(root, r); err != nil {
+		return true, err
+	}
+	if observationErr != nil {
+		return true, s.recordLocalCompletion(root, r, &fx, observed, observationErr)
+	}
+	result, _, closeoutErr := taskrun.ResumeAutomaticLocalDelivery(d, root, r.Manifest.WorkflowRunID, r.Manifest.TaskResult.ID)
+	return true, s.recordLocalCompletion(root, r, &fx, result, closeoutErr)
+}
+
+func (s *Service) recordLocalCompletion(root string, r *Receipt, fx *effect, result workflowhandoff.DeliveryIntegrationResult, completionErr error) error {
 	if !result.Completed || result.Integration.Readback.RecoveryStatus != "complete" || result.Integration.Readback.ParentOID != r.Manifest.TaskResult.ResultOID {
-		return s.stop(root, r, "unknown_effect", "native local completion is not fully observed", "Inspect the native integration and base records, then resume this Delivery ID.")
+		return s.stop(root, r, "unknown_effect", joinError("native local completion is not fully observed", completionErr), "Inspect the native integration and base records, then resume this Delivery ID.")
 	}
-	r.Local = &LocalReceipt{TargetRef: r.Manifest.Agreement.TargetRef, TargetWorktree: r.Manifest.Agreement.TargetWorktree, BeforeOID: r.Manifest.ExpectedParentOID, AfterOID: result.Integration.Readback.ParentOID, Integration: result.Integration.Readback, Base: result.Base, Queue: result.Queue, ObservedAtUTC: s.now()}
-	r.NativeClosed = true
+	r.Local = &LocalReceipt{TargetRef: r.Manifest.Agreement.TargetRef, TargetWorktree: r.Manifest.Agreement.TargetWorktree, BeforeOID: r.Manifest.ExpectedParentOID, AfterOID: result.Integration.Readback.ParentOID, Integration: result.Integration.Readback, Base: result.Base, Queue: result.Queue, ObservedAtUTC: s.now(), Closeout: result.Closeout}
 	fx.Local = r.Local
-	if e = saveEffect(root, *fx); e != nil {
-		return e
+	if err := saveEffect(root, *fx); err != nil {
+		return err
 	}
 	s.event(r, "delivery.local_observed", "local_observed", "Exact local integration, native base update and this Task's queue closure observed.", "")
+	if r.Manifest.Agreement.AutomaticAcceptance() && (completionErr != nil || result.Closeout == nil || result.Closeout.State != "complete" || !result.Closeout.LifecycleCompleted || result.Closeout.ResourceState != "kept") {
+		r.NativeClosed = false
+		return s.stop(root, r, "pending_closeout", joinError("Local integration, queue and Epic base are observed; native Task closeout remains pending", completionErr), "Resume this Delivery ID to finish native closeout. The source worktree and branch are retained; the Git integration will not be repeated.")
+	}
+	if completionErr != nil {
+		return s.stop(root, r, "unknown_effect", completionErr.Error(), "Inspect native integration, queue and Epic base, then resume this Delivery ID.")
+	}
+	r.NativeClosed = true
 	return s.complete(root, r, fx)
 }
 

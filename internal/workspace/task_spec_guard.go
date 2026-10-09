@@ -635,12 +635,12 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 }
 func validateStoredTaskSpecGuard(r WorkItemRegistry, p WorkspaceTaskIntegrationPlan) error {
 	if p.SchemaVersion == 1 {
-		if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.TaskSpecGuard != nil || p.DeliveryAuthorization != nil {
+		if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.TaskSpecGuard != nil || p.DeliveryAuthorization != nil || p.Acceptance != nil {
 			return fmt.Errorf("invalid legacy integration plan")
 		}
 		return nil
 	}
-	validVersion := p.SchemaVersion == 2 && p.Kind == "WorkspaceTaskIntegrationPlan@2" && p.DeliveryAuthorization == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil
+	validVersion := p.SchemaVersion == 2 && p.Kind == "WorkspaceTaskIntegrationPlan@2" && p.DeliveryAuthorization == nil && p.Acceptance == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil && p.Acceptance == nil || p.SchemaVersion == 4 && p.Kind == "WorkspaceTaskIntegrationPlan@4" && automaticIntegrationAuthorization(p.DeliveryAuthorization) && p.Acceptance != nil
 	if !validVersion || p.TaskSpecGuard == nil {
 		return fmt.Errorf("unsupported integration plan version")
 	}

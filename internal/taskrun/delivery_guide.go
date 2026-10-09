@@ -194,5 +194,15 @@ qualify and release the candidate again before a new human integration decision.
 			}
 		}
 	}
+	if a := s.Request.Delivery.Agreement; a != nil && a.AutomaticAcceptance() {
+		guide = strings.ReplaceAll(guide, "--review <copied-review.json>", "--review <copied-review.json> --candidate-binary <absolute-private-executable>")
+		guide += fmt.Sprintf("\n## Automatic acceptance instructions\n\nThis agreement explicitly selects automatic acceptance, owned by %s, with a %d-second timeout. Build the private candidate executable and pass its absolute path to verify. The script receives PLY_CANDIDATE_BINARY, PLY_CANDIDATE_OID and PLY_CANDIDATE_TREE, PATH and LC_ALL, and isolated HOME and TMPDIR. No provider credentials are inherited. The invocation freezes script and binary hashes, environment, candidate and executor identity before startup. A completed receipt is recovered without repeating the test; an unknown or active attempt remains blocked. Correct real failures in this Task, then qualify the new candidate.\n", a.Acceptance.ResponsibleActor, a.Acceptance.TimeoutSeconds)
+		if !a.Acceptance.RequireHumanQA && !a.HumanOwnedIntegration() {
+			start, end := strings.Index(guide, "## Actual human QA and local integration"), strings.Index(guide, "\n## Frozen delivery agreement")
+			if start >= 0 && end > start {
+				guide = guide[:start] + fmt.Sprintf("## Automatic local Epic delivery\n\nA successful exact candidate test and review satisfy the frozen automatic acceptance gate. Complete the authorized native local return with:\n\n%s workflow execute integrate %s --context %s\n\nObserve Git, Task queue and Epic base closure. Continue only the same reserved integration after interruption. Machine results never create human QA. Actual later human fail or blocked judgments still veto delivery.\n", control, id, context) + guide[end:]
+			}
+		}
+	}
 	return d.writeOnce(filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), []byte(guide))
 }

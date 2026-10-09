@@ -16,6 +16,9 @@ func WorkflowDeliveryRequalify(d Dependencies, root, id, contextPath, reviewPath
 }
 
 func deliveryReusableVerification(d Dependencies, s workflowState, receipt deliveryVerificationReceipt) error {
+	if err := validateAutomaticReceipt(s, receipt, true); err != nil {
+		return err
+	}
 	requireNew := func(reason string) error {
 		return deliveryContinuityError("receipt_mismatch", reason+"; preserve this receipt and use ordinary verify to execute acceptance for the changed inputs")
 	}

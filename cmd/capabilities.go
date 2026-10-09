@@ -34,12 +34,13 @@ type capabilityOperation struct {
 	Effect        string             `json:"effect"`
 }
 type capabilityCatalog struct {
-	Kind           string                `json:"kind"`
-	SchemaVersion  int                   `json:"schema_version"`
-	Build          capabilityBuild       `json:"build"`
-	Coverage       string                `json:"coverage"`
-	Operations     []capabilityOperation `json:"operations"`
-	ReadExtensions []capabilityOperation `json:"read_extensions"`
+	Kind               string                `json:"kind"`
+	SchemaVersion      int                   `json:"schema_version"`
+	Build              capabilityBuild       `json:"build"`
+	Coverage           string                `json:"coverage"`
+	Operations         []capabilityOperation `json:"operations"`
+	ReadExtensions     []capabilityOperation `json:"read_extensions"`
+	WorkflowExtensions []capabilityOperation `json:"workflow_extensions,omitempty"`
 }
 
 func embeddedCapabilityBuild(info *debug.BuildInfo) capabilityBuild {
@@ -111,7 +112,13 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		}
 		return extensions[i].Mode < extensions[j].Mode
 	})
-	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops, extensions}
+	two := 2
+	workflow := []capabilityOperation{
+		{ID: "workflow.execute.verify", Command: []string{"workflow", "execute", "verify"}, Mode: "candidate_acceptance", Selectors: []string{"--context", "--review", "--candidate-binary", "--reuse"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}, {"PlyDeliveryVerification@2", &two}}, Effect: "candidate_test_and_evidence"},
+		{ID: "workflow.execute.integrate", Command: []string{"workflow", "execute", "integrate"}, Mode: "frozen_acceptance", Selectors: []string{"--context"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "authorized_local_integration"},
+	}
+	sort.Slice(workflow, func(i, j int) bool { return workflow[i].ID < workflow[j].ID })
+	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops, extensions, workflow}
 }
 
 func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
@@ -157,6 +164,11 @@ func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
 			}
 			for _, op := range catalog.ReadExtensions {
 				if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  %s (%s): %s; formats: %s\n", op.ID, op.Mode, strings.Join(op.Command, " "), strings.Join(op.Formats, ", ")); err != nil {
+					return err
+				}
+			}
+			for _, op := range catalog.WorkflowExtensions {
+				if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  %s (%s): %s; effect: %s\n", op.ID, op.Mode, strings.Join(op.Command, " "), op.Effect); err != nil {
 					return err
 				}
 			}

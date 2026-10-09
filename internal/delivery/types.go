@@ -104,30 +104,32 @@ type LocalReceipt struct {
 	Base           workspace.EpicBaseResult                   `json:"base"`
 	Queue          workspace.WorkspaceTaskQueueReadback       `json:"queue"`
 	ObservedAtUTC  string                                     `json:"observed_at_utc"`
+	Closeout       *workspace.TaskCloseoutReceipt             `json:"closeout,omitempty"`
 }
 
 type Receipt struct {
-	Kind               string                       `json:"kind"`
-	SchemaVersion      int                          `json:"schema_version"`
-	ID                 string                       `json:"id"`
-	Registration       Registration                 `json:"registration"`
-	RegistrationSHA256 string                       `json:"registration_sha256"`
-	Manifest           Manifest                     `json:"manifest"`
-	ManifestSHA256     string                       `json:"manifest_sha256"`
-	State              string                       `json:"state"`
-	Reasons            []string                     `json:"reasons"`
-	NextAction         string                       `json:"next_action"`
-	CreatedAtUTC       string                       `json:"created_at_utc"`
-	UpdatedAtUTC       string                       `json:"updated_at_utc"`
-	AttemptID          string                       `json:"attempt_id,omitempty"`
-	Attempts           int                          `json:"attempts"`
-	HumanQA            *workspace.TaskHumanQARecord `json:"human_qa"`
-	Metadata           *MetadataChoice              `json:"metadata"`
-	PR                 *PRReceipt                   `json:"pull_request"`
-	Local              *LocalReceipt                `json:"local_integration"`
-	NativeClosed       bool                         `json:"native_closed"`
-	ReusedDeliveryID   string                       `json:"reused_delivery_id,omitempty"`
-	Events             []Event                      `json:"events"`
+	Kind               string                                `json:"kind"`
+	SchemaVersion      int                                   `json:"schema_version"`
+	ID                 string                                `json:"id"`
+	Registration       Registration                          `json:"registration"`
+	RegistrationSHA256 string                                `json:"registration_sha256"`
+	Manifest           Manifest                              `json:"manifest"`
+	ManifestSHA256     string                                `json:"manifest_sha256"`
+	State              string                                `json:"state"`
+	Reasons            []string                              `json:"reasons"`
+	NextAction         string                                `json:"next_action"`
+	CreatedAtUTC       string                                `json:"created_at_utc"`
+	UpdatedAtUTC       string                                `json:"updated_at_utc"`
+	AttemptID          string                                `json:"attempt_id,omitempty"`
+	Attempts           int                                   `json:"attempts"`
+	HumanQA            *workspace.TaskHumanQARecord          `json:"human_qa"`
+	Acceptance         *workspace.DeliveryAcceptanceDecision `json:"acceptance,omitempty"`
+	Metadata           *MetadataChoice                       `json:"metadata"`
+	PR                 *PRReceipt                            `json:"pull_request"`
+	Local              *LocalReceipt                         `json:"local_integration"`
+	NativeClosed       bool                                  `json:"native_closed"`
+	ReusedDeliveryID   string                                `json:"reused_delivery_id,omitempty"`
+	Events             []Event                               `json:"events"`
 }
 
 type ListResult struct {
@@ -177,6 +179,11 @@ func Text(r Receipt) string {
 		fmt.Fprintf(&b, " in %s", r.Manifest.Agreement.GitHubRepository)
 	}
 	b.WriteByte('\n')
+	if r.Acceptance != nil {
+		fmt.Fprintf(&b, "Acceptance: %s (%s)\n", r.Acceptance.Outcome, r.Acceptance.Mode)
+	} else if r.Manifest.Agreement.AutomaticAcceptance() {
+		fmt.Fprintf(&b, "Acceptance: automatic; responsible actor: %s\n", r.Manifest.Agreement.Acceptance.ResponsibleActor)
+	}
 	if r.PR != nil {
 		fmt.Fprintf(&b, "PR: %s (%s; head %s; metadata applied: %t)\n", r.PR.URL, r.PR.Disposition, r.PR.HeadOID, r.PR.MetadataApplied)
 	}

@@ -46,10 +46,7 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 		}
 	}
 	c := r.Delivery
-	boundary := "after_human_pass"
-	if c.Agreement != nil && (c.Agreement.Mode == workspace.DeliveryPullRequest || c.Agreement.HumanOwnedIntegration()) {
-		boundary = "none"
-	}
+	boundary := DeliveryLocalIntegrationBoundary(c.Agreement)
 	if !plain(c.OwnerClaim, 1, 256) || c.LocalIntegration != boundary || !filepath.IsAbs(c.AcceptancePath) || filepath.Clean(c.AcceptancePath) != c.AcceptancePath || c.ReasoningEffort != "" && !plain(c.ReasoningEffort, 1, 64) {
 		return workflowError(2, "invalid delivery owner, acceptance path or local integration boundary")
 	}
@@ -126,6 +123,14 @@ func deliveryInstructions(s workflowState) string {
 			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Human QA alone grants the developer no integration authority. Corrections require an explicit negative human decision returning source ownership; qualify and release a new candidate after correction.")
 		}
 	}
+	if a := c.Agreement; a != nil && a.AutomaticAcceptance() {
+		instructions = strings.ReplaceAll(instructions, "--review <review.json>.", "--review <review.json> --candidate-binary <absolute-private-executable>.")
+		instructions += " This new agreement explicitly selects automatic acceptance. Ply runs the declared script with the candidate binary exposed as PLY_CANDIDATE_BINARY, preserves the actual invocation/result, and enforces the policy timeout. Reuse completed receipts; an active or unknown attempt blocks a competing execution."
+		if !a.Acceptance.RequireHumanQA && !a.HumanOwnedIntegration() {
+			instructions = strings.ReplaceAll(instructions, "After candidate qualification, prepare the actual installed human journey. Preserve the human's exact answer through execute qa; only an exact candidate pass permits execute integrate.", "After candidate qualification, complete native local Epic delivery using the preserved automatic acceptance and review. Do not ask for a mechanical human pass or create a HumanQA record for machine evidence. Honor any actual later human fail or blocked answer.")
+			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Continue local integration and base update when the automatic acceptance gate and original authority cover them.")
+		}
+	}
 	return instructions
 }
 
@@ -171,7 +176,7 @@ func workflowDeliveryFreshArtifacts(d Dependencies, s workflowState, target, pol
 		}
 	}
 	phase := s.Result.Delivery.Phase
-	if target && len(s.Result.Delivery.Candidates) > 0 && (phase == "awaiting_human_qa" || phase == "human_qa_passed" || phase == "integrating" || phase == "completed") {
+	if target && len(s.Result.Delivery.Candidates) > 0 && (phase == "awaiting_human_qa" || phase == "human_qa_passed" || phase == "automatic_acceptance_passed" || phase == "integrating" || phase == "closing" || phase == "completed") {
 		c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
 		x, e := d.Workspace.IntegrationGit.ObserveIntegrationWorktree(s.Observed.Target.WorktreeLocator, s.Observed.Target.Ref)
 		if e != nil {

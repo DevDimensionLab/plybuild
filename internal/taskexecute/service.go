@@ -284,10 +284,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		return out, err
 	}
 	r := intent.Runtime
-	boundary := "after_human_pass"
-	if prepared.Delivery != nil && (prepared.Delivery.Mode == workspace.DeliveryPullRequest || prepared.Delivery.HumanOwnedIntegration()) {
-		boundary = "none"
-	}
+	boundary := taskrun.DeliveryLocalIntegrationBoundary(prepared.Delivery)
 	request, err := taskrun.BuildDeliveryWorkflowRequest(taskrun.DeliveryRequestInput{
 		RequestKey: key, WorkspaceRoot: plan.Workspace, PreparationID: preparation.ID, PreparationSHA256: digestBytes(pbytes), HandoffDraft: draft, Runtime: r.Runtime,
 		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: "human_authorized_herdr", Authorized: true},

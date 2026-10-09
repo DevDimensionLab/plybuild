@@ -478,14 +478,14 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
-		if expected == reflect.TypeOf(DeliveryAgreement{}) || expected == reflect.TypeOf(DeliveryAuthorization{}) {
+		if expected == reflect.TypeOf(DeliveryAgreement{}) || expected == reflect.TypeOf(DeliveryAuthorization{}) || expected == reflect.TypeOf(DeliveryAcceptanceDecision{}) {
 			present := map[string]bool{}
 			for i := 0; i+1 < len(node.Content); i += 2 {
 				present[node.Content[i].Value] = true
 			}
 			filtered := []yamlShapeField{}
 			for _, field := range fields {
-				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote" || field.name == "integration_owner" || field.name == "human_integration" || field.name == "human_integration_required"
+				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote" || field.name == "integration_owner" || field.name == "human_integration" || field.name == "human_integration_required" || field.name == "acceptance" || field.name == "policy_sha256" || field.name == "evidence_sha256" || field.name == "human_qa_record_id"
 				if !optional || present[field.name] {
 					filtered = append(filtered, field)
 				}
@@ -516,10 +516,19 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 					version = node.Content[i+1].Value
 				}
 			}
-			if version != "3" {
+			if version != "3" && version != "4" {
 				filtered := []yamlShapeField{}
 				for _, field := range fields {
 					if field.name != "delivery_authorization" {
+						filtered = append(filtered, field)
+					}
+				}
+				fields = filtered
+			}
+			if version != "4" {
+				filtered := []yamlShapeField{}
+				for _, field := range fields {
+					if field.name != "acceptance" {
 						filtered = append(filtered, field)
 					}
 				}
@@ -812,7 +821,8 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 	authorities := map[IntegrationAuthorityID]IntegrationAuthority{}
 	planDigests := map[string]bool{}
 	for _, a := range registry.IntegrationAuthorities {
-		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) || a.Mode == "human_integration_plan" && validDeliveryIntegrationOwner(a.DeliveryOwner) && a.Plan.DeliveryAuthorization != nil && a.Plan.DeliveryAuthorization.HumanIntegration != nil
+		automatic := a.Plan.Acceptance != nil && automaticIntegrationAuthorization(a.Plan.DeliveryAuthorization)
+		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil && !automatic || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) && !automatic || a.Mode == "delivery_owner_after_automatic_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) && automatic || a.Mode == "human_integration_plan" && validDeliveryIntegrationOwner(a.DeliveryOwner) && a.Plan.DeliveryAuthorization != nil && a.Plan.DeliveryAuthorization.HumanIntegration != nil
 		if a.Plan.DeliveryAuthorization != nil && a.DeliveryOwner != nil && (a.DeliveryOwner.RunID != a.Plan.DeliveryAuthorization.RunID || a.DeliveryOwner.RequestSHA256 != a.Plan.DeliveryAuthorization.RequestSHA256) {
 			validMode = false
 		}
@@ -821,7 +831,11 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 		}
 		r, rok := results[a.TaskResultID]
 		q, qok := qaIDs[a.HumanQARecordID]
-		if !rok || !qok || r.TaskID != a.TaskID || q.TaskResultID != r.ID || q.Outcome != "pass" || !(r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt") {
+		if automatic && a.HumanQARecordID == "" {
+			qok = true
+		}
+		decision, gateErr := integrationAcceptance(a.Plan.DeliveryAuthorization, r, q)
+		if !rok || !qok || r.TaskID != a.TaskID || q.ID != "" && q.TaskResultID != r.ID || gateErr != nil || decision.Outcome != "pass" || !(r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt") {
 			return fmt.Errorf("integration authority %s has invalid gate binding", a.ID)
 		}
 		if err := validateStoredIntegrationPlan(a.Plan, registry, r, q); err != nil || a.Plan.Task.TaskID != a.TaskID || a.Plan.TaskResult.ID != a.TaskResultID || a.Plan.HumanQA.ID != a.HumanQARecordID || !sameOptionalIntegrationResultID(a.RetryAfterResultID, a.Plan.RetryAfterResultID) || !sameAllowedEffect(a.AllowedEffect, a.Plan.Effect) {
@@ -1041,13 +1055,21 @@ func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry Work
 			return errors.New("integration plan requires its exact preserved human decision")
 		}
 	}
+	acceptanceReady := p.HumanQAReady
+	if p.Acceptance != nil {
+		decision, err := integrationAcceptance(p.DeliveryAuthorization, result, qa)
+		if err != nil || !automaticIntegrationAuthorization(p.DeliveryAuthorization) || !contentTypedEqual(decision, *p.Acceptance) || decision.Outcome != "pass" {
+			return errors.New("integration plan automatic acceptance differs from the exact candidate evidence")
+		}
+		acceptanceReady = true
+	}
 	if validatePlanObservation(p.ObservedSource) != nil || validatePlanObservation(p.ObservedParent) != nil || validateInventory(p.ObservedInventory) != nil || validateReflog(p.ObservedReflog) != nil || !setString("ready", "already_integrated", "blocked", "conflict", "unknown")[p.Readiness] || !sortedReasonTokens(p.Reasons) {
 		return errors.New("invalid integration plan observation")
 	}
 	source := worktreeFromPlan(p.ObservedSource)
 	parentObservation := worktreeFromPlan(p.ObservedParent)
 	mainForbidden := ordinaryProductRef(p.Epic.ParentRef) && (p.DeliveryAuthorization == nil || p.DeliveryAuthorization.Agreement.Mode != DeliveryLocalBranch)
-	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.TechnicalGateReady || !p.HumanQAReady || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || mainForbidden || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
+	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.TechnicalGateReady || !acceptanceReady || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || mainForbidden || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
 		return errors.New("integration authority plan is not a ready exact plan")
 	}
 	wantArgv := []string{"git", "-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", p.Epic.ParentLocator, "merge", "--ff-only", "--no-stat", "--no-autostash", p.Task.ResultOID}
@@ -1185,7 +1207,7 @@ func validateIntegrationResultOutcomeContract(result IntegrationResult, authorit
 			return errors.New("successful integration result has contradictory recovery guidance")
 		}
 	case "no_effect":
-		want := []string{"ply", "workspace", "task", "integrate", string(authority.TaskID), "--result", string(authority.TaskResultID), "--qa", string(authority.HumanQARecordID), "--expected-result-oid", authority.Plan.Task.ResultOID, "--expected-parent-oid", authority.Plan.Epic.ExpectedParentOID, "--retry-after", string(result.ID), "--check"}
+		want := integrationNoEffectNextAction(authority, result.ID).Argv
 		if result.RecoveryStatus != "safe-no-effect" || result.NextAction.Kind != "retry_after_no_effect" || !slices.Equal(result.NextAction.Argv, want) {
 			return errors.New("no-effect integration result has contradictory recovery guidance")
 		}

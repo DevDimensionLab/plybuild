@@ -106,6 +106,7 @@ type WorkspaceTaskIntegrationPlan struct {
 	Effect                IntegrationPlanEffect       `yaml:"effect" json:"effect"`
 	TaskSpecGuard         *TaskSpecRelevance          `yaml:"task_spec_guard,omitempty" json:"task_spec_guard"`
 	DeliveryAuthorization *DeliveryAuthorization      `yaml:"delivery_authorization,omitempty" json:"delivery_authorization,omitempty"`
+	Acceptance            *DeliveryAcceptanceDecision `yaml:"acceptance,omitempty" json:"acceptance,omitempty"`
 }
 
 type IntegrationPlanWorkspace struct {
@@ -356,6 +357,10 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	if err != nil {
 		return TaskIntegrationResult{}, err
 	}
+	input, err = resumeAutomaticIntegrationInput(registry, input)
+	if err != nil {
+		return TaskIntegrationResult{}, err
+	}
 	if input.DeliveryOwner != nil || input.DeliveryAuthorization != nil {
 		if recovered, found, err := checkPersistedDeliveryIntegration(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repos}, registry, input); found || err != nil {
 			return recovered, err
@@ -405,6 +410,10 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	err = dependencies.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
 		return dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
 			registry, err := session.Snapshot()
+			if err != nil {
+				return err
+			}
+			input, err = resumeAutomaticIntegrationInput(registry, input)
 			if err != nil {
 				return err
 			}
@@ -462,6 +471,9 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 			authority := IntegrationAuthority{ID: authorityID, Mode: "human_cli_start", CreatedAtUTC: now, PlanSHA256: digest, Plan: plan, RetryAfterResultID: input.RetryAfterResultID, TaskID: input.TaskID, TaskResultID: input.TaskResultID, HumanQARecordID: input.HumanQARecordID, AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: plan.Epic.ExpectedParentOID, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
 			if input.DeliveryOwner != nil {
 				authority.Mode = "delivery_owner_after_human_pass"
+				if plan.Acceptance != nil && plan.Acceptance.Mode == "automatic" {
+					authority.Mode = "delivery_owner_after_automatic_pass"
+				}
 				if input.DeliveryAuthorization != nil && input.DeliveryAuthorization.HumanIntegration != nil {
 					authority.Mode = "human_integration_plan"
 				}
@@ -507,6 +519,9 @@ type integrationContext struct {
 }
 
 func validateIntegrationInput(input TaskIntegrationInput) error {
+	if automaticIntegrationAuthorization(input.DeliveryAuthorization) && input.DeliveryOwner == nil {
+		return WorkInvalidArguments("automatic acceptance requires the preserved native delivery owner")
+	}
 	if input.DeliveryOwner != nil && !validDeliveryIntegrationOwner(input.DeliveryOwner) {
 		return WorkInvalidArguments("invalid delivery owner provenance")
 	}
@@ -522,8 +537,10 @@ func validateIntegrationInput(input TaskIntegrationInput) error {
 	if _, err := ParseTaskResultID(string(input.TaskResultID)); err != nil {
 		return err
 	}
-	if _, err := ParseHumanQARecordID(string(input.HumanQARecordID)); err != nil {
-		return err
+	if input.HumanQARecordID != "" || !automaticIntegrationAuthorization(input.DeliveryAuthorization) {
+		if _, err := ParseHumanQARecordID(string(input.HumanQARecordID)); err != nil {
+			return err
+		}
 	}
 	if !validOIDText(input.ExpectedResultOID) || !validOIDText(input.ExpectedParentOID) {
 		return WorkInvalidArguments("expected OIDs must be full lowercase object IDs")
@@ -558,8 +575,14 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	}
 	tr := findTaskResult(registry, input.TaskResultID)
 	qa := findHumanQA(registry, input.HumanQARecordID)
+	if qa == nil && input.HumanQARecordID == "" && automaticIntegrationAuthorization(input.DeliveryAuthorization) {
+		qa = &TaskHumanQARecord{}
+	}
 	if tr == nil || qa == nil {
 		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "selected Task result or human QA record is missing", nil)
+	}
+	if automaticIntegrationAuthorization(input.DeliveryAuthorization) && qa.ID != "" && qa.TaskResultID != tr.ID {
+		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "selected human QA belongs to a different Task result", nil)
 	}
 	_, repo, err := projectAndRepo(projects, task.ProjectID, task.RepoID)
 	if err != nil {
@@ -605,6 +628,10 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	readiness := "ready"
 	technical := tr.TechnicalGate == "passed" || tr.TechnicalGate == "good_enough_with_known_debt"
 	human := qa.Outcome == "pass" && qa.TaskResultID == tr.ID && qa.ResultOID == tr.ResultOID && qa.ResultTree == tr.ResultTree
+	acceptance, err := integrationAcceptance(input.DeliveryAuthorization, *tr, *qa)
+	if err != nil {
+		return WorkspaceTaskIntegrationPlan{}, "", ctx, err
+	}
 	conflict := func(reason string) { reasons = append(reasons, reason); readiness = "conflict" }
 	block := func(reason string) {
 		reasons = append(reasons, reason)
@@ -627,8 +654,12 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	if !technical {
 		block("technical_gate_not_ready")
 	}
-	if !human {
-		block("human_qa_not_ready")
+	if acceptance.Outcome != "pass" {
+		if acceptance.Mode == "automatic" {
+			block("automatic_acceptance_not_ready")
+		} else {
+			block("human_qa_not_ready")
+		}
 	}
 	if input.ExpectedParentOID != task.Worktree.ParentOID || input.ExpectedResultOID != tr.ResultOID {
 		conflict("expected_oid_mismatch")
@@ -737,6 +768,10 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 		copy := *input.DeliveryAuthorization
 		copy.AllowedEffects = append([]string{}, copy.AllowedEffects...)
 		plan.DeliveryAuthorization = &copy
+		if input.DeliveryAuthorization.Agreement.AutomaticAcceptance() {
+			plan.Kind, plan.SchemaVersion = "WorkspaceTaskIntegrationPlan@4", 4
+			plan.Acceptance = &acceptance
+		}
 	}
 	digest := integrationPlanDigest(plan)
 	return plan, digest, ctx, nil
@@ -759,8 +794,10 @@ func revalidateIntegrationEvidence(d Dependencies, result TaskResultRecord, qa T
 	if err = ValidateTaskResultEvidence(result, evidence); err != nil {
 		return err
 	}
-	if err = rehashQAEvidence(d.Files, qa.Evidence); err != nil {
-		return workError(ErrorTaskIntegrationBlocked, "human QA evidence can no longer be validated", err)
+	if qa.ID != "" {
+		if err = rehashQAEvidence(d.Files, qa.Evidence); err != nil {
+			return workError(ErrorTaskIntegrationBlocked, "human QA evidence can no longer be validated", err)
+		}
 	}
 	return nil
 }
@@ -874,7 +911,7 @@ func finishIntegrationAttempt(d Dependencies, session WorkItemStoreSession, regi
 			changed = &v
 			outcome = "no_effect"
 			recovery = "safe-no-effect"
-			next = IntegrationNextAction{Kind: "retry_after_no_effect", Reason: "Run a new check that names the no-effect result.", Argv: []string{"ply", "workspace", "task", "integrate", string(ctx.Task.ID), "--result", string(ctx.Result.ID), "--qa", string(ctx.QA.ID), "--expected-result-oid", ctx.Result.ResultOID, "--expected-parent-oid", ctx.Task.Worktree.ParentOID, "--retry-after", string(resultID), "--check"}}
+			next = integrationNoEffectNextAction(authority, resultID)
 		} else {
 			outcome = "partial"
 			recovery = "reconciliation-required"
@@ -1140,6 +1177,69 @@ func validDeliveryIntegrationOwner(o *DeliveryIntegrationOwner) bool {
 	return o != nil && validTaskText(o.RunID, 1, 256) && digestPattern.MatchString(o.RequestSHA256) && validTaskText(o.ActorClaim, 1, 256) && validTaskText(o.PreparationID, 1, 256)
 }
 
+func integrationNoEffectNextAction(authority IntegrationAuthority, resultID IntegrationResultID) IntegrationNextAction {
+	if authority.Plan.Acceptance != nil {
+		return IntegrationNextAction{Kind: "retry_after_no_effect", Reason: "The native attempt had no Git effect. Execute the same Delivery again after resolving the cause; its new native check must preserve and bind no-effect result " + string(resultID) + ".", Argv: []string{}}
+	}
+	return IntegrationNextAction{Kind: "retry_after_no_effect", Reason: "Run a new check that names the no-effect result.", Argv: []string{"ply", "workspace", "task", "integrate", string(authority.TaskID), "--result", string(authority.TaskResultID), "--qa", string(authority.HumanQARecordID), "--expected-result-oid", authority.Plan.Task.ResultOID, "--expected-parent-oid", authority.Plan.Epic.ExpectedParentOID, "--retry-after", string(resultID), "--check"}}
+}
+
+// A native automatic Delivery resumes its unique retry chain. Only an observed
+// no-effect result permits a new attempt; an active, uncertain or completed
+// authority is selected for the existing recovery path. Check is read-only and
+// Apply repeats this selection under the registry lock before validating its
+// confirmation, so concurrent resumes cannot consume a predecessor twice.
+func resumeAutomaticIntegrationInput(registry WorkItemRegistry, input TaskIntegrationInput) (TaskIntegrationInput, error) {
+	if !automaticIntegrationAuthorization(input.DeliveryAuthorization) || input.RetryAfterResultID != nil {
+		return input, nil
+	}
+	matching := map[IntegrationAuthorityID]*IntegrationAuthority{}
+	for i := range registry.IntegrationAuthorities {
+		a := &registry.IntegrationAuthorities[i]
+		if a.TaskID != input.TaskID || a.TaskResultID != input.TaskResultID || a.HumanQARecordID != input.HumanQARecordID || a.Plan.Task.ResultOID != input.ExpectedResultOID || a.Plan.Epic.ExpectedParentOID != input.ExpectedParentOID {
+			continue
+		}
+		if !contentTypedEqual(a.DeliveryOwner, input.DeliveryOwner) || !contentTypedEqual(a.Plan.DeliveryAuthorization, input.DeliveryAuthorization) {
+			return input, workError(ErrorTaskIntegrationConflict, "automatic delivery retry authority differs", nil)
+		}
+		matching[a.ID] = a
+	}
+	if len(matching) == 0 {
+		return input, nil
+	}
+	consumed := map[IntegrationAuthorityID]bool{}
+	roots := 0
+	for _, a := range matching {
+		if a.RetryAfterResultID == nil {
+			roots++
+			continue
+		}
+		prior := findIntegrationResult(registry, *a.RetryAfterResultID)
+		if prior == nil || matching[prior.AuthorityID] == nil || consumed[prior.AuthorityID] {
+			return input, workError(ErrorTaskIntegrationConflict, "automatic delivery retry history is different or ambiguous", nil)
+		}
+		consumed[prior.AuthorityID] = true
+	}
+	var leaf *IntegrationAuthority
+	for id, a := range matching {
+		if !consumed[id] {
+			if leaf != nil {
+				return input, workError(ErrorTaskIntegrationConflict, "automatic delivery retry history has competing leaves", nil)
+			}
+			leaf = a
+		}
+	}
+	if roots != 1 || leaf == nil {
+		return input, workError(ErrorTaskIntegrationConflict, "automatic delivery retry history is incomplete", nil)
+	}
+	input.RetryAfterResultID = leaf.RetryAfterResultID
+	if result := findIntegrationResultForAuthority(registry, leaf.ID); result != nil && result.Outcome == "no_effect" && result.RecoveryStatus == "safe-no-effect" && result.GitChanged != nil && !*result.GitChanged {
+		id := result.ID
+		input.RetryAfterResultID = &id
+	}
+	return input, nil
+}
+
 // A delivery owner may resume after the merge, queue close or base update. Its
 // original authority remains the sole effect ledger even when the current Epic
 // basis has advanced to the delivered candidate. Never build a second plan for
@@ -1278,6 +1378,9 @@ func contextFromPlan(r WorkItemRegistry, p WorkspaceTaskIntegrationPlan) (integr
 	epic, _ := findEpic(r, p.Epic.EpicID)
 	tr := findTaskResult(r, p.TaskResult.ID)
 	qa := findHumanQA(r, p.HumanQA.ID)
+	if qa == nil && p.HumanQA.ID == "" && p.Acceptance != nil && automaticIntegrationAuthorization(p.DeliveryAuthorization) {
+		qa = &TaskHumanQARecord{}
+	}
 	if task == nil || epic == nil || tr == nil || qa == nil {
 		return integrationContext{}, workError(ErrorTaskIntegrationConflict, "durable plan references missing state", nil)
 	}

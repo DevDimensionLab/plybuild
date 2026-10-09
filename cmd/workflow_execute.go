@@ -17,7 +17,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var target queueTargetFlags
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after an actual candidate-bound human pass. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; historical agreements retain their human gate. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
 		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
@@ -110,7 +110,14 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 				if a.GitHubRepository != "" {
 					fmt.Fprintf(c.OutOrStdout(), " in %s via %s", a.GitHubRepository, a.Remote)
 				}
-				fmt.Fprintln(c.OutOrStdout(), "\nDelivery gates: meaningful tests, review, exact candidate human pass, actual runtime authority")
+				gates := "exact candidate human pass"
+				if a.AutomaticAcceptance() {
+					gates = "exact candidate automatic pass and preserved review"
+					if a.Acceptance.RequireHumanQA || a.HumanOwnedIntegration() {
+						gates += ", exact candidate human pass"
+					}
+				}
+				fmt.Fprintf(c.OutOrStdout(), "\nDelivery gates: %s, actual runtime authority\n", gates)
 				if a.Mode == workspace.DeliveryPullRequest {
 					fmt.Fprintln(c.OutOrStdout(), "Delivery effects: publish source branch and open/update PR; stop before merge")
 				} else {
@@ -173,22 +180,22 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 	for _, verb := range []string{"show", "follow", "resume", "report", "verify", "qa", "integrate"} {
 		verb := verb
 		ownerCallback := verb != "show" && verb != "follow" && verb != "resume"
-		var format, contextPath, file, review, evidence, reuse string
+		var format, contextPath, file, review, evidence, reuse, candidateBinary string
 		var timeout int
 		var incomplete bool
 		use := verb + " RUN_ID"
 		if verb == "qa" {
 			use += " pass|fail|blocked"
 		}
-		short := map[string]string{"resume": "Continue the same startup after native onboarding without restarting it", "show": "Read the preserved delivery and its next action", "follow": "Observe the same interactive delivery session", "report": "Preserve truthful progress, questions or incomplete results", "verify": "Run the owner's acceptance entrypoint and qualify this candidate", "qa": "Record an actual human answer for the exact candidate", "integrate": "Complete the authorized local return after a matching human pass"}[verb]
+		short := map[string]string{"resume": "Continue the same startup after native onboarding without restarting it", "show": "Read the preserved delivery and its next action", "follow": "Observe the same interactive delivery session", "report": "Preserve truthful progress, questions or incomplete results", "verify": "Run the owner's acceptance entrypoint and qualify this candidate", "qa": "Record an actual human answer for the exact candidate", "integrate": "Complete the authorized local return after matching acceptance"}[verb]
 		detail := map[string]string{
 			"resume":    "Continue an existing delivery startup after the human resolves native onboarding in its preserved tab. Verify the same provider and terminal, bind readiness, and send the first Task prompt only when it was never attempted. Never create another tab, start another agent, grant permissions or replay uncertain input.",
 			"show":      "Read-only. Cached provider state is not a fresh observation or product approval.",
 			"follow":    "The observation timeout does not stop the provider. Reuse the existing tab when startup or return is unknown.",
 			"report":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate. If a runtime dependency blocks callbacks, the installed CLI's --incomplete path accepts only stopped/needs_input from the same live owner. It preserves the original context, artifacts and unresolved attempts without granting runtime authority or switching controls.",
-			"verify":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. Missing or failed tests cannot produce a technical pass. Human product judgment remains separate.",
+			"verify":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. An explicit automatic agreement requires --candidate-binary and freezes the executable, test environment and policy timeout into the attempt. A successful test plus review supplies machine acceptance; required human QA and later negative human judgments remain separate gates. Missing, failed or unknown tests cannot produce a pass. Repeating the same reserved invocation recovers its completed receipt without starting another test; unknown execution is blocked.",
 			"qa":        "Owner callback: use the frozen control executable, exact Task cwd and --context. --evidence preserves the actual user's answer and candidate binding. The answer is a local human attestation, not cryptographic identity proof. Never infer pass from tests, silence or a provider's claim.",
-			"integrate": "Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate and recorded human pass, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the registered base. Local main/master return requires an explicit local_branch_integration contract and matching runtime authority. PR mode cannot integrate locally. Does not push or delete worktrees.",
+			"integrate": "Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate, its frozen automatic or human acceptance gate, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the registered base. Local main/master return requires an explicit local_branch_integration contract and matching runtime authority. PR mode cannot integrate locally. Does not push or delete worktrees.",
 		}[verb]
 		example := "  ply workflow execute " + verb + " wfr_<digest>"
 		if ownerCallback {
@@ -227,6 +234,9 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 				if verb == "report" && file == "" || verb == "verify" && review == "" || verb == "qa" && evidence == "" {
 					return workspace.WorkInvalidArguments("provide the required callback evidence file")
 				}
+				if verb == "verify" && reuse != "" && candidateBinary != "" {
+					return workspace.WorkInvalidArguments("--reuse preserves the original binary; omit --candidate-binary")
+				}
 				if verb == "qa" && args[1] != "pass" && args[1] != "fail" && args[1] != "blocked" {
 					return workspace.WorkInvalidArguments("human outcome must be pass, fail or blocked")
 				}
@@ -259,7 +269,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 					if reuse != "" {
 						r, err = taskrun.WorkflowDeliveryRequalify(d, root, args[0], contextPath, review, reuse)
 					} else {
-						r, err = taskrun.WorkflowDeliveryVerify(d, root, args[0], contextPath, review)
+						r, err = taskrun.WorkflowDeliveryVerifyWithBinary(d, root, args[0], contextPath, review, candidateBinary)
 					}
 				case "qa":
 					r, err = taskrun.WorkflowDeliveryQA(d, root, args[0], contextPath, args[1], evidence)
@@ -285,6 +295,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 		}
 		if verb == "verify" {
 			child.Flags().StringVar(&review, "review", "", "absolute candidate-bound review evidence (required)")
+			child.Flags().StringVar(&candidateBinary, "candidate-binary", "", "absolute built candidate executable; required by explicit automatic acceptance")
 			child.Flags().StringVar(&reuse, "reuse", "", "requalify this exact preserved verification attempt without executing acceptance again")
 		}
 		if verb == "qa" {

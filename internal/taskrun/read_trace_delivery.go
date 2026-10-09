@@ -83,6 +83,12 @@ func (r *traceReader) delivery(s workflowState) {
 			e.Kind, e.Role, e.ActorClaim, e.EvidenceClass = "source_ownership_release", "agent", release.OwnerClaim, "controlled"
 			if release.Origin == "observed_provider_exit" {
 				e.Role, e.ActorClaim = "ply", "ply native provider observation"
+			} else if release.Origin == "automatic_delivery_completed" {
+				if _, found, err := automaticIntegratedResult(s, candidate.TaskResult.ID); err != nil || !found {
+					r.problem("trace_owner_release_unbound", "Automatic owner release lacks its exact observed integration: "+e.ID)
+					continue
+				}
+				e.Role, e.ActorClaim = "ply", "ply automatic delivery closeout"
 			}
 			e.Candidate, e.Data, e.RegisteredAtUTC = traceCandidate(*candidate), traceJSON(release), r.time(release.RecordedAtUTC, e.ID)
 			r.run.Entries = append(r.run.Entries, e)
@@ -120,6 +126,8 @@ func (r *traceReader) delivery(s workflowState) {
 			r.run.Entries = append(r.run.Entries, e)
 		case "integration":
 			r.deliveryIntegration(s, e, raw, candidates)
+		case "closeout":
+			r.deliveryCloseout(s, e, raw, candidates)
 		case "pull_request":
 			var value struct {
 				Candidate     string                         `json:"candidate"`
@@ -251,9 +259,15 @@ func (r *traceReader) registrySource() FileBinding {
 
 func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, candidates map[string]DeliveryCandidate) {
 	var v deliveryVerificationReceipt
-	if err := decode(raw, 256<<10, &v); err != nil || v.SchemaVersion != 1 || v.AttemptID != e.ID || v.RunID != s.Result.RunID || v.RequestSHA256 != s.Result.RequestSHA256 || !traceOIDPattern.MatchString(v.CandidateOID) || !traceOIDPattern.MatchString(v.CandidateTree) || len(v.Argv) == 0 || !filepath.IsAbs(v.CWD) {
+	if err := decode(raw, 256<<10, &v); err != nil || !deliveryVerificationVersion(v) || v.AttemptID != e.ID || v.RunID != s.Result.RunID || v.RequestSHA256 != s.Result.RequestSHA256 || !traceOIDPattern.MatchString(v.CandidateOID) || !traceOIDPattern.MatchString(v.CandidateTree) || len(v.Argv) == 0 || !filepath.IsAbs(v.CWD) {
 		r.problem("trace_verification_unbound", "Verification receipt identity/basis differs: "+e.Source.Locator)
 		return
+	}
+	if v.Automatic != nil {
+		if err := workflowhandoff.ValidateAutomaticInstructions(*v.Automatic, s.Request.Delivery.Agreement, v.Argv, v.CWD, v.Acceptance.SHA256, v.CandidateOID, v.CandidateTree); err != nil || v.Automatic.ExecutorSessionID != s.Result.Transport.AgentSessionID || v.Automatic.ExecutedArgv[1] != v.AcceptanceSnapshot.Locator || v.Outcome != "pass" && v.Outcome != "fail" && v.Outcome != "blocked" {
+			r.problem("trace_verification_unbound", "Automatic verifier instructions differ from their frozen policy and execution: "+e.ID)
+			return
+		}
 	}
 	vp := &TraceVerification{AttemptID: v.AttemptID, CandidateOID: v.CandidateOID, CandidateTree: v.CandidateTree, Argv: v.Argv, CWD: v.CWD, Acceptance: v.Acceptance, AcceptanceSnapshot: v.AcceptanceSnapshot, Review: v.Review, Exit: v.Exit, Stdout: v.Stdout, Stderr: v.Stderr, Error: v.Error}
 	for _, tm := range []struct {
@@ -278,9 +292,18 @@ func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, ca
 	// mutable across corrections and is deliberately not requalified here.
 	vp.InputsBound = v.AcceptanceSnapshot.Locator == filepath.Join(path, "acceptance.sh") && v.AcceptanceSnapshot.SHA256 == v.Acceptance.SHA256
 	for _, input := range []FileBinding{v.AcceptanceSnapshot, v.Review} {
-		if _, err := r.bound(input, 4<<20); err != nil {
+		if _, err := r.bound(input, 8<<20); err != nil {
 			vp.InputsBound = false
 			r.problem("trace_verification_input_unavailable", e.ID+": "+err.Error())
+		} else {
+			e.Sources = append(e.Sources, input)
+		}
+	}
+	if v.Automatic != nil {
+		input := FileBinding{v.Automatic.CandidateBinarySnapshot.Locator, v.Automatic.CandidateBinarySnapshot.SHA256}
+		if _, err := r.bound(input, 256<<20); err != nil || input.Locator != filepath.Join(path, "candidate-executable") {
+			vp.InputsBound = false
+			r.problem("trace_verification_input_unavailable", e.ID+": automatic candidate executable snapshot is unavailable or differs")
 		} else {
 			e.Sources = append(e.Sources, input)
 		}
@@ -301,11 +324,18 @@ func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, ca
 			e.Outcome = ptr("passed")
 		}
 	}
-	e.Data = traceJSON(map[string]any{"attempt_id": v.AttemptID, "error": v.Error, "started_at": v.StartedAt, "finished_at": v.FinishedAt})
+	data := map[string]any{"attempt_id": v.AttemptID, "error": v.Error, "started_at": v.StartedAt, "finished_at": v.FinishedAt}
+	if v.Automatic != nil {
+		data["automatic"], data["automatic_outcome"] = v.Automatic, v.Outcome
+		if v.Outcome == "blocked" {
+			e.Outcome = ptr("blocked")
+		}
+	}
+	e.Data = traceJSON(data)
 	c, qualified := candidates[v.AttemptID]
 	if qualified {
 		bound, err := r.bound(c.Verification, 256<<10)
-		if err != nil || hash(bound) != hash(raw) || c.OID != v.CandidateOID || c.Tree != v.CandidateTree || v.Exit == nil || *v.Exit != 0 || v.Error != "" {
+		if err != nil || hash(bound) != hash(raw) || c.OID != v.CandidateOID || c.Tree != v.CandidateTree || v.Exit == nil || *v.Exit != 0 || v.Error != "" || v.Automatic != nil && v.Outcome != "pass" {
 			r.problem("trace_candidate_verification_unbound", "Qualified generation does not match its successful verifier event: "+c.Key)
 			qualified = false
 		} else {
@@ -439,9 +469,20 @@ func (r *traceReader) deliveryIntegration(s workflowState, e TraceEntry, raw []b
 			}
 		}
 		qaBound := false
+		var selectedQA *workspace.TaskHumanQARecord
 		if authority != nil {
 			for _, q := range r.basis.Registry.HumanQARecords {
-				qaBound = qaBound || q.ID == authority.HumanQARecordID && q.TaskResultID == c.TaskResult.ID && q.ResultOID == c.OID && q.ResultTree == c.Tree && q.Outcome == "pass"
+				if q.ID == authority.HumanQARecordID && q.TaskResultID == c.TaskResult.ID && q.ResultOID == c.OID && q.ResultTree == c.Tree && q.Outcome == "pass" {
+					qa := q
+					selectedQA, qaBound = &qa, true
+				}
+			}
+			if a := authority.Plan.DeliveryAuthorization; a != nil && a.Agreement.AutomaticAcceptance() {
+				decision, err := workspace.EvaluateDeliveryAcceptance(&a.Agreement, c.TaskResult, selectedQA)
+				qaBound = err == nil && decision.Outcome == "pass" && equal(authority.Plan.Acceptance, &decision) && (authority.HumanQARecordID == "" || selectedQA != nil) && equal(s.Request.Delivery.Agreement, &a.Agreement) && a.RunID == s.Result.RunID && a.RequestSHA256 == s.Result.RequestSHA256 && a.MandateSHA256 == s.Result.Handoff.SHA256 && workspace.ValidateDeliveryAuthorization(*a) == nil
+				if qaBound {
+					data["acceptance"] = authority.Plan.Acceptance
+				}
 			}
 		}
 		if authority == nil || !qaBound {
@@ -458,6 +499,39 @@ func (r *traceReader) deliveryIntegration(s workflowState, e TraceEntry, raw []b
 		r.problem("trace_integration_unbound", "Integration observation has no matching preserved native result: "+e.ID)
 	}
 	e.Data = traceJSON(data)
+	r.run.Entries = append(r.run.Entries, e)
+}
+
+func (r *traceReader) deliveryCloseout(s workflowState, e TraceEntry, raw []byte, candidates map[string]DeliveryCandidate) {
+	var observed struct {
+		Candidate string                        `json:"candidate"`
+		Result    workspace.TaskCloseoutReceipt `json:"result"`
+	}
+	if err := json.Unmarshal(raw, &observed); err != nil {
+		r.problem("trace_closeout_unbound", "Invalid Task closeout event: "+e.ID)
+		return
+	}
+	c, found := candidates[observed.Candidate]
+	plan := observed.Result.Plan
+	if !found || s.Request.Delivery.Agreement == nil || !s.Request.Delivery.Agreement.AutomaticAcceptance() || plan.TaskID != c.TaskResult.TaskID || plan.TaskResultID != c.TaskResult.ID || plan.ResultOID != c.OID || plan.ResultTree != c.Tree || plan.Source.Locator != c.TaskResult.SourceLocator || plan.Source.Ref != c.TaskResult.SourceRef || !plan.Keep || observed.Result.State != "complete" || !observed.Result.LifecycleCompleted || observed.Result.ResourceState != "kept" || observed.Result.WorktreeRemoved || observed.Result.BranchRemoved {
+		r.problem("trace_closeout_unbound", "Automatic Task closeout differs from its exact retained candidate: "+e.ID)
+		return
+	}
+	path := filepath.Join(r.basis.Workspace.Root, ".ply", "task-closeouts.json")
+	store, err := r.read(path, 4<<20)
+	if err != nil {
+		r.problem("trace_closeout_unavailable", e.ID+": "+err.Error())
+		return
+	}
+	actual, err := workspace.ReadTaskCloseoutAt(r.basis.Workspace.Root, c.TaskResult.TaskID)
+	if err != nil || actual == nil || !equal(actual, &observed.Result) {
+		r.problem("trace_closeout_unbound", "Automatic closeout event differs from the preserved native receipt: "+e.ID)
+		return
+	}
+	e.Kind, e.Role, e.ActorClaim, e.EvidenceClass = "task_closeout", "ply", "ply native Task closeout", "native_lifecycle_observation"
+	e.Candidate, e.Outcome, e.Data = traceCandidate(c), ptr(actual.State), traceJSON(actual)
+	e.RegisteredAtUTC = r.time(actual.CompletedAtUTC, e.ID)
+	e.Sources = append(e.Sources, FileBinding{path, hash(store)})
 	r.run.Entries = append(r.run.Entries, e)
 }
 
