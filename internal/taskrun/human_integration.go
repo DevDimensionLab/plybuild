@@ -80,6 +80,7 @@ type deliveryOwnershipRelease struct {
 	Origin             string                       `json:"origin"`
 	InvokingExecutable *Executable                  `json:"invoking_executable,omitempty"`
 	ProviderExit       *DeliveryStartupExitEvidence `json:"provider_exit,omitempty"`
+	HumanRecovery      *humanOwnerRecovery          `json:"human_recovery,omitempty"`
 }
 
 // deliveryRelease checks the current candidate and the immutable release event.
@@ -101,7 +102,7 @@ func deliveryRelease(s workflowState, c DeliveryCandidate) (*FileBinding, error)
 	if r.Kind != "PlyDeliveryOwnerRelease@1" || r.SchemaVersion != 1 || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.TaskID != c.TaskResult.TaskID || r.TaskResultID != c.TaskResult.ID || r.ResultOID != c.OID || r.ResultTree != c.Tree || r.SourceRef != c.TaskResult.SourceRef || r.SourceLocator != c.TaskResult.SourceLocator || r.OwnerClaim != s.Request.Delivery.OwnerClaim || r.SessionID != s.Result.SessionID || !plain(r.Reason, 1, 2000) || timeErr != nil {
 		return nil, workflowError(4, "owner_release_invalid: release differs from the exact native candidate or owner")
 	}
-	if r.Origin != "bound_owner_release" && r.Origin != "observed_provider_exit" && r.Origin != "automatic_delivery_completed" || (r.Origin == "bound_owner_release" || r.Origin == "automatic_delivery_completed") && (r.InvokingExecutable == nil || r.ProviderExit != nil) || r.Origin == "observed_provider_exit" && (r.ProviderExit == nil || r.ProviderExit.PaneID != s.Result.Transport.PaneID || r.ProviderExit.TerminalID != s.Result.Transport.TerminalID) {
+	if r.Origin != "bound_owner_release" && r.Origin != "observed_provider_exit" && r.Origin != "automatic_delivery_completed" && r.Origin != "human_absent_owner_recovery" || (r.Origin == "bound_owner_release" || r.Origin == "automatic_delivery_completed") && (r.InvokingExecutable == nil || r.ProviderExit != nil || r.HumanRecovery != nil) || r.Origin == "observed_provider_exit" && (r.HumanRecovery != nil || r.ProviderExit == nil || r.ProviderExit.PaneID != s.Result.Transport.PaneID || r.ProviderExit.TerminalID != s.Result.Transport.TerminalID) {
 		return nil, workflowError(4, "owner_release_invalid: release provenance is incomplete")
 	}
 	if r.Origin == "automatic_delivery_completed" {
@@ -112,8 +113,11 @@ func deliveryRelease(s workflowState, c DeliveryCandidate) (*FileBinding, error)
 			return nil, workflowError(4, "owner_release_invalid: automatic delivery effect remains unresolved")
 		}
 	}
-	for _, event := range s.Result.Delivery.Events {
+	for i, event := range s.Result.Delivery.Events {
 		if event.Kind == "ownership_release" && equal(event.Binding, b) {
+			if r.Origin == "human_absent_owner_recovery" && !validHumanOwnerRecoveryRelease(s, c, r, i) {
+				return nil, workflowError(4, "owner_release_invalid: human recovery does not bind its original preview and absence observation")
+			}
 			return &b, nil
 		}
 	}
@@ -199,18 +203,27 @@ func ReleaseDeliveryOwnership(d Dependencies, root, id, contextPath, reason stri
 		if e != nil {
 			return e
 		}
-		return preserveDeliveryRelease(d, s, c, reason, "bound_owner_release", &Executable{Path: path, SHA256: hash(bytes)}, nil)
+		return preserveDeliveryRelease(d, s, c, reason, "bound_owner_release", &Executable{Path: path, SHA256: hash(bytes)}, nil, nil)
 	})
 	return deliveryReadback(d, root, id, err)
 }
 
-func preserveDeliveryRelease(d Dependencies, s *workflowState, c DeliveryCandidate, reason, origin string, invoker *Executable, exit *DeliveryStartupExitEvidence) error {
-	r := deliveryOwnershipRelease{Kind: "PlyDeliveryOwnerRelease@1", SchemaVersion: 1, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, TaskID: c.TaskResult.TaskID, TaskResultID: c.TaskResult.ID, ResultOID: c.OID, ResultTree: c.Tree, SourceRef: c.TaskResult.SourceRef, SourceLocator: c.TaskResult.SourceLocator, OwnerClaim: s.Request.Delivery.OwnerClaim, SessionID: s.Result.SessionID, Reason: reason, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Origin: origin, InvokingExecutable: invoker, ProviderExit: exit}
+func preserveDeliveryRelease(d Dependencies, s *workflowState, c DeliveryCandidate, reason, origin string, invoker *Executable, exit *DeliveryStartupExitEvidence, recovery *humanOwnerRecovery) error {
+	r := deliveryOwnershipRelease{Kind: "PlyDeliveryOwnerRelease@1", SchemaVersion: 1, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, TaskID: c.TaskResult.TaskID, TaskResultID: c.TaskResult.ID, ResultOID: c.OID, ResultTree: c.Tree, SourceRef: c.TaskResult.SourceRef, SourceLocator: c.TaskResult.SourceLocator, OwnerClaim: s.Request.Delivery.OwnerClaim, SessionID: s.Result.SessionID, Reason: reason, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Origin: origin, InvokingExecutable: invoker, ProviderExit: exit, HumanRecovery: recovery}
 	b, e := deliveryAppendEvent(d, s, fmt.Sprintf("release-%s-%08d", c.Key, len(s.Result.Delivery.Events)+1), "ownership_release", r)
 	if e != nil {
 		return e
 	}
 	s.Result.Delivery.OwnershipRelease = &b
+	if s.Result.Delivery.Phase == "needs_input" {
+		// This native handover supersedes the owner's pending question while
+		// preserving its report in history. The candidate was revalidated above.
+		s.Result.Delivery.Phase = "awaiting_human_qa"
+		if c.HumanQA != nil && c.HumanQA.Outcome == "pass" {
+			s.Result.Delivery.Phase = "human_qa_passed"
+		}
+		s.Result.Round.State = s.Result.Delivery.Phase
+	}
 	s.Result.NextAction = WorkflowAction{"user", "The owner released the exact source candidate. Start ply integration from an existing return checkout and confirm its visible plan."}
 	return nil
 }
@@ -285,7 +298,7 @@ func ReleaseExitedDeliveryOwnership(d Dependencies, root, id string, resultID wo
 		if e != nil {
 			return workflowError(4, "owner_active: exact provider exit is unproved; the active owner must explicitly release, or resolve its preserved terminal and process state")
 		}
-		return preserveDeliveryRelease(d, s, a.Candidate, "The exact provider has ended; human-started ownership release preserves its native process observation.", "observed_provider_exit", nil, &exit)
+		return preserveDeliveryRelease(d, s, a.Candidate, "The exact provider has ended; human-started ownership release preserves its native process observation.", "observed_provider_exit", nil, &exit, nil)
 	})
 	return deliveryReadback(d, root, id, err)
 }

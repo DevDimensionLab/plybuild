@@ -121,7 +121,7 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		if e != nil {
 			return e
 		}
-		if e = preserveDeliveryRelease(d, current, c, "Automatic local integration, queue closure and Epic base update are observed. Release source writing ownership for native closeout while retaining its worktree and branch.", "automatic_delivery_completed", &Executable{Path: path, SHA256: hash(bytes)}, nil); e != nil {
+		if e = preserveDeliveryRelease(d, current, c, "Automatic local integration, queue closure and Epic base update are observed. Release source writing ownership for native closeout while retaining its worktree and branch.", "automatic_delivery_completed", &Executable{Path: path, SHA256: hash(bytes)}, nil, nil); e != nil {
 			return e
 		}
 		current.Result.NextAction = WorkflowAction{"recipient", "Finish native Task closeout for the observed automatic delivery; retain the source worktree and branch. Resume the same operation after interruption."}

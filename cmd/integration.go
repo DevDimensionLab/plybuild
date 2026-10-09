@@ -289,18 +289,43 @@ func integrationExit(r integration.Receipt) error {
 }
 
 func newIntegrationReleaseCommand(s *integration.Service) *cobra.Command {
-	var deliveryID, taskID, format, actor string
-	var check bool
-	c := &cobra.Command{Use: "release", Short: "Preserve ownership release after a positively observed owner exit", Long: "For an existing Delivery, positively observe its native provider exit before releasing the exact candidate. An active, idle or unknown provider is not released. For one integrated legacy Task, check known owners and preserve the caller's explicit ownership release; this records neither new QA nor integration.", Args: cobra.NoArgs, RunE: func(c *cobra.Command, _ []string) error {
+	var deliveryID, taskID, format, actor, observation string
+	var check, recoverOwner bool
+	c := &cobra.Command{Use: "release", Short: "Release an exact candidate for human integration", Long: "For an existing Delivery, positively observe its native provider exit before releasing the exact candidate. If its Herdr pane was closed, --recover checks known writers and asks the human to confirm all writers are stopped and revoke the absent owner's authority. An idle agent or missing pane alone is not release. For one integrated legacy Task, check known owners and preserve the caller's explicit ownership release. Release records neither QA nor integration.", Args: cobra.NoArgs, RunE: func(c *cobra.Command, _ []string) error {
 		if e := executeFormat(format); e != nil {
 			return e
 		}
 		if (deliveryID == "") == (taskID == "") {
 			return workspace.WorkInvalidArguments("choose exactly one --delivery or --task")
 		}
+		if recoverOwner && deliveryID == "" {
+			return workspace.WorkInvalidArguments("--recover requires --delivery")
+		}
 		cwd, e := os.Getwd()
 		if e != nil {
 			return e
+		}
+		if recoverOwner {
+			p, e := s.PreviewOwnerRecovery(cwd, deliveryID)
+			if e != nil {
+				return e
+			}
+			if check || p.State == "released" {
+				return writeDeliveryOutput(c, format, p, fmt.Sprintf("Ownership recovery: %s\nCandidate: %s\nSource: %s\n%s\n", p.State, p.CandidateOID, p.SourceLocator, p.NextAction))
+			}
+			if _, e = fmt.Fprintf(c.ErrOrStderr(), "Delivery %s, candidate %s, source %s. The bound Herdr pane is absent; known writer checks passed, but absence does not prove every process has exited. Confirm you stopped all writers and revoke the old owner's authority. This grants no QA or integration. Type released: ", deliveryID, p.CandidateOID, p.SourceLocator); e != nil {
+				return e
+			}
+			started := time.Now().UTC().Format(time.RFC3339Nano)
+			answer, e := readExactHumanLine(c.InOrStdin())
+			if e != nil {
+				return e
+			}
+			r, e := s.RecoverOwner(cwd, deliveryID, taskrun.HumanOwnerRecoveryAnswer{Confirmation: p.Confirmation, Actor: actor, Answer: answer, Observation: observation, StartedAtUTC: started, CompletedAtUTC: time.Now().UTC().Format(time.RFC3339Nano)})
+			if e != nil {
+				return e
+			}
+			return writeExecuteResult(c, format, r)
 		}
 		if check {
 			p, e := s.Preview(cwd, integration.Selection{DeliveryID: deliveryID, TaskID: taskID, Reconcile: taskID != "", Keep: true})
@@ -335,6 +360,8 @@ func newIntegrationReleaseCommand(s *integration.Service) *cobra.Command {
 	c.Flags().StringVar(&deliveryID, "delivery", "", "Delivery whose exact provider exit can be observed")
 	c.Flags().StringVar(&taskID, "task", "", "one already integrated legacy Task")
 	c.Flags().StringVar(&actor, "actor", "Local integration caller", "actual caller's actor claim")
+	c.Flags().StringVar(&observation, "observation", "", "human observation preserved with --recover")
+	c.Flags().BoolVar(&recoverOwner, "recover", false, "explicit human release after a closed Herdr pane, with fresh known-writer checks")
 	c.Flags().BoolVar(&check, "check", false, "inspect release readiness without writes")
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	return c
