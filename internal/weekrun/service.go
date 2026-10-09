@@ -50,13 +50,20 @@ func serviceInstalled(b Binding) bool {
 }
 func wakeService(b Binding) error { return wakeServiceUsing(b, runLaunchctl) }
 func wakeServiceUsing(b Binding, ctl Launchctl) error {
+	st, err := ServiceReadback(b, ctl)
+	if err != nil {
+		return err
+	}
+	if st.State == "absent" {
+		return fmt.Errorf("managed service is not installed")
+	}
 	target := serviceDomain() + "/" + serviceLabel(b)
-	if _, err := ctl("print", target); err != nil {
+	if st.State == "installed" {
 		_, err = ctl("bootstrap", serviceDomain(), servicePath(b))
 		return err
 	}
 	// No -k: an active controller must never be killed to process a control.
-	_, err := ctl("kickstart", target)
+	_, err = ctl("kickstart", target)
 	return err
 }
 func escape(s string) string {
@@ -169,6 +176,13 @@ func (m Manager) Service(root, id, action string) (ServiceStatus, error) {
 			err = wakeServiceUsing(b, ctl)
 		}
 	case "stop", "uninstall":
+		st, e := ServiceReadback(b, ctl)
+		if e != nil {
+			return st, e
+		}
+		if st.State == "absent" {
+			return st, nil
+		}
 		// Publication of the worker's stop request must precede unloading launchd.
 		// Its native supervisor independently waits for the current attempt boundary.
 		_, err = m.Control(root, id, "stop")

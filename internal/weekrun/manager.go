@@ -67,14 +67,7 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	id := contractID(c)
 	dir, _ := runDir(c.Workspace, id)
 	if _, err := os.Lstat(filepath.Join(dir, "binding.json")); err == nil {
-		b, _, err := readBinding(c.Workspace, id)
-		if err != nil {
-			return State{}, err
-		}
-		if b.SHA256 != hash(canonical(c)) {
-			return State{}, fmt.Errorf("week name already binds a different contract")
-		}
-		return m.Show(c.Workspace, id)
+		return m.existingStart(c, check)
 	} else if !os.IsNotExist(err) {
 		return State{}, err
 	}
@@ -95,10 +88,7 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	}
 	now := m.now()
 	b := Binding{Contract: c, SHA256: hash(canonical(c)), ID: id, StartedAt: stamp(now), Deadline: stamp(now.Add(time.Duration(c.DurationSeconds) * time.Second))}
-	s := State{Kind: "ply.workflow.week", SchemaVersion: 1, ID: id, ContractSHA256: b.SHA256, Phase: "ready", StartedAt: b.StartedAt, Deadline: b.Deadline, LastProgressAt: b.StartedAt, UpdatedAt: b.StartedAt, NextAction: "Start only the selected native Goals", DesiredAction: "continue", Entries: []Entry{}}
-	for _, sel := range c.Selected {
-		s.Entries = append(s.Entries, Entry{TaskID: sel.TaskID, State: "pending"})
-	}
+	s := initialState(b)
 	if check {
 		return s, nil
 	}
@@ -120,6 +110,9 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 			continue
 		}
 		other, od, e2 := readBinding(c.Workspace, e.Name())
+		if os.IsNotExist(e2) {
+			continue
+		}
 		if e2 != nil {
 			return s, e2
 		}
@@ -165,6 +158,73 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	return s, nil
 }
 
+func initialState(b Binding) State {
+	s := State{Kind: "ply.workflow.week", SchemaVersion: 1, ID: b.ID, ContractSHA256: b.SHA256, Phase: "ready", StartedAt: b.StartedAt, Deadline: b.Deadline, LastProgressAt: b.StartedAt, UpdatedAt: b.StartedAt, NextAction: "Start only the selected native Goals", DesiredAction: "continue", Entries: []Entry{}}
+	for _, sel := range b.Contract.Selected {
+		s.Entries = append(s.Entries, Entry{TaskID: sel.TaskID, State: "pending"})
+	}
+	return s
+}
+
+// A first registration can die between its two publications. No scheduler may
+// act until state exists; its first Tick publishes an activity marker before
+// native effects. Only that provably unstarted gap can reconstruct initial state.
+func (m Manager) existingStart(c Contract, check bool) (State, error) {
+	b, dir, err := readBinding(c.Workspace, contractID(c))
+	if err != nil {
+		return State{}, err
+	}
+	if b.SHA256 != hash(canonical(c)) {
+		return State{}, fmt.Errorf("week name already binds a different contract")
+	}
+	if _, err = readState(b, dir); err == nil {
+		return m.Show(c.Workspace, b.ID)
+	} else if !os.IsNotExist(err) {
+		return State{}, err
+	}
+	if _, err = os.Lstat(filepath.Join(dir, "execution-started.json")); err == nil {
+		return State{}, fmt.Errorf("week state is missing after execution began; inspect native effects before recovery")
+	} else if !os.IsNotExist(err) {
+		return State{}, err
+	}
+	if check {
+		return State{}, fmt.Errorf("initial week state is incomplete; repeat the same start to recover its original binding")
+	}
+	guard, err := lock(filepath.Join(filepath.Dir(dir), "registration.lock"))
+	if err != nil {
+		return State{}, err
+	}
+	defer guard.Close()
+	if _, err = readState(b, dir); err == nil {
+		return m.Show(c.Workspace, b.ID)
+	} else if !os.IsNotExist(err) {
+		return State{}, err
+	}
+	if err = verifyControl(b); err != nil {
+		return State{}, err
+	}
+	q, err := m.Native.Queue(c)
+	if err != nil {
+		return State{}, err
+	}
+	if err = validateQueue(c, q); err != nil {
+		return State{}, err
+	}
+	if q.Current != nil {
+		return State{}, fmt.Errorf("initial state recovery found native activity")
+	}
+	for _, sel := range c.Selected {
+		if _, err = selectedRow(c, sel, q); err != nil {
+			return State{}, err
+		}
+	}
+	s := initialState(b)
+	if err = publish(filepath.Join(dir, "state.json"), s, false); err != nil {
+		return s, err
+	}
+	return s, nil
+}
+
 func (m Manager) Show(root, id string) (State, error) {
 	b, dir, err := readBinding(root, id)
 	if err != nil {
@@ -179,6 +239,20 @@ func (m Manager) Show(root, id string) (State, error) {
 		s.OwnerState = "not_started"
 	} else {
 		s.OwnerState = ownerState(dir)
+	}
+	if (s.OwnerState == "unowned" || s.OwnerState == "not_started") && s.ActiveTaskID != "" && s.DesiredAction != "continue" {
+		ix := entryIndex(&s, s.ActiveTaskID)
+		if ix >= 0 && s.Entries[ix].RunID != "" {
+			run, e := m.Native.Observe(b.Contract, s.Entries[ix].RunID)
+			if e != nil {
+				return s, e
+			}
+			if run.Phase == "paused" || run.Phase == "stopped" || run.Completed {
+				deadline, _ := time.Parse(time.RFC3339Nano, b.Deadline)
+				s.Phase = parkPhase(s.DesiredAction, !m.now().Before(deadline))
+				s.NextAction = "Native worker reached its confirmed boundary; the controller will reconcile preserved work on resume"
+			}
+		}
 	}
 	var c Control
 	if e := readJSON(filepath.Join(dir, "control.json"), &c); e == nil && c.ID != s.SeenControl {
@@ -264,6 +338,9 @@ func (m Manager) recordControl(dir string, s *State) error {
 // Tick is called under the week and Epic ownership locks by Serve. It writes a
 // launch intent before invoking native Execute; a restart reuses that same Goal.
 func (m Manager) Tick(b Binding, dir string, s *State) error {
+	if err := publish(filepath.Join(dir, "execution-started.json"), map[string]string{"id": b.ID, "contract_sha256": b.SHA256}, false); err != nil {
+		return err
+	}
 	if err := m.recordControl(dir, s); err != nil {
 		return err
 	}
@@ -357,7 +434,14 @@ func (m Manager) Tick(b Binding, dir string, s *State) error {
 				if _, er = m.Native.Control(b.Contract, e.RunID, action); er != nil {
 					return er
 				}
+			} else if (run.OwnerState == "unowned" || run.OwnerState == "not_started") && (run.SupervisorState == "unowned" || run.SupervisorState == "not_started") {
+				if _, er = m.Native.Resume(b.Contract, e.RunID, false); er != nil {
+					return er
+				}
+			} else if run.OwnerState != "lock_held" && run.SupervisorState != "lock_held" {
+				return fmt.Errorf("native worker control ownership is unknown")
 			}
+
 			s.Phase = "stopping"
 			if action == "pause" {
 				s.Phase = "pausing"
@@ -367,6 +451,12 @@ func (m Manager) Tick(b Binding, dir string, s *State) error {
 		}
 		if run.Phase == "blocked" {
 			if run.Releasable {
+				if run.OwnerState == "lock_held" {
+					s.Phase = "running"
+					s.Reason = run.Reason
+					s.NextAction = "Wait for the concretely blocked native controller to release its process lock"
+					return m.save(b, dir, s)
+				}
 				// The native adapter reacquires the worker lock and proves result/process
 				// quiescence before this irreversible native queue release.
 				e.State = "blocked"
@@ -409,7 +499,7 @@ func (m Manager) Tick(b Binding, dir string, s *State) error {
 				return er
 			}
 			s.ResumeRequested = false
-		} else if (run.OwnerState == "unowned" || run.OwnerState == "not_started") && run.SupervisorState != "lock_held" {
+		} else if (run.OwnerState == "unowned" || run.OwnerState == "not_started") && (run.SupervisorState == "unowned" || run.SupervisorState == "not_started") {
 			// false recovers supervision without clearing a native blocker or control.
 			if _, er = m.Native.Resume(b.Contract, e.RunID, false); er != nil {
 				return er
@@ -577,7 +667,11 @@ func terminal(s State) bool {
 // Serve owns one controller and one Epic lock. A signal/process death releases
 // only the scheduler; native worker ownership and receipts survive separately.
 func (m Manager) Serve(ctx context.Context, root, id string) error {
-	return m.serve(ctx, root, id, false)
+	err := m.serve(ctx, root, id, false)
+	if errors.Is(err, errOwned) {
+		return nil
+	}
+	return err
 }
 func (m Manager) serve(ctx context.Context, root, id string, service bool) error {
 	b, dir, err := readBinding(root, id)
@@ -588,13 +682,15 @@ func (m Manager) serve(ctx context.Context, root, id string, service bool) error
 		return err
 	}
 	owner, err := lock(filepath.Join(dir, "owner.lock"))
-	if errors.Is(err, errOwned) {
-		return nil
-	}
 	if err != nil {
 		return err
 	}
 	defer owner.Close()
+	if service {
+		if e := os.Remove(filepath.Join(dir, "handover.json")); e != nil && !os.IsNotExist(e) {
+			return e
+		}
+	}
 	targetKey := strings.TrimPrefix(hash(canonical(b.Contract.Target())), "sha256:")
 	target, err := lock(filepath.Join(filepath.Dir(dir), "epic-"+targetKey+".lock"))
 	if err != nil {
@@ -626,10 +722,24 @@ func (m Manager) serve(ctx context.Context, root, id string, service bool) error
 			s.Reason = err.Error()
 			s.NextAction = "Inspect native effects before resuming the same week"
 			_ = m.save(b, dir, &s)
-			return err
+			exited, exitErr := exitAtBoundary(dir, s, owner, target)
+			if exitErr != nil {
+				return exitErr
+			}
+			if exited {
+				return err
+			}
+			continue
 		}
 		if terminal(s) {
-			return nil
+			exited, e := exitAtBoundary(dir, s, owner, target)
+			if e != nil {
+				return e
+			}
+			if exited {
+				return nil
+			}
+			continue
 		}
 		delay := time.Second * 3
 		if s.ActiveTaskID != "" {
@@ -645,4 +755,32 @@ func (m Manager) serve(ctx context.Context, root, id string, service bool) error
 		case <-time.After(delay):
 		}
 	}
+}
+
+// Serialize release with control publication: a new request either remains for
+// this owner to consume or observes both locks released and launches its successor.
+func exitAtBoundary(dir string, s State, owner, target *os.File) (bool, error) {
+	guard, err := lock(filepath.Join(dir, "control.lock"))
+	if errors.Is(err, errOwned) {
+		time.Sleep(10 * time.Millisecond)
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	defer guard.Close()
+	var c Control
+	if err = readJSON(filepath.Join(dir, "control.json"), &c); err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+	if err == nil && c.ID != s.SeenControl {
+		return false, nil
+	}
+	if err = target.Close(); err != nil {
+		return false, err
+	}
+	if err = owner.Close(); err != nil {
+		return false, err
+	}
+	return true, nil
 }

@@ -526,3 +526,150 @@ func TestWeekOwnedControllerDoesNotDuplicateEffects(t *testing.T) {
 		t.Fatal("duplicate writer")
 	}
 }
+
+func TestWeekStartupRecoversBindingBeforeInitialStateWithoutExtendingDeadline(t *testing.T) {
+	f := newFixture(t, selection("first"))
+	deadline := f.b.Deadline
+	started := f.b.StartedAt
+	if err := os.Remove(filepath.Join(f.dir, "state.json")); err != nil {
+		t.Fatal(err)
+	}
+	*f.now = f.now.Add(10 * time.Minute)
+	s, err := f.m.Start(f.c, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Deadline != deadline || s.StartedAt != started || s.Entries[0].State != "pending" || len(f.n.starts) != 0 {
+		t.Fatal("startup recovery changed authority", s)
+	}
+}
+func TestWeekUnboundStartupDirectoryDoesNotPoisonOtherNames(t *testing.T) {
+	f := newFixture(t)
+	f.tick(t)
+	if err := directory(filepath.Join(filepath.Dir(f.dir), "week_deadbeef")); err != nil {
+		t.Fatal(err)
+	}
+	c := f.c
+	c.Name = "another-selected-week"
+	if _, err := f.m.Start(c, false); err != nil {
+		t.Fatal("unbound directory poisoned native selection", err)
+	}
+}
+
+type queueControlNative struct {
+	Native
+	once func()
+}
+
+func (n *queueControlNative) Queue(c Contract) (workspace.WorkspaceTaskQueueReadback, error) {
+	q, err := n.Native.Queue(c)
+	if n.once != nil {
+		fn := n.once
+		n.once = nil
+		fn()
+	}
+	return q, err
+}
+func TestWeekControlAtControllerExitIsNotLost(t *testing.T) {
+	f := newFixture(t)
+	n := &queueControlNative{Native: f.n}
+	f.m.Native = n
+	f.m.Launch = func(b Binding) error {
+		if ownerState(f.dir) != "lock_held" {
+			t.Fatal("repro requires existing controller at launch check")
+		}
+		return nil
+	}
+	n.once = func() { f.control(t, "stop") }
+	if err := f.m.Serve(context.Background(), f.c.Workspace, f.s.ID); err != nil {
+		t.Fatal(err)
+	}
+	f.reload(t)
+	if f.s.Phase != "stopped" || f.s.DesiredAction != "stop" {
+		t.Fatal("control was lost between terminal decision and owner release", f.s)
+	}
+}
+func TestWeekShowProjectsNativeStopAfterServiceUnloads(t *testing.T) {
+	f := newFixture(t, selection("first"))
+	f.tick(t)
+	f.tick(t)
+	f.control(t, "stop")
+	f.tick(t)
+	before, err := os.ReadFile(filepath.Join(f.dir, "state.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := f.n.runs["first"]
+	r.Phase = "stopped"
+	r.OwnerState = "unowned"
+	f.n.runs["first"] = r
+	s, err := f.m.Show(f.c.Workspace, f.s.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Phase != "stopped" || s.Entries[0].RunID != "run-first" {
+		t.Fatal("readback hides native confirmed stop", s)
+	}
+	after, _ := os.ReadFile(filepath.Join(f.dir, "state.json"))
+	if string(before) != string(after) {
+		t.Fatal("show wrote operational state")
+	}
+}
+
+func TestWeekConcreteBlockWaitsForNativeOwnerBeforeRelease(t *testing.T) {
+	f := newFixture(t, selection("first"), selection("independent"))
+	f.tick(t)
+	f.tick(t)
+	r := f.n.runs["first"]
+	r.Phase = "blocked"
+	r.Releasable = true
+	r.Reason = "worker reached its explicit limit"
+	r.OwnerState = "lock_held"
+	f.n.runs["first"] = r
+	f.tick(t)
+	if f.s.Phase == "blocked" || len(f.n.released) != 0 {
+		t.Fatal("ordinary native lock release boundary became a terminal blocker", f.s)
+	}
+	r.OwnerState = "unowned"
+	f.n.runs["first"] = r
+	f.tick(t)
+	f.tick(t)
+	f.tick(t)
+	if !reflect.DeepEqual(f.n.starts, []workspace.TaskID{"first", "independent"}) {
+		t.Fatal("required mechanical resume after ordinary native exit", f.n.starts)
+	}
+}
+
+func TestWeekRestoresLostSupervisorForPreservedStopRequest(t *testing.T) {
+	f := newFixture(t, selection("first"))
+	f.tick(t)
+	f.tick(t)
+	f.control(t, "stop")
+	f.tick(t)
+	r := f.n.runs["first"]
+	r.ControlAction = "stop"
+	r.OwnerState = "unowned"
+	r.SupervisorState = "unowned"
+	f.n.runs["first"] = r
+	f.reload(t)
+	f.tick(t)
+	f.tick(t)
+	if !reflect.DeepEqual(f.n.resumes, []bool{false}) || len(f.n.starts) != 1 || f.s.Entries[0].RunID != "run-first" {
+		t.Fatal("persisted stop lost native supervision", f.n.resumes, f.s)
+	}
+}
+
+func TestWeekMissingStateAfterExecutionCannotRecreateSelection(t *testing.T) {
+	f := newFixture(t, selection("first"))
+	f.tick(t)
+	f.tick(t)
+	if err := os.Remove(filepath.Join(f.dir, "state.json")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.m.Start(f.c, false); err == nil {
+		t.Fatal("lost operational state silently recreated an active selection")
+	}
+	if len(f.n.starts) != 1 {
+		t.Fatal("recovery duplicated native work")
+	}
+}

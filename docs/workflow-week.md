@@ -69,7 +69,8 @@ changing its contract under that name is rejected. Empty selection completes
 without starting work. Later queue additions never expand this selection.
 
 Without `--service`, a detached controller survives closure of its launching
-terminal. `--service` installs and starts the named per-user launchd service
+terminal. Detached recovery uses the same captured login environment as launchd;
+a later shell cannot silently select a different HOME, CODEX_HOME or PATH. `--service` installs and starts the named per-user launchd service
 immediately, using the copied executable. Neither mode publishes or installs a
 worker's product candidate; native local Epic return is the authorized effect.
 
@@ -90,7 +91,13 @@ proof that a controller lives. Files are under
 `WORKSPACE/.ply/week-runs/WEEK_ID/`; `binding.json` preserves the immutable
 contract/control, while `state.json` and `control.json` preserve observations and
 control requests. Native `workflow worker show RUN_ID` gives detailed attempt
-and reset evidence.
+and reset evidence. If the service has unloaded, show reads the active worker
+to report its confirmed pause/stop boundary without writing an observation.
+
+An interrupted first registration can recover an immutable binding whose initial
+state was not yet published, preserving its original deadline. An activity marker
+is written before operational execution; missing state after that point is an
+integrity error requiring inspection, never permission to recreate Task/Run work.
 
 Pause and stop publish a request to the active native worker. An ongoing attempt
 must finish with positive process and result evidence before the week reports
@@ -144,7 +151,8 @@ acknowledge that native worker control is published, then unloads launchd. The
 native worker can still be finishing its current attempt. If acknowledgment is
 not observed within 25 seconds, the service stays loaded and the CLI reports the
 preserved pending request. Uninstall uses the same stop boundary and removes
-only this exact managed plist; native history, product worktrees, frozen
+only this exact managed plist; every wake and stop validates its frozen contents
+before launchctl effects. Native history, product worktrees, frozen
 controls and evidence remain. Service status reports whether the plist is
 installed, loaded or running and its observed launchd PID.
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"syscall"
 	"time"
 )
@@ -40,6 +41,17 @@ func launchDetached(b Binding) error {
 	defer log.Close()
 	cmd := exec.Command(b.Control.Path, "workflow", "week", "_serve", b.ID, "--workspace", b.Contract.Workspace)
 	cmd.Dir = b.Contract.ReturnWorktree
+	keys := []string{}
+	for k := range b.Environment {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	cmd.Env = []string{}
+	for _, k := range keys {
+		if b.Environment[k] != "" {
+			cmd.Env = append(cmd.Env, k+"="+b.Environment[k])
+		}
+	}
 	cmd.Stdout = log
 	cmd.Stderr = log
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
@@ -62,18 +74,9 @@ func (m Manager) Supervise(ctx context.Context, root, id string) error {
 		if err = ctx.Err(); err != nil {
 			return err
 		}
-		if ownerState(dir) != "lock_held" {
-			if e := os.Remove(filepath.Join(dir, "handover.json")); e != nil && !os.IsNotExist(e) {
-				return e
-			}
-			return m.serve(ctx, root, id, true)
-		}
-		s, e := m.Show(root, id)
-		if e != nil {
-			return e
-		}
-		if terminal(s) {
-			return nil
+		err = m.serve(ctx, root, id, true)
+		if !errors.Is(err, errOwned) {
+			return err
 		}
 		// A detached controller observes this request between native API effects.
 		if err = publish(filepath.Join(dir, "handover.json"), map[string]string{"service": serviceLabel(b)}, true); err != nil {

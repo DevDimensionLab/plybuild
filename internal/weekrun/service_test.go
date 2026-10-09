@@ -1,6 +1,7 @@
 package weekrun
 
 import (
+	"context"
 	"encoding/xml"
 	"errors"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestWeekPlistBindsFrozenControlAndLoginEnvironment(t *testing.T) {
@@ -137,5 +139,88 @@ func TestWeekServiceRefusesDifferentPlist(t *testing.T) {
 	_, err := ServiceReadback(f.b, func(...string) (string, error) { calls++; return "", nil })
 	if err == nil || calls != 0 {
 		t.Fatal("mismatched plist was accepted or observed through launchctl", err, calls)
+	}
+}
+
+func TestWeekWakeRejectsChangedPlistBeforeLaunchctl(t *testing.T) {
+	f := newFixture(t)
+	f.b.Environment = map[string]string{"HOME": f.c.Workspace}
+	path := servicePath(f.b)
+	if err := directory(filepath.Dir(path)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte("unrelated command"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	calls := 0
+	err := wakeServiceUsing(f.b, func(...string) (string, error) { calls++; return "", nil })
+	if err == nil || calls != 0 {
+		t.Fatal("changed plist reached launchctl", err, calls)
+	}
+}
+
+func TestWeekDetachedRecoveryUsesFrozenLoginEnvironment(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix process adapter")
+	}
+	f := newFixture(t)
+	other := filepath.Join(f.c.Workspace, "other-account")
+	if err := os.Mkdir(other, 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", other)
+	t.Setenv("PATH", "/changed/path")
+	t.Setenv("CODEX_HOME", "/changed/account")
+	f.b.Environment = map[string]string{"HOME": f.c.Workspace, "PATH": "/usr/bin:/bin", "CODEX_HOME": "/original/account"}
+	path := filepath.Join(f.c.Workspace, "env-control")
+	script := "#!/bin/sh\nprintf '%s\\n%s\\n%s\\n' \"$HOME\" \"$PATH\" \"${CODEX_HOME-unset}\" > \"$HOME/observed-env\"\n"
+	if err := os.WriteFile(path, []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	var err error
+	f.b.Control, err = executable(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = launchDetached(f.b); err != nil {
+		t.Fatal(err)
+	}
+	until := time.Now().Add(time.Second)
+	var data []byte
+	for time.Now().Before(until) {
+		data, err = os.ReadFile(filepath.Join(f.c.Workspace, "observed-env"))
+		if err == nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	if string(data) != f.c.Workspace+"\n/usr/bin:/bin\n/original/account\n" {
+		t.Fatal("detached recovery changed login environment", string(data), err)
+	}
+}
+func TestWeekServiceWaitsForTerminalOwnerWithPendingResume(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix locks")
+	}
+	f := newFixture(t)
+	f.tick(t)
+	owner, err := lock(filepath.Join(f.dir, "owner.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.control(t, "resume")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	go func() { time.Sleep(20 * time.Millisecond); owner.Close() }()
+	if err = f.m.Supervise(ctx, f.c.Workspace, f.s.ID); err != nil {
+		t.Fatal(err)
+	}
+	f.reload(t)
+	var ctrl Control
+	if err = readJSON(filepath.Join(f.dir, "control.json"), &ctrl); err != nil {
+		t.Fatal(err)
+	}
+	if f.s.SeenControl != ctrl.ID {
+		t.Fatal("launchd supervision exited before the pending resume was consumed", f.s)
 	}
 }
