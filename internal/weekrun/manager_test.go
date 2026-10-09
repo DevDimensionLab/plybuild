@@ -673,3 +673,32 @@ func TestWeekMissingStateAfterExecutionCannotRecreateSelection(t *testing.T) {
 		t.Fatal("recovery duplicated native work")
 	}
 }
+
+func TestWeekConcurrentFirstStartRejectsDifferentContract(t *testing.T) {
+	f := newFixture(t)
+	f.tick(t)
+	outer := f.c
+	outer.Name = "racing-start"
+	inner := outer
+	inner.DurationSeconds = 7200
+	n := &queueControlNative{Native: f.n}
+	f.m.Native = n
+	var winner State
+	n.once = func() {
+		var err error
+		winner, err = f.m.Start(inner, false)
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got, err := f.m.Start(outer, false); err == nil {
+		t.Fatal("concurrent start accepted a different frozen contract", got.ContractSHA256, winner.ContractSHA256)
+	}
+	got, err := f.m.Show(inner.Workspace, winner.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ContractSHA256 != hash(canonical(inner)) || got.Deadline != winner.Deadline {
+		t.Fatal("winning contract was altered", got)
+	}
+}

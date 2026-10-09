@@ -129,6 +129,13 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	}
 	// The registration lock also serializes identical first starts.
 	if _, err = os.Lstat(filepath.Join(dir, "binding.json")); err == nil {
+		existing, _, e := readBinding(c.Workspace, id)
+		if e != nil {
+			return s, e
+		}
+		if existing.SHA256 != hash(canonical(c)) {
+			return s, fmt.Errorf("week name was concurrently bound to a different contract")
+		}
 		return m.Show(c.Workspace, id)
 	} else if !os.IsNotExist(err) {
 		return s, err
