@@ -1392,6 +1392,19 @@
             "usage": "output format (text or json)"
           },
           {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "headless",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "start one durable Codex worker for an automatic local Epic goal without a terminal"
+          },
+          {
             "annotations": {
               "cobra_annotation_flag_set_by_cobra": [
                 "true"
@@ -1511,6 +1524,45 @@
             "shorthand_deprecated": "",
             "type": "string",
             "usage": "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected"
+          },
+          {
+            "annotations": {},
+            "default": "3",
+            "deprecated": "",
+            "hidden": false,
+            "name": "worker-attempts",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "maximum development attempts for --headless (1-20)"
+          },
+          {
+            "annotations": {},
+            "default": "20",
+            "deprecated": "",
+            "hidden": false,
+            "name": "worker-retries",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "maximum persisted provider usage-limit retries (1-1000); no model or account switch"
+          },
+          {
+            "annotations": {},
+            "default": "1800",
+            "deprecated": "",
+            "hidden": false,
+            "name": "worker-timeout",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "int",
+            "usage": "seconds per headless provider attempt (10-86400)"
           }
         ],
         "has_args_validator": true,
@@ -1519,7 +1571,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+        "long": "From the registered return worktree, use --headless for a durable one-Spec Codex worker on macOS. It requires an explicitly automatic local Epic agreement, uses the assigned model and effort with existing account login, and performs developer, sandboxed tests, independent read-only review, bounded corrections and native local delivery. It has no terminal dependency and performs no remote push. Control it with workflow worker show/pause/stop/resume. Pause and stop finish the active attempt before preserving a boundary. Unknown attempts remain blocked. Without --headless, from a Herdr terminal, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
         "path": "ply workflow execute",
         "runnable": true,
         "short": "Deliver the next goal from this Epic with its assigned agent",
@@ -9673,6 +9725,138 @@
             "shorthand": "h",
             "shorthand_deprecated": "",
             "type": "bool",
+            "usage": "help for service"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week service",
+        "runnable": false,
+        "short": "Install, observe, start, stop or remove this week's named launchd service",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "service"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week service"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for week"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Preserve selected Task/Goal revisions, dependencies, model, return target and a deadline up to seven days. Native workers own development, tests, review and local return. The week controller chooses only approved work, continues independent work after proven blockers, and preserves active Run identity after interruption. No human test gate, global provider settings, push or notification is added.",
+        "path": "ply workflow week",
+        "runnable": false,
+        "short": "Run an explicitly selected set of native Goals through automatic local delivery",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "week"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for worker"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Start with workflow execute --headless. Worker show is read-only. Pause and stop request a preserved boundary after the active attempt ends; resume continues the same Task and native Run. A live attempt retains the owner lock when its controller exits. Unknown effects remain blocked.",
+        "path": "ply workflow worker",
+        "runnable": false,
+        "short": "Observe and control a durable one-Spec headless worker",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "worker"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
             "usage": "help for worktree"
           }
         ],
@@ -10436,6 +10620,539 @@
         "flags": [
           {
             "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "check",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "validate selected native bindings without writes or startup"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_bash_completion_one_required_flag": [
+                "true"
+              ]
+            },
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute JSON week contract path"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for start"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "service",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "install and bootstrap a named per-user launchd service using the frozen control"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week start",
+        "runnable": true,
+        "short": "Bind selected Goals and start the durable local controller",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "start"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week start"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for _attempt"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "job",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "immutable native attempt ID"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": true,
+        "long": "",
+        "path": "ply workflow worker _attempt",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "_attempt <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker _attempt"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for _serve"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": true,
+        "long": "",
+        "path": "ply workflow week _serve",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "_serve WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week _serve"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for _serve"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": true,
+        "long": "",
+        "path": "ply workflow worker _serve",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "_serve <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker _serve"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for _supervise"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": true,
+        "long": "",
+        "path": "ply workflow week _supervise",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "_supervise WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week _supervise"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for _supervise"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": true,
+        "long": "",
+        "path": "ply workflow worker _supervise",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "_supervise <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker _supervise"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for install"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week service install",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "install WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week service install"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
             "default": "text",
             "deprecated": "",
             "hidden": false,
@@ -10545,6 +11262,286 @@
             "shorthand": "h",
             "shorthand_deprecated": "",
             "type": "bool",
+            "usage": "help for pause"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week pause",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "pause WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week pause"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for pause"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow worker pause",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "pause <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker pause"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for resume"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week resume",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "resume WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week resume"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for resume"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow worker resume",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "resume <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker resume"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
             "usage": "help for scan"
           },
           {
@@ -10616,6 +11613,146 @@
             "shorthand_deprecated": "",
             "type": "bool",
             "usage": "help for show"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week show",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow worker show",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "show <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for show"
           }
         ],
         "has_args_validator": true,
@@ -10634,6 +11771,426 @@
       },
       "kind": "command_added",
       "path": "ply integration show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for start"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week service start",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "start WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week service start"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for status"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week service status",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "status WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week service status"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for stop"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week service stop",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "stop WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week service stop"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for stop"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week stop",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "stop WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week stop"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for stop"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow worker stop",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "stop <run-id>"
+      },
+      "kind": "command_added",
+      "path": "ply workflow worker stop"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for uninstall"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (default: containing workspace)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "",
+        "path": "ply workflow week service uninstall",
+        "runnable": true,
+        "short": "",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "uninstall WEEK_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow week service uninstall"
     },
     {
       "after": {

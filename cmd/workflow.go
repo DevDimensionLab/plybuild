@@ -22,6 +22,7 @@ func newWorkflowCommand(dependencies workflowhandoff.Dependencies) *cobra.Comman
 	command.AddCommand(newWorkflowRunCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
 	command.AddCommand(newWorkflowExecuteCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
 	command.AddCommand(newWorkflowWorkerCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
+	command.AddCommand(newWorkflowWeekCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
 	command.AddCommand(newWorkflowDeliveryCommandWithFactory(func(preferencesPath string) workflowDeliveryService {
 		return delivery.NewService(taskrun.SystemDependencies(workspace.SystemDependencies()), delivery.Options{PreferencesPath: preferencesPath})
 	}))
