@@ -103,7 +103,9 @@ Pause and stop publish a request to the active native worker. An ongoing attempt
 must finish with positive process and result evidence before the week reports
 `paused` or `stopped`. `pausing` and `stopping` mean this boundary is still pending.
 Both actions preserve the same Run, and resume cannot extend the original
-deadline. Expiry requests stop and prevents any next Goal from starting.
+deadline. Expiry requests stop and prevents any next Goal from starting. A
+resume request after expiry wakes the preserved controller to enforce stop on
+any surviving native Run; it grants no further work or time.
 
 A completed native local return permits the next selected dependency to start
 from the freshly observed Epic base. A concrete, positively completed developer

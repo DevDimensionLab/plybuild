@@ -280,7 +280,9 @@ func (m Manager) Control(root, id, action string) (State, error) {
 	}
 	deadline, _ := time.Parse(time.RFC3339Nano, b.Deadline)
 	if action == "resume" && !m.now().Before(deadline) {
-		return m.Show(root, id)
+		// A surviving native worker still needs supervision after the deadline.
+		// Wake only to publish/enforce stop, never to extend or select work.
+		action = "stop"
 	}
 	guard, err := lock(filepath.Join(dir, "control.lock"))
 	if err != nil {

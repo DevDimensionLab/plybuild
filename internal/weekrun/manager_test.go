@@ -702,3 +702,23 @@ func TestWeekConcurrentFirstStartRejectsDifferentContract(t *testing.T) {
 		t.Fatal("winning contract was altered", got)
 	}
 }
+
+func TestWeekExpiredResumeWakesStopForSurvivingNativeRun(t *testing.T) {
+	f := newFixture(t, selection("first"), selection("next"))
+	f.tick(t)
+	f.tick(t)
+	deadline := f.s.Deadline
+	*f.now = f.now.Add(2 * time.Hour)
+	woke := false
+	f.m.Launch = func(Binding) error { woke = true; f.tick(t); return nil }
+	shown, err := f.m.Control(f.c.Workspace, f.s.ID, "resume")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !woke || !reflect.DeepEqual(f.n.controls, []string{"stop"}) || shown.Phase != "stopping" {
+		t.Fatal("expired public resume left native work unsupervised", woke, f.n.controls, shown)
+	}
+	if shown.Deadline != deadline || shown.Entries[0].RunID != "run-first" || len(f.n.starts) != 1 {
+		t.Fatal("expired recovery changed selection or deadline", shown)
+	}
+}
