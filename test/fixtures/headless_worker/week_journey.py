@@ -300,8 +300,10 @@ def verify_behavior(binary, descending=False):
                                ("[7,7]", [7])]:
             p = subprocess.run(prefix + [str(binary)] + argv, input=data, text=True, capture_output=True, timeout=10)
             want = list(reversed(expected)) if argv else expected
+            decoded = json.loads(p.stdout) if p.returncode == 0 else None
             require(p.returncode == 0 and not p.stderr and p.stdout.endswith("\n") and len(p.stdout.splitlines()) == 1
-                    and json.loads(p.stdout) == want, f"Behavior failed: {argv}, {data}, {p}")
+                    and isinstance(decoded, list) and all(type(x) is int for x in decoded)
+                    and decoded == want, f"Behavior failed: {argv}, {data}, {p}")
             passed += 1
         for data in ["[true]", "[1.5]", "{}", '["1"]', "not json", "[1] trailing", "[[]]", "null"]:
             p = subprocess.run(prefix + [str(binary)] + argv, input=data, text=True, capture_output=True, timeout=10)
@@ -601,13 +603,23 @@ except Exception as error:
 ''')
         program.chmod(0o755)
         result = verify_behavior(program, True)
-        program.write_text(program.read_text().replace("reverse=bool(sys.argv[1:])", "reverse=False"))
-        try:
-            verify_behavior(program, True)
-        except RuntimeError:
-            pass
-        else:
-            raise RuntimeError("Harness failed to reject the descending regression")
+        correct_source = program.read_text()
+        regressions = {
+            "descending": correct_source.replace("reverse=bool(sys.argv[1:])", "reverse=False"),
+            "boolean output": correct_source.replace("json.dumps(sorted(set(data),reverse=bool(sys.argv[1:])))",
+                "json.dumps([bool(x) if x in (0, 1) else x for x in sorted(set(data),reverse=bool(sys.argv[1:]))])"),
+            "float output": correct_source.replace("json.dumps(sorted(set(data),reverse=bool(sys.argv[1:])))",
+                "json.dumps([float(x) if x in (0, 1) else x for x in sorted(set(data),reverse=bool(sys.argv[1:]))])"),
+        }
+        for name, source in regressions.items():
+            require(source != correct_source, f"Regression fixture did not change: {name}")
+            program.write_text(source)
+            try:
+                verify_behavior(program, True)
+            except RuntimeError:
+                pass
+            else:
+                raise RuntimeError(f"Harness failed to reject the {name} regression")
         assets = Path(__file__).resolve().parents[3] / "internal/workerskills"
         manifest_bytes = (assets / "manifest.json").read_bytes()
         manifest = json.loads(manifest_bytes)
@@ -625,7 +637,7 @@ except Exception as error:
             else:
                 raise RuntimeError("Prompt verifier accepted corrupted embedded license bytes")
         print(json.dumps(dict(kind="HarnessOnlySmoke", correct_candidate=result,
-                             known_regression_rejected=True, source_prompt_parser_roles=4,
+                             known_regression_rejected=True, type_regressions_rejected=2, source_prompt_parser_roles=4,
                              altered_prompt_license_rejected=True, provider_calls=0), indent=2))
 
 
