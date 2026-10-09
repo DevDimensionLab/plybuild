@@ -1,0 +1,88 @@
+//go:build !windows
+
+package weekrun
+
+import (
+	"context"
+	"errors"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"syscall"
+	"time"
+)
+
+func launchDetached(b Binding) error {
+	if err := verifyControl(b); err != nil {
+		return err
+	}
+	dir, _ := runDir(b.Contract.Workspace, b.ID)
+	// Loaded launchd owns restart supervision. Kickstart does not kill an active
+	// service, unlike -k; an already-running service will observe its control file.
+	if serviceInstalled(b) {
+		return wakeService(b)
+	}
+	guard, err := lock(filepath.Join(dir, "launch.lock"))
+	if errors.Is(err, errOwned) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	defer guard.Close()
+	if ownerState(dir) == "lock_held" {
+		return nil
+	}
+	log, err := os.OpenFile(filepath.Join(dir, "controller.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		return err
+	}
+	defer log.Close()
+	cmd := exec.Command(b.Control.Path, "workflow", "week", "_serve", b.ID, "--workspace", b.Contract.Workspace)
+	cmd.Dir = b.Contract.ReturnWorktree
+	cmd.Stdout = log
+	cmd.Stderr = log
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+	return cmd.Process.Release()
+}
+
+// Supervise is the launchd entry. If a detached controller already exists,
+// wait for its boundary handover; no second scheduler or provider can acquire
+// the same owner lock. Once this service owns the controller, a crash is a
+// nonzero launchd exit and the same frozen control will inspect native effects.
+func (m Manager) Supervise(ctx context.Context, root, id string) error {
+	b, dir, err := readBinding(root, id)
+	if err != nil {
+		return err
+	}
+	for {
+		if err = ctx.Err(); err != nil {
+			return err
+		}
+		if ownerState(dir) != "lock_held" {
+			if e := os.Remove(filepath.Join(dir, "handover.json")); e != nil && !os.IsNotExist(e) {
+				return e
+			}
+			return m.serve(ctx, root, id, true)
+		}
+		s, e := m.Show(root, id)
+		if e != nil {
+			return e
+		}
+		if terminal(s) {
+			return nil
+		}
+		// A detached controller observes this request between native API effects.
+		if err = publish(filepath.Join(dir, "handover.json"), map[string]string{"service": serviceLabel(b)}, true); err != nil {
+			return err
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
+}
