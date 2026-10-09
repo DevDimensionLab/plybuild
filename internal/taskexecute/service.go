@@ -16,6 +16,8 @@ import (
 )
 
 type Input struct {
+	ExpectedGoal        *workspace.TaskGoalRef
+	ExpectedTaskID      workspace.TaskID
 	Target              workspace.QueueTargetInput
 	Next                bool
 	SpecID              string
@@ -104,10 +106,13 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	if err != nil {
 		return out, err
 	}
+	if input.ExpectedGoal != nil && plan.Goal.Goal != *input.ExpectedGoal || input.ExpectedTaskID != "" && plan.Goal.TaskID != input.ExpectedTaskID {
+		return out, workspace.WorkInvalidArguments("selected immutable week Goal or Task changed before execution")
+	}
 	out.Goal = &plan
 	if input.Worker != nil {
 		w, a := input.Worker, plan.Delivery
-		if w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || a == nil || !a.AutomaticAcceptance() || a.HumanOwnedIntegration() || a.Acceptance.RequireHumanQA || a.Mode != workspace.DeliveryLocalEpic {
+		if w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 || a == nil || !a.AutomaticAcceptance() || a.HumanOwnedIntegration() || a.Acceptance.RequireHumanQA || a.Mode != workspace.DeliveryLocalEpic {
 			return out, workspace.WorkInvalidArguments("headless requires bounded worker settings and an explicit automatic local Epic agreement")
 		}
 	}

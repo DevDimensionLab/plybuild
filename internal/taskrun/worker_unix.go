@@ -90,6 +90,9 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 	if s.Result.Delivery.Phase == "completed" {
 		return ShowWorker(d, root, id)
 	}
+	if err = workerPreparationCurrent(d, s); err != nil {
+		return s.Result, err
+	}
 	if err = verifyExecutable(s.Request.Runtime.PlyExecutable); err != nil {
 		return s.Result, err
 	}
@@ -275,6 +278,22 @@ func ServeWorker(d Dependencies, root, id string) error {
 			}
 			continue
 		}
+		if err = workerPreparationCurrent(d, s); err != nil {
+			return workerBlocked(d, root, id, err)
+		}
+		if s.Result.Worker.RetryNotBefore != "" {
+			due, e := workerRetryDue(d, s)
+			if e != nil {
+				return workerBlocked(d, root, id, e)
+			}
+			if !due {
+				return nil
+			}
+			if e = workerContinueAfterWait(d, s); e != nil {
+				return workerBlocked(d, root, id, e)
+			}
+			continue
+		}
 		if err = workerProbeCurrentGeneration(d, s); err != nil {
 			return workerBlocked(d, root, id, err)
 		}
@@ -299,6 +318,9 @@ func workerConsumeResume(d Dependencies, s workflowState, expected workerControl
 			return err
 		}
 		current.Result.Worker.Phase = "running"
+		if current.Result.Worker.RetryNotBefore != "" {
+			current.Result.Worker.Phase = "waiting"
+		}
 		current.Result.Worker.Reason = ""
 		return nil
 	})
@@ -333,6 +355,20 @@ func SuperviseWorker(d Dependencies, root, id string) error {
 		}
 		if parked {
 			return nil
+		}
+		if s.Result.Worker.Phase == "waiting" {
+			due, e := workerRetryDue(d, s)
+			if e != nil {
+				return e
+			}
+			var control workerControl
+			if e = readValue(filepath.Join(workerDirectory(s), "control.json"), 64<<10, &control); e != nil && !os.IsNotExist(e) {
+				return e
+			}
+			if !due && control.Action != "pause" && control.Action != "stop" && control.Action != "resume" {
+				time.Sleep(time.Second)
+				continue
+			}
 		}
 		probe, e := workerLock(filepath.Join(workerDirectory(s), "owner.lock"), true)
 		if errors.Is(e, unix.EWOULDBLOCK) {

@@ -17,6 +17,9 @@ the existing Goal, creates its Task checkout and one native Run, and detaches a
 small supervisor. Repeating the same start inspects the same work. The worker
 finishes this Goal only; it does not select the next queue item.
 
+Use `workflow week` for an explicitly selected set of dependent Goals and a
+named login service; see [durable multi-Spec operation](workflow-week.md).
+
 The default is Codex with `gpt-6-astra` and `max` effort; explicit Goal choices
 win. It uses the existing Codex account login and does not introduce an API-key
 fallback. The installed CLI must support the frozen command options, including
@@ -98,6 +101,31 @@ explicitly disabled. Discovered MCP servers receive complete inert, disabled
 transport overrides. A fresh configuration check verifies these settings before
 each launch and preserves only server names/types/booleans, not credentials.
 This does not modify global Codex configuration or its existing authentication.
+
+Every actual provider prompt contains its [pinned Addy role package](worker-skills.md)
+before the prompt is hashed and preserved in the attempt. Development includes
+planning and TDD; corrections add debugging guidance, and review has a separate
+read-only adapter. The CLI embeds the exact source files, required references,
+manifest and MIT license. No live Addy checkout or network fetch is needed.
+
+## Usage limits and native queue ownership
+
+A positively completed provider attempt with a recognized usage-limit error
+parks the same Run as `waiting`, retaining its Task, model, effort, partial files
+and attempt streams. `worker show --format json` exposes `retry_not_before`,
+`provider_retries` and `last_provider_failure`. A provider reset is honored;
+otherwise backoff increases from five minutes to one hour. `--worker-retries`
+freezes the retry bound (default 20, range 1–1000), separately from developer
+correction attempts. Restart and resume cannot shorten the saved wait. Unknown
+processes, truncated evidence and generic failures never trigger blind retry.
+Authentication failures remain visible and require recovery of the existing
+login; there is no automatic model, account or payment fallback.
+
+The multi-Spec controller can permanently park a concrete failed, quiescent Run
+and release its native queue reservation so independent selected work proceeds.
+That release is not retry: the released Run cannot resume, even if the controller
+was interrupted before recording its local release marker. Native advancement
+after integration permits only recovery of the reserved integration and closeout.
 
 The process runner owns child waiting/signalling and records bounded complete
 streams and process-group quiescence. It never sends a signal after reaping its

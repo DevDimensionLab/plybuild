@@ -16,30 +16,35 @@ type WorkerContract struct {
 	SchemaVersion       int `json:"schema_version"`
 	MaxAttempts         int `json:"max_attempts"`
 	AgentTimeoutSeconds int `json:"agent_timeout_seconds"`
+	MaxProviderRetries  int `json:"max_provider_retries,omitempty"`
 }
 
 type WorkerStatus struct {
-	SessionID          string       `json:"session_id"`
-	Phase              string       `json:"phase"`
-	Stage              string       `json:"stage"`
-	Generation         int          `json:"generation"`
-	OwnerPID           int          `json:"owner_pid"`
-	OwnerStartedAt     string       `json:"owner_started_at"`
-	OwnerState         string       `json:"owner_state,omitempty"`
-	ControlAction      string       `json:"control_action,omitempty"`
-	ControlRequestedAt string       `json:"control_requested_at,omitempty"`
-	Iteration          int          `json:"iteration"`
-	Job                *WorkerJob   `json:"job,omitempty"`
-	DeveloperSessions  []string     `json:"developer_sessions"`
-	Review             *FileBinding `json:"review,omitempty"`
-	ReviewProof        *FileBinding `json:"review_proof,omitempty"`
-	CandidateBinary    string       `json:"candidate_binary,omitempty"`
-	CandidateOID       string       `json:"candidate_oid,omitempty"`
-	CandidateTree      string       `json:"candidate_tree,omitempty"`
-	Pretest            *FileBinding `json:"pretest,omitempty"`
-	Feedback           string       `json:"feedback,omitempty"`
-	Reason             string       `json:"reason,omitempty"`
-	UpdatedAt          string       `json:"updated_at"`
+	SessionID           string       `json:"session_id"`
+	Phase               string       `json:"phase"`
+	Stage               string       `json:"stage"`
+	Generation          int          `json:"generation"`
+	OwnerPID            int          `json:"owner_pid"`
+	OwnerStartedAt      string       `json:"owner_started_at"`
+	OwnerState          string       `json:"owner_state,omitempty"`
+	ControlAction       string       `json:"control_action,omitempty"`
+	ControlRequestedAt  string       `json:"control_requested_at,omitempty"`
+	Iteration           int          `json:"iteration"`
+	Job                 *WorkerJob   `json:"job,omitempty"`
+	DeveloperSessions   []string     `json:"developer_sessions"`
+	Review              *FileBinding `json:"review,omitempty"`
+	ReviewProof         *FileBinding `json:"review_proof,omitempty"`
+	CandidateBinary     string       `json:"candidate_binary,omitempty"`
+	CandidateOID        string       `json:"candidate_oid,omitempty"`
+	CandidateTree       string       `json:"candidate_tree,omitempty"`
+	Pretest             *FileBinding `json:"pretest,omitempty"`
+	Feedback            string       `json:"feedback,omitempty"`
+	Reason              string       `json:"reason,omitempty"`
+	UpdatedAt           string       `json:"updated_at"`
+	RetryNotBefore      string       `json:"retry_not_before,omitempty"`
+	ProviderRetries     int          `json:"provider_retries,omitempty"`
+	LastProviderFailure string       `json:"last_provider_failure,omitempty"`
+	QueueReleased       bool         `json:"queue_released,omitempty"`
 }
 
 type WorkerJob struct {
@@ -72,7 +77,7 @@ func workerDirectory(s workflowState) string {
 
 func validateWorkerRequest(r WorkflowRequest) error {
 	w := r.Worker
-	if w == nil || w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 {
+	if w == nil || w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 {
 		return workflowError(2, "headless requires an explicit bounded one-Spec worker contract")
 	}
 	if r.Delivery == nil || r.ReturnMode != "delivery_owner" || r.Agreement != (Agreement{}) || r.Coordinator.ActorClaim != "" || r.Coordinator.MayRequestChanges {

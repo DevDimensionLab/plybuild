@@ -16,7 +16,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var format string
 	var target queueTargetFlags
 	var headless bool
-	var workerAttempts, workerTimeout int
+	var workerAttempts, workerTimeout, workerRetries int
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
 		Long:    "From the registered return worktree, use --headless for a durable one-Spec Codex worker on macOS. It requires an explicitly automatic local Epic agreement, uses the assigned model and effort with existing account login, and performs developer, sandboxed tests, independent read-only review, bounded corrections and native local delivery. It has no terminal dependency and performs no remote push. Control it with workflow worker show/pause/stop/resume. Pause and stop finish the active attempt before preserving a boundary. Unknown attempts remain blocked. Without --headless, from a Herdr terminal, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
@@ -24,8 +24,11 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if headless {
-				in.Worker = &taskrun.WorkerContract{SchemaVersion: 1, MaxAttempts: workerAttempts, AgentTimeoutSeconds: workerTimeout}
-			} else if c.Flags().Changed("worker-attempts") || c.Flags().Changed("worker-timeout") {
+				if workerRetries < 1 || workerRetries > 1000 {
+					return workspace.WorkInvalidArguments("--worker-retries must be between 1 and 1000")
+				}
+				in.Worker = &taskrun.WorkerContract{SchemaVersion: 1, MaxAttempts: workerAttempts, AgentTimeoutSeconds: workerTimeout, MaxProviderRetries: workerRetries}
+			} else if c.Flags().Changed("worker-attempts") || c.Flags().Changed("worker-timeout") || c.Flags().Changed("worker-retries") {
 				return workspace.WorkInvalidArguments("worker limits require --headless")
 			}
 			if err := executeFormat(format); err != nil {
@@ -59,6 +62,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().BoolVar(&headless, "headless", false, "start one durable Codex worker for an automatic local Epic goal without a terminal")
 	c.Flags().IntVar(&workerAttempts, "worker-attempts", 3, "maximum development attempts for --headless (1-20)")
 	c.Flags().IntVar(&workerTimeout, "worker-timeout", 1800, "seconds per headless provider attempt (10-86400)")
+	c.Flags().IntVar(&workerRetries, "worker-retries", 20, "maximum persisted provider usage-limit retries (1-1000); no model or account switch")
 	target.bind(c)
 	c.Flags().StringVar(&in.Runtime.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace ID (default: current Herdr workspace)")
 	c.Flags().StringVar(&in.Runtime.PermissionProfile, "permission-profile", "", "existing Codex permission profile; Claude uses native auto mode")

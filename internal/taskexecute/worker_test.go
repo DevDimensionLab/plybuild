@@ -71,3 +71,27 @@ func TestExecuteHeadlessRejectsHistoricalHumanAgreementBeforeWrites(t *testing.T
 		t.Fatalf("invalid headless start wrote state: %v", err)
 	}
 }
+
+func TestExecuteRejectsChangedWeekSelectionBeforeMutation(t *testing.T) {
+	d, in, root, _ := launcherFixtureForProvider(t, "codex")
+	in.Check = true
+	preview, err := Execute(d, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	selected := preview.Goal.Goal.Goal
+	selected.Spec.Revision++
+	in.ExpectedGoal = &selected
+	in.Check = false
+	if _, err = Execute(d, in); err == nil {
+		t.Fatal("changed immutable Goal executed")
+	}
+	in.ExpectedGoal = nil
+	in.ExpectedTaskID = "another-task"
+	if _, err = Execute(d, in); err == nil {
+		t.Fatal("changed Task executed")
+	}
+	if _, err = os.Lstat(filepath.Join(root, ".ply", "task-executions")); !os.IsNotExist(err) {
+		t.Fatalf("selection conflict wrote execution state: %v", err)
+	}
+}

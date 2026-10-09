@@ -16,9 +16,10 @@ func StartWorker(Dependencies, string, string, bool) (WorkflowRun, error) {
 func ControlWorker(Dependencies, string, string, string) (WorkflowRun, error) {
 	return WorkflowRun{}, workerUnsupported()
 }
-func ServeWorker(Dependencies, string, string) error              { return workerUnsupported() }
-func SuperviseWorker(Dependencies, string, string) error          { return workerUnsupported() }
-func RunWorkerAttempt(Dependencies, string, string, string) error { return workerUnsupported() }
+func ServeWorker(Dependencies, string, string) error                    { return workerUnsupported() }
+func SuperviseWorker(Dependencies, string, string) error                { return workerUnsupported() }
+func RunWorkerAttempt(Dependencies, string, string, string) error       { return workerUnsupported() }
+func WithParkedWorker(Dependencies, string, string, func() error) error { return workerUnsupported() }
 func workerVerifierPolicy(Dependencies, workflowState, string) (string, error) {
 	return "", workerUnsupported()
 }

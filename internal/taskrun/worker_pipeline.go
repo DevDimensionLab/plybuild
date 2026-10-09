@@ -10,6 +10,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/devdimensionlab/plybuild/internal/workerskills"
 )
 
 func workerStage(d Dependencies, s workflowState, stage string) error {
@@ -100,6 +102,9 @@ func workerStep(d Dependencies, s workflowState) error {
 		}
 		return workerStage(d, s, "completed")
 	}
+	if r.ProviderFailure != nil {
+		return workerWaitForProvider(d, s, r)
+	}
 	if r.Error != "" || r.Exit == nil {
 		return fmt.Errorf("%s did not finish with a trustworthy result: %s; evidence %s", w.Stage, r.Error, w.Job.Directory)
 	}
@@ -183,7 +188,11 @@ type workerReviewAnswer struct {
 
 func workerPrepareAttempt(d Dependencies, s workflowState) error {
 	w := s.Result.Worker
-	dir := filepath.Join(workerDirectory(s), "attempts", fmt.Sprintf("%s-%04d", w.Stage, w.Iteration))
+	name := fmt.Sprintf("%s-%04d", w.Stage, w.Iteration)
+	if w.ProviderRetries > 0 {
+		name += fmt.Sprintf("-retry-%04d", w.ProviderRetries)
+	}
+	dir := filepath.Join(workerDirectory(s), "attempts", name)
 	if err := privateDir(dir); err != nil {
 		return err
 	}
@@ -204,7 +213,10 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 			}
 		}
 		readOnly := w.Stage == "reviewer"
-		prompt := workerPrompt(s, output, readOnly)
+		prompt, err := workerPromptWithSkills(s, output, readOnly)
+		if err != nil {
+			return err
+		}
 		promptPath := filepath.Join(dir, "prompt.txt")
 		if err := d.writeOnce(promptPath, []byte(prompt)); err != nil {
 			return err
@@ -263,6 +275,24 @@ func workerPrompt(s workflowState, output string, review bool) string {
 		return common + fmt.Sprintf("Act as an independent reviewer in this fresh session. The candidate is %s, tree %s. Review the diff from base %s, the Spec criteria and the actual successful pretest receipt at %s (including referenced logs). Source and evidence are read-only. Look for concrete correctness, recovery and scope defects. Request changes with actionable findings; report blocked if evidence is insufficient. A passed decision requires an empty findings array. Do not edit anything.\n", s.Result.Worker.CandidateOID, s.Result.Worker.CandidateTree, s.Observed.Epic.OID, s.Result.Worker.Pretest.Locator)
 	}
 	return common + fmt.Sprintf("Implement the Goal and its tests in Task files. Implement or extend test/delivery_acceptance.sh in the Task; the controller's native entrypoint at %s calls this committed script. Preserve intended behavioral checks and extend tests for this Spec. Tests run with read-only source and writable HOME/TMPDIR, no tool network; use PLY_CANDIDATE_BINARY to invoke the exact built executable. Build that executable at exactly %s (an executable script is acceptable when that is the product). This private output directory is writable. Do not commit: the native controller will commit all Task changes after your process ends. Do not claim completed until the executable exists and your implementation is ready for actual acceptance. For a concrete review/test bug, record a failing regression before fixing it and preserve the commands/results in Task documentation. Current instruction: %s\n", s.Request.Delivery.AcceptancePath, filepath.Join(output, "candidate"), s.Result.Worker.Feedback)
+}
+
+func workerPromptWithSkills(s workflowState, output string, review bool) (string, error) {
+	role := workerskills.RoleDeveloper
+	if review {
+		role = workerskills.RoleReviewer
+	} else if s.Result.Worker.Iteration > 1 {
+		role = workerskills.RoleCorrection
+	}
+	bundle, err := workerskills.Bundle(role)
+	if err != nil {
+		return "", err
+	}
+	resume := ""
+	if s.Result.Worker.LastProviderFailure != "" {
+		resume = "A previous provider attempt ended at a usage limit. Its preserved stream is " + s.Result.Worker.LastProviderFailure + ". Inspect existing Task progress and continue this same Goal; retain prior checks and authority.\n"
+	}
+	return bundle + workerPrompt(s, output, review) + resume, nil
 }
 
 type workerReviewProof struct {

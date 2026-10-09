@@ -31,19 +31,20 @@ type workerAttemptIntent struct {
 }
 
 type workerAttemptResult struct {
-	RunID           string       `json:"run_id"`
-	JobID           string       `json:"job_id"`
-	IntentSHA256    string       `json:"intent_sha256"`
-	StartedAt       string       `json:"started_at"`
-	FinishedAt      string       `json:"finished_at"`
-	Exit            *int         `json:"exit"`
-	Error           string       `json:"error,omitempty"`
-	ThreadID        string       `json:"thread_id,omitempty"`
-	Stdout          FileBinding  `json:"stdout"`
-	Stderr          FileBinding  `json:"stderr"`
-	Answer          *FileBinding `json:"answer,omitempty"`
-	NativeCompleted bool         `json:"native_completed"`
-	Process         *Process     `json:"process,omitempty"`
+	RunID           string                 `json:"run_id"`
+	JobID           string                 `json:"job_id"`
+	IntentSHA256    string                 `json:"intent_sha256"`
+	StartedAt       string                 `json:"started_at"`
+	FinishedAt      string                 `json:"finished_at"`
+	Exit            *int                   `json:"exit"`
+	Error           string                 `json:"error,omitempty"`
+	ThreadID        string                 `json:"thread_id,omitempty"`
+	Stdout          FileBinding            `json:"stdout"`
+	Stderr          FileBinding            `json:"stderr"`
+	Answer          *FileBinding           `json:"answer,omitempty"`
+	NativeCompleted bool                   `json:"native_completed"`
+	Process         *Process               `json:"process,omitempty"`
+	ProviderFailure *WorkerProviderFailure `json:"provider_failure,omitempty"`
 }
 
 func workerIntent(s workflowState, job WorkerJob) (workerAttemptIntent, error) {
@@ -220,6 +221,11 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 				r.Error = "provider answer missing or invalid: " + e.Error()
 			} else {
 				r.Answer = &binding
+			}
+			// Only complete, quiescent attempts may enter automatic waiting.
+			// Tool output and truncated streams never authorize a retry.
+			if quiescent(process) && process.State == "exited" && process.ExitCode != nil && *process.ExitCode != 0 && completion.StreamComplete && !completion.StdoutTruncated && !completion.StderrTruncated && !completion.TimedOut {
+				r.ProviderFailure = workerProviderFailure(stdout.data, d.Now())
 			}
 		}
 	}

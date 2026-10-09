@@ -4,6 +4,7 @@ package taskrun
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -230,7 +231,23 @@ func TestWorkerNativeReadbackAndReceiptRecovery(t *testing.T) {
 	if _, err = workflowKeep(f.D, filepath.Join(s.Result.Worker.Job.Directory, "result.json"), result); err != nil {
 		t.Fatal(err)
 	}
-	if err = workerStep(f.D, s); err != nil {
+	stage := s.Result.Worker.Stage
+	s.Result.Worker.Stage = "developer"
+	if err = workerPreparationCurrent(f.D, s); err == nil {
+		t.Fatal("advanced queue authorized a fresh developer")
+	}
+	s.Result.Worker.Stage = stage
+	if _, err = StartWorker(f.D, f.R.WorkspaceRoot, o.RunID, true); err != nil {
+		t.Fatalf("public resume refused receipt recovery after native queue advancement: %v", err)
+	}
+	// Provider/policy data in this protocol fixture is explicitly synthetic;
+	// real runtime probes have their own opt-in tests and public CLI journey.
+	probe := filepath.Join(workerDirectory(s), "policy", fmt.Sprintf("probe-%06d.json", s.Result.Worker.Generation+1))
+	if _, err = workflowKeep(f.D, probe, map[string]any{"passed": true, "fixture": "synthetic runtime for native recovery boundary"}); err != nil {
+		t.Fatal(err)
+	}
+	f.D.WorkerOwner.lock.Close()
+	if err = ServeWorker(f.D, f.R.WorkspaceRoot, o.RunID); err != nil {
 		t.Fatal(err)
 	}
 	o, err = WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
