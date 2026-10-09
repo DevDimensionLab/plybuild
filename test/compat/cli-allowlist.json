@@ -1589,6 +1589,76 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute apply --file /absolute/approved-request.json --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "absolute immutable bound-start-request@1 JSON (required)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for apply"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Apply only the unchanged request object from execute preview. Native locks recheck the full approved basis before new effects. The same identity and same request only read its retained attempt; a different request under that identity is rejected. Unknown or interrupted outcomes never automatically resume, retry, reopen, or create another agent. No fallback to ordinary execute. Explicit bound Herdr starts work from the registered return worktree without requiring HERDR_ENV; user authentication remains the consumer's responsibility.",
+        "path": "ply workflow execute apply",
+        "runnable": true,
+        "short": "Start exactly one approved immutable Goal request",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "apply"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute apply"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
         "example": "  ply workflow execute follow wfr_<digest> --timeout 60",
         "flags": [
           {
@@ -1651,6 +1721,167 @@
       },
       "kind": "command_added",
       "path": "ply workflow execute follow"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute preview --spec selected-goal --request-id 550e8400-e29b-41d4-a716-446655440000 --herdr-workspace w9 --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "epic",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Epic ID (requires --project and --repo)"
+          },
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for preview"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "herdr-workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact Herdr workspace (default: current Herdr workspace)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "permission-profile",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "existing Codex permission profile to bind"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "project",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered Project ID (requires --repo and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "repo",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "registered repository ID (requires --project and --epic)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "request-id",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "consumer identity: 8-128 letters, digits, dots, underscores or hyphens (required)"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "spec",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "exact pending Goal Spec ID (required)"
+          },
+          {
+            "annotations": {},
+            "default": "interactive",
+            "deprecated": "",
+            "hidden": false,
+            "name": "start-mode",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "bound mode; v1 supports only interactive Codex"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read-only version 1 bound-start preview. Shows the exact explicit Goal, queue/base, worktree, requested Codex runtime and policy, executables, Herdr target, trust and delivery agreement. No intent, reservation, trust grant, worktree, Run, agent or tab is created. The consumer supplies a stable request ID before approval and preserves the returned request unchanged. This binding does not authenticate the user or grant additional delivery authority. Only interactive Codex is supported; no --next, headless or startup recovery fallback.",
+        "path": "ply workflow execute preview",
+        "runnable": true,
+        "short": "Read an externally approvable initial Goal start without effects",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "preview"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute preview"
     },
     {
       "after": {
@@ -1983,6 +2214,76 @@
       },
       "kind": "command_added",
       "path": "ply workflow execute show"
+    },
+    {
+      "after": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "  ply workflow execute status 550e8400-e29b-41d4-a716-446655440000 --workspace /physical/workspace --format json",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "text",
+            "deprecated": "",
+            "hidden": false,
+            "name": "format",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "output format (text or json)"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for status"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "workspace",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "physical workspace root (required)"
+          }
+        ],
+        "has_args_validator": true,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Read-only lookup by the consumer's stable request ID and physical workspace root. Returns not_recorded, retained_attempt, existing_run or outcome_unknown. No intent alone does not prove no effect. Preserved Run state is historical evidence, not live provider observation. This command never starts, resumes, retries, repairs or reopens an attempt and does not need the original provider or installed control bytes.",
+        "path": "ply workflow execute status",
+        "runnable": true,
+        "short": "Read a bound request after a lost reply without starting anything",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "status REQUEST_ID"
+      },
+      "kind": "command_added",
+      "path": "ply workflow execute status"
     },
     {
       "after": {
