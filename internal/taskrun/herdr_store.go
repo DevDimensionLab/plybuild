@@ -424,9 +424,7 @@ func deliveryCurrentCandidateQualified(s workflowState) bool {
 	if !deliveryRun(s.Request) || d == nil || d.Attempt == nil || d.Attempt.State != "recorded" || len(d.Candidates) == 0 {
 		return false
 	}
-	switch d.Phase {
-	case "awaiting_human_qa", "human_qa_passed", "automatic_acceptance_passed", "integrating", "closing", "completed":
-	default:
+	if !deliveryCandidateQualified(d) {
 		return false
 	}
 	c := d.Candidates[len(d.Candidates)-1]
@@ -441,7 +439,7 @@ func deliveryCurrentCandidateQualified(s workflowState) bool {
 	case "human_integration":
 		return c.HumanQA != nil && c.HumanQA.TaskResultID == c.TaskResult.ID
 	case "integration":
-		return c.Integration != nil && d.Phase == "completed"
+		return c.Integration != nil && (d.Phase == "closing" || d.Phase == "completed")
 	}
 	return false
 }
