@@ -36,6 +36,9 @@ func TestQualifiedDeliveryRemainsUsableWhileAwaitingHumanInput(t *testing.T) {
 func TestQualifiedDeliveryQuestionDoesNotRestoreSupersededQualification(t *testing.T) {
 	f, o := humanIntegrationCandidate(t, true)
 	c := o.Delivery.Candidates[0]
+	// A report alone is conversational progress. Actual source correction must
+	// still invalidate the former candidate, even after a subsequent question.
+	deliveryTestCandidate(t, f, "unverified source correction")
 	r := DeliveryReport{Envelope: deliveryEnv("delivery-report"), RunID: o.RunID, RequestSHA256: o.RequestSHA256, SessionID: o.SessionID, EventID: "correction", PreviousEventSHA256: o.Delivery.LastEventSHA256, Phase: "working", Summary: "A discovered issue needs correction.", Meaning: "Candidate is being reconsidered.", Evidence: []FileBinding{}, VerifierResults: []DeliveryVerifierResult{}}
 	var err error
 	o, err = WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "correction.json", r))

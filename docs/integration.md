@@ -64,11 +64,21 @@ callbacks, and records neither product QA nor integration. Then use ordinary
 `ply integration --delivery dlv_<id> --check` and its human confirmation flow.
 Repeated recovery of the same already released candidate creates no new event.
 
-A preserved QA question (`needs_input`) does not erase an exact candidate's
-technical qualification. Its original verification and subsequent reports are
-checked without rewriting the old controller's state. A correction, failed or
-unknown verifier result, changed source, or replacement verification still
-prevents reuse of that qualification.
+A progress report (`working`) or preserved question (`needs_input`) does not
+erase an unchanged candidate's technical qualification. Release checks the
+original successful verification, subsequent reports, current source and exact
+acceptance, review and receipt inputs, together with the required native evidence.
+Changed inputs or source, a newer failed or unknown verification, and a recorded
+negative human-QA transition still prevent reuse of that qualification. Source
+release remains separate from the later integration gate, which reads the latest
+native human judgment.
+
+This also applies to reports written by an older immutable controller. Use the
+newer ordinary CLI's `workflow execute release` with the original owner context
+from the exact Task worktree. No new verification, candidate, TaskResult or human
+QA is needed for this source handover. `verify --reuse` preserves its existing
+receipt and report history; it does not rewrite the reported phase to recover
+release access.
 
 When handing over from an older immutable controller, finish its verification,
 report and required QA callbacks first. New release revokes that controller. A

@@ -50,7 +50,7 @@ func TestDeliveryQualifiedCandidateReadbackKeepsHistoryAndCurrentFailures(t *tes
 	if err != nil || readErr != nil || !bytes.Equal(raw, after) || hasRejection(shown) {
 		t.Errorf("readback changed history or presented a resolved rejection: %v %v", err, readErr)
 	}
-	for _, condition := range []string{"unknown_attempt", "different_candidate", "different_verification", "owner_correcting"} {
+	for _, condition := range []string{"unknown_attempt", "different_candidate", "different_verification", "progress_only", "changed_inputs"} {
 		t.Run(condition, func(t *testing.T) {
 			changed := s
 			delivery := *s.Result.Delivery
@@ -63,15 +63,38 @@ func TestDeliveryQualifiedCandidateReadbackKeepsHistoryAndCurrentFailures(t *tes
 				attempt.CandidateOID = strings.Repeat("0", 40)
 			case "different_verification":
 				attempt.ID = "another-verification"
-			case "owner_correcting":
+			case "progress_only":
+				// Conversational progress cannot restore an older, resolved
+				// review failure when the qualified inputs are unchanged.
 				delivery.Phase = "working"
+			case "changed_inputs":
+				delivery.Phase = "working"
+				original, err := os.ReadFile(f.AcceptancePath)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err = os.WriteFile(f.AcceptancePath, append(append([]byte{}, original...), []byte("# unverified correction\n")...), 0600); err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(func() {
+					if err := os.WriteFile(f.AcceptancePath, original, 0600); err != nil {
+						t.Error(err)
+					}
+				})
 			}
 			if err := workflowSave(f.D, changed); err != nil {
 				t.Fatal(err)
 			}
 			shown, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
-			if err != nil || !hasRejection(shown) {
+			if condition == "progress_only" {
+				if err != nil || hasRejection(shown) || shown.DeliveryStatus.QualifiedCandidate == nil || !shown.DeliveryStatus.QualifiedCandidate.Current {
+					t.Fatalf("progress restored an older rejection for unchanged qualification: %+v %v", shown, err)
+				}
+			} else if err != nil || !hasRejection(shown) {
 				t.Fatalf("unresolved %s was hidden: %+v %v", condition, shown, err)
+			}
+			if condition == "changed_inputs" && (shown.DeliveryStatus.QualifiedCandidate == nil || shown.DeliveryStatus.QualifiedCandidate.Current || shown.DeliveryStatus.Verification == nil || shown.DeliveryStatus.Verification.InputsMatch) {
+				t.Fatal("changed acceptance input retained current qualification")
 			}
 		})
 	}

@@ -248,10 +248,11 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	return out, nil
 }
 
-// A needs_input report changes conversational progress, not technical evidence.
+// Progress and needs_input reports do not themselves revoke technical evidence.
 // Read old controllers' preserved reports as well as new ones; never rewrite
-// frozen state to recover qualification. A correction, failed verification or
-// other intervening transition still requires qualification again.
+// frozen state to recover qualification. Negative evidence and intervening
+// effects still block qualification; authority checks revalidate the source and
+// exact native evidence before granting an effect.
 func deliveryCandidateQualified(ds *DeliveryState) bool {
 	if ds == nil || len(ds.Candidates) == 0 {
 		return false
@@ -259,7 +260,7 @@ func deliveryCandidateQualified(ds *DeliveryState) bool {
 	switch ds.Phase {
 	case "awaiting_human_qa", "human_qa_passed", "automatic_acceptance_passed", "integrating", "closing", "completed":
 		return true
-	case "needs_input":
+	case "working", "needs_input":
 		c := ds.Candidates[len(ds.Candidates)-1]
 		if a := ds.Attempt; a != nil && a.State == "attempted" && (a.Kind != "human_integration" || a.CandidateOID != c.OID || a.CandidateTree != c.Tree) {
 			return false
@@ -274,7 +275,7 @@ func deliveryCandidateQualified(ds *DeliveryState) bool {
 					return false
 				}
 				var report DeliveryReport
-				if decode(raw, 1<<20, &report) != nil || validateDeliveryReport(report) != nil || report.Phase != "needs_input" {
+				if decode(raw, 1<<20, &report) != nil || validateDeliveryReport(report) != nil || report.Phase != "working" && report.Phase != "needs_input" {
 					return false
 				}
 				for _, result := range report.VerifierResults {
@@ -298,7 +299,22 @@ func deliveryCandidateQualified(ds *DeliveryState) bool {
 				}
 				seenQA = true
 			case "verification":
-				return event.ID == c.Key && event.Binding.SHA256 == c.Verification.SHA256
+				if event.ID != c.Key || event.Binding.SHA256 != c.Verification.SHA256 {
+					return false
+				}
+				// The event and attempt retain the same receipt at distinct paths.
+				if _, err := workflowBound(c.Verification, 256<<10); err != nil {
+					return false
+				}
+				// Reports cannot revoke an unchanged qualification, but neither
+				// can they make historical test inputs current. Older controllers
+				// may have preserved a working phase after these files changed.
+				raw, err := workflowBound(event.Binding, 256<<10)
+				var receipt deliveryVerificationReceipt
+				if err != nil || decode(raw, 256<<10, &receipt) != nil || !deliveryVerificationVersion(receipt) || receipt.AttemptID != c.Key || receipt.CandidateOID != c.OID || receipt.CandidateTree != c.Tree || receipt.Exit == nil || *receipt.Exit != 0 || receipt.Error != "" || receipt.Acceptance.SHA256 != receipt.AcceptanceSnapshot.SHA256 {
+					return false
+				}
+				return deliveryVerificationInputs(receipt) == nil
 			default:
 				return false
 			}

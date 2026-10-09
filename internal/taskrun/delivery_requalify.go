@@ -34,10 +34,8 @@ func deliveryReusableVerification(d Dependencies, s workflowState, receipt deliv
 	if err := workflowhandoff.ValidateDeliveryOwnerContinuity(d.Workflow, s.Result.Handoff.Locator); err != nil {
 		return fmt.Errorf("requalify required Task publications: %w", err)
 	}
-	for _, b := range []FileBinding{receipt.Acceptance, receipt.AcceptanceSnapshot, receipt.Review, receipt.Stdout, receipt.Stderr} {
-		if _, err := workflowBound(b, 4<<20); err != nil {
-			return requireNew(fmt.Sprintf("receipt input %s no longer matches: %s", b.Locator, err))
-		}
+	if err := deliveryVerificationInputs(receipt); err != nil {
+		return requireNew(err.Error())
 	}
 	x, err := deliveryTarget(d, s)
 	if err != nil {
@@ -45,6 +43,17 @@ func deliveryReusableVerification(d Dependencies, s workflowState, receipt deliv
 	}
 	if x.OID != receipt.CandidateOID || x.Tree != receipt.CandidateTree {
 		return requireNew("source commit or tree differs from the completed check")
+	}
+	return nil
+}
+
+// These are the exact inputs checked by receipt reuse and by historical report
+// qualification. Reading them grants no new verification, candidate or phase.
+func deliveryVerificationInputs(receipt deliveryVerificationReceipt) error {
+	for _, b := range []FileBinding{receipt.Acceptance, receipt.AcceptanceSnapshot, receipt.Review, receipt.Stdout, receipt.Stderr} {
+		if _, err := workflowBound(b, 4<<20); err != nil {
+			return fmt.Errorf("receipt input %s no longer matches: %w", b.Locator, err)
+		}
 	}
 	return nil
 }
