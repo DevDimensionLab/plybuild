@@ -32,6 +32,8 @@ func TestExecutableEntryBoundary(t *testing.T) {
 	}
 
 	assertExecutionFunctions(t, repositoryRoot)
+	// The independent prebuilt installer has its own CLI and one main exit.
+	entrypoints = append(entrypoints, "cmd/ply-install/main.go")
 
 	violations, exitCounts := processTerminationViolations(t, repositoryRoot, entrypoints)
 	if len(violations) != 0 {

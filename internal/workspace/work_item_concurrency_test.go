@@ -168,7 +168,12 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 			r.IntegrationAttempts = nil
 			r.IntegrationResults = nil
 			r.Tasks = append(r.Tasks, TaskRecord{ID: "task", Title: "Task", Description: "Description", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply", GitCommonDir: common, WorktreeState: WorkItemUnbound})
-			return session.Publish(r)
+			// Fixture seeding is not a production downgrade operation.
+			b, err := encodeWorkItemRegistry(r)
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(workItemsPath(root), b, 0o644)
 		})
 		if err != nil {
 			t.Fatal(err)

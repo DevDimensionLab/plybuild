@@ -427,7 +427,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 				}
 			}
 		}
-		if r.FormatVersion == 4 && link != nil {
+		if r.FormatVersion >= 4 && link != nil {
 			observed := taskResultSpecRelevance(d, root, projects, r, t, v.ID)
 			relevance = observed.Relevance
 			reasons = append(reasons, observed.Reasons...)

@@ -158,7 +158,9 @@ type WorkItemRegistry struct {
 	EpicBaseUpdates         []EpicBaseUpdate          `yaml:"epic_base_updates"`
 	TaskQueueEvents         []TaskQueueEvent          `yaml:"task_queue_events"`
 	TaskPreparations        []TaskPreparation         `yaml:"task_preparations"`
+	FormatBoundary          *RegistryFormatBoundary   `yaml:"format_boundary,omitempty"`
 	RawSHA256               string                    `yaml:"-"`
+	upgradePermit           *registryUpgradePermit    `yaml:"-"`
 }
 
 type EpicAdoptInput struct {
@@ -661,7 +663,7 @@ func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationRes
 			}
 			epic := EpicRecord{ID: input.EpicID, Title: input.Title, ProjectID: input.ProjectID, RepoBindings: []EpicRepoBinding{{RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, Worktree: EpicWorktreeBinding{ID: id, OwnerKind: "epic", OwnerID: input.EpicID, Origin: "adopted", Locator: locator, Ref: input.Ref, OID: input.ExpectedOID, Tree: observation.Tree, GitCommonDir: repository.GitCommonDir}}}}
 			registry.Epics = append(registry.Epics, epic)
-			if registry.FormatVersion == 4 {
+			if registry.FormatVersion >= 4 {
 				registry.EpicBaseVersions = append(registry.EpicBaseVersions, adoptedEpicBase(epic, epic.RepoBindings[0]))
 			}
 			sortWorkRegistry(&registry)

@@ -558,7 +558,7 @@ func requireIntegrationDependencies(d Dependencies) error {
 }
 
 func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, input TaskIntegrationInput) (WorkspaceTaskIntegrationPlan, string, integrationContext, error) {
-	if registry.FormatVersion < 2 || registry.FormatVersion > 4 {
+	if registry.FormatVersion < 2 || registry.FormatVersion > CurrentRegistryFormat {
 		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "work-item store must be format 2, 3 or 4", nil)
 	}
 	task, _ := findTask(registry, input.TaskID)
@@ -639,7 +639,7 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 			readiness = "blocked"
 		}
 	}
-	if registry.FormatVersion == 4 {
+	if registry.FormatVersion >= 4 {
 		base := currentEpicBase(registry, *epic, *parent)
 		if task.Worktree.ParentOID != base.OID || task.Worktree.ParentTree != base.Tree {
 			block("epic_base_changed")

@@ -76,13 +76,13 @@ func queueWorkspace(d Dependencies, root string) (IntegrationPlanWorkspace, erro
 	return IntegrationPlanWorkspace{Root: root, MarkerSHA256: digestTaskBytes(b)}, e
 }
 func queueUpgrade(r WorkItemRegistry) *TaskRegistryUpgrade {
-	if r.FormatVersion == 4 {
+	if r.FormatVersion >= 4 {
 		return nil
 	}
 	return &TaskRegistryUpgrade{FromVersion: r.FormatVersion, RegistrySHA256: r.RawSHA256}
 }
 func upgradeQueueRegistry(d Dependencies, root string, r *WorkItemRegistry, u *TaskRegistryUpgrade) error {
-	if r.FormatVersion == 4 {
+	if r.FormatVersion >= 4 {
 		if u != nil {
 			return queueError("registry_upgrade_conflict", "format 4 requires a null upgrade")
 		}

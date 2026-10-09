@@ -211,10 +211,10 @@ func validateQueuePlanEnvelope(r WorkItemRegistry, w IntegrationPlanWorkspace, t
 	if e := validateQueueTarget(r, t); e != nil {
 		return e
 	}
-	if version < 1 || version > 4 {
+	if version < 1 || version > CurrentRegistryFormat {
 		return fmt.Errorf("invalid plan registry version")
 	}
-	if version == 4 {
+	if version >= 4 {
 		if u != nil {
 			return fmt.Errorf("format 4 upgrade must be null")
 		}
@@ -224,7 +224,7 @@ func validateQueuePlanEnvelope(r WorkItemRegistry, w IntegrationPlanWorkspace, t
 	return nil
 }
 func validateQueueRegistry(r WorkItemRegistry) error {
-	if r.FormatVersion != 4 {
+	if r.FormatVersion < 4 {
 		if r.EpicBaseVersions != nil || r.EpicBaseUpdates != nil || r.TaskQueueEvents != nil || r.TaskPreparations != nil {
 			return fmt.Errorf("legacy registry contains format 4 records")
 		}
@@ -509,10 +509,10 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 
 // Registry publication enforces append-only history, independently of public commands.
 func validateQueueTransition(old, next WorkItemRegistry) error {
-	if old.FormatVersion != 4 {
+	if old.FormatVersion < 4 {
 		return nil
 	}
-	if next.FormatVersion != 4 {
+	if next.FormatVersion < 4 {
 		return fmt.Errorf("format 4 cannot be downgraded")
 	}
 	for _, v := range old.EpicBaseVersions {

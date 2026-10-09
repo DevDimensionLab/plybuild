@@ -607,7 +607,7 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 	}
 	if cur.SelectionFreshness == "current" && cur.ContentIntegrity == "valid" && cur.TargetFreshness != "stale" && contentTypedEqual(cur.Basis, &link.Basis) {
 		out.Relevance = "current"
-		if r.FormatVersion == 4 {
+		if r.FormatVersion >= 4 {
 			ep, _ := findEpic(r, t.ParentEpicID)
 			parent, _ := findEpicRepo(*ep, t.RepoID)
 			base := currentEpicBase(r, *ep, *parent)

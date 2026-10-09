@@ -155,7 +155,7 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.Ready = result.Ready && len(result.Reasons) == 0
-	if registry.FormatVersion == 4 {
+	if registry.FormatVersion >= 4 {
 		result.Base = []EpicBaseSummary{}
 		result.Ready = true
 		for _, binding := range epic.RepoBindings {

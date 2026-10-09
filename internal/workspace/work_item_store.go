@@ -83,7 +83,13 @@ type workItemRegistryV3Wire struct {
 }
 
 func (registry WorkItemRegistry) MarshalYAML() (any, error) {
-	if registry.FormatVersion == 4 {
+	if registry.FormatVersion == 5 {
+		return struct {
+			Content        workItemRegistryV4Wire  `yaml:",inline"`
+			FormatBoundary *RegistryFormatBoundary `yaml:"format_boundary"`
+		}{workItemRegistryV4(registry), registry.FormatBoundary}, nil
+	}
+	if registry.FormatVersion >= 4 {
 		return workItemRegistryV4(registry), nil
 	}
 	if registry.FormatVersion == 1 {
@@ -235,9 +241,12 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 	}
 	registry, err := decodeWorkItemRegistry(contents)
 	if err != nil {
+		if d := RegistryError(err); d != nil {
+			d.Artifact = path
+		}
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
-	if requireClosure && registry.FormatVersion == 4 {
+	if requireClosure && registry.FormatVersion >= 4 {
 		storage := &TaskContentStorage{scope: store.scope}
 		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 			return WorkItemRegistry{}, err
@@ -253,6 +262,9 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry) error {
 	old, err := store.read(root)
 	if err != nil {
+		return err
+	}
+	if err := validateRegistryFormatTransition(old, registry); err != nil {
 		return err
 	}
 	if err := validateQueueTransition(old, registry); err != nil {
@@ -335,6 +347,15 @@ func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry
 	if fault := store.fail("replace"); fault != nil {
 		return abort("replace", fault)
 	}
+	if registry.upgradePermit != nil {
+		fresh, err := os.ReadFile(destination)
+		if err != nil || digestTaskBytes(fresh) != old.RawSHA256 {
+			return abort("replace", registryDiagnostic("registry_upgrade_conflict", "registry bytes changed before publication", old.FormatVersion))
+		}
+		if err := validateRegistryFormatTransition(old, registry); err != nil {
+			return abort("replace", err)
+		}
+	}
 	if err := platformReplace(temporaryPath, destination); err != nil {
 		return abort("replace", err)
 	}
@@ -383,13 +404,17 @@ func encodeWorkItemRegistry(registry WorkItemRegistry) ([]byte, error) {
 	return contents, nil
 }
 
-func decodeWorkItemRegistry(contents []byte) (WorkItemRegistry, error) {
+func decodeWorkItemRegistry(contents []byte) (registry WorkItemRegistry, err error) {
+	version, err := registryDeclaredFormat(contents)
+	if err != nil {
+		return registry, err
+	}
+	defer func() { err = classifyRegistryDecode(err, version) }()
 	if len(contents) == 0 {
 		return WorkItemRegistry{}, errors.New("registry is empty")
 	}
 	decoder := yaml.NewDecoder(bytes.NewReader(contents))
 	decoder.KnownFields(true)
-	var registry WorkItemRegistry
 	if err := decoder.Decode(&registry); err != nil {
 		return WorkItemRegistry{}, err
 	}
@@ -453,12 +478,15 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 	if version >= 3 {
 		fields = append(fields, yamlShapeField{name: "task_spec_policies", typeOf: reflect.TypeOf([]TaskSpecPolicy{})}, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]TaskResultSpecBinding{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
 	}
-	if version == 4 {
+	if version >= 4 {
 		for _, f := range yamlStructShapeFields(reflect.TypeOf(WorkItemRegistry{})) {
 			if f.name == "epic_base_versions" || f.name == "epic_base_updates" || f.name == "task_queue_events" || f.name == "task_preparations" {
 				fields = append(fields, f)
 			}
 		}
+	}
+	if version == 5 {
+		fields = append(fields, yamlShapeField{name: "format_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
 	}
 	return validateYAMLMappingShape(document.Content[0], fields, "work-item registry")
 }
@@ -609,8 +637,11 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 	if err := validateTaskContentRegistry(registry); err != nil {
 		return err
 	}
-	if registry.FormatVersion != 1 && registry.FormatVersion != 2 && registry.FormatVersion != 3 && registry.FormatVersion != 4 {
+	if registry.FormatVersion < 1 || registry.FormatVersion > CurrentRegistryFormat {
 		return fmt.Errorf("unsupported format_version %d", registry.FormatVersion)
+	}
+	if err := validateRegistryBoundary(registry); err != nil {
+		return err
 	}
 	if !sortedUniqueEpics(registry.Epics) || !sortedUniqueTasks(registry.Tasks) || !sortedUniqueOperations(registry.WorktreeOperations) {
 		return errors.New("work-item arrays must be sorted by unique IDs")

@@ -348,7 +348,7 @@ func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, erro
 	return out, e
 }
 func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error {
-	if r.FormatVersion != 4 {
+	if r.FormatVersion < 4 {
 		return nil
 	}
 	for _, ev := range r.TaskQueueEvents {

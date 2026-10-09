@@ -16,7 +16,11 @@ Heads up!
 - start with `ply format pom`, verify that the rewrite of the pom.xml is ok, commit, and from now on you will easily see the diff that ply introduces with ```ply upgrade <2party|3party|spring-boot|plugins|all>```
 - or just use  `ply status` (no rewrite) and manually upgrade your pom.xml based on what is reported as outdated, current option if you need to keep your pom.xml formatting
   
-Requirement: [Go 1.26.7](https://go.dev/doc/install)
+For a prebuilt macOS arm64 CLI, use the [consumer installation and recovery guide](docs/cli-installation.md).
+It needs neither Go nor a source checkout and can replace an old CLI that cannot read the workspace.
+See also [shared registry compatibility and controlled upgrades](docs/registry-compatibility.md).
+
+Building from source requires [Go 1.26.7](https://go.dev/doc/install).
 
 ```shell script
   _____  _       

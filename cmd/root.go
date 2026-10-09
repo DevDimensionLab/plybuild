@@ -15,9 +15,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/buildinfo"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/pkg/bitbucket"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/context"
@@ -37,7 +40,7 @@ import (
 	"strings"
 )
 
-const version = "v1.0.1"
+var version = buildinfo.Version
 
 var log = logger.Context()
 
@@ -77,6 +80,15 @@ func ExecuteE() error {
 		return nil
 	}
 	if err != nil {
+		if diagnostic := workspace.RegistryError(err); diagnostic != nil && executed != nil {
+			format, _ := executed.Flags().GetString("format")
+			if format == "json" {
+				if writeErr := json.NewEncoder(executed.ErrOrStderr()).Encode(diagnostic); writeErr != nil {
+					return writeErr
+				}
+				return err
+			}
+		}
 		RootCmd.PrintErrln("Error:", err.Error())
 		if strings.HasPrefix(err.Error(), "unknown command") {
 			RootCmd.PrintErrf("Run '%v --help' for usage.\n", executed.CommandPath())

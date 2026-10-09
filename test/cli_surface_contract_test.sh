@@ -29,7 +29,7 @@ fail() {
 
 for surface in root status upgrade build; do
 	case $surface in
-	root) arguments=(--help); expected='== version: v1.0.1 ==' ;;
+root) arguments=(--help); expected='== version: dev ==' ;;
 	status) arguments=(status --help); expected='Status functionality for a project' ;;
 	upgrade) arguments=(upgrade --help); expected='Perform upgrade on existing projects' ;;
 	build) arguments=(build --help); expected='Builds a ply project' ;;
