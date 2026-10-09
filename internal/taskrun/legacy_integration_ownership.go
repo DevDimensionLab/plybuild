@@ -91,6 +91,9 @@ func CheckLegacyTaskOwnership(d Dependencies, root string, result workspace.Task
 					}
 				}
 			}
+			if headlessRun(s.Request) {
+				return out, workflowError(4, "owner_active: headless worker retains native ownership until its explicit delivery release; inspect worker show")
+			}
 			exit, e := deliveryRecoveryExit(d, s)
 			if e != nil {
 				return out, workflowError(4, "owner_active: native Task owner has no explicit release or positively observed process exit")

@@ -14,10 +14,20 @@ func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, err
 	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
 	r.ClaudeProjectTrust = in.ClaudeProjectTrust
+	if in.Worker != nil {
+		r.Envelope = deliveryEnv("headless-run-request")
+		r.Worker = in.Worker
+	}
 	return r, validateDeliveryWorkflowRequest(r)
 }
 
 func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
+	if headlessRun(r) {
+		return validateWorkerRequest(r)
+	}
+	if r.Worker != nil {
+		return workflowError(2, "worker authority requires an explicit headless request")
+	}
 	if r.Envelope != deliveryEnv("herdr-run-request") || r.Delivery == nil || r.ReturnMode != "delivery_owner" || r.Agreement != (Agreement{}) || r.Coordinator.ActorClaim != "" || r.Coordinator.MayRequestChanges {
 		return workflowError(2, "delivery-owner v2 requires its own contract and cannot inherit Agreement A or coordinator control")
 	}

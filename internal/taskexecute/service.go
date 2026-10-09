@@ -23,6 +23,7 @@ type Input struct {
 	Restart             bool
 	Runtime             RuntimeOptions
 	NotificationContext string
+	Worker              *taskrun.WorkerContract
 }
 
 type Result struct {
@@ -46,6 +47,7 @@ type launchIntent struct {
 	Human              workspace.QueueHumanDecision     `json:"human"`
 	Notification       *taskrun.FileBinding             `json:"notification"`
 	ClaudeProjectTrust *taskrun.ClaudeProjectTrust      `json:"claude_project_trust,omitempty"`
+	Worker             *taskrun.WorkerContract          `json:"worker,omitempty"`
 }
 
 func checkOrigin(d taskrun.Dependencies, target workspace.QueueTarget) error {
@@ -94,11 +96,21 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		return out, workspace.WorkInvalidArguments("--restart requires an explicit --spec and cannot select --next")
 	}
 	goalInput := workspace.TaskGoalExecuteInput{Target: input.Target, Next: input.Next, SpecID: input.SpecID}
+	input.Runtime.Headless = input.Worker != nil
+	if input.Worker != nil && (input.Restart || input.NotificationContext != "") {
+		return out, workspace.WorkInvalidArguments("headless uses explicit worker resume and has no notification side effects")
+	}
 	plan, err := workspace.PreviewTaskGoalExecution(d.Workspace, goalInput)
 	if err != nil {
 		return out, err
 	}
 	out.Goal = &plan
+	if input.Worker != nil {
+		w, a := input.Worker, plan.Delivery
+		if w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || a == nil || !a.AutomaticAcceptance() || a.HumanOwnedIntegration() || a.Acceptance.RequireHumanQA || a.Mode != workspace.DeliveryLocalEpic {
+			return out, workspace.WorkInvalidArguments("headless requires bounded worker settings and an explicit automatic local Epic agreement")
+		}
+	}
 	if err = checkOrigin(d, plan.Target); err != nil {
 		return out, err
 	}
@@ -116,6 +128,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		var request taskrun.WorkflowRequest
 		if _, err = readPreservedJSON(out.RequestPath, &request); err != nil {
 			return out, err
+		}
+		if (request.Worker != nil) != (input.Worker != nil) {
+			return out, fmt.Errorf("execution already has a different transport; inspect its preserved Run")
 		}
 		if request.WorkspaceRoot != plan.Workspace || request.Delivery == nil || request.Delivery.AcceptancePath != plan.AcceptancePath || request.Delivery.Goal.SHA256 != plan.Goal.Goal.Spec.ManifestSHA256 || request.RequestKey != "execute/"+strings.TrimPrefix(plan.Confirmation, "sha256:") {
 			return out, fmt.Errorf("preserved execution request differs from the selected goal")
@@ -175,6 +190,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	var intent launchIntent
 	old, err := readPreservedJSON(intentPath, &intent)
 	if err == nil {
+		if !bytes.Equal(mustWorkerJSON(intent.Worker), mustWorkerJSON(input.Worker)) {
+			return out, fmt.Errorf("preserved worker choice or limits differ; resume the same Run")
+		}
 		// An omitted field keeps old launch authority unchanged. Explicit null
 		// is malformed and must not disguise a new or changed trust choice.
 		var fields map[string]json.RawMessage
@@ -211,7 +229,8 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 			return out, err
 		}
 		intent = launchIntent{Kind: "ply.workflow.execute-intent", SchemaVersion: 1, Goal: plan, Runtime: runtime, Notification: notice,
-			Human: workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
+			Worker: input.Worker,
+			Human:  workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
 		}
 		if runtime.Runtime.Provider == "claude" {
 			intent.ClaudeProjectTrust = &taskrun.ClaudeProjectTrust{Mode: "configuration", WorktreeRoot: plan.WorktreePath}
@@ -232,9 +251,12 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	if input.Check {
 		out.State, out.NextAction = "ready", "Run the same execute command without --check to create the worktree and start the assigned interactive owner."
+		if input.Worker != nil {
+			out.NextAction = "Run the same execute --headless command without --check to start one background worker for this goal."
+		}
 		return out, nil
 	}
-	if os.Getenv("HERDR_ENV") != "1" {
+	if input.Worker == nil && os.Getenv("HERDR_ENV") != "1" {
 		return out, fmt.Errorf("execute start requires a local Herdr terminal (HERDR_ENV=1)")
 	}
 	if old == nil {
@@ -265,7 +287,11 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	preparation := *prepared.Preparation.Preparation
 	key := "execute/" + strings.TrimPrefix(intent.Goal.Confirmation, "sha256:")
-	draft, err := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, intent.Human.ActorClaim, intent.Runtime.Runtime.Provider+" delivery owner", key, plan.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: true, Agreement: prepared.Delivery})
+	ownerClaim, startSurface, localInstall := intent.Runtime.Runtime.Provider+" delivery owner", "human_authorized_herdr", true
+	if input.Worker != nil {
+		ownerClaim, startSurface, localInstall = "Ply worker", "human_authorized_worker", false
+	}
+	draft, err := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, intent.Human.ActorClaim, ownerClaim, key, plan.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: localInstall, Agreement: prepared.Delivery})
 	if err != nil {
 		return out, err
 	}
@@ -287,10 +313,11 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	boundary := taskrun.DeliveryLocalIntegrationBoundary(prepared.Delivery)
 	request, err := taskrun.BuildDeliveryWorkflowRequest(taskrun.DeliveryRequestInput{
 		RequestKey: key, WorkspaceRoot: plan.Workspace, PreparationID: preparation.ID, PreparationSHA256: digestBytes(pbytes), HandoffDraft: draft, Runtime: r.Runtime,
-		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: "human_authorized_herdr", Authorized: true},
-		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: tabLabel(plan.Goal.Title),
+		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: startSurface, Authorized: true},
+		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: workerTabLabel(input.Worker, plan.Goal.Title),
 		ClaudeProjectTrust: intent.ClaudeProjectTrust,
-		Delivery:           taskrun.DeliveryContract{OwnerClaim: r.Runtime.Provider + " delivery owner", Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
+		Delivery:           taskrun.DeliveryContract{OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
+		Worker:             input.Worker,
 	})
 	if err != nil {
 		return out, err

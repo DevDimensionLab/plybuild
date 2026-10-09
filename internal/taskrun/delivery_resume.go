@@ -6,6 +6,9 @@ import (
 )
 
 func deliveryStartupPending(s workflowState) bool {
+	if headlessRun(s.Request) {
+		return false
+	}
 	if !deliveryRun(s.Request) || s.Result.Delivery == nil || s.Acceptance != nil || s.StartSHA256 != nil || s.Result.Round.Number != 0 {
 		return false
 	}

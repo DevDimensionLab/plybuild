@@ -415,8 +415,14 @@ func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandi
 		if err = ValidateAutomaticInstructions(instructions, agreements[0], in.Argv, in.CWD, objectMapString(a, "sha256"), in.CandidateOID, in.CandidateTree); err != nil {
 			return nil, err
 		}
-		if instructions.ExecutedArgv[1] != objectMapString(s, "locator") {
+		if instructions.ExecutedArgv[len(instructions.ExecutedArgv)-1] != objectMapString(s, "locator") {
 			return nil, fmt.Errorf("actual executed argv differs from preserved script")
+		}
+		if p := instructions.SandboxPolicy; p != nil {
+			raw, err := deliveryReadFile(files, p.Locator, 1<<20)
+			if err != nil || digestBytes(raw) != p.SHA256 {
+				return nil, fmt.Errorf("automatic sandbox policy differs from its preserved binding")
+			}
 		}
 		binary, err := deliveryReadFile(files, instructions.CandidateBinarySnapshot.Locator, AutomaticCandidateBinaryLimit)
 		if err != nil || digestBytes(binary) != instructions.CandidateBinarySnapshot.SHA256 {

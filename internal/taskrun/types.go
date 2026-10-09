@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"os"
 	"time"
 )
 
@@ -18,6 +19,13 @@ type Executable struct {
 	Path   string `json:"path"`
 	SHA256 string `json:"sha256"`
 }
+
+// A normally reaped child with a nonzero status, distinct from observation or
+// transport errors. Acceptance treats this as a test outcome, not lost control.
+type processExitError int
+
+func (e processExitError) Error() string { return fmt.Sprintf("provider exit %d", int(e)) }
+
 type Evidence struct {
 	Locator string `json:"locator"`
 	SHA256  string `json:"sha256"`
@@ -321,6 +329,8 @@ type LaunchSpec struct {
 	Timeout          time.Duration
 	StreamsRoot      string
 	Completion       *ProviderCompletion
+	Environment      []string
+	Stdin            *os.File
 }
 
 // ProcessRunner must call started only after a successful spawn and release all
@@ -358,6 +368,9 @@ type Dependencies struct {
 	// never the provider's task lifetime.
 	// Zero selects the documented adapter timeouts.
 	HerdrTimeout time.Duration
+	// WorkerOwner is an in-process capability held with the native worker lock.
+	// It is never accepted from an agent callback or a serialized CLI argument.
+	WorkerOwner *workerOwner
 }
 
 func (d Dependencies) fault(point string) error {

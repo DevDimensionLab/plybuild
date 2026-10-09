@@ -12,6 +12,11 @@ func filepathForRound(s workflowState, name string) string {
 	return filepath.Join(s.Result.Paths.RunRoot, "rounds", workflowRoundName(s.Result.Round.Number), name)
 }
 func workflowCallback(d Dependencies, s workflowState, contextPath string) error {
+	if headlessRun(s.Request) {
+		if err := workerLiveOwner(d, s); err != nil {
+			return err
+		}
+	}
 	if contextPath == "" {
 		return workflowError(2, "--context is required")
 	}
@@ -103,14 +108,14 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		if s.StartSHA256 != nil {
 			return nil
 		}
-		if s.Result.Round.Number != 0 || s.Result.Transport.AgentSessionID == "" {
+		if s.Result.Round.Number != 0 || !headlessRun(s.Request) && s.Result.Transport.AgentSessionID == "" {
 			return workflowError(4, "run has no bound initial session")
 		}
-		if s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" && s.Phase != "following" {
+		if !headlessRun(s.Request) && s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" && s.Phase != "following" {
 			return workflowError(4, "initial prompt has not been attempted; coordinator inspection is required before recipient acceptance")
 		}
 		c := a.RuntimeClaim
-		if c.NativeSessionID != nil && *c.NativeSessionID != s.Result.Transport.AgentSessionID {
+		if c.NativeSessionID != nil && *c.NativeSessionID != deliveryOwnerSession(*s) {
 			return workflowError(4, "native session claim differs from Herdr")
 		}
 		if a.Acceptance == "started" {
@@ -127,11 +132,13 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			// The recipient's claim cannot establish that Herdr still hosts the
 			// selected provider/session. Observe it before granting Task writes.
 			// A callback normally runs while the agent is working, not idle.
-			fresh, e := workflowAgentGet(d, *s, false)
-			if e != nil {
-				return e
+			if !headlessRun(s.Request) {
+				fresh, e := workflowAgentGet(d, *s, false)
+				if e != nil {
+					return e
+				}
+				workflowObserve(d, s, fresh)
 			}
-			workflowObserve(d, s, fresh)
 		}
 		path := filepath.Join(s.Result.Paths.RunRoot, "start-draft.json")
 		draft, err := readFile(path, 1<<20, true)
@@ -201,6 +208,9 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 				s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and the actual human QA through authorized local completion."}
 				if s.Request.Delivery.Agreement != nil {
 					s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and actual human QA through the frozen delivery boundary."}
+				}
+				if headlessRun(s.Request) {
+					s.Result.NextAction = WorkflowAction{"worker", "Run development, acceptance and separate review through the authorized local Epic return."}
 				}
 			}
 		} else {

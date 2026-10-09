@@ -26,6 +26,7 @@ def main():
         "PLY_CONTINUITY_JOURNEY_ROOT",
         "PLY_AUTOMATIC_JOURNEY_ROOT",
         "PLY_SYNTHETIC_PROCESS", "PLY_SYNTHETIC_RESERVATION_CHILD",
+        "PLY_WORKER_GIT_LOCK_CHILD",
     ):
         if os.environ.get(name):
             raise RuntimeError(f"unset {name} before running acceptance")

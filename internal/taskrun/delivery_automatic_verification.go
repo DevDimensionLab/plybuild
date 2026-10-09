@@ -64,7 +64,19 @@ func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deli
 		ExecutedArgv:            []string{"/bin/sh", receipt.AcceptanceSnapshot.Locator},
 		Environment:             []string{"HOME=" + filepath.Join(path, "home"), "TMPDIR=" + filepath.Join(path, "tmp"), "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + binarySnapshot, "PLY_CANDIDATE_OID=" + receipt.CandidateOID, "PLY_CANDIDATE_TREE=" + receipt.CandidateTree},
 		ExecutorClaim:           s.Request.Runtime.Provider + " / " + s.Request.Delivery.OwnerClaim,
-		ExecutorSessionID:       s.Result.Transport.AgentSessionID, ExpectedExit: 0,
+		ExecutorSessionID:       deliveryOwnerSession(s), ExpectedExit: 0,
+	}
+	if headlessRun(s.Request) {
+		policy, err := workerVerifierPolicy(d, s, path)
+		if err != nil {
+			return err
+		}
+		binding, _, err := deliveryReadBinding(policy, 1<<20)
+		if err != nil {
+			return err
+		}
+		v.SandboxPolicy = &workflowhandoff.AutomaticBinaryBinding{Locator: binding.Locator, SHA256: binding.SHA256}
+		v.ExecutedArgv = []string{"/usr/bin/sandbox-exec", "-f", policy, "/bin/sh", receipt.AcceptanceSnapshot.Locator}
 	}
 	sort.Strings(v.Environment)
 	v.InstructionsSHA256 = workflowhandoff.AutomaticInstructionsDigest(*v, receipt.Argv, receipt.CWD, receipt.Acceptance.SHA256, receipt.CandidateOID, receipt.CandidateTree)
@@ -93,11 +105,22 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 	if err := workflowhandoff.ValidateAutomaticInstructions(*r.Automatic, a, r.Argv, r.CWD, r.Acceptance.SHA256, r.CandidateOID, r.CandidateTree); err != nil {
 		return err
 	}
-	if r.Automatic.ExecutorSessionID != s.Result.Transport.AgentSessionID || r.Acceptance.Locator != s.Request.Delivery.AcceptancePath || r.CWD != s.Observed.Target.WorktreeLocator || r.Acceptance.SHA256 != r.AcceptanceSnapshot.SHA256 {
+	if r.Automatic.ExecutorSessionID != deliveryOwnerSession(s) || r.Acceptance.Locator != s.Request.Delivery.AcceptancePath || r.CWD != s.Observed.Target.WorktreeLocator || r.Acceptance.SHA256 != r.AcceptanceSnapshot.SHA256 {
 		return workflowError(4, "automatic acceptance differs from its actual owner or frozen entrypoint")
 	}
-	if r.Automatic.ExecutedArgv[1] != r.AcceptanceSnapshot.Locator || r.Automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(r.AcceptanceSnapshot.Locator), "candidate-executable") {
+	if r.Automatic.ExecutedArgv[len(r.Automatic.ExecutedArgv)-1] != r.AcceptanceSnapshot.Locator || r.Automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(r.AcceptanceSnapshot.Locator), "candidate-executable") {
 		return workflowError(4, "automatic execution snapshots differ from the reserved attempt")
+	}
+	if headlessRun(s.Request) && r.Automatic.SandboxPolicy == nil {
+		return workflowError(4, "worker verification requires its preserved sandbox")
+	}
+	if p := r.Automatic.SandboxPolicy; p != nil {
+		if _, err := workflowBound(FileBinding{Locator: p.Locator, SHA256: p.SHA256}, 1<<20); err != nil {
+			return err
+		}
+	}
+	if err := workerValidateReview(s, r.Review, r.CandidateOID, r.CandidateTree); err != nil {
+		return err
 	}
 	if _, err := workflowBound(FileBinding{Locator: r.Automatic.CandidateBinarySnapshot.Locator, SHA256: r.Automatic.CandidateBinarySnapshot.SHA256}, workflowhandoff.AutomaticCandidateBinaryLimit); err != nil {
 		return err

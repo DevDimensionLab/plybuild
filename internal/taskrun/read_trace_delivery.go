@@ -296,7 +296,7 @@ func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, ca
 		return
 	}
 	if v.Automatic != nil {
-		if err := workflowhandoff.ValidateAutomaticInstructions(*v.Automatic, deliveryEffectiveAgreement(s), v.Argv, v.CWD, v.Acceptance.SHA256, v.CandidateOID, v.CandidateTree); err != nil || v.Automatic.ExecutorSessionID != s.Result.Transport.AgentSessionID || v.Automatic.ExecutedArgv[1] != v.AcceptanceSnapshot.Locator || v.Outcome != "pass" && v.Outcome != "fail" && v.Outcome != "blocked" {
+		if err := workflowhandoff.ValidateAutomaticInstructions(*v.Automatic, deliveryEffectiveAgreement(s), v.Argv, v.CWD, v.Acceptance.SHA256, v.CandidateOID, v.CandidateTree); err != nil || v.Automatic.ExecutorSessionID != deliveryOwnerSession(s) || v.Automatic.ExecutedArgv[len(v.Automatic.ExecutedArgv)-1] != v.AcceptanceSnapshot.Locator || v.Outcome != "pass" && v.Outcome != "fail" && v.Outcome != "blocked" {
 			r.problem("trace_verification_unbound", "Automatic verifier instructions differ from their frozen policy and execution: "+e.ID)
 			return
 		}
