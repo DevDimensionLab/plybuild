@@ -164,3 +164,76 @@ func TestWorkerNativeReleasedPreparationBlocksResumeBeforeMarker(t *testing.T) {
 		t.Fatal(fmt.Sprintf("released native preparation resumed: %v", err))
 	}
 }
+
+func TestWorkerConcreteFailedReviewReleasesQueueOnceAndKeepsWork(t *testing.T) {
+	f, o := newWorkerDeliveryFixture(t)
+	if err := workflowUpdate(f.D, f.R.WorkspaceRoot, o.RunID, func(s *workflowState) error {
+		w := s.Result.Worker
+		w.Stage = "reviewer"
+		w.Iteration = s.Request.Worker.MaxAttempts
+		dir := filepath.Join(workerDirectory(*s), "attempts", "reviewer-0001")
+		in, _, err := deliveryReadBinding(filepath.Join(dir, "intent.json"), 1<<20)
+		if err != nil {
+			return err
+		}
+		w.Job = &WorkerJob{ID: "reviewer-0001", Kind: "reviewer", Directory: dir, IntentHash: in.SHA256}
+		var result workerAttemptResult
+		if err = readValue(filepath.Join(dir, "result.json"), 1<<20, &result); err != nil {
+			return err
+		}
+		answer, err := workflowKeep(f.D, filepath.Join(dir, "synthetic-changes.json"), workerReviewAnswer{Decision: "changes_requested", Summary: "Synthetic concrete failure", Findings: []string{"invalid integer input accepted"}})
+		if err != nil {
+			return err
+		}
+		result.Answer = &answer
+		return f.D.replaceValue(filepath.Join(dir, "result.json"), result)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = workerStep(f.D, s)
+	if err == nil || !strings.Contains(err.Error(), "explicit limit") {
+		t.Fatalf("unchanged failing review received green: %v", err)
+	}
+	if err = workerBlocked(f.D, f.R.WorkspaceRoot, o.RunID, err); err != nil {
+		t.Fatal(err)
+	}
+	before := gitOutput(t, s.Observed.Target.WorktreeLocator, "rev-parse", "HEAD")
+	f.D.WorkerOwner.lock.Close()
+	calls := 0
+	release := func() error {
+		calls++
+		prep, e := workerPreparation(f.D, s)
+		if e != nil {
+			return e
+		}
+		target := workspace.QueueTargetInput{ProjectID: prep.Target.ProjectID, RepoID: prep.Target.RepoID, EpicID: prep.Target.EpicID}
+		q, e := workspace.ListTaskQueue(f.D.Workspace, target, false)
+		if e != nil {
+			return e
+		}
+		_, e = workspace.CloseTaskQueue(f.D.Workspace, target, s.Request.PreparationID, q.Revision, "Concrete exhausted AW fixture review; preserve work", "release")
+		return e
+	}
+	for i := 0; i < 2; i++ {
+		if err = WithParkedWorker(f.D, f.R.WorkspaceRoot, o.RunID, release); err != nil {
+			t.Fatal(err)
+		}
+	}
+	s, err = workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 || !s.Result.Worker.QueueReleased || s.Result.Worker.Phase != "blocked" {
+		t.Fatalf("release replayed or lost block: calls=%d worker=%+v", calls, s.Result.Worker)
+	}
+	if before != gitOutput(t, s.Observed.Target.WorktreeLocator, "rev-parse", "HEAD") {
+		t.Fatal("release changed task work")
+	}
+	if _, err = StartWorker(f.D, f.R.WorkspaceRoot, o.RunID, true); err == nil {
+		t.Fatal("released failing worker resumed")
+	}
+}
