@@ -8,9 +8,11 @@ notification route, or provider configuration.
 
 The first Goal implements a small Python integer-array normalizer. The second
 adds `--descending` and argument validation while retaining all original behavior.
-Both must preserve the ten-case DW-01 acceptance block byte for byte, add meaningful
-tests, pass actual native acceptance and independent actual review, and integrate
-automatically into the disposable Epic. The explicit executor remains
+Both must preserve the exact original ten-case DW-01 Python oracle in
+`test/baseline_acceptance.py` and the shell entrypoint prefix in
+`test/delivery_acceptance.sh`, add meaningful tests, pass actual native acceptance
+and independent actual review, and integrate automatically into the disposable
+Epic. The explicit executor remains
 `gpt-6-astra` with `max` effort and the existing Codex account login.
 
 ## Prepare without model calls
@@ -21,14 +23,25 @@ python3 -B test/fixtures/headless_worker/week_journey.py --ply /absolute/qualifi
 ```
 
 The first command checks only the harness oracle and prompt parser. It runs a
-small correct executable, rejects a real descending regression, and rejects
-altered embedded license bytes. These are harness tests, never worker/provider
-evidence. On macOS, the executable checks deny writes and network access.
+small correct executable, rejects real descending and integer-type regressions,
+and rejects altered embedded license bytes. It also runs all ten original cases
+through the preserved shell entrypoint under the native verifier's write boundary,
+rejects a broken input validator, and rejects weakened wrapper/oracle bytes.
+These are harness tests, never worker/provider evidence. On macOS, source is
+read-only, only private HOME/TMPDIR are writable, and network access is denied.
 
 The second command creates a disposable fixture and uses public CLI commands to
 register both Goals and preview `workflow week start --check`. It makes no model
 call and installs no service. `prepared` means registration and preview succeeded;
 it does not mean AW-01 acceptance passed.
+
+The original Python oracle is extracted byte for byte into a separate read-only
+file because macOS system shell heredocs create temporary files outside the
+verifier's private TMPDIR. The wrapper invokes that file without a heredoc;
+additional checks may be appended after the preserved wrapper prefix. This
+keeps all ten cases and the verifier's original write policy. It applies only
+to new fixtures: retain the original harness with older heredoc journeys, and
+never rewrite an active Goal, baseline or frozen executable to migrate it.
 
 ## Start the real journey
 
@@ -108,7 +121,8 @@ Only `state: passed` means the full inspection passed. It checks:
 - Model/config boundaries and actual runtime probes; unchanged executable bytes
   throughout the journey. `executable.path` identifies the invoked file; supplying
   an installed path is what makes this an installed-CLI exercise.
-- Byte-preserved original acceptance tests, a built executable identical to its
+- Byte-preserved original Python oracle and shell entrypoint prefix in both
+  committed candidates, a built executable identical to its
   committed source, and independent final behavior checks (13 for Spec 1 and
   30 for Spec 2) under denied writes/network on macOS.
 - Requested active controls and interruption, when enabled, with actual start,

@@ -24,12 +24,10 @@ TASKS = ("normalize", "normalize-descending")
 MODEL, EFFORT = "gpt-6-astra", "max"
 TERMINAL = {"completed", "completed_with_blocks", "blocked", "expired", "paused", "stopped"}
 
-# Preserve the existing DW-01 ten-case acceptance block byte for byte. Both
-# Goals must retain it; independent final checks also exercise the executable.
-BASELINE_SCRIPT = '''#!/bin/sh
-set -eu
-python3 -I -B - <<'PY'
-import json, os, subprocess
+# Exact Python body extracted from the original DW-01 ten-case heredoc. macOS
+# system shells create heredoc temp files outside the verifier's private TMPDIR.
+# A separate read-only file keeps every oracle byte and the same write boundary.
+BASELINE_PYTHON = '''import json, os, subprocess
 binary = os.environ['PLY_CANDIDATE_BINARY']
 for data, expected in [('[3, 1, 3, -2]', [-2, 1, 3]), ('[]', []), (' [0, -1, 0] ', [-1, 0]), ('[9007199254740993, 1]', [1, 9007199254740993])]:
     p = subprocess.run([binary], input=data, text=True, capture_output=True)
@@ -38,7 +36,10 @@ for data in ['[true]', '[1.5]', '{}', '["1"]', 'not json', '[1] trailing']:
     p = subprocess.run([binary], input=data, text=True, capture_output=True)
     assert p.returncode == 2 and p.stdout == '' and p.stderr.strip(), (data, p)
 print('10 behavioral acceptance cases passed')
-PY
+'''
+BASELINE_SCRIPT = '''#!/bin/sh
+set -eu
+python3 -I -B "$(dirname "$0")/baseline_acceptance.py"
 '''
 
 SPEC_NORMALIZE = """# Normalize integer arrays
@@ -51,9 +52,13 @@ Python integer precision. Boolean values, floats, strings, non-arrays, malformed
 JSON and trailing non-whitespace input fail with exit 2, explanatory stderr, and
 no stdout. Valid input exits 0 without stderr.
 
-Preserve the complete existing test/delivery_acceptance.sh byte for byte as the
-prefix of that file. Additional checks may be appended after its final line.
-Keep and pass all ten existing cases. Add meaningful regression/unit tests and
+Preserve test/baseline_acceptance.py byte for byte; it holds the original ten
+acceptance cases. Preserve the complete existing test/delivery_acceptance.sh
+byte for byte as its prefix. Append additional checks after its final line,
+using separate Python test files instead of shell heredocs: acceptance runs
+with read-only source and private HOME/TMPDIR, and macOS system shell heredocs
+create temporary files outside those writable directories. Keep and pass all
+ten existing cases. Add meaningful regression/unit tests and
 brief usage documentation. Build the candidate by copying the self-contained
 executable to the controller's stated output path. No dependencies, network,
 installation, remote effects or human QA. Actual independent review and native
@@ -75,9 +80,11 @@ also applies in descending mode: bool, float, string, non-array, malformed JSON
 and trailing non-whitespace input remain errors.
 
 This Goal depends on the completed normalize Goal and must start from its updated
-Epic base. Keep the original complete ten-case acceptance script byte for byte
-as its prefix and append executable checks for descending behavior and argument
-errors. Preserve existing regression tests and usage behavior; add focused tests
+Epic base. Preserve test/baseline_acceptance.py byte for byte and retain the
+original shell entrypoint as the prefix of test/delivery_acceptance.sh. Append
+executable checks for descending behavior and argument errors using separate
+Python files, not shell heredocs: source is read-only during acceptance.
+Preserve existing regression tests and usage behavior; add focused tests
 and document the new flag. Do not merely add documentation or loosen tests.
 Build the self-contained executable at the controller's exact output path.
 Actual separate review and automatic local Epic delivery are required. No
@@ -177,7 +184,7 @@ def goal_draft(task_id, problem, spec, epic, recorder):
             sha256=sha(spec.read_bytes()), size_bytes=spec.stat().st_size,
             media_type="text/markdown", git_provenance=None))],
         design=[dict(document_id="spec", section=None)],
-        requirements=[dict(id="behavior", acceptance="All preserved Spec behaviors pass, with the original ten-case acceptance block unchanged and meaningful added tests."),
+        requirements=[dict(id="behavior", acceptance="All preserved Spec behaviors pass, with the original ten-case Python oracle byte-identical, its shell entrypoint prefix unchanged, and meaningful added tests."),
                       dict(id="delivery", acceptance="A distinct actual Codex reviewer passes the exact tested candidate before native automatic local Epic delivery. HumanQA remains absent.")],
         constraints=["Only this disposable Task; no network, installation, push, notifications, or unrelated project effects."],
         executor=dict(provider="codex", model=MODEL, effort=EFFORT),
@@ -186,6 +193,19 @@ def goal_draft(task_id, problem, spec, epic, recorder):
             repo_id="fixture", epic_id="epic", target_ref="refs/heads/epic", target_worktree=str(epic),
             acceptance=dict(schema_version=1, mode="automatic", responsible_actor="AW-01 disposable acceptance controller",
                             timeout_seconds=120, require_human_qa=False)))
+
+
+def write_baseline(repo):
+    (repo / "test/delivery_acceptance.sh").write_text(BASELINE_SCRIPT)
+    oracle = repo / "test/baseline_acceptance.py"
+    oracle.write_text(BASELINE_PYTHON)
+    oracle.chmod(0o444)
+
+
+def verify_baseline_bytes(script, oracle):
+    require(script.startswith(BASELINE_SCRIPT.encode()), "Original acceptance entrypoint prefix was weakened or rewritten")
+    require(oracle == BASELINE_PYTHON.encode(), "Original ten-case Python oracle was weakened or rewritten")
+    return dict(entrypoint_sha256=sha(BASELINE_SCRIPT.encode()), oracle_sha256=sha(oracle))
 
 
 def prepare(args):
@@ -204,7 +224,7 @@ def prepare(args):
     (repo / "README.md").write_text("# Disposable AW-01 multi-Spec fixture\nImplement only the native Goal selected for this attempt.\n")
     (repo / "normalize.py").write_text("#!/usr/bin/env python3\nraise SystemExit('not implemented')\n")
     (repo / "normalize.py").chmod(0o755)
-    (repo / "test/delivery_acceptance.sh").write_text(BASELINE_SCRIPT)
+    write_baseline(repo)
     commands.git(repo, "init", "-b", "main")
     commands.git(repo, "config", "user.email", "fixture@example.invalid")
     commands.git(repo, "config", "user.name", "Ply AW-01 fixture")
@@ -247,7 +267,8 @@ def prepare(args):
     contract_file = write_json(root / "week-contract.json", contract)
     preview = commands.ply("workflow", "week", "start", "--file", contract_file, "--check", cwd=epic)
     report.update(state="prepared", epic=str(epic), repo=str(repo), initial_oid=oid,
-        baseline_sha256=sha(BASELINE_SCRIPT.encode()), contract=str(contract_file), preview=preview,
+        baseline_sha256=sha(BASELINE_SCRIPT.encode()), baseline_python_sha256=sha(BASELINE_PYTHON.encode()),
+        contract=str(contract_file), preview=preview,
         service_requested=args.service, exercise_controls=args.exercise_controls,
         interruption_requested=args.interrupt_controller)
     write_json(root / "journey.json", report)
@@ -406,7 +427,8 @@ def verify_run(commands, report, entry, index):
         interruption["observed_generation_after"] = worker["generation"]
     target = inside(root, state["observed"]["target"]["worktree_locator"])
     original = commands.run(["git", "show", f"{candidate['oid']}:test/delivery_acceptance.sh"], target, raw=True)
-    require(original.startswith(BASELINE_SCRIPT.encode()), "Original acceptance block was weakened or rewritten")
+    oracle = commands.run(["git", "show", f"{candidate['oid']}:test/baseline_acceptance.py"], target, raw=True)
+    baseline = verify_baseline_bytes(original, oracle)
     candidate_binary = inside(root, worker["candidate_binary"])
     source = commands.run(["git", "show", f"{candidate['oid']}:normalize.py"], target, raw=True)
     require(candidate_binary.read_bytes() == source, "Built executable differs from committed implementation")
@@ -414,7 +436,7 @@ def verify_run(commands, report, entry, index):
     return dict(task_id=entry["task_id"], run_id=run_id, base_oid=state["observed"]["epic"]["oid"],
                 base_revision=entry["base_revision"], candidate_oid=candidate["oid"], candidate_tree=candidate["tree"],
                 candidate_binary_sha256=sha(candidate_binary.read_bytes()), developer_sessions=developer_sessions,
-                reviewer_session=reviewer_session, attempts=attempts, behavior=behavior,
+                reviewer_session=reviewer_session, attempts=attempts, behavior=behavior, baseline=baseline,
                 integration=integration, verification=verification, closeout=run["closeout"], runtime_probes=probes)
 
 
@@ -586,6 +608,35 @@ def observe(commands, report, seconds, exercise_controls=False, interrupt=False)
         time.sleep(min(3, max(0.01, until - time.monotonic())))
 
 
+def verify_baseline_runtime(root, program, expect_success=True):
+    fixture = Path(tempfile.mkdtemp(prefix="baseline-runtime-", dir=root))
+    repo, home, tmp = fixture / "repo", fixture / "home", fixture / "tmp"
+    for path in (repo / "test", home, tmp):
+        path.mkdir(parents=True)
+    write_baseline(repo)
+    # Same write boundary as the native verifier: Task and evidence read-only;
+    # only this attempt's HOME/TMPDIR and /dev/null are writable. No provider.
+    policy = "(version 1)\n(deny default)\n(allow process*)\n(allow signal)\n(allow sysctl-read)\n(allow mach-lookup)\n(allow file-read*)\n(allow file-write* (literal \"/dev/null\"))\n"
+    for path in (home, tmp):
+        policy += "(allow file-write* (subpath " + json.dumps(str(path.resolve())) + "))\n"
+    policy_path = fixture / "verifier.sb"
+    policy_path.write_text(policy)
+    argv = ["/bin/sh", "./test/delivery_acceptance.sh"]
+    if sys.platform == "darwin":
+        argv = ["/usr/bin/sandbox-exec", "-f", str(policy_path)] + argv
+    env = dict(HOME=str(home), TMPDIR=str(tmp), PATH=os.environ["PATH"], LC_ALL="C", PLY_CANDIDATE_BINARY=str(program))
+    result = subprocess.run(argv, cwd=repo, env=env, capture_output=True, text=True, timeout=20)
+    if expect_success:
+        require(result.returncode == 0 and result.stdout == "10 behavioral acceptance cases passed\n" and not result.stderr,
+                f"Preserved baseline failed in verifier boundary: exit={result.returncode}, stdout={result.stdout!r}, stderr={result.stderr!r}")
+    else:
+        require(result.returncode == 1 and not result.stdout and "AssertionError" in result.stderr,
+                f"Baseline did not reject the actual broken candidate: {result}")
+    if expect_success:
+        return dict(passed_cases=10, native_verifier_write_boundary=sys.platform == "darwin")
+    return dict(rejected_invalid_candidate=True, native_verifier_write_boundary=sys.platform == "darwin")
+
+
 def self_test():
     # Exercise the independent oracle with a tiny correct executable and a real
     # broken variant. This is harness-only evidence, never provider evidence.
@@ -602,8 +653,30 @@ except Exception as error:
  print(str(error),file=sys.stderr); sys.exit(2)
 ''')
         program.chmod(0o755)
+        # Pin the exact 667 Python bytes extracted from the original heredoc;
+        # moving them into a file must not silently change the ten-case oracle.
+        require(sha(BASELINE_PYTHON.encode()) == "sha256:8316b75d7edfb4e45146dc78360e72919517ab7feee604243b53e96ab3a512c4",
+                "Extracted original Python oracle bytes changed")
+        verify_baseline_bytes(BASELINE_SCRIPT.encode() + b"\n# Additional checks may follow.\n", BASELINE_PYTHON.encode())
+        for script, oracle in (
+            (BASELINE_SCRIPT.replace("python3", "# python3").encode(), BASELINE_PYTHON.encode()),
+            (BASELINE_SCRIPT.encode(), BASELINE_PYTHON.replace("p.returncode == 2", "p.returncode == 0").encode()),
+            (BASELINE_SCRIPT.encode(), BASELINE_PYTHON.replace("'[true]', ", "").encode()),
+        ):
+            try:
+                verify_baseline_bytes(script, oracle)
+            except RuntimeError:
+                pass
+            else:
+                raise RuntimeError("Baseline inspection accepted a weakened entrypoint/oracle")
+        baseline = verify_baseline_runtime(Path(tmp), program)
         result = verify_behavior(program, True)
         correct_source = program.read_text()
+        broken_input_validation = correct_source.replace("type(x) is not int", "False")
+        require(broken_input_validation != correct_source, "Baseline negative fixture did not change")
+        program.write_text(broken_input_validation)
+        verify_baseline_runtime(Path(tmp), program, expect_success=False)
+        program.write_text(correct_source)
         regressions = {
             "descending": correct_source.replace("reverse=bool(sys.argv[1:])", "reverse=False"),
             "boolean output": correct_source.replace("json.dumps(sorted(set(data),reverse=bool(sys.argv[1:])))",
@@ -636,7 +709,9 @@ except Exception as error:
                 pass
             else:
                 raise RuntimeError("Prompt verifier accepted corrupted embedded license bytes")
-        print(json.dumps(dict(kind="HarnessOnlySmoke", correct_candidate=result,
+        print(json.dumps(dict(kind="HarnessOnlySmoke", baseline=baseline, correct_candidate=result,
+                             original_python_bytes=667, baseline_drift_cases_rejected=3,
+                             baseline_invalid_input_regression_rejected=True,
                              known_regression_rejected=True, type_regressions_rejected=2, source_prompt_parser_roles=4,
                              altered_prompt_license_rejected=True, provider_calls=0), indent=2))
 
