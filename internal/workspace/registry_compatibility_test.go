@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestRegistryDiagnosticsUseDeclaredFormatAndValidation(t *testing.T) {
@@ -202,6 +204,124 @@ func TestRegistryDeliveredTransitionStaleAndConcurrent(t *testing.T) {
 	}
 	if counts["upgraded"] != 1 || counts["already_upgraded"] != 1 {
 		t.Fatalf("concurrent outcomes: %v", counts)
+	}
+}
+
+func TestRegistryDeliveredReaderMustRemainAvailableAtPublication(t *testing.T) {
+	original, pin := deliveredRegistryReader(t)
+	for _, stage := range []string{"before-apply", "replace"} {
+		t.Run(stage, func(t *testing.T) {
+			directory := physicalPath(t, t.TempDir())
+			for _, name := range []string{"ply", "ply-install", "manifest.json"} {
+				b, err := os.ReadFile(filepath.Join(original, name))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(directory, name), b, 0o755); err != nil {
+					t.Fatal(err)
+				}
+			}
+			f := newWorkItemJourneyFixture(t)
+			queueSetFixture(t, f, "format-fixture", []QueueEntry{})
+			root := filepath.Dir(f.wrapper)
+			before, _ := os.ReadFile(workItemsPath(root))
+			p, err := UpgradeRegistry(f.dependencies, directory, pin, "", false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			remove := func() error { return os.Remove(filepath.Join(directory, "ply")) }
+			if stage == "before-apply" {
+				if err := remove(); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				f.dependencies.WorkItems = &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(s string) error {
+					if s == stage {
+						return remove()
+					}
+					return nil
+				}}}
+			}
+			if _, err := UpgradeRegistry(f.dependencies, directory, pin, p.Confirmation, true); RegistryError(err) == nil || RegistryError(err).Code != "registry_upgrade_required" {
+				t.Fatalf("missing delivered reader accepted: %v", err)
+			}
+			after, _ := os.ReadFile(workItemsPath(root))
+			if !bytes.Equal(before, after) {
+				t.Fatal("reader disappeared but new format was published")
+			}
+		})
+	}
+}
+
+func TestRegistryDeliveredProcessKillRecovery(t *testing.T) {
+	directory, pin := deliveredRegistryReader(t)
+	if os.Getenv("PLY_REGISTRY_TEST_CHILD") == "1" {
+		root, stage := os.Getenv("PLY_REGISTRY_TEST_ROOT"), os.Getenv("PLY_REGISTRY_TEST_STAGE")
+		d := SystemDependencies()
+		d.Files = projectCwdFileSystem{FileSystem: d.Files, cwd: root}
+		d.WorkItems = &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(s string) error {
+			if s == stage {
+				_ = os.WriteFile(filepath.Join(root, "checkpoint"), []byte(s), 0o600)
+				select {}
+			}
+			return nil
+		}}}
+		_, _ = UpgradeRegistry(d, directory, pin, os.Getenv("PLY_REGISTRY_TEST_CONFIRM"), true)
+		os.Exit(3)
+	}
+	for _, stage := range []string{"replace", "directory-sync"} {
+		t.Run(stage, func(t *testing.T) {
+			f := newWorkItemJourneyFixture(t)
+			queueSetFixture(t, f, "format-fixture", []QueueEntry{})
+			root := filepath.Dir(f.wrapper)
+			before, _ := os.ReadFile(workItemsPath(root))
+			p, err := UpgradeRegistry(f.dependencies, directory, pin, "", false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			cmd := exec.Command(os.Args[0], "-test.run=^TestRegistryDeliveredProcessKillRecovery$")
+			cmd.Env = append(os.Environ(), "PLY_REGISTRY_TEST_CHILD=1", "PLY_REGISTRY_TEST_ROOT="+root, "PLY_REGISTRY_TEST_STAGE="+stage, "PLY_REGISTRY_TEST_CONFIRM="+p.Confirmation)
+			if err := cmd.Start(); err != nil {
+				t.Fatal(err)
+			}
+			defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
+			deadline := time.Now().Add(15 * time.Second)
+			for {
+				if _, err := os.Stat(filepath.Join(root, "checkpoint")); err == nil {
+					break
+				}
+				if time.Now().After(deadline) {
+					t.Fatal("child missed registry publication checkpoint")
+				}
+				time.Sleep(10 * time.Millisecond)
+			}
+			if err := cmd.Process.Kill(); err != nil {
+				t.Fatal(err)
+			}
+			_ = cmd.Wait()
+			after, err := os.ReadFile(workItemsPath(root))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if stage == "replace" && !bytes.Equal(before, after) {
+				t.Fatal("registry changed before replacement")
+			}
+			if _, err := decodeWorkItemRegistry(after); err != nil {
+				t.Fatalf("partial registry after SIGKILL: %v", err)
+			}
+			got, err := UpgradeRegistry(f.dependencies, directory, pin, p.Confirmation, true)
+			expected := "upgraded"
+			if stage == "directory-sync" {
+				expected = "already_upgraded"
+			}
+			if err != nil || got.State != expected {
+				t.Fatalf("SIGKILL recovery: %+v %v", got, err)
+			}
+			backup, err := os.ReadFile(got.Backup)
+			if err != nil || !bytes.Equal(before, backup) {
+				t.Fatal("lost registry preimage after SIGKILL")
+			}
+		})
 	}
 }
 

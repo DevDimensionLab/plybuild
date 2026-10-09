@@ -10,4 +10,4 @@ cd "$cb01a_root"
 python3 test/registry_cli_acceptance.py "$1" "$2"
 go test ./internal/workspace ./internal/clirelease ./cmd \
   -run 'TestRegistry|TestInstall|TestExecutableEntryBoundary' -count=1
-test/delivery_acceptance.sh
+sh test/delivery_acceptance.sh

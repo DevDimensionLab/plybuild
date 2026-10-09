@@ -78,8 +78,8 @@ ply workspace epic list --format json >result.json 2>diagnostic.json
 | --- | --- | --- |
 | `registry_unsupported_format` | Valid YAML declares an unsupported positive integer format | Install a supporting prebuilt release; preserve data |
 | `registry_unknown_field` | A supported format contains a field the strict reader does not recognize | Preserve evidence and correct the producer; never strip authorization fields |
-| `registry_malformed_yaml` | Syntax is invalid, empty, or contains multiple documents | Restore verified bytes after diagnosing the producer |
-| `registry_invalid_content` | Known-format shape, type or semantic/reference validation failed | Inspect the rejected content and its preserved publication/backup |
+| `registry_malformed_yaml` | Syntax is invalid, empty, or contains multiple documents | Run `ply version --format json`; retain the diagnostic, registry and backups for producer repair |
+| `registry_invalid_content` | Known-format shape, type or semantic/reference validation failed | Run `ply version --format json`; retain the diagnostic and unchanged publication/backup for producer repair |
 | `registry_upgrade_required` | No valid upgrade permit or available compatible reader | Inspect a fresh native upgrade preview with a verified package |
 | `registry_upgrade_conflict` | Confirmation, history, registry or release basis changed | Re-read and reconcile; do not bypass the native write guard |
 
