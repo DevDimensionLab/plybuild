@@ -468,7 +468,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				if err = deliveryCallback(d, current, contextPath, true); err != nil {
 					return err
 				}
-				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
+				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
 				if err == nil {
 					candidate = &value
 				}
@@ -508,7 +508,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			current.Result.Delivery.Phase = "awaiting_human_qa"
 			current.Result.TaskResultState = "candidate_qualified"
 			current.Result.NextAction = WorkflowAction{"recipient", "Prepare the exact installed candidate journey and request the human's actual product judgment; retain ownership of the same session."}
-			if a := current.Request.Delivery.Agreement; a != nil && a.AutomaticAcceptance() {
+			if a := deliveryEffectiveAgreement(*current); a != nil && a.AutomaticAcceptance() {
 				registry, err := d.Workspace.WorkItems.Snapshot(root)
 				if err != nil {
 					return err
@@ -529,7 +529,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 					current.Result.NextAction = WorkflowAction{"recipient", decision.Reason + " Preserve that human answer and correct the candidate before continuing delivery."}
 				}
 			}
-			if a := current.Request.Delivery.Agreement; a != nil && a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest && (!a.AutomaticAcceptance() || current.Result.Delivery.Phase != "working") {
+			if a := deliveryEffectiveAgreement(*current); a != nil && a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest && (!a.AutomaticAcceptance() || current.Result.Delivery.Phase != "working") {
 				current.Result.NextAction = WorkflowAction{"recipient", "Register the exact Delivery and explicitly release source ownership with ply workflow execute release. The human starts ply integration; stop before integration."}
 			}
 		}

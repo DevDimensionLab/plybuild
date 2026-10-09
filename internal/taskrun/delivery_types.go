@@ -115,6 +115,7 @@ type DeliveryState struct {
 	LastEventSHA256      *string                     `json:"last_event_sha256"`
 	OwnershipRelease     *FileBinding                `json:"ownership_release,omitempty"`
 	HumanIntegration     *HumanIntegrationAcceptance `json:"human_integration,omitempty"`
+	AcceptanceSelection  *FileBinding                `json:"acceptance_selection,omitempty"`
 }
 
 func deliveryEnv(kind string) Envelope   { return Envelope{"ply.workflow." + kind, 2} }

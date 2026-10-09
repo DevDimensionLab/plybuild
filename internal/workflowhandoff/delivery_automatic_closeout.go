@@ -16,12 +16,15 @@ func CloseAutomaticDeliveryCandidate(d Dependencies, taskID string, resultID wor
 		return out, fmt.Errorf("automatic closeout requires the exact native automatic agreement and current ownership guard")
 	}
 	wd := workspace.WithTaskContentScope(*d.TaskWorkspace, workspace.TaskID(taskID))
-	preview, err := workspace.PreviewTaskReconcile(wd, workspace.TaskID(taskID), ownership, true)
+	a := authorization.Agreement
+	// The delivery already names an exact candidate and observed integration.
+	// Older TaskResults remain evidence; they are not candidates for this closeout.
+	in := workspace.TaskCloseoutInput{OperationID: "automatic-closeout/" + authorization.RunID + "/" + string(resultID), TaskID: workspace.TaskID(taskID), TaskResultID: resultID, ExpectedResultOID: ownership.ResultOID, ExpectedResultTree: ownership.ResultTree, TargetRef: a.TargetRef, Keep: true, Ownership: ownership, RequireIntegration: true}
+	preview, err := workspace.PreviewTaskCloseout(wd, in)
 	if err != nil {
 		return out, err
 	}
 	p := preview.Plan
-	a := authorization.Agreement
 	if p.TaskID != workspace.TaskID(taskID) || p.TaskResultID != resultID || p.ResultOID != ownership.ResultOID || p.ResultTree != ownership.ResultTree || p.Source.Ref != a.SourceRef || p.TargetRef != a.TargetRef || p.ReturnLocator != a.TargetWorktree || !p.Keep {
 		return out, fmt.Errorf("automatic closeout differs from the exact accepted candidate and local Epic target")
 	}
@@ -36,7 +39,7 @@ func CloseAutomaticDeliveryCandidate(d Dependencies, taskID string, resultID wor
 		}
 		for _, prior := range registry.IntegrationAuthorities {
 			bound := prior.Plan.DeliveryAuthorization
-			if prior.ID == effect.AuthorityID && prior.TaskID == p.TaskID && prior.TaskResultID == resultID && prior.Plan.Task.ResultOID == p.ResultOID && prior.Plan.Task.ResultTree == p.ResultTree && prior.Plan.Epic.ParentRef == a.TargetRef && bound != nil && bound.Agreement.AutomaticAcceptance() && workspace.DeliveryAgreementDigest(bound.Agreement) == workspace.DeliveryAgreementDigest(a) && bound.RunID == authorization.RunID && bound.CandidateRunID == authorization.CandidateRunID && bound.RequestSHA256 == authorization.RequestSHA256 && bound.MandateSHA256 == authorization.MandateSHA256 {
+			if prior.ID == effect.AuthorityID && prior.TaskID == p.TaskID && prior.TaskResultID == resultID && prior.Plan.Task.ResultOID == p.ResultOID && prior.Plan.Task.ResultTree == p.ResultTree && prior.Plan.Epic.ParentRef == a.TargetRef && bound != nil && bound.Agreement.AutomaticAcceptance() && workspace.DeliveryAgreementDigest(bound.Agreement) == workspace.DeliveryAgreementDigest(a) && bound.RunID == authorization.RunID && bound.CandidateRunID == authorization.CandidateRunID && bound.RequestSHA256 == authorization.RequestSHA256 && bound.MandateSHA256 == authorization.MandateSHA256 && canonicalEqual(bridgeValue(bound.AcceptanceAmendment), bridgeValue(authorization.AcceptanceAmendment)) {
 				matched = true
 			}
 		}
@@ -47,6 +50,5 @@ func CloseAutomaticDeliveryCandidate(d Dependencies, taskID string, resultID wor
 	if !preview.Ready {
 		return out, fmt.Errorf("automatic closeout pending: %s; %s", strings.Join(preview.Reasons, "; "), preview.NextAction)
 	}
-	in := workspace.TaskCloseoutInput{OperationID: "automatic-closeout/" + authorization.RunID + "/" + string(resultID), TaskID: p.TaskID, TaskResultID: resultID, ExpectedResultOID: p.ResultOID, ExpectedResultTree: p.ResultTree, TargetRef: p.TargetRef, Keep: true, Ownership: ownership, RequireIntegration: true}
 	return workspace.ApplyTaskCloseoutWithOwnershipGuard(wd, in, preview.PlanSHA256, guard)
 }

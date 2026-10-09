@@ -114,6 +114,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 	})
 	two := 2
 	workflow := []capabilityOperation{
+		{ID: "workflow.execute.acceptance", Command: []string{"workflow", "execute", "acceptance"}, Mode: "explicit_policy_selection", Selectors: []string{"--context", "--file"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "acceptance_policy_selection"},
 		{ID: "workflow.execute.verify", Command: []string{"workflow", "execute", "verify"}, Mode: "candidate_acceptance", Selectors: []string{"--context", "--review", "--candidate-binary", "--reuse"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}, {"PlyDeliveryVerification@2", &two}}, Effect: "candidate_test_and_evidence"},
 		{ID: "workflow.execute.integrate", Command: []string{"workflow", "execute", "integrate"}, Mode: "frozen_acceptance", Selectors: []string{"--context"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "authorized_local_integration"},
 	}

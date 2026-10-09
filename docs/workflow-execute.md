@@ -86,8 +86,14 @@ New structured delivery agreements travel through the goal, queue, preview and
 frozen execution inputs. They bind the actual Task source, target and permitted
 effects. `ply workflow delivery` registers and performs the resulting qualified
 candidate after its exact automatic or human acceptance gate. New agreement v3
-can explicitly select [automatic local Epic acceptance](workflow-delivery.md#explicit-automatic-acceptance-for-a-new-local-epic-task). Historical goals without this field keep
-their original local return contract.
+can explicitly select [automatic local Epic acceptance](workflow-delivery.md#explicit-automatic-acceptance-for-a-new-local-epic-task).
+An existing schema 1 local Epic run can record a human's explicit
+[acceptance policy choice](workflow-delivery.md#select-automatic-acceptance-for-an-existing-local-epic-run)
+through `workflow execute acceptance RUN_ID --context PATH --file PATH`,
+preserving the original frozen agreement and prior evidence. The choice is
+separate from both test execution and human QA. Historical goals without this
+field or an explicit supported amendment keep their original local return
+contract.
 
 ## Runtime and permissions
 
@@ -167,8 +173,10 @@ and refuses to replay an uncertain prompt. `show` and `follow` remain observers.
 Owner callbacks use the **absolute preserved control executable**, exact Task
 cwd and private context printed in the start guide. Installing another Ply
 candidate does not replace that control binary. Callback surfaces are `report`,
-`verify`, `qa` and `integrate` under `workflow execute`; runtime acceptance uses
-`workflow run accept`. Consult each command's help for its required evidence.
+`acceptance`, `verify`, `qa` and `integrate` under `workflow execute`; runtime
+acceptance uses `workflow run accept`. The `acceptance` callback records the
+explicit policy choice for an eligible existing run. Consult each command's
+help for its required evidence.
 
 Reports preserve working, failed, unknown and not-run facts. Candidate
 qualification executes the declared script and checks actual review evidence and

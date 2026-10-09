@@ -25,7 +25,7 @@ func ObserveAutomaticLocalDelivery(d Dependencies, root, id string, resultID wor
 
 func automaticIntegratedResult(s workflowState, resultID workspace.TaskResultID) (workflowhandoff.DeliveryIntegrationResult, bool, error) {
 	var out workflowhandoff.DeliveryIntegrationResult
-	if !deliveryRun(s.Request) || s.Request.Delivery.Agreement == nil || !s.Request.Delivery.Agreement.AutomaticAcceptance() || s.Request.Delivery.Agreement.HumanOwnedIntegration() || s.Result.Delivery == nil || len(s.Result.Delivery.Candidates) == 0 {
+	if !deliveryRun(s.Request) || deliveryEffectiveAgreement(s) == nil || !deliveryEffectiveAgreement(s).AutomaticAcceptance() || deliveryEffectiveAgreement(s).HumanOwnedIntegration() || s.Result.Delivery == nil || len(s.Result.Delivery.Candidates) == 0 {
 		return out, false, nil
 	}
 	if s.Result.Delivery.HumanIntegration != nil {

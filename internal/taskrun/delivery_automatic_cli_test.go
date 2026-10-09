@@ -33,6 +33,9 @@ func automaticCLIFixture(t *testing.T, binary string, automatic bool, timeout in
 		a.Acceptance = &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "synthetic CLI orchestrator", TimeoutSeconds: timeout}
 	}
 	f := newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: a})
+	// Public native closeout reads the actual registered goal manifest for both
+	// historical and automatic Runs, including an explicit later policy choice.
+	f.R.Delivery.Goal = FileBinding{filepath.Join(f.R.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
 	f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
 	f.D.Executable = func() (string, error) { return binary, nil }
 	f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)

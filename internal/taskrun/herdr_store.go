@@ -43,6 +43,9 @@ func workflowRead(root, id string) (workflowState, error) {
 	if _, e = workflowRecoveryRecord(saved); e != nil {
 		return saved, e
 	}
+	if e = workflowLoadAcceptanceSelection(&saved); e != nil {
+		return saved, e
+	}
 	return saved, nil
 }
 func workflowSave(d Dependencies, s workflowState) error {

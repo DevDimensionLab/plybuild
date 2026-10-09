@@ -417,6 +417,20 @@ func historicalHandoffTaskSpec(d Dependencies, snapshot Snapshot) (*workspace.Ta
 	if e = validateTaskSpecInputs(snapshot.Handoff.Value, eval.RequiredInputs, eval.Spec); e != nil {
 		return b, &eval, e
 	}
+	if taskSpecVersion(snapshot.Handoff.Value) == 3 {
+		amendment, err := deliveryAcceptanceAmendment(snapshot.Handoff.Value)
+		if err != nil {
+			return b, &eval, err
+		}
+		if err = validateDeliveryAmendmentEvidence(d, amendment); err != nil {
+			return b, &eval, err
+		}
+		if amendment != nil {
+			if err = validateDeliverySpecAgreement(snapshot.Handoff.Value, eval.Spec); err != nil {
+				return b, &eval, err
+			}
+		}
+	}
 	if snapshot.Start != nil {
 		if taskSpecVersion(snapshot.Start.Value) < 2 {
 			return b, &eval, fmt.Errorf("Task basis requires version 2 start")

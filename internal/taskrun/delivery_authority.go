@@ -93,7 +93,8 @@ func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.Deliver
 	if err != nil {
 		return nil, err
 	}
-	return &workspace.DeliveryAuthorization{Agreement: *s.Request.Delivery.Agreement, AgreementSHA256: workspace.DeliveryAgreementDigest(*s.Request.Delivery.Agreement), RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, AllowedEffects: append([]string{}, acceptance.DeliveryPermission.AllowedEffects...), PermissionConfirmed: true, HumanIntegration: human, HumanIntegrationRequired: s.Request.Delivery.Agreement.HumanOwnedIntegration() && s.Request.Delivery.Agreement.Mode != workspace.DeliveryPullRequest || s.Result.Delivery.OwnershipRelease != nil}, nil
+	a := deliveryEffectiveAgreement(s)
+	return &workspace.DeliveryAuthorization{Agreement: *a, AgreementSHA256: workspace.DeliveryAgreementDigest(*a), AcceptanceAmendment: s.EffectiveAcceptanceAmendment, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, AllowedEffects: append([]string{}, acceptance.DeliveryPermission.AllowedEffects...), PermissionConfirmed: true, HumanIntegration: human, HumanIntegrationRequired: a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest || s.Result.Delivery.OwnershipRelease != nil}, nil
 }
 
 func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoffEvidenceRequest) (*workspace.DeliveryAuthorization, error) {
@@ -110,10 +111,11 @@ func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoff
 			Root string `json:"root"`
 		} `json:"workspace_binding"`
 		Delivery struct {
-			ParentLocator string                       `json:"parent_handoff_locator"`
-			ParentSHA     string                       `json:"parent_handoff_sha256"`
-			Agreement     *workspace.DeliveryAgreement `json:"agreement"`
-			CandidateKey  string                       `json:"candidate_key"`
+			ParentLocator       string                                 `json:"parent_handoff_locator"`
+			ParentSHA           string                                 `json:"parent_handoff_sha256"`
+			Agreement           *workspace.DeliveryAgreement           `json:"agreement"`
+			CandidateKey        string                                 `json:"candidate_key"`
+			AcceptanceAmendment *workspace.DeliveryAcceptanceAmendment `json:"acceptance_amendment,omitempty"`
 		} `json:"delivery_binding"`
 		Target struct {
 			OID  string `json:"oid"`
@@ -145,7 +147,7 @@ func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoff
 		if attempt := ds.Attempt; ds.Phase == "verifying" && attempt != nil && attempt.Kind == "verification" && attempt.ID == h.Delivery.CandidateKey && attempt.CandidateOID == h.Target.OID && attempt.CandidateTree == h.Target.Tree {
 			current = true
 			candidate = DeliveryCandidate{Key: attempt.ID, OID: attempt.CandidateOID, Tree: attempt.CandidateTree}
-			if agreement := s.Request.Delivery.Agreement; agreement != nil && agreement.AutomaticAcceptance() {
+			if agreement := deliveryEffectiveAgreement(s); agreement != nil && agreement.AutomaticAcceptance() {
 				candidate.Verification, _, err = deliveryReadBinding(filepath.Join(attempt.Path, "verification.json"), 4<<20)
 				if err != nil {
 					return nil, err
@@ -155,6 +157,9 @@ func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoff
 	}
 	if !current {
 		return nil, nil
+	}
+	if !equal(h.Delivery.AcceptanceAmendment, s.EffectiveAcceptanceAmendment) {
+		return nil, workflowError(4, "candidate does not bind the current explicit acceptance selection")
 	}
 	if err = validateAutomaticVerification(d, s, candidate); err != nil {
 		return nil, err
@@ -179,9 +184,10 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	if err != nil {
 		return out, err
 	}
-	if !equal(a.Agreement, agreement) {
+	if !equal(s.Request.Delivery.Agreement, &agreement) && !equal(a.Agreement, agreement) {
 		return out, workflowError(4, "mode or target differs from the frozen delivery agreement; publish a revised Spec and authorize a new execution")
 	}
+	agreement = a.Agreement
 	if len(s.Result.Delivery.Candidates) == 0 {
 		return out, workflowError(4, "delivery requires a technically qualified native candidate")
 	}

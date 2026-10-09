@@ -485,7 +485,7 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 			}
 			filtered := []yamlShapeField{}
 			for _, field := range fields {
-				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote" || field.name == "integration_owner" || field.name == "human_integration" || field.name == "human_integration_required" || field.name == "acceptance" || field.name == "policy_sha256" || field.name == "evidence_sha256" || field.name == "human_qa_record_id"
+				optional := field.name == "source_ref" || field.name == "target_worktree" || field.name == "github_repository" || field.name == "remote" || field.name == "integration_owner" || field.name == "human_integration" || field.name == "human_integration_required" || field.name == "acceptance" || field.name == "acceptance_amendment" || field.name == "policy_sha256" || field.name == "evidence_sha256" || field.name == "human_qa_record_id"
 				if !optional || present[field.name] {
 					filtered = append(filtered, field)
 				}

@@ -20,7 +20,7 @@ func WorkflowDeliveryVerifyWithBinary(d Dependencies, root, id, contextPath, rev
 }
 
 func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deliveryVerificationReceipt, path, binary string) error {
-	a := s.Request.Delivery.Agreement
+	a := deliveryEffectiveAgreement(s)
 	if a == nil || !a.AutomaticAcceptance() {
 		if binary != "" {
 			return workflowError(2, "--candidate-binary requires an explicitly automatic acceptance agreement")
@@ -80,7 +80,7 @@ func deliveryVerificationVersion(r deliveryVerificationReceipt) bool {
 }
 
 func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, live bool) error {
-	a := s.Request.Delivery.Agreement
+	a := deliveryEffectiveAgreement(s)
 	if a == nil || !a.AutomaticAcceptance() {
 		if r.Automatic != nil {
 			return workflowError(4, "historical agreement cannot acquire automatic acceptance")
@@ -119,7 +119,7 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 // Called both at delivery preview and the native workspace's final authority
 // read before effects, including qualification before Candidates is appended.
 func validateAutomaticVerification(d Dependencies, s workflowState, c DeliveryCandidate) error {
-	if s.Request.Delivery.Agreement == nil || !s.Request.Delivery.Agreement.AutomaticAcceptance() {
+	if deliveryEffectiveAgreement(s) == nil || !deliveryEffectiveAgreement(s).AutomaticAcceptance() {
 		return nil
 	}
 	raw, err := workflowBound(c.Verification, 256<<10)
@@ -138,7 +138,7 @@ func validateAutomaticVerification(d Dependencies, s workflowState, c DeliveryCa
 	// controls the recorded effect. Disappearing working test inputs cannot
 	// turn that effect into an unperformed merge or force a second execution.
 	if attempt := s.Result.Delivery.Attempt; attempt != nil && attempt.Kind == "integration" && attempt.CandidateOID == c.OID && attempt.CandidateTree == c.Tree {
-		a := s.Request.Delivery.Agreement
+		a := deliveryEffectiveAgreement(s)
 		target, err := d.Workspace.IntegrationGit.ObserveIntegrationWorktree(a.TargetWorktree, a.TargetRef)
 		if err == nil && target.Clean && len(target.InProgress) == 0 && target.Ref == a.TargetRef && target.GitCommonDir == s.Observed.Target.GitCommonDir && target.OID == c.OID && target.Tree == c.Tree {
 			live = false

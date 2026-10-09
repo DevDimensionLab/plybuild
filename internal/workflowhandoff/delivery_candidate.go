@@ -25,6 +25,7 @@ type DeliveryCandidateInput struct {
 	Exit                                                 int
 	StdoutPath, StderrPath, ReviewPath, VerificationPath string
 	RequireIndependentReview                             bool
+	AcceptanceAmendment                                  *workspace.DeliveryAcceptanceAmendment
 }
 
 type DeliveryCandidateResult struct {
@@ -130,6 +131,13 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	if e != nil {
 		return out, e
 	}
+	agreement, e = effectiveDeliveryCandidateAgreement(agreement, in.AcceptanceAmendment, in.RunID, in.RequestSHA256, parent.Handoff.SHA256)
+	if e != nil {
+		return out, e
+	}
+	if e = validateDeliveryAmendmentEvidence(d, in.AcceptanceAmendment); e != nil {
+		return out, e
+	}
 	acceptanceSnapshot, e := validateDeliveryVerification(d.Files, verification, in, stdout, stderr, reviewRaw, agreement)
 	if e != nil {
 		return out, e
@@ -180,7 +188,10 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	} else if a != nil {
 		b := fields["delivery_binding"].(map[string]any)
 		b["agreement"], b["workflow_run_id"], b["request_sha256"] = a, in.RunID, in.RequestSHA256
-		if a.AutomaticAcceptance() && !a.Acceptance.RequireHumanQA {
+		if in.AcceptanceAmendment != nil {
+			b["acceptance_amendment"] = in.AcceptanceAmendment
+		}
+		if agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA {
 			fields["authority"].(map[string]any)["human_gates"] = []string{}
 			fields["goal"].(map[string]any)["done_when"] = "Native technical evidence records automatic acceptance and review for this exact candidate under the frozen policy."
 		}

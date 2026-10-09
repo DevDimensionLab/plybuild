@@ -22,12 +22,16 @@ func (s *Service) ValidateForIntegration(cwd, id string) (Receipt, taskrun.Deliv
 	if err != nil {
 		return r, empty, err
 	}
-	registry, _, result, basis, err := registryCandidate(d, root, r.Manifest.TaskID, r.Manifest.TaskResult.ID)
+	registry, task, result, basis, err := registryCandidate(d, root, r.Manifest.TaskID, r.Manifest.TaskResult.ID)
 	if err != nil {
 		return r, empty, err
 	}
 	if digest(result) != r.Manifest.TaskResultSHA256 || !reflect.DeepEqual(basis, r.Manifest.Spec) {
 		return r, empty, fmt.Errorf("registered native TaskResult or Spec changed")
+	}
+	original, err := originalDeliveryAgreement(d, root, registry, task, result, basis)
+	if err != nil {
+		return r, empty, err
 	}
 	if err = checkEvidence(d, result, basis); err != nil {
 		return r, empty, err
@@ -35,12 +39,12 @@ func (s *Service) ValidateForIntegration(cwd, id string) (Receipt, taskrun.Deliv
 	if err = sourceUnchanged(d, result); err != nil {
 		return r, empty, err
 	}
-	auth, err := taskrun.ValidateDeliveryAuthority(d, root, r.Manifest.WorkflowRunID, result, r.Manifest.Agreement)
+	auth, err := taskrun.ValidateDeliveryAuthority(d, root, r.Manifest.WorkflowRunID, result, *original)
 	if err != nil {
 		return r, empty, err
 	}
-	if auth.RequestSHA256 != r.Manifest.RequestSHA256 || auth.MandateSHA256 != r.Manifest.MandateSHA256 || auth.PreparationID != r.Manifest.PreparationID || auth.ExpectedParentOID != r.Manifest.ExpectedParentOID {
-		return r, empty, fmt.Errorf("preserved native delivery authority changed")
+	if err = manifestAuthorityMatches(r.Manifest, auth); err != nil {
+		return r, empty, err
 	}
 	r.HumanQA, err = taskrun.LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, result, &r.Manifest.Agreement)
 	if err != nil {

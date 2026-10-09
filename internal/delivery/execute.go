@@ -107,7 +107,7 @@ func (s *Service) Execute(cwd, id string) (Receipt, error) {
 }
 
 func (s *Service) reuseCompleted(root string, r *Receipt, fx *effect, owner Receipt) error {
-	if owner.Manifest.TaskID != r.Manifest.TaskID || owner.Manifest.WorkflowRunID != r.Manifest.WorkflowRunID || owner.Manifest.PreparationID != r.Manifest.PreparationID || owner.Manifest.TaskResult.ID != r.Manifest.TaskResult.ID || owner.Manifest.TaskResultSHA256 != r.Manifest.TaskResultSHA256 || !reflect.DeepEqual(owner.Manifest.Agreement, r.Manifest.Agreement) {
+	if owner.Manifest.TaskID != r.Manifest.TaskID || owner.Manifest.WorkflowRunID != r.Manifest.WorkflowRunID || owner.Manifest.PreparationID != r.Manifest.PreparationID || owner.Manifest.TaskResult.ID != r.Manifest.TaskResult.ID || owner.Manifest.TaskResultSHA256 != r.Manifest.TaskResultSHA256 || !reflect.DeepEqual(owner.Manifest.Agreement, r.Manifest.Agreement) || !reflect.DeepEqual(owner.Manifest.AcceptanceAmendment, r.Manifest.AcceptanceAmendment) {
 		return s.stop(root, r, "blocked", "The existing candidate/target receipt belongs to a different native Task, run, candidate evidence or source agreement.", "Inspect Delivery "+owner.ID+"; its observed effect cannot be claimed as this run's native closure.")
 	}
 	if owner.State != "delivered" || !owner.NativeClosed || owner.PR != nil && (owner.Metadata == nil || owner.Metadata.State != "applied" || !owner.PR.MetadataApplied) || !reflect.DeepEqual(fx.PR, owner.PR) || !reflect.DeepEqual(fx.Local, owner.Local) {

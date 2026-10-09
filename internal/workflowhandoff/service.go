@@ -868,6 +868,11 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 			requiredReads = append(requiredReads, objectString(value.(canonicaljson.Object), "locator"))
 		}
 	}
+	if amendment, err := deliveryAcceptanceAmendment(snapshot.Handoff.Value); err != nil {
+		return err
+	} else if amendment != nil {
+		requiredReads = append(requiredReads, amendment.DecisionLocator)
+	}
 	for _, required := range requiredReads {
 		covered := false
 		for _, root := range readRoots {

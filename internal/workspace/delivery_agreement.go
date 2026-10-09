@@ -46,6 +46,7 @@ type DeliveryAuthorization struct {
 	MandateSHA256            string                         `yaml:"mandate_sha256" json:"mandate_sha256"`
 	AllowedEffects           []string                       `yaml:"allowed_effects" json:"allowed_effects"`
 	PermissionConfirmed      bool                           `yaml:"permission_confirmed" json:"permission_confirmed"`
+	AcceptanceAmendment      *DeliveryAcceptanceAmendment   `yaml:"acceptance_amendment,omitempty" json:"acceptance_amendment,omitempty"`
 	HumanIntegration         *HumanIntegrationAuthorization `yaml:"human_integration,omitempty" json:"human_integration,omitempty"`
 	HumanIntegrationRequired bool                           `yaml:"human_integration_required,omitempty" json:"human_integration_required,omitempty"`
 }
@@ -201,6 +202,13 @@ func ValidateDeliveryAuthorization(a DeliveryAuthorization) error {
 	if a.Agreement.SourceRef == "" || a.AgreementSHA256 != DeliveryAgreementDigest(a.Agreement) || !validTaskText(a.RunID, 1, 256) || !validTaskText(a.CandidateRunID, 1, 256) || !digestPattern.MatchString(a.RequestSHA256) || !digestPattern.MatchString(a.MandateSHA256) || !a.PermissionConfirmed {
 		return fmt.Errorf("delivery authorization lacks an exact agreement, native run/request/mandate or confirmed permission")
 	}
+	if amendment := a.AcceptanceAmendment; amendment != nil {
+		original := a.Agreement
+		original.SchemaVersion, original.Acceptance = 1, nil
+		if _, err := deliveryAuthorizedAgreement(original, &a); err != nil || amendment.RunID != a.RunID || amendment.RequestSHA256 != a.RequestSHA256 || amendment.MandateSHA256 != a.MandateSHA256 {
+			return fmt.Errorf("delivery acceptance amendment differs from its exact native authority")
+		}
+	}
 	want := a.Agreement.AllowedEffects()
 	if len(a.AllowedEffects) != len(want) {
 		return fmt.Errorf("delivery authorization effects differ from its mode")
@@ -238,9 +246,14 @@ func validateIntegrationDelivery(d Dependencies, root string, r WorkItemRegistry
 	if agreement == nil && auth == nil {
 		return nil
 	}
-	if agreement == nil || auth == nil || ValidateDeliveryAuthorization(*auth) != nil || auth.CandidateRunID != result.RunID || !contentTypedEqual(agreement, &auth.Agreement) {
+	if agreement == nil || auth == nil || ValidateDeliveryAuthorization(*auth) != nil || auth.CandidateRunID != result.RunID {
 		return workError(ErrorTaskIntegrationBlocked, "delivery authorization differs from the result-bound immutable agreement and native run", nil)
 	}
+	effective, e := deliveryAuthorizedAgreement(*agreement, auth)
+	if e != nil {
+		return workError(ErrorTaskIntegrationBlocked, "delivery authorization differs from the result-bound immutable agreement and native run", e)
+	}
+	agreement = &effective
 	if agreement.Mode == DeliveryPullRequest {
 		return workError(ErrorTaskIntegrationBlocked, "pull_request authorizes no local integration", nil)
 	}

@@ -174,19 +174,16 @@ func sourceUnchanged(d taskrun.Dependencies, result workspace.TaskResultRecord) 
 	return nil
 }
 
-func (s *Service) buildManifest(d taskrun.Dependencies, root string, in Registration) (Manifest, error) {
-	var out Manifest
-	r, task, result, basis, e := registryCandidate(d, root, in.TaskID, in.TaskResultID)
-	if e != nil {
-		return out, e
-	}
+// The immutable Spec supplies the original agreement. An explicit native
+// acceptance amendment may affect its policy, but cannot rewrite this basis.
+func originalDeliveryAgreement(d taskrun.Dependencies, root string, r workspace.WorkItemRegistry, task workspace.TaskRecord, result workspace.TaskResultRecord, basis workspace.TaskSpecBasis) (*workspace.DeliveryAgreement, error) {
 	eval, e := workspace.ReadHistoricalTaskSpec(d.Workspace, root, basis)
 	if e != nil {
-		return out, e
+		return nil, e
 	}
 	agreement, e := workspace.DeliveryAgreementFromSpec(eval.Spec)
 	if e != nil {
-		return out, e
+		return nil, e
 	}
 	if agreement == nil {
 		// Only the historical local Epic contract is retained when no new field
@@ -202,13 +199,33 @@ func (s *Service) buildManifest(d taskrun.Dependencies, root string, in Registra
 		}
 	}
 	if agreement == nil {
-		return out, fmt.Errorf("no immutable delivery agreement or historical local Epic return context")
+		return nil, fmt.Errorf("no immutable delivery agreement or historical local Epic return context")
 	}
 	if e = workspace.ValidateDeliveryAgreement(*agreement); e != nil {
-		return out, e
+		return nil, e
 	}
 	if agreement.SourceRef != result.SourceRef || agreement.ProjectID != task.ProjectID || agreement.RepoID != task.RepoID || agreement.EpicID != task.ParentEpicID {
-		return out, fmt.Errorf("result-bound agreement differs from the Task source and scope")
+		return nil, fmt.Errorf("result-bound agreement differs from the Task source and scope")
+	}
+	return agreement, nil
+}
+
+func manifestAuthorityMatches(m Manifest, auth taskrun.DeliveryAuthority) error {
+	if auth.Authorization == nil || auth.RequestSHA256 != m.RequestSHA256 || auth.MandateSHA256 != m.MandateSHA256 || auth.PreparationID != m.PreparationID || auth.ExpectedParentOID != m.ExpectedParentOID || !reflect.DeepEqual(auth.Agreement, m.Agreement) || !reflect.DeepEqual(auth.Authorization.AcceptanceAmendment, m.AcceptanceAmendment) {
+		return fmt.Errorf("preserved native delivery authority or selected acceptance policy changed")
+	}
+	return nil
+}
+
+func (s *Service) buildManifest(d taskrun.Dependencies, root string, in Registration) (Manifest, error) {
+	var out Manifest
+	r, task, result, basis, e := registryCandidate(d, root, in.TaskID, in.TaskResultID)
+	if e != nil {
+		return out, e
+	}
+	agreement, e := originalDeliveryAgreement(d, root, r, task, result, basis)
+	if e != nil {
+		return out, e
 	}
 	if e = checkEvidence(d, result, basis); e != nil {
 		return out, e
@@ -220,10 +237,13 @@ func (s *Service) buildManifest(d taskrun.Dependencies, root string, in Registra
 	if e != nil {
 		return out, e
 	}
+	// Only the native accepted run can supply the effective policy. The original
+	// Spec remains in the manifest and is re-read before each authority check.
+	agreement = &auth.Agreement
 	if agreement.Mode != workspace.DeliveryPullRequest && (in.Metadata != nil || in.Title != "" || in.Body != "") {
 		return out, fmt.Errorf("PR title, body and people metadata do not belong to local delivery")
 	}
-	out = Manifest{Workspace: root, TaskID: task.ID, EpicID: task.ParentEpicID, ProjectID: task.ProjectID, RepoID: task.RepoID, Spec: basis, TaskResult: result, TaskResultSHA256: digest(result), Agreement: *agreement, WorkflowRunID: in.WorkflowRunID, RequestSHA256: auth.RequestSHA256, MandateSHA256: auth.MandateSHA256, PreparationID: auth.PreparationID, OwnerClaim: auth.OwnerClaim, ExpectedParentOID: auth.ExpectedParentOID, RequiredGates: []string{"native_technical_qualification", "preserved_review", "exact_candidate_human_pass", "frozen_delivery_authority", "exact_target"}}
+	out = Manifest{Workspace: root, TaskID: task.ID, EpicID: task.ParentEpicID, ProjectID: task.ProjectID, RepoID: task.RepoID, Spec: basis, TaskResult: result, TaskResultSHA256: digest(result), Agreement: *agreement, AcceptanceAmendment: auth.Authorization.AcceptanceAmendment, WorkflowRunID: in.WorkflowRunID, RequestSHA256: auth.RequestSHA256, MandateSHA256: auth.MandateSHA256, PreparationID: auth.PreparationID, OwnerClaim: auth.OwnerClaim, ExpectedParentOID: auth.ExpectedParentOID, RequiredGates: []string{"native_technical_qualification", "preserved_review", "exact_candidate_human_pass", "frozen_delivery_authority", "exact_target"}}
 	if agreement.AutomaticAcceptance() {
 		out.RequiredGates[2] = "exact_candidate_automatic_pass"
 		if agreement.Acceptance.RequireHumanQA || agreement.HumanOwnedIntegration() {
@@ -319,14 +339,15 @@ func (s *Service) gate(d taskrun.Dependencies, root string, r *Receipt) (_ taskr
 		}
 	}()
 	var empty taskrun.DeliveryAuthority
-	registry, _, result, basis, e := registryCandidate(d, root, r.Manifest.TaskID, r.Manifest.TaskResult.ID)
+	registry, task, result, basis, e := registryCandidate(d, root, r.Manifest.TaskID, r.Manifest.TaskResult.ID)
 	if e != nil {
 		return empty, e
 	}
 	if digest(result) != r.Manifest.TaskResultSHA256 || !reflect.DeepEqual(basis, r.Manifest.Spec) {
 		return empty, fmt.Errorf("registered native TaskResult or Spec changed")
 	}
-	if _, e = workspace.ReadHistoricalTaskSpec(d.Workspace, root, basis); e != nil {
+	original, e := originalDeliveryAgreement(d, root, registry, task, result, basis)
+	if e != nil {
 		return empty, e
 	}
 	if e = checkEvidence(d, result, basis); e != nil {
@@ -335,12 +356,12 @@ func (s *Service) gate(d taskrun.Dependencies, root string, r *Receipt) (_ taskr
 	if e = sourceUnchanged(d, result); e != nil {
 		return empty, e
 	}
-	auth, e := taskrun.ValidateDeliveryAuthority(d, root, r.Manifest.WorkflowRunID, result, r.Manifest.Agreement)
+	auth, e := taskrun.ValidateDeliveryAuthority(d, root, r.Manifest.WorkflowRunID, result, *original)
 	if e != nil {
 		return empty, e
 	}
-	if auth.RequestSHA256 != r.Manifest.RequestSHA256 || auth.MandateSHA256 != r.Manifest.MandateSHA256 || auth.PreparationID != r.Manifest.PreparationID || auth.ExpectedParentOID != r.Manifest.ExpectedParentOID {
-		return empty, fmt.Errorf("preserved native delivery authority changed")
+	if e = manifestAuthorityMatches(r.Manifest, auth); e != nil {
+		return empty, e
 	}
 	// A newer fail/blocked supersedes a prior answer for this exact result. QA
 	// for another result, commit or tree can never unlock the candidate.

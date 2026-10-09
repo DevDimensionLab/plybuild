@@ -30,6 +30,9 @@ func validateDeliveryBinding(o canonicaljson.Object) error {
 			fields = append(fields, "workflow_run_id", "request_sha256")
 		}
 	}
+	if _, ok := objectMember(binding, "acceptance_amendment"); ok {
+		fields = append(fields, "acceptance_amendment")
+	}
 	m, e := exactObject(v, "delivery_binding", fields...)
 	if e != nil {
 		return e
@@ -65,6 +68,9 @@ func validateDeliveryBinding(o canonicaljson.Object) error {
 		if objectMapString(m, "mode") == "candidate" && (validatePlainText("workflow_run_id", objectMapString(m, "workflow_run_id"), 1, 256) != nil || !validateDigest(objectMapString(m, "request_sha256"))) {
 			return fmt.Errorf("candidate requires its exact workflow authority binding")
 		}
+	}
+	if _, e = effectiveDeliveryAgreement(o); e != nil {
+		return e
 	}
 	b, e := taskSpecBasis(o)
 	if e != nil || b == nil {
@@ -117,6 +123,16 @@ func validateDeliveryOrTaskTarget(d Dependencies, contract canonicaljson.Object,
 	ca, e := deliveryAgreement(contract)
 	if e != nil || !canonicalEqual(bridgeValue(pa), bridgeValue(ca)) {
 		return workspace.TaskSpecEvaluation{}, fmt.Errorf("candidate delivery agreement differs from its frozen owner")
+	}
+	if _, e = effectiveDeliveryAgreement(contract); e != nil {
+		return workspace.TaskSpecEvaluation{}, e
+	}
+	amendment, e := deliveryAcceptanceAmendment(contract)
+	if e != nil {
+		return workspace.TaskSpecEvaluation{}, e
+	}
+	if e = validateDeliveryAmendmentEvidence(d, amendment); e != nil {
+		return workspace.TaskSpecEvaluation{}, e
 	}
 	return d.taskSpecSession.ValidateDeliveryCandidateTarget(target.Worktree, target.Ref, target.GitCommonDir, basis)
 }

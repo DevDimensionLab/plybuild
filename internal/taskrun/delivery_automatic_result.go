@@ -24,7 +24,7 @@ func preserveAutomaticResult(d Dependencies, path string, receipt deliveryVerifi
 
 func recoverAutomaticResult(d Dependencies, s workflowState) error {
 	a := s.Result.Delivery.Attempt
-	if a == nil || a.Kind != "verification" || s.Request.Delivery.Agreement == nil || !s.Request.Delivery.Agreement.AutomaticAcceptance() {
+	if a == nil || a.Kind != "verification" || deliveryEffectiveAgreement(s) == nil || !deliveryEffectiveAgreement(s).AutomaticAcceptance() {
 		return nil
 	}
 	if _, err := readFile(filepath.Join(a.Path, "verification.json"), 256<<10, true); err == nil || !os.IsNotExist(err) {

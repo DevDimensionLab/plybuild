@@ -46,9 +46,11 @@ Select agreement schema 3 when registering the Goal, before starting execution:
 ```
 
 The bound source ref is added during Task preparation. This choice travels through
-Goal, execution Spec, native mandate and Delivery; it cannot change an already
-started run. PRs and local main/master delivery cannot select this policy. V1/v2
-and absent policies retain their historical human gates. `require_human_qa: true`
+Goal, execution Spec, native mandate and Delivery. An existing schema 1 local Epic
+run can record the explicit policy amendment described below while preserving
+its original frozen agreement. PRs and local main/master delivery cannot select
+this policy. V1/v2 and absent policies retain their historical human gates unless
+the supported explicit amendment is recorded. `require_human_qa: true`
 adds a real human judgment after automatic verification. Optional
 `integration_owner: human` preserves the separate human-started integration path.
 
@@ -100,6 +102,82 @@ separate explicit native cleanup action.
 Text status and versioned JSON show acceptance separately from human judgment
 and final delivery. `ply capabilities` advertises the new CLI through additive
 `workflow_extensions`; historical read-catalog fields are unchanged.
+
+## Select automatic acceptance for an existing local Epic run
+
+When a human explicitly chooses automatic acceptance for an existing schema 1
+local Epic delivery, its accepted owner can record that choice in the same Task,
+Run and worktree. The choice preserves the actor's claim, verbatim answer, time,
+previous agreement digest and current candidate commit/tree. It creates no
+HumanQA record and supplies no test result.
+
+Create a private `DeliveryAcceptanceChoice@1` JSON file using the actual bound
+values and the human's exact policy-choice answer:
+
+```json
+{
+  "kind": "DeliveryAcceptanceChoice@1",
+  "schema_version": 1,
+  "run_id": "wfr_<digest>",
+  "request_sha256": "sha256:<request-digest>",
+  "previous_agreement_sha256": "sha256:<original-agreement-digest>",
+  "candidate_oid": "<current-commit-oid>",
+  "candidate_tree": "<current-tree-oid>",
+  "actor_claim": "the human who selected this policy",
+  "answer": "Use automatic acceptance and local delivery for this existing Task.",
+  "requested_at_utc": "2026-10-09T12:00:00Z",
+  "policy": {
+    "schema_version": 1,
+    "mode": "automatic",
+    "responsible_actor": "the selected orchestrator",
+    "require_human_qa": false,
+    "timeout_seconds": 300
+  }
+}
+```
+
+Use the current compatible control returned by the run. If the original immutable
+control predates the command, first run the supported `workflow execute continue`
+from the private built or installed CLI. Preserve the original control and use
+the compatible control path returned by continuation:
+
+```shell
+/absolute/private/ply workflow execute continue wfr_<id> \
+  --context /absolute/original/context.json --format json
+/absolute/returned/ply-control workflow execute acceptance wfr_<id> \
+  --context /absolute/original/context.json \
+  --file /absolute/private/acceptance-choice.json --format json
+/absolute/returned/ply-control workflow execute verify wfr_<id> \
+  --context /absolute/original/context.json \
+  --review /absolute/private/candidate-review.json \
+  --candidate-binary /absolute/private/built-candidate
+/absolute/returned/ply-control workflow execute integrate wfr_<id> \
+  --context /absolute/original/context.json
+```
+
+The narrow amendment selects automatic acceptance without changing the original
+source, return target, local delivery mode, runtime permissions or allowed
+effects. The original request, Spec, mandate, candidates and test attempts remain
+preserved. Status exposes the effective policy separately; newly registered
+Delivery manifests bind the effective agreement and its native amendment while
+retaining the original Spec basis. An identical repeated choice returns the
+same record. A new choice naming stale candidate bytes, a different choice or a
+competing owner is rejected.
+Explicit human integration ownership retains its own flow.
+
+If publication stops after preserving the validated selection record, repeat
+the same command with the unchanged choice file. Recovery preserves that record
+even if intervening progress reports or code corrections have advanced the Run;
+it completes the pending policy selection without approving the changed source.
+The current candidate still needs its own matching verification and review.
+
+The policy choice alone cannot promote an older verifier receipt. Historical
+`PlyDeliveryVerification@1` evidence lacks the automatic executable/environment
+binding and needs a new verification. A successful current `@2` attempt can use
+the ordinary `verify --reuse` path only when its candidate and relevant inputs
+still match. Changed code requires new test and review evidence. Actual human
+`fail` or `blocked` remains binding for the unchanged candidate; switching policy
+cannot erase it. Test failure, timeout or an unknown result blocks delivery.
 
 ## Record the agreement before starting
 

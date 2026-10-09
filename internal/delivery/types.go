@@ -48,23 +48,24 @@ type MetadataChoice struct {
 }
 
 type Manifest struct {
-	Workspace         string                      `json:"workspace"`
-	TaskID            workspace.TaskID            `json:"task_id"`
-	EpicID            workspace.EpicID            `json:"epic_id"`
-	ProjectID         workspace.ProjectID         `json:"project_id"`
-	RepoID            workspace.RepoID            `json:"repo_id"`
-	Spec              workspace.TaskSpecBasis     `json:"spec"`
-	TaskResult        workspace.TaskResultRecord  `json:"task_result"`
-	TaskResultSHA256  string                      `json:"task_result_sha256"`
-	Agreement         workspace.DeliveryAgreement `json:"agreement"`
-	WorkflowRunID     string                      `json:"workflow_run_id"`
-	RequestSHA256     string                      `json:"request_sha256"`
-	MandateSHA256     string                      `json:"mandate_sha256"`
-	PreparationID     string                      `json:"preparation_id"`
-	OwnerClaim        string                      `json:"owner_claim"`
-	ExpectedParentOID string                      `json:"expected_parent_oid"`
-	RequiredGates     []string                    `json:"required_gates"`
-	EffectKey         string                      `json:"effect_key"`
+	Workspace           string                                 `json:"workspace"`
+	TaskID              workspace.TaskID                       `json:"task_id"`
+	EpicID              workspace.EpicID                       `json:"epic_id"`
+	ProjectID           workspace.ProjectID                    `json:"project_id"`
+	RepoID              workspace.RepoID                       `json:"repo_id"`
+	Spec                workspace.TaskSpecBasis                `json:"spec"`
+	TaskResult          workspace.TaskResultRecord             `json:"task_result"`
+	TaskResultSHA256    string                                 `json:"task_result_sha256"`
+	Agreement           workspace.DeliveryAgreement            `json:"agreement"`
+	AcceptanceAmendment *workspace.DeliveryAcceptanceAmendment `json:"acceptance_amendment,omitempty"`
+	WorkflowRunID       string                                 `json:"workflow_run_id"`
+	RequestSHA256       string                                 `json:"request_sha256"`
+	MandateSHA256       string                                 `json:"mandate_sha256"`
+	PreparationID       string                                 `json:"preparation_id"`
+	OwnerClaim          string                                 `json:"owner_claim"`
+	ExpectedParentOID   string                                 `json:"expected_parent_oid"`
+	RequiredGates       []string                               `json:"required_gates"`
+	EffectKey           string                                 `json:"effect_key"`
 }
 
 type Event struct {

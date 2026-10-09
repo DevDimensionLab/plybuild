@@ -425,8 +425,11 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 		if auth == nil && agreement == nil {
 			continue
 		}
-		if auth == nil || agreement == nil || !contentTypedEqual(auth.Agreement, *agreement) {
+		if auth == nil || agreement == nil {
 			return contentError("task_delivery_binding_conflict", "stored delivery authority differs from the immutable result-bound Spec", nil)
+		}
+		if _, err := deliveryAuthorizedAgreement(*agreement, auth); err != nil {
+			return contentError("task_delivery_binding_conflict", "stored delivery authority differs from the immutable result-bound Spec", err)
 		}
 	}
 	for _, pub := range r.TaskContentPublications {

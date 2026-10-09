@@ -18,6 +18,16 @@ func (r *traceReader) delivery(s workflowState) {
 		r.problem("trace_delivery_unavailable", "Preserved run has no delivery state")
 		return
 	}
+	if err := workflowLoadAcceptanceSelection(&s); err != nil {
+		r.problem("trace_acceptance_selection_unbound", err.Error())
+		return
+	}
+	if b := s.Result.Delivery.AcceptanceSelection; b != nil {
+		if _, err := r.bound(*b, 1<<20); err != nil {
+			r.problem("trace_acceptance_selection_unbound", err.Error())
+			return
+		}
+	}
 	candidates := r.deliveryCandidates(s)
 	eventRoot := filepath.Join(s.Result.Paths.RunRoot, "delivery", "events")
 	entries, entriesErr := inventoryEntries(eventRoot)
@@ -59,6 +69,25 @@ func (r *traceReader) delivery(s workflowState) {
 			continue
 		}
 		switch event.Kind {
+		case "acceptance_selection":
+			if s.Result.Delivery.AcceptanceSelection == nil {
+				r.problem("trace_acceptance_selection_unbound", "Native selection event has no current binding")
+				continue
+			}
+			selection, choice, _, err := readAcceptanceSelection(s, *s.Result.Delivery.AcceptanceSelection)
+			if err != nil || e.Source.SHA256 != s.Result.Delivery.AcceptanceSelection.SHA256 {
+				r.problem("trace_acceptance_selection_unbound", "Acceptance choice differs from its native selection and predecessor")
+				continue
+			}
+			if _, err = r.bound(selection.Choice, 1<<20); err != nil {
+				r.problem("trace_acceptance_selection_unbound", err.Error())
+				continue
+			}
+			e.Kind, e.Role, e.ActorClaim, e.EvidenceClass = "acceptance_policy_choice", "human", choice.ActorClaim, "policy_choice"
+			e.Data = traceJSON(map[string]any{"choice": choice, "selection": selection})
+			e.ReportedAtUTC, e.RegisteredAtUTC = r.time(choice.RequestedAtUTC, e.ID), r.time(selection.RecordedAtUTC, e.ID)
+			e.Sources = append(e.Sources, selection.Choice)
+			r.run.Entries = append(r.run.Entries, e)
 		case "verification":
 			r.verification(s, e, raw, candidates)
 		case "human_qa":
@@ -264,7 +293,7 @@ func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, ca
 		return
 	}
 	if v.Automatic != nil {
-		if err := workflowhandoff.ValidateAutomaticInstructions(*v.Automatic, s.Request.Delivery.Agreement, v.Argv, v.CWD, v.Acceptance.SHA256, v.CandidateOID, v.CandidateTree); err != nil || v.Automatic.ExecutorSessionID != s.Result.Transport.AgentSessionID || v.Automatic.ExecutedArgv[1] != v.AcceptanceSnapshot.Locator || v.Outcome != "pass" && v.Outcome != "fail" && v.Outcome != "blocked" {
+		if err := workflowhandoff.ValidateAutomaticInstructions(*v.Automatic, deliveryEffectiveAgreement(s), v.Argv, v.CWD, v.Acceptance.SHA256, v.CandidateOID, v.CandidateTree); err != nil || v.Automatic.ExecutorSessionID != s.Result.Transport.AgentSessionID || v.Automatic.ExecutedArgv[1] != v.AcceptanceSnapshot.Locator || v.Outcome != "pass" && v.Outcome != "fail" && v.Outcome != "blocked" {
 			r.problem("trace_verification_unbound", "Automatic verifier instructions differ from their frozen policy and execution: "+e.ID)
 			return
 		}
@@ -479,7 +508,7 @@ func (r *traceReader) deliveryIntegration(s workflowState, e TraceEntry, raw []b
 			}
 			if a := authority.Plan.DeliveryAuthorization; a != nil && a.Agreement.AutomaticAcceptance() {
 				decision, err := workspace.EvaluateDeliveryAcceptance(&a.Agreement, c.TaskResult, selectedQA)
-				qaBound = err == nil && decision.Outcome == "pass" && equal(authority.Plan.Acceptance, &decision) && (authority.HumanQARecordID == "" || selectedQA != nil) && equal(s.Request.Delivery.Agreement, &a.Agreement) && a.RunID == s.Result.RunID && a.RequestSHA256 == s.Result.RequestSHA256 && a.MandateSHA256 == s.Result.Handoff.SHA256 && workspace.ValidateDeliveryAuthorization(*a) == nil
+				qaBound = err == nil && decision.Outcome == "pass" && equal(authority.Plan.Acceptance, &decision) && (authority.HumanQARecordID == "" || selectedQA != nil) && equal(deliveryEffectiveAgreement(s), &a.Agreement) && a.RunID == s.Result.RunID && a.RequestSHA256 == s.Result.RequestSHA256 && a.MandateSHA256 == s.Result.Handoff.SHA256 && workspace.ValidateDeliveryAuthorization(*a) == nil
 				if qaBound {
 					data["acceptance"] = authority.Plan.Acceptance
 				}
@@ -513,7 +542,7 @@ func (r *traceReader) deliveryCloseout(s workflowState, e TraceEntry, raw []byte
 	}
 	c, found := candidates[observed.Candidate]
 	plan := observed.Result.Plan
-	if !found || s.Request.Delivery.Agreement == nil || !s.Request.Delivery.Agreement.AutomaticAcceptance() || plan.TaskID != c.TaskResult.TaskID || plan.TaskResultID != c.TaskResult.ID || plan.ResultOID != c.OID || plan.ResultTree != c.Tree || plan.Source.Locator != c.TaskResult.SourceLocator || plan.Source.Ref != c.TaskResult.SourceRef || !plan.Keep || observed.Result.State != "complete" || !observed.Result.LifecycleCompleted || observed.Result.ResourceState != "kept" || observed.Result.WorktreeRemoved || observed.Result.BranchRemoved {
+	if !found || deliveryEffectiveAgreement(s) == nil || !deliveryEffectiveAgreement(s).AutomaticAcceptance() || plan.TaskID != c.TaskResult.TaskID || plan.TaskResultID != c.TaskResult.ID || plan.ResultOID != c.OID || plan.ResultTree != c.Tree || plan.Source.Locator != c.TaskResult.SourceLocator || plan.Source.Ref != c.TaskResult.SourceRef || !plan.Keep || observed.Result.State != "complete" || !observed.Result.LifecycleCompleted || observed.Result.ResourceState != "kept" || observed.Result.WorktreeRemoved || observed.Result.BranchRemoved {
 		r.problem("trace_closeout_unbound", "Automatic Task closeout differs from its exact retained candidate: "+e.ID)
 		return
 	}

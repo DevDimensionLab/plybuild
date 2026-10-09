@@ -83,7 +83,7 @@ func inventoryDeliveryUnknownAction(s workflowState, reason string) InventoryDel
 func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 	a := s.Result.NextAction
 	out := InventoryDeliveryAction{Actor: inventoryDeliveryActor(a.Actor), RecordedActor: a.Actor, Kind: "continue_delivery", Reason: a.Message, EvidenceIDs: []string{s.Result.RunID}}
-	if s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.AutomaticAcceptance() && !s.Request.Delivery.Agreement.HumanOwnedIntegration() && (s.Result.Delivery.Phase == "closing" || s.Result.Delivery.Phase == "completed") {
+	if deliveryEffectiveAgreement(s) != nil && deliveryEffectiveAgreement(s).AutomaticAcceptance() && !deliveryEffectiveAgreement(s).HumanOwnedIntegration() && (s.Result.Delivery.Phase == "closing" || s.Result.Delivery.Phase == "completed") {
 		out.Kind = "continue_closeout"
 		if s.Result.Delivery.Phase == "completed" {
 			out.Kind = "delivery_completed"
@@ -109,7 +109,7 @@ func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 		out.Kind = "prepare_human_qa"
 	case "human_qa_passed", "automatic_acceptance_passed", "integrating":
 		out.Kind = "continue_integration"
-		if s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.Mode == workspace.DeliveryPullRequest {
+		if deliveryEffectiveAgreement(s) != nil && deliveryEffectiveAgreement(s).Mode == workspace.DeliveryPullRequest {
 			out.Kind = "continue_pull_request"
 		}
 	case "completed":
@@ -131,6 +131,12 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 		out.Phase = "unknown"
 		out.NextAction = inventoryDeliveryUnknownAction(s, "The preserved run has no delivery state.")
 		inventoryDeliveryProblem(row, "delivery_state_unavailable", "The delivery request has no preserved delivery state")
+		return
+	}
+	if err := workflowLoadAcceptanceSelection(&s); err != nil {
+		inventoryDeliveryProblem(row, "delivery_state_unavailable", err.Error())
+		out.Phase = s.Result.Delivery.Phase
+		out.NextAction = inventoryDeliveryUnknownAction(s, "Preserved acceptance selection is damaged; inspect the original choice and its native event.")
 		return
 	}
 	out.Phase, out.NextAction = s.Result.Delivery.Phase, inventoryDeliveryAction(s)
@@ -159,6 +165,16 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 			sources = append(sources, capturedSource{binding, raw})
 		}
 		return raw, err
+	}
+	if b := s.Result.Delivery.AcceptanceSelection; b != nil {
+		if _, err := readSource(*b); err != nil {
+			inventoryDeliveryProblem(row, "delivery_state_unavailable", err.Error())
+		}
+		if selection, _, _, err := readAcceptanceSelection(s, *b); err == nil {
+			if _, err = readSource(selection.Choice); err != nil {
+				inventoryDeliveryProblem(row, "delivery_state_unavailable", err.Error())
+			}
+		}
 	}
 	goalBytes, err := readSource(out.GoalSource)
 	if err == nil {
@@ -339,8 +355,8 @@ func inventoryDeliveryEventIdentity(raw []byte, s workflowState, kind string) er
 	if err := json.Unmarshal(raw, &event); err != nil {
 		return err
 	}
-	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1", "ownership_release": "PlyDeliveryOwnerRelease@1", "human_integration": "PlyHumanIntegrationDecision@1", "closeout": "PlyDeliveryCloseout@1"}[kind]
-	if kind == "verification" && s.Request.Delivery.Agreement != nil && s.Request.Delivery.Agreement.AutomaticAcceptance() {
+	expected := map[string]string{"verification": "PlyDeliveryVerification@1", "human_qa": "PlyDeliveryHumanQA@1", "integration": "PlyDeliveryIntegration@1", "pull_request": "PlyDeliveryPullRequest@1", "ownership_release": "PlyDeliveryOwnerRelease@1", "human_integration": "PlyHumanIntegrationDecision@1", "closeout": "PlyDeliveryCloseout@1", "acceptance_selection": "PlyDeliveryAcceptanceSelection@1"}[kind]
+	if kind == "verification" && event.Kind == "PlyDeliveryVerification@2" && deliveryEffectiveAgreement(s) != nil && deliveryEffectiveAgreement(s).AutomaticAcceptance() {
 		expected = "PlyDeliveryVerification@2"
 	}
 	if expected == "" || event.Kind != expected || event.RunID != s.Result.RunID || event.RequestSHA256 != s.Result.RequestSHA256 {

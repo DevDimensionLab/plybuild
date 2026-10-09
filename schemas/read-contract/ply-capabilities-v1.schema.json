@@ -585,6 +585,7 @@
         "effect": {
           "type": "string",
           "enum": [
+            "acceptance_policy_selection",
             "candidate_test_and_evidence",
             "authorized_local_integration"
           ]

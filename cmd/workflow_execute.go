@@ -17,7 +17,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var target queueTargetFlags
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; historical agreements retain their human gate. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+		Long:    "From a Herdr terminal inside the registered return worktree, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
 		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
@@ -59,6 +59,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.AddCommand(newWorkflowExecuteReleaseCommand(d))
 	c.AddCommand(newWorkflowExecuteRecoverStartCommand(d))
 	c.AddCommand(newWorkflowExecuteContinueCommand(d))
+	c.AddCommand(newWorkflowExecuteAcceptanceCommand(d))
 	c.AddCommand(newWorkflowExecuteQARecoveryCommand(d))
 	return c
 }
@@ -102,7 +103,13 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 	case taskexecute.Result:
 		if v.Goal != nil {
 			fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nReturn worktree: %s\nFeature worktree: %s\n", v.Goal.Goal.TaskID, v.Goal.Goal.Title, v.Goal.Target.ParentLocator, v.Goal.WorktreePath)
-			if a := v.Goal.Delivery; a != nil {
+			a := v.Goal.Delivery
+			if v.Run != nil && v.Run.DeliveryStatus != nil && v.Run.DeliveryStatus.AcceptanceSelection != nil {
+				// Display the native validated current choice without changing the
+				// frozen Goal that the JSON response preserves separately.
+				a = &v.Run.DeliveryStatus.AcceptanceSelection.EffectiveAgreement
+			}
+			if a != nil {
 				fmt.Fprintf(c.OutOrStdout(), "Delivery mode: %s\nSource: %s\nTarget: %s", a.Mode, a.SourceRef, a.TargetRef)
 				if a.TargetWorktree != "" {
 					fmt.Fprintf(c.OutOrStdout(), " at %s", a.TargetWorktree)

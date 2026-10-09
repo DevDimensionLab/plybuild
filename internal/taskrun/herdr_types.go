@@ -175,6 +175,10 @@ type workflowState struct {
 	Recovery          *FileBinding        `json:"startup_recovery,omitempty"`
 	RecoveryTransport *FileBinding        `json:"startup_recovery_transport,omitempty"`
 	Continuation      *FileBinding        `json:"delivery_continuation,omitempty"`
+	// Derived only after validating the immutable acceptance selection. These
+	// never replace the frozen request or become additional persisted authority.
+	EffectiveDeliveryAgreement   *workspace.DeliveryAgreement           `json:"-"`
+	EffectiveAcceptanceAmendment *workspace.DeliveryAcceptanceAmendment `json:"-"`
 }
 
 func workflowEnv(kind string) Envelope { return Envelope{"ply.workflow." + kind, 1} }
