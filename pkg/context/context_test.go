@@ -425,7 +425,7 @@ func TestOnEachMavenProjectPreservesEmptyErrorAndCompleteTraversalJobOrder(t *te
 		}
 
 		wantLogs := []contextLogRecord{
-			{level: logrus.DebugLevel, message: "using maven repository from local config " + repositoryURL + "\n"},
+			{level: logrus.DebugLevel, message: "using maven repository from local config"},
 			{level: logrus.InfoLevel, message: "characterizing in first project"},
 			{level: logrus.DebugLevel, message: "operating on a dirty git repo"},
 			{level: logrus.WarnLevel, message: jobError.Error()},
@@ -816,7 +816,7 @@ func TestGetMavenRepositoryPreservesConfiguredAuthAndLegacyDefaultSelection(t *t
 				t.Fatalf("partial configured credentials created auth: %#v", repository.Auth)
 			}
 			assertContextLogs(t, hook, []contextLogRecord{{
-				level: logrus.DebugLevel, message: "using maven repository from local config " + url + "\n",
+				level: logrus.DebugLevel, message: "using maven repository from local config",
 			}})
 		})
 	}

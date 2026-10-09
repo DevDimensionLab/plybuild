@@ -67,7 +67,7 @@ func TestUpgradeDependenciesReportsEveryPerItemFailureExactlyAndContinues(t *tes
 		{level: logrus.InfoLevel, message: "failed to get version for com.example:missing-version"},
 		{level: logrus.DebugLevel, message: "failed to get max version for com.example:invalid-maximum"},
 		{level: logrus.WarnLevel, message: `unable to parse version:not-a-version due to strconv.Atoi: parsing "not": invalid syntax`},
-		{level: logrus.WarnLevel, message: statusURL + " returned status code [503 Complete Dependency Status]"},
+		{level: logrus.WarnLevel, message: "could not determine release for com.example:metadata-failure from " + repositoryURL + ": HTTP 503 Service Unavailable"},
 	})
 	wantURLs := []string{
 		repositoryURL + "/com/example/invalid-maximum/maven-metadata.xml",
@@ -130,8 +130,8 @@ func TestUpgradePluginsOnModelReportsEveryPerPluginFailureExactlyAndContinues(t 
 	assertMavenPartialFailureLogs(t, hook, []mavenPartialFailureLog{
 		{level: logrus.WarnLevel, message: "version points at ${missing.plugin.version}, but no properties are defined"},
 		{level: logrus.WarnLevel, message: `unable to parse version:not-a-version due to strconv.Atoi: parsing "not": invalid syntax`},
-		{level: logrus.WarnLevel, message: statusURL + " returned status code [502 Complete Plugin Status]"},
-		{level: logrus.WarnLevel, message: "could not find a suitable release version"},
+		{level: logrus.WarnLevel, message: "could not determine release for com.example:metadata-failure from " + repositoryURL + ": HTTP 502 Bad Gateway"},
+		{level: logrus.WarnLevel, message: "could not determine release for com.example:release-failure from " + repositoryURL + ": could not find a suitable release version"},
 	})
 	wantURLs := []string{
 		statusURL,
