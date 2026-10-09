@@ -7,7 +7,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -110,7 +112,35 @@ func TestBoundStartPublicCLIContract(t *testing.T) {
 	if !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) {
 		t.Fatal("rejected public apply wrote native state")
 	}
-	call("apply", true, "workflow", "execute", "apply", "--file", request, "--format", "json")
+	requestBytes, _ := os.ReadFile(request)
+	for _, change := range []string{"duplicate", "unknown"} {
+		prefix := `{"kind":"ply.workflow.bound-start-request",`
+		if change == "unknown" {
+			prefix = `{"unexpected":true,`
+		}
+		path := filepath.Join(root, "invalid-"+change+".json")
+		if err := os.WriteFile(path, append([]byte(prefix), requestBytes[1:]...), 0600); err != nil {
+			t.Fatal(err)
+		}
+		command := exec.Command(compiled, "workflow", "execute", "apply", "--file", path, "--format", "json")
+		command.Dir = epic
+		output, err := command.CombinedOutput()
+		if err == nil || !strings.Contains(string(output), "bound_start_invalid_request") {
+			t.Fatalf("public parser accepted %s: %s %v", change, output, err)
+		}
+	}
+	if !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) {
+		t.Fatal("invalid public request wrote native state")
+	}
+	var simultaneous sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		simultaneous.Add(1)
+		go func(n int) {
+			defer simultaneous.Done()
+			call("apply-"+strconv.Itoa(n), true, "workflow", "execute", "apply", "--file", request, "--format", "json")
+		}(i)
+	}
+	simultaneous.Wait()
 	call("status", true, "workflow", "execute", "status", preview.Request.RequestID, "--workspace", root, "--format", "json")
 	call("replay", true, "workflow", "execute", "apply", "--file", request, "--format", "json")
 	for _, verb := range []string{"preview", "apply", "status"} {
