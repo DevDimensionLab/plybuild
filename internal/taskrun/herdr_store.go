@@ -381,6 +381,11 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// Correct the readback without rewriting those historical artifacts.
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup and any native onboarding in the same tab; no native session is bound. Do not restart or resend input."}
 	}
+	if headlessRun(s.Request) {
+		if e = workerReadControl(s, &o); e != nil {
+			return o, e
+		}
+	}
 	if closeout, closeoutErr := workflowTaskCloseout(root, s); closeoutErr != nil {
 		o.Reasons = append(o.Reasons, Reason{"task_closeout_unavailable", closeoutErr.Error()})
 	} else if closeout != nil {
@@ -432,6 +437,11 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// after qualification failed. Explain the supported continuation without
 		// replacing a human question or recommending replay of an unknown check.
 		o.NextAction = WorkflowAction{"recipient", "Acceptance succeeded; inspect the separate qualification failure. For a control compatibility update use the installed Ply's workflow execute continue with this run and its original context. Reuse unchanged successful evidence with verify --reuse " + status.Verification.AttemptID + "; changed source, review, script or authority requires new verification."}
+	}
+	if headlessRun(s.Request) {
+		// Resolve current evidence first, so unavailable closeout or binding
+		// diagnostics cannot be replaced with ordinary worker observation advice.
+		o.NextAction = workerCurrentAction(o)
 	}
 	return o, nil
 }

@@ -75,6 +75,58 @@ func workerDirectory(s workflowState) string {
 	return filepath.Join(s.Result.Paths.RunRoot, "worker")
 }
 
+type workerControl struct {
+	RunID       string `json:"run_id"`
+	Action      string `json:"action"`
+	RequestedAt string `json:"requested_at"`
+}
+
+func workerReadControl(s workflowState, o *WorkflowRun) error {
+	w := *o.Worker
+	o.Worker = &w
+	w.ControlAction, w.ControlRequestedAt = "", ""
+	var control workerControl
+	if err := readValue(filepath.Join(workerDirectory(s), "control.json"), 64<<10, &control); err == nil {
+		if control.RunID != o.RunID {
+			return fmt.Errorf("worker control belongs to another Run")
+		}
+		if control.Action != "continue" {
+			w.ControlAction, w.ControlRequestedAt = control.Action, control.RequestedAt
+		}
+	} else if !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+// Older controllers retain pause/wait actions after their transitions. Project
+// only that known guidance; persisted history and unrelated diagnostics remain.
+func workerCurrentAction(o WorkflowRun) WorkflowAction {
+	a, w := o.NextAction, o.Worker
+	if w == nil || len(o.Reasons) != 0 || (a != (WorkflowAction{"human", "Work is preserved; use worker resume for this same Run."}) && a.Actor != "worker_wait") {
+		return a
+	}
+	if w.Phase == "blocked" || (w.Reason != "" && !(w.Phase == "waiting" && w.Reason == "usage_limit: same Run waits until "+w.RetryNotBefore)) {
+		return a
+	}
+	if (w.ControlAction == "resume" && (w.Phase == "paused" || w.Phase == "stopped" || w.Phase == "running" || w.Phase == "waiting")) ||
+		(w.ControlAction == "pause" && (w.Phase == "running" || w.Phase == "waiting")) ||
+		(w.ControlAction == "stop" && (w.Phase == "running" || w.Phase == "waiting" || w.Phase == "paused")) {
+		return WorkflowAction{"worker", w.ControlAction + " requested for this same Run; consumption at a safe boundary is not yet confirmed. Existing attempts retain ownership until their completion is known."}
+	}
+	switch w.Phase {
+	case "running":
+		if w.Reason == "" && w.RetryNotBefore == "" {
+			return WorkflowAction{"worker", "Observe the same Run; cached worker state does not attest provider liveness or attempt completion."}
+		}
+	case "waiting":
+		if w.RetryNotBefore != "" && (w.Reason == "" || w.Reason == "usage_limit: same Run waits until "+w.RetryNotBefore) {
+			return WorkflowAction{"worker_wait", "The same Run waits until " + w.RetryNotBefore + "; continuing still requires confirmed attempt completion."}
+		}
+	}
+	return a
+}
+
 func validateWorkerRequest(r WorkflowRequest) error {
 	w := r.Worker
 	if w == nil || w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 {

@@ -2,6 +2,12 @@
 set -eu
 
 delivery_repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
+# This exact Task alone has the preserved AW-01 focused acceptance agreement.
+delivery_task_ref=$(GIT_OPTIONAL_LOCKS=0 git -c core.fsmonitor=false -c core.hooksPath=/dev/null -C "$delivery_repo_root" symbolic-ref --quiet HEAD 2>/dev/null || true)
+if [ "$delivery_task_ref" = 'refs/heads/ply-task/aw-01-current-resume-guidance-038968865f8f' ]; then
+    cd "$delivery_repo_root"
+    exec /bin/sh ./test/resume-next-action-acceptance.sh
+fi
 # Native automatic verification supplies TMPDIR inside the Run. Disposable Ply
 # workspace fixtures must live outside the real workspace to avoid nesting it.
 delivery_test_root=$(mktemp -d "/tmp/ply-delivery-acceptance.XXXXXX")

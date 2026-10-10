@@ -43,6 +43,15 @@ pending control request, blocked reason and a current lock observation. A saved
 controller PID alone does not prove that a process is alive. Inventory and trace
 retain native Task/Run history without inventing a Herdr tab or provider session.
 
+Both Run and worker readback derive current guidance from preserved headless
+state. After resume, older pause/wait messages become advice to observe the same
+Run, without attesting provider liveness or attempt completion. Waiting retains
+the exact saved retry deadline, even after that time passes until the controller
+confirms completion. Pending controls remain requests for a safe boundary;
+blocked reasons, binding drift and native closeout retain priority. These reads
+do not rewrite saved actions, consume controls or start attempts. Interactive
+Runs retain their own guidance.
+
 Pause and stop finish the active attempt before parking, retain all work and
 can both be resumed. They do not kill a model halfway through a command. A pause
 or stop request remains visible while the active attempt holds ownership. The

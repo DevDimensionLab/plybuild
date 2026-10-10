@@ -60,17 +60,6 @@ func ShowWorker(d Dependencies, root, id string) (WorkflowRun, error) {
 	} else {
 		o.Worker.OwnerState = "unknown"
 	}
-	var control workerControl
-	if e := readValue(filepath.Join(workerDirectory(s), "control.json"), 64<<10, &control); e == nil {
-		if control.RunID != id {
-			return o, fmt.Errorf("worker control belongs to another Run")
-		}
-		if control.Action != "continue" {
-			o.Worker.ControlAction, o.Worker.ControlRequestedAt = control.Action, control.RequestedAt
-		}
-	} else if !os.IsNotExist(e) {
-		return o, e
-	}
 	return o, nil
 }
 
@@ -123,12 +112,6 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 		return s.Result, err
 	}
 	return ShowWorker(d, root, id)
-}
-
-type workerControl struct {
-	RunID       string `json:"run_id"`
-	Action      string `json:"action"`
-	RequestedAt string `json:"requested_at"`
 }
 
 func workerControlWrite(d Dependencies, s workflowState, action string) error {
