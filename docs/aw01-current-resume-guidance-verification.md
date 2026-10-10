@@ -132,3 +132,99 @@ developer tree. No clean-source check was bypassed. Successful native pretest,
 separate review, verification, commit and local Epic integration belong to the
 controller after this worker exits; none is claimed here. No fullsuite, live
 provider/service, installation, external message or Git mutation was performed.
+
+## Review correction: pending resume after a parked wait
+
+Correction attempt `developer-0002` starts at
+`38ab7da700a38e902ef7074fbfc27146aeeb4c22` (tree
+`6428d96029c9335cf0b9df0d0612830beb2141df`). The prior record above and all prior
+attempt evidence remain unchanged. The required P2 finding is preserved in
+`reviewer-0001/answer.json` alongside these worker attempts: the reason guard in
+`workerCurrentAction` accepted a usage-limit reason only in the `waiting` phase.
+Actual pause/stop transitions retain that reason, so both public readers still
+advised repeating resume after it had already been published.
+
+`TestAW01GuidancePendingControls/waiting_paused` and `waiting_stopped` now enter
+the wait using a confirmed synthetic usage-limit result, consume pause/stop
+through `ServeWorker`, and publish resume without consuming it. Both public
+readers retain ordinary resume advice before publication, then report the
+pending request without claiming consumption. The tests check the exact saved
+deadline, reason, retry count, Run/request/attempt identity, parked phase, and
+control action/timestamp. The control file and complete file inventory, bytes,
+and permissions remain unchanged by the reads.
+
+The fix recognizes only the exact usage-limit reason matching a nonempty saved
+deadline, including when pause/stop preserved it. Other reasons, run-level
+diagnostics, and the blocked phase retain priority. Additional public-reader
+cases cover authentication and unknown process completion, a blocked wait,
+mismatched or missing deadlines, and a run-level obstacle with pending resume.
+No control consumption, retry policy, transition, or acceptance-driver changes
+are needed; the existing Task dispatcher runs the extended mandatory test.
+
+The commands below use these correction-specific paths:
+
+```sh
+aw01_attempt=/Users/perottochristensen/github/.ply/workflow-runs/runs/wfr_946895b4d004bf2abecb373c9f0ac1d81030782da5917ef8862756682895ae6c/worker/attempts/developer-0002
+aw01_scratch="$aw01_attempt/tmp/aw01-correction"
+aw01_go=/Users/perottochristensen/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.darwin-arm64/bin/go
+```
+
+Each command used private HOME/TMPDIR and writable build caches, with the
+existing local module/toolchain cache and downloads disabled:
+
+```sh
+env HOME="$aw01_scratch/home" TMPDIR="$aw01_scratch/tmp" \
+  GOCACHE="$aw01_scratch/go-cache" GOTMPDIR="$aw01_scratch/go-tmp" \
+  GOMODCACHE=/Users/perottochristensen/go/pkg/mod \
+  GOROOT=/Users/perottochristensen/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.darwin-arm64 \
+  GOTOOLCHAIN=local GOENV=off GOWORK=off GOPROXY=off GOSUMDB=off
+```
+
+The broader verification/build commands also set `GIT_OPTIONAL_LOCKS=0`.
+Exact expanded commands are in `output/verification-commands.json`.
+
+1. **RED before the production fix:**
+   `"$aw01_go" test -json -mod=readonly -count=1 -p=1 -parallel=1 -timeout=120s -run '^TestAW01GuidancePendingControls/waiting_(paused|stopped)$' ./internal/taskrun`
+   exited 1. All four post-publication public-reader assertions failed with
+   `pending resume for a parked wait treated as completed or repeated: {Actor:human Message:Work is preserved; use worker resume for this same Run.}`.
+   Pre-publication assertions passed. Raw output:
+   `output/pending-resume-red.jsonl`, `.stderr`, and `.exit`.
+2. **GREEN after the guard fix:** the same Go options with
+   `-run '^TestAW01GuidancePendingControls$'` exited 0, including both new
+   transitions and all obstacle/control cases, with no failures or skips.
+   Raw output: `output/pending-resume-green.jsonl`, `.stderr`, and `.exit`.
+3. **All eight mandatory regressions:** the exact eight-name selection recorded
+   above, using the same Go options, exited 0. Each top-level test ran and passed
+   once; one package pass and zero failed/skipped events were observed.
+   Raw output: `output/guidance-all.stdout`, `.stderr`, and `.exit`;
+   parsed red/green counts: `output/test-summary.json`.
+4. `python3 -I -B test/resume_next_action_dispatch_test.py` passed all three
+   groups (`output/dispatch.stderr`). The reviewed driver and ordinary default
+   remain byte-identical. This checks dispatch/binding, not native acceptance.
+5. `"$aw01_go" vet -mod=readonly ./internal/taskrun` and
+   `"$aw01_go" build -mod=readonly -o "$aw01_attempt/output/candidate" ./cmd/ply`
+   both exited 0 with empty stderr. The exact candidate was invoked through
+   `PLY_CANDIDATE_BINARY` with `version --format json` and exited 0. This is an
+   executable smoke check, not public guidance coverage.
+6. `gofmt`, `/bin/sh -n test/delivery_acceptance.sh test/resume-next-action-acceptance.sh`,
+   and `git --no-optional-locks diff --check` passed.
+
+The rebuilt executable exists at `developer-0002/output/candidate`, with SHA-256
+`3e641de87aac18f992f64ea22d620dd40a5225cd56dd7ee3e3af710eaf48b7ed`.
+Its identity and smoke output are in `output/candidate-identity.json` and
+`output/candidate-version.stdout`.
+
+The supplied native entrypoint was rerun with this candidate and the actual
+starting HEAD/tree above in `PLY_CANDIDATE_OID` / `PLY_CANDIDATE_TREE`:
+
+```sh
+/bin/sh /Users/perottochristensen/github/.ply/task-executions/7318d0234c8a7b6aa3e3a2fbfc1f38d083edd14eadbc1ead7327b042a4826a42/acceptance.sh
+```
+
+It exited 1 with `candidate source must remain clean`, before running tests
+(`output/native-entrypoint-precommit.stdout`, `.stderr`, and `.exit`). The
+clean-source guard is intact; this is not a successful native acceptance receipt.
+The correction is ready for the controller's commit, fresh native acceptance
+and independent review. The controller also retains delivery and notification
+ownership. No native acceptance, review approval, or local integration is claimed
+for this correction attempt.

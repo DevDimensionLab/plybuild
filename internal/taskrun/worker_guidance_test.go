@@ -354,6 +354,49 @@ func TestAW01GuidancePauseStopAndBlocked(t *testing.T) {
 }
 
 func TestAW01GuidancePendingControls(t *testing.T) {
+	for _, parked := range []struct{ action, phase string }{{"pause", "paused"}, {"stop", "stopped"}} {
+		t.Run("waiting_"+parked.phase, func(t *testing.T) {
+			f := newAW01Fixture(t)
+			deadline := f.now.Add(time.Hour).Format(time.RFC3339Nano)
+			r := f.result(&Process{State: "exited", ExitCode: ptr(1), Quiescence: ptr(true)}, &WorkerProviderFailure{Kind: "usage_limit", ResetAt: deadline})
+			f.own()
+			if err := workerWaitForProvider(f.d, f.s, r); err != nil {
+				t.Fatal(err)
+			}
+			f.reload()
+			waitReason, originalJob := f.s.Result.Worker.Reason, *f.s.Result.Worker.Job
+			f.park(parked.action)
+			if f.s.Result.Worker.Phase != parked.phase || f.s.Result.Worker.Reason != waitReason || *f.s.Result.Worker.Job != originalJob {
+				t.Fatal("pause/stop did not preserve the waiting attempt and reason")
+			}
+			f.reads(func(t *testing.T, o WorkflowRun) {
+				if o.NextAction != (WorkflowAction{"human", aw01ResumeMessage}) || o.Worker.RetryNotBefore != deadline {
+					t.Fatalf("parked wait lost its resume advice or deadline: %+v / %+v", o.NextAction, o.Worker)
+				}
+			})
+			f.now = f.now.Add(time.Minute)
+			control := f.control("resume")
+			before := aw01Inventory(t, f.s.Request.WorkspaceRoot)
+			f.reads(func(t *testing.T, o WorkflowRun) {
+				if o.Worker.ControlAction != control.Action || o.Worker.ControlRequestedAt != control.RequestedAt || o.Worker.Phase != parked.phase {
+					t.Fatalf("pending resume identity or unconsumed phase lost: %+v", o.Worker)
+				}
+				if o.Worker.RetryNotBefore != deadline || o.Worker.Reason != waitReason || o.Worker.ProviderRetries != 1 {
+					t.Fatalf("pending resume changed the preserved wait: %+v", o.Worker)
+				}
+				if o.NextAction.Actor != "worker" || !strings.Contains(o.NextAction.Message, "resume requested") || !strings.Contains(o.NextAction.Message, "safe boundary") || !strings.Contains(o.NextAction.Message, "not yet confirmed") || strings.Contains(o.NextAction.Message, "use worker resume") {
+					t.Fatalf("pending resume for a parked wait treated as completed or repeated: %+v", o.NextAction)
+				}
+			})
+			var preserved workerControl
+			if err := readValue(filepath.Join(workerDirectory(f.s), "control.json"), 64<<10, &preserved); err != nil || preserved != control {
+				t.Fatalf("read consumed pending resume: %+v / %v", preserved, err)
+			}
+			if after := aw01Inventory(t, f.s.Request.WorkspaceRoot); !reflect.DeepEqual(before, after) {
+				t.Fatal("pending resume read changed actual inventory, bytes or permissions")
+			}
+		})
+	}
 	for _, action := range []string{"pause", "stop", "resume"} {
 		t.Run(action, func(t *testing.T) {
 			f := newAW01Fixture(t)
@@ -374,6 +417,39 @@ func TestAW01GuidancePendingControls(t *testing.T) {
 			if err := readValue(filepath.Join(workerDirectory(f.s), "control.json"), 64<<10, &preserved); err != nil || preserved != control {
 				t.Fatalf("read consumed pending control: %+v / %v", preserved, err)
 			}
+		})
+	}
+	deadline := "2026-10-10T07:00:00Z"
+	waitReason := "usage_limit: same Run waits until " + deadline
+	for _, obstacle := range []struct {
+		name, phase, reason, deadline string
+		runReasons                    []Reason
+	}{
+		{"paused_diagnostic", "paused", "authentication_required: existing Codex login failed", deadline, nil},
+		{"stopped_diagnostic", "stopped", "attempt reviewer-0001 has no positive process completion", deadline, nil},
+		{"blocked_wait", "blocked", waitReason, deadline, nil},
+		{"different_deadline", "paused", "usage_limit: same Run waits until 2026-10-10T08:00:00Z", deadline, nil},
+		{"missing_deadline", "stopped", "usage_limit: same Run waits until ", "", nil},
+		{"run_diagnostic", "paused", waitReason, deadline, []Reason{{"worker_attempt_unknown", "ownership and process outcome are unknown"}}},
+	} {
+		t.Run(obstacle.name, func(t *testing.T) {
+			f := newAW01Fixture(t)
+			f.s.Result.Worker.Phase = obstacle.phase
+			f.s.Result.Worker.Reason = obstacle.reason
+			f.s.Result.Worker.RetryNotBefore = obstacle.deadline
+			if obstacle.runReasons != nil {
+				f.s.Result.Reasons = obstacle.runReasons
+			}
+			f.save()
+			control := f.control("resume")
+			f.reads(func(t *testing.T, o WorkflowRun) {
+				if o.NextAction != f.s.Result.NextAction || o.Worker.Phase != obstacle.phase || o.Worker.Reason != obstacle.reason || !equal(o.Reasons, f.s.Result.Reasons) {
+					t.Fatalf("pending resume concealed an obstacle: %+v", o)
+				}
+				if o.Worker.RetryNotBefore != obstacle.deadline || o.Worker.ControlAction != control.Action || o.Worker.ControlRequestedAt != control.RequestedAt {
+					t.Fatalf("pending resume changed deadline or control identity: %+v", o.Worker)
+				}
+			})
 		})
 	}
 	for _, controlState := range []string{"other_run", "malformed", "consumed"} {

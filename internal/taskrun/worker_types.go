@@ -106,7 +106,9 @@ func workerCurrentAction(o WorkflowRun) WorkflowAction {
 	if w == nil || len(o.Reasons) != 0 || (a != (WorkflowAction{"human", "Work is preserved; use worker resume for this same Run."}) && a.Actor != "worker_wait") {
 		return a
 	}
-	if w.Phase == "blocked" || (w.Reason != "" && !(w.Phase == "waiting" && w.Reason == "usage_limit: same Run waits until "+w.RetryNotBefore)) {
+	// Pause and stop preserve the wait reason until resume is consumed.
+	preservedWait := w.RetryNotBefore != "" && w.Reason == "usage_limit: same Run waits until "+w.RetryNotBefore
+	if w.Phase == "blocked" || (w.Reason != "" && !preservedWait) {
 		return a
 	}
 	if (w.ControlAction == "resume" && (w.Phase == "paused" || w.Phase == "stopped" || w.Phase == "running" || w.Phase == "waiting")) ||
