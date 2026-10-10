@@ -59,6 +59,11 @@ func newAW01Fixture(t *testing.T) *aw01Fixture {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// TempDir's child mode depends on the caller's umask. These fixtures use
+	// the real private-store guard, including under ordinary operator tests.
+	if err := os.Chmod(root, 0700); err != nil {
+		t.Fatal(err)
+	}
 	f := &aw01Fixture{t: t, now: time.Date(2026, 10, 10, 6, 0, 0, 0, time.UTC)}
 	f.d.Now = func() time.Time { return f.now }
 	f.d.Workflow.Workspace = aw01Workspace{root: root}
