@@ -610,6 +610,7 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 					s.ActiveTaskID = ""
 					g.ActiveRun = ""
 					s.ResumeRequested = false
+					g.ResumeAllowed = false
 				} else if s.DesiredAction != "continue" {
 					if r.Phase == "paused" || r.Phase == "stopped" {
 						s.Phase = parkPhase(s.DesiredAction, expired)

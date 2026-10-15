@@ -181,6 +181,7 @@ func TestMR05WeekPauseDispatchReservationRace(t *testing.T) {
 }
 
 func TestMR05WeekControlResumePreservesSelectionAndDeadline(t *testing.T) {
+	t.Run("resume_completion_keeps_same_start", mr05ResumeCompletionKeepsSameStart)
 	t.Run("state_before_gate_registration_gap", mr05StateBeforeGateGap)
 	t.Run("missing_state_cannot_reset_confirmed_pause", func(t *testing.T) {
 		f := newMR05Week(t)
@@ -292,6 +293,88 @@ func TestMR05WeekControlResumePreservesSelectionAndDeadline(t *testing.T) {
 			t.Fatal("resume replaced active Run")
 		}
 	})
+}
+
+func mr05ResumeCompletionKeepsSameStart(t *testing.T) {
+	for _, scenario := range []string{"next_goal", "completed_week"} {
+		t.Run(scenario, func(t *testing.T) {
+			f := newMR05Week(t)
+			wakes := 0
+			f.m.Launch = func(Binding) error { wakes++; return nil }
+			f.tick(t)
+			current := workspace.TaskID("first")
+			if scenario == "completed_week" {
+				f.n.complete(current)
+				f.tick(t)
+				current = "second"
+			}
+			runID := f.n.runs[current].ID
+			pause := weekPreview(t, f, "pause", "completion-pause-0001")
+			weekApply(t, f, pause)
+			child := f.n.runs[current]
+			child.Phase, child.OwnerState, child.SupervisorState = "paused", "unowned", "unowned"
+			f.n.runs[current] = child
+			f.tick(t)
+			weekEffect(t, f, pause.RequestID, "paused")
+			if f.s.Phase != "paused" || f.s.ActiveTaskID != current {
+				t.Fatal("legitimate parking boundary lost", f.s)
+			}
+			if _, err := f.m.Start(f.c, true); err != nil {
+				t.Fatal("parked same-contract check", err)
+			}
+			preview, err := f.m.Controls().Preview(f.c.Workspace, f.b.ID, "resume", "completion-resume-0001")
+			if err != nil || preview.Request == nil || preview.Basis.RunID == nil || *preview.Basis.RunID != runID {
+				t.Fatal("resume did not bind the same child", preview, err)
+			}
+			resume := *preview.Request
+			weekApply(t, f, resume)
+			f.tick(t)
+			confirmed := weekEffect(t, f, resume.RequestID, "resumed")
+			f.tick(t) // Dispatch the one approved resume without observing running.
+			if !reflect.DeepEqual(f.n.resumes, []bool{true}) || f.n.runs[current].ID != runID {
+				t.Fatal("resume dispatch changed identity or repeated", f.n.resumes, f.n.runs)
+			}
+			// Supply only the child observation; production Tick owns parent state.
+			f.n.complete(current)
+			completed := f.n.runs[current]
+			f.tick(t)
+			entry := f.s.Entries[entryIndex(&f.s, current)]
+			if entry.State != "completed" || entry.RunID != runID || f.s.ResumeRequested {
+				t.Fatal("completion lost the retained child result", entry, f.s)
+			}
+			if scenario == "next_goal" && (f.s.Phase != "running" || f.s.ActiveTaskID != "second") || scenario == "completed_week" && (f.s.Phase != "completed" || f.s.ActiveTaskID != "") {
+				t.Fatal("completion did not preserve the selected workset", f.s)
+			}
+			gate, err := taskrun.ReadParentControl(f.c.Workspace, f.b.ControlContract)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gate.ResumeAllowed {
+				t.Error("completed child retained resume authority after clearing ResumeRequested")
+			}
+			for _, check := range []bool{true, false} {
+				t.Run(map[bool]string{true: "check", false: "start"}[check], func(t *testing.T) {
+					before := mr05ChildInventory(t, f.c.Workspace)
+					nativeBefore := taskrun.ControlRevision(f.n.runs)
+					starts, controls, resumes, wakeCount := len(f.n.starts), len(f.n.controls), len(f.n.resumes), wakes
+					*f.now = f.now.Add(time.Minute)
+					got, err := f.m.Start(f.c, check)
+					if err != nil {
+						t.Error("same-contract start/check rejected after approved resume and child completion", err)
+					} else if got.ID != f.b.ID || got.StartedAt != f.b.StartedAt || got.Deadline != f.b.Deadline || got.ContractSHA256 != f.b.SHA256 || !reflect.DeepEqual(got.Entries, f.s.Entries) || got.ActiveTaskID != f.s.ActiveTaskID || got.Phase != f.s.Phase || got.StartContract == nil || !reflect.DeepEqual(got.StartContract.Selected, f.c.Selected) {
+						t.Error("same-contract start/check changed identity, selection, deadline or results", got)
+					}
+					if !reflect.DeepEqual(before, mr05ChildInventory(t, f.c.Workspace)) || nativeBefore != taskrun.ControlRevision(f.n.runs) || f.n.runs[current] != completed || len(f.n.starts) != starts || len(f.n.controls) != controls || len(f.n.resumes) != resumes || wakes != wakeCount {
+						t.Error("same-contract start/check changed retained state or dispatched more work")
+					}
+					status := weekEffect(t, f, resume.RequestID, "resumed")
+					if !reflect.DeepEqual(status.Receipt, confirmed.Receipt) {
+						t.Error("same-contract start/check revised the historical resume receipt")
+					}
+				})
+			}
+		})
+	}
 }
 
 func TestMR05WeekControlDeadlineSupersedesPendingResume(t *testing.T) {
