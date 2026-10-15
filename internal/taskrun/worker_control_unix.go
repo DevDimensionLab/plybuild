@@ -152,7 +152,7 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 		Project struct {
 			ProjectID string `json:"project_id"`
 			RepoID    string `json:"repo_id"`
-		} `json:"project_binding"`
+		} `json:"binding_request"` // WorkflowRequest preserves the draft, not the finalized handoff.
 	}
 	_ = json.Unmarshal(s.Request.HandoffDraft, &draft)
 	o.ProjectID = controlString(draft.Project.ProjectID)

@@ -13,6 +13,11 @@ if [ "$delivery_task_ref" = 'refs/heads/ply-task/mr-05-bound-runtime-control-rep
     cd "$delivery_repo_root"
     exec /bin/sh ./test/mr05-acceptance.sh
 fi
+# MR-05 project/repo projection correction only; fresh native preview must match.
+if [ "$delivery_task_ref" = 'refs/heads/ply-task/mr-05-standalone-project-binding-correct-20951f628816' ]; then
+    cd "$delivery_repo_root"
+    exec /bin/sh ./test/mr05-projection-acceptance.sh
+fi
 # Native automatic verification supplies TMPDIR inside the Run. Disposable Ply
 # workspace fixtures must live outside the real workspace to avoid nesting it.
 delivery_test_root=$(mktemp -d "/tmp/ply-delivery-acceptance.XXXXXX")
