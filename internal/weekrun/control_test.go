@@ -112,6 +112,8 @@ func nativePark(f *fixture, phase string) {
 }
 
 func TestMR05WeekPauseDispatchReservationRace(t *testing.T) {
+	t.Run("terminal_consumption_exits_owner", mr05ParentTerminalConsumption)
+	t.Run("receipt_publication_recovers_after_successor", mr05ParentReceiptRecovery)
 	t.Run("owner_generation_publication_serializes_with_apply", mr05OwnerPublicationRace)
 	t.Run("failure_publication_serializes_with_apply", mr05FailurePublicationRace)
 	t.Run("accepted_wake_links_only_its_successor", mr05BoundWakeSuccessor)
@@ -179,6 +181,7 @@ func TestMR05WeekPauseDispatchReservationRace(t *testing.T) {
 }
 
 func TestMR05WeekControlResumePreservesSelectionAndDeadline(t *testing.T) {
+	t.Run("state_before_gate_registration_gap", mr05StateBeforeGateGap)
 	t.Run("missing_state_cannot_reset_confirmed_pause", func(t *testing.T) {
 		f := newMR05Week(t)
 		wakes := 0
@@ -330,6 +333,9 @@ func TestMR05WeekControlDeadlineSupersedesPendingResume(t *testing.T) {
 }
 
 func TestMR05WeekControlChildAndLegacyAuthority(t *testing.T) {
+	t.Run("child_drift_after_reservation", mr05ChildConsumptionDrift)
+	t.Run("completed_integration_retains_attempt_proof", mr05CompletedIntegrationProof)
+	t.Run("parent_runtime_drift_between_goals", mr05ParentRuntimeDrift)
 	t.Run("native_registry_publication_contention", mr05NativeRegistryContention)
 	t.Run("native_child_evidence_revalidated", mr05NativeChildEvidence)
 	t.Run("shutdown_sees_reserved_resume", func(t *testing.T) {

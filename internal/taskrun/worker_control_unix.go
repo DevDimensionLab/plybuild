@@ -181,7 +181,7 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 	}
 	o.OwnerLock = controlLockObservation(filepath.Join(workerDirectory(s), "owner.lock"))
 	o.SupervisorLock = controlLockObservation(filepath.Join(workerDirectory(s), "supervisor.lock"))
-	o.Observation.State = w.Phase
+	o.Observation.State = PublicControlState(w.Phase)
 	o.StateRevision = digest(struct {
 		Revision uint64
 		Semantic string
@@ -195,6 +195,17 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 		return o, nil
 	}
 	if s.Result.Delivery.Phase == "completed" || w.Phase == "completed" {
+		if verifyExecutable(s.Request.Runtime.PlyExecutable) != nil || verifyExecutable(s.Request.Runtime.Executable) != nil {
+			o.Unavailable("frozen_control_unavailable")
+			return o, nil
+		}
+		if w.Job != nil {
+			result, er := workerRunReserved(b.d, s)
+			if er != nil || workerNativeKind(w.Job.Kind) && !result.NativeCompleted {
+				o.Unavailable("attempt_outcome_unknown")
+				return o, nil
+			}
+		}
 		o.Observation.State = "completed"
 		o.Unavailable("completed")
 		return o, nil
@@ -233,7 +244,7 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 		o.Unavailable("control_unavailable")
 		return o, nil
 	}
-	if w.Job != nil && (w.Phase == "paused" || w.Phase == "stopped") {
+	if w.Job != nil && (w.Phase == "paused" || w.Phase == "stopped" || o.OwnerLock != "lock_held" && o.SupervisorLock != "lock_held") {
 		result, er := workerRunReserved(b.d, s)
 		if er != nil || (workerNativeKind(w.Job.Kind) && !result.NativeCompleted) {
 			o.Unavailable("attempt_outcome_unknown")
@@ -322,35 +333,39 @@ func workerConsumeBoundControl(d Dependencies, s workflowState) (bool, error) {
 	if s.ControlReceipt != nil && s.ControlReceipt.Sequence == r.Sequence {
 		return true, FinishControl(d, *r, *s.ControlReceipt)
 	}
-	if verifyExecutable(s.Request.Runtime.PlyExecutable) != nil || verifyExecutable(s.Request.Runtime.Executable) != nil {
-		_ = BeginControlConsumption(d, *r)
-		return true, controlSafeError("control_outcome_unknown")
-	}
-	w := s.Result.Worker
-	// Only the original generation or its recorded native wake successor can
-	// consume approval. The logical worker and exact active job stay bound.
-	if r.Basis.WorkerSession == nil || *r.Basis.WorkerSession != w.SessionID || r.Basis.RunRequestHash == nil || *r.Basis.RunRequestHash != s.Result.RequestSHA256 || !workerControlGenerationAllowed(s, *r) {
-		return true, controlSafeError("control_outcome_unknown")
-	}
-	if w.Job != nil && (r.Basis.JobID == nil || *r.Basis.JobID != w.Job.ID || r.Basis.JobHash == nil || *r.Basis.JobHash != w.Job.IntentHash) {
-		return true, controlSafeError("control_outcome_unknown")
-	}
 	a := r.Request.Input.Action
-	if w.Job != nil && a != "resume" {
-		result, er := workerRunReserved(d, s)
-		if er != nil {
-			return true, er
-		}
-		if workerNativeKind(w.Job.Kind) && !result.NativeCompleted {
-			return true, controlSafeError("control_outcome_unknown")
-		}
-	}
-	if e = BeginControlConsumption(d, *r); e != nil {
-		return true, e
-	}
+
 	var receipt ControlReceipt
 	e = workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(current *workflowState) error {
 		w := current.Result.Worker
+		fail := func() error { return FailControlConsumption(d, *r) }
+		if verifyExecutable(current.Request.Runtime.PlyExecutable) != nil || verifyExecutable(current.Request.Runtime.Executable) != nil {
+			return fail()
+		}
+		if r.Basis.WorkerSession == nil || *r.Basis.WorkerSession != w.SessionID || r.Basis.RunRequestHash == nil || *r.Basis.RunRequestHash != current.Result.RequestSHA256 || !workerControlGenerationAllowed(*current, *r) {
+			return fail()
+		}
+		if w.Job == nil {
+			if r.Basis.JobID != nil || r.Basis.JobHash != nil {
+				if workerCompletedControlAttempt(d, *current, r.Basis) != nil {
+					return fail()
+				}
+			}
+		} else {
+			if r.Basis.JobID == nil || *r.Basis.JobID != w.Job.ID || r.Basis.JobHash == nil || *r.Basis.JobHash != w.Job.IntentHash {
+				return fail()
+			}
+			result, er := workerRunReserved(d, *current)
+			if er != nil || workerNativeKind(w.Job.Kind) && !result.NativeCompleted {
+				return fail()
+			}
+		}
+		if current.Result.Delivery.Phase != "completed" && (w.QueueReleased || a == "resume" && w.Phase != "paused" && w.Phase != "stopped") {
+			return fail()
+		}
+		if e := BeginControlConsumption(d, *r); e != nil {
+			return e
+		}
 		effect := map[string]string{"pause": "paused", "stop": "stopped", "resume": "resumed"}[a]
 		if current.Result.Delivery.Phase == "completed" {
 			effect = "completed_before_boundary"
@@ -385,6 +400,33 @@ func workerConsumeBoundControl(d Dependencies, s workflowState) (bool, error) {
 		return true, e
 	}
 	return true, FinishControl(d, *r, receipt)
+}
+
+// VerifyCompletedControlAttempt is read-only; the parent holds its control and
+// TaskRun guards. A finished integration may clear Job, but its originally
+// approved intent, result and streams still have to prove that exact attempt.
+func VerifyCompletedControlAttempt(d Dependencies, root, id string, basis ControlBasis) error {
+	s, e := workflowRead(root, id)
+	if e != nil {
+		return controlSafeError("control_outcome_unknown")
+	}
+	if basis.WorkerSession == nil || *basis.WorkerSession != s.Result.Worker.SessionID || basis.RunRequestHash == nil || *basis.RunRequestHash != s.Result.RequestSHA256 {
+		return controlSafeError("control_outcome_unknown")
+	}
+	return workerCompletedControlAttempt(d, s, basis)
+}
+func workerCompletedControlAttempt(d Dependencies, s workflowState, basis ControlBasis) error {
+	if s.Result.Delivery.Phase != "completed" || s.Result.Worker.Stage != "completed" || basis.Stage == nil || *basis.Stage != "integrate" || basis.JobID == nil || basis.JobHash == nil {
+		return controlSafeError("control_outcome_unknown")
+	}
+	w := *s.Result.Worker
+	w.Job = &WorkerJob{ID: *basis.JobID, Kind: "integrate", Directory: filepath.Join(workerDirectory(s), "attempts", *basis.JobID), IntentHash: *basis.JobHash}
+	s.Result.Worker = &w
+	result, e := workerRunReserved(d, s)
+	if e != nil || !result.NativeCompleted {
+		return controlSafeError("control_outcome_unknown")
+	}
+	return nil
 }
 
 func workerControlDispatch(d Dependencies, s workflowState, fn func(*workflowState) error) error {

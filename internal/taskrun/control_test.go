@@ -56,11 +56,13 @@ func mr05Status(t *testing.T, f *aw01Fixture, id, effect string) ControlStatus {
 }
 
 func TestMR05ControlDiscoveryAndOwnership(t *testing.T) {
+	t.Run("unowned_running_requires_result", mr05UnownedRunningEvidence)
 	f := newAW01Fixture(t)
 	f.d.ControlQueue = func(string, string) (string, error) { return "current", nil }
 	f.s.Request.ControlContract = NewControlContract("standalone", "", "")
 	f.s.Result.RequestSHA256 = digest(f.s.Request)
 	f.save()
+	f.own()
 	b, err := ShowControl(f.d, f.s.Request.WorkspaceRoot, f.s.Result.RunID)
 	if err != nil {
 		t.Fatal(err)
@@ -330,6 +332,9 @@ func (fs mr05CommittedWriteError) WriteOnce(path string, raw []byte) error {
 }
 
 func TestMR05ControlFaultsPreserveUnknown(t *testing.T) {
+	t.Run("resume_drift_after_reservation", mr05ResumeConsumptionDrift)
+	t.Run("terminal_consumption_exits_supervisor", mr05TerminalConsumption)
+	t.Run("receipt_publication_recovers_after_successor", mr05WorkerReceiptRecovery)
 	t.Run("publication_error_after_commit", func(t *testing.T) {
 		f, wakes := mr05Worker(t)
 		r := mr05Preview(t, f, "pause", "write-error-0001")
@@ -487,6 +492,8 @@ func TestMR05ControlFaultsPreserveUnknown(t *testing.T) {
 }
 
 func TestMR05ControlAttemptBoundariesAndSameRunResume(t *testing.T) {
+	t.Run("existing_waiting_supervisor", mr05ExistingWaitingSupervisor)
+	t.Run("pause_before_job_then_successor_resume", mr05UnreservedIntentResume)
 	for _, scenario := range []string{"exact_wake_successor", "owner_observed_before_wake", "second_successor"} {
 		t.Run(scenario, func(t *testing.T) {
 			f, wakes := mr05Worker(t)
@@ -551,11 +558,11 @@ func TestMR05ControlAttemptBoundariesAndSameRunResume(t *testing.T) {
 		f, _ := mr05Worker(t)
 		f.job("commit")
 		f.save()
+		f.own()
 		r := mr05Preview(t, f, "pause", "commit-boundary-0001")
 		if _, e := WorkerControls(f.d).Apply(r); e != nil {
 			t.Fatal(e)
 		}
-		f.own()
 		f.result(&Process{State: "exited", ExitCode: ptr(0), Quiescence: ptr(true)}, nil)
 		if _, e := workerConsumeBoundControl(f.d, f.s); e == nil {
 			t.Fatal("commit without native completion was parked")
@@ -563,38 +570,62 @@ func TestMR05ControlAttemptBoundariesAndSameRunResume(t *testing.T) {
 	})
 	for _, kind := range []string{"developer", "reviewer", "pretest", "verify", "integrate"} {
 		t.Run(kind, func(t *testing.T) {
-			f, _ := mr05Worker(t)
-			f.job(kind)
-			f.save()
-			r := mr05Preview(t, f, "pause", "boundary-0001")
-			if _, e := WorkerControls(f.d).Apply(r); e != nil {
-				t.Fatal(e)
+			for _, complete := range []bool{false, true} {
+				t.Run(map[bool]string{false: "unproven_stays_unknown", true: "positive_boundary"}[complete], func(t *testing.T) {
+					f, _ := mr05Worker(t)
+					f.job(kind)
+					f.save()
+					f.own()
+					r := mr05Preview(t, f, "pause", "boundary-0001")
+					if _, e := WorkerControls(f.d).Apply(r); e != nil {
+						t.Fatal(e)
+					}
+					mr05Status(t, f, r.RequestID, "pending_boundary")
+					if !complete {
+						if _, e := workerConsumeBoundControl(f.d, f.s); e == nil {
+							t.Fatal("parked without positive completion")
+						}
+						f.reload()
+						if f.s.Result.Worker.Phase != "running" {
+							t.Fatal("unconfirmed park")
+						}
+					}
+					result := f.result(&Process{State: "exited", ExitCode: ptr(0), Quiescence: ptr(true)}, nil)
+					if kind == "verify" || kind == "integrate" {
+						result.NativeCompleted = true
+						if e := f.d.replaceValue(filepath.Join(f.s.Result.Worker.Job.Directory, "result.json"), result); e != nil {
+							t.Fatal(e)
+						}
+					}
+					if !complete {
+						// Late evidence cannot automatically reverse a terminal rejection.
+						if _, e := workerConsumeBoundControl(f.d, f.s); e == nil {
+							t.Fatal("late evidence retried a terminal request")
+						}
+						status, e := WorkerControls(f.d).Status(r.Workspace, r.RequestID)
+						if e == nil || status.ControlEffect != "unknown" || status.Receipt != nil {
+							t.Fatal("terminal rejection became positive", status, e)
+						}
+						return
+					}
+					effect := "paused"
+					if kind == "integrate" {
+						effect = "completed_before_boundary"
+						if e := workflowUpdate(f.d, r.Workspace, f.s.Result.RunID, func(s *workflowState) error { s.Result.Delivery.Phase = "completed"; return nil }); e != nil {
+							t.Fatal(e)
+						}
+						if e := workflowUpdate(f.d, r.Workspace, f.s.Result.RunID, func(s *workflowState) error {
+							s.Result.Worker.Job = nil
+							s.Result.Worker.Stage = "completed"
+							return nil
+						}); e != nil {
+							t.Fatal(e)
+						}
+					}
+					mr05Consume(t, f)
+					mr05Status(t, f, r.RequestID, effect)
+				})
 			}
-			mr05Status(t, f, r.RequestID, "pending_boundary")
-			f.own()
-			if _, e := workerConsumeBoundControl(f.d, f.s); e == nil {
-				t.Fatal("parked without positive completion")
-			}
-			f.reload()
-			if f.s.Result.Worker.Phase != "running" {
-				t.Fatal("unconfirmed park")
-			}
-			result := f.result(&Process{State: "exited", ExitCode: ptr(0), Quiescence: ptr(true)}, nil)
-			if kind == "verify" || kind == "integrate" {
-				result.NativeCompleted = true
-				if e := f.d.replaceValue(filepath.Join(f.s.Result.Worker.Job.Directory, "result.json"), result); e != nil {
-					t.Fatal(e)
-				}
-			}
-			effect := "paused"
-			if kind == "integrate" {
-				effect = "completed_before_boundary"
-				if e := workflowUpdate(f.d, r.Workspace, f.s.Result.RunID, func(s *workflowState) error { s.Result.Delivery.Phase = "completed"; return nil }); e != nil {
-					t.Fatal(e)
-				}
-			}
-			mr05Consume(t, f)
-			mr05Status(t, f, r.RequestID, effect)
 		})
 	}
 	f, _ := mr05Worker(t)

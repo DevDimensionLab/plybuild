@@ -377,6 +377,9 @@ func SuperviseWorker(d Dependencies, root, id string) error {
 			return nil
 		}
 		if s.Result.Worker.Phase == "waiting" {
+			if e = d.fault("worker_supervisor_waiting"); e != nil {
+				return e
+			}
 			due, e := workerRetryDue(d, s)
 			if e != nil {
 				return e
@@ -385,7 +388,15 @@ func SuperviseWorker(d Dependencies, root, id string) error {
 			if e = readValue(filepath.Join(workerDirectory(s), "control.json"), 64<<10, &control); e != nil && !os.IsNotExist(e) {
 				return e
 			}
-			if !due && control.Action != "pause" && control.Action != "stop" && control.Action != "resume" {
+			boundPending := false
+			if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "standalone" {
+				_, pending, e := ControlHistory(root, ControlTarget{"run", id})
+				if e != nil {
+					return e
+				}
+				boundPending = pending != nil
+			}
+			if !due && !boundPending && control.Action != "pause" && control.Action != "stop" && control.Action != "resume" {
 				time.Sleep(time.Second)
 				continue
 			}
@@ -400,6 +411,9 @@ func SuperviseWorker(d Dependencies, root, id string) error {
 		}
 		probe.Close()
 		if err = verifyExecutable(s.Request.Runtime.PlyExecutable); err != nil {
+			return err
+		}
+		if err = d.fault("worker_supervisor_before_serve"); err != nil {
 			return err
 		}
 		cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_serve", id, "--workspace", root, "--format", "json")

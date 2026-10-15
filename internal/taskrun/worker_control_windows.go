@@ -2,6 +2,10 @@
 
 package taskrun
 
+func VerifyCompletedControlAttempt(Dependencies, string, string, ControlBasis) error {
+	return controlSafeError("control_unavailable")
+}
+
 type workerControlBackend struct{ d Dependencies }
 
 func WorkerControls(d Dependencies) ControlService { return ControlService{d, workerControlBackend{d}} }

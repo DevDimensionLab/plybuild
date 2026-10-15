@@ -344,15 +344,21 @@ func workerRunReserved(d Dependencies, s workflowState) (workerAttemptResult, er
 func workerLaunchAttempt(d Dependencies, s workflowState, in workerAttemptIntent, dir string) error {
 	in.RunID, in.Generation = s.Result.RunID, s.Result.Worker.Generation
 	in.JobID = filepath.Base(dir)
-	b, err := workflowKeep(d, filepath.Join(dir, "intent.json"), in)
-	if err != nil {
+	if err := d.fault("worker_before_attempt_reservation"); err != nil {
 		return err
 	}
-	job := &WorkerJob{ID: in.JobID, Kind: in.Kind, Directory: dir, IntentHash: b.SHA256}
-	if err = workerControlDispatch(d, s, func(current *workflowState) error {
+	var job *WorkerJob
+	if err := workerControlDispatch(d, s, func(current *workflowState) error {
 		if current.Result.Worker.Job != nil {
 			return fmt.Errorf("another worker attempt is reserved")
 		}
+		// A winning pause leaves no intent. Once publication begins under the
+		// dispatch guard, any incomplete reservation remains deliberately unknown.
+		b, err := workflowKeep(d, filepath.Join(dir, "intent.json"), in)
+		if err != nil {
+			return err
+		}
+		job = &WorkerJob{ID: in.JobID, Kind: in.Kind, Directory: dir, IntentHash: b.SHA256}
 		current.Result.Worker.Job = job
 		current.Result.Worker.Phase = "running"
 		return nil
@@ -364,7 +370,7 @@ func workerLaunchAttempt(d Dependencies, s workflowState, in workerAttemptIntent
 	cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_attempt", s.Result.RunID, "--workspace", s.Request.WorkspaceRoot, "--job", job.ID)
 	cmd.Dir, cmd.Stdout, cmd.Stderr = s.Observed.Target.WorktreeLocator, os.Stdout, os.Stderr
 	cmd.ExtraFiles = []*os.File{d.WorkerOwner.lock}
-	if err = cmd.Run(); err != nil {
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("attempt runner ended without confirmed completion: %w", err)
 	}
 	return nil

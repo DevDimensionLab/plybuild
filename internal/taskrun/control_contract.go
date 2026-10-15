@@ -199,6 +199,34 @@ type ControlBasis struct {
 	Actions           []ControlAction    `json:"actions"`
 	UnavailableReason *string            `json:"unavailable_reason"`
 	NextAction        string             `json:"next_action"`
+	Error             *ControlFailure    `json:"error,omitempty"`
+}
+
+// A missing revision means no state was observed, not a digest of an invented
+// state. Keep the internal string for stable comparison and emit explicit null.
+func (b ControlBasis) MarshalJSON() ([]byte, error) {
+	type basis ControlBasis
+	return json.Marshal(struct {
+		basis
+		Revision *string `json:"state_revision"`
+	}{basis(b), controlString(b.StateRevision)})
+}
+
+// PublicControlState projects internal phases without asserting quiescence
+// while a pause/stop is still approaching its native boundary.
+func PublicControlState(phase string) string {
+	switch phase {
+	case "running", "waiting", "paused", "stopped", "completed":
+		return phase
+	case "pausing", "stopping":
+		return "running"
+	case "expired":
+		return "stopped"
+	case "completed_with_blocks":
+		return "completed"
+	default:
+		return "unknown"
+	}
 }
 
 func (b *ControlBasis) Unavailable(reason string) {

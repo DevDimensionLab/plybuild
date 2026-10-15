@@ -169,8 +169,8 @@ func mr05FailurePublicationRace(t *testing.T) {
 	if len(f.n.starts) != 0 {
 		t.Fatal("fault barrier spawned native work")
 	}
-	_, pending, err := taskrun.ControlHistory(f.c.Workspace, r.Input.Target)
-	if err != nil || pending == nil || pending.Request.RequestID != r.RequestID {
-		t.Fatal("race lost the accepted identity", pending, err)
+	status, err := f.m.Controls().Status(f.c.Workspace, r.RequestID)
+	if status.RequestDigest == nil || *status.RequestDigest != taskrun.ControlRevision(r) || status.Scope == nil || *status.Scope != r.Input.Target || status.RequestState != "accepted" && status.RequestState != "outcome_unknown" {
+		t.Fatal("race lost the accepted identity", status, err)
 	}
 }

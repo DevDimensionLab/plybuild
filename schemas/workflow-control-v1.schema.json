@@ -259,7 +259,15 @@
       ],
       "properties": {
         "state": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "running",
+            "waiting",
+            "paused",
+            "stopped",
+            "completed",
+            "unknown"
+          ]
         },
         "source": {
           "type": "string"
@@ -558,7 +566,10 @@
           "type": "string"
         },
         "state_revision": {
-          "type": "string",
+          "type": [
+            "string",
+            "null"
+          ],
           "pattern": "^sha256:[a-f0-9]{64}$"
         },
         "owner_lock": {
@@ -594,6 +605,9 @@
             "string",
             "null"
           ]
+        },
+        "error": {
+          "$ref": "#/$defs/error"
         }
       },
       "additionalProperties": true

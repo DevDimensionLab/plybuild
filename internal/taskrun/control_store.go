@@ -104,6 +104,32 @@ func readControlReceipt(root string, r ControlRecord) (*ControlReceipt, error) {
 	return &p, nil
 }
 
+// Terminal rejection is distinct from an interrupted receipt publication. The
+// latter can recover from the owner's saved receipt; this record can never
+// authorize another owner, wake, dispatch, or positive receipt.
+type controlConsumptionFailure struct {
+	RequestDigest string `json:"request_digest"`
+	Sequence      string `json:"sequence"`
+	Outcome       string `json:"outcome"`
+}
+
+func FailControlConsumption(d Dependencies, r ControlRecord) error {
+	failure := controlConsumptionFailure{r.Digest, r.Sequence, "outcome_unknown"}
+	if e := d.writeValue(controlPath(r.Request.Workspace, r.Request.RequestID, "consumption-failed"), failure); e != nil {
+		return controlSafeError("control_outcome_unknown")
+	}
+	return controlSafeError("control_outcome_unknown")
+}
+func controlConsumptionError(root string, r ControlRecord) error {
+	var failure controlConsumptionFailure
+	e := readValue(controlPath(root, r.Request.RequestID, "consumption-failed"), 64<<10, &failure)
+	if os.IsNotExist(e) {
+		return nil
+	}
+	// A malformed or unbound failure record is also unresolved authority.
+	return controlSafeError("control_outcome_unknown")
+}
+
 // ControlHistory is read-only. Every durable reservation changes the basis even
 // if its publisher died before waking the consumer. No pointer-publication gap.
 func ControlHistory(root string, target ControlTarget) (string, *ControlRecord, error) {
@@ -130,6 +156,9 @@ func ControlHistory(root string, target ControlTarget) (string, *ControlRecord, 
 		if r.Request.Input.Target != target {
 			continue
 		}
+		if er = controlConsumptionError(root, r); er != nil {
+			return "", nil, er
+		}
 		p, er := readControlReceipt(root, r)
 		if er != nil {
 			return "", nil, er
@@ -152,6 +181,8 @@ func WithControlStore(root string, fn func() error) error { return withStore(roo
 func (c ControlService) basis(root, id string) (ControlBasis, error) {
 	b, e := c.Backend.ControlBasis(root, id)
 	if e != nil {
+		b.Error = ControlFailureOf(e)
+		b.Unavailable(b.Error.Code)
 		return b, e
 	}
 	h, p, e := ControlHistory(root, b.Scope)
@@ -219,6 +250,10 @@ func (c ControlService) Status(root, id string) (ControlStatus, error) {
 	s.ControlEffect = "pending_boundary"
 	s.NextAction = "Observe this same request until the native boundary is confirmed. Status never wakes or recovers a controller."
 	p, e := readControlReceipt(root, r)
+	if failure := controlConsumptionError(root, r); failure != nil {
+		e = failure
+		p = nil
+	}
 	if e == nil && p != nil {
 		s.Receipt = p
 		s.ControlEffect = p.Effect
@@ -395,6 +430,9 @@ func BeginControlConsumption(d Dependencies, r ControlRecord) error {
 	return d.fault("control_after_consume")
 }
 func FinishControl(d Dependencies, r ControlRecord, p ControlReceipt) error {
+	if e := controlConsumptionError(r.Request.Workspace, r); e != nil {
+		return e
+	}
 	if e := d.fault("control_before_receipt"); e != nil {
 		return e
 	}

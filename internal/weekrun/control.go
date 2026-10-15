@@ -62,8 +62,98 @@ func initialGate(b Binding) taskrun.ParentControlGate {
 	return taskrun.ParentControlGate{Contract: b.ControlContract, Deadline: b.Deadline, DesiredAction: "continue"}
 }
 
+// Complete registrations must agree with their gate. Only the exact initial
+// state, with no activity or control history, can repair a missing publication.
+func (m Manager) existingBoundStart(b Binding, dir string, check bool) (State, error) {
+	var out State
+	inspect := func() error {
+		s, se := readState(b, dir)
+		if se != nil && !os.IsNotExist(se) {
+			return se
+		}
+		var g taskrun.ParentControlGate
+		ge := readJSON(taskrun.ParentControlPath(b.Contract.Workspace, b.ID), &g)
+		if ge != nil && !os.IsNotExist(ge) {
+			return ge
+		}
+		if se == nil && ge == nil {
+			active, dispatch := "", ""
+			if ix := entryIndex(&s, s.ActiveTaskID); s.ActiveTaskID != "" && ix >= 0 {
+				active = s.Entries[ix].RunID
+			}
+			if s.Dispatch != nil {
+				dispatch = s.Dispatch.Sequence
+			}
+			resume := s.ResumeRequested && s.DesiredAction == "continue"
+			stop := taskrun.ControlRevision([]string{b.ID, b.Deadline, "deadline_expired"})
+			if taskrun.ControlRevision(g.Contract) != taskrun.ControlRevision(b.ControlContract) || g.Deadline != b.Deadline || g.DesiredAction != s.DesiredAction || g.Revision != s.ControlRevision || g.ActiveRun != active || g.Dispatch != dispatch || g.ResumeAllowed != resume || g.StopSequence != "" && (g.StopSequence != stop || s.DesiredAction != "stop") || s.Phase == "expired" && g.StopSequence != stop {
+				return fmt.Errorf("week state and parent authority disagree; inspect locally")
+			}
+			out = s
+			return nil
+		}
+		if check {
+			return fmt.Errorf("initial week registration is incomplete; repeat the same start to recover its original binding")
+		}
+		if se == nil && hash(canonical(s)) != hash(canonical(initialState(b))) {
+			return fmt.Errorf("missing parent authority after state changed")
+		}
+		if ge == nil && hash(canonical(g)) != hash(canonical(initialGate(b))) {
+			return fmt.Errorf("missing week state after parent authority changed")
+		}
+		if _, e := os.Lstat(filepath.Join(dir, "execution-started.json")); !os.IsNotExist(e) {
+			return fmt.Errorf("incomplete registration after execution or unknown activity")
+		}
+		history, pending, e := taskrun.ControlHistory(b.Contract.Workspace, taskrun.ControlTarget{Kind: "week", ID: b.ID})
+		if e != nil {
+			return e
+		}
+		if pending != nil || history != taskrun.ControlRevision([]string{}) {
+			return fmt.Errorf("incomplete registration after a bound control")
+		}
+		if e = verifyControl(b); e != nil {
+			return e
+		}
+		q, e := m.Native.Queue(b.Contract)
+		if e != nil {
+			return e
+		}
+		if e = validateQueue(b.Contract, q); e != nil {
+			return e
+		}
+		if q.Current != nil {
+			return fmt.Errorf("initial registration recovery found native activity")
+		}
+		for _, sel := range b.Contract.Selected {
+			if _, e = selectedRow(b.Contract, sel, q); e != nil {
+				return e
+			}
+		}
+		out = initialState(b)
+		if ge != nil {
+			if e = publish(taskrun.ParentControlPath(b.Contract.Workspace, b.ID), initialGate(b), false); e != nil {
+				return e
+			}
+		}
+		if se != nil {
+			return publish(filepath.Join(dir, "state.json"), out, false)
+		}
+		return nil
+	}
+	var err error
+	if check {
+		err = inspect()
+	} else {
+		err = m.ControlGuard(b.Contract.Workspace, b.ID, inspect)
+	}
+	return out, err
+}
+
 type childControlReader interface {
 	BoundControlBasis(Contract, string) (taskrun.ControlBasis, error)
+}
+type completedChildControlReader interface {
+	VerifyCompletedControlAttempt(Contract, string, taskrun.ControlBasis) error
 }
 type nativeControlSnapshot interface {
 	WithControlSnapshot(string, func(string) error) error
@@ -88,6 +178,9 @@ func (m Manager) ControlPublicationGuard(root, expected string, fn func() error)
 func (n NativeAdapter) BoundControlBasis(c Contract, id string) (out taskrun.ControlBasis, err error) {
 	err = at(c, func() error { var e error; out, e = taskrun.ShowControl(n.Dependencies, c.Workspace, id); return e })
 	return
+}
+func (n NativeAdapter) VerifyCompletedControlAttempt(c Contract, id string, basis taskrun.ControlBasis) error {
+	return at(c, func() error { return taskrun.VerifyCompletedControlAttempt(n.Dependencies, c.Workspace, id, basis) })
 }
 func nullable(s string) *string {
 	if s == "" {
@@ -115,7 +208,7 @@ func (m Manager) ControlBasis(root, id string) (taskrun.ControlBasis, error) {
 	o.RuntimeMode = nullable("codex_headless_week_v1")
 	o.Provider = nullable("codex")
 	o.OwnerLock = s.OwnerState
-	o.Observation.State = s.Phase
+	o.Observation.State = taskrun.PublicControlState(s.Phase)
 	o.Week = &taskrun.ControlWeek{ID: b.ID, Binding: b.SHA256, Selected: canonical(b.Contract.Selected), Deadline: b.Deadline, DesiredAction: s.DesiredAction, Revision: s.ControlRevision, Generation: s.Generation, FrozenControl: b.Control.SHA256}
 	if s.Dispatch != nil {
 		o.Week.Dispatch = &s.Dispatch.Sequence
@@ -262,26 +355,85 @@ func (m Manager) receiptBound(b Binding, dir string, s *State, g *taskrun.Parent
 	if s.ControlReceipt != nil && s.ControlReceipt.Sequence == r.Sequence {
 		return taskrun.FinishControl(d, r, *s.ControlReceipt)
 	}
-	if e := taskrun.BeginControlConsumption(d, r); e != nil {
+	return taskrun.WithControlStore(b.Contract.Workspace, func() error {
+		if verifyControl(b) != nil {
+			return taskrun.FailControlConsumption(d, r)
+		}
+		if effect != "superseded" {
+			if e := m.verifyChildBoundary(b, *s, r); e != nil {
+				return taskrun.FailControlConsumption(d, r)
+			}
+		}
+		if e := taskrun.BeginControlConsumption(d, r); e != nil {
+			return e
+		}
+		basis := r.Basis
+		basis.OwnerGeneration = &s.Generation
+		p := taskrun.ReceiptForControl(d, r, effect, basis)
+		if r.Basis.OwnerGeneration != nil && *r.Basis.OwnerGeneration != s.Generation && parentGenerationAllowed(*s, r) {
+			previous := *r.Basis.OwnerGeneration
+			p.PredecessorGeneration = &previous
+		}
+		if effect == "superseded" {
+			reason := "deadline_expired"
+			p.Reason = &reason
+			p.NativeStopSequence = &g.StopSequence
+		}
+		s.ControlReceipt = &p
+		if e := m.saveBound(b, dir, s, g); e != nil {
+			return e
+		}
+		return taskrun.FinishControl(d, r, p)
+	})
+}
+
+// Called under parent and TaskRun guards immediately before publishing a
+// positive boundary. It permits completed integration, not arbitrary revision
+// equality or a phase string standing in for positive attempt evidence.
+func (m Manager) verifyChildBoundary(b Binding, s State, r taskrun.ControlRecord) error {
+	reader, ok := m.Native.(childControlReader)
+	if !ok {
+		return nil
+	}
+	if r.Basis.RunID == nil {
+		if s.ActiveTaskID != "" {
+			return taskrun.ControlError("control_outcome_unknown", "An unapproved child appeared.")
+		}
+		return nil
+	}
+	id := *r.Basis.RunID
+	child, e := reader.BoundControlBasis(b.Contract, id)
+	if e != nil {
 		return e
 	}
-	basis := r.Basis
-	basis.OwnerGeneration = &s.Generation
-	p := taskrun.ReceiptForControl(d, r, effect, basis)
-	if r.Basis.OwnerGeneration != nil && *r.Basis.OwnerGeneration != s.Generation && parentGenerationAllowed(*s, r) {
-		previous := *r.Basis.OwnerGeneration
-		p.PredecessorGeneration = &previous
-	}
-	if effect == "superseded" {
-		reason := "deadline_expired"
-		p.Reason = &reason
-		p.NativeStopSequence = &g.StopSequence
-	}
-	s.ControlReceipt = &p
-	if e := m.saveBound(b, dir, s, g); e != nil {
+	observed, e := m.Native.Observe(b.Contract, id)
+	if e != nil {
 		return e
 	}
-	return taskrun.FinishControl(d, r, p)
+	equal := func(a, b any) bool { return taskrun.ControlRevision(a) == taskrun.ControlRevision(b) }
+	if !equal(child.Contract, b.ControlContract) || !equal(child.RunID, r.Basis.RunID) || !equal(child.RunRequestHash, r.Basis.RunRequestHash) || !equal(child.WorkerSession, r.Basis.WorkerSession) {
+		return taskrun.ControlError("control_outcome_unknown", "The approved child identity changed.")
+	}
+	if child.UnavailableReason == nil || (*child.UnavailableReason != "parent_control_unsupported" && !(observed.Completed && *child.UnavailableReason == "completed")) {
+		return taskrun.ControlError("control_outcome_unknown", "Positive child evidence is unavailable.")
+	}
+	if observed.Completed {
+		if !equal(child.JobID, r.Basis.JobID) || !equal(child.JobHash, r.Basis.JobHash) {
+			reader, ok := m.Native.(completedChildControlReader)
+			if child.JobID != nil || child.JobHash != nil || !ok {
+				return taskrun.ControlError("control_outcome_unknown", "The completed child lost its approved attempt identity.")
+			}
+			if e := reader.VerifyCompletedControlAttempt(b.Contract, id, r.Basis); e != nil {
+				return e
+			}
+		}
+	} else {
+		ix := entryIndex(&s, s.ActiveTaskID)
+		if ix < 0 || s.Entries[ix].RunID != id || !equal(child.JobID, r.Basis.JobID) || !equal(child.JobHash, r.Basis.JobHash) || observed.Phase != "paused" && observed.Phase != "stopped" {
+			return taskrun.ControlError("control_outcome_unknown", "The approved child boundary changed.")
+		}
+	}
+	return nil
 }
 
 func parentGenerationAllowed(s State, r taskrun.ControlRecord) bool {
@@ -301,6 +453,9 @@ func (m Manager) claimBoundOwner(b Binding, dir string, observed State) (State, 
 	err := m.ControlGuard(b.Contract.Workspace, b.ID, func() error {
 		s, e := readState(b, dir)
 		if e != nil {
+			return e
+		}
+		if _, _, e = taskrun.ControlHistory(b.Contract.Workspace, taskrun.ControlTarget{Kind: "week", ID: b.ID}); e != nil {
 			return e
 		}
 		g, e := taskrun.ReadParentControl(b.Contract.Workspace, b.ControlContract)
@@ -360,7 +515,7 @@ func (m Manager) saveBoundFailure(b Binding, dir string, cause error) (State, er
 // pause published during dispatch cannot be overwritten by a stale tick.
 func (m Manager) tickBound(b Binding, dir string, out *State) error {
 	var dispatch *Dispatch
-	err := m.ControlGuard(b.Contract.Workspace, b.ID, func() error {
+	err := m.ControlGuard(b.Contract.Workspace, b.ID, func() (failure error) {
 		s, e := readState(b, dir)
 		if e != nil {
 			return e
@@ -377,6 +532,11 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 		if e != nil {
 			return e
 		}
+		defer func() {
+			if failure != nil && pending != nil && (s.ControlReceipt == nil || s.ControlReceipt.Sequence != pending.Sequence) {
+				failure = taskrun.FailControlConsumption(m.controlDependencies(), *pending)
+			}
+		}()
 		deadline, e := time.Parse(time.RFC3339Nano, b.Deadline)
 		if e != nil {
 			return e
@@ -396,14 +556,13 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 			}
 		}
 		if pending != nil {
-			if !parentGenerationAllowed(s, *pending) {
-				return taskrun.ControlError("control_outcome_unknown", "The current parent owner is not the approved generation or its bound wake successor.")
-			}
 			if s.ControlReceipt != nil && s.ControlReceipt.Sequence == pending.Sequence {
 				if e = taskrun.FinishControl(m.controlDependencies(), *pending, *s.ControlReceipt); e != nil {
 					return e
 				}
 				pending = nil
+			} else if !parentGenerationAllowed(s, *pending) {
+				return taskrun.ControlError("control_outcome_unknown", "The current parent owner is not the approved generation or its bound wake successor.")
 			} else if pending.Request.Input.Action == "resume" {
 				if s.Phase != "paused" && s.Phase != "stopped" {
 					return taskrun.ControlError("control_outcome_unknown", "The preserved week is no longer at its approved parking boundary.")

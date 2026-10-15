@@ -140,6 +140,9 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 		if existing.SHA256 != hash(canonical(c)) {
 			return s, fmt.Errorf("week name was concurrently bound to a different contract")
 		}
+		if existing.ControlContract != nil {
+			return m.existingBoundStart(existing, dir, check)
+		}
 		return m.Show(c.Workspace, id)
 	} else if !os.IsNotExist(err) {
 		return s, err
@@ -197,6 +200,9 @@ func (m Manager) existingStart(c Contract, check bool) (State, error) {
 	if b.SHA256 != hash(canonical(c)) {
 		return State{}, fmt.Errorf("week name already binds a different contract")
 	}
+	if b.ControlContract != nil {
+		return m.existingBoundStart(b, dir, check)
+	}
 	if _, err = readState(b, dir); err == nil {
 		return m.Show(c.Workspace, b.ID)
 	} else if !os.IsNotExist(err) {
@@ -215,61 +221,7 @@ func (m Manager) existingStart(c Contract, check bool) (State, error) {
 		return State{}, err
 	}
 	defer guard.Close()
-	if b.ControlContract != nil {
-		var recovered State
-		err = m.ControlGuard(c.Workspace, b.ID, func() error {
-			var e error
-			if recovered, e = readState(b, dir); e == nil {
-				return nil
-			} else if !os.IsNotExist(e) {
-				return e
-			}
-			if _, e = os.Lstat(filepath.Join(dir, "execution-started.json")); e == nil {
-				return fmt.Errorf("week state is missing after execution began; inspect native effects before recovery")
-			} else if !os.IsNotExist(e) {
-				return e
-			}
-			history, pending, e := taskrun.ControlHistory(c.Workspace, taskrun.ControlTarget{Kind: "week", ID: b.ID})
-			if e != nil {
-				return e
-			}
-			if pending != nil || history != taskrun.ControlRevision([]string{}) {
-				return fmt.Errorf("week state is missing after a bound control; preserve its authority and inspect locally")
-			}
-			var gate taskrun.ParentControlGate
-			if e = readJSON(taskrun.ParentControlPath(c.Workspace, b.ID), &gate); e == nil {
-				if hash(canonical(gate)) != hash(canonical(initialGate(b))) {
-					return fmt.Errorf("week state is missing after parent authority changed")
-				}
-			} else if !os.IsNotExist(e) {
-				return e
-			}
-			if e = verifyControl(b); e != nil {
-				return e
-			}
-			q, e := m.Native.Queue(c)
-			if e != nil {
-				return e
-			}
-			if e = validateQueue(c, q); e != nil {
-				return e
-			}
-			if q.Current != nil {
-				return fmt.Errorf("initial state recovery found native activity")
-			}
-			for _, sel := range c.Selected {
-				if _, e = selectedRow(c, sel, q); e != nil {
-					return e
-				}
-			}
-			recovered = initialState(b)
-			if e = publish(taskrun.ParentControlPath(c.Workspace, b.ID), initialGate(b), false); e != nil {
-				return e
-			}
-			return publish(filepath.Join(dir, "state.json"), recovered, false)
-		})
-		return recovered, err
-	}
+
 	if _, err = readState(b, dir); err == nil {
 		return m.Show(c.Workspace, b.ID)
 	} else if !os.IsNotExist(err) {

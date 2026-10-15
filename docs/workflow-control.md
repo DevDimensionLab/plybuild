@@ -85,6 +85,13 @@ request. Status is historical readback, with explicit source/freshness; a receip
 or saved PID is not proof that a provider is alive. Public output contains opaque
 revisions and identities, not private callbacks, streams or authentication data.
 
+`runtime_observation.state` is one of `running`, `waiting`, `paused`, `stopped`,
+`completed` or `unknown`. Internal `phase` stays separate: `ready` and `blocked`
+project to `unknown`, `pausing` and `stopping` remain `running`, and `expired`
+projects to `stopped` only at the parent's confirmed parking boundary. An absent
+week or unreadable state returns a nonzero exit and safe JSON `error.code` /
+`error.detail`, no actions, and `state_revision: null`.
+
 Pause and stop wait for the active or reserved attempt's positive result and
 process boundary. They send no signals or terminal input. An already reserved
 integration can finish. A week pause that wins before the next selection still
@@ -115,6 +122,11 @@ and launchd waits happen after releasing the short publication guard. A durable
 dispatch reservation counts as active even before spawn, so a winning pause
 cannot fall into a read-before-spawn gap. Reconciliation reloads guarded state.
 Owner-generation and failure publication use the same guard as apply.
+Intent publication and Job reservation share the winning dispatch guard. A pause
+that wins first leaves no intent to obstruct a later same-Run successor. A
+partially published or reserved attempt remains unknown and is never overwritten.
+An existing supervisor observes bound pause/stop during provider backoff without
+changing `RetryNotBefore` or starting another provider attempt.
 
 Each immutable request/digest/sequence is stored before wake. The original owner
 may consume it, or one successor recorded against that reservation may do so;
@@ -123,6 +135,12 @@ changes preserve an unknown outcome. A completed native state write retains the
 receipt for recovery if immutable receipt publication was interrupted. Public
 replay and status perform no recovery. Corrupt readback after a known durable
 reservation cannot turn a possible effect into `none`.
+Consumers revalidate the exact child/session/job, executable bytes and required
+positive result/stream evidence before opening a resume gate or confirming a
+boundary. Terminal consumption rejection is retained against the request and
+stops automatic owner retries. Later evidence does not reverse that rejection.
+Recovery of an already saved positive receipt is separate and preserves its
+original generation and observation, even when a later owner publishes it.
 
 The week marks operational execution before consuming controls, including before
 the first Goal. Missing mutable state after that point requires local recovery.

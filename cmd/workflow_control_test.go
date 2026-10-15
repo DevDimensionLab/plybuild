@@ -216,6 +216,8 @@ func TestMR05ControlCandidateCLIAndSchema(t *testing.T) {
 }
 
 func TestMR05ControlCandidateCLIReadOnlyErrors(t *testing.T) {
+	t.Run("unavailable_week_json", mr05UnavailableWeekJSON)
+	t.Run("public_observation_states", mr05PublicObservationStates)
 	f := mr05Candidate(t)
 	id := f.oldRun()
 	before := mr05Snapshot(t, f.root)
