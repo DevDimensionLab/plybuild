@@ -93,6 +93,9 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 		if err = workerControlWrite(d, s, "resume"); err != nil {
 			return s.Result, err
 		}
+		if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "standalone" {
+			return ShowWorker(d, root, id)
+		}
 	}
 	// Multiple clients may race here. Only the controller that acquires the
 	// owner lock may reserve a provider attempt or mutate the Task.
@@ -115,6 +118,19 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 }
 
 func workerControlWrite(d Dependencies, s workflowState, action string) error {
+	if s.Request.ControlContract != nil {
+		if s.Request.ControlContract.ParentKind == "standalone" {
+			return workerLegacyBoundControl(d, s, action)
+		}
+		return WithWorkerParentGuard(s.Request.WorkspaceRoot, s.Request.ControlContract, func() error {
+			if err := CheckParentAction(s.Request.WorkspaceRoot, s.Request.ControlContract, action, controlNow(d)); err != nil {
+				return err
+			}
+			return withStore(s.Request.WorkspaceRoot, func() error {
+				return d.replaceValue(filepath.Join(workerDirectory(s), "control.json"), workerControl{s.Result.RunID, action, ControlTimestamp(controlNow(d))})
+			})
+		})
+	}
 	return withStore(s.Request.WorkspaceRoot, func() error {
 		return d.replaceValue(filepath.Join(workerDirectory(s), "control.json"), workerControl{s.Result.RunID, action, d.Now().UTC().Format(time.RFC3339Nano)})
 	})
@@ -139,6 +155,12 @@ func ControlWorker(d Dependencies, root, id, action string) (WorkflowRun, error)
 	}
 	if err = d.fault("worker_control_after_read"); err != nil {
 		return s.Result, err
+	}
+	if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "standalone" {
+		if err = workerLegacyBoundControl(d, s, action); err != nil {
+			return s.Result, err
+		}
+		return ShowWorker(d, root, id)
 	}
 	if err = privateDir(workerDirectory(s)); err == nil {
 		err = workerControlWrite(d, s, action)
@@ -201,19 +223,26 @@ func ServeWorker(d Dependencies, root, id string) error {
 	if err = os.Chdir(s.Observed.Target.WorktreeLocator); err != nil {
 		return err
 	}
-	if err = workflowUpdate(d, root, id, func(current *workflowState) error {
-		w := current.Result.Worker
-		w.Generation++
-		w.OwnerPID, w.OwnerStartedAt = os.Getpid(), d.Now().UTC().Format(time.RFC3339Nano)
-		d.WorkerOwner = &workerOwner{root: root, runID: id, generation: w.Generation, lock: lock}
-		return nil
-	}); err != nil {
+	if s, err = workflowRead(root, id); err != nil {
+		return err
+	}
+	if err = workerClaimOwner(&d, s, lock); err != nil {
 		return err
 	}
 	for {
 		s, err = workflowRead(root, id)
 		if err != nil {
 			return err
+		}
+		if consumed, e := workerConsumeBoundControl(d, s); e != nil {
+			return workerBlocked(d, root, id, e)
+		} else if consumed {
+			continue
+		}
+		if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "week" {
+			if err = workerSyncParentControl(d, s); err != nil {
+				return workerBlocked(d, root, id, err)
+			}
 		}
 		if s.Result.Delivery.Phase == "completed" {
 			return workerStateUpdate(d, root, id, func(s *workflowState) error {
@@ -235,7 +264,7 @@ func ServeWorker(d Dependencies, root, id string) error {
 		if control.Action == "pause" || control.Action == "stop" {
 			if s.Result.Worker.Job != nil {
 				result, e := workerRunReserved(d, s)
-				if e == nil && (s.Result.Worker.Job.Kind == "verify" || s.Result.Worker.Job.Kind == "integrate") && !result.NativeCompleted {
+				if e == nil && workerNativeKind(s.Result.Worker.Job.Kind) && !result.NativeCompleted {
 					e = fmt.Errorf("native effect did not confirm completion; inspect the preserved receipt")
 				}
 				if e != nil {
@@ -253,6 +282,9 @@ func ServeWorker(d Dependencies, root, id string) error {
 			})
 		}
 		if s.Result.Worker.Phase == "blocked" && control.Action != "resume" {
+			return nil
+		}
+		if s.Request.ControlContract != nil && (s.Result.Worker.Phase == "paused" || s.Result.Worker.Phase == "stopped") && control.Action != "resume" {
 			return nil
 		}
 		if control.Action == "resume" {
@@ -281,6 +313,11 @@ func ServeWorker(d Dependencies, root, id string) error {
 			return workerBlocked(d, root, id, err)
 		}
 		if err = workerStep(d, s); err != nil {
+			if s.Request.ControlContract != nil {
+				if e, ok := err.(*ControlFailure); ok && (e.Code == "control_in_progress" || e.Code == "control_unavailable") {
+					continue
+				}
+			}
 			return workerBlocked(d, root, id, err)
 		}
 	}
@@ -389,6 +426,15 @@ func workerSupervisorExit(d Dependencies, root, id string, lock *os.File) (bool,
 			return e
 		}
 		phase := s.Result.Worker.Phase
+		if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "standalone" {
+			_, pending, e := ControlHistory(root, ControlTarget{"run", id})
+			if e != nil {
+				return e
+			}
+			if pending != nil {
+				return nil
+			}
+		}
 		changeParkedControl := phase == "paused" && control.Action == "stop" || phase == "stopped" && control.Action == "pause"
 		shouldExit := phase == "completed" || (phase == "blocked" || phase == "paused" || phase == "stopped") && control.Action != "resume" && !changeParkedControl
 		if !shouldExit {

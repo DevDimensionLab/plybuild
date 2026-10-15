@@ -56,32 +56,20 @@ func workerStep(d Dependencies, s workflowState) error {
 		return workerCorrection(d, s, "Implement the registered Goal and all its acceptance criteria.")
 	}
 	if w.Stage == "commit" {
-		status, err := workerGit(d, s, "status", "--porcelain")
+		if s.Request.ControlContract == nil {
+			return workerCommit(d, s)
+		}
+		if w.Job == nil {
+			return workerPrepareAttempt(d, s)
+		}
+		r, err := workerRunReserved(d, s)
 		if err != nil {
 			return err
 		}
-		if status != "" {
-			if _, err = workerGit(d, s, "add", "--all"); err != nil {
-				return err
-			}
-			if _, err = workerGit(d, s, "commit", "-m", fmt.Sprintf("Worker %s attempt %d", s.Result.RunID, w.Iteration)); err != nil {
-				return err
-			}
+		if !r.NativeCompleted {
+			return fmt.Errorf("native commit completion is unknown")
 		}
-		oid, err := workerGit(d, s, "rev-parse", "HEAD")
-		if err != nil {
-			return err
-		}
-		tree, err := workerGit(d, s, "rev-parse", "HEAD^{tree}")
-		if err != nil {
-			return err
-		}
-		return workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(s *workflowState) error {
-			s.Result.Worker.CandidateOID = oid
-			s.Result.Worker.CandidateTree = tree
-			s.Result.Worker.Stage = "pretest"
-			return nil
-		})
+		return workerStage(d, s, "pretest")
 	}
 	if w.Job == nil {
 		return workerPrepareAttempt(d, s)
@@ -251,7 +239,7 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 		in.Argv = []string{"/usr/bin/sandbox-exec", "-f", policy, "/bin/sh", script}
 		in.Environment = []string{"HOME=" + filepath.Join(dir, "home"), "TMPDIR=" + filepath.Join(dir, "tmp"), "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + w.CandidateBinary, "PLY_CANDIDATE_OID=" + w.CandidateOID, "PLY_CANDIDATE_TREE=" + w.CandidateTree}
 		in.TimeoutSeconds = s.Request.Delivery.Agreement.Acceptance.TimeoutSeconds
-	} else if w.Stage != "verify" && w.Stage != "integrate" {
+	} else if !workerNativeKind(w.Stage) {
 		return fmt.Errorf("unknown worker stage %q", w.Stage)
 	}
 	return workerLaunchAttempt(d, s, in, dir)
@@ -398,4 +386,36 @@ func workerValidateReview(s workflowState, review FileBinding, oid, tree string)
 		return fmt.Errorf("native review differs from the actual reviewer thread")
 	}
 	return nil
+}
+
+func workerCommit(d Dependencies, s workflowState) error {
+	w := s.Result.Worker
+	status, err := workerGit(d, s, "status", "--porcelain")
+	if err != nil {
+		return err
+	}
+	if status != "" {
+		if _, err = workerGit(d, s, "add", "--all"); err != nil {
+			return err
+		}
+		if _, err = workerGit(d, s, "commit", "-m", fmt.Sprintf("Worker %s attempt %d", s.Result.RunID, w.Iteration)); err != nil {
+			return err
+		}
+	}
+	oid, err := workerGit(d, s, "rev-parse", "HEAD")
+	if err != nil {
+		return err
+	}
+	tree, err := workerGit(d, s, "rev-parse", "HEAD^{tree}")
+	if err != nil {
+		return err
+	}
+	return workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(s *workflowState) error {
+		s.Result.Worker.CandidateOID = oid
+		s.Result.Worker.CandidateTree = tree
+		if s.Request.ControlContract == nil {
+			s.Result.Worker.Stage = "pretest"
+		}
+		return nil
+	})
 }

@@ -20,6 +20,11 @@ finishes this Goal only; it does not select the next queue item.
 Use `workflow week` for an explicitly selected set of dependent Goals and a
 named login service; see [durable multi-Spec operation](workflow-week.md).
 
+New standalone starts can explicitly add `--bound-control` (also with `--check`)
+to enable [request-bound pause, stop and resume](workflow-control.md). A week-owned
+Run is controlled through its parent week and entire selected workset. Existing
+Runs retain their frozen contracts; a newer CLI does not upgrade their controls.
+
 The default is Codex with `gpt-6-astra` and `max` effort; explicit Goal choices
 win. It uses the existing Codex account login and does not introduce an API-key
 fallback. The installed CLI must support the frozen command options, including

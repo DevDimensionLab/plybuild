@@ -56,6 +56,13 @@ choices retain the worker defaults shown above. No model switch, new payment
 route, plugin installation or global Codex setting change is performed. The
 existing account login is used.
 
+To opt a new week into [request-bound runtime control](workflow-control.md), set
+`schema_version` to `2` and add
+`"runtime_control": {"schema_version": 1, "mode": "bound_control_v1"}`. All other
+selection and execution bounds remain required. The check displays the frozen
+control agreement. Version 1 retains its existing controls and does not gain
+mobile actions when a new CLI is installed.
+
 ```sh
 ply workflow week start --file /absolute/week.json --check --format json
 ply workflow week start --file /absolute/week.json --service --format json

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskexecute"
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -88,6 +89,9 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	}
 	now := m.now()
 	b := Binding{Contract: c, SHA256: hash(canonical(c)), ID: id, StartedAt: stamp(now), Deadline: stamp(now.Add(time.Duration(c.DurationSeconds) * time.Second))}
+	if c.RuntimeControl != nil {
+		b.ControlContract = taskrun.NewControlContract("week", id, b.SHA256)
+	}
 	s := initialState(b)
 	if check {
 		return s, nil
@@ -162,11 +166,20 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	if err = publish(filepath.Join(dir, "state.json"), s, false); err != nil {
 		return s, err
 	}
+	if b.ControlContract != nil {
+		if err = publish(taskrun.ParentControlPath(c.Workspace, id), initialGate(b), false); err != nil {
+			return s, err
+		}
+	}
 	return s, nil
 }
 
 func initialState(b Binding) State {
 	s := State{Kind: "ply.workflow.week", SchemaVersion: 1, ID: b.ID, ContractSHA256: b.SHA256, Phase: "ready", StartedAt: b.StartedAt, Deadline: b.Deadline, LastProgressAt: b.StartedAt, UpdatedAt: b.StartedAt, NextAction: "Start only the selected native Goals", DesiredAction: "continue", Entries: []Entry{}}
+	if b.ControlContract != nil {
+		s.StartContract = &b.Contract
+		s.ControlContract = b.ControlContract
+	}
 	for _, sel := range b.Contract.Selected {
 		s.Entries = append(s.Entries, Entry{TaskID: sel.TaskID, State: "pending"})
 	}
@@ -202,6 +215,61 @@ func (m Manager) existingStart(c Contract, check bool) (State, error) {
 		return State{}, err
 	}
 	defer guard.Close()
+	if b.ControlContract != nil {
+		var recovered State
+		err = m.ControlGuard(c.Workspace, b.ID, func() error {
+			var e error
+			if recovered, e = readState(b, dir); e == nil {
+				return nil
+			} else if !os.IsNotExist(e) {
+				return e
+			}
+			if _, e = os.Lstat(filepath.Join(dir, "execution-started.json")); e == nil {
+				return fmt.Errorf("week state is missing after execution began; inspect native effects before recovery")
+			} else if !os.IsNotExist(e) {
+				return e
+			}
+			history, pending, e := taskrun.ControlHistory(c.Workspace, taskrun.ControlTarget{Kind: "week", ID: b.ID})
+			if e != nil {
+				return e
+			}
+			if pending != nil || history != taskrun.ControlRevision([]string{}) {
+				return fmt.Errorf("week state is missing after a bound control; preserve its authority and inspect locally")
+			}
+			var gate taskrun.ParentControlGate
+			if e = readJSON(taskrun.ParentControlPath(c.Workspace, b.ID), &gate); e == nil {
+				if hash(canonical(gate)) != hash(canonical(initialGate(b))) {
+					return fmt.Errorf("week state is missing after parent authority changed")
+				}
+			} else if !os.IsNotExist(e) {
+				return e
+			}
+			if e = verifyControl(b); e != nil {
+				return e
+			}
+			q, e := m.Native.Queue(c)
+			if e != nil {
+				return e
+			}
+			if e = validateQueue(c, q); e != nil {
+				return e
+			}
+			if q.Current != nil {
+				return fmt.Errorf("initial state recovery found native activity")
+			}
+			for _, sel := range c.Selected {
+				if _, e = selectedRow(c, sel, q); e != nil {
+					return e
+				}
+			}
+			recovered = initialState(b)
+			if e = publish(taskrun.ParentControlPath(c.Workspace, b.ID), initialGate(b), false); e != nil {
+				return e
+			}
+			return publish(filepath.Join(dir, "state.json"), recovered, false)
+		})
+		return recovered, err
+	}
 	if _, err = readState(b, dir); err == nil {
 		return m.Show(c.Workspace, b.ID)
 	} else if !os.IsNotExist(err) {
@@ -278,6 +346,16 @@ func (m Manager) Control(root, id, action string) (State, error) {
 	if err != nil {
 		return State{}, err
 	}
+	if b.ControlContract != nil {
+		p, e := m.Controls().Preview(root, id, action, "local-week-"+strings.TrimPrefix(hash(canonical([]string{action, stamp(m.now())})), "sha256:"))
+		if e != nil {
+			return State{}, e
+		}
+		if _, e = m.Controls().Apply(*p.Request); e != nil {
+			return State{}, e
+		}
+		return m.Show(root, id)
+	}
 	deadline, _ := time.Parse(time.RFC3339Nano, b.Deadline)
 	if action == "resume" && !m.now().Before(deadline) {
 		// A surviving native worker still needs supervision after the deadline.
@@ -353,6 +431,9 @@ func (m Manager) recordControl(dir string, s *State) error {
 // Tick is called under the week and Epic ownership locks by Serve. It writes a
 // launch intent before invoking native Execute; a restart reuses that same Goal.
 func (m Manager) Tick(b Binding, dir string, s *State) error {
+	if b.ControlContract != nil {
+		return m.tickBound(b, dir, s)
+	}
 	if err := publish(filepath.Join(dir, "execution-started.json"), map[string]string{"id": b.ID, "contract_sha256": b.SHA256}, false); err != nil {
 		return err
 	}
@@ -716,9 +797,16 @@ func (m Manager) serve(ctx context.Context, root, id string, service bool) error
 	if err != nil {
 		return err
 	}
-	s.Generation++
-	s.ControllerPID = os.Getpid()
-	if err = m.save(b, dir, &s); err != nil {
+	if b.ControlContract != nil {
+		// Capture the wake seen by this actual owner before waiting for the
+		// publication guard. A later wake cannot retroactively authorize it.
+		s, err = m.claimBoundOwner(b, dir, s)
+	} else {
+		s.Generation++
+		s.ControllerPID = os.Getpid()
+		err = m.save(b, dir, &s)
+	}
+	if err != nil {
 		return err
 	}
 	for {
@@ -733,10 +821,20 @@ func (m Manager) serve(ctx context.Context, root, id string, service bool) error
 			}
 		}
 		if err = m.Tick(b, dir, &s); err != nil {
-			s.Phase = "blocked"
-			s.Reason = err.Error()
-			s.NextAction = "Inspect native effects before resuming the same week"
-			_ = m.save(b, dir, &s)
+			if b.ControlContract != nil {
+				var saveErr error
+				s, saveErr = m.saveBoundFailure(b, dir, err)
+				if saveErr != nil {
+					return saveErr
+				}
+			} else {
+				s.Phase = "blocked"
+				s.Reason = err.Error()
+				s.NextAction = "Inspect native effects before resuming the same week"
+				if saveErr := m.save(b, dir, &s); saveErr != nil {
+					return saveErr
+				}
+			}
 			exited, exitErr := exitAtBoundary(dir, s, owner, target)
 			if exitErr != nil {
 				return exitErr
@@ -784,6 +882,19 @@ func exitAtBoundary(dir string, s State, owner, target *os.File) (bool, error) {
 		return false, err
 	}
 	defer guard.Close()
+	if s.ControlContract != nil {
+		var b Binding
+		if e := readJSON(filepath.Join(dir, "binding.json"), &b); e != nil {
+			return false, e
+		}
+		_, pending, e := taskrun.ControlHistory(b.Contract.Workspace, taskrun.ControlTarget{Kind: "week", ID: b.ID})
+		if e != nil {
+			return false, e
+		}
+		if pending != nil {
+			return false, nil
+		}
+	}
 	var c Control
 	if err = readJSON(filepath.Join(dir, "control.json"), &c); err != nil && !os.IsNotExist(err) {
 		return false, err

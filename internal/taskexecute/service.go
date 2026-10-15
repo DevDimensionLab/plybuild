@@ -26,6 +26,7 @@ type Input struct {
 	Runtime             RuntimeOptions
 	NotificationContext string
 	Worker              *taskrun.WorkerContract
+	ControlContract     *taskrun.ControlContract
 	boundEnvironment    *taskrun.GoalStartEnvironment
 	expectedRuntime     *RuntimePreview
 	boundRequestKey     string
@@ -42,6 +43,7 @@ type Result struct {
 	Recovery           *RecoveryResult                   `json:"startup_recovery,omitempty"`
 	RequestPath        string                            `json:"request_path"`
 	NextAction         string                            `json:"next_action"`
+	ControlContract    *taskrun.ControlContract          `json:"control_contract,omitempty"`
 }
 
 type launchIntent struct {
@@ -53,6 +55,7 @@ type launchIntent struct {
 	Notification       *taskrun.FileBinding             `json:"notification"`
 	ClaudeProjectTrust *taskrun.ClaudeProjectTrust      `json:"claude_project_trust,omitempty"`
 	Worker             *taskrun.WorkerContract          `json:"worker,omitempty"`
+	ControlContract    *taskrun.ControlContract         `json:"control_contract,omitempty"`
 	RequestKey         string                           `json:"request_key,omitempty"`
 }
 
@@ -103,6 +106,15 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	goalInput := workspace.TaskGoalExecuteInput{Target: input.Target, Next: input.Next, SpecID: input.SpecID}
 	input.Runtime.Headless = input.Worker != nil
+	if input.ControlContract != nil {
+		if input.Worker == nil {
+			return out, workspace.WorkInvalidArguments("bound control requires headless")
+		}
+		if err := taskrun.ValidateControlContract(input.ControlContract); err != nil {
+			return out, err
+		}
+	}
+	out.ControlContract = input.ControlContract
 	if input.Worker != nil && (input.Restart || input.NotificationContext != "") {
 		return out, workspace.WorkInvalidArguments("headless uses explicit worker resume and has no notification side effects")
 	}
@@ -143,6 +155,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		}
 		if (request.Worker != nil) != (input.Worker != nil) {
 			return out, fmt.Errorf("execution already has a different transport; inspect its preserved Run")
+		}
+		if taskrun.ControlRevision(request.ControlContract) != taskrun.ControlRevision(input.ControlContract) {
+			return out, fmt.Errorf("preserved execution has a different control contract; old Runs cannot be upgraded")
 		}
 		if request.WorkspaceRoot != plan.Workspace || request.Delivery == nil || request.Delivery.AcceptancePath != plan.AcceptancePath || request.Delivery.Goal.SHA256 != plan.Goal.Goal.Spec.ManifestSHA256 || request.RequestKey != "execute/"+strings.TrimPrefix(plan.Confirmation, "sha256:") {
 			return out, fmt.Errorf("preserved execution request differs from the selected goal")
@@ -211,6 +226,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		if !bytes.Equal(mustWorkerJSON(intent.Worker), mustWorkerJSON(input.Worker)) {
 			return out, fmt.Errorf("preserved worker choice or limits differ; resume the same Run")
 		}
+		if taskrun.ControlRevision(intent.ControlContract) != taskrun.ControlRevision(input.ControlContract) {
+			return out, fmt.Errorf("preserved control contract differs")
+		}
 		// An omitted field keeps old launch authority unchanged. Explicit null
 		// is malformed and must not disguise a new or changed trust choice.
 		var fields map[string]json.RawMessage
@@ -247,9 +265,10 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 			return out, err
 		}
 		intent = launchIntent{Kind: "ply.workflow.execute-intent", SchemaVersion: 1, Goal: plan, Runtime: runtime, Notification: notice,
-			Worker:     input.Worker,
-			RequestKey: input.boundRequestKey,
-			Human:      workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
+			Worker:          input.Worker,
+			ControlContract: input.ControlContract,
+			RequestKey:      input.boundRequestKey,
+			Human:           workspace.QueueHumanDecision{ActorClaim: "Local execute caller", DecidedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Source: "explicit_human_instruction", Statement: "The local caller requested this exact goal from its registered return worktree through ply workflow execute; caller identity is a local attestation."},
 		}
 		if runtime.Runtime.Provider == "claude" {
 			intent.ClaudeProjectTrust = &taskrun.ClaudeProjectTrust{Mode: "configuration", WorktreeRoot: plan.WorktreePath}
@@ -343,6 +362,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		ClaudeProjectTrust:   intent.ClaudeProjectTrust,
 		Delivery:             taskrun.DeliveryContract{OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
 		Worker:               input.Worker,
+		ControlContract:      intent.ControlContract,
 		GoalStartEnvironment: input.boundEnvironment,
 	})
 	if err != nil {

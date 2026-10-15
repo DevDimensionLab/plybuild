@@ -34,6 +34,7 @@ type WorkflowRequest struct {
 	ReturnMode           string                `json:"return_mode"`
 	Delivery             *DeliveryContract     `json:"delivery,omitempty"`
 	Worker               *WorkerContract       `json:"worker,omitempty"`
+	ControlContract      *ControlContract      `json:"control_contract,omitempty"`
 	GoalStartEnvironment *GoalStartEnvironment `json:"goal_start_environment,omitempty"`
 }
 
@@ -170,6 +171,10 @@ type workflowRecord struct {
 	Review       *FileBinding `json:"review"`
 }
 type workflowState struct {
+	ControlRevision   uint64              `json:"control_revision,omitempty"`
+	ControlReceipt    *ControlReceipt     `json:"control_receipt,omitempty"`
+	ControlWake       *workerControlWake  `json:"control_wake,omitempty"`
+	ControlSuccessor  *workerControlWake  `json:"control_successor,omitempty"`
 	Request           WorkflowRequest     `json:"request"`
 	Observed          Observed            `json:"observed"`
 	Result            WorkflowRun         `json:"result"`

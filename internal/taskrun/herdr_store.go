@@ -71,8 +71,12 @@ func workflowUpdate(d Dependencies, root, id string, fn func(*workflowState) err
 		if e != nil {
 			return e
 		}
+		before := controlSemanticState(s)
 		if e = fn(&s); e != nil {
 			return e
+		}
+		if s.Request.ControlContract != nil && before != controlSemanticState(s) {
+			s.ControlRevision++
 		}
 		return workflowSave(d, s)
 	})

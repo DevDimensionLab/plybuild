@@ -8,6 +8,11 @@ if [ "$delivery_task_ref" = 'refs/heads/ply-task/aw-01-current-resume-guidance-0
     cd "$delivery_repo_root"
     exec /bin/sh ./test/resume-next-action-acceptance.sh
 fi
+# MR-05 replacement only; root must match this expected ref to fresh native preview.
+if [ "$delivery_task_ref" = 'refs/heads/ply-task/mr-05-bound-runtime-control-replacement-ae7cec4dc362' ]; then
+    cd "$delivery_repo_root"
+    exec /bin/sh ./test/mr05-acceptance.sh
+fi
 # Native automatic verification supplies TMPDIR inside the Run. Disposable Ply
 # workspace fixtures must live outside the real workspace to avoid nesting it.
 delivery_test_root=$(mktemp -d "/tmp/ply-delivery-acceptance.XXXXXX")

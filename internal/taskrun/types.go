@@ -374,6 +374,10 @@ type Dependencies struct {
 	// ApprovedGoalStart exists only in the in-process bound-start composition.
 	// It checks the approved environment before each first transport effect.
 	ApprovedGoalStart func() error
+	// Read-only native ownership and process wake boundaries, injectable by
+	// isolated tests. No serialized request can provide either adapter.
+	ControlQueue func(string, string) (string, error)
+	ControlWake  func(string, string) error
 }
 
 func (d Dependencies) fault(point string) error {

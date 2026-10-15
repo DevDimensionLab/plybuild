@@ -121,7 +121,37 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		{ID: "workflow.execute.verify", Command: []string{"workflow", "execute", "verify"}, Mode: "candidate_acceptance", Selectors: []string{"--context", "--review", "--candidate-binary", "--reuse"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}, {"PlyDeliveryVerification@2", &two}}, Effect: "candidate_test_and_evidence"},
 		{ID: "workflow.execute.integrate", Command: []string{"workflow", "execute", "integrate"}, Mode: "frozen_acceptance", Selectors: []string{"--context"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "authorized_local_integration"},
 	}
-	sort.Slice(workflow, func(i, j int) bool { return workflow[i].ID < workflow[j].ID })
+	for _, mode := range []string{"codex_headless_standalone_v1", "codex_headless_week_v1"} {
+		for _, verb := range []string{"show", "preview", "apply", "status"} {
+			kind := "ply.workflow.control-status"
+			effect := "read"
+			selectors := []string{"--workspace"}
+			schemas := []capabilitySchema{}
+			switch verb {
+			case "show":
+				kind = "ply.workflow.control-capabilities"
+				selectors = append(selectors, "--week")
+			case "preview":
+				kind = "ply.workflow.control-preview"
+				selectors = append(selectors, "--week", "--action", "--request-id")
+			case "apply":
+				effect = "approved_runtime_control"
+				selectors = []string{"--file"}
+			}
+			schemas = append(schemas, capabilitySchema{kind, &one})
+			if verb == "preview" {
+				schemas = append(schemas, capabilitySchema{"ply.workflow.control-request", &one})
+			}
+			workflow = append(workflow, capabilityOperation{ID: "workflow.control." + verb, Command: []string{"workflow", "control", verb}, Mode: mode, Selectors: selectors, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: effect})
+		}
+	}
+	workflow = append(workflow, capabilityOperation{ID: "workflow.execute.bound-control", Command: []string{"workflow", "execute"}, Mode: "codex_headless_standalone_v1", Selectors: []string{"--headless", "--bound-control", "--spec", "--check"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.execute", &one}}, Effect: "explicit_goal_start"}, capabilityOperation{ID: "workflow.week.bound-control", Command: []string{"workflow", "week", "start"}, Mode: "codex_headless_week_v1", Selectors: []string{"--file", "--check"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.week-contract", &two}}, Effect: "explicit_workset_start"})
+	sort.Slice(workflow, func(i, j int) bool {
+		if workflow[i].ID == workflow[j].ID {
+			return workflow[i].Mode < workflow[j].Mode
+		}
+		return workflow[i].ID < workflow[j].ID
+	})
 	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops, extensions, workflow}
 }
 

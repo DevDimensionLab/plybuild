@@ -18,11 +18,15 @@ func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, err
 	if in.Worker != nil {
 		r.Envelope = deliveryEnv("headless-run-request")
 		r.Worker = in.Worker
+		r.ControlContract = in.ControlContract
 	}
 	return r, validateDeliveryWorkflowRequest(r)
 }
 
 func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
+	if r.ControlContract != nil && !headlessRun(r) {
+		return workflowError(2, "bound control requires headless runtime")
+	}
 	if env := r.GoalStartEnvironment; env != nil {
 		if r.Worker != nil || r.Runtime.Provider != "codex" || !filepath.IsAbs(env.Home) || !filepath.IsAbs(env.CodexHome) || filepath.Clean(env.Home) != env.Home || filepath.Clean(env.CodexHome) != env.CodexHome || env.Path == "" || strings.ContainsAny(env.Path, "\x00\r\n") {
 			return workflowError(2, "bound start requires the exact Codex HOME, CODEX_HOME and PATH")

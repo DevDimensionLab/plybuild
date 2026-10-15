@@ -121,7 +121,13 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 	}
 	r := workerAttemptResult{RunID: id, JobID: job.ID, IntentSHA256: job.IntentHash, StartedAt: d.Now().UTC().Format(time.RFC3339Nano)}
 	var stdout, stderr workflowLimitedOutput
-	if in.Kind == "verify" || in.Kind == "integrate" {
+	if in.Kind == "commit" {
+		err = workerCommit(d, s)
+		r.NativeCompleted = err == nil
+		if err != nil {
+			r.Error = err.Error()
+		}
+	} else if in.Kind == "verify" || in.Kind == "integrate" {
 		var o WorkflowRun
 		if in.Kind == "verify" {
 			if s.Result.Worker.Review == nil {
@@ -317,7 +323,7 @@ func workerRunReserved(d Dependencies, s workflowState) (workerAttemptResult, er
 	if r.RunID != s.Result.RunID || r.JobID != job.ID || r.IntentSHA256 != job.IntentHash || r.FinishedAt == "" {
 		return r, fmt.Errorf("worker attempt result binding differs")
 	}
-	if job.Kind != "verify" && job.Kind != "integrate" {
+	if !workerNativeKind(job.Kind) {
 		if r.Process == nil || r.Process.State != "exited" || !quiescent(*r.Process) || r.Process.ExitCode == nil || r.Exit == nil || *r.Process.ExitCode != *r.Exit {
 			return r, fmt.Errorf("attempt %s has no positive process completion; pause, replacement and further effects remain blocked", job.ID)
 		}
@@ -343,7 +349,7 @@ func workerLaunchAttempt(d Dependencies, s workflowState, in workerAttemptIntent
 		return err
 	}
 	job := &WorkerJob{ID: in.JobID, Kind: in.Kind, Directory: dir, IntentHash: b.SHA256}
-	if err = workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(current *workflowState) error {
+	if err = workerControlDispatch(d, s, func(current *workflowState) error {
 		if current.Result.Worker.Job != nil {
 			return fmt.Errorf("another worker attempt is reserved")
 		}

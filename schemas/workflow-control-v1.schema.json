@@ -1,0 +1,909 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plybuild.dev/schemas/workflow-control-v1.schema.json",
+  "title": "MR05 bound runtime control v1",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/basis"
+    },
+    {
+      "$ref": "#/$defs/preview"
+    },
+    {
+      "$ref": "#/$defs/status"
+    }
+  ],
+  "$defs": {
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "run"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^wfr_[0-9a-f]{64}$"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "week"
+            },
+            "id": {
+              "type": "string",
+              "pattern": "^week_[0-9a-f]{32}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "request_id",
+        "workspace",
+        "input",
+        "validity",
+        "binding"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.control-request"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{7,127}$"
+        },
+        "workspace": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "input": {
+          "type": "object",
+          "required": [
+            "target",
+            "action"
+          ],
+          "properties": {
+            "target": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "run"
+                    },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^wfr_[0-9a-f]{64}$"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "week"
+                    },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^week_[0-9a-f]{32}$"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "action": {
+              "enum": [
+                "pause",
+                "stop",
+                "resume"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "validity": {
+          "type": "object",
+          "required": [
+            "issued_at",
+            "expires_at"
+          ],
+          "properties": {
+            "issued_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "additionalProperties": false
+        },
+        "binding": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "contract": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "mode",
+        "contract_digest",
+        "parent_kind",
+        "week_id",
+        "week_binding",
+        "schemas"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "bound_control_v1"
+        },
+        "contract_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "parent_kind": {
+          "enum": [
+            "standalone",
+            "week"
+          ]
+        },
+        "week_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "week_binding": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schemas": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "action": {
+      "type": "object",
+      "required": [
+        "action",
+        "boundary",
+        "effect",
+        "continuation_policy",
+        "caveats"
+      ],
+      "properties": {
+        "action": {
+          "enum": [
+            "pause",
+            "stop",
+            "resume"
+          ]
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "effect": {
+          "enum": [
+            "paused",
+            "stopped",
+            "resumed"
+          ]
+        },
+        "continuation_policy": {
+          "type": "string"
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "observation": {
+      "type": "object",
+      "required": [
+        "state",
+        "source",
+        "freshness",
+        "observed_at"
+      ],
+      "properties": {
+        "state": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "freshness": {
+          "type": "string"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": true
+    },
+    "week": {
+      "type": "object",
+      "required": [
+        "id",
+        "binding",
+        "selected",
+        "deadline",
+        "desired_action",
+        "control_revision",
+        "generation",
+        "frozen_control",
+        "dispatch"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "binding": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "selected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "task_id",
+              "goal",
+              "depends_on"
+            ],
+            "properties": {
+              "task_id": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "object"
+              },
+              "depends_on": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "desired_action": {
+          "enum": [
+            "continue",
+            "pause",
+            "stop"
+          ]
+        },
+        "control_revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer"
+        },
+        "frozen_control": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "dispatch": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "basis": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "project_id",
+        "repo_id",
+        "epic_id",
+        "task_id",
+        "goal",
+        "run_id",
+        "run_request_hash",
+        "worker_session",
+        "runtime_mode",
+        "provider",
+        "frozen_control",
+        "stage",
+        "job_id",
+        "job_hash",
+        "queue_revision",
+        "retry_not_before",
+        "unavailable_reason",
+        "workspace",
+        "scope",
+        "control_contract",
+        "owner_generation",
+        "phase",
+        "state_revision",
+        "owner_lock",
+        "supervisor_lock",
+        "week",
+        "runtime_observation",
+        "actions",
+        "next_action",
+        "native_revision"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.control-capabilities"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "project_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "repo_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "epic_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "task_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "goal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "run_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "run_request_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "worker_session": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "runtime_mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "frozen_control": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "job_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "job_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "queue_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "retry_not_before": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "unavailable_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "workspace": {
+          "type": "string"
+        },
+        "scope": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "id"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "run"
+                },
+                "id": {
+                  "type": "string",
+                  "pattern": "^wfr_[0-9a-f]{64}$"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "id"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "week"
+                },
+                "id": {
+                  "type": "string",
+                  "pattern": "^week_[0-9a-f]{32}$"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "control_contract": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/contract"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "owner_generation": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "phase": {
+          "type": "string"
+        },
+        "state_revision": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "owner_lock": {
+          "type": "string"
+        },
+        "supervisor_lock": {
+          "type": "string"
+        },
+        "week": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/week"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtime_observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/action"
+          }
+        },
+        "next_action": {
+          "type": "string"
+        },
+        "native_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "preview": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "state",
+        "basis",
+        "request",
+        "error"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.control-preview"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "state": {
+          "enum": [
+            "ready",
+            "rejected"
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/basis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/request"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/error"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "rejected"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "request": {
+                "type": "null"
+              },
+              "error": {
+                "$ref": "#/$defs/error"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "request": {
+                "$ref": "#/$defs/request"
+              },
+              "basis": {
+                "$ref": "#/$defs/basis"
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "request_digest",
+        "sequence",
+        "control_effect",
+        "observed_at",
+        "owner_generation",
+        "job_id",
+        "job_hash",
+        "reason",
+        "native_stop_sequence"
+      ],
+      "properties": {
+        "request_digest": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "sequence": {
+          "type": "string",
+          "pattern": "^sha256:[a-f0-9]{64}$"
+        },
+        "control_effect": {
+          "enum": [
+            "paused",
+            "stopped",
+            "resumed",
+            "completed_before_boundary",
+            "superseded"
+          ]
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "owner_generation": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "job_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "job_hash": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "native_stop_sequence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "predecessor_generation": {
+          "type": "integer",
+          "description": "Present when the actual owner is the one native wake successor bound to the approved predecessor generation."
+        }
+      },
+      "additionalProperties": true
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "workspace",
+        "request_id",
+        "request_digest",
+        "approval_binding",
+        "action",
+        "scope",
+        "basis",
+        "control_sequence",
+        "request_state",
+        "control_effect",
+        "receipt",
+        "runtime_observation",
+        "error",
+        "next_action"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.control-status"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "workspace": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "request_digest": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approval_binding": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "action": {
+          "enum": [
+            "pause",
+            "stop",
+            "resume",
+            null
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/target"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/basis"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "control_sequence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "request_state": {
+          "enum": [
+            "not_recorded",
+            "rejected",
+            "accepted",
+            "outcome_unknown"
+          ]
+        },
+        "control_effect": {
+          "enum": [
+            "not_confirmed",
+            "none",
+            "pending_boundary",
+            "paused",
+            "stopped",
+            "resumed",
+            "completed_before_boundary",
+            "superseded",
+            "unknown"
+          ]
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/receipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtime_observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/error"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_action": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

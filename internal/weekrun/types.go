@@ -17,6 +17,7 @@ const MaxDurationSeconds = 7 * 24 * 60 * 60
 // The Goal revision/hash, native executor and delivery agreement are rechecked
 // before every launch; later queue additions never enlarge this authorization.
 type Contract struct {
+	RuntimeControl      *RuntimeControl     `json:"runtime_control,omitempty"`
 	Kind                string              `json:"kind"`
 	SchemaVersion       int                 `json:"schema_version"`
 	Name                string              `json:"name"`
@@ -35,6 +36,11 @@ type Contract struct {
 	MaxProviderRetries  int                 `json:"max_provider_retries"`
 }
 
+type RuntimeControl struct {
+	SchemaVersion int    `json:"schema_version"`
+	Mode          string `json:"mode"`
+}
+
 type Selection struct {
 	TaskID    workspace.TaskID      `json:"task_id"`
 	Goal      workspace.TaskGoalRef `json:"goal"`
@@ -42,13 +48,14 @@ type Selection struct {
 }
 
 type Binding struct {
-	Contract    Contract           `json:"contract"`
-	SHA256      string             `json:"contract_sha256"`
-	ID          string             `json:"id"`
-	StartedAt   string             `json:"started_at"`
-	Deadline    string             `json:"deadline"`
-	Control     taskrun.Executable `json:"control"`
-	Environment map[string]string  `json:"environment"`
+	ControlContract *taskrun.ControlContract `json:"control_contract,omitempty"`
+	Contract        Contract                 `json:"contract"`
+	SHA256          string                   `json:"contract_sha256"`
+	ID              string                   `json:"id"`
+	StartedAt       string                   `json:"started_at"`
+	Deadline        string                   `json:"deadline"`
+	Control         taskrun.Executable       `json:"control"`
+	Environment     map[string]string        `json:"environment"`
 }
 
 type Entry struct {
@@ -61,26 +68,50 @@ type Entry struct {
 }
 
 type State struct {
-	Kind            string           `json:"kind"`
-	SchemaVersion   int              `json:"schema_version"`
-	ID              string           `json:"id"`
-	ContractSHA256  string           `json:"contract_sha256"`
-	Phase           string           `json:"phase"`
-	StartedAt       string           `json:"started_at"`
-	Deadline        string           `json:"deadline"`
-	LastProgressAt  string           `json:"last_progress_at"`
-	UpdatedAt       string           `json:"updated_at"`
-	NextCheckAt     string           `json:"next_check_at,omitempty"`
-	NextAction      string           `json:"next_action"`
-	Reason          string           `json:"reason,omitempty"`
-	Entries         []Entry          `json:"entries"`
-	ActiveTaskID    workspace.TaskID `json:"active_task_id,omitempty"`
-	DesiredAction   string           `json:"desired_action"`
-	SeenControl     string           `json:"seen_control,omitempty"`
-	ResumeRequested bool             `json:"resume_requested,omitempty"`
-	Generation      int              `json:"generation"`
-	ControllerPID   int              `json:"controller_pid"`
-	OwnerState      string           `json:"owner_state,omitempty"`
+	StartContract    *Contract                `json:"start_contract,omitempty"`
+	ControlContract  *taskrun.ControlContract `json:"control_contract,omitempty"`
+	ControlRevision  uint64                   `json:"control_revision,omitempty"`
+	ControlReceipt   *taskrun.ControlReceipt  `json:"control_receipt,omitempty"`
+	ControlWake      *ControlWake             `json:"control_wake,omitempty"`
+	ControlSuccessor *ControlWake             `json:"control_successor,omitempty"`
+	Dispatch         *Dispatch                `json:"dispatch,omitempty"`
+	Kind             string                   `json:"kind"`
+	SchemaVersion    int                      `json:"schema_version"`
+	ID               string                   `json:"id"`
+	ContractSHA256   string                   `json:"contract_sha256"`
+	Phase            string                   `json:"phase"`
+	StartedAt        string                   `json:"started_at"`
+	Deadline         string                   `json:"deadline"`
+	LastProgressAt   string                   `json:"last_progress_at"`
+	UpdatedAt        string                   `json:"updated_at"`
+	NextCheckAt      string                   `json:"next_check_at,omitempty"`
+	NextAction       string                   `json:"next_action"`
+	Reason           string                   `json:"reason,omitempty"`
+	Entries          []Entry                  `json:"entries"`
+	ActiveTaskID     workspace.TaskID         `json:"active_task_id,omitempty"`
+	DesiredAction    string                   `json:"desired_action"`
+	SeenControl      string                   `json:"seen_control,omitempty"`
+	ResumeRequested  bool                     `json:"resume_requested,omitempty"`
+	Generation       int                      `json:"generation"`
+	ControllerPID    int                      `json:"controller_pid"`
+	OwnerState       string                   `json:"owner_state,omitempty"`
+}
+
+type Dispatch struct {
+	Sequence string           `json:"sequence"`
+	Kind     string           `json:"kind"`
+	TaskID   workspace.TaskID `json:"task_id"`
+	RunID    string           `json:"run_id"`
+	Explicit bool             `json:"explicit"`
+}
+
+// A wake permits only the next owner generation for this exact reservation.
+// ControlSuccessor records that the process observed the wake after acquiring
+// ownership; an owner already waiting at publication cannot adopt a later wake.
+type ControlWake struct {
+	Sequence    string `json:"sequence"`
+	Predecessor int    `json:"predecessor_generation"`
+	Successor   int    `json:"successor_generation"`
 }
 
 type Control struct {
@@ -125,6 +156,7 @@ type Manager struct {
 	Executable func() (string, error)
 	Launch     func(Binding) error
 	Launchctl  Launchctl
+	Fault      func(string) error
 }
 
 var slug = regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{0,95}$`)
@@ -135,8 +167,11 @@ func (c Contract) Target() workspace.QueueTargetInput {
 }
 
 func Validate(c Contract) error {
-	if c.Kind != "ply.workflow.week-contract" || c.SchemaVersion != 1 || !slug.MatchString(c.Name) {
+	if c.Kind != "ply.workflow.week-contract" || (c.SchemaVersion != 1 && c.SchemaVersion != 2) || !slug.MatchString(c.Name) {
 		return fmt.Errorf("week requires ply.workflow.week-contract schema 1 and a short lowercase name")
+	}
+	if c.SchemaVersion == 1 && c.RuntimeControl != nil || c.SchemaVersion == 2 && (c.RuntimeControl == nil || c.RuntimeControl.SchemaVersion != 1 || c.RuntimeControl.Mode != taskrun.BoundControlMode) {
+		return fmt.Errorf("week schema 2 requires runtime_control schema 1 mode bound_control_v1; schema 1 cannot opt in")
 	}
 	for _, p := range []string{c.Workspace, c.ReturnWorktree} {
 		if err := physical(p); err != nil {

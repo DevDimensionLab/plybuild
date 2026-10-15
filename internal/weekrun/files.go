@@ -160,6 +160,13 @@ func readBinding(root, id string) (Binding, string, error) {
 	if b.ID != id || b.Contract.Workspace != root || contractID(b.Contract) != id || b.SHA256 != hash(canonical(b.Contract)) {
 		return b, dir, fmt.Errorf("week immutable binding differs")
 	}
+	if b.Contract.RuntimeControl != nil {
+		if !bytes.Equal(canonical(b.ControlContract), canonical(taskrun.NewControlContract("week", id, b.SHA256))) {
+			return b, dir, fmt.Errorf("week control contract differs")
+		}
+	} else if b.ControlContract != nil {
+		return b, dir, fmt.Errorf("old week cannot acquire bound control")
+	}
 	return b, dir, nil
 }
 func readState(b Binding, dir string) (State, error) {

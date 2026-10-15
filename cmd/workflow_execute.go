@@ -16,6 +16,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var format string
 	var target queueTargetFlags
 	var headless bool
+	var boundControl bool
 	var workerAttempts, workerTimeout, workerRetries int
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
@@ -23,6 +24,12 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
+			if boundControl {
+				if !headless || in.SpecID == "" || in.Next {
+					return workspace.WorkInvalidArguments("--bound-control requires --headless and an explicit --spec")
+				}
+				in.ControlContract = taskrun.NewControlContract("standalone", "", "")
+			}
 			if headless {
 				if workerRetries < 1 || workerRetries > 1000 {
 					return workspace.WorkInvalidArguments("--worker-retries must be between 1 and 1000")
@@ -60,6 +67,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup")
 	c.Flags().BoolVar(&in.Restart, "restart", false, "recover this --spec's interrupted Codex startup before Task input, preserving its worktree and history")
 	c.Flags().BoolVar(&headless, "headless", false, "start one durable Codex worker for an automatic local Epic goal without a terminal")
+	c.Flags().BoolVar(&boundControl, "bound-control", false, "opt a new --headless --spec Run into bound runtime control v1; --check previews the frozen contract")
 	c.Flags().IntVar(&workerAttempts, "worker-attempts", 3, "maximum development attempts for --headless (1-20)")
 	c.Flags().IntVar(&workerTimeout, "worker-timeout", 1800, "seconds per headless provider attempt (10-86400)")
 	c.Flags().IntVar(&workerRetries, "worker-retries", 20, "maximum persisted provider usage-limit retries (1-1000); no model or account switch")

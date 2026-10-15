@@ -54,7 +54,11 @@ func (n NativeAdapter) execute(c Contract, s Selection, control taskrun.Executab
 		d := n.Dependencies
 		d.Executable = func() (string, error) { return control.Path, nil }
 		var e error
-		out, e = taskexecute.Execute(d, taskexecute.Input{Target: c.Target(), SpecID: s.Goal.SpecID, Check: check, Worker: workerContract(c), ExpectedTaskID: s.TaskID, ExpectedGoal: &s.Goal})
+		var contract *taskrun.ControlContract
+		if c.RuntimeControl != nil {
+			contract = taskrun.NewControlContract("week", contractID(c), hash(canonical(c)))
+		}
+		out, e = taskexecute.Execute(d, taskexecute.Input{Target: c.Target(), SpecID: s.Goal.SpecID, Check: check, Worker: workerContract(c), ControlContract: contract, ExpectedTaskID: s.TaskID, ExpectedGoal: &s.Goal})
 		return e
 	})
 	return

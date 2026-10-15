@@ -18,7 +18,7 @@ func newWorkflowWeekCommand(d taskrun.Dependencies) *cobra.Command {
 	parent := &cobra.Command{Use: "week", Short: "Run an explicitly selected set of native Goals through automatic local delivery", Long: "Preserve selected Task/Goal revisions, dependencies, model, return target and a deadline up to seven days. Native workers own development, tests, review and local return. The week controller chooses only approved work, continues independent work after proven blockers, and preserves active Run identity after interruption. No human test gate, global provider settings, push or notification is added."}
 	var file, format string
 	var check, service bool
-	start := &cobra.Command{Use: "start", Args: cobra.NoArgs, Short: "Bind selected Goals and start the durable local controller", RunE: func(c *cobra.Command, _ []string) error {
+	start := &cobra.Command{Use: "start", Args: cobra.NoArgs, Short: "Bind selected Goals and start the durable local controller", Long: "Start the exact selected week contract. Schema 2 explicitly opts in with runtime_control: {\"schema_version\":1,\"mode\":\"bound_control_v1\"}. --check shows the complete preserved selection and control_contract without writes or startup. Schema 1 retains legacy behavior. Existing weeks cannot be upgraded.", RunE: func(c *cobra.Command, _ []string) error {
 		if err := executeFormat(format); err != nil {
 			return err
 		}

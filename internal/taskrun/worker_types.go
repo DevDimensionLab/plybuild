@@ -19,6 +19,10 @@ type WorkerContract struct {
 	MaxProviderRetries  int `json:"max_provider_retries,omitempty"`
 }
 
+func workerNativeKind(kind string) bool {
+	return kind == "verify" || kind == "integrate" || kind == "commit"
+}
+
 type WorkerStatus struct {
 	SessionID           string       `json:"session_id"`
 	Phase               string       `json:"phase"`
@@ -45,6 +49,13 @@ type WorkerStatus struct {
 	ProviderRetries     int          `json:"provider_retries,omitempty"`
 	LastProviderFailure string       `json:"last_provider_failure,omitempty"`
 	QueueReleased       bool         `json:"queue_released,omitempty"`
+}
+
+// A wake authorizes one native successor, never an arbitrary later generation.
+type workerControlWake struct {
+	Sequence    string `json:"sequence"`
+	Predecessor int    `json:"predecessor"`
+	Successor   int    `json:"successor"`
 }
 
 type WorkerJob struct {
@@ -130,6 +141,9 @@ func workerCurrentAction(o WorkflowRun) WorkflowAction {
 }
 
 func validateWorkerRequest(r WorkflowRequest) error {
+	if err := ValidateControlContract(r.ControlContract); err != nil {
+		return err
+	}
 	w := r.Worker
 	if w == nil || w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 {
 		return workflowError(2, "headless requires an explicit bounded one-Spec worker contract")

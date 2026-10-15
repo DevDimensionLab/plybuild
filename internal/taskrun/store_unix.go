@@ -10,6 +10,13 @@ import (
 func openRead(p string) (*os.File, error) { return physicalOpenFile(p, os.O_RDONLY|unix.O_NOFOLLOW, 0) }
 func lockFile(p string) (*os.File, error) {
 	f, e := physicalOpenFile(p, os.O_RDWR|os.O_CREATE|unix.O_NOFOLLOW, 0600)
+	if os.IsNotExist(e) {
+		// Concurrent first creation can return ENOENT from macOS openat even
+		// after another publisher created the lock. Reopen only the existing
+		// physical inode, with the same symlink and identity checks; no retry
+		// of protected work or uncertain effect occurs here.
+		f, e = physicalOpenFile(p, os.O_RDWR|unix.O_NOFOLLOW, 0600)
+	}
 	if e != nil {
 		return nil, e
 	}
