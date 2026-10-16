@@ -118,7 +118,9 @@ func workerWaitForProvider(d Dependencies, s workflowState, result workerAttempt
 		return fmt.Errorf("authentication_required: existing Codex login failed; inspect %s; no account, model or API fallback was attempted", result.Stdout.Locator)
 	}
 	limit := s.Request.Worker.MaxProviderRetries
-	if limit == 0 {
+	// Schema 1 preserves its historical omitted/zero default. The explicitly
+	// opted-in schema-2 product-question contract treats zero as no extra turn.
+	if limit == 0 && s.Request.Worker.SchemaVersion == 1 {
 		limit = 20
 	}
 	if w.ProviderRetries >= limit {

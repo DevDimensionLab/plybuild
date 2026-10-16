@@ -88,24 +88,35 @@ func (b workerControlBackend) ControlWake(root, id string) error {
 func workerClaimOwner(d *Dependencies, observed workflowState, lock *os.File) error {
 	root, id := observed.Request.WorkspaceRoot, observed.Result.RunID
 	generation := 0
-	err := workflowUpdate(*d, root, id, func(s *workflowState) error {
-		w := s.Result.Worker
-		s.ControlSuccessor = nil
-		if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "standalone" {
-			_, pending, err := ControlHistory(root, ControlTarget{"run", id})
-			if err != nil {
-				return err
+	err := WithWorkerParentGuard(root, observed.Request.ControlContract, func() error {
+		return workflowUpdate(*d, root, id, func(s *workflowState) error {
+			if !equal(s.ProductQuestion, observed.ProductQuestion) {
+				return boundAnswerError("owner_changed", "Question changed while acquiring worker ownership.")
 			}
-			link := s.ControlWake
-			if pending != nil && link != nil && equal(link, observed.ControlWake) && link.Sequence == pending.Sequence && pending.Basis.OwnerGeneration != nil && link.Predecessor == *pending.Basis.OwnerGeneration && link.Predecessor == w.Generation && link.Successor == w.Generation+1 {
-				copy := *link
-				s.ControlSuccessor = &copy
+			if e := productReadoption(*d, *s); e != nil {
+				return e
 			}
-		}
-		w.Generation++
-		w.OwnerPID, w.OwnerStartedAt = os.Getpid(), ControlTimestamp(controlNow(*d))
-		generation = w.Generation
-		return nil
+			w := s.Result.Worker
+			s.ControlSuccessor = nil
+			if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "standalone" {
+				_, pending, err := ControlHistory(root, ControlTarget{"run", id})
+				if err != nil {
+					return err
+				}
+				link := s.ControlWake
+				if pending != nil && link != nil && equal(link, observed.ControlWake) && link.Sequence == pending.Sequence && pending.Basis.OwnerGeneration != nil && link.Predecessor == *pending.Basis.OwnerGeneration && link.Predecessor == w.Generation && link.Successor == w.Generation+1 {
+					copy := *link
+					s.ControlSuccessor = &copy
+				}
+			}
+			w.Generation++
+			w.OwnerPID, w.OwnerStartedAt = os.Getpid(), ControlTimestamp(controlNow(*d))
+			generation = w.Generation
+			if s.ProductContinuation != nil && s.ProductLaunch == nil {
+				s.ProductContinuationGeneration = w.Generation
+			}
+			return nil
+		})
 	})
 	if err == nil {
 		d.WorkerOwner = &workerOwner{root: root, runID: id, generation: generation, lock: lock}
@@ -245,10 +256,17 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 		return o, nil
 	}
 	if w.Job != nil && (w.Phase == "paused" || w.Phase == "stopped" || o.OwnerLock != "lock_held" && o.SupervisorLock != "lock_held") {
-		result, er := workerRunReserved(b.d, s)
-		if er != nil || (workerNativeKind(w.Job.Kind) && !result.NativeCompleted) {
-			o.Unavailable("attempt_outcome_unknown")
-			return o, nil
+		if s.ProductContinuation != nil && s.ProductLaunch == nil {
+			if e := productUnstartedReservation(b.d, s); e != nil {
+				o.Unavailable("attempt_outcome_unknown")
+				return o, nil
+			}
+		} else {
+			result, er := workerRunReserved(b.d, s)
+			if er != nil || (workerNativeKind(w.Job.Kind) && !result.NativeCompleted) {
+				o.Unavailable("attempt_outcome_unknown")
+				return o, nil
+			}
 		}
 	}
 	// Parent routing is not an exemption from validating the child's runtime,
@@ -259,7 +277,7 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 		return o, nil
 	}
 	switch w.Phase {
-	case "running", "waiting":
+	case "running", "waiting", "awaiting_product_answer":
 		o.Offer("pause", "stop")
 	case "paused":
 		o.Offer("stop", "resume")

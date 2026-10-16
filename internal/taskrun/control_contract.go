@@ -216,7 +216,7 @@ func (b ControlBasis) MarshalJSON() ([]byte, error) {
 // while a pause/stop is still approaching its native boundary.
 func PublicControlState(phase string) string {
 	switch phase {
-	case "running", "waiting", "paused", "stopped", "completed":
+	case "running", "waiting", "awaiting_product_answer", "paused", "stopped", "completed":
 		return phase
 	case "pausing", "stopping":
 		return "running"

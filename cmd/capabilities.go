@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
@@ -120,6 +121,26 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		{ID: "workflow.execute.acceptance", Command: []string{"workflow", "execute", "acceptance"}, Mode: "explicit_policy_selection", Selectors: []string{"--context", "--file"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "acceptance_policy_selection"},
 		{ID: "workflow.execute.verify", Command: []string{"workflow", "execute", "verify"}, Mode: "candidate_acceptance", Selectors: []string{"--context", "--review", "--candidate-binary", "--reuse"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}, {"PlyDeliveryVerification@2", &two}}, Effect: "candidate_test_and_evidence"},
 		{ID: "workflow.execute.integrate", Command: []string{"workflow", "execute", "integrate"}, Mode: "frozen_acceptance", Selectors: []string{"--context"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "authorized_local_integration"},
+	}
+	answerVersion := taskrun.BoundAnswerSchemaVersion
+	for _, answer := range []struct {
+		id, verb, kind, effect string
+		selectors              []string
+	}{
+		{"workflow.execute.product-question", "question", "ply.workflow.product-question", "read", []string{"--workspace"}},
+		{"workflow.execute.bound-answer", "answer preview", "ply.workflow.bound-answer-preview", "read", []string{"--workspace", "--question-id", "--question-revision", "--option-id", "--request-id"}},
+		{"workflow.execute.bound-answer.apply", "answer apply", "ply.workflow.bound-answer-status", "approved_product_answer", []string{"--file"}},
+		{"workflow.execute.bound-answer.status", "answer status", "ply.workflow.bound-answer-status", "read", []string{"--workspace"}},
+	} {
+		schemas := []capabilitySchema{{answer.kind, &answerVersion}}
+		if answer.verb == "answer preview" {
+			schemas = append(schemas, capabilitySchema{"ply.workflow.bound-answer-request", &answerVersion})
+		}
+		workflow = append(workflow, capabilityOperation{
+			ID: answer.id, Command: append([]string{"workflow", "execute"}, strings.Split(answer.verb, " ")...),
+			Mode: taskrun.BoundAnswerMode, Selectors: answer.selectors, Formats: []string{"text", "json"},
+			Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: answer.effect,
+		})
 	}
 	for _, mode := range []string{"codex_headless_standalone_v1", "codex_headless_week_v1"} {
 		for _, verb := range []string{"show", "preview", "apply", "status"} {

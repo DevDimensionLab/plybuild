@@ -128,8 +128,14 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	out.Goal = &plan
 	if input.Worker != nil {
 		w, a := input.Worker, plan.Delivery
-		if w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 || a == nil || !a.AutomaticAcceptance() || a.HumanOwnedIntegration() || a.Acceptance.RequireHumanQA || a.Mode != workspace.DeliveryLocalEpic {
+		if (w.SchemaVersion != 1 && w.SchemaVersion != 2) || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 || a == nil || !a.AutomaticAcceptance() || a.HumanOwnedIntegration() || a.Acceptance.RequireHumanQA || a.Mode != workspace.DeliveryLocalEpic {
 			return out, workspace.WorkInvalidArguments("headless requires bounded worker settings and an explicit automatic local Epic agreement")
+		}
+		if err := taskrun.ValidateProductQuestionContract(w.ProductQuestions); err != nil {
+			return out, err
+		}
+		if w.SchemaVersion == 1 && w.ProductQuestions != nil || w.SchemaVersion == 2 && (w.ProductQuestions == nil || input.ControlContract == nil || input.ControlContract.ParentKind != "week") {
+			return out, workspace.WorkInvalidArguments("product questions require a new schema-2 worker and bound parent week")
 		}
 	}
 	if err = checkOrigin(d, plan.Target); err != nil {

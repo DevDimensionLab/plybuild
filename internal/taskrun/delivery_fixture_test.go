@@ -21,9 +21,10 @@ type deliveryFixture struct {
 }
 
 type deliveryFixtureOptions struct {
-	Agreement *workspace.DeliveryAgreement
-	ParentRef string
-	Root      string
+	Agreement     *workspace.DeliveryAgreement
+	ParentRef     string
+	Root          string
+	BeforePrepare func(workspace.Dependencies, string, string, workspace.TaskGoalRef)
 }
 
 func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtureOptions) deliveryFixture {
@@ -95,6 +96,9 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	queue := workspace.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/goals", ProjectID: "ply", RepoID: "ply", EpicID: "epic", Entries: []workspace.TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}}, Recorder: workspace.TaskGoalQueueRecorder{ActorClaim: "fixture planner", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}, RegistryUpgrade: &workspace.TaskRegistryUpgrade{RegistrySHA256: r.RawSHA256, FromVersion: r.FormatVersion}}
 	if _, e = workspace.SetTaskQueue(w, writeAny(t, root, "goal-queue.json", queue)); e != nil {
 		t.Fatal(e)
+	}
+	if option.BeforePrepare != nil {
+		option.BeforePrepare(w, root, epic, goal)
 	}
 	acceptance := filepath.Join(root, "acceptance.sh")
 	preview, e := workspace.PreviewTaskGoalExecution(w, workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Next: true, AcceptancePath: acceptance})

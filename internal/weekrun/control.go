@@ -627,6 +627,20 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 						}
 						dispatch = &Dispatch{Kind: "control", TaskID: entry.TaskID, RunID: entry.RunID}
 					}
+				} else if r.Phase == "awaiting_product_answer" {
+					s.Phase = "awaiting_product_answer"
+					entry.State = "awaiting_product_answer"
+					s.NextAction = "Wait for one bound product answer on the same native Task and developer session"
+					s.NextCheckAt = ""
+					s.ResumeRequested = false
+					g.ResumeAllowed = false
+					if r.OwnerState != "lock_held" && r.SupervisorState != "lock_held" {
+						if r.OwnerState == "unowned" && r.SupervisorState == "unowned" {
+							dispatch = &Dispatch{Kind: "resume", TaskID: entry.TaskID, RunID: entry.RunID, Explicit: false}
+						} else {
+							return taskrun.ControlError("control_owner_unknown", "The waiting worker's ownership is unknown; do not replace it.")
+						}
+					}
 				} else if r.Phase == "blocked" {
 					s.Phase = "blocked"
 					s.Reason = "The native Run requires local recovery."
@@ -740,7 +754,7 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 		ix := entryIndex(out, dispatch.TaskID)
 		run, err = m.Native.Start(b.Contract, b.Contract.Selected[ix], b.Control, false)
 	case "resume":
-		run, err = m.Native.Resume(b.Contract, dispatch.RunID, true)
+		run, err = m.Native.Resume(b.Contract, dispatch.RunID, dispatch.Explicit)
 	case "control":
 		run, err = m.Native.Control(b.Contract, dispatch.RunID, out.DesiredAction)
 	}

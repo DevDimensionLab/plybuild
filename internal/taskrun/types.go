@@ -323,14 +323,19 @@ func env(kind string) Envelope {
 func ptr[T any](v T) *T { return &v }
 
 type LaunchSpec struct {
+	// StartGuard holds the parent/store gate only around the immediate OS Start.
+	StartGuard       func(func() error) error
 	Executable       Executable
 	Argv             []string
 	CWD, ContextPath string
 	Timeout          time.Duration
-	StreamsRoot      string
-	Completion       *ProviderCompletion
-	Environment      []string
-	Stdin            *os.File
+	// Deadline is an immutable absolute cutoff; a resumed reservation cannot
+	// renew it by retaining a previously computed relative timeout.
+	Deadline    time.Time
+	StreamsRoot string
+	Completion  *ProviderCompletion
+	Environment []string
+	Stdin       *os.File
 }
 
 // ProcessRunner must call started only after a successful spawn and release all
@@ -349,18 +354,20 @@ type StartupProcess struct {
 }
 
 type Dependencies struct {
-	Executable      func() (string, error)
-	Files           FileSystem
-	Workspace       workspace.Dependencies
-	Workflow        workflowhandoff.Dependencies
-	Runner          ProcessRunner
-	ExecRunner      ProcessRunner
-	Now             func() time.Time
-	CallbackContext *string
-	TaskStatusPath  string
-	ContextPath     func() string
-	CWD             func() (string, error)
-	Fault           func(string) error
+	// Trusted in-process qualification seam for owned adapter stand-ins; never serialized.
+	ProductAnswerQualification func(Runtime, string) (string, error)
+	Executable                 func() (string, error)
+	Files                      FileSystem
+	Workspace                  workspace.Dependencies
+	Workflow                   workflowhandoff.Dependencies
+	Runner                     ProcessRunner
+	ExecRunner                 ProcessRunner
+	Now                        func() time.Time
+	CallbackContext            *string
+	TaskStatusPath             string
+	ContextPath                func() string
+	CWD                        func() (string, error)
+	Fault                      func(string) error
 	// StartupProcessTree observes the shell and all of its descendants. A nil
 	// observer uses a bounded local process-table read, without command lines.
 	StartupProcessTree func(shellPID int) ([]StartupProcess, error)

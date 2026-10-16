@@ -47,7 +47,13 @@ func (n NativeAdapter) Queue(c Contract) (q workspace.WorkspaceTaskQueueReadback
 	return
 }
 func workerContract(c Contract) *taskrun.WorkerContract {
-	return &taskrun.WorkerContract{SchemaVersion: 1, MaxAttempts: c.MaxAttempts, AgentTimeoutSeconds: c.AgentTimeoutSeconds, MaxProviderRetries: c.MaxProviderRetries}
+	w := &taskrun.WorkerContract{SchemaVersion: 1, MaxAttempts: c.MaxAttempts, AgentTimeoutSeconds: c.AgentTimeoutSeconds, MaxProviderRetries: c.MaxProviderRetries}
+	if c.ProductQuestions != nil {
+		w.SchemaVersion = 2
+		v := *c.ProductQuestions
+		w.ProductQuestions = &v
+	}
+	return w
 }
 func (n NativeAdapter) execute(c Contract, s Selection, control taskrun.Executable, check bool) (out taskexecute.Result, err error) {
 	err = at(c, func() error {

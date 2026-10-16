@@ -15,6 +15,7 @@ import (
 )
 
 type workerAttemptIntent struct {
+	BoundAnswer     *FileBinding `json:"bound_answer,omitempty"`
 	RunID           string       `json:"run_id"`
 	JobID           string       `json:"job_id"`
 	Kind            string       `json:"kind"`
@@ -87,7 +88,7 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 	if err != nil {
 		return err
 	}
-	if in.Generation != s.Result.Worker.Generation {
+	if in.Generation != s.Result.Worker.Generation && !(in.Kind == "developer_answer" && s.ProductContinuationGeneration == s.Result.Worker.Generation && s.ProductContinuation != nil && *s.ProductContinuation == *job) {
 		return fmt.Errorf("stale worker attempt generation")
 	}
 	if in.Kind == "verify" || in.Kind == "integrate" {
@@ -100,7 +101,7 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 		return fmt.Errorf("missing inherited worker ownership")
 	}
 	defer lock.Close()
-	d.WorkerOwner = &workerOwner{root: root, runID: id, generation: in.Generation, lock: lock}
+	d.WorkerOwner = &workerOwner{root: root, runID: id, generation: s.Result.Worker.Generation, lock: lock}
 	if err = workerLiveOwner(d, s); err != nil {
 		return err
 	}
@@ -148,7 +149,7 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 		if len(in.Argv) == 0 || in.TimeoutSeconds < 1 {
 			return fmt.Errorf("invalid worker command intent")
 		}
-		if in.Kind == "developer" || in.Kind == "reviewer" {
+		if in.Kind == "developer" || in.Kind == "reviewer" || in.Kind == "developer_answer" {
 			end := -1
 			for i, a := range in.Argv {
 				if a == "exec" {
@@ -193,7 +194,23 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 			program = Executable{Path: in.Argv[0], SHA256: hash(b)}
 		}
 		completion := ProviderCompletion{}
-		process, runErr := workerOwnedExec(LaunchSpec{Executable: program, Argv: in.Argv, CWD: s.Observed.Target.WorktreeLocator, Timeout: time.Duration(in.TimeoutSeconds) * time.Second, StreamsRoot: filepath.Join(job.Directory, "streams"), Completion: &completion, Environment: in.Environment, Stdin: stdin}, func(p Process) error { return d.writeValue(filepath.Join(job.Directory, "process.json"), p) })
+		var guard func(func() error) error
+		var deadline time.Time
+		if in.Kind == "developer_answer" {
+			q, e := productQuestionRecordRead(s)
+			if e != nil {
+				return e
+			}
+			deadline, e = boundAnswerTime(q.OriginalDeadlineUTC)
+			if e != nil {
+				return e
+			}
+			guard = func(start func() error) error { return workerProductFinalStart(d, s, in, start) }
+		}
+		process, runErr := workerOwnedExec(LaunchSpec{StartGuard: guard, Deadline: deadline, Executable: program, Argv: in.Argv, CWD: s.Observed.Target.WorktreeLocator, Timeout: time.Duration(in.TimeoutSeconds) * time.Second, StreamsRoot: filepath.Join(job.Directory, "streams"), Completion: &completion, Environment: in.Environment, Stdin: stdin}, func(p Process) error { return d.writeValue(filepath.Join(job.Directory, "process.json"), p) })
+		if in.Kind == "developer_answer" && process.State == "not_started" {
+			return runErr
+		}
 		r.Process = &process
 		r.Exit = process.ExitCode
 		r.Error = workerAttemptError(in.Kind, runErr)
@@ -214,7 +231,7 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 			}
 			stderr.data = raw
 		}
-		if in.Kind == "developer" || in.Kind == "reviewer" {
+		if in.Kind == "developer" || in.Kind == "reviewer" || in.Kind == "developer_answer" {
 			if !completion.SequenceValid || completion.TurnsCompleted < 1 {
 				r.Error = "provider event sequence did not record a completed turn"
 			}

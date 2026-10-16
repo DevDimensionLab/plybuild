@@ -1,0 +1,1685 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plybuild.dev/schemas/workflow-bound-answer-v2.schema.json",
+  "title": "SL01 same-owner model-turn answer contract v2 — draft, not installed",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/question_read"
+    },
+    {
+      "$ref": "#/$defs/preview"
+    },
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/status"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 68,
+      "maxLength": 68,
+      "pattern": "^wfr_[a-f0-9]{64}$"
+    },
+    "question_id": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^pqw_[a-f0-9]{32}$"
+    },
+    "sha256": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,9})?Z$"
+    },
+    "workspace": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^/"
+    },
+    "counter": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "positive": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "reason": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 14,
+          "maxLength": 96,
+          "pattern": "^bound_answer_[a-z_]+$"
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "sha256",
+        "observed_at_utc"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "type": {
+          "enum": [
+            "question",
+            "source_result",
+            "answer",
+            "continuation_intent",
+            "provider_start",
+            "continuation_result",
+            "qualification"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "validity": {
+      "type": "object",
+      "required": [
+        "issued_at_utc",
+        "expires_at_utc"
+      ],
+      "properties": {
+        "issued_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "expires_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id",
+        "task_id",
+        "goal_id",
+        "goal_revision",
+        "goal_sha256",
+        "run_request_sha256",
+        "delivery_contract_sha256",
+        "task_worktree"
+      ],
+      "properties": {
+        "project_id": {
+          "$ref": "#/$defs/id"
+        },
+        "repo_id": {
+          "$ref": "#/$defs/id"
+        },
+        "epic_id": {
+          "$ref": "#/$defs/id"
+        },
+        "task_id": {
+          "$ref": "#/$defs/id"
+        },
+        "goal_id": {
+          "$ref": "#/$defs/id"
+        },
+        "goal_revision": {
+          "$ref": "#/$defs/positive"
+        },
+        "goal_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "run_request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "delivery_contract_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "task_worktree": {
+          "$ref": "#/$defs/workspace"
+        }
+      },
+      "additionalProperties": false
+    },
+    "parent_week": {
+      "type": "object",
+      "required": [
+        "week_id",
+        "contract_sha256",
+        "workset_sha256",
+        "control_revision",
+        "desired_action",
+        "original_deadline_utc"
+      ],
+      "properties": {
+        "week_id": {
+          "type": "string",
+          "minLength": 37,
+          "maxLength": 37,
+          "pattern": "^week_[a-f0-9]{32}$"
+        },
+        "contract_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "workset_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "control_revision": {
+          "$ref": "#/$defs/counter"
+        },
+        "desired_action": {
+          "enum": [
+            "continue",
+            "pause",
+            "stop"
+          ]
+        },
+        "original_deadline_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "worker": {
+      "type": "object",
+      "required": [
+        "owner_id",
+        "owner_generation",
+        "owner_state",
+        "iteration",
+        "source_job_id",
+        "source_intent_sha256",
+        "provider",
+        "provider_session_id",
+        "provider_binary_sha256",
+        "model",
+        "effort",
+        "policy_sha256",
+        "session_binding_sha256",
+        "qualification_sha256",
+        "continuation_limit",
+        "continuations_dispatched"
+      ],
+      "properties": {
+        "owner_id": {
+          "$ref": "#/$defs/id"
+        },
+        "owner_generation": {
+          "$ref": "#/$defs/positive"
+        },
+        "owner_state": {
+          "enum": [
+            "confirmed",
+            "unowned",
+            "unknown"
+          ]
+        },
+        "iteration": {
+          "$ref": "#/$defs/positive"
+        },
+        "source_job_id": {
+          "$ref": "#/$defs/id"
+        },
+        "source_intent_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "provider": {
+          "const": "codex"
+        },
+        "provider_session_id": {
+          "$ref": "#/$defs/id"
+        },
+        "provider_binary_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32
+        },
+        "policy_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "session_binding_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "qualification_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "continuation_limit": {
+          "const": 1
+        },
+        "continuations_dispatched": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "option": {
+      "type": "object",
+      "required": [
+        "option_id",
+        "label",
+        "consequence"
+      ],
+      "properties": {
+        "option_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "consequence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "additionalProperties": false
+    },
+    "continuation": {
+      "type": "object",
+      "required": [
+        "type",
+        "source_job_id",
+        "source_iteration",
+        "source_session_id",
+        "dispatch_policy",
+        "max_dispatches",
+        "boundary",
+        "global_writer_quiescence"
+      ],
+      "properties": {
+        "type": {
+          "const": "resume_same_developer_thread"
+        },
+        "source_job_id": {
+          "$ref": "#/$defs/id"
+        },
+        "source_iteration": {
+          "$ref": "#/$defs/positive"
+        },
+        "source_session_id": {
+          "$ref": "#/$defs/id"
+        },
+        "dispatch_policy": {
+          "const": "subject_to_parent_control"
+        },
+        "max_dispatches": {
+          "const": 1
+        },
+        "boundary": {
+          "const": "completed_model_turn_same_owner"
+        },
+        "global_writer_quiescence": {
+          "const": "not_attested"
+        }
+      },
+      "additionalProperties": false
+    },
+    "question": {
+      "type": "object",
+      "required": [
+        "question_id",
+        "question_revision",
+        "question_sha256",
+        "wait_generation",
+        "purpose",
+        "text",
+        "reason",
+        "options",
+        "continuation"
+      ],
+      "properties": {
+        "question_id": {
+          "$ref": "#/$defs/question_id"
+        },
+        "question_revision": {
+          "const": 1
+        },
+        "question_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "wait_generation": {
+          "$ref": "#/$defs/positive"
+        },
+        "purpose": {
+          "const": "product_choice"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/option"
+          },
+          "minItems": 2,
+          "maxItems": 5
+        },
+        "continuation": {
+          "$ref": "#/$defs/continuation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "question_read": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "mode",
+        "workspace",
+        "run_id",
+        "scope",
+        "parent_week",
+        "worker",
+        "original_deadline_utc",
+        "question_state",
+        "eligibility",
+        "question",
+        "reasons",
+        "observed_at_utc",
+        "freshness",
+        "evidence"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.product-question"
+        },
+        "schema_version": {
+          "const": 2
+        },
+        "mode": {
+          "const": "week_codex_same_owner_turn_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "run_id": {
+          "$ref": "#/$defs/run_id"
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/scope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_week": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/parent_week"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "worker": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/worker"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "original_deadline_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question_state": {
+          "enum": [
+            "active",
+            "answered",
+            "withdrawn",
+            "none",
+            "unknown"
+          ]
+        },
+        "eligibility": {
+          "enum": [
+            "ready",
+            "blocked",
+            "unsupported",
+            "unknown"
+          ]
+        },
+        "question": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/question"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "freshness": {
+          "enum": [
+            "current",
+            "retained",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "eligibility": {
+                "enum": [
+                  "ready"
+                ]
+              }
+            },
+            "required": [
+              "eligibility"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scope": {
+                "$ref": "#/$defs/scope"
+              },
+              "parent_week": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/parent_week"
+                  },
+                  {
+                    "properties": {
+                      "desired_action": {
+                        "enum": [
+                          "continue",
+                          "pause"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "worker": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/worker"
+                  },
+                  {
+                    "properties": {
+                      "owner_state": {
+                        "const": "confirmed"
+                      },
+                      "continuations_dispatched": {
+                        "const": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              "original_deadline_utc": {
+                "$ref": "#/$defs/timestamp"
+              },
+              "question_state": {
+                "const": "active"
+              },
+              "question": {
+                "$ref": "#/$defs/question"
+              },
+              "reasons": {
+                "maxItems": 0
+              },
+              "freshness": {
+                "const": "current"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "question_state": {
+                "enum": [
+                  "none"
+                ]
+              }
+            },
+            "required": [
+              "question_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "question": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "question_state": {
+                "enum": [
+                  "active",
+                  "answered",
+                  "withdrawn"
+                ]
+              }
+            },
+            "required": [
+              "question_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "question": {
+                "$ref": "#/$defs/question"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "mode",
+        "action",
+        "request_id",
+        "workspace",
+        "run_id",
+        "question_id",
+        "question_revision",
+        "option_id",
+        "original_deadline_utc",
+        "validity",
+        "binding",
+        "dispatch_policy"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.bound-answer-request"
+        },
+        "schema_version": {
+          "const": 2
+        },
+        "mode": {
+          "const": "week_codex_same_owner_turn_v1"
+        },
+        "action": {
+          "const": "answer_product_question"
+        },
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "run_id": {
+          "$ref": "#/$defs/run_id"
+        },
+        "question_id": {
+          "$ref": "#/$defs/question_id"
+        },
+        "question_revision": {
+          "const": 1
+        },
+        "option_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "original_deadline_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "validity": {
+          "$ref": "#/$defs/validity"
+        },
+        "binding": {
+          "$ref": "#/$defs/sha256"
+        },
+        "dispatch_policy": {
+          "enum": [
+            "when_parent_allows",
+            "deferred_until_explicit_parent_resume"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "preview": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "mode",
+        "workspace",
+        "run_id",
+        "eligibility",
+        "basis",
+        "request",
+        "request_sha256",
+        "reasons",
+        "observed_at_utc",
+        "freshness",
+        "evidence"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.bound-answer-preview"
+        },
+        "schema_version": {
+          "const": 2
+        },
+        "mode": {
+          "const": "week_codex_same_owner_turn_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "run_id": {
+          "$ref": "#/$defs/run_id"
+        },
+        "eligibility": {
+          "enum": [
+            "ready",
+            "blocked",
+            "unsupported",
+            "unknown"
+          ]
+        },
+        "basis": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/question_read"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/request"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "freshness": {
+          "enum": [
+            "current",
+            "retained",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "eligibility": {
+                "enum": [
+                  "ready"
+                ]
+              }
+            },
+            "required": [
+              "eligibility"
+            ]
+          },
+          "then": {
+            "properties": {
+              "basis": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/question_read"
+                  },
+                  {
+                    "properties": {
+                      "eligibility": {
+                        "const": "ready"
+                      }
+                    }
+                  }
+                ]
+              },
+              "request": {
+                "$ref": "#/$defs/request"
+              },
+              "request_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "reasons": {
+                "maxItems": 0
+              },
+              "freshness": {
+                "const": "current"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "request": {
+                "type": "null"
+              },
+              "request_sha256": {
+                "type": "null"
+              },
+              "reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "request_id",
+        "request_sha256",
+        "question_id",
+        "question_revision",
+        "question_sha256",
+        "option_id",
+        "source_job_id",
+        "source_intent_sha256",
+        "source_session_id",
+        "recorded_at_utc",
+        "continuation_job_id",
+        "continuation_intent_sha256",
+        "continuation_session_id",
+        "continuation_started_at_utc",
+        "continuation_completed_at_utc",
+        "result_sha256",
+        "consumed_answer_request_id",
+        "consumed_answer_request_sha256"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "question_id": {
+          "$ref": "#/$defs/question_id"
+        },
+        "question_revision": {
+          "const": 1
+        },
+        "question_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "option_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9_-]*$"
+        },
+        "source_job_id": {
+          "$ref": "#/$defs/id"
+        },
+        "source_intent_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_session_id": {
+          "$ref": "#/$defs/id"
+        },
+        "recorded_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "continuation_job_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "continuation_intent_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "continuation_session_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "continuation_started_at_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "continuation_completed_at_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consumed_answer_request_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/request_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "consumed_answer_request_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "mode",
+        "workspace",
+        "request_id",
+        "action",
+        "request_sha256",
+        "binding",
+        "run_id",
+        "scope",
+        "parent_week",
+        "worker",
+        "original_deadline_utc",
+        "question_id",
+        "question_revision",
+        "question_sha256",
+        "option_id",
+        "state",
+        "answer_recorded",
+        "continuation_requested",
+        "execution_effect",
+        "receipt",
+        "reasons",
+        "observed_at_utc",
+        "freshness",
+        "evidence"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.bound-answer-status"
+        },
+        "schema_version": {
+          "const": 2
+        },
+        "mode": {
+          "const": "week_codex_same_owner_turn_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/workspace"
+        },
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "action": {
+          "const": "answer_product_question"
+        },
+        "request_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "binding": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/run_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/scope"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parent_week": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/parent_week"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "worker": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/worker"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "original_deadline_utc": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/question_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question_revision": {
+          "anyOf": [
+            {
+              "const": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "question_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "option_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64,
+              "pattern": "^[a-z0-9][a-z0-9_-]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "not_recorded",
+            "answer_recorded",
+            "continuation_deferred",
+            "continuation_reserved",
+            "continuation_observed",
+            "continuation_completed",
+            "outcome_unknown",
+            "rejected"
+          ]
+        },
+        "answer_recorded": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "continuation_requested": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_effect": {
+          "enum": [
+            "not_confirmed",
+            "continuation_observed",
+            "continuation_completed",
+            "unknown"
+          ]
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/receipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "freshness": {
+          "enum": [
+            "current",
+            "retained",
+            "unknown"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "answer_recorded",
+                  "continuation_deferred",
+                  "continuation_reserved",
+                  "continuation_observed",
+                  "continuation_completed"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "request_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "binding": {
+                "$ref": "#/$defs/sha256"
+              },
+              "run_id": {
+                "$ref": "#/$defs/run_id"
+              },
+              "scope": {
+                "$ref": "#/$defs/scope"
+              },
+              "parent_week": {
+                "$ref": "#/$defs/parent_week"
+              },
+              "worker": {
+                "$ref": "#/$defs/worker"
+              },
+              "original_deadline_utc": {
+                "$ref": "#/$defs/timestamp"
+              },
+              "question_id": {
+                "$ref": "#/$defs/question_id"
+              },
+              "question_revision": {
+                "const": 1
+              },
+              "question_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "option_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[a-z0-9][a-z0-9_-]*$"
+              },
+              "answer_recorded": {
+                "const": true
+              },
+              "receipt": {
+                "$ref": "#/$defs/receipt"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "not_recorded"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "request_sha256": {
+                "type": "null"
+              },
+              "binding": {
+                "type": "null"
+              },
+              "run_id": {
+                "type": "null"
+              },
+              "scope": {
+                "type": "null"
+              },
+              "parent_week": {
+                "type": "null"
+              },
+              "worker": {
+                "type": "null"
+              },
+              "original_deadline_utc": {
+                "type": "null"
+              },
+              "question_id": {
+                "type": "null"
+              },
+              "question_revision": {
+                "type": "null"
+              },
+              "question_sha256": {
+                "type": "null"
+              },
+              "option_id": {
+                "type": "null"
+              },
+              "answer_recorded": {
+                "type": "null"
+              },
+              "continuation_requested": {
+                "type": "null"
+              },
+              "execution_effect": {
+                "const": "unknown"
+              },
+              "receipt": {
+                "type": "null"
+              },
+              "reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "outcome_unknown"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "execution_effect": {
+                "const": "unknown"
+              },
+              "reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "answer_recorded": {
+                "const": false
+              },
+              "continuation_requested": {
+                "const": false
+              },
+              "execution_effect": {
+                "const": "not_confirmed"
+              },
+              "receipt": {
+                "type": "null"
+              },
+              "reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "answer_recorded",
+                  "continuation_deferred"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "continuation_requested": {
+                "const": false
+              },
+              "execution_effect": {
+                "const": "not_confirmed"
+              },
+              "receipt": {
+                "properties": {
+                  "continuation_job_id": {
+                    "type": "null"
+                  },
+                  "continuation_intent_sha256": {
+                    "type": "null"
+                  },
+                  "continuation_session_id": {
+                    "type": "null"
+                  },
+                  "continuation_started_at_utc": {
+                    "type": "null"
+                  },
+                  "continuation_completed_at_utc": {
+                    "type": "null"
+                  },
+                  "result_sha256": {
+                    "type": "null"
+                  },
+                  "consumed_answer_request_id": {
+                    "type": "null"
+                  },
+                  "consumed_answer_request_sha256": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "continuation_reserved"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "continuation_requested": {
+                "const": true
+              },
+              "execution_effect": {
+                "const": "not_confirmed"
+              },
+              "receipt": {
+                "properties": {
+                  "continuation_job_id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "continuation_intent_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "continuation_session_id": {
+                    "type": "null"
+                  },
+                  "continuation_started_at_utc": {
+                    "type": "null"
+                  },
+                  "continuation_completed_at_utc": {
+                    "type": "null"
+                  },
+                  "result_sha256": {
+                    "type": "null"
+                  },
+                  "consumed_answer_request_id": {
+                    "type": "null"
+                  },
+                  "consumed_answer_request_sha256": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "continuation_observed"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "continuation_requested": {
+                "const": true
+              },
+              "execution_effect": {
+                "const": "continuation_observed"
+              },
+              "receipt": {
+                "properties": {
+                  "continuation_job_id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "continuation_intent_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "continuation_session_id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "continuation_started_at_utc": {
+                    "$ref": "#/$defs/timestamp"
+                  },
+                  "continuation_completed_at_utc": {
+                    "type": "null"
+                  },
+                  "result_sha256": {
+                    "type": "null"
+                  },
+                  "consumed_answer_request_id": {
+                    "type": "null"
+                  },
+                  "consumed_answer_request_sha256": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "continuation_completed"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "continuation_requested": {
+                "const": true
+              },
+              "execution_effect": {
+                "const": "continuation_completed"
+              },
+              "receipt": {
+                "properties": {
+                  "continuation_job_id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "continuation_intent_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "continuation_session_id": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "continuation_started_at_utc": {
+                    "$ref": "#/$defs/timestamp"
+                  },
+                  "continuation_completed_at_utc": {
+                    "$ref": "#/$defs/timestamp"
+                  },
+                  "result_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  },
+                  "consumed_answer_request_id": {
+                    "$ref": "#/$defs/request_id"
+                  },
+                  "consumed_answer_request_sha256": {
+                    "$ref": "#/$defs/sha256"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

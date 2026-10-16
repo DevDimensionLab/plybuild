@@ -79,6 +79,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.SetFlagErrorFunc(func(c *cobra.Command, e error) error { return workspace.WorkInvalidArguments(e.Error()) })
 	addExecuteOwnerCommands(c, d)
 	addBoundStartCommands(c, d)
+	addBoundAnswerCommands(c, d)
 	c.AddCommand(newWorkflowExecuteReleaseCommand(d))
 	c.AddCommand(newWorkflowExecuteRecoverStartCommand(d))
 	c.AddCommand(newWorkflowExecuteContinueCommand(d))

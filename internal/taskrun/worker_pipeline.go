@@ -44,6 +44,9 @@ func workerCorrection(d Dependencies, s workflowState, feedback string) error {
 
 func workerStep(d Dependencies, s workflowState) error {
 	w := s.Result.Worker
+	if w.Phase == "awaiting_product_answer" && s.ProductQuestion != nil && s.ProductLaunch == nil {
+		return nil
+	}
 	if s.StartSHA256 == nil {
 		return workerAccept(d, s)
 	}
@@ -91,6 +94,9 @@ func workerStep(d Dependencies, s workflowState) error {
 		return workerStage(d, s, "completed")
 	}
 	if r.ProviderFailure != nil {
+		if w.Job.Kind == "developer_answer" {
+			return boundAnswerError("continuation_unknown", "The single continuation ended at a provider failure; no automatic retry is authorized.")
+		}
 		return workerWaitForProvider(d, s, r)
 	}
 	if r.Error != "" || r.Exit == nil {
@@ -119,6 +125,34 @@ func workerStep(d Dependencies, s workflowState) error {
 		return err
 	}
 	if w.Stage == "developer" {
+		if w.Job.Kind == "developer_answer" {
+			q, e := productQuestionRecordRead(s)
+			if e != nil {
+				return e
+			}
+			c, e := productClaimForQuestion(s.Request.WorkspaceRoot, s.Result.RunID, q.Question.QuestionID)
+			if e != nil {
+				return e
+			}
+			answer, e := productValidateCompleted(d, s, c, q, r)
+			if e != nil {
+				return e
+			}
+			raw, _ = Canonical(map[string]string{"status": answer.Status, "summary": answer.Summary, "block_reason": answer.BlockReason})
+		}
+		if productQuestionsEnabled(s) && w.Job.Kind == "developer" {
+			var proposed productDeveloperAnswer
+			if err = decode(raw, 1<<20, &proposed); err != nil {
+				return err
+			}
+			if proposed.Status == "needs_product_answer" {
+				return workerPublishProductQuestion(d, s, r, proposed.ProductQuestion)
+			}
+			if proposed.ProductQuestion != nil || (proposed.Status != "completed" && proposed.Status != "blocked") {
+				return boundAnswerError("invalid_question", "Only needs_product_answer may contain a product question.")
+			}
+			raw, _ = Canonical(map[string]string{"status": proposed.Status, "summary": proposed.Summary, "block_reason": proposed.BlockReason})
+		}
 		var answer struct {
 			Status      string `json:"status"`
 			Summary     string `json:"summary"`
@@ -131,6 +165,13 @@ func workerStep(d Dependencies, s workflowState) error {
 			return fmt.Errorf("developer blocked: %s", answer.BlockReason)
 		}
 		binary := filepath.Join(w.Job.Directory, "output", "candidate")
+		if w.Job.Kind == "developer_answer" {
+			q, e := productQuestionRecordRead(s)
+			if e != nil {
+				return e
+			}
+			binary = filepath.Join(q.SourceJob.Directory, "output", "candidate")
+		}
 		info, err := os.Lstat(binary)
 		if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
 			return fmt.Errorf("developer did not produce the required executable %s", binary)
@@ -205,12 +246,24 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 		if err != nil {
 			return err
 		}
+		choice, err := workerProductChoiceContext(d, s)
+		if err != nil {
+			return err
+		}
+		prompt += choice
+		if !readOnly && productQuestionsEnabled(s) && s.ProductQuestion == nil {
+			prompt += workerProductPrompt(s)
+		}
 		promptPath := filepath.Join(dir, "prompt.txt")
 		if err := d.writeOnce(promptPath, []byte(prompt)); err != nil {
 			return err
 		}
 		in.Prompt = &FileBinding{Locator: promptPath, SHA256: hash([]byte(prompt))}
-		schema, err := workflowKeep(d, filepath.Join(dir, "schema.json"), workerAnswerSchema(readOnly))
+		schemaValue := workerAnswerSchema(readOnly)
+		if !readOnly && productQuestionsEnabled(s) {
+			schemaValue = workerProductSchema(false)
+		}
+		schema, err := workflowKeep(d, filepath.Join(dir, "schema.json"), schemaValue)
 		if err != nil {
 			return err
 		}

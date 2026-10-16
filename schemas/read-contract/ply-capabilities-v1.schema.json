@@ -587,6 +587,10 @@
           "enum": [
             "read",
             "approved_goal_start",
+            "approved_product_answer",
+            "approved_runtime_control",
+            "explicit_goal_start",
+            "explicit_workset_start",
             "acceptance_policy_selection",
             "candidate_test_and_evidence",
             "authorized_local_integration"

@@ -17,23 +17,24 @@ const MaxDurationSeconds = 7 * 24 * 60 * 60
 // The Goal revision/hash, native executor and delivery agreement are rechecked
 // before every launch; later queue additions never enlarge this authorization.
 type Contract struct {
-	RuntimeControl      *RuntimeControl     `json:"runtime_control,omitempty"`
-	Kind                string              `json:"kind"`
-	SchemaVersion       int                 `json:"schema_version"`
-	Name                string              `json:"name"`
-	Workspace           string              `json:"workspace"`
-	ReturnWorktree      string              `json:"return_worktree"`
-	ReturnRef           string              `json:"return_ref"`
-	ProjectID           workspace.ProjectID `json:"project_id"`
-	RepoID              workspace.RepoID    `json:"repo_id"`
-	EpicID              workspace.EpicID    `json:"epic_id"`
-	Selected            []Selection         `json:"selected"`
-	Model               string              `json:"model"`
-	Effort              string              `json:"effort"`
-	DurationSeconds     int                 `json:"duration_seconds"`
-	MaxAttempts         int                 `json:"max_attempts"`
-	AgentTimeoutSeconds int                 `json:"agent_timeout_seconds"`
-	MaxProviderRetries  int                 `json:"max_provider_retries"`
+	ProductQuestions    *taskrun.ProductQuestionContract `json:"product_questions,omitempty"`
+	RuntimeControl      *RuntimeControl                  `json:"runtime_control,omitempty"`
+	Kind                string                           `json:"kind"`
+	SchemaVersion       int                              `json:"schema_version"`
+	Name                string                           `json:"name"`
+	Workspace           string                           `json:"workspace"`
+	ReturnWorktree      string                           `json:"return_worktree"`
+	ReturnRef           string                           `json:"return_ref"`
+	ProjectID           workspace.ProjectID              `json:"project_id"`
+	RepoID              workspace.RepoID                 `json:"repo_id"`
+	EpicID              workspace.EpicID                 `json:"epic_id"`
+	Selected            []Selection                      `json:"selected"`
+	Model               string                           `json:"model"`
+	Effort              string                           `json:"effort"`
+	DurationSeconds     int                              `json:"duration_seconds"`
+	MaxAttempts         int                              `json:"max_attempts"`
+	AgentTimeoutSeconds int                              `json:"agent_timeout_seconds"`
+	MaxProviderRetries  int                              `json:"max_provider_retries"`
 }
 
 type RuntimeControl struct {
@@ -173,6 +174,12 @@ func Validate(c Contract) error {
 	if c.SchemaVersion == 1 && c.RuntimeControl != nil || c.SchemaVersion == 2 && (c.RuntimeControl == nil || c.RuntimeControl.SchemaVersion != 1 || c.RuntimeControl.Mode != taskrun.BoundControlMode) {
 		return fmt.Errorf("week schema 2 requires runtime_control schema 1 mode bound_control_v1; schema 1 cannot opt in")
 	}
+	if err := taskrun.ValidateProductQuestionContract(c.ProductQuestions); err != nil {
+		return err
+	}
+	if c.ProductQuestions != nil && c.SchemaVersion != 2 {
+		return fmt.Errorf("product questions require a new schema-2 bound week")
+	}
 	for _, p := range []string{c.Workspace, c.ReturnWorktree} {
 		if err := physical(p); err != nil {
 			return err
@@ -181,8 +188,12 @@ func Validate(c Contract) error {
 	if !slug.MatchString(string(c.ProjectID)) || !slug.MatchString(string(c.RepoID)) || !slug.MatchString(string(c.EpicID)) || c.ReturnRef == "" {
 		return fmt.Errorf("week requires an explicit native Project/Repo/Epic and return ref")
 	}
-	if c.Model == "" || c.Effort == "" || c.DurationSeconds < 1 || c.DurationSeconds > MaxDurationSeconds || c.MaxAttempts < 1 || c.MaxAttempts > 20 || c.AgentTimeoutSeconds < 10 || c.AgentTimeoutSeconds > 86400 || c.MaxProviderRetries < 1 || c.MaxProviderRetries > 1000 {
-		return fmt.Errorf("week requires an explicit model/effort, duration 1..604800, attempts 1..20, provider timeout 10..86400 and provider retries 1..1000")
+	minimumRetries := 1
+	if c.SchemaVersion == 2 && c.ProductQuestions != nil {
+		minimumRetries = 0
+	}
+	if c.Model == "" || c.Effort == "" || c.DurationSeconds < 1 || c.DurationSeconds > MaxDurationSeconds || c.MaxAttempts < 1 || c.MaxAttempts > 20 || c.AgentTimeoutSeconds < 10 || c.AgentTimeoutSeconds > 86400 || c.MaxProviderRetries < minimumRetries || c.MaxProviderRetries > 1000 {
+		return fmt.Errorf("week requires an explicit model/effort, duration 1..604800, attempts 1..20, provider timeout 10..86400 and provider retries %d..1000", minimumRetries)
 	}
 	if len(c.Selected) > 256 {
 		return fmt.Errorf("week selects at most 256 native Goals")

@@ -80,30 +80,26 @@ func runOwnedExec(s LaunchSpec, started func(Process) error, maximum time.Durati
 	if s.Timeout <= 0 || s.Timeout > maximum || s.Completion == nil {
 		return p, invalid("exec timeout or evidence destination missing")
 	}
+	checkDeadline := func() error {
+		if !s.Deadline.IsZero() && !time.Now().Before(s.Deadline) {
+			return fmt.Errorf("the original absolute attempt deadline expired")
+		}
+		return nil
+	}
+	if e := checkDeadline(); e != nil {
+		return p, e
+	}
 	if e := privateDir(s.StreamsRoot); e != nil {
-		return p, e
-	}
-	out, e := os.OpenFile(filepath.Join(s.StreamsRoot, "stdout.jsonl"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-	if e != nil {
-		return p, e
-	}
-	errout, e := os.OpenFile(filepath.Join(s.StreamsRoot, "stderr.txt"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
-	if e != nil {
-		out.Close()
 		return p, e
 	}
 	stdout, wout, e := os.Pipe()
 	if e != nil {
-		out.Close()
-		errout.Close()
 		return p, e
 	}
 	stderr, werr, e := os.Pipe()
 	if e != nil {
 		stdout.Close()
 		wout.Close()
-		out.Close()
-		errout.Close()
 		return p, e
 	}
 	c := exec.Command(s.Executable.Path, s.Argv[1:]...)
@@ -124,13 +120,40 @@ func runOwnedExec(s LaunchSpec, started func(Process) error, maximum time.Durati
 		c.Stdin = s.Stdin
 	}
 	c.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	if e = c.Start(); e != nil {
+	var out, errout *os.File
+	// Only the authorized start closure creates immutable stream evidence. A
+	// rejected gate cannot leave files that prevent this same intent from being
+	// dispatched later. Once the closure is entered, existing evidence is never
+	// removed or reused: a possibly started attempt remains non-retryable.
+	startProcess := func() error {
+		out, e = os.OpenFile(filepath.Join(s.StreamsRoot, "stdout.jsonl"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if e != nil {
+			return e
+		}
+		errout, e = os.OpenFile(filepath.Join(s.StreamsRoot, "stderr.txt"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+		if e != nil {
+			return e
+		}
+		if e = checkDeadline(); e != nil {
+			return e
+		}
+		return c.Start()
+	}
+	start := startProcess
+	if s.StartGuard != nil {
+		start = func() error { return s.StartGuard(startProcess) }
+	}
+	if e = start(); e != nil {
 		stdout.Close()
 		stderr.Close()
 		wout.Close()
 		werr.Close()
-		out.Close()
-		errout.Close()
+		if out != nil {
+			out.Close()
+		}
+		if errout != nil {
+			errout.Close()
+		}
 		return p, e
 	}
 	_ = wout.Close()
@@ -156,6 +179,9 @@ func runOwnedExec(s LaunchSpec, started func(Process) error, maximum time.Durati
 		observationErr = started(p)
 	}
 	deadline := time.Now().Add(s.Timeout)
+	if !s.Deadline.IsZero() && s.Deadline.Before(deadline) {
+		deadline = s.Deadline
+	}
 	timedOut := false
 	termAt := time.Time{}
 	killed := false

@@ -171,24 +171,28 @@ type workflowRecord struct {
 	Review       *FileBinding `json:"review"`
 }
 type workflowState struct {
-	ControlRevision   uint64              `json:"control_revision,omitempty"`
-	ControlReceipt    *ControlReceipt     `json:"control_receipt,omitempty"`
-	ControlWake       *workerControlWake  `json:"control_wake,omitempty"`
-	ControlSuccessor  *workerControlWake  `json:"control_successor,omitempty"`
-	Request           WorkflowRequest     `json:"request"`
-	Observed          Observed            `json:"observed"`
-	Result            WorkflowRun         `json:"result"`
-	Phase             string              `json:"phase"`
-	ContextSHA256     string              `json:"context_sha256"`
-	Acceptance        *FileBinding        `json:"acceptance"`
-	StartDraft        *FileBinding        `json:"start_draft"`
-	StartSHA256       *string             `json:"start_sha256"`
-	Records           []workflowRecord    `json:"records"`
-	CodexTrust        *workflowTrustFacts `json:"codex_project_trust,omitempty"`
-	ClaudeTrust       *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
-	Recovery          *FileBinding        `json:"startup_recovery,omitempty"`
-	RecoveryTransport *FileBinding        `json:"startup_recovery_transport,omitempty"`
-	Continuation      *FileBinding        `json:"delivery_continuation,omitempty"`
+	ProductContinuationGeneration int                 `json:"product_continuation_generation,omitempty"`
+	ProductLaunch                 *FileBinding        `json:"product_launch,omitempty"`
+	ProductContinuation           *WorkerJob          `json:"product_continuation,omitempty"`
+	ProductQuestion               *FileBinding        `json:"product_question,omitempty"`
+	ControlRevision               uint64              `json:"control_revision,omitempty"`
+	ControlReceipt                *ControlReceipt     `json:"control_receipt,omitempty"`
+	ControlWake                   *workerControlWake  `json:"control_wake,omitempty"`
+	ControlSuccessor              *workerControlWake  `json:"control_successor,omitempty"`
+	Request                       WorkflowRequest     `json:"request"`
+	Observed                      Observed            `json:"observed"`
+	Result                        WorkflowRun         `json:"result"`
+	Phase                         string              `json:"phase"`
+	ContextSHA256                 string              `json:"context_sha256"`
+	Acceptance                    *FileBinding        `json:"acceptance"`
+	StartDraft                    *FileBinding        `json:"start_draft"`
+	StartSHA256                   *string             `json:"start_sha256"`
+	Records                       []workflowRecord    `json:"records"`
+	CodexTrust                    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
+	ClaudeTrust                   *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
+	Recovery                      *FileBinding        `json:"startup_recovery,omitempty"`
+	RecoveryTransport             *FileBinding        `json:"startup_recovery_transport,omitempty"`
+	Continuation                  *FileBinding        `json:"delivery_continuation,omitempty"`
 	// Derived only after validating the immutable acceptance selection. These
 	// never replace the frozen request or become additional persisted authority.
 	EffectiveDeliveryAgreement   *workspace.DeliveryAgreement           `json:"-"`

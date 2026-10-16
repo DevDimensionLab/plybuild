@@ -239,6 +239,18 @@ func ServeWorker(d Dependencies, root, id string) error {
 		} else if consumed {
 			continue
 		}
+		if handled, e := workerProductWaiting(d, s); handled {
+			if e != nil {
+				return workerBlocked(d, root, id, e)
+			}
+			if s.Result.Worker.Phase == "stopped" {
+				return nil
+			}
+			time.Sleep(250 * time.Millisecond)
+			continue
+		} else if e != nil {
+			return workerBlocked(d, root, id, e)
+		}
 		if s.Request.ControlContract != nil && s.Request.ControlContract.ParentKind == "week" {
 			if err = workerSyncParentControl(d, s); err != nil {
 				return workerBlocked(d, root, id, err)

@@ -13,10 +13,11 @@ import (
 // an existing interactive owner. The controller owns native effects; providers
 // receive only Task-file authority and their own disposable output directory.
 type WorkerContract struct {
-	SchemaVersion       int `json:"schema_version"`
-	MaxAttempts         int `json:"max_attempts"`
-	AgentTimeoutSeconds int `json:"agent_timeout_seconds"`
-	MaxProviderRetries  int `json:"max_provider_retries,omitempty"`
+	ProductQuestions    *ProductQuestionContract `json:"product_questions,omitempty"`
+	SchemaVersion       int                      `json:"schema_version"`
+	MaxAttempts         int                      `json:"max_attempts"`
+	AgentTimeoutSeconds int                      `json:"agent_timeout_seconds"`
+	MaxProviderRetries  int                      `json:"max_provider_retries,omitempty"`
 }
 
 func workerNativeKind(kind string) bool {
@@ -128,6 +129,8 @@ func workerCurrentAction(o WorkflowRun) WorkflowAction {
 		return WorkflowAction{"worker", w.ControlAction + " requested for this same Run; consumption at a safe boundary is not yet confirmed. Existing attempts retain ownership until their completion is known."}
 	}
 	switch w.Phase {
+	case "awaiting_product_answer":
+		return WorkflowAction{"product_answer", "The same developer session and Task await one bound product answer; no model turn is dispatched while waiting."}
 	case "running":
 		if w.Reason == "" && w.RetryNotBefore == "" {
 			return WorkflowAction{"worker", "Observe the same Run; cached worker state does not attest provider liveness or attempt completion."}
@@ -145,8 +148,14 @@ func validateWorkerRequest(r WorkflowRequest) error {
 		return err
 	}
 	w := r.Worker
-	if w == nil || w.SchemaVersion != 1 || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 {
+	if w == nil || (w.SchemaVersion != 1 && w.SchemaVersion != 2) || w.MaxAttempts < 1 || w.MaxAttempts > 20 || w.AgentTimeoutSeconds < 10 || w.AgentTimeoutSeconds > 86400 || w.MaxProviderRetries < 0 || w.MaxProviderRetries > 1000 {
 		return workflowError(2, "headless requires an explicit bounded one-Spec worker contract")
+	}
+	if err := ValidateProductQuestionContract(w.ProductQuestions); err != nil {
+		return err
+	}
+	if w.SchemaVersion == 1 && w.ProductQuestions != nil || w.SchemaVersion == 2 && (w.ProductQuestions == nil || r.ControlContract == nil || r.ControlContract.ParentKind != "week") {
+		return workflowError(2, "product questions require a new schema-2 worker and bound parent week")
 	}
 	if r.Delivery == nil || r.ReturnMode != "delivery_owner" || r.Agreement != (Agreement{}) || r.Coordinator.ActorClaim != "" || r.Coordinator.MayRequestChanges {
 		return workflowError(2, "headless requires its own delivery-owner contract")
