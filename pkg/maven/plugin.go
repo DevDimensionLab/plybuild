@@ -96,12 +96,7 @@ func (repository Repository) upgradePlugin(model *pom.Model, plugin pom.Plugin) 
 		return err
 	}
 
-	metaData, err := repository.GetMetaData(plugin.GroupId, plugin.ArtifactId)
-	if err != nil {
-		return err
-	}
-
-	latestRelease, err := metaData.LatestRelease()
+	latestRelease, err := repository.latestRelease(plugin.GroupId, plugin.ArtifactId)
 	if err != nil {
 		return err
 	}

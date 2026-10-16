@@ -27,16 +27,32 @@ func UpgradeDependency(groupId string, artifactId string) func(repository Reposi
 	}
 }
 
-func (repository Repository) upgradeDependencyOnModel(model *pom.Model, groupId string, artifactId string) (err error) {
+func (repository Repository) upgradeDependencyOnModel(model *pom.Model, groupId string, artifactId string) error {
+	if model.Dependencies == nil && (model.DependencyManagement == nil || model.DependencyManagement.Dependencies == nil) {
+		return nil
+	}
+	found := false
+	upgrade := func(dependencies []pom.Dependency) {
+		matched, err := repository.specificDependencyUpgrade(model, dependencies, groupId, artifactId)
+		if matched {
+			found = true
+			if err != nil {
+				log.Warnf("%v", err)
+			}
+		}
+	}
 	if model.Dependencies != nil {
-		err = repository.specificDependencyUpgrade(model, model.Dependencies.Dependency, groupId, artifactId)
+		upgrade(model.Dependencies.Dependency)
 	}
 
 	if model.DependencyManagement != nil && model.DependencyManagement.Dependencies != nil {
-		err = repository.specificDependencyUpgrade(model, model.DependencyManagement.Dependencies.Dependency, groupId, artifactId)
+		upgrade(model.DependencyManagement.Dependencies.Dependency)
 	}
 
-	return err
+	if !found {
+		return fmt.Errorf("could not find %s:%s in project", groupId, artifactId)
+	}
+	return nil
 }
 
 func (repository Repository) upgradeDependenciesForProject(project *config.Project, enabledSecondParty bool) error {
@@ -83,14 +99,14 @@ func UpgradeDependenciesWithVersions() func(repository Repository, project confi
 	}
 }
 
-func (repository Repository) specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) error {
+func (repository Repository) specificDependencyUpgrade(model *pom.Model, availableDependencies []pom.Dependency, groupId string, artifactId string) (bool, error) {
 	for _, dep := range availableDependencies {
 		if dep.Version != "" && dep.GroupId == groupId && dep.ArtifactId == artifactId {
-			return repository.upgradeDependency(model, dep, nil, model.SetDependencyVersion)
+			return true, repository.upgradeDependency(model, dep, nil, model.SetDependencyVersion)
 		}
 	}
 
-	return fmt.Errorf("could not find %s:%s in project", groupId, artifactId)
+	return false, nil
 }
 
 func isSecondParty(model *pom.Model, enabled bool) func(groupId string) bool {
@@ -171,16 +187,9 @@ func (repository Repository) upgradeDependency(model *pom.Model, dep pom.Depende
 	//}
 	//log.Debugf("%v", serviceUrl)
 
-	repo := repository
-
-	metaData, err := repo.GetMetaData(dep.GroupId, dep.ArtifactId)
+	latestVersion, err := repository.latestRelease(dep.GroupId, dep.ArtifactId)
 	if err != nil {
 		return err
-	}
-
-	latestVersion, err := metaData.LatestRelease()
-	if err != nil {
-		return nil
 	}
 	if maxVersion != nil {
 		log.Warnf("dependency %s:%s is held back at version [%s]", dep.GroupId, dep.ArtifactId, maxVersion.ToString())

@@ -187,7 +187,7 @@ func (ctx *Context) GetMavenRepository() maven.Repository {
 	var repository maven.Repository
 
 	if cfg.Nexus.Url != "" {
-		log.Debugf("using maven repository from local config %s\n", cfg.Nexus.Url)
+		log.Debugln("using maven repository from local config")
 		repository = maven.RepositoryFrom(cfg.Nexus.Url, cfg.Nexus.Username, cfg.Nexus.Password)
 	} else {
 		log.Debugf("search for maven repository in .m2 folder \n")
