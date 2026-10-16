@@ -74,6 +74,18 @@ func queueCloseRule(close bool) contentRule {
 	}
 	return contentExact(m)
 }
+
+const queueSourceRemoved = "removed"
+
+func queueReleaseRule(v canonicaljson.Value) error {
+	if _, ok := contentFields(v)["source_state"]; !ok {
+		return queueCloseRule(true)(v)
+	}
+	return contentExact(map[string]contentRule{
+		"preparation_id": queuePrefixedID("pre_"), "expected_revision": contentInteger(0, 2147483647),
+		"reason": contentText(2000), "source_state": contentEnum(queueSourceRemoved), "expected_source_oid": contentOID,
+	})(v)
+}
 func queuePrefixedID(prefix string) contentRule {
 	return func(v canonicaljson.Value) error {
 		s, ok := v.(string)
@@ -483,15 +495,19 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 			q.Pending = pending
 			reserved[id] = true
 		case "advance", "release":
-			if err := queueCloseRule(true)(v); err != nil {
+			rule := queueCloseRule(true)
+			if e.Kind == "release" {
+				rule = queueReleaseRule
+			}
+			if err := rule(v); err != nil {
 				return err
 			}
 			id := contentString(m, "preparation_id")
 			if q.Current == nil || *q.Current != id {
 				return fmt.Errorf("closing a noncurrent reservation")
 			}
-			if e.Kind == "advance" && findPreparation(r, id).Outcome == nil {
-				return fmt.Errorf("advance needs prepared outcome")
+			if (e.Kind == "advance" || contentString(m, "source_state") == queueSourceRemoved) && findPreparation(r, id).Outcome == nil {
+				return fmt.Errorf("advance or removed-source release needs prepared outcome")
 			}
 		default:
 			return fmt.Errorf("unknown queue event kind")

@@ -87,6 +87,8 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 	for _, kind := range []string{"advance", "release"} {
 		kind := kind
 		var id, reason, format string
+		var removedSource bool
+		var expectedSourceOID string
 		var expected int
 		var target queueTargetFlags
 		c := &cobra.Command{Use: kind, Short: map[string]string{"advance": "Close a prepared choice without preparing the next Task", "release": "Release a known choice while preserving its worktree and history"}[kind], Long: "Close the exact current preparation with an expected queue revision and a reason. Advance requires a known prepared worktree. Release accepts known no-effect or prepared state. Partial and unknown effects must be resolved first. A released Task cannot be resumed or adopted in this version. No worktree or evidence is deleted; no next Task is prepared.", Example: "  ply workspace task queue " + kind + " --preparation pre_<digest> --expected-revision 2 --reason \"Human queue decision\"", Args: cobra.NoArgs, RunE: func(c *cobra.Command, args []string) error {
@@ -97,6 +99,13 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 			if e != nil {
 				return e
 			}
+			if removedSource {
+				r, e := workspace.ReleaseTaskQueueRemovedSource(d, in, id, expected, reason, expectedSourceOID)
+				return outputQueue(c, format, r, e)
+			}
+			if expectedSourceOID != "" || c.Flags().Changed("expected-source-oid") {
+				return workspace.WorkInvalidArguments("--expected-source-oid requires --removed-source")
+			}
 			r, e := workspace.CloseTaskQueue(d, in, id, expected, reason, kind)
 			return outputQueue(c, format, r, e)
 		}}
@@ -105,6 +114,11 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 		c.Flags().IntVar(&expected, "expected-revision", 0, "exact current queue revision")
 		c.Flags().StringVar(&reason, "reason", "", "human reason for closing this choice (maximum 2000 characters)")
 		c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+		if kind == "release" {
+			c.Long += " With --removed-source and --expected-source-oid, release a known prepared choice only when its path is absent and its current ref is preserved without any checkout. This releases the queue slot; it does not complete the Task or Run, or claim that processes have stopped."
+			c.Flags().BoolVar(&removedSource, "removed-source", false, "explicitly release a prepared choice after its source worktree was removed")
+			c.Flags().StringVar(&expectedSourceOID, "expected-source-oid", "", "exact current preserved source ref OID (required with --removed-source)")
+		}
 		for _, f := range []string{"preparation", "expected-revision", "reason"} {
 			_ = c.MarkFlagRequired(f)
 		}

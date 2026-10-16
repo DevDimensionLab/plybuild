@@ -49,3 +49,27 @@ func TestQueueReadyAliasPreservesOrdinaryListService(t *testing.T) {
 		t.Fatalf("legacy list: %d %v", calls, e)
 	}
 }
+
+func TestRemovedSourceReleaseCLIRequiresExplicitPair(t *testing.T) {
+	base := []string{"queue", "release", "--preparation", "pre_" + strings.Repeat("a", 64), "--expected-revision", "2", "--reason", "preserve history"}
+	for _, flags := range [][]string{
+		{"--removed-source"}, {"--removed-source", "--expected-source-oid", "HEAD"},
+		{"--expected-source-oid", strings.Repeat("a", 40)}, {"--expected-source-oid", ""},
+		{"--removed-source=false", "--expected-source-oid", strings.Repeat("a", 40)},
+	} {
+		t.Run(strings.Join(flags, " "), func(t *testing.T) {
+			c := newWorkspaceTaskCommand(workspace.Dependencies{})
+			c.SetArgs(append(append([]string{}, base...), flags...))
+			c.SetOut(&bytes.Buffer{})
+			c.SetErr(&bytes.Buffer{})
+			if e := c.Execute(); e == nil {
+				t.Fatal("invalid opt-in reached dependencies")
+			}
+		})
+	}
+	c := newWorkspaceTaskCommand(workspace.Dependencies{})
+	advance, _, e := c.Find([]string{"queue", "advance"})
+	if e != nil || advance.Flags().Lookup("removed-source") != nil || advance.Flags().Lookup("expected-source-oid") != nil {
+		t.Fatal("removed-source flags leaked into advance")
+	}
+}

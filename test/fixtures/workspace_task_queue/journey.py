@@ -137,6 +137,37 @@ assert prepared_a['state'] == 'prepared'
 task = Path(prepared_a['plan']['worktree_path'])
 task_ref = 'refs/heads/' + prepared_a['plan']['branch']
 assert git(task, 'rev-parse', 'HEAD') == b1 and git(epic, 'rev-parse', 'HEAD') == b1
+if '--removed-source' in sys.argv[2:]:
+    git(task, 'commit', '--allow-empty', '-m', 'Legitimate work after preparation')
+    source_oid = git(task, 'rev-parse', 'HEAD')
+    git(repo, 'worktree', 'remove', task)
+    assert not task.exists() and git(repo, 'rev-parse', task_ref) == source_oid
+    git(epic, 'commit', '--allow-empty', '-m', 'Later Epic base')
+    base = js('workspace', 'epic', 'base', 'update', 'epic', '--repo', 'ply', '--check')
+    js('workspace', 'epic', 'base', 'update', 'epic', '--repo', 'ply', '--apply', '--confirm', base['confirmation'])
+    before = state_bytes()
+    previous = js('workspace', 'task', 'preparation', 'show', prepared_a['preparation']['id'])
+    persisted = js('workspace', 'task', 'show', 'task')['resource']['persisted']
+    q = js('workspace', 'task', 'queue', 'list', *target)
+    close = ['workspace', 'task', 'queue', 'release', *target,
+             '--preparation', prepared_a['preparation']['id'], '--expected-revision', str(q['revision']),
+             '--reason', 'Synthetic release after source removal']
+    ply(*close, expected=1)
+    assert state_bytes() == before, 'default release changed state'
+    close += ['--removed-source', '--expected-source-oid', source_oid]
+    released = js(*close)
+    assert released['current'] is None and released['revision'] == q['revision'] + 1
+    assert released['pending'] == q['pending'], 'release changed pending choices'
+    after = state_bytes()
+    assert after[1:] == before[1:], 'release changed Git'
+    assert js(*close) == released and state_bytes() == after, 'retry was not idempotent'
+    shown = js('workspace', 'task', 'preparation', 'show', prepared_a['preparation']['id'])
+    assert shown['preparation'] == previous['preparation'] and shown['disposition'] == 'released'
+    assert js('workspace', 'task', 'show', 'task')['resource']['persisted'] == persisted
+    assert js('workspace', 'task', 'queue', 'list', *target) == released
+    assert all(after[0][p] == h for p, h in before[0].items() if p != '.ply/work-items.yaml'), 'historical bytes changed'
+    print('QR-01: passed; removed source, advanced ref and Epic base, unchanged history, idempotent public readback')
+    sys.exit(0)
 for item in prepared_a['plan']['required_inputs']:
     data = Path(item['locator']).read_bytes()
     assert item['sha256'] == 'sha256:' + hashlib.sha256(data).hexdigest() and item['size_bytes'] == len(data)

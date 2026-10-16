@@ -449,7 +449,52 @@ func preparationNoEffect(d Dependencies, repo RepoRecord, p TaskPreparation) boo
 	_, exists := worktreeEntry(inventory, p.Plan.WorktreePath)
 	return !exists
 }
+
+// A removed source is a queue decision only. Its preserved creation outcome and
+// current ref do not establish Task completion or the absence of active Runs.
+func preparationRemovedSourceKnown(d Dependencies, repo RepoRecord, p TaskPreparation, expectedOID string) bool {
+	if p.Outcome == nil {
+		return false
+	}
+	path, e := canonicalAbsentTarget(d.Files, p.Plan.Workspace.Root, p.Plan.WorktreePath)
+	if e != nil || path != p.Plan.WorktreePath {
+		return false
+	}
+	observed, e := d.WorkGit.ObserveRepo(repo)
+	if e != nil || observed.Locator != repo.Locator || observed.GitCommonDir != repo.GitCommonDir || observed.GitCommonDir != p.Plan.Target.GitCommonDir {
+		return false
+	}
+	sourceRef := "refs/heads/" + p.Plan.Branch
+	ref, e := d.WorkGit.ObserveRef(repo, sourceRef)
+	if e != nil || !ref.Exists || ref.Ref != sourceRef || ref.OID != expectedOID || ref.CheckedOutAt != "" {
+		return false
+	}
+	inventory, e := d.WorkGit.ListWorktrees(repo)
+	if e != nil {
+		return false
+	}
+	for _, entry := range inventory.Entries {
+		if entry.Locator == path || entry.Ref == sourceRef {
+			return false
+		}
+	}
+	return true
+}
+
 func CloseTaskQueue(d Dependencies, in QueueTargetInput, id string, expected int, reason, kind string) (WorkspaceTaskQueueReadback, error) {
+	return closeTaskQueue(d, in, id, expected, reason, kind, "")
+}
+
+// ReleaseTaskQueueRemovedSource explicitly releases a prepared slot whose source
+// path is absent and whose current, un-checked-out ref matches expectedSourceOID.
+func ReleaseTaskQueueRemovedSource(d Dependencies, in QueueTargetInput, id string, expected int, reason, expectedSourceOID string) (WorkspaceTaskQueueReadback, error) {
+	if !validOIDText(expectedSourceOID) {
+		return WorkspaceTaskQueueReadback{}, WorkInvalidArguments("--expected-source-oid must be a full lowercase Git OID")
+	}
+	return closeTaskQueue(d, in, id, expected, reason, "release", expectedSourceOID)
+}
+
+func closeTaskQueue(d Dependencies, in QueueTargetInput, id string, expected int, reason, kind, expectedSourceOID string) (WorkspaceTaskQueueReadback, error) {
 	var out WorkspaceTaskQueueReadback
 	if kind != "advance" && kind != "release" {
 		return out, WorkInvalidArguments("unknown queue transition")
@@ -465,6 +510,10 @@ func CloseTaskQueue(d Dependencies, in QueueTargetInput, id string, expected int
 		return out, e
 	}
 	request := map[string]any{"preparation_id": id, "expected_revision": expected, "reason": reason}
+	if expectedSourceOID != "" {
+		request["source_state"] = queueSourceRemoved
+		request["expected_source_oid"] = expectedSourceOID
+	}
 	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
 		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
 			r, e := session.Snapshot()
@@ -487,8 +536,12 @@ func CloseTaskQueue(d Dependencies, in QueueTargetInput, id string, expected int
 				return queueError("task_queue_revision_conflict", "current preparation or queue revision differs")
 			}
 			p := findPreparation(r, id)
-			known := p.Outcome != nil && preparationIdentityKnown(d, repo, *p)
-			if kind == "release" && p.Outcome == nil {
+			known := false
+			if expectedSourceOID != "" {
+				known = preparationRemovedSourceKnown(d, repo, *p, expectedSourceOID)
+			} else if p.Outcome != nil {
+				known = preparationIdentityKnown(d, repo, *p)
+			} else if kind == "release" {
 				known = preparationNoEffect(d, repo, *p)
 			}
 			if !known {
