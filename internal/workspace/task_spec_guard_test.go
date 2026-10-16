@@ -6,6 +6,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -96,6 +97,103 @@ func TestTaskSpecGuardRejectsUnboundAndForgedBasis(t *testing.T) {
 				t.Fatalf("basis %s: %v", name, err)
 			}
 		})
+	}
+}
+
+func TestTaskSpecTargetRejectsRelevantMissingPathsAndOwnershipConflicts(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	root, target := filepath.Dir(f.wrapper), filepath.Join(f.wrapper, "task")
+	if _, err := CreateTaskWorktree(f.dependencies, TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: target, ExpectedParentOID: f.oid}); err != nil {
+		t.Fatal(err)
+	}
+	basis := fixtureSelectTaskSpec(t, f)
+	alias := filepath.Join(f.wrapper, "alias")
+	if err := os.Symlink(target, alias); err != nil {
+		t.Fatal(err)
+	}
+	loop := filepath.Join(f.wrapper, "loop")
+	if err := os.Symlink(loop, loop); err != nil {
+		t.Fatal(err)
+	}
+	before, err := os.ReadFile(workItemsPath(root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{
+		"valid_alias", "missing_selected_target", "unresolvable_selected_target",
+		"wrong_task", "wrong_spec", "unbound_selected_target", "unregistered_target",
+		"selected_registration_missing", "conflicting_physical_path", "conflicting_alias",
+		"conflicting_ref_common", "missing_same_ref_common", "unresolvable_other_registration",
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := WithTaskSpecSnapshot(f.dependencies, root, func(s *TaskSpecSession) error {
+				b, locator := basis, target
+				basisPtr := &b
+				task, index := findTask(s.Registry, "task")
+				selected := *task
+				binding := *task.Worktree
+				selected.Worktree = &binding
+				other, otherBinding := selected, binding
+				other.ID, other.Worktree = "conflict", &otherBinding
+				other.Worktree.Ref = "refs/heads/other"
+				other.GitCommonDir = filepath.Join(f.wrapper, "other.git")
+				expect := "task_spec_binding_conflict"
+				switch name {
+				case "valid_alias":
+					locator, expect = alias, ""
+				case "missing_selected_target":
+					locator, expect = filepath.Join(f.wrapper, "absent"), "no such file"
+				case "unresolvable_selected_target":
+					locator, expect = loop, "too many links"
+				case "wrong_task":
+					b.TaskID = "wrong"
+				case "wrong_spec":
+					b.Spec.ManifestSHA256 = digestTaskBytes([]byte("different selected Spec"))
+					expect = "task_spec_selection_stale"
+				case "unbound_selected_target":
+					basisPtr, expect = nil, "task_spec_required"
+				case "unregistered_target":
+					locator = filepath.Join(f.wrapper, "main")
+				case "selected_registration_missing":
+					selected.Worktree.Locator = filepath.Join(f.wrapper, "absent")
+					s.Registry.Tasks[index] = selected
+					expect = "task_content_observation_unknown"
+				case "conflicting_physical_path":
+					s.Registry.Tasks = append(s.Registry.Tasks, other)
+				case "conflicting_alias":
+					other.Worktree.Locator = alias
+					s.Registry.Tasks = append(s.Registry.Tasks, other)
+				case "conflicting_ref_common", "missing_same_ref_common":
+					other.Worktree.Ref, other.GitCommonDir = selected.Worktree.Ref, selected.GitCommonDir
+					other.Worktree.Locator = filepath.Join(f.wrapper, "main")
+					if name == "missing_same_ref_common" {
+						other.Worktree.Locator = filepath.Join(f.wrapper, "absent")
+						expect = "task_content_observation_unknown"
+					}
+					s.Registry.Tasks = append(s.Registry.Tasks, other)
+				case "unresolvable_other_registration":
+					other.Worktree.Locator = loop
+					s.Registry.Tasks = append(s.Registry.Tasks, other)
+					expect = "task_content_observation_unknown"
+				}
+				_, err := s.ValidateTarget(locator, "refs/heads/task", task.GitCommonDir, basisPtr)
+				if expect == "" {
+					if err != nil {
+						t.Fatalf("valid physical alias rejected: %v", err)
+					}
+				} else if err == nil || !strings.Contains(err.Error(), expect) {
+					t.Fatalf("wanted %s before startup, got %v", expect, err)
+				}
+				return nil
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+	after, err := os.ReadFile(workItemsPath(root))
+	if err != nil || !bytes.Equal(before, after) {
+		t.Fatal("target validation changed the registered Task history")
 	}
 }
 

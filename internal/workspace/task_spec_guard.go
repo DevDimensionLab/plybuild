@@ -448,11 +448,18 @@ func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *Tas
 		if t.Worktree == nil || t.WorktreeState == WorkItemRetired {
 			continue
 		}
+		sameRef := t.Worktree.Ref == ref && t.GitCommonDir == common
 		p, e := filepath.EvalSymlinks(t.Worktree.Locator)
 		if e != nil {
+			// A removed, unrelated source cannot own this existing target.
+			// Keep selected/path/ref claims and other observation failures
+			// fail-closed; existing aliases still resolve below.
+			if errors.Is(e, fs.ErrNotExist) && filepath.Clean(t.Worktree.Locator) != physical && !sameRef && (basis == nil || t.ID != basis.TaskID) {
+				continue
+			}
 			return TaskSpecEvaluation{}, contentError("task_content_observation_unknown", "cannot resolve registered Task target", e)
 		}
-		if p == physical || t.Worktree.Ref == ref && t.GitCommonDir == common {
+		if p == physical || sameRef {
 			if owner != nil {
 				return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "ambiguous target ownership", nil)
 			}
