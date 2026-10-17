@@ -685,11 +685,12 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 				return fmt.Errorf("worktree ID %s is shared by %s and Epic %s", wt.ID, owner, epic.ID)
 			}
 			worktreeIDs[wt.ID] = "Epic " + string(epic.ID)
+			// Epics may share an integration base; Task operations below may not
+			// reuse any Epic path or ref.
 			for _, key := range []string{binding.GitCommonDir + "\x00path\x00" + wt.Locator, binding.GitCommonDir + "\x00ref\x00" + wt.Ref} {
-				if owner, ok := resources[key]; ok {
-					return fmt.Errorf("Git resource shared by %s and Epic %s", owner, epic.ID)
+				if _, ok := resources[key]; !ok {
+					resources[key] = "Epic " + string(epic.ID)
 				}
-				resources[key] = "Epic " + string(epic.ID)
 			}
 		}
 		epics[epic.ID] = epic

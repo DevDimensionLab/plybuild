@@ -4218,7 +4218,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Register one existing clean local worktree as the repository anchor for an Epic without changing Git.",
+        "long": "Register one existing clean local worktree as the repository anchor for an Epic without changing Git. Several Epics may share the same clean integration worktree and branch; adoption reserves no directory, and each Task still gets its own branch and worktree. Where the current directory is shared, select the Epic explicitly with --project, --repo and --epic.",
         "path": "ply workspace epic adopt",
         "runnable": true,
         "short": "Adopt an existing worktree as an Epic",

@@ -650,11 +650,11 @@ func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationRes
 			if err != nil {
 				return err
 			}
-			for _, epic := range registry.Epics {
-				for _, binding := range epic.RepoBindings {
-					if binding.GitCommonDir == repository.GitCommonDir && (binding.Worktree.Locator == locator || binding.Worktree.Ref == input.Ref) {
-						return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree or ref is already owned by Epic %s", epic.ID), nil)
-					}
+			// Several logical Epics may share one clean integration base. Only
+			// an exclusive Task copy (its operation path or branch) is reserved.
+			for _, operation := range registry.WorktreeOperations {
+				if operation.GitCommonDir == repository.GitCommonDir && (operation.TargetLocator == locator || operation.SourceRef == input.Ref) {
+					return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree or ref is reserved by Task %s", operation.TaskID), nil)
 				}
 			}
 			id, err := dependencies.WorkIDs.NewWorktreeID()

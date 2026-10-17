@@ -128,6 +128,30 @@ type QueueTargetInput struct {
 }
 
 func resolveQueueTarget(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput) (QueueTarget, RepoRecord, error) {
+	return resolveGoalQueueTarget(d, root, r, projects, in, "")
+}
+
+// queueHasGoalSpec reports whether the goal Spec is pending or currently
+// prepared in the target's queue.
+func queueHasGoalSpec(r WorkItemRegistry, root string, t QueueTarget, specID string) bool {
+	q := foldQueue(r, queueID(root, t))
+	for _, entry := range q.Pending {
+		if entry.Goal != nil && entry.Goal.SpecID == specID {
+			return true
+		}
+	}
+	if q.Current != nil {
+		if p := findPreparation(r, *q.Current); p != nil && p.Plan.SpecID == specID {
+			return true
+		}
+	}
+	return false
+}
+
+// resolveGoalQueueTarget also lets a unique goal Spec choose among Epics that
+// share the caller's directory. Explicit flags and unshared directories behave
+// exactly as resolveQueueTarget.
+func resolveGoalQueueTarget(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, specID string) (QueueTarget, RepoRecord, error) {
 	explicit := in.ProjectID != "" || in.RepoID != "" || in.EpicID != ""
 	if explicit && (in.ProjectID == "" || in.RepoID == "" || in.EpicID == "") {
 		return QueueTarget{}, RepoRecord{}, queueError("task_queue_context_required", "provide all of --project <id> --repo <id> --epic <id>")
@@ -153,7 +177,7 @@ func resolveQueueTarget(d Dependencies, root string, r WorkItemRegistry, project
 		}
 	}
 
-	matches := []QueueTarget{}
+	matches, current := []QueueTarget{}, []QueueTarget{}
 	for _, ep := range r.Epics {
 		for _, b := range ep.RepoBindings {
 			if explicit && (ep.ID != in.EpicID || ep.ProjectID != in.ProjectID || b.RepoID != in.RepoID) {
@@ -162,14 +186,41 @@ func resolveQueueTarget(d Dependencies, root string, r WorkItemRegistry, project
 			if !explicit && actualRoot != b.Worktree.Locator {
 				continue
 			}
+			target := QueueTarget{ep.ProjectID, b.RepoID, ep.ID, b.GitCommonDir, b.Worktree.ID, b.Worktree.Locator, b.Worktree.Ref}
 			if !explicit {
 				o, err := d.WorkGit.ObserveWorktree(b.Worktree.Locator)
 				if err != nil || o.Locator != b.Worktree.Locator || o.GitCommonDir != b.GitCommonDir {
 					continue
 				}
+				if o.Ref == b.Worktree.Ref {
+					current = append(current, target)
+				}
 			}
-			matches = append(matches, QueueTarget{ep.ProjectID, b.RepoID, ep.ID, b.GitCommonDir, b.Worktree.ID, b.Worktree.Locator, b.Worktree.Ref})
+			matches = append(matches, target)
 		}
+	}
+	// A historical Epic whose ref is no longer checked out here never wins
+	// over an Epic that names the current branch of the shared directory.
+	if len(matches) > 1 && len(current) > 0 {
+		matches = current
+	}
+	if len(matches) > 1 && specID != "" {
+		withSpec := []QueueTarget{}
+		for _, m := range matches {
+			if queueHasGoalSpec(r, root, m, specID) {
+				withSpec = append(withSpec, m)
+			}
+		}
+		if len(withSpec) == 1 {
+			matches = withSpec
+		}
+	}
+	if len(matches) > 1 {
+		commands := make([]string, len(matches))
+		for i, m := range matches {
+			commands[i] = fmt.Sprintf("--project %s --repo %s --epic %s", m.ProjectID, m.RepoID, m.EpicID)
+		}
+		return QueueTarget{}, RepoRecord{}, queueError("task_queue_context_required", "this worktree is the shared base of several Epics; choose one explicitly, or a goal Spec pending in only one of them: "+strings.Join(commands, " | "))
 	}
 	if len(matches) != 1 {
 		return QueueTarget{}, RepoRecord{}, queueError("task_queue_context_required", "provide --project <id> --repo <id> --epic <id> for exactly one registered Epic worktree")
@@ -229,7 +280,9 @@ func queueUnresolved(r WorkItemRegistry, t QueueTarget) []string {
 		}
 	}
 	for _, a := range r.IntegrationAuthorities {
-		if a.Plan.Epic.EpicID == t.EpicID && a.Plan.Repository.RepoID == t.RepoID && !taskIntegrationAuthorityComplete(r, a.ID) {
+		sameEpic := a.Plan.Epic.EpicID == t.EpicID && a.Plan.Repository.RepoID == t.RepoID
+		sharedRef := a.Plan.Repository.GitCommonDir == t.GitCommonDir && a.Plan.Epic.ParentRef == t.ParentRef
+		if (sameEpic || sharedRef) && !taskIntegrationAuthorityComplete(r, a.ID) {
 			out = append(out, string(a.ID))
 		}
 	}

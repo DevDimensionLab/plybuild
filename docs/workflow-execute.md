@@ -29,6 +29,17 @@ a control executable and starts the assigned Claude or Codex in Herdr. The calle
 worktree, including when explicit `--project`, `--repo`, `--epic` flags are supplied.
 Supply all three target flags or none.
 
+Several Epics may share one clean return worktree and branch, such as a project's
+`main` checkout. Adoption reserves no directory; each Task still gets its own
+sibling branch and worktree, and integration stays bound to the exact candidate
+and the freshly observed target. In a shared directory, Ply selects an Epic whose
+recorded branch is checked out there, so a stale historical registration never wins. When several
+current Epics remain, `--spec <id>` selects the one whose queue holds that goal. Otherwise
+the command refuses and prints the exact `--project <id> --repo <id> --epic <id>`
+choices. After another Epic integrates into the shared branch, this Epic's base is
+stale until `ply workspace epic base` records the new commit; no merge, reset or
+rerun happens implicitly.
+
 The first version supports one registered Epic in one repository. A planner may
 continue recording goals and changing the pending queue while the owner works.
 The current preparation is retained. Returning a second concurrent feature to a

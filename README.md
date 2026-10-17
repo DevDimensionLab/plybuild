@@ -136,8 +136,17 @@ ply workspace epic adopt ply-agentic-workflow-support \
 ```
 
 Adoption records the exact physical worktree, full local branch ref, commit, tree, and Git common
-directory. It performs no Git change. Each Task belongs to an Epic and binds exactly one registered
-repository and Git common directory:
+directory. It performs no Git change and reserves no directory: several logical Epics may share the
+same clean integration worktree and branch, for example a project's `main` checkout. Exclusivity
+belongs to concrete work instead. Each Task gets its own branch and worktree, and an integration
+into a shared branch blocks other Epics' base updates and preparations on that branch until it
+completes. An older registration whose branch is no longer checked out remains visible as
+`epic_ref_stale` history. It does not block a new adoption and gives no authority to continue old
+work. When the current directory is the base of several Epics, Ply picks the one whose recorded
+branch is checked out. If that is still ambiguous, it refuses and prints the exact
+`--project <id> --repo <id> --epic <id>` choices.
+
+Each Task belongs to an Epic and binds exactly one registered repository and Git common directory:
 
 ```shell script
 ply workspace task create workspace-work-item-bootstrap \

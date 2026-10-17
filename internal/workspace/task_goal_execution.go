@@ -145,7 +145,7 @@ func buildGoalExecutionPreview(d Dependencies, root string, r WorkItemRegistry, 
 		}
 	}
 	out := TaskGoalExecutePreview{Kind: "WorkspaceTaskGoalExecutePlan@1", SchemaVersion: 1, Workspace: root, Input: in, AcceptancePath: in.AcceptancePath}
-	target, repo, e := resolveQueueTarget(d, root, r, projects, in.Target)
+	target, repo, e := resolveGoalQueueTarget(d, root, r, projects, in.Target, in.SpecID)
 	if e != nil {
 		return out, e
 	}
@@ -613,7 +613,7 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 				selected = prep.Plan.Selection
 				return nil
 			}
-			target, _, e := resolveQueueTarget(d, root, r, projects, in.Target)
+			target, _, e := resolveGoalQueueTarget(d, root, r, projects, in.Target, in.SpecID)
 			if e != nil {
 				return e
 			}
