@@ -126,6 +126,9 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 				return workflowError(4, "positive acceptance requires the bound native session")
 			}
 			if permission != nil {
+				if mandateReceipt(s.Request) && permission.MandateSHA256 != s.Result.Handoff.SHA256 {
+					return workflowError(4, "receipt mandate digest differs")
+				}
 				if e := positiveDeliveryClaim(a, *permission, s.Request); e != nil {
 					return e
 				}
@@ -174,6 +177,9 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		}
 		s.Acceptance = &binding
 		s.Result.RuntimeFacts = RuntimeFacts{s.Request.Runtime.Model, c.ModelID, "unknown", ptr("recipient_claim"), ptr(binding.SHA256)}
+		if mandateReceipt(s.Request) {
+			s.Result.RuntimeFacts.Source = ptr("recipient_observation")
+		}
 		if c.ModelID != nil {
 			if *c.ModelID == s.Request.Runtime.Model || permission != nil && deliveryModelMatches(s.Request.Runtime.Provider, s.Request.Runtime.Model, *c.ModelID) {
 				s.Result.RuntimeFacts.ModelState = "matches"
@@ -206,11 +212,17 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			if permission != nil {
 				s.Result.Delivery.Phase = "working"
 				s.Result.Delivery.PermissionState = "recipient_confirmed_contract"
+				if mandateReceipt(s.Request) {
+					s.Result.Delivery.PermissionState = RuntimePerAction
+				}
 				s.Result.Delivery.ActualPolicySHA256 = c.EffectivePolicySHA256
 				s.Result.Delivery.ActualPolicyEvidence = permission.ActualPolicyEvidence
 				s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and the actual human QA through authorized local completion."}
 				if s.Request.Delivery.Agreement != nil {
 					s.Result.NextAction = WorkflowAction{"recipient", "Own design, implementation, verification and actual human QA through the frozen delivery boundary."}
+				}
+				if mandateReceipt(s.Request) {
+					s.Result.NextAction = WorkflowAction{"recipient", "Own implementation, meaningful verification, separate review and the frozen delivery boundary under per-action runtime review."}
 				}
 				if headlessRun(s.Request) {
 					s.Result.NextAction = WorkflowAction{"worker", "Run development, acceptance and separate review through the authorized local Epic return."}

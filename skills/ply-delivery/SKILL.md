@@ -11,20 +11,26 @@ owns Git, PR, evidence, locking and recovery; this skill supplies the workflow.
 ## Begin an assigned Task
 
 Read the frozen goal and mandate from the start message. Reuse their human
-authorization. The bound callback guide gives the control executable, context,
-provider and native session. Before Task writes, use that control's
-`workflow execute begin RUN_ID --context PATH --help`, then supply your actual
-provider, native session, policy observation and read/write roots through the
-command flags. Confirm permission only when the observed runtime covers the
-mandate's exact effects and targets. Unknown model or profile can be omitted;
-unknown authority stops dependent work. Ply preserves evidence, hashes, identity
-bindings and acceptance natively; no handwritten acceptance file is required.
-Repeat the same observations after a lost response to read the same acceptance.
-Do not infer permission from the requested launch mode or change provider policy.
+authorization. The bound callback guide selects the startup protocol and gives
+the immutable control, context, provider and native session.
+
+For `mandate_receipt_v1`, run that control's `workflow execute check-in RUN_ID
+--context PATH --provider PROVIDER --native-session SESSION` before Task writes.
+Ply checks the frozen mandate, exact owner and cwd and keeps an idempotent receipt.
+Optional model, profile, policy and roots are actual sourced observations; omit
+unknown facts. Reported roots do not establish sandbox coverage. The receipt
+acknowledges the mandate; runtime evaluates actions when they happen. No blanket
+permission confirmation, handwritten acceptance or repeated human yes is needed.
+A known refusal or unresolved prior effect still stops dependent work.
+
+For a frozen legacy contract, follow its `workflow execute begin --help` and
+original actual-permission requirements. Do not move it to check-in, rewrite its
+old claims or revive a stopped owner. Both protocols preserve identity and
+scope, and reuse identical input after a lost response. Preserve provider controls.
 
 Use the existing authorized notification context. For a new binding, supply
 `--notification-route`, `--notification-authority` and `--notification-timezone`
-to `begin`; Ply returns the private `delivery/notification-task.json` path for
+to the contract-selected startup command; Ply returns the private `delivery/notification-task.json` path for
 the installed ply-agent-notify helper. This creates no transport or global
 configuration. If the goal gives notifications to a parent, omit these flags
 and return to that parent without a separate notification.
@@ -34,7 +40,7 @@ The coordinator can use `workflow execute observe-stop --help` with the actual
 denial evidence. This preserves a sourced observation without owner acceptance
 or writer release. After the cause is actually repaired, the same owner uses
 `workflow execute resolve-stop --help` with the exact stop digest and current
-permission confirmation, then `begin` if acceptance is still absent. The
+permission confirmation, then the contract-selected startup command if receipt is still absent. The
 resolution starts nothing and resends no rejected input. Never replace a Run
 or change global permission rules to forget a denial.
 

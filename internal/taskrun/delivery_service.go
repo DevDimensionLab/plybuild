@@ -1,6 +1,7 @@
 package taskrun
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -65,6 +66,21 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 		}
 	}
 	c := r.Delivery
+	if c.StartupProtocol != "" && (c.StartupProtocol != MandateReceiptV1 || headlessRun(r)) {
+		return workflowError(2, "unsupported startup protocol")
+	}
+	protocol, protocolErr := workflowhandoff.DeliveryStartupProtocol(r.HandoffDraft)
+	if protocolErr != nil {
+		return protocolErr
+	}
+	if mandateReceipt(r) {
+		if _, err := readDeliveryReceiptGoal(c.Goal); err != nil {
+			return err
+		}
+	}
+	if protocol != c.StartupProtocol {
+		return workflowError(4, "startup protocol differs from frozen mandate")
+	}
 	boundary := DeliveryLocalIntegrationBoundary(c.Agreement)
 	if !plain(c.OwnerClaim, 1, 256) || c.LocalIntegration != boundary || !filepath.IsAbs(c.AcceptancePath) || filepath.Clean(c.AcceptancePath) != c.AcceptancePath || c.ReasoningEffort != "" && !plain(c.ReasoningEffort, 1, 64) {
 		return workflowError(2, "invalid delivery owner, acceptance path or local integration boundary")
@@ -90,10 +106,11 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 	return e
 }
 
-func deliveryEvidence(evidence []Evidence) error {
+func deliveryEvidence(evidence []Evidence) error { return deliveryEvidenceRoles(evidence, false) }
+func deliveryEvidenceRoles(evidence []Evidence, observation bool) error {
 	last := ""
 	for _, x := range evidence {
-		if x.Locator <= last || !digestPattern.MatchString(x.SHA256) || (x.Role != "effective_policy" && x.Role != "permission_proof" && x.Role != "runtime_contract") {
+		if x.Locator <= last || !digestPattern.MatchString(x.SHA256) || (x.Role != "effective_policy" && x.Role != "permission_proof" && x.Role != "runtime_contract" && !(observation && x.Role == "runtime_observation")) {
 			return workflowError(2, "delivery policy evidence must be sorted, unique and typed")
 		}
 		if _, e := workflowBound(FileBinding{x.Locator, x.SHA256}, 1<<20); e != nil {
@@ -118,6 +135,9 @@ func deliveryInstructions(s workflowState) string {
 		return "Startup binding is unavailable; preserve the stop and do not write the Task."
 	}
 	c := s.Request.Delivery
+	if mandateReceipt(s.Request) {
+		return deliveryReceiptInstructions(s, runtime)
+	}
 	notification := "Use the authorized ply-agent-notify route unless the goal assigns notifications to a parent; internal delegates stay quiet."
 	if c.NotificationContext != nil {
 		notification = "Reuse the existing notification identity at " + c.NotificationContext.Locator + "; do not create a second binding. Internal delegates stay quiet."
@@ -142,7 +162,7 @@ func workflowDeliveryFreshArtifacts(d Dependencies, s workflowState, target, pol
 		}
 	}
 	if policy {
-		if e := deliveryEvidence(s.Result.Delivery.ActualPolicyEvidence); e != nil {
+		if e := deliveryEvidenceRoles(s.Result.Delivery.ActualPolicyEvidence, mandateReceipt(s.Request)); e != nil {
 			return e
 		}
 	}
@@ -253,4 +273,36 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			time.Sleep(pause)
 		}
 	}
+}
+
+func deliveryReceiptInstructions(s workflowState, runtime Runtime) string {
+	goal, err := readDeliveryReceiptGoal(s.Request.Delivery.Goal)
+	if err != nil {
+		return "Frozen goal unavailable; preserve the stop."
+	}
+	scope := ""
+	if a := s.Request.Delivery.Agreement; a != nil {
+		scope = fmt.Sprintf(" Authorized delivery: %s from %s to %s at %s. No other delivery target is authorized.", a.Mode, a.SourceRef, a.TargetRef, a.TargetWorktree)
+	}
+	return fmt.Sprintf("Your authorized assignment is %s: %s Work in %s. Receive this frozen mandate with %s workflow execute check-in %s --context %s --provider %s --native-session %s. This idempotent receipt records identity and mandate receipt; runtime reviews each action when it happens. A known refusal or unknown previous effect stops dependent work. Preserve provider controls and the same session. Edit and test this Task, make controlled commits on its source branch, and own separate review and the exact delivery.%s Local installation allowed: %t. Delegation allowed: %t. Read %s for complete scope and %s for callbacks, verification and gates. Implement acceptance at %s. The frozen goal is %s. Parent-owned notifications stay with the parent; otherwise use the existing authorized route. Receipt, actual work, technical acceptance, human judgment and delivery are separate facts.", goal.Title, goal.Objective, s.Observed.Target.WorktreeLocator, ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context), s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID), scope, s.Request.Delivery.AllowLocalInstall, s.Request.Delivery.AllowSubagents, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), s.Request.Delivery.AcceptancePath, s.Request.Delivery.Goal.Locator)
+}
+
+type deliveryReceiptGoal struct {
+	Title     string `json:"title"`
+	Objective string `json:"objective"`
+}
+
+func readDeliveryReceiptGoal(binding FileBinding) (deliveryReceiptGoal, error) {
+	var goal deliveryReceiptGoal
+	raw, err := workflowBound(binding, 4<<20)
+	if err != nil {
+		return goal, err
+	}
+	if err = json.Unmarshal(raw, &goal); err != nil {
+		return goal, err
+	}
+	if strings.TrimSpace(goal.Title) == "" || strings.TrimSpace(goal.Objective) == "" {
+		return goal, workflowError(2, "mandate receipt requires the frozen goal title and objective")
+	}
+	return goal, nil
 }

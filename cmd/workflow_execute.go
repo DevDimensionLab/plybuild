@@ -85,6 +85,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.AddCommand(newWorkflowExecuteContinueCommand(d))
 	c.AddCommand(newWorkflowExecuteAcceptanceCommand(d))
 	c.AddCommand(newWorkflowExecuteBeginCommand(d))
+	c.AddCommand(newWorkflowExecuteCheckInCommand(d))
 	c.AddCommand(newWorkflowExecuteObserveStopCommand(d))
 	c.AddCommand(newWorkflowExecuteResolveStopCommand(d))
 	c.AddCommand(newWorkflowExecuteQARecoveryCommand(d))

@@ -189,7 +189,7 @@ func deliveryRecoveryReadback(s, old workflowState, r deliveryStartRecoveryRecor
 }
 
 func deliveryRecoveryStateEligible(s workflowState) bool {
-	if !deliveryRun(s.Request) || s.Request.Runtime.Provider != "codex" || s.Result.Delivery == nil || s.Acceptance != nil || s.StartDraft != nil || s.StartSHA256 != nil || s.Result.Round.Number != 0 || len(s.Records) != 0 || len(s.Result.Delivery.Events) != 0 || len(s.Result.Delivery.Candidates) != 0 || s.Result.Delivery.Attempt != nil || s.Result.Delivery.PermissionState != "pending_runtime_acceptance" || s.Result.Delivery.Phase != "awaiting_acceptance" {
+	if !deliveryRun(s.Request) || s.Request.Runtime.Provider != "codex" || s.Result.Delivery == nil || s.Acceptance != nil || s.StartDraft != nil || s.StartSHA256 != nil || s.Result.Round.Number != 0 || len(s.Records) != 0 || len(s.Result.Delivery.Events) != 0 || len(s.Result.Delivery.Candidates) != 0 || s.Result.Delivery.Attempt != nil || s.Result.Delivery.PermissionState != "pending_runtime_acceptance" && !(mandateReceipt(s.Request) && s.Result.Delivery.PermissionState == "awaiting_mandate_receipt") || s.Result.Delivery.Phase != "awaiting_acceptance" {
 		return false
 	}
 	return s.Phase == "agent_start_attempted" || s.Phase == "bootstrap_attempted" || s.Phase == "session_bound"

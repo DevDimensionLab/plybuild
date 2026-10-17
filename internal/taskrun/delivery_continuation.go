@@ -181,7 +181,7 @@ func deliveryAcceptedAuthority(s workflowState) error {
 	if err := workflowhandoff.ValidateDeliveryMandate(s.Request.HandoffDraft, s.Request.Delivery.Agreement); err != nil {
 		return deliveryContinuityError("continuation_unsupported", "required delivery agreement is unsupported: "+err.Error())
 	}
-	if s.Acceptance == nil || s.StartSHA256 == nil || s.Result.Delivery.PermissionState != "recipient_confirmed_contract" {
+	if s.Acceptance == nil || !deliveryStarted(s) {
 		return deliveryContinuityError("continuation_authority", "continue requires the active owner's existing positive native acceptance; resolve missing authority with the original owner")
 	}
 	raw, err := workflowBound(*s.Acceptance, 1<<20)
@@ -197,6 +197,9 @@ func deliveryAcceptedAuthority(s workflowState) error {
 	}
 	if err = workflowClaim(s, a.RunID, a.RequestSHA256, a.SessionID); err != nil {
 		return err
+	}
+	if mandateReceipt(s.Request) && a.DeliveryPermission.MandateSHA256 != s.Result.Handoff.SHA256 {
+		return deliveryContinuityError("continuation_authority", "receipt mandate digest differs")
 	}
 	if err = positiveDeliveryClaim(a.Acceptance, a.DeliveryPermission, s.Request); err != nil {
 		return deliveryContinuityError("continuation_authority", err.Error())

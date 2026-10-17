@@ -10,6 +10,9 @@ import (
 )
 
 type DeliveryStopInput struct {
+	Action        string `json:"action,omitempty"`
+	EffectStatus  string `json:"effect_status,omitempty"`
+	Rule          string `json:"rule,omitempty"`
 	EventID       string `json:"event_id"`
 	Provider      string `json:"provider"`
 	NativeSession string `json:"native_session"`
@@ -26,8 +29,20 @@ func WorkflowObserveDeliveryStop(d Dependencies, root, id string, in DeliverySto
 	if in.EventID == "" || len(in.EventID) > 128 || strings.TrimSpace(in.Observer) == "" || len(in.Observer) > 256 || strings.TrimSpace(in.Reason) == "" || len(in.Reason) > 4096 {
 		return WorkflowRun{}, workflowError(2, "event ID, actual observer and bounded reason are required")
 	}
-	if in.Stage != "startup" && in.Stage != "acceptance" && in.Stage != "report" {
-		return WorkflowRun{}, workflowError(2, "stage must be startup, acceptance or report")
+	switch in.Stage {
+	case "startup", "acceptance", "report":
+	case "receipt", "work", "verification", "delivery":
+		if strings.TrimSpace(in.Action) == "" || in.EffectStatus == "" {
+			return WorkflowRun{}, workflowError(2, "action and known effect status are required for an action refusal")
+		}
+	default:
+		return WorkflowRun{}, workflowError(2, "unsupported denial stage")
+	}
+	if len(in.Action) > 2000 || len(in.Rule) > 256 {
+		return WorkflowRun{}, workflowError(2, "denial action or rule exceeds limit")
+	}
+	if in.EffectStatus != "" && in.EffectStatus != "not_started" && in.EffectStatus != "none_observed" && in.EffectStatus != "partial" && in.EffectStatus != "unknown" {
+		return WorkflowRun{}, workflowError(2, "unsupported known effect status")
 	}
 	evidence, raw, err := deliveryReadBinding(in.EvidencePath, 1<<20)
 	if err != nil {
@@ -161,7 +176,7 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 			s.Result.Delivery.Phase = "awaiting_acceptance"
 			s.Result.Round.State = "awaiting_acceptance"
 			s.Result.NextAction = WorkflowAction{"recipient", "Use execute begin with actual observations before Task writes."}
-		} else if s.Result.Delivery.PermissionState == "recipient_confirmed_contract" {
+		} else if deliveryStarted(*s) {
 			s.Result.Delivery.Phase = "working"
 			s.Result.Round.State = "working"
 			s.Result.NextAction = WorkflowAction{"recipient", "Continue the same accepted mandate after the preserved cause repair."}

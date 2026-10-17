@@ -35,3 +35,20 @@ func TestStartupCapabilitiesExposeDifferentAuthorityEffects(t *testing.T) {
 		t.Fatalf("startup capabilities absent: %v", want)
 	}
 }
+
+func TestExecuteCheckInHasNoBlanketPermissionFlag(t *testing.T) {
+	c, _, err := newWorkflowExecuteCommand(taskrun.Dependencies{}).Find([]string{"check-in"})
+	if err != nil || c.Name() != "check-in" {
+		t.Fatalf("missing neutral receipt: %v", err)
+	}
+	for _, flag := range []string{"context", "provider", "native-session", "policy", "read-root", "write-root"} {
+		if c.Flags().Lookup(flag) == nil {
+			t.Errorf("missing receipt selector %s", flag)
+		}
+	}
+	for _, flag := range []string{"permission-confirmed", "file"} {
+		if c.Flags().Lookup(flag) != nil {
+			t.Errorf("receipt requires authority attestation: %s", flag)
+		}
+	}
+}

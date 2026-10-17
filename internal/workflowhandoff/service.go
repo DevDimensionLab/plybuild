@@ -520,6 +520,17 @@ func validateStartBinding(dependencies Dependencies, snapshot Snapshot, draft st
 			return err
 		}
 	}
+	if deliveryStartupProtocol(snapshot.Handoff.Value) == workspace.DeliveryMandateReceiptV1 {
+		// Receipt binds the mandate and observed identity, not sandbox coverage.
+		match, _ := objectMember(sandbox, "matches_contract")
+		if match != nil {
+			return classified(ErrorConflict, "mandate receipt cannot attest sandbox coverage", nil)
+		}
+		if draft.Acceptance == "started" && !(workspaceExpected && projectMatch && targetExpected && inputsExpected) {
+			return classified(ErrorConflict, "mandate receipt binding differs", nil)
+		}
+		return nil
+	}
 	sandboxErr := validateSandboxContract(dependencies.Files, snapshot, sandbox, taskReadPaths...)
 	sandboxActual := sandboxErr == nil
 	if objectBool(sandbox, "matches_contract") != sandboxActual {

@@ -51,10 +51,17 @@ func WorkflowDeliveryBegin(d Dependencies, root, id, contextPath string, in Deli
 	if in.Provider != s.Request.Runtime.Provider || in.NativeSession == "" || in.NativeSession != s.Result.Transport.AgentSessionID {
 		return deliveryReadback(d, root, id, workflowError(4, "actual provider and native session must match the bound owner"))
 	}
-	if !in.PermissionConfirmed || strings.TrimSpace(in.Policy) == "" || len(in.Policy) > 32768 {
+	receipt := mandateReceipt(s.Request)
+	if receipt && in.PermissionConfirmed {
+		return deliveryReadback(d, root, id, workflowError(2, "mandate receipt does not accept blanket permission confirmation"))
+	}
+	if !receipt && (!in.PermissionConfirmed || strings.TrimSpace(in.Policy) == "" || len(in.Policy) > 32768) {
 		return deliveryReadback(d, root, id, workflowError(4, "actual permission is unconfirmed: preserve the stop; no target writes are authorized"))
 	}
-	if len(in.ReadRoots) == 0 || len(in.WriteRoots) == 0 {
+	if len(in.Policy) > 32768 {
+		return WorkflowRun{}, workflowError(2, "observation exceeds limit")
+	}
+	if !receipt && (len(in.ReadRoots) == 0 || len(in.WriteRoots) == 0) {
 		return deliveryReadback(d, root, id, workflowError(2, "actual read and write roots are required"))
 	}
 	if err = validateBeginNotification(in); err != nil {
@@ -79,7 +86,11 @@ func WorkflowDeliveryBegin(d Dependencies, root, id, contextPath string, in Deli
 	if err = privateDir(dir); err != nil {
 		return WorkflowRun{}, err
 	}
-	policy, err := workflowKeep(d, filepath.Join(dir, "actual-policy.json"), in)
+	evidenceName, evidenceRole := "actual-policy.json", "effective_policy"
+	if receipt {
+		evidenceName, evidenceRole = "runtime-observation.json", "runtime_observation"
+	}
+	policy, err := workflowKeep(d, filepath.Join(dir, evidenceName), in)
 	if err != nil {
 		return WorkflowRun{}, err
 	}
@@ -87,7 +98,18 @@ func WorkflowDeliveryBegin(d Dependencies, root, id, contextPath string, in Deli
 	if err = privateDir(tmp); err != nil {
 		return WorkflowRun{}, err
 	}
-	sandbox, err := Canonical(map[string]any{"read_roots": in.ReadRoots, "write_roots": in.WriteRoots, "temp_root": tmp, "matches_contract": true})
+	var matches any = true
+	if receipt {
+		matches = nil
+	}
+	reads, writes := in.ReadRoots, in.WriteRoots
+	if reads == nil {
+		reads = []string{}
+	}
+	if writes == nil {
+		writes = []string{}
+	}
+	sandbox, err := Canonical(map[string]any{"read_roots": reads, "write_roots": writes, "temp_root": tmp, "matches_contract": matches})
 	if err != nil {
 		return WorkflowRun{}, err
 	}
@@ -98,7 +120,12 @@ func WorkflowDeliveryBegin(d Dependencies, root, id, contextPath string, in Deli
 	if in.Profile != "" {
 		claim.ProfileID = ptr(in.Profile)
 	}
-	permission := DeliveryPermissionAcceptance{LaunchContractSHA256: s.Request.Runtime.PermissionBinding.EffectivePolicySHA256, PermissionConfirmed: true, ActualPolicyEvidence: []Evidence{{Locator: policy.Locator, SHA256: policy.SHA256, Role: "effective_policy"}}}
+	permission := DeliveryPermissionAcceptance{LaunchContractSHA256: s.Request.Runtime.PermissionBinding.EffectivePolicySHA256, PermissionConfirmed: true, ActualPolicyEvidence: []Evidence{{Locator: policy.Locator, SHA256: policy.SHA256, Role: evidenceRole}}}
+	if receipt {
+		permission.PermissionConfirmed = false
+		permission.StartupProtocol = MandateReceiptV1
+		permission.MandateSHA256 = s.Result.Handoff.SHA256
+	}
 	if a := s.Request.Delivery.Agreement; a != nil {
 		permission.DeliveryAgreementSHA256 = workspace.DeliveryAgreementDigest(*a)
 		permission.AllowedEffects = workflowhandoff.DeliveryAllowedEffects(*a)
@@ -180,4 +207,16 @@ func deliveryBindNotification(d Dependencies, s workflowState, in DeliveryBeginI
 	}
 	_, err = workflowKeep(d, filepath.Join(dir, "notification-task.json"), map[string]any{"kind": "PlyAgentNotificationTask@2", "activity": handoff.Identity.ActivityID, "run": s.Result.RunID, "worktree": s.Observed.Target.WorktreeLocator, "handoff": authority.Locator, "route": in.NotificationRoute, "event_root": filepath.Join(dir, "notification-events"), "actor_claim": s.Request.Delivery.OwnerClaim, "notification_authorized": true, "provider": in.Provider, "origin_cwd": s.Observed.Target.WorktreeLocator, "context_root": s.Request.WorkspaceRoot, "timezone": in.NotificationTimezone})
 	return err
+}
+
+// WorkflowDeliveryReceipt routes by the frozen contract, never by a new permission claim.
+func WorkflowDeliveryReceipt(d Dependencies, root, id, contextPath string, in DeliveryBeginInput, receipt bool) (WorkflowRun, error) {
+	s, err := workflowRead(root, id)
+	if err != nil {
+		return WorkflowRun{}, err
+	}
+	if mandateReceipt(s.Request) != receipt {
+		return deliveryReadback(d, root, id, workflowError(4, "startup entrypoint differs from frozen contract; use its callback guide"))
+	}
+	return WorkflowDeliveryBegin(d, root, id, contextPath, in)
 }

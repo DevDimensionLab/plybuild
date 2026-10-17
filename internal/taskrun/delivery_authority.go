@@ -28,7 +28,7 @@ type DeliveryAuthority struct {
 // provider process, executable or conversation to still exist. The accepted
 // policy and exact frozen input bytes remain required.
 func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.DeliveryAuthorization, error) {
-	if !deliveryRun(s.Request) || s.Request.Delivery.Agreement == nil || s.Result.Delivery == nil || s.Acceptance == nil || s.StartSHA256 == nil || s.Result.Delivery.PermissionState != "recipient_confirmed_contract" {
+	if !deliveryRun(s.Request) || s.Request.Delivery.Agreement == nil || s.Result.Delivery == nil || s.Acceptance == nil || !deliveryStarted(s) {
 		return nil, workflowError(4, "delivery requires an explicit frozen agreement and actual accepted authority; historical runs cannot acquire new effects")
 	}
 	if err := workflowhandoff.ValidateDeliveryMandate(s.Request.HandoffDraft, s.Request.Delivery.Agreement); err != nil {
@@ -50,6 +50,12 @@ func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.Deliver
 	}
 	if err = workflowClaim(s, acceptance.RunID, acceptance.RequestSHA256, acceptance.SessionID); err != nil {
 		return nil, err
+	}
+	if mandateReceipt(s.Request) && acceptance.DeliveryPermission.MandateSHA256 != s.Result.Handoff.SHA256 {
+		return nil, workflowError(4, "receipt mandate digest differs")
+	}
+	if deliveryObservedStop(s) {
+		return nil, workflowError(4, "active provider stop blocks delivery authority")
 	}
 	if err = positiveDeliveryClaim(acceptance.Acceptance, acceptance.DeliveryPermission, s.Request); err != nil {
 		return nil, err
@@ -94,7 +100,11 @@ func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.Deliver
 		return nil, err
 	}
 	a := deliveryEffectiveAgreement(s)
-	return &workspace.DeliveryAuthorization{Agreement: *a, AgreementSHA256: workspace.DeliveryAgreementDigest(*a), AcceptanceAmendment: s.EffectiveAcceptanceAmendment, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, AllowedEffects: append([]string{}, acceptance.DeliveryPermission.AllowedEffects...), PermissionConfirmed: true, HumanIntegration: human, HumanIntegrationRequired: a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest || s.Result.Delivery.OwnershipRelease != nil}, nil
+	authorityKind := ""
+	if mandateReceipt(s.Request) {
+		authorityKind = MandateReceiptV1
+	}
+	return &workspace.DeliveryAuthorization{Agreement: *a, AgreementSHA256: workspace.DeliveryAgreementDigest(*a), AcceptanceAmendment: s.EffectiveAcceptanceAmendment, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, AllowedEffects: append([]string{}, acceptance.DeliveryPermission.AllowedEffects...), PermissionConfirmed: !mandateReceipt(s.Request), AuthorityKind: authorityKind, HumanIntegration: human, HumanIntegrationRequired: a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest || s.Result.Delivery.OwnershipRelease != nil}, nil
 }
 
 func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoffEvidenceRequest) (*workspace.DeliveryAuthorization, error) {

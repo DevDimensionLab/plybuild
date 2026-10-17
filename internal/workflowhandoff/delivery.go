@@ -24,6 +24,12 @@ func validateDeliveryBinding(o canonicaljson.Object) error {
 	}
 	fields := []string{"mode", "human_actor", "owner_claim", "parent_handoff_locator", "parent_handoff_sha256", "candidate_key"}
 	binding, _ := v.(canonicaljson.Object)
+	if _, ok := objectMember(binding, "startup_protocol"); ok {
+		fields = append(fields, "startup_protocol")
+		if objectString(binding, "startup_protocol") != workspace.DeliveryMandateReceiptV1 {
+			return fmt.Errorf("unsupported startup protocol")
+		}
+	}
 	if _, ok := objectMember(binding, "agreement"); ok {
 		fields = append(fields, "agreement")
 		if objectString(binding, "mode") == "candidate" {
@@ -185,6 +191,7 @@ func BuildDeliveryTaskRunResult(d Dependencies, locator, publicationKey string, 
 // BuildDeliveryHandoffDraft binds prepared execution, not future test success.
 type DeliveryDraftAuthority struct {
 	AllowLocalInstall bool
+	StartupProtocol   string
 	Agreement         *workspace.DeliveryAgreement
 }
 
@@ -193,6 +200,13 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		return nil, fmt.Errorf("at most one delivery authority scope is supported")
 	}
 	allowInstall := len(options) == 1 && options[0].AllowLocalInstall
+	protocol := ""
+	if len(options) == 1 {
+		protocol = options[0].StartupProtocol
+	}
+	if protocol != "" && protocol != workspace.DeliveryMandateReceiptV1 {
+		return nil, fmt.Errorf("unsupported startup protocol")
+	}
 	ws, e := d.Workspace.ObserveContaining()
 	if e != nil {
 		return nil, e
@@ -288,6 +302,9 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		value := bridgeEnvelope("ply.workflow.handoff-draft")
 		value = replaceObjectMember(value, "schema_version", int64(3))
 		fields := map[string]any{"publication_key": publicationKey, "activity_key": publicationKey, "goal": goal, "recipient": map[string]any{"principal_id": "delivery-owner", "principal_kind": "human_started_agent", "runtime_constraints": []string{"actual-runtime-authority-required"}}, "binding_request": map[string]any{"project_id": plan.Target.ProjectID, "repo_id": plan.Target.RepoID, "target_worktree": plan.WorktreePath, "target_ref": "refs/heads/" + plan.Branch, "expected_oid": plan.ParentOID, "status_policy": map[string]any{"mode": "clean"}}, "inputs": inputs, "authority": map[string]any{"allowed_effects": effects, "forbidden_effects": forbidden, "human_gates": []string{"human_task_qa"}}, "budget": deliveryBudget(nil), "procedure": procedure, "verifiers": []canonicaljson.Value{verifier}, "stop_conditions": deliveryStops(), "reporting": deliveryReporting(), "task_spec_binding": basis, "delivery_binding": map[string]any{"mode": "owner", "human_actor": humanActor, "owner_claim": ownerClaim, "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}}
+		if protocol != "" {
+			fields["delivery_binding"].(map[string]any)["startup_protocol"] = protocol
+		}
 		if agreement != nil {
 			fields["delivery_binding"].(map[string]any)["agreement"] = agreement
 			if agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA {
@@ -346,4 +363,18 @@ func deliveryStops() []canonicaljson.Value {
 }
 func deliveryReporting() canonicaljson.Object {
 	return deliveryObject(map[string]any{"summary_max_codepoints": 240, "meaning_max_codepoints": 600, "required_start_fields": []string{"acceptance", "binding", "contract_digests", "issues", "observed_inputs", "observed_project", "observed_target", "observed_workspace", "principal", "receipt_id", "sandbox"}, "required_terminal_fields": []string{"artifacts", "binding", "evidence_gaps", "final_target", "forbidden_effects_observed", "meaning", "observed_effects", "principal", "reported_outcome", "result_id", "review", "rounds_used", "start_binding", "stop_reasons", "summary", "verifier_results"}})
+}
+
+// DeliveryStartupProtocol reads the immutable mandate, never a recipient permission claim.
+func DeliveryStartupProtocol(raw []byte) (string, error) {
+	d, err := decodeHandoffDraft(raw)
+	if err != nil {
+		return "", err
+	}
+	return deliveryStartupProtocol(d.Value), nil
+}
+func deliveryStartupProtocol(o canonicaljson.Object) string {
+	v, _ := objectMember(o, "delivery_binding")
+	b, _ := v.(canonicaljson.Object)
+	return objectString(b, "startup_protocol")
 }

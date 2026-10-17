@@ -32,6 +32,11 @@ type DeliveryStartupStatus struct {
 	RuntimePermission string       `json:"runtime_permission"`
 	TargetWork        string       `json:"target_work"`
 	Stop              *FileBinding `json:"stop"`
+	StartupProtocol   string       `json:"startup_protocol,omitempty"`
+	ObservationSource string       `json:"observation_source,omitempty"`
+	SandboxCoverage   string       `json:"sandbox_coverage,omitempty"`
+	HumanScope        *FileBinding `json:"human_scope,omitempty"`
+	RuntimeDecision   string       `json:"runtime_decision,omitempty"`
 }
 
 type DeliveryAcceptanceSelectionStatus struct {
@@ -94,6 +99,19 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 	out := &DeliveryStatus{Source: DeliverySourceStatus{State: "unknown"}, FinalDelivery: DeliveryFinalStatus{State: "not_delivered"}, Reasons: []Reason{}}
 	if !headlessRun(s.Request) {
 		out.Startup = &DeliveryStartupStatus{Terminal: "not_observed", NativeSession: s.Result.Transport.AgentSessionID, TaskPrompt: "not_attempted", TaskReceived: "unknown", RuntimePermission: s.Result.Delivery.PermissionState, TargetWork: "unknown", Stop: s.Result.Delivery.ActiveStop}
+		if mandateReceipt(s.Request) {
+			out.Startup.StartupProtocol = MandateReceiptV1
+			out.Startup.ObservationSource = "not_observed"
+			if s.Acceptance != nil {
+				out.Startup.ObservationSource = "recipient_observation"
+			}
+			out.Startup.SandboxCoverage = "unknown"
+			out.Startup.HumanScope = &FileBinding{s.Result.Handoff.Locator, s.Result.Handoff.SHA256}
+			out.Startup.RuntimeDecision = "per_action_not_observed"
+			if deliveryObservedStop(s) {
+				out.Startup.RuntimeDecision = "preserved_stop"
+			}
+		}
 		if s.Result.Transport.PaneID != "" {
 			out.Startup.Terminal = "created"
 		}

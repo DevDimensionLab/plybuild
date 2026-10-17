@@ -352,3 +352,20 @@ The repository's [ply-delivery skill](../skills/ply-delivery/SKILL.md) describes
 the agent journey: find the exact native Task, register, check, execute/resume and
 report its observed receipt. Technical qualification, human judgment and final
 delivery are distinct. Finishing one Task does not finish or publish its Epic.
+
+## Mandate receipt and per-action runtime decisions
+
+New interactive executions freeze `mandate_receipt_v1` in the request and native
+handoff. `workflow execute check-in` binds the exact mandate and live owner
+without asserting future runtime permissions. Before native effects, delivery
+still checks the preserved human agreement, allowed effects, owner, current
+candidate and target, stops and unknown attempts. The authorization's additive
+`authority_kind: "mandate_receipt_v1"` names this source; its legacy
+`permission_confirmed` field remains false. Legacy authorizations keep their
+original true permission claim and cannot acquire the new kind by readback.
+
+The private startup record keeps historical field names for serialization
+compatibility, but `startup_protocol`, the mandate digest, `runtime_per_action`
+and unknown sandbox match distinguish receipt from a legacy positive claim.
+Supplied roots are recipient observations, not verified enforcement. The active
+runtime retains its normal per-action review; Ply does not change its policy.

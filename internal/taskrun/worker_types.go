@@ -183,6 +183,9 @@ func validateWorkerRequest(r WorkflowRequest) error {
 		return err
 	}
 	c := r.Delivery
+	if c.StartupProtocol != "" {
+		return workflowError(2, "headless workers retain their existing startup contract")
+	}
 	if c.Agreement == nil || !c.Agreement.AutomaticAcceptance() || c.Agreement.HumanOwnedIntegration() || c.Agreement.Acceptance.RequireHumanQA || string(c.Agreement.Mode) != "local_epic_integration" {
 		return workflowError(2, "worker requires an explicit automatic local Epic agreement without a human gate")
 	}

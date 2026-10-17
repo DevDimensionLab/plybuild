@@ -89,7 +89,13 @@ func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
 	if deliveryRun(r) {
 		o.Envelope = deliveryEnv("run")
 		o.Delivery = &DeliveryState{Phase: "awaiting_acceptance", OwnerClaim: r.Delivery.OwnerClaim, PermissionState: "pending_runtime_acceptance", ActualPolicyEvidence: []Evidence{}, Events: []DeliveryEventRecord{}, Candidates: []DeliveryCandidate{}}
+		if mandateReceipt(r) {
+			o.Delivery.PermissionState = "awaiting_mandate_receipt"
+		}
 		o.NextAction = WorkflowAction{"recipient", "Confirm the actual runtime and permissions in this same interactive session before Task writes."}
+		if mandateReceipt(r) {
+			o.NextAction = WorkflowAction{"recipient", "Receive the frozen mandate with check-in in this same session; runtime evaluates each action."}
+		}
 	}
 	if headlessRun(r) {
 		o.Worker = &WorkerStatus{SessionID: "ply-worker:" + id, Phase: "pending", DeveloperSessions: []string{}}

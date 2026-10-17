@@ -1293,7 +1293,7 @@ func validateSandbox(value canonicaljson.Value) error {
 		return err
 	}
 	for _, name := range []string{"read_roots", "write_roots"} {
-		roots, err := sortedStringArray(fields[name], "sandbox."+name, false)
+		roots, err := sortedStringArray(fields[name], "sandbox."+name, fields["matches_contract"] == nil)
 		if err != nil {
 			return err
 		}
@@ -1306,8 +1306,8 @@ func validateSandbox(value canonicaljson.Value) error {
 	if _, err := absoluteCleanString(fields, "temp_root", "sandbox"); err != nil {
 		return err
 	}
-	if _, ok := fields["matches_contract"].(bool); !ok {
-		return fmt.Errorf("sandbox.matches_contract must be boolean")
+	if _, ok := fields["matches_contract"].(bool); !ok && fields["matches_contract"] != nil {
+		return fmt.Errorf("sandbox.matches_contract must be boolean or unknown (null)")
 	}
 	return nil
 }

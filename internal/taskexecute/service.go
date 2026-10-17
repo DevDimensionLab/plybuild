@@ -341,7 +341,11 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	if input.Worker != nil {
 		ownerClaim, startSurface, localInstall = "Ply worker", "human_authorized_worker", false
 	}
-	draft, err := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, intent.Human.ActorClaim, ownerClaim, key, plan.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: localInstall, Agreement: prepared.Delivery})
+	startupProtocol := ""
+	if input.Worker == nil {
+		startupProtocol = taskrun.MandateReceiptV1
+	}
+	draft, err := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, intent.Human.ActorClaim, ownerClaim, key, plan.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{StartupProtocol: startupProtocol, AllowLocalInstall: localInstall, Agreement: prepared.Delivery})
 	if err != nil {
 		return out, err
 	}
@@ -366,7 +370,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: startSurface, Authorized: true},
 		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: workerTabLabel(input.Worker, plan.Goal.Title),
 		ClaudeProjectTrust:   intent.ClaudeProjectTrust,
-		Delivery:             taskrun.DeliveryContract{OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
+		Delivery:             taskrun.DeliveryContract{StartupProtocol: startupProtocol, OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
 		Worker:               input.Worker,
 		ControlContract:      intent.ControlContract,
 		GoalStartEnvironment: input.boundEnvironment,

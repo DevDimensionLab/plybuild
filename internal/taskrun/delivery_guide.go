@@ -42,6 +42,9 @@ func workflowDeliveryGuide(d Dependencies, s workflowState) error {
 		name  string
 		value any
 	}{{"acceptance.json", a}, {"report.json", r}, {"review.json", json.RawMessage(review)}, {"human-qa.json", qa}} {
+		if mandateReceipt(s.Request) && f.name == "acceptance.json" {
+			continue
+		}
 		if _, err := workflowKeep(d, filepath.Join(dir, f.name), f.value); err != nil {
 			return err
 		}
@@ -219,5 +222,42 @@ qualify and release the candidate again before a new human integration decision.
 			}
 		}
 	}
+	if mandateReceipt(s.Request) {
+		start := strings.Index(guide, "## Begin with actual observations")
+		end := strings.Index(guide, "## Progress and necessary human questions")
+		receipt := fmt.Sprintf(`## Receive the frozen mandate
+
+Startup protocol: mandate_receipt_v1. Run this small idempotent receipt from
+this exact Task and immutable control:
+
+%s workflow execute check-in %s --context %s --provider %s --native-session %s
+
+Ply checks the native mandate digest, provider/session, cwd and frozen inputs.
+The receipt acknowledges the existing human mandate. It does not attest
+sandbox coverage or future runtime approval. No handwritten acceptance file,
+blanket permission confirmation or repeated human approval is required.
+Optional --model, --profile, --policy, --read-root and --write-root preserve
+sourced recipient observations. Omitted facts stay unknown; reported roots
+have matches_contract=null and cannot create permission coverage.
+Readback separates this receipt, observed facts, human scope, runtime decisions,
+actual work and delivery. The launch profile is a request, not observed policy.
+
+Runtime evaluates actions when they happen. Preserve any actual refusal with
+its action, stage, source and known effect status through execute observe-stop;
+the coordinator can report denied receipt/report transport without impersonating
+the owner. A known active stop or unknown prior attempt blocks dependent work.
+Repeating receipt cannot clear it or replay a previous action. Legacy frozen
+runs retain begin and their original permission requirements.
+
+`, control, id, context, s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID))
+		guide = guide[:start] + receipt + guide[end:]
+		guide = strings.ReplaceAll(guide, "working requires positive acceptance.", "working requires the bound mandate receipt.")
+		start = strings.Index(guide, "For positive acceptance, delivery_permission.delivery_agreement_sha256")
+		if start >= 0 {
+			end = strings.Index(guide[start:], "authorized execution.") + start + len("authorized execution.")
+			guide = guide[:start] + "The preserved human mandate authorizes only this exact agreement and effects. Native callbacks recheck the mandate, owner, candidate, target and active stops before effects. Receipt supplies no additional permissions; runtime evaluates each action." + guide[end:]
+		}
+	}
+
 	return d.writeOnce(filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), []byte(guide))
 }

@@ -183,6 +183,9 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 		"budget":          deliveryBudget(1), "procedure": []canonicaljson.Value{deliveryObject(map[string]any{"id": "verify-candidate", "instruction": "Control the preserved acceptance invocation executed under the already accepted delivery-owner handoff, explicit review and task-requirements artifact. This control starts now; prior command execution is not a new effect.", "required_before": []string{}})},
 		"delivery_binding": map[string]any{"mode": "candidate", "human_actor": objectString(ob, "human_actor"), "owner_claim": objectString(ob, "owner_claim"), "parent_handoff_locator": parent.Handoff.Locator, "parent_handoff_sha256": parent.Handoff.SHA256, "candidate_key": in.CandidateKey},
 	}
+	if protocol := deliveryStartupProtocol(parent.Handoff.Value); protocol != "" {
+		fields["delivery_binding"].(map[string]any)["startup_protocol"] = protocol
+	}
 	if a, err := deliveryAgreement(parent.Handoff.Value); err != nil {
 		return out, err
 	} else if a != nil {

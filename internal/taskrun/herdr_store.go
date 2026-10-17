@@ -214,7 +214,7 @@ func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool,
 			return e
 		}
 		if providerErr := verifyExecutable(runtime.Executable); providerErr != nil {
-			if deliveryRun(s.Request) && s.StartSHA256 != nil && s.Result.Delivery != nil && s.Result.Delivery.PermissionState == "recipient_confirmed_contract" {
+			if deliveryRun(s.Request) && deliveryStarted(s) {
 				return deliveryContinuityError("runtime_observation_required", "accepted delivery's historical provider launcher is missing or changed at "+runtime.Executable.Path+"; use installed workflow execute continue with the original owner's current --runtime-evidence; the new installed provider is not authority")
 			}
 			return deliveryContinuityError("launch_dependency", "unaccepted runtime requires its original provider launcher: "+providerErr.Error())
@@ -358,7 +358,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	// written before the optional readback field existed. No state rewrite.
 	o.Provider = s.Request.Runtime.Provider
 	o.Transport.Observation = "cached"
-	if deliveryRun(s.Request) && o.Delivery != nil && o.Transport.AgentSessionID != "" && (s.Phase == "following" || s.StartSHA256 != nil && o.Delivery.PermissionState == "recipient_confirmed_contract") {
+	if deliveryRun(s.Request) && o.Delivery != nil && o.Transport.AgentSessionID != "" && (s.Phase == "following" || deliveryStarted(s)) {
 		// Keep the immutable startup evidence in saved state. Once the first
 		// Task prompt is known to have arrived, these are history, not current
 		// instructions to repair startup. Unrelated/current problems remain.

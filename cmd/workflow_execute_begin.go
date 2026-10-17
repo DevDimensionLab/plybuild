@@ -7,6 +7,14 @@ import (
 )
 
 func newWorkflowExecuteBeginCommand(d taskrun.Dependencies) *cobra.Command {
+	return newWorkflowExecuteReceiptCommand(d, false)
+}
+
+func newWorkflowExecuteCheckInCommand(d taskrun.Dependencies) *cobra.Command {
+	return newWorkflowExecuteReceiptCommand(d, true)
+}
+
+func newWorkflowExecuteReceiptCommand(d taskrun.Dependencies, receipt bool) *cobra.Command {
 	var in taskrun.DeliveryBeginInput
 	var contextPath, format string
 	c := &cobra.Command{Use: "begin RUN_ID", Short: "Record actual recipient observations and accept the existing startup mandate",
@@ -15,19 +23,27 @@ func newWorkflowExecuteBeginCommand(d taskrun.Dependencies) *cobra.Command {
 			if err := executeFormat(format); err != nil {
 				return err
 			}
-			if contextPath == "" || in.Provider == "" || in.NativeSession == "" || in.Policy == "" || len(in.ReadRoots) == 0 || len(in.WriteRoots) == 0 {
+			if contextPath == "" || in.Provider == "" || in.NativeSession == "" || !receipt && (in.Policy == "" || len(in.ReadRoots) == 0 || len(in.WriteRoots) == 0) {
+				if receipt {
+					return workspace.WorkInvalidArguments("--context, --provider and --native-session are required for the bound mandate receipt")
+				}
 				return workspace.WorkInvalidArguments("--context, --provider, --native-session, --policy, --read-root and --write-root are required actual observations")
 			}
 			ws, err := d.Workflow.Workspace.ObserveContaining()
 			if err != nil {
 				return err
 			}
-			result, err := taskrun.WorkflowDeliveryBegin(d, ws.Observation.Root, args[0], contextPath, in)
+			result, err := taskrun.WorkflowDeliveryReceipt(d, ws.Observation.Root, args[0], contextPath, in, receipt)
 			if outErr := writeExecuteResult(c, format, result); outErr != nil {
 				return outErr
 			}
 			return workflowRunError(err)
 		}}
+	if receipt {
+		c.Use = "check-in RUN_ID"
+		c.Short = "Acknowledge the frozen mandate and bound session without asserting runtime permissions"
+		c.Long = "From the bound Task and immutable control, supply --context, --provider and --native-session. Ply checks the frozen mandate, exact owner and cwd and records an idempotent receipt. Optional model, profile, policy and roots are sourced recipient observations; omitted facts stay unknown. Reported roots never attest sandbox coverage. The human mandate supplies scope and target; runtime reviews actions when they happen. A known denial or unresolved prior effect remains binding. Repeat identical input only after a lost response; no handwritten acceptance or blanket permission flag is required."
+	}
 	c.Flags().StringVar(&contextPath, "context", "", "exact private execution context")
 	c.Flags().StringVar(&in.Provider, "provider", "", "actual provider: codex or claude")
 	c.Flags().StringVar(&in.NativeSession, "native-session", "", "actual native session observed by Herdr")
@@ -36,7 +52,9 @@ func newWorkflowExecuteBeginCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&in.Policy, "policy", "", "actual effective policy observation and its source, without secrets")
 	c.Flags().StringArrayVar(&in.ReadRoots, "read-root", nil, "actual physical read root; repeat for multiple roots")
 	c.Flags().StringArrayVar(&in.WriteRoots, "write-root", nil, "actual physical write root; repeat for multiple roots")
-	c.Flags().BoolVar(&in.PermissionConfirmed, "permission-confirmed", false, "observed policy covers the exact mandate, selected effects and targets")
+	if !receipt {
+		c.Flags().BoolVar(&in.PermissionConfirmed, "permission-confirmed", false, "observed policy covers the exact mandate, selected effects and targets")
+	}
 	c.Flags().StringVar(&in.NotificationRoute, "notification-route", "", "existing authorized route to bind natively; omit for internal delegates whose parent owns notifications")
 	c.Flags().StringVar(&in.NotificationAuthority, "notification-authority", "", "source of the existing user authorization for this route")
 	c.Flags().StringVar(&in.NotificationTimezone, "notification-timezone", "", "recipient's IANA timezone for the authorized route")

@@ -143,35 +143,44 @@ manual-mode requests. Older intents and requests without a trust choice never
 gain one when read or resumed. Repeating execute or resuming startup does not
 repeat the configuration update or switch an existing session's permission mode.
 
-The launch-policy snapshot describes requested settings. It is not an OS
-permission grant. Before Task writes, the recipient reports its actual runtime,
-native session and permission evidence. Unknown authority stops dependent writes.
-Neither a goal nor the owner's broad delivery role changes sandbox enforcement.
-Old Agreement A runs keep their original budget; a new delivery owner does not
-inherit a hidden correction-count or time limit.
+The launch-policy snapshot describes requested settings. New interactive Runs
+bind `startup_protocol: "mandate_receipt_v1"` in both the request and native
+mandate. The human mandate supplies scope and the exact delivery target;
+runtime evaluates each action when it happens. Unknown future decisions do not
+block all work. Known refusals and unknown previous effects remain binding.
+Headless workers and frozen historical Runs retain their existing contracts.
 
-### Begin from actual observations
+### Receive the mandate with check-in
 
-New interactive owners use the bound control executable and context from their
-callback guide. `workflow execute begin RUN_ID --help` describes the observations:
+From the exact Task and bound immutable control, use the command in its callback
+guide:
 
 ```shell
-/absolute/ply-control workflow execute begin RUN_ID --context /absolute/context.json \
-  --provider claude --native-session ACTUAL_SESSION \
-  --policy 'Actual effective policy observation and its source, without secrets' \
-  --read-root /physical/observed/read/root --write-root /physical/observed/write/root \
-  --permission-confirmed
+/absolute/ply-control workflow execute check-in RUN_ID --context /absolute/context.json \
+  --provider claude --native-session ACTUAL_SESSION
 ```
 
-Supply actual physical roots, including authorized private callback and delivery
-areas. The example is not permission evidence. Omit unknown model/profile labels;
-unknown or insufficient authority cannot positively accept. Ply preserves the
-recipient observation, creates a private temporary directory, hashes exact bytes,
-binds the existing human mandate and delivery agreement, and submits native
-acceptance with the existing identity and scope checks. It does not infer actual
-rights from the launch request, probe for extra rights, or change provider policy.
-Identical observations recover the same receipt after a lost response. Changed
-observations cannot overwrite an existing acceptance.
+The three selectors are the only required receipt arguments. Ply computes the
+mandate and input digests, observes the live owner, checks cwd and records the
+same immutable receipt on identical input. It does not ask for another human
+approval, a handwritten acceptance file or blanket permission confirmation.
+Optional `--model`, `--profile`, `--policy`, `--read-root` and `--write-root`
+preserve actual sourced recipient observations. Omitted facts stay unknown.
+Reported roots have `matches_contract: null`; profile names and root strings
+never become sandbox attestations or future action approval.
+
+Readback distinguishes the launch request, owner receipt, recipient observations,
+unknown sandbox coverage, preserved human scope, per-action runtime decisions,
+actual target changes, technical acceptance and final delivery. Native mutation
+checks still bind the exact Run/owner/session, mandate, effects, candidate and
+delivery target. A mismatched entrypoint cannot downgrade a frozen contract.
+
+### Frozen legacy startup
+
+A Run without the new protocol keeps its original callback guide and `workflow
+execute begin` requirements, including its actual policy evidence and permission
+confirmation. Its receipt and any stops remain unchanged. The new check-in
+cannot convert old permission claims or clear either stopped CM01 Run.
 
 When the owner has an existing notification authorization, add
 `--notification-route PATH --notification-authority SOURCE --notification-timezone ZONE`.
@@ -211,7 +220,7 @@ After the cause is actually repaired, the same owner uses the bound control:
 
 Resolution requires fresh identity checks and refuses an unknown effect attempt.
 It preserves the denial, starts nothing and sends no input. If acceptance is
-absent, the owner still uses `begin` with actual observations before Task writes.
+absent, the owner uses the startup command selected by the frozen callback guide before Task writes.
 Neither operation releases a writer or authorizes a replacement Run. These owner
 commands must be present in the bound control; do not overwrite an older control
 to acquire them. Existing accepted Runs can use the supported compatible-control

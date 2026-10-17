@@ -8,7 +8,24 @@ import (
 
 // DeliveryContract is an explicit v2 ownership contract. It never upgrades an
 // existing v1 run, its Agreement A, or the permissions of a provider process.
+const MandateReceiptV1 = workspace.DeliveryMandateReceiptV1
+const RuntimePerAction = "runtime_per_action"
+
+func mandateReceipt(r WorkflowRequest) bool {
+	return r.Delivery != nil && r.Delivery.StartupProtocol == MandateReceiptV1
+}
+func deliveryStarted(s workflowState) bool {
+	if s.Result.Delivery == nil || s.StartSHA256 == nil {
+		return false
+	}
+	if mandateReceipt(s.Request) {
+		return s.Result.Delivery.PermissionState == RuntimePerAction
+	}
+	return s.Result.Delivery.PermissionState == "recipient_confirmed_contract"
+}
+
 type DeliveryContract struct {
+	StartupProtocol     string                       `json:"startup_protocol,omitempty"`
 	OwnerClaim          string                       `json:"owner_claim"`
 	Goal                FileBinding                  `json:"goal"`
 	AcceptancePath      string                       `json:"acceptance_path"`
@@ -36,6 +53,8 @@ type DeliveryRequestInput struct {
 }
 
 type DeliveryPermissionAcceptance struct {
+	StartupProtocol         string     `json:"startup_protocol,omitempty"`
+	MandateSHA256           string     `json:"mandate_sha256,omitempty"`
 	LaunchContractSHA256    string     `json:"launch_contract_sha256"`
 	PermissionConfirmed     bool       `json:"permission_confirmed"`
 	ActualPolicyEvidence    []Evidence `json:"actual_policy_evidence"`

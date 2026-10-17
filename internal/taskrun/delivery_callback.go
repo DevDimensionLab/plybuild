@@ -22,10 +22,22 @@ func positiveDeliveryClaim(a Acceptance, permission DeliveryPermissionAcceptance
 	// another label (or none), particularly after native permission onboarding.
 	// Authority comes from confirmed, bound actual policy and validated scope,
 	// never from equating the requested selector with an observed profile name.
-	if permission.LaunchContractSHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || !permission.PermissionConfirmed || c.RuntimeID == nil || *c.RuntimeID != runtimeID || c.EffectivePolicySHA256 == nil || c.ModelID != nil && !deliveryModelMatches(r.Runtime.Provider, r.Runtime.Model, *c.ModelID) || len(permission.ActualPolicyEvidence) == 0 {
+	receipt := mandateReceipt(r)
+	if receipt != (permission.StartupProtocol == MandateReceiptV1) || receipt && (permission.PermissionConfirmed || !digestPattern.MatchString(permission.MandateSHA256)) || !receipt && (permission.StartupProtocol != "" || permission.MandateSHA256 != "") {
+		return workflowError(4, "receipt protocol or mandate binding differs")
+	}
+	if receipt {
+		var sb struct {
+			Matches any `json:"matches_contract"`
+		}
+		if err := json.Unmarshal(a.Sandbox, &sb); err != nil || sb.Matches != nil {
+			return workflowError(4, "receipt cannot attest sandbox coverage")
+		}
+	}
+	if permission.LaunchContractSHA256 != r.Runtime.PermissionBinding.EffectivePolicySHA256 || !receipt && !permission.PermissionConfirmed || c.RuntimeID == nil || *c.RuntimeID != runtimeID || c.EffectivePolicySHA256 == nil || c.ModelID != nil && !deliveryModelMatches(r.Runtime.Provider, r.Runtime.Model, *c.ModelID) || len(permission.ActualPolicyEvidence) == 0 {
 		return workflowError(4, "delivery runtime and actual permissions are not confirmed against the launch contract")
 	}
-	if e := deliveryEvidence(permission.ActualPolicyEvidence); e != nil {
+	if e := deliveryEvidenceRoles(permission.ActualPolicyEvidence, receipt); e != nil {
 		return e
 	}
 	bound := false
@@ -87,7 +99,7 @@ func deliveryCallback(d Dependencies, s workflowState, contextPath string, start
 	if s.Result.Delivery.Phase == "completed" {
 		return workflowError(4, "this delivery mandate is complete; further work requires a new selected goal")
 	}
-	if started && (s.StartSHA256 == nil || s.Result.Delivery.PermissionState != "recipient_confirmed_contract") {
+	if started && !deliveryStarted(s) {
 		return workflowError(4, "delivery requires actual positive runtime acceptance before effects")
 	}
 	if started && deliveryObservedStop(s) {

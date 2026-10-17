@@ -37,6 +37,8 @@ type DeliveryAgreement struct {
 // DeliveryAuthorization is supplied by the validated native run evidence. An
 // input copy alone is insufficient: integration re-reads that evidence and the
 // immutable result-bound Spec before allowing any new effect.
+const DeliveryMandateReceiptV1 = "mandate_receipt_v1"
+
 type DeliveryAuthorization struct {
 	Agreement                DeliveryAgreement              `yaml:"agreement" json:"agreement"`
 	AgreementSHA256          string                         `yaml:"agreement_sha256" json:"agreement_sha256"`
@@ -45,6 +47,7 @@ type DeliveryAuthorization struct {
 	RequestSHA256            string                         `yaml:"request_sha256" json:"request_sha256"`
 	MandateSHA256            string                         `yaml:"mandate_sha256" json:"mandate_sha256"`
 	AllowedEffects           []string                       `yaml:"allowed_effects" json:"allowed_effects"`
+	AuthorityKind            string                         `yaml:"authority_kind,omitempty" json:"authority_kind,omitempty"`
 	PermissionConfirmed      bool                           `yaml:"permission_confirmed" json:"permission_confirmed"`
 	AcceptanceAmendment      *DeliveryAcceptanceAmendment   `yaml:"acceptance_amendment,omitempty" json:"acceptance_amendment,omitempty"`
 	HumanIntegration         *HumanIntegrationAuthorization `yaml:"human_integration,omitempty" json:"human_integration,omitempty"`
@@ -199,8 +202,8 @@ func ValidateDeliveryAuthorization(a DeliveryAuthorization) error {
 	if e := ValidateDeliveryAgreement(a.Agreement); e != nil {
 		return e
 	}
-	if a.Agreement.SourceRef == "" || a.AgreementSHA256 != DeliveryAgreementDigest(a.Agreement) || !validTaskText(a.RunID, 1, 256) || !validTaskText(a.CandidateRunID, 1, 256) || !digestPattern.MatchString(a.RequestSHA256) || !digestPattern.MatchString(a.MandateSHA256) || !a.PermissionConfirmed {
-		return fmt.Errorf("delivery authorization lacks an exact agreement, native run/request/mandate or confirmed permission")
+	if a.Agreement.SourceRef == "" || a.AgreementSHA256 != DeliveryAgreementDigest(a.Agreement) || !validTaskText(a.RunID, 1, 256) || !validTaskText(a.CandidateRunID, 1, 256) || !digestPattern.MatchString(a.RequestSHA256) || !digestPattern.MatchString(a.MandateSHA256) || !(a.AuthorityKind == "" && a.PermissionConfirmed || a.AuthorityKind == DeliveryMandateReceiptV1 && !a.PermissionConfirmed) {
+		return fmt.Errorf("delivery authorization lacks an exact agreement, native run/request/mandate or supported startup authority")
 	}
 	if amendment := a.AcceptanceAmendment; amendment != nil {
 		original := a.Agreement
