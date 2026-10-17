@@ -1,6 +1,9 @@
 package taskrun
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -120,23 +123,25 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 		if a := s.Result.Delivery.Attempt; a != nil && a.State != "recorded" {
 			return workflowError(4, "an unresolved attempt blocks continuation")
 		}
-		if s.Result.Delivery.ActiveStop == nil {
-			for _, event := range s.Result.Delivery.Events {
-				if event.Kind != "stop_resolution" {
-					continue
-				}
-				var old DeliveryStopResolution
-				b, e := workflowBound(event.Binding, 1<<20)
-				if e != nil {
-					return e
-				}
-				if e = decode(b, 1<<20, &old); e != nil {
-					return e
-				}
-				if old.Stop.SHA256 == stopSHA && old.Resolution == resolution && old.NativeSession == s.Result.Transport.AgentSessionID {
-					return nil
-				}
+		// A completed resolution can be replayed while other denials remain.
+		// Only a new transition must address the current pending stop.
+		for _, event := range s.Result.Delivery.Events {
+			if event.Kind != "stop_resolution" {
+				continue
 			}
+			var old DeliveryStopResolution
+			b, e := workflowBound(event.Binding, 1<<20)
+			if e != nil {
+				return e
+			}
+			if e = decode(b, 1<<20, &old); e != nil {
+				return e
+			}
+			if old.Stop.SHA256 == stopSHA && old.Resolution == resolution && old.NativeSession == s.Result.Transport.AgentSessionID {
+				return nil
+			}
+		}
+		if s.Result.Delivery.ActiveStop == nil {
 			return workflowError(4, "no matching unresolved stop")
 		}
 		stop := *s.Result.Delivery.ActiveStop
@@ -174,6 +179,9 @@ func deliveryLoadObservedStop(s *workflowState) error {
 	if s.Result.Delivery == nil {
 		return nil
 	}
+	if err := deliveryRecoverStopEvents(s); err != nil {
+		return err
+	}
 	s.Result.Delivery.ActiveStop = nil
 	var pending []FileBinding
 	for _, event := range s.Result.Delivery.Events {
@@ -187,7 +195,7 @@ func deliveryLoadObservedStop(s *workflowState) error {
 			if err = decode(b, 2<<20, &stop); err != nil {
 				return err
 			}
-			if stop.Kind != "ply.workflow.coordinator-stop" || stop.RunID != s.Result.RunID || stop.Input.EventID != event.ID {
+			if stop.Kind != "ply.workflow.coordinator-stop" || stop.SchemaVersion != 1 || stop.RunID != s.Result.RunID || stop.Input.EventID != event.ID {
 				return workflowError(4, "coordinator stop binding changed")
 			}
 			if _, err = workflowBound(stop.Evidence, 1<<20); err != nil {
@@ -217,6 +225,47 @@ func deliveryLoadObservedStop(s *workflowState) error {
 		}
 	}
 	return nil
+}
+
+// Event bytes are durable before state.json indexes them. Recover only trailing
+// coordinator stops into the read projection, so a failed state publication
+// cannot hide a denial. The next locked update persists the recovered index;
+// identical observe-stop retries then reuse the original timestamp and bytes.
+// Other event kinds retain their existing operation-specific recovery paths.
+func deliveryRecoverStopEvents(s *workflowState) error {
+	for {
+		path := filepath.Join(s.Result.Paths.RunRoot, "delivery", "events", fmt.Sprintf("%08d.json", len(s.Result.Delivery.Events)+1))
+		raw, err := readFile(path, 2<<20, true)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		var header struct {
+			Kind string `json:"kind"`
+		}
+		if err = json.Unmarshal(raw, &header); err != nil {
+			return err
+		}
+		if header.Kind != "ply.workflow.coordinator-stop" {
+			return nil
+		}
+		var stop DeliveryStopRecord
+		if err = decode(raw, 2<<20, &stop); err != nil {
+			return err
+		}
+		for _, prior := range s.Result.Delivery.Events {
+			if prior.ID == stop.Input.EventID {
+				return workflowError(4, "unindexed stop reuses a recorded event ID")
+			}
+		}
+		binding := FileBinding{path, hash(raw)}
+		s.Result.Delivery.Events = append(s.Result.Delivery.Events, DeliveryEventRecord{stop.Input.EventID, "coordinator_stop", binding})
+		s.Result.Delivery.LastEventSHA256 = &binding.SHA256
+		// deliveryLoadObservedStop validates the full recovered record and its
+		// preserved evidence before exposing this state to any caller.
+	}
 }
 
 func deliveryProjectStop(s workflowState, o *WorkflowRun) {
