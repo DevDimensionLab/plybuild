@@ -193,6 +193,9 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 			s.Result.Delivery.Phase = "awaiting_acceptance"
 			s.Result.Round.State = "awaiting_acceptance"
 			s.Result.NextAction = WorkflowAction{"recipient", "Use execute begin with actual observations before Task writes."}
+			if mandateReceipt(s.Request) {
+				s.Result.NextAction.Message = "Use execute check-in to record mandate receipt before Task writes."
+			}
 		} else if deliveryStarted(*s) {
 			s.Result.Delivery.Phase = "working"
 			s.Result.Round.State = "working"
@@ -308,5 +311,9 @@ func deliveryProjectStop(s workflowState, o *WorkflowRun) {
 	projected.Phase = "stopped"
 	o.Delivery = &projected
 	o.Round.State = "stopped"
-	o.NextAction = WorkflowAction{"coordinator", "A sourced provider stop is preserved at " + s.Result.Delivery.ActiveStop.Locator + ". Inspect and repair its cause within the existing mandate. The same owner must use execute resolve-stop with this observation digest and actual resolution before continuing; begin is still required if acceptance is absent. Do not resend denied input, infer permission or release the writer."}
+	startup := "begin is still required if acceptance is absent."
+	if mandateReceipt(s.Request) {
+		startup = "check-in is still required if mandate receipt is absent."
+	}
+	o.NextAction = WorkflowAction{"coordinator", "A sourced provider stop is preserved at " + s.Result.Delivery.ActiveStop.Locator + ". Inspect and repair its cause within the existing mandate. The same owner must use execute resolve-stop with this observation digest and actual resolution before continuing; " + startup + " Do not resend denied input, infer permission or release the writer."}
 }

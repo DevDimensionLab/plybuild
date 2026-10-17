@@ -316,3 +316,54 @@ func TestDeliveryReceiptResolutionPreservesUncertainExternalEffects(t *testing.T
 		})
 	}
 }
+
+func TestDeliveryReceiptResolutionSelectsFrozenStartupEntrypoint(t *testing.T) {
+	for _, receipt := range []bool{false, true} {
+		name := "legacy"
+		if receipt {
+			name = "mandate_receipt"
+		}
+		t.Run(name, func(t *testing.T) {
+			var f deliveryFixture
+			if receipt {
+				f = receiptFixture(t, "codex")
+			} else {
+				f = newDeliveryFixture(t, "codex")
+			}
+			o := workflowTestStart(t, f.workflowFixture)
+			proof := writeAny(t, f.R.WorkspaceRoot, "pre-receipt-denial.json", map[string]string{"source": "synthetic provider refusal", "effect_status": "not_started"})
+			stopped, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryStopInput{EventID: "before-receipt", Provider: "codex", NativeSession: o.Transport.AgentSessionID, Stage: "acceptance", Observer: "fixture coordinator", Reason: "Initial receipt action refused before starting", EvidencePath: proof, Action: "record initial receipt", EffectStatus: DeliveryEffectNotStarted})
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "execute begin"
+			if receipt {
+				want = "execute check-in"
+			}
+			if !strings.Contains(stopped.NextAction.Message, strings.TrimPrefix(want, "execute ")+" is still required") {
+				t.Fatalf("stopped %s contract recommends wrong startup entrypoint: %s", name, stopped.NextAction.Message)
+			}
+			resumed, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stopped.Delivery.ActiveStop.SHA256, "Actual refusal cause repaired; initial receipt never started", true)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(resumed.NextAction.Message, want) {
+				t.Fatalf("resolved %s contract recommends wrong startup entrypoint: %s", name, resumed.NextAction.Message)
+			}
+			in := beginFixtureInput(f, o)
+			if receipt {
+				in = DeliveryBeginInput{Provider: "codex", NativeSession: o.Transport.AgentSessionID}
+			}
+			if _, err := WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, in, !receipt); err == nil {
+				t.Fatal("recovery allowed the other protocol's startup entrypoint")
+			}
+			received, err := WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, in, receipt)
+			if err != nil {
+				t.Fatalf("recommended frozen entrypoint did not reach receipt: %v", err)
+			}
+			if received.Delivery.Phase != "working" || received.Delivery.ActiveStop != nil {
+				t.Fatal("correct startup failed to resume the same mandate")
+			}
+		})
+	}
+}

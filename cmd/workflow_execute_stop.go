@@ -40,7 +40,7 @@ func newWorkflowExecuteObserveStopCommand(d taskrun.Dependencies) *cobra.Command
 func newWorkflowExecuteResolveStopCommand(d taskrun.Dependencies) *cobra.Command {
 	var contextPath, stop, resolution, format string
 	var permission bool
-	c := &cobra.Command{Use: "resolve-stop RUN_ID", Short: "Record the same owner's repaired cause before supported continuation", Long: "Owner-only continuation after a sourced stop. Bind the exact active stop digest and state the actual cause repair with current permission confirmed. Preserves the original denial and session; grants no new acceptance, starts no agent, sends no input and releases no writer. If acceptance is still absent, use begin with actual observations afterward. Unknown attempts and unresolved authority remain blocked.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	c := &cobra.Command{Use: "resolve-stop RUN_ID", Short: "Record the same owner's repaired cause before supported continuation", Long: "Owner-only continuation after a sourced stop. Bind the exact active stop digest and state the actual cause repair with current permission confirmed. Preserves the original denial and session; grants no new acceptance, starts no agent, sends no input and releases no writer. If startup is still absent, follow the frozen callback guide: use execute check-in for mandate_receipt_v1, or execute begin with actual observations for legacy contracts. Unknown attempts and unresolved authority remain blocked.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if err := executeFormat(format); err != nil {
 			return err
 		}
