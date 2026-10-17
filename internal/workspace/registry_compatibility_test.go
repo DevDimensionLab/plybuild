@@ -11,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestRegistryDiagnosticsUseDeclaredFormatAndValidation(t *testing.T) {
@@ -408,5 +410,40 @@ func TestRegistryDeliveredHistoryAndOrdinaryRegistrations(t *testing.T) {
 		if !bytes.Equal(saved, got) {
 			t.Fatal("rejection changed bytes")
 		}
+	}
+}
+
+// Authorization source is additive: absent legacy fields must stay absent,
+// while an explicit receipt source must survive the same strict YAML boundary.
+func TestDeliveryAuthorizationRegistryShapePreservesLegacyAndReceipt(t *testing.T) {
+	for _, source := range []string{"", DeliveryMandateReceiptV1} {
+		t.Run(source, func(t *testing.T) {
+			auth := DeliveryAuthorization{AuthorityKind: source, PermissionConfirmed: source == "", AllowedEffects: []string{DeliveryLocalEpic}}
+			raw, err := yaml.Marshal(auth)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var document yaml.Node
+			if err = yaml.Unmarshal(raw, &document); err != nil {
+				t.Fatal(err)
+			}
+			if err = validateYAMLNodeShape(document.Content[0], reflect.TypeOf(auth), "delivery_authorization"); err != nil {
+				t.Fatalf("strict registry rejected supported authorization source %q: %v", source, err)
+			}
+			if bytes.Contains(raw, []byte("authority_kind:")) != (source != "") {
+				t.Fatal("legacy authorization acquired a new source claim")
+			}
+			var read DeliveryAuthorization
+			if err = yaml.Unmarshal(raw, &read); err != nil || !reflect.DeepEqual(auth, read) {
+				t.Fatalf("authorization source changed on roundtrip: %v", err)
+			}
+			bad := append(append([]byte{}, raw...), []byte("unknown_authorizer: true\n")...)
+			if err = yaml.Unmarshal(bad, &document); err != nil {
+				t.Fatal(err)
+			}
+			if err = validateYAMLNodeShape(document.Content[0], reflect.TypeOf(auth), "delivery_authorization"); err == nil {
+				t.Fatal("unknown authority member bypassed strict registry schema")
+			}
+		})
 	}
 }

@@ -8,6 +8,8 @@ set -eu
 : "${TMPDIR:?isolated native TMPDIR required}"
 : "${PLY_FL02_GO:?recorded local Go executable required}"
 : "${GOMODCACHE:?recorded module cache required}"
+: "${PLY_MR05_SCHEMA_PYTHON:?recorded JSON Schema interpreter required}"
+test -x "$PLY_MR05_SCHEMA_PYTHON"
 test -x "$PLY_CANDIDATE_BINARY"
 test -x "$PLY_FL02_GO"
 test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
@@ -23,8 +25,8 @@ export PLY_TASK_RUN_TEST_BINARY="$PLY_CANDIDATE_BINARY"
 "$PLY_CANDIDATE_BINARY" workflow execute check-in --help
 "$PLY_FL02_GO" test ./cmd -run '^(TestExecute(CheckIn|Begin)|TestStartupCapabilities)' -count=1 -timeout=120s
 "$PLY_FL02_GO" test ./internal/workflowhandoff -run '^(TestDelivery|Test.*Sandbox)' -count=1 -timeout=180s
-"$PLY_FL02_GO" test ./internal/workspace -run '^(TestDeliveryAgreement|TestDeliveryAuthorization|Test.*Automatic.*Retention)' -count=1 -timeout=180s
-"$PLY_FL02_GO" test ./internal/taskexecute -count=1 -timeout=180s
+"$PLY_FL02_GO" test ./internal/workspace -run '^(TestDeliveryAgreement|TestDeliveryAuthorization|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory|TestAutomaticNativeIntegrationRecoversAfterGitWithoutHumanQA|Test.*Automatic.*Retention)' -count=1 -timeout=180s
+"$PLY_FL02_GO" test ./internal/taskexecute -count=1 -timeout=600s
 # Each selector runs in its own process: existing fixtures mutate CWD and env.
 for fl02_selector in '^TestDeliveryReceipt' '^TestDeliveryBegin' '^TestDeliveryStartup' '^TestDelivery(ResolvingLatestStop|ObservedStop)' '^TestDeliveryContinuationPreservesAcceptedSessionAndFrozenInputs$' '^TestDeliveryContinuationRejects' '^TestAutomaticDeliveryRevalidatesLiveInputsAtEveryGate$' '^TestAutomaticDeliveryRuntimeDriftInvalidatesCurrentAcceptance$' '^TestWorkerNativeReviewRejectsDeveloperIdentityAndForgedReview$' '^TestWorkerRecoveryCannotConsumeAnotherCandidate$'; do
     "$PLY_FL02_GO" test ./internal/taskrun -run "$fl02_selector" -count=1 -timeout=180s
