@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+const (
+	DeliveryEffectNotStarted   = "not_started"
+	DeliveryEffectNoneObserved = "none_observed"
+	DeliveryEffectPartial      = "partial"
+	DeliveryEffectUnknown      = "unknown"
+)
+
 type DeliveryStopInput struct {
 	Action        string `json:"action,omitempty"`
 	EffectStatus  string `json:"effect_status,omitempty"`
@@ -41,7 +48,7 @@ func WorkflowObserveDeliveryStop(d Dependencies, root, id string, in DeliverySto
 	if len(in.Action) > 2000 || len(in.Rule) > 256 {
 		return WorkflowRun{}, workflowError(2, "denial action or rule exceeds limit")
 	}
-	if in.EffectStatus != "" && in.EffectStatus != "not_started" && in.EffectStatus != "none_observed" && in.EffectStatus != "partial" && in.EffectStatus != "unknown" {
+	if in.EffectStatus != "" && in.EffectStatus != DeliveryEffectNotStarted && in.EffectStatus != DeliveryEffectNoneObserved && in.EffectStatus != DeliveryEffectPartial && in.EffectStatus != DeliveryEffectUnknown {
 		return WorkflowRun{}, workflowError(2, "unsupported known effect status")
 	}
 	evidence, raw, err := deliveryReadBinding(in.EvidencePath, 1<<20)
@@ -163,8 +170,18 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 		if stop.SHA256 != stopSHA {
 			return workflowError(4, "resolution must bind the current stop digest")
 		}
-		if _, err := workflowBound(stop, 2<<20); err != nil {
+		raw, err := workflowBound(stop, 2<<20)
+		if err != nil {
 			return err
+		}
+		var observed DeliveryStopRecord
+		if err = decode(raw, 2<<20, &observed); err != nil {
+			return err
+		}
+		// Ordinary work need not have a native Delivery.Attempt. Current
+		// permission and a repaired refusal do not establish its earlier effects.
+		if observed.Input.EffectStatus == DeliveryEffectUnknown || observed.Input.EffectStatus == DeliveryEffectPartial {
+			return workflowError(4, "unknown or partial external effects remain unresolved; text and permission confirmation cannot clear this stop")
 		}
 		r := DeliveryStopResolution{Kind: "ply.workflow.stop-resolution", RunID: id, Stop: stop, NativeSession: s.Result.Transport.AgentSessionID, Resolution: resolution, PermissionConfirmed: permissionConfirmed}
 		if _, err := deliveryAppendEvent(d, s, "resolve-"+strings.TrimPrefix(stopSHA, "sha256:"), "stop_resolution", r); err != nil {

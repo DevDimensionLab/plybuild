@@ -28,7 +28,9 @@ export PLY_TASK_RUN_TEST_BINARY="$PLY_CANDIDATE_BINARY"
 "$PLY_FL02_GO" test ./internal/workspace -run '^(TestDeliveryAgreement|TestDeliveryAuthorization|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory|TestAutomaticNativeIntegrationRecoversAfterGitWithoutHumanQA|Test.*Automatic.*Retention)' -count=1 -timeout=180s
 "$PLY_FL02_GO" test ./internal/taskexecute -count=1 -timeout=600s
 # Each selector runs in its own process: existing fixtures mutate CWD and env.
-for fl02_selector in '^TestDeliveryReceipt' '^TestDeliveryBegin' '^TestDeliveryStartup' '^TestDelivery(ResolvingLatestStop|ObservedStop)' '^TestDeliveryContinuationPreservesAcceptedSessionAndFrozenInputs$' '^TestDeliveryContinuationRejects' '^TestAutomaticDeliveryRevalidatesLiveInputsAtEveryGate$' '^TestAutomaticDeliveryRuntimeDriftInvalidatesCurrentAcceptance$' '^TestWorkerNativeReviewRejectsDeveloperIdentityAndForgedReview$' '^TestWorkerRecoveryCannotConsumeAnotherCandidate$'; do
+# Worker review identity is checked here; nested sandbox-exec execution is not
+# available in this runtime (preserved sandbox_apply denial), and is outside FL02.
+for fl02_selector in '^TestDeliveryReceipt' '^TestDeliveryBegin' '^TestDeliveryStartup' '^TestDelivery(ResolvingLatestStop|ObservedStop)' '^TestDeliveryContinuationPreservesAcceptedSessionAndFrozenInputs$' '^TestDeliveryContinuationRejects' '^TestAutomaticDeliveryRevalidatesLiveInputsAtEveryGate$' '^TestAutomaticDeliveryRuntimeDriftInvalidatesCurrentAcceptance$' '^TestWorkerNativeReviewRejectsDeveloperIdentityAndForgedReview$'; do
     "$PLY_FL02_GO" test ./internal/taskrun -run "$fl02_selector" -count=1 -timeout=180s
 done
 git diff --check

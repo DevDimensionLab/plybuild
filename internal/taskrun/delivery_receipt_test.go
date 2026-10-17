@@ -276,3 +276,43 @@ func TestDeliveryReceiptAuthorityRemainsBoundToMandateAndEffects(t *testing.T) {
 	}
 	f.D.CWD = priorCWD
 }
+
+// A runtime refusal may follow ordinary work outside native Delivery.Attempt.
+// Permission to continue cannot establish the outcome of that earlier action.
+func TestDeliveryReceiptResolutionPreservesUncertainExternalEffects(t *testing.T) {
+	for _, effect := range []string{"unknown", "partial"} {
+		t.Run(effect, func(t *testing.T) {
+			f := receiptFixture(t, "claude")
+			o := workflowTestStart(t, f.workflowFixture)
+			in := DeliveryBeginInput{Provider: "claude", NativeSession: o.Transport.AgentSessionID}
+			if _, err := WorkflowDeliveryBegin(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, in); err != nil {
+				t.Fatal(err)
+			}
+			proof := writeAny(t, f.R.WorkspaceRoot, "external-work-refusal.json", map[string]string{"source": "synthetic provider refusal", "effect_status": effect})
+			stopped, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryStopInput{EventID: "external-refusal", Provider: "claude", NativeSession: o.Transport.AgentSessionID, Stage: "work", Observer: "synthetic coordinator", Reason: "Tool response lost after ordinary work; earlier effects unresolved", EvidencePath: proof, Action: "ordinary work outside the native delivery attempt", EffectStatus: effect})
+			if err != nil {
+				t.Fatal(err)
+			}
+			stop := *stopped.Delivery.ActiveStop
+			if stopped.Delivery.Attempt != nil {
+				t.Fatal("fixture unexpectedly has a native delivery attempt")
+			}
+			for attempt := 0; attempt < 2; attempt++ {
+				resumed, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stop.SHA256, "Current refusal cause repaired; earlier external effects remain unresolved", true)
+				if err == nil {
+					t.Fatalf("permission and text cleared %s external effects: phase=%s stop=%v", effect, resumed.Delivery.Phase, resumed.Delivery.ActiveStop)
+				}
+				observed, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if observed.Delivery.ActiveStop == nil || *observed.Delivery.ActiveStop != stop || observed.Delivery.Phase != "stopped" || len(observed.Delivery.Events) != 1 {
+					t.Fatal("failed resolution changed the stop or its history")
+				}
+				if _, err = WorkflowDeliveryBegin(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, in); err == nil {
+					t.Fatal("receipt reopened unresolved external work")
+				}
+			}
+		})
+	}
+}
