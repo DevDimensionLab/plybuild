@@ -68,7 +68,22 @@ notifications, this internal agent sends no Slack messages. Return through the
 bound callbacks and the same tab; the parent owns user questions and completion.
 Otherwise honor the existing notification contract in the delivery instructions.
 
-## Accept the actual runtime before Task writes
+## Begin with actual observations before Task writes
+
+Use the bound control's workflow execute begin command with this Run
+and --context. Supply --provider, --native-session,
+--policy (your effective runtime observation and its source), and repeat
+--read-root / --write-root for actual physical roots. Include
+--permission-confirmed only when the observed policy covers the selected
+mandate, exact effects and targets. Optional --model and --profile are
+actual observations; omit them when unknown. Ply creates private evidence and
+temporary directories, computes hashes and submits the native acceptance. It
+does not change provider permissions. Repeating identical observations reuses
+the receipt. No handwritten mandate, acceptance JSON or hashing shell is needed.
+Unknown or insufficient permission stops dependent work. Read the frozen goal
+and mandate for scope; the launch request is not proof of runtime permission.
+
+## Advanced acceptance file contract
 
 Copy templates/acceptance.json. The runtime_claim fields are actual observations:
 runtime_id (the canonical provider codex or claude, not a CLI version), model_id

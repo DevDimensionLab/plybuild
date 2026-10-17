@@ -119,6 +119,9 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 			return workflowError(4, "native session claim differs from Herdr")
 		}
 		if a.Acceptance == "started" {
+			if deliveryObservedStop(*s) {
+				return workflowError(4, "resolve the preserved provider stop before acceptance; do not replay a denied callback")
+			}
 			if c.NativeSessionID == nil {
 				return workflowError(4, "positive acceptance requires the bound native session")
 			}

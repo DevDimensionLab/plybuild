@@ -11,6 +11,12 @@ func writeDeliveryStatus(out io.Writer, status *taskrun.DeliveryStatus) {
 	if status == nil {
 		return
 	}
+	if s := status.Startup; s != nil {
+		fmt.Fprintf(out, "Startup: terminal %s; task prompt %s; task receipt %s; target work %s\n", s.Terminal, s.TaskPrompt, s.TaskReceived, s.TargetWork)
+		if s.Stop != nil {
+			fmt.Fprintf(out, "Observed stop: %s\n", s.Stop.Locator)
+		}
+	}
 	short := func(oid string) string {
 		if len(oid) > 12 {
 			return oid[:12]

@@ -119,6 +119,7 @@ type DeliveryState struct {
 	OwnershipRelease     *FileBinding                `json:"ownership_release,omitempty"`
 	HumanIntegration     *HumanIntegrationAcceptance `json:"human_integration,omitempty"`
 	AcceptanceSelection  *FileBinding                `json:"acceptance_selection,omitempty"`
+	ActiveStop           *FileBinding                `json:"active_stop,omitempty"`
 }
 
 func deliveryEnv(kind string) Envelope   { return Envelope{"ply.workflow." + kind, 2} }

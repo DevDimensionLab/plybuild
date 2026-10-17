@@ -150,6 +150,78 @@ Neither a goal nor the owner's broad delivery role changes sandbox enforcement.
 Old Agreement A runs keep their original budget; a new delivery owner does not
 inherit a hidden correction-count or time limit.
 
+### Begin from actual observations
+
+New interactive owners use the bound control executable and context from their
+callback guide. `workflow execute begin RUN_ID --help` describes the observations:
+
+```shell
+/absolute/ply-control workflow execute begin RUN_ID --context /absolute/context.json \
+  --provider claude --native-session ACTUAL_SESSION \
+  --policy 'Actual effective policy observation and its source, without secrets' \
+  --read-root /physical/observed/read/root --write-root /physical/observed/write/root \
+  --permission-confirmed
+```
+
+Supply actual physical roots, including authorized private callback and delivery
+areas. The example is not permission evidence. Omit unknown model/profile labels;
+unknown or insufficient authority cannot positively accept. Ply preserves the
+recipient observation, creates a private temporary directory, hashes exact bytes,
+binds the existing human mandate and delivery agreement, and submits native
+acceptance with the existing identity and scope checks. It does not infer actual
+rights from the launch request, probe for extra rights, or change provider policy.
+Identical observations recover the same receipt after a lost response. Changed
+observations cannot overwrite an existing acceptance.
+
+When the owner has an existing notification authorization, add
+`--notification-route PATH --notification-authority SOURCE --notification-timezone ZONE`.
+Ply creates `delivery/notification-task.json` for the installed notification helper,
+using the actual provider, Task cwd, native activity and workflow Run identity.
+This binds an existing route; it performs no transport or global setup. Internal
+delegates whose parent owns notifications omit these flags. Preserve this binding
+and event identity across continuations.
+
+### Preserve a provider stop without an owner callback
+
+A coordinator in the containing workspace can preserve an actual denial with:
+
+```shell
+ply workflow execute observe-stop RUN_ID --event-id report-denied-01 \
+  --provider claude --native-session ACTUAL_SESSION --stage report \
+  --observer 'Actual coordinator' --reason 'Observed provider rejection' \
+  --evidence /absolute/private/denial.txt
+```
+
+Stages are `startup`, `acceptance` and `report`. Omit the native session only for
+startup before session binding. The command preserves a copy and hash of the
+actual evidence. It records coordinator observation separately from recipient
+acceptance and retains the writer reservation and any unresolved attempt.
+Identical retries reuse the event; changed evidence under that ID is rejected.
+A later owner report cannot hide the active stop. Readback separately shows the
+terminal, Task prompt, observed owner receipt, runtime permission and target
+changes. Target changes alone do not claim meaningful tests or product completion.
+
+After the cause is actually repaired, the same owner uses the bound control:
+
+```shell
+/absolute/ply-control workflow execute resolve-stop RUN_ID --context /absolute/context.json \
+  --stop sha256:ACTUAL_STOP_DIGEST --resolution 'Actual cause repair and current permission source' \
+  --permission-confirmed
+```
+
+Resolution requires fresh identity checks and refuses an unknown effect attempt.
+It preserves the denial, starts nothing and sends no input. If acceptance is
+absent, the owner still uses `begin` with actual observations before Task writes.
+Neither operation releases a writer or authorizes a replacement Run. These owner
+commands must be present in the bound control; do not overwrite an older control
+to acquire them. Existing accepted Runs can use the supported compatible-control
+continuation when needed. Historical denied Runs remain preserved.
+
+Native folder trust remains separate. If its existing configuration lock cannot
+be acquired, the same Claude tab may require its native trust decision before
+`execute resume`. Preserve that action as a startup limitation; do not retry the
+launch or change permission mode. FL01 does not repair that configuration lock.
+
 ## Follow the owner
 
 ```shell

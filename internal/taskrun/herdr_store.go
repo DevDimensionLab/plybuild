@@ -53,6 +53,9 @@ func workflowRead(root, id string) (workflowState, error) {
 	if e = workflowLoadAcceptanceSelection(&saved); e != nil {
 		return saved, e
 	}
+	if e = deliveryLoadObservedStop(&saved); e != nil {
+		return saved, e
+	}
 	if headlessRun(saved.Request) {
 		if e = workerValidateIdentity(saved); e != nil {
 			return saved, e
@@ -63,6 +66,13 @@ func workflowRead(root, id string) (workflowState, error) {
 	return saved, nil
 }
 func workflowSave(d Dependencies, s workflowState) error {
+	// ActiveStop is a read projection of immutable events. Keeping it out of
+	// stored state leaves historical frozen controls able to read that state.
+	if s.Result.Delivery != nil {
+		copy := *s.Result.Delivery
+		copy.ActiveStop = nil
+		s.Result.Delivery = &copy
+	}
 	return d.replaceValue(filepath.Join(s.Result.Paths.RunRoot, "state.json"), s)
 }
 func workflowUpdate(d Dependencies, root, id string, fn func(*workflowState) error) error {
@@ -447,6 +457,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// diagnostics cannot be replaced with ordinary worker observation advice.
 		o.NextAction = workerCurrentAction(o)
 	}
+	deliveryProjectStop(s, &o)
 	return o, nil
 }
 

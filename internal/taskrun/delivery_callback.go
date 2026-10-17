@@ -90,6 +90,9 @@ func deliveryCallback(d Dependencies, s workflowState, contextPath string, start
 	if started && (s.StartSHA256 == nil || s.Result.Delivery.PermissionState != "recipient_confirmed_contract") {
 		return workflowError(4, "delivery requires actual positive runtime acceptance before effects")
 	}
+	if started && deliveryObservedStop(s) {
+		return workflowError(4, "resolve the preserved provider stop before continuing dependent work")
+	}
 	return deliveryLiveOwner(d, s)
 }
 

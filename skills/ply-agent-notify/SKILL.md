@@ -11,6 +11,13 @@ authority when no such preference exists. A narrower current instruction takes p
 
 At task start, bind one notification owner (normally root), the authority source,
 activity/run, physical target worktree, stable mandate, report location, route and event root.
+For a current native Ply delivery, use the bound `workflow execute begin` command's
+`--notification-route`, `--notification-authority` and `--notification-timezone` options.
+It binds the existing authorized route and returns `delivery/notification-task.json`;
+pass that file to the helper below. No handcrafted binding or hash script is needed.
+Omit these options when the goal assigns notifications to a parent. A native binding
+does not send a notification or prove transport success. Older frozen controls and
+other jobs continue to use the existing task context template.
 Use Task@2 and bind the actual provider (`codex` or `claude`), physical `origin_cwd`,
 physical containing `context_root`, and the recipient's IANA `timezone` at task start.
 Provider comes from the actual agent context or controlled native identity, never a

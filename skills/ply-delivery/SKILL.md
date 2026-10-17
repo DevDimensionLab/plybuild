@@ -1,12 +1,42 @@
 ---
 name: ply-delivery
-description: Register, inspect, execute or resume a native Ply Delivery for an exact verified Task candidate under its frozen PR or local integration agreement.
+description: Begin an assigned Ply Task using actual runtime observations, then verify and deliver its exact candidate under the frozen agreement. Also register, inspect or resume native Delivery.
 ---
 
 # Ply Delivery
 
 Use Ply's native Delivery commands from the registered Task worktree. The CLI
 owns Git, PR, evidence, locking and recovery; this skill supplies the workflow.
+
+## Begin an assigned Task
+
+Read the frozen goal and mandate from the start message. Reuse their human
+authorization. The bound callback guide gives the control executable, context,
+provider and native session. Before Task writes, use that control's
+`workflow execute begin RUN_ID --context PATH --help`, then supply your actual
+provider, native session, policy observation and read/write roots through the
+command flags. Confirm permission only when the observed runtime covers the
+mandate's exact effects and targets. Unknown model or profile can be omitted;
+unknown authority stops dependent work. Ply preserves evidence, hashes, identity
+bindings and acceptance natively; no handwritten acceptance file is required.
+Repeat the same observations after a lost response to read the same acceptance.
+Do not infer permission from the requested launch mode or change provider policy.
+
+Use the existing authorized notification context. For a new binding, supply
+`--notification-route`, `--notification-authority` and `--notification-timezone`
+to `begin`; Ply returns the private `delivery/notification-task.json` path for
+the installed ply-agent-notify helper. This creates no transport or global
+configuration. If the goal gives notifications to a parent, omit these flags
+and return to that parent without a separate notification.
+
+If a provider rejects acceptance or report transport, stop the rejected action.
+The coordinator can use `workflow execute observe-stop --help` with the actual
+denial evidence. This preserves a sourced observation without owner acceptance
+or writer release. After the cause is actually repaired, the same owner uses
+`workflow execute resolve-stop --help` with the exact stop digest and current
+permission confirmation, then `begin` if acceptance is still absent. The
+resolution starts nothing and resends no rejected input. Never replace a Run
+or change global permission rules to forget a denial.
 
 ## Find the exact contract and candidate
 
@@ -28,8 +58,8 @@ For a goal that has not started, propose the relevant mode and exact target:
 Reuse an explicit human choice already given. Otherwise obtain the missing mode
 or target choice before publishing that agreement. Repository visibility,
 missing remote, cwd and branch names provide context, not integration authority.
-Use the structured goal `delivery` field documented in
-[the product guide](../../docs/workflow-delivery.md); execute-preview binds the
+Use the structured goal `delivery` field described by the native command help;
+execute-preview binds the
 actual Task source branch. A started run retains its frozen agreement. A later
 goal revision cannot change that run's target or permissions.
 
@@ -59,10 +89,11 @@ Registration is allowed before human QA; it performs no delivery effect. Reuse
 the same publication key and bytes after a lost response. Changed content needs
 a new key; retain predecessor history when replacing a candidate.
 
-All modes require the human's actual pass for the exact candidate. Use the
-run's preserved QA callback and guide to record the exact answer; technical
-success, silence and your own judgment cannot fill that gate. A fail keeps the
-owner responsible for correction and qualification of a new candidate.
+Follow the frozen acceptance policy. An explicitly automatic agreement uses
+the exact candidate's executed acceptance and independent review. A human gate
+requires the human's actual answer through the preserved QA callback; technical
+success and silence cannot fill it. A later human fail or blocked answer still
+vetoes automatic delivery. Keep responsibility for correction and requalification.
 
 ## Execute or resume
 

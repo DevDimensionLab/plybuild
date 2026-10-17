@@ -11,6 +11,7 @@ import (
 // DeliveryStatus is a read-only projection, never a receipt or an authority
 // input. Each outcome remains bound to its own candidate and evidence.
 type DeliveryStatus struct {
+	Startup             *DeliveryStartupStatus             `json:"startup,omitempty"`
 	Source              DeliverySourceStatus               `json:"source"`
 	Verification        *DeliveryVerificationStatus        `json:"verification"`
 	QualifiedCandidate  *DeliveryQualifiedStatus           `json:"qualified_candidate"`
@@ -19,6 +20,18 @@ type DeliveryStatus struct {
 	AcceptanceSelection *DeliveryAcceptanceSelectionStatus `json:"acceptance_selection,omitempty"`
 	FinalDelivery       DeliveryFinalStatus                `json:"final_delivery"`
 	Reasons             []Reason                           `json:"reasons"`
+}
+
+// These are separate observations, not a claim that a launched terminal has
+// accepted permission or begun meaningful product work.
+type DeliveryStartupStatus struct {
+	Terminal          string       `json:"terminal"`
+	NativeSession     string       `json:"native_session"`
+	TaskPrompt        string       `json:"task_prompt"`
+	TaskReceived      string       `json:"task_received"`
+	RuntimePermission string       `json:"runtime_permission"`
+	TargetWork        string       `json:"target_work"`
+	Stop              *FileBinding `json:"stop"`
 }
 
 type DeliveryAcceptanceSelectionStatus struct {
@@ -79,6 +92,26 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 		return nil
 	}
 	out := &DeliveryStatus{Source: DeliverySourceStatus{State: "unknown"}, FinalDelivery: DeliveryFinalStatus{State: "not_delivered"}, Reasons: []Reason{}}
+	if !headlessRun(s.Request) {
+		out.Startup = &DeliveryStartupStatus{Terminal: "not_observed", NativeSession: s.Result.Transport.AgentSessionID, TaskPrompt: "not_attempted", TaskReceived: "unknown", RuntimePermission: s.Result.Delivery.PermissionState, TargetWork: "unknown", Stop: s.Result.Delivery.ActiveStop}
+		if s.Result.Transport.PaneID != "" {
+			out.Startup.Terminal = "created"
+		}
+		switch s.Phase {
+		case "following":
+			out.Startup.TaskPrompt = "sent"
+		case "prompt_attempted", "prompt_unknown":
+			out.Startup.TaskPrompt = "delivery_unknown"
+		}
+		if s.Acceptance != nil {
+			out.Startup.TaskReceived = "owner_callback_observed"
+		}
+		for _, event := range s.Result.Delivery.Events {
+			if event.Kind == "report" {
+				out.Startup.TaskReceived = "owner_callback_observed"
+			}
+		}
+	}
 	if b := s.Result.Delivery.AcceptanceSelection; b != nil && s.EffectiveDeliveryAgreement != nil {
 		_, choice, _, err := readAcceptanceSelection(s, *b)
 		if err == nil {
@@ -118,6 +151,12 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 		problem("delivery_source_stale", "Current source identity differs from the bound Task worktree")
 	} else {
 		out.Source = DeliverySourceStatus{OID: x.OID, Tree: x.Tree, Clean: x.Clean && len(x.InProgress) == 0, State: "observed"}
+		if out.Startup != nil {
+			out.Startup.TargetWork = "no_changes_observed"
+			if x.OID != s.Observed.Target.OID || x.Tree != s.Observed.Target.Tree || !x.Clean {
+				out.Startup.TargetWork = "changes_observed"
+			}
+		}
 	}
 	matches := func(oid, tree string) bool {
 		return out.Source.State == "observed" && out.Source.Clean && out.Source.OID == oid && out.Source.Tree == tree

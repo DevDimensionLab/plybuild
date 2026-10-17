@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, error) {
@@ -114,44 +113,16 @@ func deliveryReadback(d Dependencies, root, id string, operationErr error) (Work
 }
 
 func deliveryInstructions(s workflowState) string {
-	r, o := s.Request, s.Result
-	// The prompt path validates this binding before generating instructions.
-	if runtime, err := workflowEffectiveRuntime(s); err == nil {
-		r.Runtime = runtime
+	runtime, err := workflowEffectiveRuntime(s)
+	if err != nil {
+		return "Startup binding is unavailable; preserve the stop and do not write the Task."
 	}
-	c := r.Delivery
-	// The per-run guide supplies the exact callback schemas with unobserved
-	// templates, so native recipients need not guess protocol fields.
-	notify := "At start, use the installed ply-agent-notify skill to bind an existing authorized standing notification route, preserving the actual provider and Task cwd. Never invent a route or change global configuration. If this is an internal delegation whose goal assigns notifications to its parent, stay quiet and return to that parent."
+	c := s.Request.Delivery
+	notification := "Use the authorized ply-agent-notify route unless the goal assigns notifications to a parent; internal delegates stay quiet."
 	if c.NotificationContext != nil {
-		notify = "You own the one notification context at " + c.NotificationContext.Locator + ". Use the installed ply-agent-notify skill for a necessary human answer, a real stop, or the agreed completion. Internal delegates stay quiet; preserve and reuse event identity."
+		notification = "Reuse the existing notification identity at " + c.NotificationContext.Locator + "; do not create a second binding. Internal delegates stay quiet."
 	}
-	notify += " Read the callback guide before accepting or reporting: " + filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md") + ". Copy its adjacent unobserved templates into new private files and fill actual observations."
-	instructions := fmt.Sprintf("You own this selected delivery through local completion. Read the frozen goal %s, the native mandate %s, the immutable request %s and private context %s. The goal constrains the outcome; you own design, implementation, meaningful tests, review and fixes. Subagents allowed: %t. Local installation allowed: %t. These choices grant no new runtime permissions, remote effects or unrelated goals. Before target writes submit ply.workflow.run-acceptance schema_version 2 using %s workflow run accept %s --context %s --file <private-acceptance.json>. Include delivery_permission with the bound launch_contract_sha256, actual permission_confirmed and actual_policy_evidence; report actual runtime/session/policy, not requested facts as observations. Unknown authority stops dependent work. There is no inherited Agreement A or fixed correction budget. Implement the acceptance entrypoint at %s; do not treat its placeholder as a passed test. Preserve an actual review record and run %s workflow execute verify %s --context %s --review <review.json>. The verifier preserves execution evidence and qualifies a technical candidate; it does not claim human QA. Report work, necessary questions or incomplete outcomes with ply.workflow.delivery-report schema_version 2 via %s workflow execute report %s --context %s --file <report.json>. Never fabricate unrun verifier exits. After candidate qualification, prepare the actual installed human journey. Preserve the human's exact answer through execute qa; only an exact candidate pass permits execute integrate. Keep the same interactive session and own corrections after fail. Continue local integration and base update when the actual pass and original authority cover them. Technical candidate, human judgment and final delivery are separate events. Do not publish a second terminal into an existing candidate handoff. The bound control executable %s is immutable and separate from the installed candidate. Do not restart, resend uncertain input, or overwrite this control executable. %s", c.Goal.Locator, filepath.Join(o.Paths.RunRoot, "mandate.json"), workflowIndex(r.WorkspaceRoot, o.RunID), o.Paths.Context, c.AllowSubagents, c.AllowLocalInstall, ShellQuote(r.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), ShellQuote(c.AcceptancePath), ShellQuote(r.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), ShellQuote(r.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), ShellQuote(r.Runtime.PlyExecutable.Path), notify)
-	if c.Agreement != nil {
-		instructions = strings.ReplaceAll(instructions, "These choices grant no new runtime permissions, remote effects or unrelated goals.", "The frozen structured delivery agreement grants only its exact selected effects after actual runtime acceptance; no unrelated goals or implicit permissions.")
-		instructions = strings.ReplaceAll(instructions, "You own this selected delivery through local completion.", "You own this selected delivery through its frozen completion boundary.")
-		instructions += fmt.Sprintf(" Frozen delivery mode: %s. Source: %s. Target: %s. Required allowed_effects for actual permission acceptance: %s. delivery_permission.delivery_agreement_sha256 must bind %s. Keep mode, target and stop boundary unchanged.", c.Agreement.Mode, c.Agreement.SourceRef, c.Agreement.TargetRef, workflowJSON(workflowhandoff.DeliveryAllowedEffects(*c.Agreement)), workspace.DeliveryAgreementDigest(*c.Agreement))
-		if c.Agreement.Mode == workspace.DeliveryPullRequest {
-			instructions = strings.ReplaceAll(instructions, "only an exact candidate pass permits execute integrate.", "only an exact candidate pass permits the agreed PR publication through the delivery CLI; execute integrate is forbidden for this mode.")
-			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Continue the agreed PR delivery and truthful queue closure after actual pass. Stop before merge; preserve the local target and Epic base.")
-			if c.Agreement.HumanOwnedIntegration() {
-				instructions += " After verified PR delivery, explicitly release source ownership with workflow execute release; the human starts ply integration for a separate merge plan."
-			}
-		} else if c.Agreement.HumanOwnedIntegration() {
-			instructions = strings.ReplaceAll(instructions, "After candidate qualification, prepare the actual installed human journey. Preserve the human's exact answer through execute qa; only an exact candidate pass permits execute integrate.", "After candidate qualification, register the exact Delivery and explicitly release source writing with workflow execute release. Stop before integration; the human starts ply integration from an existing checkout, reviews the visible plan, and supplies the actual pass/fail/blocked answer.")
-			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Human QA alone grants the developer no integration authority. Corrections require an explicit negative human decision returning source ownership; qualify and release a new candidate after correction.")
-		}
-	}
-	if a := c.Agreement; a != nil && a.AutomaticAcceptance() {
-		instructions = strings.ReplaceAll(instructions, "--review <review.json>.", "--review <review.json> --candidate-binary <absolute-private-executable>.")
-		instructions += " This new agreement explicitly selects automatic acceptance. Ply runs the declared script with the candidate binary exposed as PLY_CANDIDATE_BINARY, preserves the actual invocation/result, and enforces the policy timeout. Reuse completed receipts; an active or unknown attempt blocks a competing execution."
-		if !a.Acceptance.RequireHumanQA && !a.HumanOwnedIntegration() {
-			instructions = strings.ReplaceAll(instructions, "After candidate qualification, prepare the actual installed human journey. Preserve the human's exact answer through execute qa; only an exact candidate pass permits execute integrate.", "After candidate qualification, complete native local Epic delivery using the preserved automatic acceptance and review. Do not ask for a mechanical human pass or create a HumanQA record for machine evidence. Honor any actual later human fail or blocked answer.")
-			instructions = strings.ReplaceAll(instructions, "Continue local integration and base update when the actual pass and original authority cover them.", "Continue local integration and base update when the automatic acceptance gate and original authority cover them.")
-		}
-	}
-	return instructions
+	return fmt.Sprintf("You own the selected delivery through its frozen completion boundary. Work in %s. Read the frozen goal %s and native mandate %s for scope and existing human authority. Next, read %s for the bound provider/session and run %s workflow execute begin %s --context %s --help; submit only your actual runtime observations through begin before Task writes. Ply handles identities, private evidence and hashes. Unknown permission stops dependent work; never change provider policy to make acceptance pass. The installed ply-delivery skill describes the normal workflow. Use the callback guide for verification, reporting and the exact delivery gates. Own meaningful tests, review and corrections; implement the acceptance entrypoint %s. Keep this session and the immutable control executable; do not restart or resend uncertain input. Local installation allowed: %t. Delegation allowed: %t, within the goal's constraints. %s A launch, candidate, human judgment and final delivery are separate facts.", s.Observed.Target.WorktreeLocator, c.Goal.Locator, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context), c.AcceptancePath, c.AllowLocalInstall, c.AllowSubagents, notification)
 }
 
 func workflowDeliveryFresh(d Dependencies, s workflowState, target bool) error {
