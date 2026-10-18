@@ -3,6 +3,7 @@ package taskexecute
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +14,17 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
+
+type sharedGoalLostPublicationReply struct {
+	workspace.ProjectSnapshotLocker
+}
+
+func (l sharedGoalLostPublicationReply) WithSnapshotLock(root string, fn func(workspace.ProjectSnapshot) error) error {
+	if err := l.ProjectSnapshotLocker.WithSnapshotLock(root, fn); err != nil {
+		return err
+	}
+	return errors.New("synthetic lost goal queue publication reply")
+}
 
 // Genuine public CLI preparation and native Git/registry effects. Only the
 // provider and Herdr are stand-ins, confined to the disposable fixture.
@@ -33,8 +45,8 @@ func TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry(t *testing.T) {
 	if !filepath.IsAbs(binary) {
 		t.Fatal("public CLI binary must be absolute")
 	}
-	for _, moveTarget := range []bool{false, true} {
-		t.Run(map[bool]string{false: "prepare-and-retry", true: "changed-target"}[moveTarget], func(t *testing.T) {
+	for _, scenario := range []string{"prepare-and-retry", "changed-target", "published-solution-retry", "published-solution-target-changed"} {
+		t.Run(scenario, func(t *testing.T) {
 			agreement := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "synthetic CLI fixture", TimeoutSeconds: 30}}
 			d, in, root, epic := launcherFixtureWithCLI(t, "codex", binary, agreement)
 			if err := os.WriteFile(in.Runtime.HerdrExecutable, []byte(recoveryLauncherHerdr), 0700); err != nil {
@@ -70,13 +82,39 @@ func TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry(t *testing.T) {
 			if err := json.Unmarshal(call(true, "workflow", "execute", "--spec", "observable-goal", "--check", "--format", "json"), &preview); err != nil || preview.Goal == nil || preview.Goal.Target.EpicID != "epic" {
 				t.Fatalf("Spec-only CLI preview = %+v, %v", preview, err)
 			}
-			if moveTarget {
+			published := strings.HasPrefix(scenario, "published-solution")
+			if published {
+				locks := d.Workspace.ProjectLocks
+				d.Workspace.ProjectLocks = sharedGoalLostPublicationReply{locks}
+				_, err := workspace.PrepareTaskGoalExecution(d.Workspace, preview.Goal.Input, preview.Goal.Confirmation, workspace.QueueHumanDecision{ActorClaim: "fixture human", DecidedAtUTC: "2026-10-05T00:00:00Z", Source: "explicit_human_instruction", Statement: "Synthetic interrupted execution; not actual product QA."})
+				d.Workspace.ProjectLocks = locks
+				if err == nil || !strings.Contains(err.Error(), "synthetic lost goal queue publication reply") {
+					t.Fatalf("did not preserve interrupted publication: %v", err)
+				}
+				before, err := d.Workspace.WorkItems.Snapshot(root)
+				if err != nil || len(before.TaskSpecRevisions) != 2 || len(before.TaskSolutionSelections) != 1 || len(before.TaskPreparations) != 0 {
+					t.Fatalf("wrong interrupted state: %v", err)
+				}
+				var resumed Result
+				if err := json.Unmarshal(call(true, "workflow", "execute", "--spec", "observable-goal", "--check", "--format", "json"), &resumed); err != nil || resumed.Goal == nil || resumed.Goal.Confirmation != preview.Goal.Confirmation || resumed.Goal.Target != preview.Goal.Target {
+					t.Fatalf("public Spec-only retry lost frozen execution: %+v, %v", resumed, err)
+				}
+				after, err := d.Workspace.WorkItems.Snapshot(root)
+				if err != nil || before.RawSHA256 != after.RawSHA256 {
+					t.Fatalf("public retry preview changed history: %v", err)
+				}
+			}
+			if scenario == "changed-target" || scenario == "published-solution-target-changed" {
 				fixtureGit(t, epic, "commit", "--allow-empty", "-m", "shared target advanced")
 				before, err := d.Workspace.WorkItems.Snapshot(root)
 				if err != nil {
 					t.Fatal(err)
 				}
-				if output := call(false, "workflow", "execute", "--spec", "observable-goal", "--format", "json"); !strings.Contains(string(output), string(workspace.ErrorWorkParentStale)) {
+				want := string(workspace.ErrorWorkParentStale)
+				if published {
+					want = "epic_base_changed"
+				}
+				if output := call(false, "workflow", "execute", "--spec", "observable-goal", "--format", "json"); !strings.Contains(string(output), want) {
 					t.Fatalf("expected changed-parent refusal: %s", output)
 				}
 				after, err := d.Workspace.WorkItems.Snapshot(root)

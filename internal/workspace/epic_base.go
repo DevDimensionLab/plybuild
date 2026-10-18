@@ -131,21 +131,39 @@ func resolveQueueTarget(d Dependencies, root string, r WorkItemRegistry, project
 	return resolveGoalQueueTarget(d, root, r, projects, in, "")
 }
 
-// queueHasGoalSpec reports whether the goal Spec is pending or currently
-// prepared in the target's queue.
-func queueHasGoalSpec(r WorkItemRegistry, root string, t QueueTarget, specID string) bool {
+// queueHasGoalSpec includes a goal's selected execution solution: publication
+// may have completed before its Task preparation was reserved.
+func queueHasGoalSpec(d Dependencies, r WorkItemRegistry, root string, t QueueTarget, specID string) (bool, error) {
 	q := foldQueue(r, queueID(root, t))
 	for _, entry := range q.Pending {
 		if entry.Goal != nil && entry.Goal.SpecID == specID {
-			return true
+			return true, nil
+		}
+		if entry.Selection != nil {
+			selection, err := readRegisteredTaskManifest(d.TaskContent, root, r, entry.Selection.ManifestSHA256)
+			if err != nil {
+				return false, err
+			}
+			solution := contentFields(contentFields(selection)["solution"])
+			ref := valueRevision(solution["spec"])
+			if contentString(solution, "spec_id") != specID || ref == nil {
+				continue
+			}
+			spec, err := registeredTaskSpec(d, root, r, entry.TaskID, specID, ref)
+			if err != nil {
+				return false, err
+			}
+			if contentString(contentFields(spec), "contract_kind") == "execution" {
+				return true, nil
+			}
 		}
 	}
 	if q.Current != nil {
 		if p := findPreparation(r, *q.Current); p != nil && p.Plan.SpecID == specID {
-			return true
+			return true, nil
 		}
 	}
-	return false
+	return false, nil
 }
 
 // resolveGoalQueueTarget also lets a unique goal Spec choose among Epics that
@@ -207,7 +225,11 @@ func resolveGoalQueueTarget(d Dependencies, root string, r WorkItemRegistry, pro
 	if len(matches) > 1 && specID != "" {
 		withSpec := []QueueTarget{}
 		for _, m := range matches {
-			if queueHasGoalSpec(r, root, m, specID) {
+			hasSpec, err := queueHasGoalSpec(d, r, root, m, specID)
+			if err != nil {
+				return QueueTarget{}, RepoRecord{}, err
+			}
+			if hasSpec {
 				withSpec = append(withSpec, m)
 			}
 		}

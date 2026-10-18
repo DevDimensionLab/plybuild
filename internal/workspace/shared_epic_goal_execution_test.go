@@ -75,7 +75,10 @@ func TestSharedEpicUniqueSpecPreparesAndRecoversExactTarget(t *testing.T) {
 					t.Fatal("lost response was not reported")
 				}
 				f.dependencies.TaskContent.fault = nil
-				resume, err := PreviewTaskGoalExecution(f.dependencies, p.Input)
+			}
+			if failAt != 0 {
+				// The CLI repeats only --spec, not the derived acceptance path.
+				resume, err := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{SpecID: p.Input.SpecID})
 				if err != nil || resume.Confirmation != p.Confirmation || resume.Target != p.Target {
 					t.Fatalf("retry lost preserved request: %+v, %v", resume, err)
 				}
