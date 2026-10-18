@@ -59,6 +59,26 @@ func writeDeliveryStatus(out io.Writer, status *taskrun.DeliveryStatus) {
 	} else {
 		fmt.Fprintf(out, "Final delivery: %s\n", status.FinalDelivery.State)
 	}
+	if r := status.Review; r != nil {
+		for _, round := range r.Rounds {
+			current := "historical"
+			if round.Current {
+				current = "current"
+			}
+			fmt.Fprintf(out, "Review round %d for %s (%s): %s", round.Round, short(round.CandidateOID), current, round.State)
+			if round.Decision != "" {
+				fmt.Fprintf(out, " — %s", round.Decision)
+			}
+			fmt.Fprintln(out)
+			for _, f := range round.Findings {
+				fmt.Fprintf(out, "  Finding %s [%s]: %s\n", f.ID, f.Severity, f.Summary)
+			}
+			for _, g := range round.EvidenceGaps {
+				fmt.Fprintf(out, "  Evidence gap: %s\n", g)
+			}
+		}
+		fmt.Fprintf(out, "Review next: %s — %s\n", r.Next.Actor, r.Next.Message)
+	}
 	for _, reason := range status.Reasons {
 		fmt.Fprintln(out, "Needs attention: "+reason.Detail)
 	}

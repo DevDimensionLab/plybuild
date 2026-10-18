@@ -598,7 +598,9 @@
             "bound_mandate_receipt",
             "coordinator_observation",
             "owner_stop_resolution",
-            "coordinator_owner_retirement"
+            "coordinator_owner_retirement",
+            "coordinator_review_round",
+            "reviewer_review_return"
           ]
         }
       },

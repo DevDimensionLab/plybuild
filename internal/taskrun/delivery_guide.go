@@ -165,6 +165,15 @@ actual review found none.
 The callback itself executes /bin/sh against the declared acceptance entrypoint,
 captures output, checks candidate stability and preserves a separate candidate.
 
+Independent review is a round on this same Run: the coordinator runs the
+installed "ply workflow execute review RUN_ID --coordinator CLAIM" for your
+clean committed candidate; Ply starts a separate reviewer session in its own
+Herdr tab, which returns with "workflow execute review-return". Keep that
+candidate unchanged until the round returns. Findings
+return to you: correct them, commit and ask the coordinator for a new round.
+When a round passed exactly the current candidate, omit --review and Ply builds
+the review record from it; earlier findings stay as fixes.
+
 %s workflow execute verify %s --context %s --review <copied-review.json>
 
 ## Actual human QA and local integration

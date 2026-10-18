@@ -19,6 +19,7 @@ type DeliveryStatus struct {
 	Acceptance          *DeliveryAcceptanceStatus          `json:"acceptance,omitempty"`
 	AcceptanceSelection *DeliveryAcceptanceSelectionStatus `json:"acceptance_selection,omitempty"`
 	FinalDelivery       DeliveryFinalStatus                `json:"final_delivery"`
+	Review              *DeliveryReviewStatus              `json:"review,omitempty"`
 	Reasons             []Reason                           `json:"reasons"`
 }
 
@@ -175,6 +176,11 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 				out.Startup.TargetWork = "changes_observed"
 			}
 		}
+	}
+	if review, err := deliveryReviewStatus(s, out.Source); err != nil {
+		problem("delivery_review_unknown", "Review rounds cannot be read: "+err.Error())
+	} else {
+		out.Review = review
 	}
 	matches := func(oid, tree string) bool {
 		return out.Source.State == "observed" && out.Source.Clean && out.Source.OID == oid && out.Source.Tree == tree

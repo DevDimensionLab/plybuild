@@ -327,6 +327,53 @@ rejected before a candidate handoff is created. Preserve rejected inputs; a
 corrected review uses a new private file and a new verification after the prior
 attempt has a known recorded outcome. Never replay an uncertain attempt.
 
+### Independent review rounds
+
+Review is an ordinary transition of the same Task and Run. When the owner has a
+clean committed candidate, the coordinator runs, from the containing workspace:
+
+```shell
+ply workflow execute review RUN_ID --coordinator 'Actual coordinator'
+```
+
+Ply binds that exact candidate as the next numbered round and writes a reviewer
+brief, a return template and a reviewer-only return context under the Run's
+`review/rounds/NNN/`. No review Task, Spec, assessment, selection, queue move,
+preparation or start request is written, and the owner keeps the queue slot.
+The same command starts the separate reviewer through Ply: a new visible Herdr
+tab in the owner's workspace (or `--herdr-workspace`), in the Task worktree,
+with the Run's provider, model and permission mode. Ply binds the reviewer's
+observed native session, which must differ from the owner's, and sends it the
+brief. The owner's own pane cannot start its review. Each start effect is
+reserved before it is sent and never replayed. Repeating the command for the
+same candidate returns the existing round. An unknown start is shown as a stop;
+after inspecting the tab, `--new-round` starts a fresh reviewer for the same
+candidate.
+
+From its own pane, the reviewer returns an ordinary JSON file with `decision`
+(`passed`, `changes_requested` or `blocked`), `summary`, `findings`
+(`severity`, `summary`, optional `evidence`), `evidence_gaps` and an optional
+`reviewer_claim`. Ply checks the calling pane and that pane's current session,
+and records the session it observed:
+
+```shell
+ply workflow execute review-return RUN_ID --context /absolute/review/rounds/001/context.json --file /absolute/my-review.json
+```
+
+A complete negative review is a completed review: status shows the product
+decision and its findings, and truthful evidence gaps are kept. Ply assigns
+finding IDs and ordering and accepts ordinary file modes and letter case. A
+sealed round cannot be overwritten; a changed judgment needs a new round.
+
+Findings return to the owner, who corrects, commits and asks the coordinator
+for a new round. That round binds the new candidate explicitly and keeps the
+earlier rounds and their evidence. If the owner commits while a round is still
+open, the return stays bound to the reviewed candidate and status shows the
+drift. `verify` without `--review` uses the completed passed round for exactly
+the current candidate and carries earlier findings as fixes; any other
+candidate has no pass to inherit. `execute show` lists each round, its findings
+and gaps, and the next responsible actor.
+
 After a later candidate qualifies, resolved qualification failures remain in
 the saved event history; the current readback describes the qualified candidate.
 Current drift or a newer failed attempt still remains visible.

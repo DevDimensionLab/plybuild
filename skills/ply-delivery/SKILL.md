@@ -47,6 +47,16 @@ action or change global permission rules to forget a denial. For a selected
 replacement, the coordinator uses `workflow execute retire --help`; the retired
 owner sends nothing further.
 
+## Independent review rounds
+
+Review is a round on the same Run, not a separate review Task. The coordinator
+uses `workflow execute review --help` for the owner's clean committed candidate;
+Ply starts the separate reviewer in its own Herdr tab and binds its session.
+The reviewer follows the generated brief and returns from that pane with
+`workflow execute review-return --help`. A negative review is a completed
+review: the owner corrects, commits and asks for a new round. `verify` without
+`--review` uses the round that passed exactly the current candidate.
+
 ## Find the exact contract and candidate
 
 Read `ply workspace task list --format json`, then

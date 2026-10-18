@@ -89,6 +89,8 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.AddCommand(newWorkflowExecuteObserveStopCommand(d))
 	c.AddCommand(newWorkflowExecuteResolveStopCommand(d))
 	c.AddCommand(newWorkflowExecuteRetireCommand(d))
+	c.AddCommand(newWorkflowExecuteReviewCommand(d))
+	c.AddCommand(newWorkflowExecuteReviewReturnCommand(d))
 	c.AddCommand(newWorkflowExecuteQARecoveryCommand(d))
 	return c
 }
@@ -239,7 +241,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 			"show":      "Read-only. Cached provider state is not a fresh observation or product approval.",
 			"follow":    "The observation timeout does not stop the provider. Reuse the existing tab when startup or return is unknown.",
 			"report":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --file is a delivery-report@2; failed, not_run and unknown facts remain readable and do not qualify a candidate. If a runtime dependency blocks callbacks, the installed CLI's --incomplete path accepts only stopped/needs_input from the same live owner. It preserves the original context, artifacts and unresolved attempts without granting runtime authority or switching controls.",
-			"verify":    "Owner callback: use the frozen control executable, exact Task cwd and --context. --review supplies an actual candidate-bound DeliveryCandidateReview@1 record. Execute the declared acceptance script and preserve real evidence. An explicit automatic agreement requires --candidate-binary and freezes the executable, test environment and policy timeout into the attempt. A successful test plus review supplies machine acceptance; required human QA and later negative human judgments remain separate gates. Missing, failed or unknown tests cannot produce a pass. Repeating the same reserved invocation recovers its completed receipt without starting another test; unknown execution is blocked.",
+			"verify":    "Owner callback: use the frozen control executable, exact Task cwd and --context. Without --review, Ply uses the completed passed review round for exactly this candidate (see execute review); --review supplies an actual candidate-bound DeliveryCandidateReview@1 record instead. Execute the declared acceptance script and preserve real evidence. An explicit automatic agreement requires --candidate-binary and freezes the executable, test environment and policy timeout into the attempt. A successful test plus review supplies machine acceptance; required human QA and later negative human judgments remain separate gates. Missing, failed or unknown tests cannot produce a pass. Repeating the same reserved invocation recovers its completed receipt without starting another test; unknown execution is blocked.",
 			"qa":        "Owner callback: use the frozen control executable, exact Task cwd and --context. --evidence preserves the actual user's answer and candidate binding. The answer is a local human attestation, not cryptographic identity proof. Never infer pass from tests, silence or a provider's claim.",
 			"integrate": "Owner callback: use the frozen control executable, exact Task cwd and --context. Requires the exact qualified candidate, its frozen automatic or human acceptance gate, unchanged clean parent, and the original local delivery authority. Preserves integration evidence, advances this preparation and updates the registered base. Local main/master return requires an explicit local_branch_integration contract and matching runtime authority. PR mode cannot integrate locally. Does not push or delete worktrees.",
 		}[verb]
@@ -277,7 +279,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 				if ownerCallback && contextPath == "" {
 					return workspace.WorkInvalidArguments("--context is required for an owner callback")
 				}
-				if verb == "report" && file == "" || verb == "verify" && review == "" || verb == "qa" && evidence == "" {
+				if verb == "report" && file == "" || verb == "qa" && evidence == "" {
 					return workspace.WorkInvalidArguments("provide the required callback evidence file")
 				}
 				if verb == "verify" && reuse != "" && candidateBinary != "" {
@@ -340,7 +342,7 @@ func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
 			child.Flags().BoolVar(&incomplete, "incomplete", false, "record only stopped/needs_input through the installed reader; no runtime authority or control transition")
 		}
 		if verb == "verify" {
-			child.Flags().StringVar(&review, "review", "", "absolute candidate-bound review evidence (required)")
+			child.Flags().StringVar(&review, "review", "", "absolute candidate-bound review evidence (default: the passed native review round for this candidate)")
 			child.Flags().StringVar(&candidateBinary, "candidate-binary", "", "absolute built candidate executable; required by explicit automatic acceptance")
 			child.Flags().StringVar(&reuse, "reuse", "", "requalify this exact preserved verification attempt without executing acceptance again")
 		}

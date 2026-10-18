@@ -336,6 +336,12 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			if e = recoverAutomaticResult(d, *current); e != nil {
 				return e
 			}
+			if reviewPath == "" {
+				// A native review round was frozen into the reserved attempt.
+				if reviewPath, e = deliveryAttemptReview(*current); e != nil {
+					return e
+				}
+			}
 			receipt, e = deliveryRecoverVerification(*current, reviewPath)
 			if e != nil {
 				return e
@@ -381,6 +387,11 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		acceptance, acceptanceRaw, e := deliveryReadBinding(current.Request.Delivery.AcceptancePath, 4<<20)
 		if e != nil {
 			return e
+		}
+		if reviewPath == "" {
+			if reviewPath, e = deliveryNativeCandidateReview(d, *current, x.OID, x.Tree); e != nil {
+				return e
+			}
 		}
 		review, _, e := deliveryReadBinding(reviewPath, 1<<20)
 		if e != nil {
