@@ -40,7 +40,7 @@ choices. After another Epic integrates into the shared branch, this Epic's base 
 stale until `ply workspace epic base` records the new commit; no merge, reset or
 rerun happens implicitly.
 
-The first version supports one registered Epic in one repository. A planner may
+Each execution works for exactly one selected Epic in one repository. A planner may
 continue recording goals and changing the pending queue while the owner works.
 The current preparation is retained. Returning a second concurrent feature to a
 parent that has moved needs a later refresh workflow; this version reports the
