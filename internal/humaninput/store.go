@@ -32,7 +32,6 @@ func continuationPath(root, id string) string { return factPath(root, "continuat
 func withdrawalPath(root, id string) string   { return factPath(root, "withdrawals", id) }
 
 const maxFactBytes = 512 << 10
-const maxInventory = 16384
 
 type questionRecord struct {
 	Workspace      string   `json:"workspace"`
@@ -238,9 +237,6 @@ func questionIDs(root string) ([]string, error) {
 	entries, e := os.ReadDir(dir)
 	if e != nil {
 		return nil, invalidState("the question inventory cannot be read")
-	}
-	if len(entries) > maxInventory {
-		return nil, invalidState("the question inventory exceeds its bound")
 	}
 	ids := make([]string, 0, len(entries))
 	for _, entry := range entries {

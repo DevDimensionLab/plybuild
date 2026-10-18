@@ -811,3 +811,30 @@ func TestHI03ApplyRequiresTheExplicitMatchingWorkspace(t *testing.T) {
 		t.Fatalf("matching workspace: %+v %v", s, err)
 	}
 }
+
+// r001-f01: discovery has no hidden inventory ceiling. Many interrupted
+// publication temporaries and other projects' history never make a
+// discoverable question vanish or block listing for every project.
+func TestHI02ListHasNoHiddenInventoryCeiling(t *testing.T) {
+	f := newFixture(t)
+	mine := f.ask(f.choice("inventory/mine"))
+	other := f.choice("inventory/other")
+	other.ProjectID, other.OriginCWD = "other", f.otherOrigin
+	theirs := f.ask(other)
+	dir := filepath.Join(storeRoot(f.root), "questions")
+	for i := 0; i < 16500; i++ {
+		mustDo(t, os.WriteFile(filepath.Join(dir, fmt.Sprintf(".publish-%032x", i)), nil, 0o600))
+	}
+	for project, want := range map[string]string{"ply": mine.QuestionID, "other": theirs.QuestionID} {
+		page, err := List(f.d, f.root, ListQuery{ProjectID: project})
+		if err != nil || len(page.Questions) != 1 || page.Questions[0].QuestionID != want || !page.Complete {
+			t.Fatalf("project %s lost its question behind the inventory: %+v %v", project, page, err)
+		}
+	}
+	if q := f.ask(f.choice("inventory/later")); q.State != StateWaiting {
+		t.Fatal("publication after many temporaries failed")
+	}
+	if page, err := List(f.d, f.root, ListQuery{ProjectID: "ply"}); err != nil || len(page.Questions) != 2 {
+		t.Fatalf("a question published later is not discoverable: %+v %v", page, err)
+	}
+}

@@ -1093,6 +1093,8 @@ No webhook belongs in a prompt, argv, repository, report or ordinary log.
 Run `make test-agent-notify` for isolated installation, bootstrap and actual
 helper/CLI interaction with controlled fake transport. Set `AGENT_NOTIFY_TEST_ROOT`
 to a new private fixture path and `AGENT_NOTIFY_DEST` for fixture-only installation.
+The technical tests use no Slack service. Personal installation and the useful,
+human-observed agent journey remain a separate QA activity.
 
 ### Human input from an ordinary agent
 
@@ -1112,5 +1114,3 @@ can use the skill: confirm that the Claude and Codex entry points actually
 discover it, or that a readable mandate pointer such as the existing
 `~/.agents/AGENTS.md` names it. That check is part of installation and needs no
 broad provider configuration change.
-The technical tests use no Slack service. Personal installation and the useful,
-human-observed agent journey remain a separate QA activity.
