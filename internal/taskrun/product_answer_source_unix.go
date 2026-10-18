@@ -16,7 +16,6 @@ import (
 )
 
 const productAnswerQualification = "sha256:378849e8cf9825acce41a3170063b1095e267b613145dd1f6f6ae0d723c16337"
-const productAnswerProvider = "sha256:74c6a6d263f40d65f99c27a815275f5b4ed0bcc2baecc396b4cf3255498bdfc0"
 
 type productQuestionProposal struct {
 	Purpose      string                  `json:"purpose"`
@@ -68,8 +67,8 @@ func productRuntimeQualification(d Dependencies, s workflowState) (string, error
 	if d.ProductAnswerQualification != nil {
 		return d.ProductAnswerQualification(s.Request.Runtime, s.Request.Delivery.ReasoningEffort)
 	}
-	if s.Request.Runtime.Executable.SHA256 != productAnswerProvider || s.Request.Runtime.Model != "gpt-6-astra" || s.Request.Delivery.ReasoningEffort != "max" {
-		return "", boundAnswerError("unsupported", "This provider binary/model/effort has no preserved same-session adapter qualification.")
+	if s.Request.Runtime.Model != "gpt-6-astra" || s.Request.Delivery.ReasoningEffort != "max" {
+		return "", boundAnswerError("unsupported", "This provider model/effort has no preserved same-session adapter qualification.")
 	}
 	return productAnswerQualification, nil
 }

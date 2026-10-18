@@ -23,7 +23,9 @@ const sl01Thread = "01a145a7-9221-7ac0-a56d-d64f4c7bab11"
 // result/stream/session files. Its qualification callback labels a synthetic
 // stand-in; it does not claim another real Codex probe.
 func newSL01Fixture(t *testing.T) *aw01Fixture {
-	f := newAW01Fixture(t)
+	return sl01Fixture(t, newAW01Fixture(t))
+}
+func sl01Fixture(t *testing.T, f *aw01Fixture) *aw01Fixture {
 	f.job("developer")
 	f.s.StartSHA256 = ptr("sha256:" + strings.Repeat("c", 64))
 	f.s.Request.Worker = &WorkerContract{SchemaVersion: 2, MaxAttempts: 3, AgentTimeoutSeconds: 120, ProductQuestions: &ProductQuestionContract{1, BoundAnswerMode, 1}}
@@ -125,6 +127,42 @@ func TestSL01SourceTurnPublishesDurableQuestion(t *testing.T) {
 	w := f.s.Result.Worker
 	if w.Phase != "awaiting_product_answer" || w.Stage != "developer" || w.Iteration != 1 || w.CandidateBinary != "" || f.s.ProductQuestion == nil {
 		t.Fatalf("question did not retain its developer turn: %+v", w)
+	}
+}
+
+// PH01: the default qualification path, without an injected callback, must not
+// require the provider executable to match one hardcoded approved Codex digest.
+func TestPH01DefaultQualificationAcceptsAnotherProviderDigest(t *testing.T) {
+	f := newAW01Fixture(t)
+	f.s.Request.Runtime.Model = "gpt-6-astra"
+	f = sl01Fixture(t, f)
+	f.d.ProductAnswerQualification = nil
+	if f.s.Request.Runtime.Executable.SHA256 == "sha256:74c6a6d263f40d65f99c27a815275f5b4ed0bcc2baecc396b4cf3255498bdfc0" {
+		t.Fatal("fixture provider must differ from the formerly approved Codex digest")
+	}
+	sl01Park(t, f)
+	if f.s.Result.Worker.Phase != "awaiting_product_answer" || f.s.ProductQuestion == nil {
+		t.Fatalf("default qualification did not publish: %+v", f.s.Result.Worker)
+	}
+	p := sl01Preview(t, f, "fixture-answer-001")
+	if p.Basis.Worker == nil || p.Basis.Worker.ProviderBinarySHA256 != f.s.Request.Runtime.Executable.SHA256 || p.Basis.Worker.QualificationSHA256 != productAnswerQualification {
+		t.Fatalf("source validation lost the observed provider binding: %+v", p.Basis.Worker)
+	}
+}
+func TestPH01DefaultQualificationKeepsModelAndEffortScope(t *testing.T) {
+	f := newAW01Fixture(t)
+	f.s.Request.Runtime.Model = "gpt-6-astra"
+	if _, e := productRuntimeQualification(Dependencies{}, f.s); e != nil {
+		t.Fatalf("supported Codex runtime rejected: %v", e)
+	}
+	f.s.Request.Runtime.Model = "fixture-model"
+	if _, e := productRuntimeQualification(Dependencies{}, f.s); e == nil {
+		t.Fatal("unsupported model qualified")
+	}
+	f.s.Request.Runtime.Model = "gpt-6-astra"
+	f.s.Request.Delivery.ReasoningEffort = "high"
+	if _, e := productRuntimeQualification(Dependencies{}, f.s); e == nil {
+		t.Fatal("unsupported effort qualified")
 	}
 }
 func TestSL01ReadAndPreviewHaveNoEffects(t *testing.T) {
