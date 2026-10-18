@@ -183,11 +183,8 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 					}
 				}
 			}
-			if sha, ok := v["manifest_sha256"].(string); ok && digestPattern.MatchString(sha) {
-				if err := add("spec_manifest", taskContentPath(root, "manifests", sha), sha, -1); err != nil {
-					return err
-				}
-			}
+			// A bare manifest_sha256 field is informative: it names no store.
+			// Native Spec manifests are required from the TaskResult basis below.
 			for _, key := range keys {
 				if err := walk(v[key]); err != nil {
 					return err
