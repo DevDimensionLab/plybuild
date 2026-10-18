@@ -1,180 +1,85 @@
-# Task binding and normal use
+# Installation and legacy usage
 
-At human task start, check the current request and standing user/project preference
-for the named Slack route. A standing choice is reusable authorization, not a reason
-to ask again. Without one, do not send. Bind the single notification owner and that
-source in the stable task mandate. For a chat task this may be a short local task
-note; a separate agent handoff is not required.
+Read only the section needed for an authorized installation/upgrade, a legacy task continuation,
+or diagnosis of the helper's transport result. Normal Task@2 operation is in [the skill](../SKILL.md).
 
-Copy `task-template.json` to the task's agreed return directory and replace the
-example activity/run and physical paths. Reuse an existing context for a continuation.
-`notification_authorized` records the existing choice for that exact route; it is a
-claim, not authentication. The task JSON has a strict schema: ownership and authority
-notes belong in the mandate, not additional JSON fields.
-New tasks use `PlyAgentNotificationTask@2`. Its exact fields are the Task@1 fields
-`kind`, `activity`, `run`, `worktree`, `handoff`, `route`, `event_root`, `actor_claim`,
-`notification_authorized`, plus required `provider`, `origin_cwd`, `context_root`
-and `timezone`. No other fields are accepted. Provider is explicitly `codex` or
-`claude` from the actual runtime or controlled native session, never inferred from
-model/actor names. `worktree` remains the target. Origin and context root are physical
-absolute directories; origin must be inside the root and match the helper's actual
-cwd. The display context is derived as a relative path, or `.` at the root.
+## One-time installation and credential bootstrap
 
-The template's Europe/Oslo is this user's selected zone, not a universal default.
-Set another recipient's actual IANA zone explicitly. Unknown zones and `Local` fail;
-no fallback to UTC occurs. Requires Python 3.9+ with IANA timezone data available.
-The helper converts UTC `occurred_at` once and retains the RFC3339 local timestamp
-and offset in request-v3. Subsequent helper readback and explicit CLI retries keep
-that value even after TZ or timezone data changes.
-
-The event directory and route state root must remain fixed across callers/restarts.
-The event directory's parent must exist; the helper creates it privately if absent.
-The task's completion procedure preserves its report, then calls the helper before
-the human-readable final response. Its necessary-feedback procedure preserves the
-question, calls the helper, then waits for the answer in the active task.
-
-The root/coordinator owns the parent task's notification. Tell internal delegates to
-return locally without sending Slack; opening a Herdr tab is not a separate human
-notification request. If the user separately chooses a delegated notification boundary,
-bind one owner for it and avoid sending the same completion again from root.
-
-Reuse the same task context and event file when resuming, restarting, or receiving a
-QA answer. Do not recreate a sent completion or still-pending question. A later real
-completion after an answered question is a new event within the same activity/run.
-Keep the original event/request bytes and let the helper read back an existing attempt.
-Record transport status separately; a final local result is still usable if sending fails.
-
-For an agent that the user asked to deliver work, `agent_finished` means that the
-agreed delivery boundary is reached, not that each internal coding/review step ended.
-Use `feedback_required` for an actual required human decision, and `agent_stopped` for
-a real stop. Do not turn an authorized coordinator continuation into a human start gate.
-When no human action is required, say so plainly in `next_action`; `next_actor` still
-identifies the actor responsible for any remaining follow-up. The only supported
-values are `user` and `coordinator`. For completed work with no required follow-up,
-use `user` with, for example, `No action required.`
-This identifies the recipient of the return without inventing a new task or approval.
-
-Task@2 requires Event@2 and generates request-v3. Task@1 still requires Event@1 and
-generates exactly the old request-v2. Mixed pairs and unknown new fields fail.
-Do not recast an existing event to upgrade its appearance; event IDs and event-root
-keys remain version independent, so a schema change conflicts without another send.
-
-| Event | Public status | Visible label |
-| --- | --- | --- |
-| agent_finished | ready_for_review | Ready for review |
-| agent_finished | ready_for_your_check | Ready for your check |
-| agent_finished | done | Done |
-| agent_stopped | stopped | Stopped |
-| feedback_required | needs_answer | Needs answer |
-
-Use review for a worker return, your-check for a human product judgment after technical
-control, and done for completion of the agreed task. None creates native approval or
-QA state. Each notice has exactly three plain-text lines and at most 480 Unicode
-characters. Title/summary/action limits are 60/100/140; derived context is at most 96.
-All text is nonempty and single-line; controls, format characters, mentions, webhook
-URLs, secrets and invalid Unicode are refused. Long input is rejected, never truncated.
-The summary is omitted from the result line when identical to the title.
-
-```text
-16:00:00 · codex · ply/planning
-Done: Varsler — Felles regel lagt inn.
-Next: No action required.
-```
-
-Preserve a strict event JSON file at the agreed return location, for example:
-
-```json
-{
-  "kind": "PlyAgentNotificationEvent@2",
-  "activity": "example/delivery/1",
-  "run": "example-run-1",
-  "event_id": "target-question-1",
-  "event_type": "feedback_required",
-  "phase": "after_start",
-  "occurred_at": "2026-10-04T14:00:00Z",
-  "public": {
-    "status": "needs_answer",
-    "task_title": "Choose the deployment target",
-    "summary": "Which of the two agreed targets should I use?",
-    "next_action": "Reply in the active agent conversation.",
-    "next_actor": "user"
-  }
-}
-```
-
-The activity/run must match the task context. Use the actual UTC event time without
-fractional seconds; preserve it on replay. Public text is the only exported free
-text. No mentions, webhook URLs, secrets, raw report text or transcript belong there.
-`agent_finished` requires `--report` pointing to an actual JSON object with its
-kind/activity/run. `--start-receipt` uses the same metadata binding when available.
-`agent_stopped` permits missing report/receipt; only this event permits `before_start`,
-which forbids a start receipt. Feedback requires `after_start`, `next_actor=user`
-and an actual question containing `?`. Necessity remains the caller's responsibility.
-
-```sh
-python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/notify.py \
-  --task /absolute/task/notify-task.json --event /absolute/task/question.json \
-  --start-receipt /absolute/task/start-receipt.json
-
-python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/notify.py \
-  --task /absolute/task/notify-task.json --event /absolute/task/finished.json \
-  --start-receipt /absolute/task/start-receipt.json --report /absolute/task/report.json
-```
-
-For an optional question, internal correction, or ending still waiting for the same
-feedback, use `--trigger optional_feedback`, `--trigger internal_correction`, or
-`--trigger waiting_for_feedback`. These produce `suppressed` without invoking Ply or
-writing notification state. `--port-revision` is only a caller annotation: it never
-changes the event identity or grants another attempt.
-
-The helper returns JSON with `product_outcome=unchanged`, transport `state`, command
-exits and a local delivery receipt when available. Exit 0 means acknowledged or
-suppressed; 2 means not attempted; 5 means delivery was rejected, not sent,
-rate-limited or is unknown. Always parse `state`, including for Ply exit 0. A helper
-crash after its apply marker permits only readback; uncertainty is preserved. Do not
-change the frozen request or bypass a conflict. Keep the question visible in the
-terminal, and the local report usable, even when transport fails. Explicit Ply retry
-remains a separate operation under its existing guards; this helper never retries.
-
-# One-time installation and credential bootstrap
-
-Only during the separately authorized installation activity:
+Only during the separately authorized installation activity, from the owning source repository:
 
 ```sh
 make install-agent-notify
 python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/bootstrap.py
 ```
 
-Bootstrap prefers `PLY_SLACK_WEBHOOK_URL` if present, otherwise reuses its already
-stored value or requests the existing webhook through hidden terminal input. An
-invalid environment value is an error, with no file fallback. It creates only the
-named route, private credential file and state directory; it sends nothing. It
-preserves conflicting files and rejects symlinks, unsafe ownership and modes.
+Bootstrap prefers `PLY_SLACK_WEBHOOK_URL`, otherwise reuses its named private value or requests
+hidden terminal input. An invalid environment value is an error, with no file fallback. It creates
+only the named route, private credential file, and state directory; it sends nothing. Conflicting
+files, symlinks, unsafe ownership, and unsafe modes fail without repair.
 
-Normal route: `/Users/perottochristensen/.config/ply/notifications/ply-log/route.json`.
-Credential: the `webhook` file alongside it (0600 in a 0700 directory).
-State: `/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log` (0700).
-The helper passes the credential only to send/check children, never to show. Ply's
-CLI still stores no secret. Historical QA fixtures are not operational state.
+- Route: `/Users/perottochristensen/.config/ply/notifications/ply-log/route.json`.
+- Credential: `webhook` alongside it, mode `0600` in a `0700` directory.
+- State: `/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log`, mode `0700`.
 
-An explicit upgrade of an owned installation uses the reviewed previous skill source
-and a new separate backup path. It first checks the complete installed file set,
-exact previous bytes, ownership and modes, then preserves a complete private backup
-before replacing only owned files. Customizations or unsafe modes fail without repair.
-After any interrupted upgrade, inspect the destination and preserved backup; do not
-blindly rerun or overwrite a mixed installation. This never changes route or credentials.
+The helper passes the credential only to send/check children, never to show. Normal calls reuse
+this installation; they do not search secret stores, set up another app/route, or request another
+webhook. Never put a webhook in prompts, argv, reports, or ordinary logs.
+
+An explicit upgrade uses the reviewed previous skill source and a separate private backup path.
+The installer checks the complete owned file set, exact previous bytes, ownership, and modes,
+then preserves a complete backup before replacing owned files. Inspect the destination and backup
+after an interrupted upgrade; do not blindly replace a mixed installation.
 
 ```sh
-python3 skills/ply-agent-notify/scripts/install.py \
-  --destination /absolute/installed/ply-agent-notify \
-  --upgrade-from /absolute/reviewed-base/skills/ply-agent-notify \
-  --backup /absolute/private/ply-agent-notify-before-upgrade
+python3 skills/ply-agent-notify/scripts/install.py   --destination /absolute/installed/ply-agent-notify   --upgrade-from /absolute/reviewed-base/skills/ply-agent-notify   --backup /absolute/private/ply-agent-notify-before-upgrade
 ```
 
-Fixture installation uses `make install-agent-notify AGENT_NOTIFY_DEST=/absolute/private/fixture/ply-agent-notify`.
-Bootstrap accepts explicit `--config-dir` and `--state-root`; notify accepts the exact
-`--credential-file` and a single `--ply-bin` executable. Keep all fixture paths under
-the authorized test root. `make test-agent-notify` builds the actual CLI and its
-network-free production-command driver, exercises the installed helper, and retains
-its isolated fixture path. Fake transport proves technical behavior; actual skill
-activation, useful text and Slack delivery require the later human agent journey.
+For fixtures, use `make install-agent-notify AGENT_NOTIFY_DEST=/absolute/private/fixture/ply-agent-notify`.
+Bootstrap accepts explicit `--config-dir` and `--state-root`; notify accepts `--credential-file`
+and a single `--ply-bin` executable. Keep fixture paths under the authorized test root.
+`make test-agent-notify` builds the CLI and uses a network-free production-command driver. This
+checks technical behavior; actual Slack delivery requires an authorized real notification.
+
+## Continue an older task
+
+New tasks use Task@2 and Event@2, producing request-v3. An existing Task@1 must keep Event@1 and
+request-v2. Mixed pairs fail. Preserve existing task/event bytes and IDs; converting a record to
+change its presentation does not create permission for another send.
+
+Event `kind`, `activity`, and `run` may be omitted: the helper binds them from the existing Task.
+Supply the actual report/start receipt with the existing flags. Complete sources retain their
+original locators. When a source lacks notification metadata, the helper preserves its exact
+bytes and original locator/digest beside a small `PlyAgentNotificationSource@1` binding in the
+same private event directory. The native document's kind, fields, and meaning remain unchanged;
+the binding only associates that source with the authorized Task. Explicit legacy or native
+identity conflicts fail locally before credential lookup or any Ply call. An explicit worktree
+must match the Task; Task@2 also checks an explicit provider or origin cwd. No separate handwritten
+notification report is needed.
+
+Task@1 contains `kind`, `activity`, `run`, `worktree`, `handoff`, `route`, `event_root`,
+`actor_claim`, and `notification_authorized`. Task@2 adds `provider`, `origin_cwd`, `context_root`,
+and `timezone`. Use the existing records and the schema validation in the helper rather than
+rebuilding legacy records from a new template.
+
+Physical origin must be inside the context root and match the helper's actual working directory.
+A separately authorized native proxy preserves the provider's actual origin. Never relabel a
+Codex task as Claude. Requires Python 3.9+ with IANA timezone data; unknown zones and `Local` fail.
+A saved request retains its local event timestamp across changes to TZ or timezone data.
+
+## Diagnose a helper result
+
+The helper returns `product_outcome=unchanged`, transport `state`, command exits, and a receipt
+when available. Exit 0 means acknowledged or suppressed; 2 means not attempted; 5 means rejected,
+not sent, rate-limited, or unknown. The JSON state is authoritative for the report.
+
+A crash after the durable apply marker permits only readback. `--port-revision` is a caller
+annotation and never changes event identity or grants another attempt. Explicit Ply retries are
+a separate authorized operation under the CLI's guards.
+
+The helper's existing receipt includes `source_inputs` when it generated bindings, so the original
+source path and digest remain reviewable. Reuse the original input paths and event ID for readback;
+changing a source does not authorize a resend. A binding does not establish QA or transport success.
+
+`--trigger optional_feedback`, `internal_correction`, and `waiting_for_feedback` return
+`suppressed` without invoking Ply or writing notification state. Use the original question when
+still waiting for feedback; do not construct a replacement ending event.

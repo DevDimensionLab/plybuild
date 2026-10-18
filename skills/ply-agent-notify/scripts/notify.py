@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 sys.dont_write_bytecode = True
-from common import CONFIG, ENV, Failure, credential, decode, directory, encode, locator, physical, private, read_file, safe_public, write_once
+from common import CONFIG, ENV, Failure, credential, decode, digest, directory, encode, locator, physical, private, read_file, safe_public, write_once
 
 STATES = {'transport_acknowledged', 'rejected', 'not_sent', 'rate_limited', 'unknown'}
 ID = re.compile(r'ntf_[0-9a-f]{64}\Z')
@@ -22,6 +22,32 @@ DIGEST = re.compile(r'sha256:[0-9a-f]{64}\Z')
 ZONE = re.compile(r'[A-Za-z0-9_+-]+(?:/[A-Za-z0-9_+-]+)*\Z')
 STATUS = {'agent_finished': {'ready_for_review', 'ready_for_your_check', 'done'},
           'agent_stopped': {'stopped'}, 'feedback_required': {'needs_answer'}}
+SOURCE_KIND = 'PlyAgentNotificationSource@1'
+
+
+def bound_source(path, name, task, folder):
+    """Bind notification metadata without recasting or rewriting the actual source."""
+    raw = read_file(path, 16 << 20)
+    value = decode(raw)
+    expected = {key: task[key] for key in ['activity', 'run', 'worktree']}
+    expected.update(activity_id=task['activity'], run_id=task['run'])
+    expected.update({key: task[key] for key in ['provider', 'origin_cwd'] if key in task})
+    if any(key in value and value[key] != want for key, want in expected.items()):
+        raise Failure(name+'_identity_mismatch')
+    original = {'path': str(physical(path)), 'sha256': digest(raw)}
+    if 'kind' in value:
+        compact_text(value['kind'], 200)
+        original['kind'] = value['kind']
+    if all(key in value for key in ['kind', 'activity', 'run']):
+        # Keep complete historical sources and their request bytes unchanged.
+        return original, {}, None
+    preserved = {**original, 'path': str(folder/(name+'-original.json'))}
+    envelope = {'kind': SOURCE_KIND, 'activity': task['activity'], 'run': task['run'],
+                'role': name, 'original': original, 'preserved': preserved}
+    encoded = encode(envelope)
+    bound = folder/(name+'-bound.json')
+    return {'path': str(bound), 'sha256': digest(encoded), 'kind': SOURCE_KIND}, {
+        folder/(name+'-original.json'): raw, bound: encoded}, original
 
 
 def compact_text(value, limit):
@@ -118,32 +144,50 @@ def deliver(args):
         required |= {'provider', 'origin_cwd', 'context_root', 'timezone'}
     if set(task) != required or task['kind'] not in {'PlyAgentNotificationTask@1', 'PlyAgentNotificationTask@2'} or task['notification_authorized'] is not True:
         raise Failure('task_route_authority_required')
-    event = decode(read_file(args.event))
+    event_raw = read_file(args.event)
+    supplied_event = decode(event_raw)
     event_kind = 'PlyAgentNotificationEvent@2' if compact else 'PlyAgentNotificationEvent@1'
-    if event.get('kind') != event_kind or event.get('activity') != task['activity'] or event.get('run') != task['run']:
+    expected = {'kind': event_kind, 'activity': task['activity'], 'run': task['run']}
+    if any(key in supplied_event and supplied_event[key] != want for key, want in expected.items()):
         raise Failure('event_identity_mismatch')
+    event = {**expected, **supplied_event}
     if compact:
         presentation, instant = compact_presentation(task, event, args)
+    root = physical(task['event_root'])
+    # The version-independent key is also used by older Task@1 callers.
+    key = hashlib.sha256(encode({'activity':task['activity'], 'run':task['run'], 'event':event['event_id']})).hexdigest()
+    folder = root/key
+    preserved, inputs = {}, {}
     route = decode(read_file(task['route'], 16 << 10))
     if route.get('webhook_env') != ENV:
         raise Failure('named_credential_required')
-    record = locator(args.event)
-    record['kind'] = event_kind
+    record = {'path': str(physical(args.event)), 'sha256': digest(event_raw), 'kind': event_kind}
+    if event != supplied_event:
+        inputs['event'] = {'path': str(physical(args.event)), 'sha256': digest(event_raw)}
+        encoded = encode(event)
+        preserved.update({folder/'event-original.json': event_raw, folder/'event-bound.json': encoded})
+        record = {'path': str(folder/'event-bound.json'), 'sha256': digest(encoded), 'kind': event_kind}
     source = {k: task[k] for k in ['activity', 'run', 'worktree']}
     source.update(kind='external', handoff=locator(task['handoff']))
     for name in ['start_receipt', 'report']:
         path = getattr(args, name)
         if path:
-            source[name] = locator(path, metadata=True)
+            try:
+                source[name], files, original = bound_source(path, name, task, folder)
+            except (Failure, OSError):
+                # A conflicting input cannot erase an earlier attempt. No
+                # credential lookup or new CLI call is needed to retain uncertainty.
+                if os.path.lexists(folder/'apply-started.json'):
+                    return outcome('unknown', 'source_conflict_preserved_attempt')
+                raise
+            preserved.update(files)
+            if original is not None:
+                inputs[name] = original
     request = {'kind':'ply.workflow.notification-request', 'schema_version':3 if compact else 2,
                'route':route['name'], 'source':source,
                'event':{'id':event['event_id'], 'type':event['event_type'], 'phase':event['phase'],
                         'occurred_at':event['occurred_at'], 'record':record},
                'sender':{'actor_claim':task['actor_claim']}, 'public':event['public']}
-    root = physical(task['event_root'])
-    # The version-independent key is also used by older Task@1 callers.
-    key = hashlib.sha256(encode({'activity':task['activity'], 'run':task['run'], 'event':event['event_id']})).hexdigest()
-    folder = root/key
     if compact:
         request['presentation'] = presentation
         request_path = folder/'request.json'
@@ -201,8 +245,12 @@ def deliver(args):
                     raise Failure('unsafe_notification_text')
             # Freeze route locator as well as request bytes, before any send.
             write_once(folder/'binding.json', encode({'route':task['route'], 'state_root':route['state_root'], 'route_sha256':locator(task['route'])['sha256']}))
+            for path, raw in preserved.items():
+                write_once(path, raw)
             write_once(request_path, encode(request))
             details = {'event_id':event['event_id'], 'request':str(request_path)}
+            if inputs:
+                details['source_inputs'] = inputs
             if os.path.lexists(attempt_path):
                 prior = decode(read_file(attempt_path, mode=0o600))
                 notification_id = prior.get('notification_id')
@@ -251,7 +299,7 @@ def deliver(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--task', required=True, help='Authorized task context JSON')
-    parser.add_argument('--event', help='Already preserved strict event-record JSON')
+    parser.add_argument('--event', help='Preserved event JSON; omitted kind/activity/run bind from the task')
     parser.add_argument('--start-receipt', help='Actual start receipt JSON, when available')
     parser.add_argument('--report', help='Actual report JSON; required for agent_finished')
     parser.add_argument('--ply-bin', default='ply', help='Ply executable (one argv entry)')

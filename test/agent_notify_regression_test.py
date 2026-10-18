@@ -139,4 +139,57 @@ class UpgradeRegression(unittest.TestCase):
                 self.assertEqual(before,after);self.assertFalse(backup.exists())
 
 
+class NativeSourceRegression(unittest.TestCase):
+    fixture=HelperRegression.fixture
+    compact=CompactHelperRegression.compact
+    def native(self):
+        args,task,event=self.compact()
+        args.report=str(Path(args.task).parent/'report.json')
+        raw=b'{"kind":"ply.workflow.delivery-report","summary":"Private original report"}\n'
+        Path(args.report).write_bytes(raw)
+        event.update(event_type='agent_finished',phase='after_start')
+        event['public'].update(status='done',next_actor='user')
+        for key in ['kind','activity','run']:event.pop(key)
+        Path(args.event).write_bytes(encode(event))
+        return args,task,raw
+
+    def test_native_sources_bind_without_rewriting_originals(self):
+        args,task,raw=self.native();event_raw=Path(args.event).read_bytes()
+        with patch.dict(os.environ,{'PLY_SLACK_WEBHOOK_URL':'invalid'}),patch.object(notify,'call') as cli:
+            result=notify.deliver(args)
+        cli.assert_not_called()
+        folder=Path(result['request']).parent
+        self.assertEqual(Path(args.report).read_bytes(),raw)
+        self.assertEqual((folder/'report-original.json').read_bytes(),raw)
+        self.assertEqual(Path(args.event).read_bytes(),event_raw)
+        self.assertEqual((folder/'event-original.json').read_bytes(),event_raw)
+        envelope=json.loads((folder/'report-bound.json').read_bytes())
+        self.assertEqual(envelope['original']['path'],args.report)
+        self.assertEqual(envelope['activity'],task['activity'])
+        self.assertEqual(result['source_inputs']['report'],envelope['original'])
+
+    def test_explicit_native_conflicts_fail_before_credential_or_cli(self):
+        for key in ['activity','run','activity_id','run_id','worktree','provider','origin_cwd']:
+            with self.subTest(key=key):
+                args,task,raw=self.native()
+                value=json.loads(raw);value[key]='different'
+                Path(args.report).write_bytes(encode(value))
+                with patch.object(notify,'credential') as creds,patch.object(notify,'call') as cli,self.assertRaises(notify.Failure) as raised:
+                    notify.deliver(args)
+                self.assertEqual(raised.exception.reason,'report_identity_mismatch')
+                creds.assert_not_called();cli.assert_not_called()
+                self.assertFalse(Path(task['event_root']).exists())
+
+    def test_conflicting_source_after_attempt_preserves_uncertainty(self):
+        args,task,raw=self.native()
+        with patch.dict(os.environ,{'PLY_SLACK_WEBHOOK_URL':'invalid'}):first=notify.deliver(args)
+        folder=Path(first['request']).parent
+        (folder/'apply-started.json').write_bytes(encode({'notification_id':'ntf_'+'a'*64,'confirmation':'sha256:'+'b'*64}))
+        Path(args.report).write_bytes(encode({'run_id':'different'}))
+        with patch.object(notify,'credential') as creds,patch.object(notify,'call') as cli:result=notify.deliver(args)
+        self.assertEqual(result['state'],'unknown')
+        self.assertEqual((folder/'report-original.json').read_bytes(),raw)
+        creds.assert_not_called();cli.assert_not_called()
+
+
 if __name__=='__main__':unittest.main()

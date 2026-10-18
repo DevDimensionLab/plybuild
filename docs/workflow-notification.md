@@ -32,6 +32,29 @@ Done: Varsler — Felles regel lagt inn.
 Next: No action required.
 ```
 
+For new skill-generated notices, the preserved title starts with ⚠️ when the user
+must answer, check, review or act on a stop, and ℹ️ for ordinary information or
+coordinator continuation. These are title characters within existing limits;
+the core renderer, schemas and older event/request/payload bytes do not change.
+
+The [human-input skill](../skills/ply-human-input/SKILL.md) publishes the full Q,
+then delegates one compact `feedback_required` alert to the existing authorized
+job binding. Its stable event is `human-input/QUESTION_ID`. Only a still-waiting Q
+needs an alert; restart and unknown transport reuse the original event and receipt.
+The human opens `/plyapp` → Questions → Open → Review answer and confirms with
+passkey. The complete question and consequences stay in Ply/app; the notification
+contains a short question directing the human there. The agent waits, acknowledges
+and uses the answer on that same Q. Missing route authority is `not_attempted`.
+The helper owns send/readback; acknowledgement of transport is separate from the
+human's answer. This path adds no app code, Task, daemon, route or credentials.
+
+`test/human_input_notification_journey.py --ply /absolute/ply --driver /absolute/notification-driver`
+exercises the installed skills in a new retained `/private/tmp` fixture, including
+restart, answered/withdrawn Q, unknown delivery and an upgrade of old v3 requests.
+Build the network-free driver with `go test -c -o /absolute/notification-driver
+./test/notification-driver`. This models the agent/app answer APIs; physical phone
+and passkey behavior remains the app's separate acceptance.
+
 A separately authorized Claude event uses `claude` and its own bound origin. Fixed
 labels are English; title, summary and action may follow the conversation language.
 When title and summary are identical, the second line omits the repeated summary
@@ -53,7 +76,8 @@ These remain declared statuses, not new native approvals. `next_actor` is still 
 or `coordinator`; the compact payload shows the concrete action without an actor prefix.
 Use `No action required.` when done has no remaining action. Necessary feedback requires
 an actual question containing `?`, `next_actor=user`, and `phase=after_start`. Point the
-answer to the active agent conversation. Slack thread replies are not connected.
+answer to the active agent conversation, or `/plyapp` Questions for a published Q
+as described above. Slack thread replies are not connected.
 
 The strict request-v3 fields are:
 
@@ -127,9 +151,10 @@ state root do not change. No migration or receipt rewriting is needed. The histo
 only activity/run/event ID. Recasting an existing event as v3 conflicts or reads its
 existing state; unknown delivery never gains another attempt.
 
-The skill [usage contract](../skills/ply-agent-notify/references/usage.md) supplies the
-complete Event@2 example, Task@2 field list, invocation and separately authorized upgrade
-procedure with an exact previous-source check and preserved private backup. The installer
+The [skill](../skills/ply-agent-notify/SKILL.md) supplies the Event@2 example and invocation;
+its [usage contract](../skills/ply-agent-notify/references/usage.md) supplies legacy Task
+fields and the separately authorized upgrade procedure with an exact previous-source
+check and preserved private backup. The installer
 updates only its owned files; it does not change the route, credential or state root.
 
 ## Report-ready human gates
