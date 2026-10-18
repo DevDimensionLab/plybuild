@@ -524,3 +524,49 @@ func TestFS01SealedFindingsCannotBeReplacedForTheSameCandidate(t *testing.T) {
 		t.Fatal("sealed findings no longer govern the candidate")
 	}
 }
+
+// A round requested by 8066ecb has no supersedes field. Later candidates read
+// that preserved request unchanged and can start the next round after it.
+func TestFS01ReadsRoundRequestWithoutSupersedesFrom8066ecb(t *testing.T) {
+	f, o, _ := reviewRoundFixture(t)
+	reviewRoundCandidate(t, f, "first attempt")
+	coordinator := reviewRoundAsCoordinator(f)
+	reviewRoundIn(t, "w-fixture:root")
+	requested, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	round := reviewRoundLatest(t, requested)
+	var old map[string]any
+	raw, err := os.ReadFile(round.Request.Locator)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = json.Unmarshal(raw, &old); err != nil {
+		t.Fatal(err)
+	}
+	delete(old, "supersedes")
+	legacy, err := Canonical(old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(round.Request.Locator, legacy, 0600); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil || shown.DeliveryStatus.Review == nil || len(shown.DeliveryStatus.Review.Rounds) != 1 {
+		t.Fatalf("8066ecb round request is unreadable: %v %+v", err, shown.DeliveryStatus)
+	}
+	reviewRoundCandidate(t, f, "fixed attempt")
+	next, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator"})
+	if err != nil {
+		t.Fatalf("next round cannot start after a 8066ecb round: %v", err)
+	}
+	if r := reviewRoundLatest(t, next); r.Round != 2 || r.Supersedes != nil {
+		t.Fatalf("next round after a legacy round differs: %+v", r)
+	}
+	after, err := os.ReadFile(round.Request.Locator)
+	if err != nil || string(after) != string(legacy) {
+		t.Fatal("the preserved 8066ecb request was rewritten")
+	}
+}

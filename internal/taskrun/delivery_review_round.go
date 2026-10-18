@@ -45,7 +45,7 @@ type deliveryReviewRound struct {
 	CoordinatorPane string       `json:"coordinator_pane"`
 	OwnerSession    string       `json:"owner_session"`
 	Previous        *FileBinding `json:"previous"`
-	Supersedes      *FileBinding `json:"supersedes"`
+	Supersedes      *FileBinding `json:"supersedes,omitempty"` // absent in rounds written by 8066ecb
 	Brief           FileBinding  `json:"brief"`
 	Context         FileBinding  `json:"context"`
 	Template        FileBinding  `json:"template"`
