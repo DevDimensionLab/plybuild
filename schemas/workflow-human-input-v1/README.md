@@ -25,9 +25,11 @@ physical passkey; local CLI use keeps the OS user's existing authority.
 
 ## Operations
 
-All consumer commands take the explicit physical `--workspace` (never inferred
-from cwd), except `answer apply`, whose request carries the workspace. Use
-`--format json` (`text` prints the same JSON).
+Every consumer command takes the explicit physical `--workspace`, never
+inferred from cwd. For `answer apply` it must also equal the request's immutable
+`workspace`; a mismatch is refused (`not_recorded`, `human_input_request_mismatch`)
+before anything is read or changed. Use `--format json` (`text` prints the same
+JSON).
 
 | Command | Effect | Result |
 | --- | --- | --- |
@@ -35,7 +37,7 @@ from cwd), except `answer apply`, whose request carries the workspace. Use
 | `list --workspace WS --project ID [--state S] [--limit 1-20] [--cursor C]` | `read` | `list` |
 | `show QUESTION_ID --workspace WS` | `read` | `question` |
 | `answer preview QUESTION_ID --workspace WS --request-id ID (--option-id ID \| --text-file ABS)` | `read` | `preview` (contains `request`) |
-| `answer apply --file ABS_REQUEST` | `human_input_answer_record` | `status` |
+| `answer apply --workspace WS --file ABS_REQUEST` | `human_input_answer_record` | `status` |
 | `answer status REQUEST_ID --question-id QUESTION_ID --workspace WS` | `read` | `status` |
 | `wait QUESTION_ID --workspace WS --timeout-seconds 1-600` | `read` | `wait` |
 | `acknowledge QUESTION_ID --workspace WS --request-id ID --request-sha256 D` | `agent_reported_receipt` | `question` |

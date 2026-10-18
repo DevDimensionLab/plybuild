@@ -309,7 +309,7 @@ func TestHI02MaximalPageFitsConsumerOutputLimit(t *testing.T) {
 		if i%2 == 1 {
 			text := strings.Repeat("\x01", 4000)
 			p := f.preview(created.QuestionID, fmt.Sprintf("request-max-%02d", i), AnswerValue{AnswerKind: AnswerText, Text: &text})
-			if _, err := Apply(f.d, p.Request); err != nil {
+			if _, err := Apply(f.d, f.root, p.Request); err != nil {
 				t.Fatal(err)
 			}
 			if _, err := Acknowledge(f.d, f.root, created.QuestionID, p.Request.RequestID, p.RequestSHA256); err != nil {
@@ -341,7 +341,7 @@ func TestHI03ChoiceAndExactTextPreviewAndRecord(t *testing.T) {
 	if p.Request.Purpose != PurposeAnswer || p.Request.QuestionSHA256 != c.QuestionSHA256 || p.RequestSHA256 != digestOf(p.Request) || p.Request.BindingSHA256 != bindingOf(p.Request) || p.Request.Answer.Text != nil {
 		t.Fatalf("preview request is not bound: %+v", p)
 	}
-	s, err := Apply(f.d, p.Request)
+	s, err := Apply(f.d, f.root, p.Request)
 	if err != nil || s.State != StatusRecorded || s.Question == nil || s.Question.State != StateAnswered || s.Question.NextAction.Actor != ActorAgent || *s.Question.Answer.OptionID != "full" {
 		t.Fatalf("apply: %+v %v", s, err)
 	}
@@ -349,7 +349,7 @@ func TestHI03ChoiceAndExactTextPreviewAndRecord(t *testing.T) {
 	tq := f.ask(f.text("answer/text"))
 	exact := "  Línea uno\r\nline twó  \n\n"
 	tp := f.preview(tq.QuestionID, "request-text-1", AnswerValue{AnswerKind: AnswerText, Text: &exact})
-	if _, err := Apply(f.d, tp.Request); err != nil {
+	if _, err := Apply(f.d, f.root, tp.Request); err != nil {
 		t.Fatal(err)
 	}
 	shown, err := Show(f.d, f.root, tq.QuestionID)
@@ -408,7 +408,7 @@ func TestHI03InvalidAnswersAreRejectedBeforeChange(t *testing.T) {
 			r := good.Request
 			r.Scope = good.Request.Scope
 			change(&r)
-			s, err := Apply(f.d, r)
+			s, err := Apply(f.d, f.root, r)
 			if err == nil || s.State == StatusRecorded {
 				t.Fatalf("tampered request was accepted: %+v", s)
 			}
@@ -447,7 +447,7 @@ func TestHI03RemovedScopeBlocksNewAnswersAndKeepsHistory(t *testing.T) {
 	}
 	_, err = PreviewAnswer(f.d, f.root, waiting.QuestionID, "request-scope-3", AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr("short")})
 	wantCode(t, err, CodeScopeUnavailable)
-	s, err := Apply(f.d, p.Request)
+	s, err := Apply(f.d, f.root, p.Request)
 	if err == nil || s.State != StatusNotRecorded || codeOfReasons(s) != CodeScopeUnavailable {
 		t.Fatalf("removed scope accepted an answer: %+v %v", s, err)
 	}
@@ -479,7 +479,7 @@ func TestHI04ConcurrentApplyHasOneImmutableWinner(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := range requests {
 		wg.Add(1)
-		go func(i int) { defer wg.Done(); results[i], _ = Apply(f.d, requests[i]) }(i)
+		go func(i int) { defer wg.Done(); results[i], _ = Apply(f.d, f.root, requests[i]) }(i)
 	}
 	wg.Wait()
 	winners := 0
@@ -506,14 +506,14 @@ func TestHI04ConcurrentApplyHasOneImmutableWinner(t *testing.T) {
 		}
 	}
 	before := snapshot(t, storeRoot(f.root))
-	if s, err := Apply(f.d, winner); err != nil || s.State != StatusRecorded {
+	if s, err := Apply(f.d, f.root, winner); err != nil || s.State != StatusRecorded {
 		t.Fatalf("replay of the winner is not idempotent: %+v %v", s, err)
 	}
 	for _, r := range requests {
 		if r.RequestID == winner.RequestID {
 			continue
 		}
-		if s, err := Apply(f.d, r); err == nil || s.State != StatusOtherWinner {
+		if s, err := Apply(f.d, f.root, r); err == nil || s.State != StatusOtherWinner {
 			t.Fatalf("another request overwrote the winner: %+v", s)
 		}
 		if s, _ := Status(f.d, f.root, q.QuestionID, r.RequestID); s.State != StatusOtherWinner || s.Winner.RequestID != winner.RequestID {
@@ -523,7 +523,7 @@ func TestHI04ConcurrentApplyHasOneImmutableWinner(t *testing.T) {
 	sameRequestOtherBytes := winner
 	sameRequestOtherBytes.Answer.OptionID = ptr(map[string]string{"short": "full", "full": "short"}[*winner.Answer.OptionID])
 	sameRequestOtherBytes.BindingSHA256 = bindingOf(sameRequestOtherBytes)
-	if s, err := Apply(f.d, sameRequestOtherBytes); err == nil || s.State != StatusOtherWinner || codeOfReasons(s) != CodeRequestConflict {
+	if s, err := Apply(f.d, f.root, sameRequestOtherBytes); err == nil || s.State != StatusOtherWinner || codeOfReasons(s) != CodeRequestConflict {
 		t.Fatalf("same request ID with other bytes: %+v %v", s, err)
 	}
 	sameSnapshot(t, before, snapshot(t, storeRoot(f.root)))
@@ -543,14 +543,14 @@ func TestHI04LostReturnRecoversTheSameOutcome(t *testing.T) {
 		}
 		return nil
 	}
-	if _, err := Apply(lost, p.Request); err == nil {
+	if _, err := Apply(lost, f.root, p.Request); err == nil {
 		t.Fatal("fault did not surface")
 	}
 	s, err := Status(f.d, f.root, q.QuestionID, p.Request.RequestID)
 	if err != nil || s.State != StatusRecorded || s.RequestSHA256 == nil || *s.RequestSHA256 != p.RequestSHA256 {
 		t.Fatalf("status after lost return: %+v %v", s, err)
 	}
-	if s, err := Apply(f.d, p.Request); err != nil || s.State != StatusRecorded {
+	if s, err := Apply(f.d, f.root, p.Request); err != nil || s.State != StatusRecorded {
 		t.Fatalf("same-ID recovery: %+v %v", s, err)
 	}
 
@@ -563,14 +563,14 @@ func TestHI04LostReturnRecoversTheSameOutcome(t *testing.T) {
 		}
 		return nil
 	}
-	if _, err := Apply(early, p2.Request); err == nil {
+	if _, err := Apply(early, f.root, p2.Request); err == nil {
 		t.Fatal("fault did not surface")
 	}
 	if s, _ := Status(f.d, f.root, q2.QuestionID, p2.Request.RequestID); s.State != StatusNotRecorded {
 		t.Fatalf("authoritative not_recorded after an early crash: %+v", s)
 	}
 	// Fresh confirmation of the SAME immutable request may now be applied.
-	if s, err := Apply(f.d, p2.Request); err != nil || s.State != StatusRecorded {
+	if s, err := Apply(f.d, f.root, p2.Request); err != nil || s.State != StatusRecorded {
 		t.Fatalf("same request after not_recorded: %+v %v", s, err)
 	}
 }
@@ -588,7 +588,7 @@ func TestHI05WaitTimeoutIsReadOnlyAndReturnsTheAnswer(t *testing.T) {
 	go func() {
 		time.Sleep(40 * time.Millisecond)
 		p, _ := PreviewAnswer(f.d, f.root, q.QuestionID, "request-wait-1", AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr("short")})
-		_, _ = Apply(f.d, p.Request)
+		_, _ = Apply(f.d, f.root, p.Request)
 	}()
 	w, err = Wait(f.d, f.root, q.QuestionID, 5*time.Second)
 	if err != nil || w.Outcome != WaitAnswered || w.Question.Answer == nil || w.Question.Answer.RequestID != "request-wait-1" {
@@ -651,7 +651,7 @@ func TestHI05WithdrawIsTerminalAndKeepsTheQuestion(t *testing.T) {
 	}
 	_, err = Withdraw(f.d, f.root, q.QuestionID, "Other reason.")
 	wantCode(t, err, CodeReportConflict)
-	s, err := Apply(f.d, p.Request)
+	s, err := Apply(f.d, f.root, p.Request)
 	if err == nil || s.State != StatusNotRecorded || codeOfReasons(s) != CodeWithdrawn || s.Question == nil || s.Question.State != StateWithdrawn {
 		t.Fatalf("answer after withdrawal: %+v %v", s, err)
 	}
@@ -764,7 +764,7 @@ func TestHI06UnsafeOrInvalidStateFailsWithoutRepair(t *testing.T) {
 					t.Fatalf("read %d: want %s, got %v", i, CodeStateInvalid, err)
 				}
 			}
-			s, err := Apply(f.d, f.preview2(q.QuestionID))
+			s, err := Apply(f.d, f.root, f.preview2(q.QuestionID))
 			if err == nil || s.State == StatusRecorded {
 				t.Fatalf("write accepted unsafe state: %+v", s)
 			}
@@ -784,5 +784,30 @@ func mustDo(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// HI03/HI07: apply takes the explicit workspace and refuses a request bound to
+// another workspace before any state change.
+func TestHI03ApplyRequiresTheExplicitMatchingWorkspace(t *testing.T) {
+	f := newFixture(t)
+	other := newFixture(t)
+	q := f.ask(f.choice("workspace/one"))
+	p := f.preview(q.QuestionID, "request-workspace-1", AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr("short")})
+	before, otherBefore := snapshot(t, f.root), snapshot(t, other.root)
+	for _, root := range []string{other.root, "", "relative/root"} {
+		s, err := Apply(f.d, root, p.Request)
+		if err == nil || s.State == StatusRecorded {
+			t.Fatalf("apply in %q accepted a request bound to %s: %+v", root, f.root, s)
+		}
+	}
+	s, err := Apply(f.d, other.root, p.Request)
+	if codeOf(err) != CodeRequestMismatch || s.State != StatusNotRecorded || s.Workspace != other.root {
+		t.Fatalf("mismatched workspace: %+v %v", s, err)
+	}
+	sameSnapshot(t, before, snapshot(t, f.root))
+	sameSnapshot(t, otherBefore, snapshot(t, other.root))
+	if s, err := Apply(f.d, f.root, p.Request); err != nil || s.State != StatusRecorded {
+		t.Fatalf("matching workspace: %+v %v", s, err)
 	}
 }

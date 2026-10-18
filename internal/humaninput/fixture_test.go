@@ -129,7 +129,7 @@ func (f *hiFixture) preview(id, request string, v AnswerValue) Preview {
 func (f *hiFixture) answer(id, request, option string) AnswerRequest {
 	f.t.Helper()
 	p := f.preview(id, request, AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr(option)})
-	if s, err := Apply(f.d, p.Request); err != nil || s.State != StatusRecorded {
+	if s, err := Apply(f.d, f.root, p.Request); err != nil || s.State != StatusRecorded {
 		f.t.Fatalf("apply: %+v %v", s, err)
 	}
 	return p.Request

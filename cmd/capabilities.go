@@ -185,7 +185,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		{"list", "read", []string{"--workspace", "--project", "--state", "--limit", "--cursor"}, []string{humaninput.ListKind, humaninput.ErrorKind}},
 		{"show", "read", []string{"--workspace"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},
 		{"answer preview", "read", []string{"--workspace", "--request-id", "--option-id", "--text-file"}, []string{humaninput.PreviewKind, humaninput.RequestKind, humaninput.ErrorKind}},
-		{"answer apply", "human_input_answer_record", []string{"--file"}, []string{humaninput.StatusKind, humaninput.ErrorKind}},
+		{"answer apply", "human_input_answer_record", []string{"--workspace", "--file"}, []string{humaninput.StatusKind, humaninput.ErrorKind}},
 		{"answer status", "read", []string{"--workspace", "--question-id"}, []string{humaninput.StatusKind}},
 		{"wait", "read", []string{"--workspace", "--timeout-seconds"}, []string{humaninput.WaitKind, humaninput.ErrorKind}},
 		{"acknowledge", "agent_reported_receipt", []string{"--workspace", "--request-id", "--request-sha256"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},

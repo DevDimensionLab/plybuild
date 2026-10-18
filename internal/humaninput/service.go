@@ -389,11 +389,19 @@ func Status(d Dependencies, root, id, requestID string) (AnswerStatus, error) {
 	return classify(s, q, e), nil
 }
 
-// Apply records the request as the question's one winner. Replay of the same
-// request is idempotent; any other request is refused without overwriting.
-func Apply(d Dependencies, r AnswerRequest) (AnswerStatus, error) {
-	s := statusBase(d, r.Workspace, r.QuestionID, r.RequestID)
+// Apply records the request as the question's one winner in the explicit
+// workspace root, which must equal the request's immutable workspace. Replay of
+// the same request is idempotent; any other request is refused without
+// overwriting.
+func Apply(d Dependencies, root string, r AnswerRequest) (AnswerStatus, error) {
+	s := statusBase(d, root, r.QuestionID, r.RequestID)
 	if e := validateRequestShape(r); e != nil {
+		s.State = StatusNotRecorded
+		s.Reasons = append(s.Reasons, reasonOf(e))
+		return s, e
+	}
+	if root != r.Workspace {
+		e := fail(CodeRequestMismatch, "--workspace differs from the request's immutable workspace; nothing was read or changed")
 		s.State = StatusNotRecorded
 		s.Reasons = append(s.Reasons, reasonOf(e))
 		return s, e
@@ -404,7 +412,7 @@ func Apply(d Dependencies, r AnswerRequest) (AnswerStatus, error) {
 		s.Reasons = append(s.Reasons, reasonOf(e))
 		return s, e
 	}
-	root, id := r.Workspace, r.QuestionID
+	id := r.QuestionID
 	// decide returns a final status, or (zero, nil) when this request may win.
 	decide := func() (AnswerStatus, error) {
 		q, e := view(root, id)

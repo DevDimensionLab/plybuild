@@ -218,7 +218,7 @@
         "detail": "this publication key already names a different question; publish a changed question under a new key",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:09.48342Z",
+        "observed_at_utc": "2026-10-18T19:00:37.574461Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
@@ -537,7 +537,7 @@
         "detail": "option medium is not one of this question's options",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:10.486086Z",
+        "observed_at_utc": "2026-10-18T19:00:38.577741Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
@@ -790,7 +790,7 @@
     {
       "name": "apply-recorded",
       "definition": "status",
-      "command": "ply workflow input answer apply --file $WORKSPACE/inputs/request-choice.json",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-choice.json",
       "exit": 0,
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
@@ -866,7 +866,7 @@
     {
       "name": "apply-replay-recorded",
       "definition": "status",
-      "command": "ply workflow input answer apply --file $WORKSPACE/inputs/request-choice.json",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-choice.json",
       "exit": 0,
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
@@ -942,7 +942,7 @@
     {
       "name": "apply-other-winner",
       "definition": "status",
-      "command": "ply workflow input answer apply --file $WORKSPACE/inputs/request-competing.json",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-competing.json",
       "exit": 1,
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
@@ -1021,14 +1021,39 @@
       }
     },
     {
-      "name": "apply-same-id-other-bytes",
+      "name": "apply-workspace-mismatch-not-recorded",
       "definition": "status",
-      "command": "ply workflow input answer apply --file $WORKSPACE/inputs/request-conflict.json",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE/ply --file $WORKSPACE/inputs/request-choice.json",
       "exit": 1,
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
         "observed_at_utc": "2026-10-18T18:00:13Z",
+        "question": null,
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [
+          {
+            "code": "human_input_request_mismatch",
+            "detail": "--workspace differs from the request's immutable workspace; nothing was read or changed"
+          }
+        ],
+        "request_id": "app-choice-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "not_recorded",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace/ply"
+      }
+    },
+    {
+      "name": "apply-same-id-other-bytes",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-conflict.json",
+      "exit": 1,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:14Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -1109,7 +1134,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:14Z",
+        "observed_at_utc": "2026-10-18T18:00:15Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -1185,7 +1210,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:15Z",
+        "observed_at_utc": "2026-10-18T18:00:16Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -1263,7 +1288,7 @@
         "detail": "this question already has its one recorded answer",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:10.512288Z",
+        "observed_at_utc": "2026-10-18T19:00:38.60844Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -1331,7 +1356,7 @@
       "value": {
         "kind": "ply.workflow.human-input-wait",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:16Z",
+        "observed_at_utc": "2026-10-18T18:00:17Z",
         "outcome": "answered",
         "question": {
           "answer": {
@@ -1403,7 +1428,7 @@
         "detail": "acknowledge the answer before reporting its use",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:10.513787Z",
+        "observed_at_utc": "2026-10-18T19:00:38.612164Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -1504,7 +1529,7 @@
         "reason": "The goal leaves the scope of the README change open.",
         "receipt": {
           "provenance": "reported_by_agent",
-          "reported_at_utc": "2026-10-18T18:00:18Z",
+          "reported_at_utc": "2026-10-18T18:00:19Z",
           "request_id": "app-choice-0001",
           "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
         },
@@ -1545,7 +1570,7 @@
         "answer_kind": "choice",
         "continuation": {
           "provenance": "reported_by_agent",
-          "reported_at_utc": "2026-10-18T18:00:20Z",
+          "reported_at_utc": "2026-10-18T18:00:21Z",
           "request_id": "app-choice-0001",
           "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
           "summary": "Wrote the full reference section into README.md."
@@ -1575,7 +1600,7 @@
         "reason": "The goal leaves the scope of the README change open.",
         "receipt": {
           "provenance": "reported_by_agent",
-          "reported_at_utc": "2026-10-18T18:00:18Z",
+          "reported_at_utc": "2026-10-18T18:00:19Z",
           "request_id": "app-choice-0001",
           "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
         },
@@ -1607,7 +1632,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-preview",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:21Z",
+        "observed_at_utc": "2026-10-18T18:00:22Z",
         "question": {
           "answer": null,
           "answer_kind": "text",
@@ -1711,7 +1736,7 @@
         "detail": "text must be non-blank UTF-8 without NUL, at most 4000 codepoints and 16000 bytes",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:10.551575Z",
+        "observed_at_utc": "2026-10-18T19:00:38.654625Z",
         "question": null,
         "question_id": null,
         "schema_version": 1,
@@ -1721,17 +1746,17 @@
     {
       "name": "apply-text-recorded",
       "definition": "status",
-      "command": "ply workflow input answer apply --file $WORKSPACE/inputs/request-text.json",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-text.json",
       "exit": 0,
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:22Z",
+        "observed_at_utc": "2026-10-18T18:00:23Z",
         "question": {
           "answer": {
             "answer_kind": "text",
             "option_id": null,
-            "recorded_at_utc": "2026-10-18T18:00:23Z",
+            "recorded_at_utc": "2026-10-18T18:00:24Z",
             "request_id": "app-text-0001",
             "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
             "text": "Export format\r\n  (v1) \n"
@@ -1792,7 +1817,7 @@
         "answer": {
           "answer_kind": "text",
           "option_id": null,
-          "recorded_at_utc": "2026-10-18T18:00:23Z",
+          "recorded_at_utc": "2026-10-18T18:00:24Z",
           "request_id": "app-text-0001",
           "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
           "text": "Export format\r\n  (v1) \n"
@@ -1841,7 +1866,7 @@
         "answer": null,
         "answer_kind": "choice",
         "continuation": null,
-        "created_at_utc": "2026-10-18T18:00:24Z",
+        "created_at_utc": "2026-10-18T18:00:25Z",
         "kind": "ply.workflow.human-input-question",
         "mode": "cooperative_agent_v1",
         "next_action": {
@@ -1893,12 +1918,12 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-preview",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:25Z",
+        "observed_at_utc": "2026-10-18T18:00:26Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
           "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:24Z",
+          "created_at_utc": "2026-10-18T18:00:25Z",
           "kind": "ply.workflow.human-input-question",
           "mode": "cooperative_agent_v1",
           "next_action": {
@@ -1978,7 +2003,7 @@
         "answer": null,
         "answer_kind": "choice",
         "continuation": null,
-        "created_at_utc": "2026-10-18T18:00:24Z",
+        "created_at_utc": "2026-10-18T18:00:25Z",
         "kind": "ply.workflow.human-input-question",
         "mode": "cooperative_agent_v1",
         "next_action": {
@@ -2021,7 +2046,7 @@
         "withdrawal": {
           "provenance": "reported_by_agent",
           "reason": "The goal already answers this.",
-          "withdrawn_at_utc": "2026-10-18T18:00:27Z"
+          "withdrawn_at_utc": "2026-10-18T18:00:28Z"
         },
         "workspace": "/private/tmp/hi01-example-workspace"
       }
@@ -2029,17 +2054,17 @@
     {
       "name": "apply-after-withdrawal-not-recorded",
       "definition": "status",
-      "command": "ply workflow input answer apply --file $WORKSPACE/inputs/request-gone.json",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-gone.json",
       "exit": 1,
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:28Z",
+        "observed_at_utc": "2026-10-18T18:00:29Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
           "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:24Z",
+          "created_at_utc": "2026-10-18T18:00:25Z",
           "kind": "ply.workflow.human-input-question",
           "mode": "cooperative_agent_v1",
           "next_action": {
@@ -2082,7 +2107,7 @@
           "withdrawal": {
             "provenance": "reported_by_agent",
             "reason": "The goal already answers this.",
-            "withdrawn_at_utc": "2026-10-18T18:00:27Z"
+            "withdrawn_at_utc": "2026-10-18T18:00:28Z"
           },
           "workspace": "/private/tmp/hi01-example-workspace"
         },
@@ -2109,13 +2134,13 @@
       "value": {
         "kind": "ply.workflow.human-input-wait",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:29Z",
+        "observed_at_utc": "2026-10-18T18:00:30Z",
         "outcome": "withdrawn",
         "question": {
           "answer": null,
           "answer_kind": "choice",
           "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:24Z",
+          "created_at_utc": "2026-10-18T18:00:25Z",
           "kind": "ply.workflow.human-input-question",
           "mode": "cooperative_agent_v1",
           "next_action": {
@@ -2158,7 +2183,7 @@
           "withdrawal": {
             "provenance": "reported_by_agent",
             "reason": "The goal already answers this.",
-            "withdrawn_at_utc": "2026-10-18T18:00:27Z"
+            "withdrawn_at_utc": "2026-10-18T18:00:28Z"
           },
           "workspace": "/private/tmp/hi01-example-workspace"
         },
@@ -2181,14 +2206,14 @@
         "limit": 20,
         "mode": "cooperative_agent_v1",
         "next_cursor": null,
-        "observed_at_utc": "2026-10-18T18:00:30Z",
+        "observed_at_utc": "2026-10-18T18:00:31Z",
         "project_id": "ply",
         "questions": [
           {
             "answer": {
               "answer_kind": "text",
               "option_id": null,
-              "recorded_at_utc": "2026-10-18T18:00:23Z",
+              "recorded_at_utc": "2026-10-18T18:00:24Z",
               "request_id": "app-text-0001",
               "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
               "text": "Export format\r\n  (v1) \n"
@@ -2231,7 +2256,7 @@
             "answer": null,
             "answer_kind": "choice",
             "continuation": null,
-            "created_at_utc": "2026-10-18T18:00:24Z",
+            "created_at_utc": "2026-10-18T18:00:25Z",
             "kind": "ply.workflow.human-input-question",
             "mode": "cooperative_agent_v1",
             "next_action": {
@@ -2274,7 +2299,7 @@
             "withdrawal": {
               "provenance": "reported_by_agent",
               "reason": "The goal already answers this.",
-              "withdrawn_at_utc": "2026-10-18T18:00:27Z"
+              "withdrawn_at_utc": "2026-10-18T18:00:28Z"
             },
             "workspace": "/private/tmp/hi01-example-workspace"
           },
@@ -2290,7 +2315,7 @@
             "answer_kind": "choice",
             "continuation": {
               "provenance": "reported_by_agent",
-              "reported_at_utc": "2026-10-18T18:00:20Z",
+              "reported_at_utc": "2026-10-18T18:00:21Z",
               "request_id": "app-choice-0001",
               "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
               "summary": "Wrote the full reference section into README.md."
@@ -2320,7 +2345,7 @@
             "reason": "The goal leaves the scope of the README change open.",
             "receipt": {
               "provenance": "reported_by_agent",
-              "reported_at_utc": "2026-10-18T18:00:18Z",
+              "reported_at_utc": "2026-10-18T18:00:19Z",
               "request_id": "app-choice-0001",
               "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
             },
@@ -2357,7 +2382,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:31Z",
+        "observed_at_utc": "2026-10-18T18:00:32Z",
         "question": null,
         "question_id": "hiq_00000000000000000000000000000000",
         "reasons": [
@@ -2384,7 +2409,7 @@
         "detail": "no question hiq_00000000000000000000000000000000 exists in this workspace",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:10.601513Z",
+        "observed_at_utc": "2026-10-18T19:00:38.694226Z",
         "question": null,
         "question_id": null,
         "schema_version": 1,
@@ -2399,7 +2424,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:32Z",
+        "observed_at_utc": "2026-10-18T18:00:33Z",
         "question": null,
         "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
         "reasons": [
@@ -2426,7 +2451,7 @@
         "detail": "malformed human-input file answers/hiq_46320dca9c67033536c4b962ba5dd32a.json; nothing was repaired or changed",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:57:10.603169Z",
+        "observed_at_utc": "2026-10-18T19:00:38.695532Z",
         "question": null,
         "question_id": null,
         "schema_version": 1,
@@ -2602,7 +2627,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:14Z",
+        "observed_at_utc": "2026-10-18T18:00:15Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -2675,7 +2700,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:32Z",
+        "observed_at_utc": "2026-10-18T18:00:33Z",
         "question": null,
         "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
         "reasons": [
@@ -2854,14 +2879,14 @@
         "limit": 21,
         "mode": "cooperative_agent_v1",
         "next_cursor": null,
-        "observed_at_utc": "2026-10-18T18:00:30Z",
+        "observed_at_utc": "2026-10-18T18:00:31Z",
         "project_id": "ply",
         "questions": [
           {
             "answer": {
               "answer_kind": "text",
               "option_id": null,
-              "recorded_at_utc": "2026-10-18T18:00:23Z",
+              "recorded_at_utc": "2026-10-18T18:00:24Z",
               "request_id": "app-text-0001",
               "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
               "text": "Export format\r\n  (v1) \n"
@@ -2904,7 +2929,7 @@
             "answer": null,
             "answer_kind": "choice",
             "continuation": null,
-            "created_at_utc": "2026-10-18T18:00:24Z",
+            "created_at_utc": "2026-10-18T18:00:25Z",
             "kind": "ply.workflow.human-input-question",
             "mode": "cooperative_agent_v1",
             "next_action": {
@@ -2947,7 +2972,7 @@
             "withdrawal": {
               "provenance": "reported_by_agent",
               "reason": "The goal already answers this.",
-              "withdrawn_at_utc": "2026-10-18T18:00:27Z"
+              "withdrawn_at_utc": "2026-10-18T18:00:28Z"
             },
             "workspace": "/private/tmp/hi01-example-workspace"
           },
@@ -2963,7 +2988,7 @@
             "answer_kind": "choice",
             "continuation": {
               "provenance": "reported_by_agent",
-              "reported_at_utc": "2026-10-18T18:00:20Z",
+              "reported_at_utc": "2026-10-18T18:00:21Z",
               "request_id": "app-choice-0001",
               "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
               "summary": "Wrote the full reference section into README.md."
@@ -2993,7 +3018,7 @@
             "reason": "The goal leaves the scope of the README change open.",
             "receipt": {
               "provenance": "reported_by_agent",
-              "reported_at_utc": "2026-10-18T18:00:18Z",
+              "reported_at_utc": "2026-10-18T18:00:19Z",
               "request_id": "app-choice-0001",
               "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
             },
@@ -3030,7 +3055,7 @@
       "value": {
         "kind": "ply.workflow.human-input-wait",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:16Z",
+        "observed_at_utc": "2026-10-18T18:00:17Z",
         "outcome": "timed_out",
         "question": {
           "answer": {

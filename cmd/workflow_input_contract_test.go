@@ -167,13 +167,14 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	other := run("preview-choice-competing", "preview", append([]string{"answer", "preview", cid, "--request-id", "app-choice-0002", "--option-id", "short"}, ws...)...)
 	var competing humaninput.Preview
 	_ = json.Unmarshal(other, &competing)
-	run("apply-recorded", "status", "answer", "apply", "--file", file("request-choice.json", preview.Request))
-	run("apply-replay-recorded", "status", "answer", "apply", "--file", file("request-choice.json", preview.Request))
-	run("apply-other-winner", "status", "answer", "apply", "--file", file("request-competing.json", competing.Request))
+	run("apply-recorded", "status", "answer", "apply", "--workspace", root, "--file", file("request-choice.json", preview.Request))
+	run("apply-replay-recorded", "status", "answer", "apply", "--workspace", root, "--file", file("request-choice.json", preview.Request))
+	run("apply-other-winner", "status", "answer", "apply", "--workspace", root, "--file", file("request-competing.json", competing.Request))
 	conflict := preview.Request
 	conflict.Answer.OptionID = ptrTo("short")
 	conflict.BindingSHA256 = bindingFor(t, conflict)
-	run("apply-same-id-other-bytes", "status", "answer", "apply", "--file", file("request-conflict.json", conflict))
+	run("apply-workspace-mismatch-not-recorded", "status", "answer", "apply", "--workspace", filepath.Join(root, "ply"), "--file", file("request-choice.json", preview.Request))
+	run("apply-same-id-other-bytes", "status", "answer", "apply", "--workspace", root, "--file", file("request-conflict.json", conflict))
 	run("status-recorded", "status", append([]string{"answer", "status", "app-choice-0001", "--question-id", cid}, ws...)...)
 	run("status-other-winner", "status", append([]string{"answer", "status", "app-choice-0002", "--question-id", cid}, ws...)...)
 	run("error-already-answered", "error", append([]string{"answer", "preview", cid, "--request-id", "app-choice-0003", "--option-id", "short"}, ws...)...)
@@ -188,7 +189,7 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	_ = json.Unmarshal(tp, &tpreview)
 	out = append(out, hiExample{"request-text", "request", nil, nil, mustRaw(t, tpreview.Request)})
 	run("error-invalid-answer-blank-text", "error", append([]string{"answer", "preview", tid, "--request-id", "app-text-0002", "--text-file", file("blank.txt", []byte(" \n\t"))}, ws...)...)
-	run("apply-text-recorded", "status", "answer", "apply", "--file", file("request-text.json", tpreview.Request))
+	run("apply-text-recorded", "status", "answer", "apply", "--workspace", root, "--file", file("request-text.json", tpreview.Request))
 	run("show-text-answered", "question", append([]string{"show", tid}, ws...)...)
 	gone := choiceDraft
 	gone.PublicationKey = "docs-export/obsolete"
@@ -198,7 +199,7 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	var gpreview humaninput.Preview
 	_ = json.Unmarshal(gp, &gpreview)
 	run("withdraw", "question", append([]string{"withdraw", gid, "--reason", "The goal already answers this."}, ws...)...)
-	run("apply-after-withdrawal-not-recorded", "status", "answer", "apply", "--file", file("request-gone.json", gpreview.Request))
+	run("apply-after-withdrawal-not-recorded", "status", "answer", "apply", "--workspace", root, "--file", file("request-gone.json", gpreview.Request))
 	run("wait-withdrawn", "wait", append([]string{"wait", gid, "--timeout-seconds", "1"}, ws...)...)
 	run("list-all-states", "list", append([]string{"list", "--project", "ply"}, ws...)...)
 	missing := "hiq_" + strings.Repeat("0", 32)
@@ -335,9 +336,9 @@ print(len(items),'checked')
 // of the same definitions.
 func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	locked := map[string]string{
-		"README.md":                           "784157fe51d7a4287db20ab9e321addef056aa769745ab6265a7171b2fab9cca",
+		"README.md":                           "6bbde62b5433f2be16ea1b8e60eadef7ec5cb250d9bf0c7110d7350e8f0fa566",
 		"workflow-human-input-v1.schema.json": "daa4f65481747eb7259521fa8b56731e3cf2153c85a2ff4319c07fd203d3620d",
-		"examples.json":                       "1e87e1e081678251616915db6b83b283bb435598a7db295234e641e260fd7576",
+		"examples.json":                       "319dd79fa0482125fb6ff072ff894e93c784dfb2dd9417141054667057c41ded",
 	}
 	for name, want := range locked {
 		b, err := os.ReadFile(filepath.Join(hiBundle, name))
@@ -420,6 +421,7 @@ func TestHI07ArgumentErrorsPrintNoResult(t *testing.T) {
 		{"continue", id, "--workspace", root, "--request-id", "app-0000001", "--request-sha256", "sha256:" + strings.Repeat("a", 64)},
 		{"ask", "--workspace", root},
 		{"answer", "apply"},
+		{"answer", "apply", "--file", filepath.Join(root, "request.json")},
 		{"unknown"},
 	} {
 		out, err := hiRun(t, d, args...)

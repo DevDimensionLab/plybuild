@@ -228,10 +228,10 @@ func newWorkflowInputCommand(d humaninput.Dependencies) *cobra.Command {
 		Use:     "apply",
 		Short:   "Record one previewed answer request as the question's one winner",
 		Long:    "Apply only the complete unchanged request from answer preview. The same request again is an idempotent read of the same winner (state recorded, exit 0). Any other request, or the same request ID with other bytes, is refused without overwriting (state other_winner with winner). Refusals before any change are not_recorded with a reason. After a lost or interrupted reply, read answer status for the same request; never create a new request to retry. A nonzero exit still prints the status JSON when the request identity is known.",
-		Example: "  ply workflow input answer apply --file /absolute/answer-request.json --format json",
+		Example: "  ply workflow input answer apply --workspace /physical/workspace --file /absolute/answer-request.json --format json",
 		Args:    exactArgs(0, "apply takes no positional arguments"),
 		RunE: func(c *cobra.Command, _ []string) error {
-			if e := applyFlags.check(false); e != nil {
+			if e := applyFlags.check(true); e != nil {
 				return e
 			}
 			if applyFile == "" {
@@ -239,13 +239,13 @@ func newWorkflowInputCommand(d humaninput.Dependencies) *cobra.Command {
 			}
 			r, e := humaninput.ReadAnswerRequest(applyFile)
 			if e != nil {
-				return writeInput(c, "", nil, e)
+				return writeInput(c, applyFlags.workspace, nil, e)
 			}
-			s, e := humaninput.Apply(d, r)
+			s, e := humaninput.Apply(d, applyFlags.workspace, r)
 			return writeStatus(c, s, e)
 		},
 	}
-	configureInput(apply, &applyFlags, false)
+	configureInput(apply, &applyFlags, true)
 	apply.Flags().StringVar(&applyFile, "file", "", "absolute physical regular file with the unchanged answer request (maximum 256 KiB)")
 	answer.AddCommand(apply)
 
