@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
@@ -172,6 +173,35 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 			}
 			workflow = append(workflow, capabilityOperation{ID: "workflow.control." + verb, Command: []string{"workflow", "control", verb}, Mode: mode, Selectors: selectors, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: effect})
 		}
+	}
+	// cooperative_agent_v1 human input is additive and separate from schema 2.
+	inputVersion := humaninput.SchemaVersion
+	for _, input := range []struct {
+		verb, effect string
+		selectors    []string
+		kinds        []string
+	}{
+		{"ask", "human_input_question_publication", []string{"--workspace", "--file"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},
+		{"list", "read", []string{"--workspace", "--project", "--state", "--limit", "--cursor"}, []string{humaninput.ListKind, humaninput.ErrorKind}},
+		{"show", "read", []string{"--workspace"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},
+		{"answer preview", "read", []string{"--workspace", "--request-id", "--option-id", "--text-file"}, []string{humaninput.PreviewKind, humaninput.RequestKind, humaninput.ErrorKind}},
+		{"answer apply", "human_input_answer_record", []string{"--file"}, []string{humaninput.StatusKind, humaninput.ErrorKind}},
+		{"answer status", "read", []string{"--workspace", "--question-id"}, []string{humaninput.StatusKind}},
+		{"wait", "read", []string{"--workspace", "--timeout-seconds"}, []string{humaninput.WaitKind, humaninput.ErrorKind}},
+		{"acknowledge", "agent_reported_receipt", []string{"--workspace", "--request-id", "--request-sha256"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},
+		{"continue", "agent_reported_continuation", []string{"--workspace", "--request-id", "--request-sha256", "--summary"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},
+		{"withdraw", "human_input_question_withdrawal", []string{"--workspace", "--reason"}, []string{humaninput.QuestionKind, humaninput.ErrorKind}},
+	} {
+		schemas := []capabilitySchema{}
+		for _, kind := range input.kinds {
+			schemas = append(schemas, capabilitySchema{kind, &inputVersion})
+		}
+		path := strings.Split(input.verb, " ")
+		workflow = append(workflow, capabilityOperation{
+			ID: "workflow.input." + strings.Join(path, "."), Command: append([]string{"workflow", "input"}, path...),
+			Mode: humaninput.Mode, Selectors: input.selectors, Formats: []string{"text", "json"},
+			Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: input.effect,
+		})
 	}
 	workflow = append(workflow, capabilityOperation{ID: "workflow.execute.bound-control", Command: []string{"workflow", "execute"}, Mode: "codex_headless_standalone_v1", Selectors: []string{"--headless", "--bound-control", "--spec", "--check"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.execute", &one}}, Effect: "explicit_goal_start"}, capabilityOperation{ID: "workflow.week.bound-control", Command: []string{"workflow", "week", "start"}, Mode: "codex_headless_week_v1", Selectors: []string{"--file", "--check"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.week-contract", &two}}, Effect: "explicit_workset_start"})
 	sort.Slice(workflow, func(i, j int) bool {

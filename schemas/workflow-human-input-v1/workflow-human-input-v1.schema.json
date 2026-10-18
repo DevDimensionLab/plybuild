@@ -1,0 +1,1289 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ply:workflow-human-input-v1",
+  "title": "Ply workflow human input, mode cooperative_agent_v1, schema 1",
+  "description": "Closed public contract of ply workflow input. Every named field is required; nullable fields are explicit null; unknown fields are rejected. Text limits are Unicode codepoints (JSON Schema maxLength counts codepoints); the answer text is also at most 16000 UTF-8 bytes, which native validates.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/question_draft"
+    },
+    {
+      "$ref": "#/$defs/question"
+    },
+    {
+      "$ref": "#/$defs/list"
+    },
+    {
+      "$ref": "#/$defs/preview"
+    },
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/status"
+    },
+    {
+      "$ref": "#/$defs/wait"
+    },
+    {
+      "$ref": "#/$defs/error"
+    }
+  ],
+  "$defs": {
+    "question_id": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^hiq_[a-f0-9]{32}$"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "option_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "key": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._/-]*$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "repo_or_task_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32,
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "minLength": 71,
+      "maxLength": 71,
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d(?:\\.\\d{1,9})?Z$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 4096,
+      "pattern": "^/"
+    },
+    "state": {
+      "enum": [
+        "waiting_for_answer",
+        "answered",
+        "agent_received",
+        "agent_reported_continued",
+        "withdrawn"
+      ]
+    },
+    "answer_kind": {
+      "enum": [
+        "choice",
+        "text"
+      ]
+    },
+    "provenance": {
+      "const": "reported_by_agent"
+    },
+    "option": {
+      "type": "object",
+      "required": [
+        "consequence",
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/option_id"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "consequence": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "scope": {
+      "type": "object",
+      "required": [
+        "activity_id",
+        "activity_title",
+        "project_id",
+        "repo_id",
+        "task_id"
+      ],
+      "properties": {
+        "project_id": {
+          "$ref": "#/$defs/project_id"
+        },
+        "repo_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/repo_or_task_id"
+            }
+          ]
+        },
+        "task_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/repo_or_task_id"
+            }
+          ]
+        },
+        "activity_id": {
+          "$ref": "#/$defs/key"
+        },
+        "activity_title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "origin_cwd",
+        "provenance",
+        "provider",
+        "session_id"
+      ],
+      "properties": {
+        "provider": {
+          "$ref": "#/$defs/provider"
+        },
+        "session_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        },
+        "origin_cwd": {
+          "$ref": "#/$defs/path"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "answer_value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "answer_kind",
+            "option_id",
+            "text"
+          ],
+          "properties": {
+            "answer_kind": {
+              "const": "choice"
+            },
+            "option_id": {
+              "$ref": "#/$defs/option_id"
+            },
+            "text": {
+              "type": "null"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "answer_kind",
+            "option_id",
+            "text"
+          ],
+          "properties": {
+            "answer_kind": {
+              "const": "text"
+            },
+            "option_id": {
+              "type": "null"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 16000
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "answer": {
+      "type": "object",
+      "required": [
+        "answer_kind",
+        "option_id",
+        "recorded_at_utc",
+        "request_id",
+        "request_sha256",
+        "text"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "answer_kind": {
+          "$ref": "#/$defs/answer_kind"
+        },
+        "option_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/option_id"
+            }
+          ]
+        },
+        "text": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 16000
+            }
+          ]
+        },
+        "recorded_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "receipt": {
+      "type": "object",
+      "required": [
+        "provenance",
+        "reported_at_utc",
+        "request_id",
+        "request_sha256"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "reported_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "continuation": {
+      "type": "object",
+      "required": [
+        "provenance",
+        "reported_at_utc",
+        "request_id",
+        "request_sha256",
+        "summary"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "reported_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "withdrawal": {
+      "type": "object",
+      "required": [
+        "provenance",
+        "reason",
+        "withdrawn_at_utc"
+      ],
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "withdrawn_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        }
+      },
+      "additionalProperties": false
+    },
+    "next_action": {
+      "type": "object",
+      "required": [
+        "actor",
+        "message"
+      ],
+      "properties": {
+        "actor": {
+          "enum": [
+            "human",
+            "agent",
+            "none"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        }
+      },
+      "additionalProperties": false
+    },
+    "reason": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 96,
+          "pattern": "^human_input_[a-z_]+$"
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      },
+      "additionalProperties": false
+    },
+    "winner": {
+      "type": "object",
+      "required": [
+        "request_id",
+        "request_sha256"
+      ],
+      "properties": {
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "question_draft": {
+      "type": "object",
+      "required": [
+        "activity_id",
+        "activity_title",
+        "answer_kind",
+        "kind",
+        "options",
+        "origin_cwd",
+        "project_id",
+        "provider",
+        "publication_key",
+        "reason",
+        "repo_id",
+        "schema_version",
+        "session_id",
+        "task_id",
+        "text"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-question-draft"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "publication_key": {
+          "$ref": "#/$defs/key"
+        },
+        "project_id": {
+          "$ref": "#/$defs/project_id"
+        },
+        "repo_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/repo_or_task_id"
+            }
+          ]
+        },
+        "task_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/repo_or_task_id"
+            }
+          ]
+        },
+        "activity_id": {
+          "$ref": "#/$defs/key"
+        },
+        "activity_title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "provider": {
+          "$ref": "#/$defs/provider"
+        },
+        "session_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        },
+        "origin_cwd": {
+          "$ref": "#/$defs/path"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "answer_kind": {
+          "$ref": "#/$defs/answer_kind"
+        },
+        "options": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "answer_kind": {
+                "const": "choice"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "minItems": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "answer_kind": {
+                "const": "text"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "options": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "question": {
+      "type": "object",
+      "required": [
+        "answer",
+        "answer_kind",
+        "continuation",
+        "created_at_utc",
+        "kind",
+        "mode",
+        "next_action",
+        "options",
+        "publication_key",
+        "question_id",
+        "question_sha256",
+        "reason",
+        "receipt",
+        "schema_version",
+        "scope",
+        "source",
+        "state",
+        "text",
+        "withdrawal",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-question"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/path"
+        },
+        "question_id": {
+          "$ref": "#/$defs/question_id"
+        },
+        "question_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "publication_key": {
+          "$ref": "#/$defs/key"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "answer_kind": {
+          "$ref": "#/$defs/answer_kind"
+        },
+        "options": {
+          "type": "array",
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/option"
+          }
+        },
+        "created_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        },
+        "state": {
+          "$ref": "#/$defs/state"
+        },
+        "answer": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/answer"
+            }
+          ]
+        },
+        "receipt": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/receipt"
+            }
+          ]
+        },
+        "continuation": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/continuation"
+            }
+          ]
+        },
+        "withdrawal": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/withdrawal"
+            }
+          ]
+        },
+        "next_action": {
+          "$ref": "#/$defs/next_action"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "waiting_for_answer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "answer": {
+                "type": "null"
+              },
+              "withdrawal": {
+                "type": "null"
+              },
+              "next_action": {
+                "properties": {
+                  "actor": {
+                    "const": "human"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "answered",
+                  "agent_received"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "answer": {
+                "$ref": "#/$defs/answer"
+              },
+              "withdrawal": {
+                "type": "null"
+              },
+              "next_action": {
+                "properties": {
+                  "actor": {
+                    "const": "agent"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "agent_reported_continued"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "answer": {
+                "$ref": "#/$defs/answer"
+              },
+              "receipt": {
+                "$ref": "#/$defs/receipt"
+              },
+              "continuation": {
+                "$ref": "#/$defs/continuation"
+              },
+              "next_action": {
+                "properties": {
+                  "actor": {
+                    "const": "none"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "withdrawn"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "answer": {
+                "type": "null"
+              },
+              "withdrawal": {
+                "$ref": "#/$defs/withdrawal"
+              },
+              "next_action": {
+                "properties": {
+                  "actor": {
+                    "const": "none"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "list": {
+      "type": "object",
+      "required": [
+        "complete",
+        "cursor",
+        "has_more",
+        "kind",
+        "limit",
+        "mode",
+        "next_cursor",
+        "observed_at_utc",
+        "project_id",
+        "questions",
+        "schema_version",
+        "state",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-list"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/path"
+        },
+        "project_id": {
+          "$ref": "#/$defs/project_id"
+        },
+        "state": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/state"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "cursor": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/question_id"
+            }
+          ]
+        },
+        "questions": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/question"
+          }
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/question_id"
+            }
+          ]
+        },
+        "has_more": {
+          "type": "boolean"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "required": [
+        "answer",
+        "binding_sha256",
+        "kind",
+        "mode",
+        "purpose",
+        "question_id",
+        "question_sha256",
+        "request_id",
+        "schema_version",
+        "scope",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-answer-request"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "purpose": {
+          "const": "human_input_answer_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/path"
+        },
+        "question_id": {
+          "$ref": "#/$defs/question_id"
+        },
+        "question_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "request_id": {
+          "$ref": "#/$defs/request_id"
+        },
+        "answer": {
+          "$ref": "#/$defs/answer_value"
+        },
+        "binding_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "additionalProperties": false
+    },
+    "preview": {
+      "type": "object",
+      "required": [
+        "kind",
+        "mode",
+        "observed_at_utc",
+        "question",
+        "request",
+        "request_sha256",
+        "schema_version",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-answer-preview"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/path"
+        },
+        "question": {
+          "$ref": "#/$defs/question"
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "object",
+      "required": [
+        "kind",
+        "mode",
+        "observed_at_utc",
+        "question",
+        "question_id",
+        "reasons",
+        "request_id",
+        "request_sha256",
+        "schema_version",
+        "state",
+        "winner",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-answer-status"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "workspace": {
+          "type": "string"
+        },
+        "question_id": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "recorded",
+            "other_winner",
+            "not_recorded",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "request_sha256": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/sha256"
+            }
+          ]
+        },
+        "winner": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/winner"
+            }
+          ]
+        },
+        "question": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/question"
+            }
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reason"
+          }
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "recorded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "request_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "winner": {
+                "$ref": "#/$defs/winner"
+              },
+              "question": {
+                "$ref": "#/$defs/question"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "other_winner"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "request_sha256": {
+                "type": "null"
+              },
+              "winner": {
+                "$ref": "#/$defs/winner"
+              },
+              "question": {
+                "$ref": "#/$defs/question"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "not_recorded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "request_sha256": {
+                "type": "null"
+              },
+              "winner": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "unavailable",
+                  "unknown"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "request_sha256": {
+                "type": "null"
+              },
+              "winner": {
+                "type": "null"
+              },
+              "question": {
+                "type": "null"
+              },
+              "reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "wait": {
+      "type": "object",
+      "required": [
+        "kind",
+        "mode",
+        "observed_at_utc",
+        "outcome",
+        "question",
+        "question_id",
+        "schema_version",
+        "timeout_seconds",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-wait"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "workspace": {
+          "$ref": "#/$defs/path"
+        },
+        "question_id": {
+          "$ref": "#/$defs/question_id"
+        },
+        "outcome": {
+          "enum": [
+            "answered",
+            "withdrawn",
+            "still_waiting"
+          ]
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 600
+        },
+        "question": {
+          "$ref": "#/$defs/question"
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "detail",
+        "kind",
+        "mode",
+        "observed_at_utc",
+        "question",
+        "question_id",
+        "schema_version",
+        "workspace"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ply.workflow.human-input-error"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "mode": {
+          "const": "cooperative_agent_v1"
+        },
+        "workspace": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/path"
+            }
+          ]
+        },
+        "question_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/question_id"
+            }
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 96,
+          "pattern": "^human_input_[a-z_]+$"
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "question": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/question"
+            }
+          ]
+        },
+        "observed_at_utc": {
+          "$ref": "#/$defs/timestamp"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/devdimensionlab/plybuild/internal/delivery"
+	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/planningrepo"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
@@ -32,6 +33,7 @@ func newWorkflowCommand(dependencies workflowhandoff.Dependencies) *cobra.Comman
 	command.AddCommand(newWorkflowStatusCommand(workspace.SystemDependencies()))
 	command.AddCommand(newWorkflowTraceCommand(workspace.SystemDependencies()))
 	command.AddCommand(NewWorkflowNotificationCommand(workflownotification.SystemDependencies()))
+	command.AddCommand(newWorkflowInputCommand(humaninput.SystemDependencies()))
 	return command
 }
 

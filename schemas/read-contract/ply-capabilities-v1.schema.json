@@ -600,7 +600,12 @@
             "owner_stop_resolution",
             "coordinator_owner_retirement",
             "coordinator_review_round",
-            "reviewer_review_return"
+            "reviewer_review_return",
+            "human_input_question_publication",
+            "human_input_answer_record",
+            "agent_reported_receipt",
+            "agent_reported_continuation",
+            "human_input_question_withdrawal"
           ]
         }
       },
