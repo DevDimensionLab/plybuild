@@ -277,6 +277,8 @@ func deliveryLoadObservedStop(s *workflowState) error {
 // coordinator stops into the read projection, so a failed state publication
 // cannot hide a denial. The next locked update persists the recovered index;
 // identical observe-stop retries then reuse the original timestamp and bytes.
+// A trailing owner retirement is recovered the same way, so a retired owner
+// stays closed and an identical retire retry reuses the durable event.
 // Other event kinds retain their existing operation-specific recovery paths.
 func deliveryRecoverStopEvents(s *workflowState) error {
 	for {
@@ -293,6 +295,24 @@ func deliveryRecoverStopEvents(s *workflowState) error {
 		}
 		if err = json.Unmarshal(raw, &header); err != nil {
 			return err
+		}
+		if header.Kind == "ply.workflow.owner-retirement" {
+			var r DeliveryRetirement
+			if err = decode(raw, 1<<20, &r); err != nil {
+				return err
+			}
+			if r.RunID != s.Result.RunID {
+				return workflowError(4, "unindexed owner retirement belongs to another Run")
+			}
+			for _, prior := range s.Result.Delivery.Events {
+				if prior.ID == "owner-retirement" {
+					return workflowError(4, "unindexed owner retirement reuses a recorded event ID")
+				}
+			}
+			binding := FileBinding{path, hash(raw)}
+			s.Result.Delivery.Events = append(s.Result.Delivery.Events, DeliveryEventRecord{"owner-retirement", "owner_retirement", binding})
+			s.Result.Delivery.LastEventSHA256 = &binding.SHA256
+			continue
 		}
 		if header.Kind != "ply.workflow.coordinator-stop" {
 			return nil

@@ -186,3 +186,33 @@ func TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect(t *testing.T) {
 		})
 	}
 }
+
+// Review fs02-r1/fs02-r2 regressions, adopted from the independent reviewer.
+func TestFS02ReviewRetirePreservesEarlierUnknownEffect(t *testing.T) {
+	f, o := retireFixture(t)
+	retireStopFixture(t, f, o, DeliveryEffectUnknown)
+	retireStopFixture(t, f, o, DeliveryEffectNotStarted)
+	retireAsCoordinator(&f)
+	out, err := WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryRetireInput{Observer: "independent reviewer fixture", Reason: "Selected isolated replacement"})
+	if err == nil {
+		t.Fatalf("retirement accepted unresolved earlier unknown effect: phase=%s queue_current=%v pane_close_calls=%d", out.Delivery.Phase, retireQueueCurrent(t, f), workflowTestCalls(t, f.workflowFixture, "pane close"))
+	}
+	if workflowTestCalls(t, f.workflowFixture, "pane close") != 0 {
+		t.Fatal("closed pane despite earlier unresolved unknown effect")
+	}
+}
+
+func TestFS02ReviewRetireRecoversDurableEventAfterStateFailure(t *testing.T) {
+	f, o := retireFixture(t)
+	retireAsCoordinator(&f)
+	in := DeliveryRetireInput{Observer: "independent reviewer fixture", Reason: "Selected isolated replacement"}
+	fault := f.D
+	fault.Files = deliveryRejectStopState{statePath: o.Paths.RunRoot + "/state.json"}
+	if _, err := WorkflowRetireDelivery(fault, f.R.WorkspaceRoot, o.RunID, in); err == nil {
+		t.Fatal("fault not reached")
+	}
+	time.Sleep(10 * time.Millisecond)
+	if _, err := WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, in); err != nil {
+		t.Fatalf("identical retirement cannot recover durable event after state publication failure: %v", err)
+	}
+}

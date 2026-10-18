@@ -78,6 +78,8 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 			if prior.Input != in {
 				return workflowError(4, "owner is already retired with a different recorded reason")
 			}
+			// A retry after a failed state publication indexes the durable event.
+			s.Result.Delivery.Phase, s.Result.Round.State = "stopped", "stopped"
 			return nil
 		}
 		dl := s.Result.Delivery
@@ -89,15 +91,12 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		case dl.Attempt != nil && dl.Attempt.State != "recorded":
 			return workflowError(4, "active_writer: "+dl.Attempt.Kind+" attempt is "+dl.Attempt.State+"; resolve its actual effect before replacement")
 		}
-		if dl.ActiveStop != nil {
-			raw, err := workflowBound(*dl.ActiveStop, 2<<20)
-			if err != nil {
-				return err
-			}
-			var stop DeliveryStopRecord
-			if err = decode(raw, 2<<20, &stop); err != nil {
-				return err
-			}
+		// Every unresolved stop counts, not only the latest pending one.
+		stops, err := deliveryUnresolvedStops(*s)
+		if err != nil {
+			return err
+		}
+		for _, stop := range stops {
 			if e := stop.Input.EffectStatus; e == DeliveryEffectUnknown || e == DeliveryEffectPartial {
 				return workflowError(4, "unknown_effect: preserved stop "+stop.Input.EventID+" has "+e+" effects for action "+stop.Input.Action+"; establish them from actual observations before replacement")
 			}
@@ -121,6 +120,31 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		err = deliveryRetireReleaseQueue(d, root, id, in.Reason)
 	}
 	return deliveryReadback(d, root, id, err)
+}
+
+// deliveryUnresolvedStops replays stop history: each resolution addresses the
+// latest pending stop, so earlier stops stay unresolved beneath it.
+func deliveryUnresolvedStops(s workflowState) ([]DeliveryStopRecord, error) {
+	var pending []DeliveryStopRecord
+	for _, event := range s.Result.Delivery.Events {
+		switch event.Kind {
+		case "coordinator_stop":
+			raw, err := workflowBound(event.Binding, 2<<20)
+			if err != nil {
+				return nil, err
+			}
+			var stop DeliveryStopRecord
+			if err = decode(raw, 2<<20, &stop); err != nil {
+				return nil, err
+			}
+			pending = append(pending, stop)
+		case "stop_resolution":
+			if len(pending) > 0 {
+				pending = pending[:len(pending)-1]
+			}
+		}
+	}
+	return pending, nil
 }
 
 // deliveryRetireClosePane closes only the exact bound pane. An already absent
