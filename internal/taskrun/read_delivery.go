@@ -368,7 +368,7 @@ func (h *inventoryDeliveryHistory) identity(raw []byte, s workflowState, slot De
 		if err := decode(raw, 2<<20, &stop); err != nil {
 			return err
 		}
-		if stop.Kind != "ply.workflow.coordinator-stop" || stop.SchemaVersion != 1 || stop.RunID != s.Result.RunID || stop.Input.EventID != slot.ID || stop.Input.Provider != s.Request.Runtime.Provider || stop.Input.NativeSession != s.Result.Transport.AgentSessionID && !(stop.Input.Stage == "startup" && stop.Input.NativeSession == "") {
+		if stop.Kind != "ply.workflow.coordinator-stop" || stop.SchemaVersion != 1 || stop.RunID != s.Result.RunID || stop.Input.EventID != slot.ID || stop.Input.Provider != s.Request.Runtime.Provider || stop.Input.Stage != "startup" && stop.Input.NativeSession == "" || stop.Input.NativeSession != s.Result.Transport.AgentSessionID && !(stop.Input.Stage == "startup" && stop.Input.NativeSession == "") {
 			return integrity("coordinator stop identity differs from its preserved owner and event")
 		}
 		h.pending = append(h.pending, struct {

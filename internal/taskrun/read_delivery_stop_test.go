@@ -113,11 +113,14 @@ func TestReadInventoryNativeRetirementNeedsNoAgentReport(t *testing.T) {
 // Historical fixtures exercise frozen legacy and current native field shapes.
 // They carry no live permission or delivery authority.
 func TestReadInventoryStopHistoryIdentityContracts(t *testing.T) {
-	cases := []string{"current", "legacy", "startup-before-session", "missing-work-session", "wrong-stop-run", "wrong-provider", "wrong-stop-session", "wrong-event", "wrong-resolution-run", "wrong-request", "wrong-resolution-session", "wrong-stop", "wrong-stop-locator", "unknown-effect", "partial-effect", "legacy-unknown-effect", "same-refused-action", "legacy-bool-with-current-fields", "corrupt", "unknown-kind"}
+	cases := []string{"current", "legacy", "startup-before-session", "missing-work-session", "missing-work-session-before-binding", "wrong-stop-run", "wrong-provider", "wrong-stop-session", "wrong-event", "wrong-resolution-run", "wrong-request", "wrong-resolution-session", "wrong-stop", "wrong-stop-locator", "unknown-effect", "partial-effect", "legacy-unknown-effect", "same-refused-action", "legacy-bool-with-current-fields", "corrupt", "unknown-kind"}
 	for _, condition := range cases {
 		t.Run(condition, func(t *testing.T) {
 			f := newDeliveryFixture(t, "codex")
 			s := deliveryInventoryState(t, f, condition)
+			if condition == "missing-work-session-before-binding" {
+				s.Result.Transport.AgentSessionID = ""
+			}
 			proof := writeAny(t, f.R.WorkspaceRoot, "history-proof.json", map[string]string{"observed": "synthetic refusal"})
 			evidence, _, err := deliveryReadBinding(proof, 1<<20)
 			if err != nil {
