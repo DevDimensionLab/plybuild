@@ -412,3 +412,14 @@ install-agent-notify:
 
 test-agent-notify:
 	$(PYTHON) test/agent_notify_acceptance.py $(if $(AGENT_NOTIFY_TEST_ROOT),--root "$(AGENT_NOTIFY_TEST_ROOT)",)
+
+# Human-input skill: installation is an explicit, separate effect. A different
+# existing skill is replaced only with HUMAN_INPUT_SKILL_BACKUP=/new/path.
+HUMAN_INPUT_SKILL_DEST ?= $(HOME)/.agents/skills/ply-human-input
+HUMAN_INPUT_SKILL_BACKUP ?=
+.PHONY: install-human-input-skill test-human-input-skill
+install-human-input-skill:
+	scripts/install-human-input-skill --destination "$(HUMAN_INPUT_SKILL_DEST)" $(if $(HUMAN_INPUT_SKILL_BACKUP),--backup "$(HUMAN_INPUT_SKILL_BACKUP)",)
+
+test-human-input-skill:
+	scripts/test-install-human-input-skill

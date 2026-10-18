@@ -1,0 +1,40 @@
+#!/bin/sh
+# Hermetic checks for install-human-input-skill under a physical /private/tmp root.
+set -eu
+here=$(cd "$(dirname "$0")" && pwd -P)
+install="$here/install-human-input-skill"
+source_skill="$here/../skills/ply-human-input/SKILL.md"
+root=$(mktemp -d /private/tmp/hi01-skill-install.XXXXXX)
+trap 'rm -rf "$root"' EXIT
+fail() { printf 'install-human-input-skill test failed: %s\n' "$1" >&2; exit 1; }
+mode() { stat -f %Lp "$1"; }
+
+dest="$root/home/.agents/skills/ply-human-input"
+"$install" --destination "$dest" >/dev/null || fail "fresh install"
+cmp -s "$dest/SKILL.md" "$source_skill" || fail "installed bytes differ"
+[ "$(mode "$dest/SKILL.md")" = 644 ] && [ "$(mode "$dest")" = 755 ] || fail "installed modes"
+[ "$(ls -A "$dest")" = SKILL.md ] || fail "installed extra files"
+
+out=$("$install" --destination "$dest") || fail "identical reinstall"
+printf '%s\n' "$out" | grep -q 'already installed' || fail "identical reinstall is not a no-op"
+
+printf 'older skill\n' > "$dest/SKILL.md"
+if "$install" --destination "$dest" 2>/dev/null; then fail "replaced a different skill without backup"; fi
+[ "$(cat "$dest/SKILL.md")" = 'older skill' ] || fail "refusal changed the existing skill"
+
+mkdir "$root/taken"
+if "$install" --destination "$dest" --backup "$root/taken" 2>/dev/null; then fail "reused an existing backup path"; fi
+[ "$(cat "$dest/SKILL.md")" = 'older skill' ] || fail "backup refusal changed the existing skill"
+
+"$install" --destination "$dest" --backup "$root/backup" >/dev/null || fail "replace with backup"
+[ "$(cat "$root/backup/SKILL.md")" = 'older skill' ] || fail "backup lost the previous skill"
+cmp -s "$dest/SKILL.md" "$source_skill" || fail "replacement bytes differ"
+
+printf 'x\n' > "$dest/extra.md"
+if "$install" --destination "$dest" 2>/dev/null; then fail "accepted an install with unknown files"; fi
+rm "$dest/extra.md"
+
+ln -s "$dest" "$root/link"
+if "$install" --destination "$root/link" 2>/dev/null; then fail "followed a symlinked destination"; fi
+if "$install" --destination relative/path 2>/dev/null; then fail "accepted a relative destination"; fi
+printf 'install-human-input-skill checks passed\n'

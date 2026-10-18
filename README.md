@@ -1093,5 +1093,24 @@ No webhook belongs in a prompt, argv, repository, report or ordinary log.
 Run `make test-agent-notify` for isolated installation, bootstrap and actual
 helper/CLI interaction with controlled fake transport. Set `AGENT_NOTIFY_TEST_ROOT`
 to a new private fixture path and `AGENT_NOTIFY_DEST` for fixture-only installation.
+
+### Human input from an ordinary agent
+
+`ply workflow input` lets an ordinary Claude or Codex agent publish one necessary
+question (2-6 fixed choices or one exact short text) for a named activity, with an
+optional existing Task, and read back one immutable answer. A configured app
+discovers questions with `list`/`show` and records the answer with
+`answer preview`/`apply`/`status`; the agent waits, acknowledges and reports its
+use. Nothing starts or wakes an agent, and no Task is created. The versioned
+contract is [schemas/workflow-human-input-v1](schemas/workflow-human-input-v1/README.md);
+the agent procedure is the [ply-human-input skill](skills/ply-human-input/SKILL.md).
+`make install-human-input-skill` installs it to `~/.agents/skills/ply-human-input`
+(identical install is a no-op; a different skill is replaced only with
+`HUMAN_INPUT_SKILL_BACKUP=/new/path`). `make test-human-input-skill` checks the
+installer in an isolated `/private/tmp` root. A copied directory is not evidence that an agent
+can use the skill: confirm that the Claude and Codex entry points actually
+discover it, or that a readable mandate pointer such as the existing
+`~/.agents/AGENTS.md` names it. That check is part of installation and needs no
+broad provider configuration change.
 The technical tests use no Slack service. Personal installation and the useful,
 human-observed agent journey remain a separate QA activity.
