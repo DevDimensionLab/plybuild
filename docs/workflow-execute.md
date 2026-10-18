@@ -348,7 +348,9 @@ brief. The owner's own pane cannot start its review. Each start effect is
 reserved before it is sent and never replayed. Repeating the command for the
 same candidate returns the existing round. An unknown start is shown as a stop;
 after inspecting the tab, `--new-round` starts a fresh reviewer for the same
-candidate.
+candidate. The replaced round is recorded as superseded: its history and
+unknown start are kept, but its reviewer can no longer return and the fresh
+round decides. A round with a sealed return cannot be replaced.
 
 From its own pane, the reviewer returns an ordinary JSON file with `decision`
 (`passed`, `changes_requested` or `blocked`), `summary`, `findings`
@@ -369,8 +371,9 @@ Findings return to the owner, who corrects, commits and asks the coordinator
 for a new round. That round binds the new candidate explicitly and keeps the
 earlier rounds and their evidence. If the owner commits while a round is still
 open, the return stays bound to the reviewed candidate and status shows the
-drift. `verify` without `--review` uses the completed passed round for exactly
-the current candidate and carries earlier findings as fixes; any other
+drift. Any sealed negative return for a candidate keeps governing it. `verify`
+without `--review` uses the completed passed round for exactly the current
+candidate and carries earlier candidates' findings as fixes; any other
 candidate has no pass to inherit. `execute show` lists each round, its findings
 and gaps, and the next responsible actor.
 

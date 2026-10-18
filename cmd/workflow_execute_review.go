@@ -24,7 +24,7 @@ func newWorkflowExecuteReviewCommand(d taskrun.Dependencies) *cobra.Command {
 	}}
 	c.Flags().StringVar(&in.Coordinator, "coordinator", "", "actual review coordinator claim (required)")
 	c.Flags().StringVar(&in.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace for the reviewer tab (default: the owner's workspace)")
-	c.Flags().BoolVar(&in.NewRound, "new-round", false, "replace an unknown reviewer start for the same candidate with a fresh round")
+	c.Flags().BoolVar(&in.NewRound, "new-round", false, "supersede an unknown reviewer start for the same candidate with a fresh round; the old reviewer can no longer return")
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	setWorkFlagErrors(c)
 	return c

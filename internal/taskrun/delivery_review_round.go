@@ -45,6 +45,7 @@ type deliveryReviewRound struct {
 	CoordinatorPane string       `json:"coordinator_pane"`
 	OwnerSession    string       `json:"owner_session"`
 	Previous        *FileBinding `json:"previous"`
+	Supersedes      *FileBinding `json:"supersedes"`
 	Brief           FileBinding  `json:"brief"`
 	Context         FileBinding  `json:"context"`
 	Template        FileBinding  `json:"template"`
@@ -79,11 +80,12 @@ type deliveryReviewResult struct {
 }
 
 type deliveryReviewRecord struct {
-	Dir     string
-	Request deliveryReviewRound
-	Binding FileBinding
-	Result  *deliveryReviewResult
-	Return  *FileBinding
+	Superseded bool
+	Dir        string
+	Request    deliveryReviewRound
+	Binding    FileBinding
+	Result     *deliveryReviewResult
+	Return     *FileBinding
 }
 
 // DeliveryReviewStatus is a read-only projection of the preserved rounds.
@@ -110,6 +112,7 @@ type DeliveryReviewRoundStatus struct {
 	ReviewerPane    string                  `json:"reviewer_pane,omitempty"`
 	StartDetail     string                  `json:"start_detail,omitempty"`
 	Previous        *FileBinding            `json:"previous"`
+	Supersedes      *FileBinding            `json:"supersedes"`
 	Request         FileBinding             `json:"request"`
 	Brief           FileBinding             `json:"brief"`
 	Context         FileBinding             `json:"context"`
@@ -174,6 +177,13 @@ func deliveryReviewRounds(s workflowState) ([]deliveryReviewRecord, error) {
 			return nil, e
 		}
 		out = append(out, r)
+	}
+	for _, r := range out {
+		for i := range out {
+			if r.Request.Supersedes != nil && *r.Request.Supersedes == out[i].Binding {
+				out[i].Superseded = true
+			}
+		}
 	}
 	return out, nil
 }
@@ -243,6 +253,11 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		r := deliveryReviewRound{Kind: "ply.workflow.review-round", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, Round: number, CandidateOID: x.OID, CandidateTree: x.Tree, Coordinator: in.Coordinator, CoordinatorPane: coordinatorPane, OwnerSession: deliveryOwnerSession(s), RequestedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		if number > 1 {
 			r.Previous = &rounds[number-2].Binding
+		}
+		if in.NewRound {
+			// The coordinator replaces an unknown reviewer start. The old
+			// round keeps its history but can no longer return or govern.
+			r.Supersedes = &rounds[n-1].Binding
 		}
 		if r.Context, e = workflowKeep(d, filepath.Join(dir, "context.json"), deliveryReviewContext{"ply.workflow.review-context", 1, id, s.Result.RequestSHA256, number, x.OID, x.Tree}); e != nil {
 			return e
@@ -415,6 +430,9 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 		if _, e = workflowBound(r.Request.Context, 1<<20); e != nil {
 			return e
 		}
+		if r.Superseded && r.Result == nil {
+			return workflowError(4, fmt.Sprintf("review round %d was superseded by the coordinator's fresh round for the same candidate; its reviewer cannot return", r.Request.Round))
+		}
 		start := deliveryReviewStartState(r.Dir)
 		if start.Agent == nil {
 			return workflowError(4, fmt.Sprintf("review round %d has no reviewer session started and bound by Ply (%s); the coordinator starts it with execute review", r.Request.Round, start.State))
@@ -470,27 +488,62 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 	return o, err
 }
 
-// deliveryNativeCandidateReview turns the completed passed round for exactly
-// this candidate into the existing qualification record. Earlier findings stay
-// as fixes. Another candidate never inherits a pass.
+// deliveryReviewJudge decides one exact candidate across all its rounds. Any
+// sealed negative return for it governs. Otherwise its latest round that the
+// coordinator has not superseded decides: open rounds are awaited.
+func deliveryReviewJudge(rounds []deliveryReviewRecord, oid, tree string) (string, *deliveryReviewRecord) {
+	var latest, negative *deliveryReviewRecord
+	for i := range rounds {
+		r := &rounds[i]
+		if r.Request.CandidateOID != oid || r.Request.CandidateTree != tree {
+			continue
+		}
+		if r.Result != nil && r.Result.Decision != "passed" {
+			negative = r
+		}
+		if r.Superseded {
+			continue
+		}
+		latest = r
+	}
+	switch {
+	case latest == nil:
+		return "none", nil
+	case negative != nil:
+		return "negative", negative
+	case latest.Result == nil:
+		return "awaiting", latest
+	}
+	return "passed", latest
+}
+
+func deliveryReviewFindingIDs(r *deliveryReviewRecord) string {
+	ids := []string{}
+	for _, f := range r.Result.Findings {
+		ids = append(ids, f.ID)
+	}
+	if len(ids) == 0 {
+		return "no findings, see its evidence gaps"
+	}
+	return strings.Join(ids, ", ")
+}
+
+// deliveryNativeCandidateReview turns the passed judgment of exactly this
+// candidate into the existing qualification record. Findings of earlier
+// candidates stay as fixes. Another candidate never inherits a pass.
 func deliveryNativeCandidateReview(d Dependencies, s workflowState, oid, tree string) (string, error) {
 	rounds, e := deliveryReviewRounds(s)
 	if e != nil {
 		return "", e
 	}
-	var match *deliveryReviewRecord
-	for i := range rounds {
-		if rounds[i].Request.CandidateOID == oid && rounds[i].Request.CandidateTree == tree {
-			match = &rounds[i]
-		}
-	}
-	switch {
-	case match == nil:
+	verdict, match := deliveryReviewJudge(rounds, oid, tree)
+	switch verdict {
+	case "none":
 		return "", workflowError(4, fmt.Sprintf("candidate %s has no independent review; the coordinator requests one with `ply workflow execute review %s`", oid, s.Result.RunID))
-	case match.Result == nil:
-		return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s has not returned yet", match.Request.Round, oid))
-	case match.Result.Decision != "passed":
-		return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s is %s with %d finding(s); correct them and commit a new candidate for a new review round", match.Request.Round, oid, match.Result.Decision, len(match.Result.Findings)))
+	case "awaiting":
+		return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s has not returned yet; its judgment governs this candidate", match.Request.Round, oid))
+	case "negative":
+		return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s is %s (%s); correct them and commit a new candidate for a new review round", match.Request.Round, oid, match.Result.Decision, deliveryReviewFindingIDs(match)))
 	}
 	if _, e = workflowBound(*match.Return, 1<<20); e != nil {
 		return "", e
@@ -500,7 +553,7 @@ func deliveryNativeCandidateReview(d Dependencies, s workflowState, oid, tree st
 	}
 	fixes := []any{}
 	for _, r := range rounds {
-		if r.Request.Round < match.Request.Round && r.Result != nil {
+		if r.Request.Round < match.Request.Round && r.Result != nil && (r.Request.CandidateOID != oid || r.Request.CandidateTree != tree) {
 			for _, f := range r.Result.Findings {
 				fixes = append(fixes, map[string]any{"id": f.ID, "severity": f.Severity, "summary": f.Summary, "evidence_ids": []string{"candidate-review"}})
 			}
@@ -517,21 +570,26 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 		return nil, e
 	}
 	out := &DeliveryReviewStatus{CurrentCandidate: "not_reviewed", Rounds: []DeliveryReviewRoundStatus{}}
-	var current *DeliveryReviewRoundStatus
 	for _, r := range rounds {
-		x := DeliveryReviewRoundStatus{Round: r.Request.Round, CandidateOID: r.Request.CandidateOID, CandidateTree: r.Request.CandidateTree, Coordinator: r.Request.Coordinator, State: "requested", Findings: []DeliveryReviewFinding{}, EvidenceGaps: []string{}, Previous: r.Request.Previous, Request: r.Binding, Brief: r.Request.Brief, Context: r.Request.Context, Template: r.Request.Template, Result: r.Return}
+		x := DeliveryReviewRoundStatus{Round: r.Request.Round, CandidateOID: r.Request.CandidateOID, CandidateTree: r.Request.CandidateTree, Coordinator: r.Request.Coordinator, State: "requested", Findings: []DeliveryReviewFinding{}, EvidenceGaps: []string{}, Previous: r.Request.Previous, Supersedes: r.Request.Supersedes, Request: r.Binding, Brief: r.Request.Brief, Context: r.Request.Context, Template: r.Request.Template, Result: r.Return}
 		x.Current = source.State == "observed" && source.Clean && source.OID == x.CandidateOID && source.Tree == x.CandidateTree
 		start := deliveryReviewStartState(r.Dir)
 		x.ReviewerStart, x.StartDetail = start.State, start.Detail
 		if start.Pane != nil {
 			x.ReviewerPane = start.Pane.PaneID
 		}
+		if r.Superseded {
+			x.State = "superseded"
+		}
 		if res := r.Result; res != nil {
 			x.State, x.Decision, x.Summary, x.ReviewerClaim, x.ReviewerSession, x.Findings, x.EvidenceGaps = res.ReviewState, res.Decision, res.Summary, res.ReviewerClaim, res.ReviewerSession, res.Findings, res.EvidenceGaps
 		}
 		out.Rounds = append(out.Rounds, x)
-		if x.Current {
-			current = &out.Rounds[len(out.Rounds)-1]
+	}
+	var current *DeliveryReviewRoundStatus
+	if source.State == "observed" && source.Clean {
+		if _, r := deliveryReviewJudge(rounds, source.OID, source.Tree); r != nil {
+			current = &out.Rounds[r.Request.Round-1]
 		}
 	}
 	id := s.Result.RunID

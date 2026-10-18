@@ -30,6 +30,9 @@ if review_pane.startswith("w-fixture:r"):
         agents[review_pane] = args[2]
     if cmd == ["agent", "prompt"]:
         model.setdefault("review_prompts", {})[review_pane] = args[3]
+        if model.get("review_prompt_lost"):
+            path.write_text(json.dumps(model))
+            raise SystemExit(7)
     session = model["agent_session_id"] if model.get("review_session_is_owner") else "reviewer-session-" + review_pane.split(":r")[1]
     agent = {"workspace_id":"w-fixture", "tab_id":"tab-review-" + review_pane.split(":r")[1], "pane_id":review_pane, "terminal_id":"terminal-review-" + review_pane.split(":r")[1],
              "name":agents.get(review_pane, "unstarted"), "agent":model.get("provider", "codex"), "agent_status":"idle",
@@ -433,5 +436,91 @@ func TestFS01ReviewRoundsThroughCandidateCLI(t *testing.T) {
 		if !strings.Contains(out, want) {
 			t.Fatalf("native status lacks %q:\n%s", want, out)
 		}
+	}
+}
+
+// Review r001-f01: after a lost review prompt the coordinator explicitly
+// replaces the round for the same candidate. The replacement completes
+// without waking the old reviewer; a late return of the superseded round is
+// refused, so it can neither hide a finding nor become a "fix". Sealed
+// findings of a candidate keep governing it and cannot be replaced.
+func TestFS01SupersededRoundCannotReturnAndReplacementCompletes(t *testing.T) {
+	f, o, binary := reviewRoundFixture(t)
+	reviewRoundCandidate(t, f, "fixed attempt")
+	coordinator := reviewRoundAsCoordinator(f)
+	reviewRoundIn(t, "w-fixture:root")
+	workflowTestModel(t, f.workflowFixture, map[string]any{"review_prompt_lost": true})
+	if _, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator"}); err == nil {
+		t.Fatal("a lost review prompt was reported as a started review")
+	}
+	first := reviewRoundLatest(t, mustShow(t, f, o.RunID))
+	if first.ReviewerStart != "prompt_unknown" {
+		t.Fatalf("lost prompt is not visible: %+v", first)
+	}
+	workflowTestModel(t, f.workflowFixture, map[string]any{"review_prompt_lost": false})
+	fresh, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator", NewRound: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	second := reviewRoundLatest(t, fresh)
+	if old := fresh.DeliveryStatus.Review.Rounds[0]; old.State != "superseded" || old.ReviewerStart != "prompt_unknown" || second.Supersedes == nil || second.Supersedes.Locator != old.Request.Locator {
+		t.Fatalf("replacement is not an explicit superseded binding with preserved history: %+v %+v", old, second.Supersedes)
+	}
+	prompted := len(reviewRoundArgv(t, f, "agent prompt"))
+	passed := reviewRoundReturnFile(t, f, "passed.json", `{"decision":"passed","summary":"Looks right","findings":[],"evidence_gaps":[]}`)
+	reviewRoundIn(t, second.ReviewerPane)
+	if o, err = WorkflowDeliveryReviewReturn(coordinator, f.R.WorkspaceRoot, o.RunID, second.Context.Locator, passed); err != nil {
+		t.Fatal(err)
+	}
+	if c := o.DeliveryStatus.Review.CurrentCandidate; c != "review_passed" || o.DeliveryStatus.Review.Next.Actor != "owner" {
+		t.Fatalf("the replacement review does not complete while the old reviewer is silent: %s %+v", c, o.DeliveryStatus.Review.Next)
+	}
+	negative := reviewRoundReturnFile(t, f, "late-negative.json", `{"decision":"changes_requested","summary":"Late review","findings":[{"severity":"high","summary":"Late finding"}],"evidence_gaps":[]}`)
+	reviewRoundIn(t, first.ReviewerPane)
+	if _, err = WorkflowDeliveryReviewReturn(coordinator, f.R.WorkspaceRoot, o.RunID, first.Context.Locator, negative); err == nil || !strings.Contains(err.Error(), "superseded") {
+		t.Fatalf("a superseded round returned a judgment: %v", err)
+	}
+	if _, err = os.Stat(filepath.Join(filepath.Dir(first.Context.Locator), "return.json")); err == nil {
+		t.Fatal("a superseded round sealed a return")
+	}
+	if len(reviewRoundArgv(t, f, "agent prompt")) != prompted {
+		t.Fatal("the old reviewer was woken")
+	}
+	reviewRoundIn(t, "w-fixture:root")
+	if o, err = WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "", binary); err != nil {
+		t.Fatalf("the replacement pass could not qualify its candidate: %v", err)
+	}
+	qualification, err := os.ReadFile(filepath.Join(filepath.Dir(second.Context.Locator), "candidate-review.json"))
+	if err != nil || !strings.Contains(string(qualification), `"fixes":[]`) {
+		t.Fatalf("qualification invented fixes: %s %v", qualification, err)
+	}
+}
+
+// A sealed negative judgment of a candidate cannot be replaced by a fresh
+// round for that same candidate; only a corrected candidate gets a new round.
+func TestFS01SealedFindingsCannotBeReplacedForTheSameCandidate(t *testing.T) {
+	f, o, binary := reviewRoundFixture(t)
+	reviewRoundCandidate(t, f, "first attempt")
+	coordinator := reviewRoundAsCoordinator(f)
+	reviewRoundIn(t, "w-fixture:root")
+	requested, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	round := reviewRoundLatest(t, requested)
+	negative := reviewRoundReturnFile(t, f, "negative.json", `{"decision":"changes_requested","summary":"Complete review","findings":[{"severity":"high","summary":"Real finding"}],"evidence_gaps":[]}`)
+	reviewRoundIn(t, round.ReviewerPane)
+	if _, err = WorkflowDeliveryReviewReturn(coordinator, f.R.WorkspaceRoot, o.RunID, round.Context.Locator, negative); err != nil {
+		t.Fatal(err)
+	}
+	reviewRoundIn(t, "w-fixture:root")
+	if _, err = WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator", NewRound: true}); err == nil {
+		t.Fatal("a fresh round replaced sealed findings of the same candidate")
+	}
+	if _, err = WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "", binary); err == nil || !strings.Contains(err.Error(), "r001-f01") {
+		t.Fatalf("verify qualified a candidate with its own open finding: %v", err)
+	}
+	if s := mustShow(t, f, o.RunID); s.Delivery.Attempt != nil || s.DeliveryStatus.Review.CurrentCandidate != "findings_open" {
+		t.Fatal("sealed findings no longer govern the candidate")
 	}
 }
