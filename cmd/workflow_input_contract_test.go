@@ -261,6 +261,11 @@ func hiSchemaInvalid(t *testing.T, valid []hiExample) []hiExample {
 	mut("request-missing-binding", "request", "request-choice", func(m map[string]any) { delete(m, "binding_sha256") })
 	mut("request-old-purpose", "request", "request-choice", func(m map[string]any) { m["purpose"] = "product_answer_v1" })
 	mut("request-text-with-option", "request", "request-text", func(m map[string]any) { m["answer"].(map[string]any)["option_id"] = "short" })
+	// JSON Schema maxLength counts codepoints: 4000 is the text limit; the
+	// 16000 UTF-8 byte cap is native-only.
+	mut("request-text-4001-codepoints", "request", "request-text", func(m map[string]any) {
+		m["answer"].(map[string]any)["text"] = strings.Repeat("a", 4001)
+	})
 	mut("draft-one-option", "question_draft", "draft-choice", func(m map[string]any) { m["options"] = m["options"].([]any)[:1] })
 	mut("draft-text-with-options", "question_draft", "draft-text", func(m map[string]any) { m["options"] = pick("draft-choice")["options"] })
 	mut("list-limit-21", "list", "list-all-states", func(m map[string]any) { m["limit"] = 21 })
@@ -285,6 +290,14 @@ func TestHI07WriteContractExamples(t *testing.T) {
 	t.Cleanup(func() { _ = os.RemoveAll(root) })
 	d, repo := hiWorkspace(t, root)
 	valid := hiJourney(t, d, root, repo)
+	boundary := map[string]any{}
+	for _, e := range valid {
+		if e.Name == "request-text" {
+			_ = json.Unmarshal(e.Value, &boundary)
+		}
+	}
+	boundary["answer"].(map[string]any)["text"] = strings.Repeat("\U0001F600", 4000)
+	valid = append(valid, hiExample{"request-text-4000-codepoints-16000-bytes-boundary", "request", nil, nil, mustRaw(t, boundary)})
 	ex := hiExamples{Status: "Generated from the actual ply workflow input commands with a fixed clock; the workspace path is a fixture, not a registered workspace.", Schema: "workflow-human-input-v1.schema.json", Workspace: root, Valid: valid, SchemaInvalid: hiSchemaInvalid(t, valid)}
 	for _, name := range []string{"request-choice", "request-text"} {
 		for _, e := range valid {
@@ -337,8 +350,8 @@ print(len(items),'checked')
 func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	locked := map[string]string{
 		"README.md":                           "6bbde62b5433f2be16ea1b8e60eadef7ec5cb250d9bf0c7110d7350e8f0fa566",
-		"workflow-human-input-v1.schema.json": "daa4f65481747eb7259521fa8b56731e3cf2153c85a2ff4319c07fd203d3620d",
-		"examples.json":                       "319dd79fa0482125fb6ff072ff894e93c784dfb2dd9417141054667057c41ded",
+		"workflow-human-input-v1.schema.json": "5ce06991b547197ace52d777af738adf4bf4254c4a4dba34722686a3c6f5c43c",
+		"examples.json":                       "9655c7549e05c600c5b33be3d577be2f10458c6d3a5d14001644509d5f2189a6",
 	}
 	for name, want := range locked {
 		b, err := os.ReadFile(filepath.Join(hiBundle, name))

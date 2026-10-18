@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:ply:workflow-human-input-v1",
   "title": "Ply workflow human input, mode cooperative_agent_v1, schema 1",
-  "description": "Closed public contract of ply workflow input. Every named field is required; nullable fields are explicit null; unknown fields are rejected. Text limits are Unicode codepoints (JSON Schema maxLength counts codepoints); the answer text is also at most 16000 UTF-8 bytes, which native validates.",
+  "description": "Closed public contract of ply workflow input. Every named field is required; nullable fields are explicit null; unknown fields are rejected. Text limits are Unicode codepoints (JSON Schema maxLength counts codepoints); a text answer is at most 4000 codepoints here and also at most 16000 UTF-8 bytes, which only native validates.",
   "oneOf": [
     {
       "$ref": "#/$defs/question_draft"
@@ -246,7 +246,7 @@
             "text": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 16000
+              "maxLength": 4000
             }
           },
           "additionalProperties": false
@@ -291,7 +291,7 @@
             {
               "type": "string",
               "minLength": 1,
-              "maxLength": 16000
+              "maxLength": 4000
             }
           ]
         },
