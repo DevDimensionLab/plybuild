@@ -613,7 +613,9 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 				selected = prep.Plan.Selection
 				return nil
 			}
-			target, _, e := resolveGoalQueueTarget(d, root, r, projects, in.Target, in.SpecID)
+			// Recheck the chosen identity, including on a retry after the goal
+			// queue entry has become a selected execution solution.
+			target, _, e := resolveQueueTarget(d, root, r, projects, QueueTargetInput{p.Target.ProjectID, p.Target.RepoID, p.Target.EpicID})
 			if e != nil {
 				return e
 			}
@@ -647,12 +649,12 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 		return out, e
 	}
 	id := p.Goal.TaskID
-	prepareInput := TaskPrepareInput{Target: in.Target, Selector: QueueSelector{Kind: "task", TaskID: &id}}
+	prepareInput := TaskPrepareInput{Target: QueueTargetInput{p.Target.ProjectID, p.Target.RepoID, p.Target.EpicID}, Selector: QueueSelector{Kind: "task", TaskID: &id}}
 	prepared, e := PrepareTask(d, prepareInput)
 	if e != nil {
 		return out, e
 	}
-	if prepared.Plan == nil || prepared.Plan.TaskID != id || prepared.Plan.ParentOID != p.ParentOID || prepared.Plan.ParentTree != p.ParentTree || prepared.Plan.WorktreePath != p.WorktreePath || prepared.Plan.Selection != selected {
+	if prepared.Plan == nil || prepared.Plan.Target != p.Target || prepared.Plan.TaskID != id || prepared.Plan.ParentOID != p.ParentOID || prepared.Plan.ParentTree != p.ParentTree || prepared.Plan.WorktreePath != p.WorktreePath || prepared.Plan.Selection != selected {
 		return out, queueError("task_goal_execution_conflict", "prepared binding differs from the chosen execution")
 	}
 	if prepared.Preparation == nil || prepared.Preparation.Outcome == nil {

@@ -42,6 +42,10 @@ func launcherFixture(t *testing.T) (taskrun.Dependencies, Input, string, string)
 }
 
 func launcherFixtureForProvider(t *testing.T, provider string, delivery ...workspace.DeliveryAgreement) (taskrun.Dependencies, Input, string, string) {
+	return launcherFixtureWithCLI(t, provider, "", delivery...)
+}
+
+func launcherFixtureWithCLI(t *testing.T, provider, binary string, delivery ...workspace.DeliveryAgreement) (taskrun.Dependencies, Input, string, string) {
 	t.Helper()
 	root := physicalTemp(t)
 	repo, epic := filepath.Join(root, "main"), filepath.Join(root, "epic")
@@ -73,17 +77,36 @@ func launcherFixtureForProvider(t *testing.T, provider string, delivery ...works
 		t.Fatal(err)
 	}
 	w := workspace.SystemDependencies()
-	if _, err = workspace.Init(w); err != nil {
-		t.Fatal(err)
+	cli := func(args ...string) []byte {
+		t.Helper()
+		command := exec.Command(binary, args...)
+		command.Dir = root
+		var stderr strings.Builder
+		command.Stderr = &stderr
+		output, err := command.Output()
+		if err != nil {
+			t.Fatalf("CLI fixture %v: %v\n%s\n%s", args, err, output, stderr.String())
+		}
+		return output
 	}
-	if _, err = workspace.AddProject(w, workspace.ProjectAddInput{ProjectID: "fixture", Name: "Execution fixture", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "fixture", Path: repo}}}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "fixture", RepoID: "fixture", Worktree: epic, Ref: "refs/heads/epic", ExpectedOID: oid}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "goal", Title: "Goal fixture", Description: "Test the execute composition.", ParentEpicID: "epic", ProjectID: "fixture", RepoID: "fixture"}); err != nil {
-		t.Fatal(err)
+	if binary != "" {
+		cli("workspace", "init")
+		cli("workspace", "project", "add", "fixture", "--name", "Execution fixture", "--wrapper", root, "--repo", "fixture="+repo)
+		cli("workspace", "epic", "adopt", "epic", "--title", "Fixture Epic", "--project", "fixture", "--repo", "fixture", "--worktree", epic, "--ref", "refs/heads/epic", "--expected-oid", oid)
+		cli("workspace", "task", "create", "goal", "--title", "Goal fixture", "--description", "Test the execute composition.", "--epic", "epic", "--project", "fixture", "--repo", "fixture")
+	} else {
+		if _, err = workspace.Init(w); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = workspace.AddProject(w, workspace.ProjectAddInput{ProjectID: "fixture", Name: "Execution fixture", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "fixture", Path: repo}}}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "fixture", RepoID: "fixture", Worktree: epic, Ref: "refs/heads/epic", ExpectedOID: oid}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err = workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "goal", Title: "Goal fixture", Description: "Test the execute composition.", ParentEpicID: "epic", ProjectID: "fixture", RepoID: "fixture"}); err != nil {
+			t.Fatal(err)
+		}
 	}
 	r, err := w.WorkItems.Snapshot(root)
 	if err != nil {
@@ -119,7 +142,12 @@ func launcherFixtureForProvider(t *testing.T, provider string, delivery ...works
 	}
 	file := filepath.Join(root, "goal.json")
 	fixtureJSON(t, file, draft)
-	s, err := workspace.RecordTaskSpec(w, workspace.TaskContentInput{TaskID: "goal", File: file})
+	var s workspace.TaskContentMutationResult
+	if binary != "" {
+		err = json.Unmarshal(cli("workspace", "task", "spec", "record", "goal", "--file", file, "--format", "json"), &s)
+	} else {
+		s, err = workspace.RecordTaskSpec(w, workspace.TaskContentInput{TaskID: "goal", File: file})
+	}
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -133,7 +161,9 @@ func launcherFixtureForProvider(t *testing.T, provider string, delivery ...works
 	}
 	file = filepath.Join(root, "queue.json")
 	fixtureJSON(t, file, q)
-	if _, err = workspace.SetTaskQueue(w, file); err != nil {
+	if binary != "" {
+		cli("workspace", "task", "queue", "set", "--file", file, "--format", "json")
+	} else if _, err = workspace.SetTaskQueue(w, file); err != nil {
 		t.Fatal(err)
 	}
 	binDir := filepath.Join(root, "bin")
