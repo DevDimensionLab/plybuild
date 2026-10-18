@@ -33,6 +33,7 @@ func (r *traceReader) delivery(s workflowState) {
 	entries, entriesErr := inventoryEntries(eventRoot)
 	boundPaths, seen := map[string]bool{}, map[string]bool{}
 	var previous *string
+	var history inventoryDeliveryHistory
 	for i, event := range s.Result.Delivery.Events {
 		predecessor := previous
 		previous = ptr(event.Binding.SHA256)
@@ -64,11 +65,14 @@ func (r *traceReader) delivery(s workflowState) {
 			r.run.Entries = append(r.run.Entries, e)
 			continue
 		}
-		if err = inventoryDeliveryEventIdentity(raw, s, event.Kind); err != nil {
+		if err = history.identity(raw, s, event); err != nil {
 			r.problem("trace_delivery_event_unbound", event.ID+": "+err.Error())
 			continue
 		}
 		switch event.Kind {
+		case "coordinator_stop", "stop_resolution", "owner_retirement":
+			e.Data = append(json.RawMessage(nil), raw...)
+			r.run.Entries = append(r.run.Entries, e)
 		case "acceptance_selection":
 			if s.Result.Delivery.AcceptanceSelection == nil {
 				r.problem("trace_acceptance_selection_unbound", "Native selection event has no current binding")

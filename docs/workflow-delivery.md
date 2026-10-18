@@ -99,6 +99,15 @@ failure stays visible independently of successful integration; resuming the
 same delivery completes closeout only. Removing retained resources remains a
 separate explicit native cleanup action.
 
+If integration and source ownership release are already recorded, run
+`ply workflow execute integrate RUN_ID --context /absolute/context.json` from the
+same Task with the installed CLI to finish the remaining automatic closeout.
+This path reads the existing integration journal before owner callbacks; it does
+not need a new owner continuation, verification, QA or Git integration. Preserve
+the original Run, session, stop/resolution events and integration receipt. A
+resolved native stop remains readable history, including resolutions recorded
+with the earlier permission-confirmation format; reading it grants no permission.
+
 Text status and versioned JSON show acceptance separately from human judgment
 and final delivery. `ply capabilities` advertises the new CLI through additive
 `workflow_extensions`; historical read-catalog fields are unchanged.

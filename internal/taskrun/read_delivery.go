@@ -211,6 +211,8 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 	seen := map[string]bool{}
 	var previous *string
 	currentReport := false
+	var history inventoryDeliveryHistory
+	nativeStopped := false
 	for i, event := range events {
 		predecessor := previous
 		previous = ptr(event.Binding.SHA256)
@@ -227,8 +229,10 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 		if event.Kind != "report" {
 			// Keep non-report events as immutable sources. They cannot supply
 			// TaskResult, QA or integration facts through this adapter.
-			if err = inventoryDeliveryEventIdentity(raw, s, event.Kind); err != nil {
+			if err = history.identity(raw, s, event); err != nil {
 				inventoryDeliveryProblem(row, "delivery_event_invalid", fmt.Sprintf("Delivery event %q: %s", event.ID, err))
+			} else if i == len(events)-1 && event.Kind == "owner_retirement" {
+				nativeStopped = true
 			}
 			continue
 		}
@@ -269,7 +273,7 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 	if len(out.Reports) > 0 {
 		out.Report = &out.Reports[len(out.Reports)-1]
 	}
-	if (out.Phase == "needs_input" || out.Phase == "stopped") && !currentReport {
+	if (out.Phase == "needs_input" || out.Phase == "stopped" && !nativeStopped) && !currentReport {
 		inventoryDeliveryProblem(row, "delivery_current_report_unavailable", "The current delivery phase has no matching intact report")
 		out.NextAction = inventoryDeliveryUnknownAction(s, "The preserved delivery need has no matching intact current report; inspect the recorded sources.")
 	}
@@ -343,9 +347,67 @@ func inventoryDeliveryGoalOrigin(raw []byte, basis workspace.TaskSpecBasis, goal
 	return nil
 }
 
-func inventoryDeliveryEventIdentity(raw []byte, s workflowState, kind string) error {
+// Stop records predate a universal request-digest field. Replay only their
+// preserved identity contracts here; readable history grants no live authority.
+// Both inventory and trace validate the same captured event bytes in order.
+type inventoryDeliveryHistory struct {
+	pending []struct {
+		binding FileBinding
+		stop    DeliveryStopRecord
+	}
+}
+
+func (h *inventoryDeliveryHistory) identity(raw []byte, s workflowState, slot DeliveryEventRecord) error {
+	kind := slot.Kind
 	if _, err := canonicaljson.DecodeStrict(raw); err != nil {
 		return err
+	}
+	switch kind {
+	case "coordinator_stop":
+		var stop DeliveryStopRecord
+		if err := decode(raw, 2<<20, &stop); err != nil {
+			return err
+		}
+		if stop.Kind != "ply.workflow.coordinator-stop" || stop.SchemaVersion != 1 || stop.RunID != s.Result.RunID || stop.Input.EventID != slot.ID || stop.Input.Provider != s.Request.Runtime.Provider || stop.Input.NativeSession != s.Result.Transport.AgentSessionID && !(stop.Input.Stage == "startup" && stop.Input.NativeSession == "") {
+			return integrity("coordinator stop identity differs from its preserved owner and event")
+		}
+		h.pending = append(h.pending, struct {
+			binding FileBinding
+			stop    DeliveryStopRecord
+		}{slot.Binding, stop})
+		return nil
+	case "stop_resolution":
+		var resolution DeliveryStopResolution
+		if err := decode(raw, 1<<20, &resolution); err != nil {
+			return err
+		}
+		if resolution.Kind != "ply.workflow.stop-resolution" || resolution.RunID != s.Result.RunID || resolution.NativeSession != s.Result.Transport.AgentSessionID || len(h.pending) == 0 {
+			return integrity("stop resolution identity differs from its preserved owner")
+		}
+		prior := h.pending[len(h.pending)-1]
+		legacy := resolution.PermissionConfirmed && resolution.RequestSHA256 == "" && resolution.ContinuationAction == ""
+		current := !resolution.PermissionConfirmed && resolution.RequestSHA256 == s.Result.RequestSHA256 && deliveryActionText(resolution.ContinuationAction) != ""
+		if resolution.Stop != prior.binding || !legacy && !current {
+			return integrity("stop resolution request or stop binding differs")
+		}
+		if prior.stop.Input.EffectStatus == DeliveryEffectUnknown || prior.stop.Input.EffectStatus == DeliveryEffectPartial || current && prior.stop.Input.Action != "" && deliveryActionText(prior.stop.Input.Action) == deliveryActionText(resolution.ContinuationAction) {
+			return integrity("stop resolution cannot clear uncertain effects or repeat the refused action")
+		}
+		h.pending = h.pending[:len(h.pending)-1]
+		return nil
+	case "owner_retirement":
+		var retirement DeliveryRetirement
+		if err := decode(raw, 1<<20, &retirement); err != nil {
+			return err
+		}
+		var active *FileBinding
+		if len(h.pending) > 0 {
+			active = &h.pending[len(h.pending)-1].binding
+		}
+		if retirement.Kind != "ply.workflow.owner-retirement" || retirement.SchemaVersion != 1 || retirement.RunID != s.Result.RunID || retirement.RequestSHA256 != s.Result.RequestSHA256 || retirement.NativeSession != s.Result.Transport.AgentSessionID || slot.ID != "owner-retirement" || !equal(retirement.ActiveStop, active) {
+			return integrity("owner retirement identity or active stop binding differs")
+		}
+		return nil
 	}
 	var event struct {
 		Kind          string `json:"kind"`
