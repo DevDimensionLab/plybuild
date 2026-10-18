@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -188,6 +189,8 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	var tpreview humaninput.Preview
 	_ = json.Unmarshal(tp, &tpreview)
 	out = append(out, hiExample{"request-text", "request", nil, nil, mustRaw(t, tpreview.Request)})
+	// The maximal text answer: 4000 codepoints and 16000 UTF-8 bytes.
+	run("preview-text-4000-codepoints-16000-bytes-boundary", "preview", append([]string{"answer", "preview", tid, "--request-id", "app-text-max-0001", "--text-file", file("answer-max.txt", []byte(strings.Repeat("\U0001F600", 4000)))}, ws...)...)
 	run("error-invalid-answer-blank-text", "error", append([]string{"answer", "preview", tid, "--request-id", "app-text-0002", "--text-file", file("blank.txt", []byte(" \n\t"))}, ws...)...)
 	run("apply-text-recorded", "status", "answer", "apply", "--workspace", root, "--file", file("request-text.json", tpreview.Request))
 	run("show-text-answered", "question", append([]string{"show", tid}, ws...)...)
@@ -290,14 +293,18 @@ func TestHI07WriteContractExamples(t *testing.T) {
 	t.Cleanup(func() { _ = os.RemoveAll(root) })
 	d, repo := hiWorkspace(t, root)
 	valid := hiJourney(t, d, root, repo)
-	boundary := map[string]any{}
+	var boundary humaninput.Preview
 	for _, e := range valid {
-		if e.Name == "request-text" {
-			_ = json.Unmarshal(e.Value, &boundary)
+		if e.Name == "preview-text-4000-codepoints-16000-bytes-boundary" {
+			if err := json.Unmarshal(e.Value, &boundary); err != nil {
+				t.Fatal(err)
+			}
 		}
 	}
-	boundary["answer"].(map[string]any)["text"] = strings.Repeat("\U0001F600", 4000)
-	valid = append(valid, hiExample{"request-text-4000-codepoints-16000-bytes-boundary", "request", nil, nil, mustRaw(t, boundary)})
+	if text := *boundary.Request.Answer.Text; utf8.RuneCountInString(text) != 4000 || len(text) != 16000 {
+		t.Fatalf("boundary text has %d codepoints and %d bytes", utf8.RuneCountInString(text), len(text))
+	}
+	valid = append(valid, hiExample{"request-text-4000-codepoints-16000-bytes-boundary", "request", nil, nil, mustRaw(t, boundary.Request)})
 	ex := hiExamples{Status: "Generated from the actual ply workflow input commands with a fixed clock; the workspace path is a fixture, not a registered workspace.", Schema: "workflow-human-input-v1.schema.json", Workspace: root, Valid: valid, SchemaInvalid: hiSchemaInvalid(t, valid)}
 	for _, name := range []string{"request-choice", "request-text"} {
 		for _, e := range valid {
@@ -313,6 +320,11 @@ func TestHI07WriteContractExamples(t *testing.T) {
 			}
 		}
 	}
+	if errs := hiDigestErrors(t, ex); len(errs) != 0 {
+		t.Fatalf("generated examples carry wrong digests:\n%s", strings.Join(errs, "\n"))
+	}
+	hiValidate(t, ex.Valid, true)
+	hiValidate(t, ex.SchemaInvalid, false)
 	b, err := json.MarshalIndent(ex, "", "  ")
 	if err != nil {
 		t.Fatal(err)
@@ -351,7 +363,7 @@ func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	locked := map[string]string{
 		"README.md":                           "6bbde62b5433f2be16ea1b8e60eadef7ec5cb250d9bf0c7110d7350e8f0fa566",
 		"workflow-human-input-v1.schema.json": "5ce06991b547197ace52d777af738adf4bf4254c4a4dba34722686a3c6f5c43c",
-		"examples.json":                       "9655c7549e05c600c5b33be3d577be2f10458c6d3a5d14001644509d5f2189a6",
+		"examples.json":                       "03802a23a66a1bb7275ddf9c329472be8cad420ec8a43e04fd882da77d81a04d",
 	}
 	for name, want := range locked {
 		b, err := os.ReadFile(filepath.Join(hiBundle, name))
@@ -409,6 +421,110 @@ func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 			t.Fatalf("example %s no longer matches the actual journey", observed[i].Name)
 		}
 	}
+}
+
+// hiDigestErrors checks the RFC8785 digests a strict consumer recomputes:
+// every request's binding_sha256, every preview's request_sha256, every
+// request_sha256 reported for a known request_id and every canonical vector.
+func hiDigestErrors(t *testing.T, ex hiExamples) []string {
+	t.Helper()
+	var errs []string
+	known := map[string]string{}
+	digest := func(v any) string { return "sha256:" + sha256Hex(mustRaw(t, v)) }
+	request := func(name string, r map[string]any) string {
+		unbound := map[string]any{}
+		for k, v := range r {
+			if k != "binding_sha256" {
+				unbound[k] = v
+			}
+		}
+		if got := digest(unbound); r["binding_sha256"] != got {
+			errs = append(errs, name+": binding_sha256 "+r["binding_sha256"].(string)+" != "+got)
+		}
+		sha := digest(r)
+		id := r["request_id"].(string)
+		if prior, ok := known[id]; ok && prior != sha {
+			errs = append(errs, name+": request_id "+id+" names two requests")
+		}
+		known[id] = sha
+		return sha
+	}
+	values := map[string]map[string]any{}
+	for _, e := range ex.Valid {
+		m := map[string]any{}
+		if err := json.Unmarshal(e.Value, &m); err != nil {
+			t.Fatal(err)
+		}
+		values[e.Name] = m
+		switch e.Definition {
+		case "request":
+			request(e.Name, m)
+		case "preview":
+			if sha := request(e.Name, m["request"].(map[string]any)); m["request_sha256"] != sha {
+				errs = append(errs, e.Name+": request_sha256 does not match its request")
+			}
+		}
+	}
+	var reported func(name string, v any)
+	reported = func(name string, v any) {
+		switch x := v.(type) {
+		case map[string]any:
+			if id, ok := x["request_id"].(string); ok {
+				if sha, ok := x["request_sha256"].(string); ok && known[id] != "" && sha != known[id] {
+					errs = append(errs, name+": request_sha256 for "+id+" does not match its request")
+				}
+			}
+			for _, y := range x {
+				reported(name, y)
+			}
+		case []any:
+			for _, y := range x {
+				reported(name, y)
+			}
+		}
+	}
+	for _, e := range ex.Valid {
+		reported(e.Name, values[e.Name])
+	}
+	for _, v := range ex.CanonicalVectors {
+		m, ok := values[v.Name]
+		if !ok || string(mustRaw(t, m)) != v.CanonicalUTF8 || digest(m) != v.RequestSHA256 {
+			errs = append(errs, "canonical vector "+v.Name+" does not match its valid request")
+		}
+	}
+	return errs
+}
+
+// HI01A: schema validity is not enough; a strict consumer recomputes every
+// digest of a declared-valid request and must accept them all.
+func TestHI07ValidRequestExamplesCarryNativeDigests(t *testing.T) {
+	raw, err := os.ReadFile(filepath.Join(hiBundle, "examples.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ex hiExamples
+	if err := json.Unmarshal(raw, &ex); err != nil {
+		t.Fatal(err)
+	}
+	if errs := hiDigestErrors(t, ex); len(errs) != 0 {
+		t.Fatalf("declared-valid examples carry wrong digests:\n%s", strings.Join(errs, "\n"))
+	}
+	// The delivered HI01 counterexample: request-text with other text and a
+	// stale binding stays schema-valid, but must be rejected here.
+	for i, e := range ex.Valid {
+		if e.Name == "request-text-4000-codepoints-16000-bytes-boundary" {
+			m := map[string]any{}
+			_ = json.Unmarshal(e.Value, &m)
+			m["answer"].(map[string]any)["text"] = "Export format"
+			stale := ex
+			stale.Valid = append(append([]hiExample{}, ex.Valid[:i]...), hiExample{e.Name, e.Definition, nil, nil, mustRaw(t, m)})
+			if errs := hiDigestErrors(t, stale); len(errs) == 0 {
+				t.Fatal("a stale binding_sha256 was accepted")
+			}
+			return
+		}
+	}
+	t.Fatal("no maximal text request example")
 }
 
 // Argument errors print nothing on stdout; semantic refusals print one result.
