@@ -298,7 +298,7 @@ func TestDeliveryReceiptResolutionPreservesUncertainExternalEffects(t *testing.T
 				t.Fatal("fixture unexpectedly has a native delivery attempt")
 			}
 			for attempt := 0; attempt < 2; attempt++ {
-				resumed, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stop.SHA256, "Current refusal cause repaired; earlier external effects remain unresolved", true)
+				resumed, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stop.SHA256, "Current refusal cause repaired; earlier external effects remain unresolved", "Continue the clarified changed fixture action")
 				if err == nil {
 					t.Fatalf("permission and text cleared %s external effects: phase=%s stop=%v", effect, resumed.Delivery.Phase, resumed.Delivery.ActiveStop)
 				}
@@ -343,7 +343,7 @@ func TestDeliveryReceiptResolutionSelectsFrozenStartupEntrypoint(t *testing.T) {
 			if !strings.Contains(stopped.NextAction.Message, strings.TrimPrefix(want, "execute ")+" is still required") {
 				t.Fatalf("stopped %s contract recommends wrong startup entrypoint: %s", name, stopped.NextAction.Message)
 			}
-			resumed, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stopped.Delivery.ActiveStop.SHA256, "Actual refusal cause repaired; initial receipt never started", true)
+			resumed, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stopped.Delivery.ActiveStop.SHA256, "Actual refusal cause repaired; initial receipt never started", "Continue the clarified changed fixture action")
 			if err != nil {
 				t.Fatal(err)
 			}

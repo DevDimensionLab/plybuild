@@ -245,7 +245,10 @@ actual work and delivery. The launch profile is a request, not observed policy.
 Runtime evaluates actions when they happen. Preserve any actual refusal with
 its action, stage, source and known effect status through execute observe-stop;
 the coordinator can report denied receipt/report transport without impersonating
-the owner. A known active stop or unknown prior attempt blocks dependent work.
+the owner. After the cause is clarified, continue with execute resolve-stop,
+naming the changed action you take now; no permission confirmation is needed and
+the refused action stays refused. A known active stop or unknown prior attempt
+blocks dependent work.
 Repeating receipt cannot clear it or replay a previous action. Legacy frozen
 runs retain begin and their original permission requirements.
 

@@ -593,7 +593,12 @@
             "explicit_workset_start",
             "acceptance_policy_selection",
             "candidate_test_and_evidence",
-            "authorized_local_integration"
+            "authorized_local_integration",
+            "recipient_runtime_acceptance",
+            "bound_mandate_receipt",
+            "coordinator_observation",
+            "owner_stop_resolution",
+            "coordinator_owner_retirement"
           ]
         }
       },

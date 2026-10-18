@@ -118,16 +118,24 @@ type DeliveryStopResolution struct {
 	NativeSession       string      `json:"native_session"`
 	Resolution          string      `json:"resolution"`
 	PermissionConfirmed bool        `json:"permission_confirmed"`
+	// Schema 2 names the changed action and its existing Run mandate instead of
+	// a permission claim. Schema 1 history keeps PermissionConfirmed.
+	ContinuationAction string `json:"continuation_action,omitempty"`
+	RequestSHA256      string `json:"request_sha256,omitempty"`
 }
 
-// Resolution records the current owner's explicit cause repair. It starts no
-// process, resends no input, grants no acceptance and releases no writer.
-func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA, resolution string, permissionConfirmed bool) (WorkflowRun, error) {
+func deliveryActionText(s string) string { return strings.Join(strings.Fields(s), " ") }
+
+// Resolution records the current owner's clarified cause and the changed action
+// it continues under the same Run mandate. It claims no future permission,
+// starts no process, resends no input, grants no acceptance and releases no
+// writer. Runtime still reviews the named action when it happens.
+func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA, resolution, action string) (WorkflowRun, error) {
 	if err := containing(d, root); err != nil {
 		return WorkflowRun{}, err
 	}
-	if strings.TrimSpace(resolution) == "" || len(resolution) > 4096 || !permissionConfirmed {
-		return WorkflowRun{}, workflowError(4, "resolution requires the actual repaired cause and confirmed current permission; do not repeat a denied action")
+	if strings.TrimSpace(resolution) == "" || len(resolution) > 4096 || deliveryActionText(action) == "" || len(action) > 2000 {
+		return WorkflowRun{}, workflowError(4, "resolution requires the actual clarified cause and the changed action to continue; do not repeat a denied action")
 	}
 	err := workflowUpdate(d, root, id, func(s *workflowState) error {
 		if !deliveryRun(s.Request) || s.Result.Delivery == nil || headlessRun(s.Request) {
@@ -159,7 +167,7 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 			if e = decode(b, 1<<20, &old); e != nil {
 				return e
 			}
-			if old.Stop.SHA256 == stopSHA && old.Resolution == resolution && old.NativeSession == s.Result.Transport.AgentSessionID {
+			if old.Stop.SHA256 == stopSHA && old.Resolution == resolution && old.ContinuationAction == action && old.NativeSession == s.Result.Transport.AgentSessionID {
 				return nil
 			}
 		}
@@ -183,7 +191,10 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 		if observed.Input.EffectStatus == DeliveryEffectUnknown || observed.Input.EffectStatus == DeliveryEffectPartial {
 			return workflowError(4, "unknown or partial external effects remain unresolved; text and permission confirmation cannot clear this stop")
 		}
-		r := DeliveryStopResolution{Kind: "ply.workflow.stop-resolution", RunID: id, Stop: stop, NativeSession: s.Result.Transport.AgentSessionID, Resolution: resolution, PermissionConfirmed: permissionConfirmed}
+		if observed.Input.Action != "" && deliveryActionText(observed.Input.Action) == deliveryActionText(action) {
+			return workflowError(4, "the refused action remains refused; name the changed action this owner will take instead")
+		}
+		r := DeliveryStopResolution{Kind: "ply.workflow.stop-resolution", RunID: id, Stop: stop, NativeSession: s.Result.Transport.AgentSessionID, Resolution: resolution, ContinuationAction: action, RequestSHA256: s.Result.RequestSHA256}
 		if _, err := deliveryAppendEvent(d, s, "resolve-"+strings.TrimPrefix(stopSHA, "sha256:"), "stop_resolution", r); err != nil {
 			return err
 		}
@@ -248,7 +259,7 @@ func deliveryLoadObservedStop(s *workflowState) error {
 			if err = decode(b, 1<<20, &resolution); err != nil {
 				return err
 			}
-			if resolution.Kind != "ply.workflow.stop-resolution" || resolution.RunID != s.Result.RunID || !resolution.PermissionConfirmed || s.Result.Delivery.ActiveStop == nil || resolution.Stop != *s.Result.Delivery.ActiveStop {
+			if resolution.Kind != "ply.workflow.stop-resolution" || resolution.RunID != s.Result.RunID || !resolution.PermissionConfirmed && resolution.ContinuationAction == "" || s.Result.Delivery.ActiveStop == nil || resolution.Stop != *s.Result.Delivery.ActiveStop {
 				return workflowError(4, "stop resolution binding changed")
 			}
 			pending = pending[:len(pending)-1]
@@ -315,5 +326,5 @@ func deliveryProjectStop(s workflowState, o *WorkflowRun) {
 	if mandateReceipt(s.Request) {
 		startup = "check-in is still required if mandate receipt is absent."
 	}
-	o.NextAction = WorkflowAction{"coordinator", "A sourced provider stop is preserved at " + s.Result.Delivery.ActiveStop.Locator + ". Inspect and repair its cause within the existing mandate. The same owner must use execute resolve-stop with this observation digest and actual resolution before continuing; " + startup + " Do not resend denied input, infer permission or release the writer."}
+	o.NextAction = WorkflowAction{"coordinator", "A sourced provider stop is preserved at " + s.Result.Delivery.ActiveStop.Locator + ". Inspect and repair its cause within the existing mandate. The same owner must use execute resolve-stop with this observation digest, the actual clarified cause and the changed action it will take before continuing; " + startup + " Do not resend denied input, infer permission or release the writer."}
 }

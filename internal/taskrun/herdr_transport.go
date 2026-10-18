@@ -134,6 +134,9 @@ func workflowIdentity(s workflowState, a workflowAgent, first bool) error {
 	if e := workflowLocation(s, a); e != nil {
 		return e
 	}
+	return workflowSession(s, a, first)
+}
+func workflowSession(s workflowState, a workflowAgent, first bool) error {
 	t := s.Result.Transport
 	if a.Session == nil || a.Session.Agent != s.Request.Runtime.Provider || a.Session.Kind != "id" || !plain(a.Session.Value, 1, 256) || (!first || t.AgentSessionID != "") && a.Session.Value != t.AgentSessionID {
 		return workflowError(4, "fresh Herdr identity or native "+s.Request.Runtime.Provider+" session differs from the bound run")
@@ -141,12 +144,21 @@ func workflowIdentity(s workflowState, a workflowAgent, first bool) error {
 	return nil
 }
 func workflowLocation(s workflowState, a workflowAgent) error {
-	t := s.Result.Transport
-	if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != s.Request.Runtime.Provider {
-		return workflowError(4, "fresh Herdr location, name or agent differs from the reserved attempt")
+	if e := workflowPlace(s, a); e != nil {
+		return e
 	}
 	if (s.Request.Runtime.Provider == "claude" || deliveryRun(s.Request) && a.ForegroundCWD != "") && a.ForegroundCWD != s.Observed.Target.WorktreeLocator {
 		return workflowError(4, "fresh "+s.Request.Runtime.Provider+" foreground cwd differs from the bound Task worktree")
+	}
+	return nil
+}
+
+// workflowPlace checks the reserved Herdr pane and provider without the
+// current foreground cwd. Observation may use it; Task mutations may not.
+func workflowPlace(s workflowState, a workflowAgent) error {
+	t := s.Result.Transport
+	if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.WorkspaceID != t.WorkspaceID || a.TabID != t.TabID || a.PaneID != t.PaneID || a.TerminalID != t.TerminalID || a.Name != workflowAgentName(s.Result.RunID) || a.Agent != s.Request.Runtime.Provider {
+		return workflowError(4, "fresh Herdr location, name or agent differs from the reserved attempt")
 	}
 	return nil
 }

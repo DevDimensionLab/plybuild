@@ -226,18 +226,23 @@ A later owner report cannot hide the active stop. Readback separately shows the
 terminal, Task prompt, observed owner receipt, runtime permission and target
 changes. Target changes alone do not claim meaningful tests or product completion.
 
-After the cause is actually repaired, the same owner uses the bound control:
+After the cause is clarified, the same owner names the changed action it will
+take under the same Run mandate:
 
 ```shell
 /absolute/ply-control workflow execute resolve-stop RUN_ID --context /absolute/context.json \
-  --stop sha256:ACTUAL_STOP_DIGEST --resolution 'Actual cause repair and current permission source' \
-  --permission-confirmed
+  --stop sha256:ACTUAL_STOP_DIGEST --resolution 'Actual clarified cause and who clarified it' \
+  --action 'Changed action this owner takes now'
 ```
 
-Resolution requires fresh identity checks and refuses an unknown effect attempt.
-It preserves the denial, starts nothing and sends no input. If acceptance is
-absent, the owner uses the startup command selected by the frozen callback guide before Task writes.
-Neither operation releases a writer or authorizes a replacement Run. These owner
+No permission confirmation is asked for: runtime still reviews the named action
+when it happens. The refused action itself cannot be named again, and unknown or
+partial effects cannot be cleared with text. Resolution requires fresh identity
+checks and refuses an unresolved attempt. It preserves the denial, starts
+nothing and sends no input. If acceptance is absent, the owner uses the startup
+command selected by the frozen callback guide before Task writes. Older stops
+resolved with the earlier `--permission-confirmed` flag remain readable history.
+Neither operation releases a writer; selected replacement uses `execute retire`. These owner
 commands must be present in the bound control; do not overwrite an older control
 to acquire them. Existing accepted Runs can use the supported compatible-control
 continuation when needed. Historical denied Runs remain preserved.
@@ -247,6 +252,31 @@ be acquired, the same Claude tab may require its native trust decision before
 `execute resume`. Preserve that action as a startup limitation; do not retry the
 launch or change permission mode. FL01 does not repair that configuration lock.
 
+### Retire a selected owner for a fresh Task copy
+
+When the coordinator selects replacement (for example standing cattle or
+Codex backup), one operation from the containing workspace ends the old owner:
+
+```shell
+ply workflow execute retire RUN_ID --observer 'Actual coordinator' \
+  --reason 'Selected replacement and its source'
+```
+
+Ply closes the exact bound Herdr pane itself, then requires the pane, its
+managed agent and every known Task writer to be positively absent. It records
+the retirement, closes every callback of the retired owner and releases only
+this Task's queue slot. No last owner callback, private context, manual journal
+edit, `queue release` or rebind is needed. The Run, its refusals, reviews and
+Task worktree stay as history; useful code can be reused as reviewed input. A
+fresh Task copy starts through ordinary goal publication and `execute` with its
+own new mandate and inherits no acceptance.
+
+An unresolved verification or integration attempt, a preserved stop with
+unknown or partial effects, or a writer that is still observed stops retirement
+with a concrete diagnosis before anything is recorded or released. A stopped
+history whose effects are known does not block it. Repeating the same input
+after a lost reply is safe; a different reason cannot overwrite the record.
+
 ## Follow the owner
 
 ```shell
@@ -254,7 +284,10 @@ ply workflow execute show wfr_<digest>
 ply workflow execute follow wfr_<digest> --timeout 60
 ```
 
-Show is read-only. Follow observes the same provider/session. A timeout ends
+Show is read-only. Follow observes the same provider/session. It checks the
+bound pane, terminal and native session, not the owner's current foreground
+cwd: a transient read outside the Task does not hide that the same session is
+working, idle or done. Owner callbacks still require the exact Task cwd. A timeout ends
 observation and leaves the provider running. Repeating execute reuses the
 preserved launch; it never creates a second tab to conceal an uncertain start.
 The interactive Herdr session is also where the human can steer the owner.

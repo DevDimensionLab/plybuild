@@ -20,6 +20,11 @@ func workflowCallback(d Dependencies, s workflowState, contextPath string) error
 	if contextPath == "" {
 		return workflowError(2, "--context is required")
 	}
+	if r, e := deliveryRetirement(s); e != nil {
+		return e
+	} else if r != nil {
+		return workflowError(4, "owner_retired: the coordinator retired this owner; its callbacks are closed and a fresh Task copy has its own mandate")
+	}
 	if contextPath != s.Result.Paths.Context {
 		return workflowError(4, "callback requires the exact current private context")
 	}

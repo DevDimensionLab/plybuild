@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDeliveryResolvingLatestStopDoesNotForgetEarlierDenial(t *testing.T) {
@@ -23,7 +24,7 @@ func TestDeliveryResolvingLatestStopDoesNotForgetEarlierDenial(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	resolved, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, second.Delivery.ActiveStop.SHA256, "Report cause repaired with actual permission", true)
+	resolved, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, second.Delivery.ActiveStop.SHA256, "Report cause repaired with actual permission", "Continue the clarified changed fixture action")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +34,7 @@ func TestDeliveryResolvingLatestStopDoesNotForgetEarlierDenial(t *testing.T) {
 	if _, err = WorkflowDeliveryBegin(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, beginFixtureInput(f, o)); err == nil {
 		t.Fatal("earlier denial no longer blocked acceptance")
 	}
-	resolved, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, first.Delivery.ActiveStop.SHA256, "Acceptance cause repaired with actual permission", true)
+	resolved, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, first.Delivery.ActiveStop.SHA256, "Acceptance cause repaired with actual permission", "Continue the clarified changed fixture action")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,13 +92,13 @@ func TestDeliveryObservedStopRequiresOwnerResolutionBeforeProgress(t *testing.T)
 		if _, err = WorkflowDeliveryBegin(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, in); err == nil {
 			t.Fatal("begin bypassed known stop")
 		}
-		if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, digest, "unknown current permission", false); err == nil {
+		if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, digest, "unknown current permission", ""); err == nil {
 			t.Fatal("unknown permission resolved stop")
 		}
-		if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "sha256:wrong", "cause repaired", true); err == nil {
+		if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "sha256:wrong", "cause repaired", "Continue the clarified changed fixture action"); err == nil {
 			t.Fatal("wrong stop resolved")
 		}
-		shown, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, digest, "Fixture cause repaired; current synthetic policy covers the same isolated scope", true)
+		shown, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, digest, "Fixture cause repaired; current synthetic policy covers the same isolated scope", "Continue the clarified changed fixture action")
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -164,5 +165,95 @@ func TestDeliveryCoordinatorPreservesDeniedCallbacksWithoutAcceptance(t *testing
 				t.Fatal("denial was overwritten")
 			}
 		})
+	}
+}
+
+// FS02: the owner names the clarified changed action instead of attesting
+// future runtime permission. The refused action itself stays refused.
+func TestDeliveryResolveStopContinuesNamedChangedActionWithoutPermissionClaim(t *testing.T) {
+	f := receiptFixture(t, "claude")
+	o := workflowTestStart(t, f.workflowFixture)
+	in := DeliveryBeginInput{Provider: "claude", NativeSession: o.Transport.AgentSessionID}
+	if _, err := WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, in, true); err != nil {
+		t.Fatal(err)
+	}
+	denied := "ply workflow run review wfr_old --candidate abc"
+	proof := writeAny(t, f.R.WorkspaceRoot, "work-refusal.json", map[string]string{"source": "synthetic provider refusal", "rule": "Auto-Mode Bypass"})
+	stopped, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryStopInput{EventID: "work-refusal", Provider: "claude", NativeSession: o.Transport.AgentSessionID, Stage: "work", Observer: "fixture coordinator", Reason: "Review command refused before execution", EvidencePath: proof, Action: denied, EffectStatus: DeliveryEffectNotStarted, Rule: "Auto-Mode Bypass"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	stop := *stopped.Delivery.ActiveStop
+	for _, action := range []string{"", "  ply workflow run review   wfr_old --candidate abc "} {
+		if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stop.SHA256, "Root selected a separate review", action); err == nil {
+			t.Fatalf("resolution with action %q cleared a refusal without a changed action", action)
+		}
+	}
+	shown, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if shown.Delivery.ActiveStop == nil || *shown.Delivery.ActiveStop != stop || len(shown.Delivery.Events) != 1 {
+		t.Fatal("rejected resolution changed the preserved refusal")
+	}
+	changed := "Continue product correction in this Task; root owns the separate review"
+	resolved, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stop.SHA256, "Root selected a separate review under its standing authority", changed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resolved.Delivery.ActiveStop != nil || resolved.Delivery.Phase != "working" || len(resolved.Delivery.Events) != 2 {
+		t.Fatalf("named continuation made no progress: %+v", resolved.Delivery)
+	}
+	var record DeliveryStopResolution
+	raw, err := workflowBound(resolved.Delivery.Events[1].Binding, 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = decode(raw, 1<<20, &record); err != nil {
+		t.Fatal(err)
+	}
+	if record.PermissionConfirmed || record.ContinuationAction != changed || record.Stop != stop || record.RequestSHA256 != o.RequestSHA256 {
+		t.Fatalf("resolution did not preserve the named action, mandate and refusal: %+v", record)
+	}
+	if strings.Contains(string(raw), "permission_confirmed\":true") {
+		t.Fatal("resolution recorded a self-attested permission")
+	}
+	if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, stop.SHA256, "Root selected a separate review under its standing authority", changed); err != nil {
+		t.Fatalf("identical replay after a lost reply failed: %v", err)
+	}
+	if s, err := workflowRead(f.R.WorkspaceRoot, o.RunID); err != nil || s.Result.Delivery.ActiveStop != nil || len(s.Result.Delivery.Events) != 2 {
+		t.Fatalf("reload of resolved history failed: %v", err)
+	}
+}
+
+// FS02 AC06: observing the same bound session is not a Task mutation. A
+// transient read cwd outside the Task must not hide that it still works;
+// owner callbacks keep their own fresh cwd check.
+func TestDeliveryFollowObservesSameSessionDuringTransientReadCWD(t *testing.T) {
+	f := receiptFixture(t, "claude")
+	o := workflowTestStart(t, f.workflowFixture)
+	if _, err := WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, DeliveryBeginInput{Provider: "claude", NativeSession: o.Transport.AgentSessionID}, true); err != nil {
+		t.Fatal(err)
+	}
+	before, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	outside := f.Parent
+	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_status": "working", "foreground_cwd": outside})
+	time.Sleep(time.Millisecond)
+	shown, err := WorkflowFollow(f.D, f.R.WorkspaceRoot, o.RunID, 300*time.Millisecond)
+	if err == nil || strings.Contains(err.Error(), "cwd") {
+		t.Fatalf("follow treated a transient read cwd as a binding failure: %v", err)
+	}
+	if shown.Transport.ObservedAt == before.Transport.ObservedAt || shown.Transport.State != "working" || shown.Delivery.Phase != "working" {
+		t.Fatalf("follow hid the still-working session: %+v", shown.Transport)
+	}
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = deliveryLiveOwner(f.D, s); err == nil || !strings.Contains(err.Error(), "cwd") {
+		t.Fatalf("owner callback check accepted a live session outside the Task: %v", err)
 	}
 }

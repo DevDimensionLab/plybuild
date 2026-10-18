@@ -226,7 +226,14 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			if !time.Now().Before(deadline) {
 				return observationTimeout()
 			}
-			a, e := workflowAgentGetUntil(d, *s, false, deadline)
+			// Follow only observes the bound session. A transient read cwd is
+			// not a Task mutation; owner callbacks recheck the live cwd.
+			a, e := workflowAgentRead(d, *s, deadline)
+			if e == nil {
+				if e = workflowPlace(*s, a); e == nil {
+					e = workflowSession(*s, a, false)
+				}
+			}
 			if e != nil {
 				return e
 			}

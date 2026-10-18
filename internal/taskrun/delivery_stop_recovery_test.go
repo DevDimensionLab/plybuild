@@ -123,14 +123,14 @@ func TestDeliveryObservedStopResolutionReplayWithPendingDenials(t *testing.T) {
 	}
 	sha := second.Delivery.ActiveStop.SHA256
 	resolution := "Synthetic report transport cause repaired; actual permission confirmed"
-	resolved, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, resolution, true)
+	resolved, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, resolution, "Continue the clarified changed fixture action")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if resolved.Delivery.ActiveStop == nil || *resolved.Delivery.ActiveStop != *first.Delivery.ActiveStop {
 		t.Fatal("earlier denial disappeared")
 	}
-	replay, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, resolution, true)
+	replay, err := WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, resolution, "Continue the clarified changed fixture action")
 	if err != nil {
 		t.Fatalf("lost resolution response cannot replay while earlier denial remains: %v", err)
 	}
@@ -142,14 +142,14 @@ func TestDeliveryObservedStopResolutionReplayWithPendingDenials(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	replay, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, resolution, true)
+	replay, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, resolution, "Continue the clarified changed fixture action")
 	if err != nil {
 		t.Fatalf("recorded resolution cannot replay with a later pending denial: %v", err)
 	}
 	if replay.Delivery.ActiveStop == nil || *replay.Delivery.ActiveStop != *third.Delivery.ActiveStop || len(replay.Delivery.Events) != 4 {
 		t.Fatal("resolution replay changed later denial or history")
 	}
-	if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, "different repair claim", true); err == nil {
+	if _, err = WorkflowResolveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, sha, "different repair claim", "Continue the clarified changed fixture action"); err == nil {
 		t.Fatal("conflicting resolution replay accepted")
 	}
 }

@@ -38,11 +38,14 @@ and return to that parent without a separate notification.
 If a provider rejects acceptance or report transport, stop the rejected action.
 The coordinator can use `workflow execute observe-stop --help` with the actual
 denial evidence. This preserves a sourced observation without owner acceptance
-or writer release. After the cause is actually repaired, the same owner uses
-`workflow execute resolve-stop --help` with the exact stop digest and current
-permission confirmation, then the contract-selected startup command if receipt is still absent. The
-resolution starts nothing and resends no rejected input. Never replace a Run
-or change global permission rules to forget a denial.
+or writer release. After the cause is clarified, the same owner uses
+`workflow execute resolve-stop --help` with the exact stop digest, the actual
+clarified cause and the changed action it takes now; no permission confirmation
+is needed. Then use the contract-selected startup command if receipt is still absent. The
+resolution starts nothing and resends no rejected input. Never repeat the refused
+action or change global permission rules to forget a denial. For a selected
+replacement, the coordinator uses `workflow execute retire --help`; the retired
+owner sends nothing further.
 
 ## Find the exact contract and candidate
 
