@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/currentstate"
 	"golang.org/x/sys/unix"
 )
 
@@ -188,6 +189,9 @@ func workerStateUpdate(d Dependencies, root, id string, fn func(*workflowState) 
 		if err := fn(s); err != nil {
 			return err
 		}
+		if s.Result.Worker.Reason == "" {
+			s.Result.Worker.ReasonCode = ""
+		}
 		s.Result.Worker.UpdatedAt = d.Now().UTC().Format(time.RFC3339Nano)
 		return nil
 	})
@@ -196,6 +200,7 @@ func workerStateUpdate(d Dependencies, root, id string, fn func(*workflowState) 
 func workerBlocked(d Dependencies, root, id string, cause error) error {
 	return workerStateUpdate(d, root, id, func(s *workflowState) error {
 		s.Result.Worker.Reason = cause.Error()
+		s.Result.Worker.ReasonCode = currentstate.Blocked
 		s.Result.Worker.Phase = "blocked"
 		s.Result.NextAction = WorkflowAction{"human", "Worker blocked with preserved work: " + cause.Error()}
 		return nil

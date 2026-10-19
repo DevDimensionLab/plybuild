@@ -45,6 +45,7 @@ type WorkerStatus struct {
 	Pretest             *FileBinding `json:"pretest,omitempty"`
 	Feedback            string       `json:"feedback,omitempty"`
 	Reason              string       `json:"reason,omitempty"`
+	ReasonCode          string       `json:"reason_code,omitempty"`
 	UpdatedAt           string       `json:"updated_at"`
 	RetryNotBefore      string       `json:"retry_not_before,omitempty"`
 	ProviderRetries     int          `json:"provider_retries,omitempty"`
@@ -109,38 +110,6 @@ func workerReadControl(s workflowState, o *WorkflowRun) error {
 		return err
 	}
 	return nil
-}
-
-// Older controllers retain pause/wait actions after their transitions. Project
-// only that known guidance; persisted history and unrelated diagnostics remain.
-func workerCurrentAction(o WorkflowRun) WorkflowAction {
-	a, w := o.NextAction, o.Worker
-	if w == nil || len(o.Reasons) != 0 || (a != (WorkflowAction{"human", "Work is preserved; use worker resume for this same Run."}) && a.Actor != "worker_wait") {
-		return a
-	}
-	// Pause and stop preserve the wait reason until resume is consumed.
-	preservedWait := w.RetryNotBefore != "" && w.Reason == "usage_limit: same Run waits until "+w.RetryNotBefore
-	if w.Phase == "blocked" || (w.Reason != "" && !preservedWait) {
-		return a
-	}
-	if (w.ControlAction == "resume" && (w.Phase == "paused" || w.Phase == "stopped" || w.Phase == "running" || w.Phase == "waiting")) ||
-		(w.ControlAction == "pause" && (w.Phase == "running" || w.Phase == "waiting")) ||
-		(w.ControlAction == "stop" && (w.Phase == "running" || w.Phase == "waiting" || w.Phase == "paused")) {
-		return WorkflowAction{"worker", w.ControlAction + " requested for this same Run; consumption at a safe boundary is not yet confirmed. Existing attempts retain ownership until their completion is known."}
-	}
-	switch w.Phase {
-	case "awaiting_product_answer":
-		return WorkflowAction{"product_answer", "The same developer session and Task await one bound product answer; no model turn is dispatched while waiting."}
-	case "running":
-		if w.Reason == "" && w.RetryNotBefore == "" {
-			return WorkflowAction{"worker", "Observe the same Run; cached worker state does not attest provider liveness or attempt completion."}
-		}
-	case "waiting":
-		if w.RetryNotBefore != "" && (w.Reason == "" || w.Reason == "usage_limit: same Run waits until "+w.RetryNotBefore) {
-			return WorkflowAction{"worker_wait", "The same Run waits until " + w.RetryNotBefore + "; continuing still requires confirmed attempt completion."}
-		}
-	}
-	return a
 }
 
 func validateWorkerRequest(r WorkflowRequest) error {

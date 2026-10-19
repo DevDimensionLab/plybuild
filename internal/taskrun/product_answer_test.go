@@ -526,7 +526,7 @@ func sl01NextAction(t *testing.T, f *aw01Fixture, actor string, want ...string) 
 		// This synthetic fixture reports binding drift through WorkflowShow,
 		// which keeps precedence; project its persisted Run directly.
 		f.reload()
-		a := productCurrentAction(f.d, f.s, f.s.Result)
+		a := currentRunAction(f.d, f.s, f.s.Result)
 		if a.Actor != actor {
 			t.Fatalf("next action %+v (persisted %+v), want actor %s", a, f.s.Result.NextAction, actor)
 		}

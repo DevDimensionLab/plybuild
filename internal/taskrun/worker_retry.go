@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/devdimensionlab/plybuild/internal/currentstate"
 )
 
 // WorkerProviderFailure is an observation from a provider error envelope, never
@@ -153,6 +155,7 @@ func workerWaitForProvider(d Dependencies, s workflowState, result workerAttempt
 		w.LastProviderFailure = result.Stdout.Locator
 		w.Phase = "waiting"
 		w.Reason = "usage_limit: same Run waits until " + w.RetryNotBefore
+		w.ReasonCode = currentstate.ProviderWait
 		current.Result.NextAction = WorkflowAction{"worker_wait", w.Reason}
 		return nil
 	})

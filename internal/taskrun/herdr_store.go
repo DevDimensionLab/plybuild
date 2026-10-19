@@ -465,8 +465,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	if headlessRun(s.Request) {
 		// Resolve current evidence first, so unavailable closeout or binding
 		// diagnostics cannot be replaced with ordinary worker observation advice.
-		o.NextAction = workerCurrentAction(o)
-		o.NextAction = productCurrentAction(d, s, o)
+		o.NextAction = currentRunAction(d, s, o)
 	}
 	deliveryProjectStop(s, &o)
 	if r, e := deliveryRetirement(s); e != nil {

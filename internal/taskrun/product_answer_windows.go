@@ -2,6 +2,8 @@
 
 package taskrun
 
+import "github.com/devdimensionlab/plybuild/internal/currentstate"
+
 // The public CLI is portable; the qualified same-owner provider runtime is not.
 func ReadProductQuestion(Dependencies, string, string) (ProductQuestionReadback, error) {
 	return ProductQuestionReadback{}, boundAnswerError("unsupported", "Product-answer continuation requires the qualified macOS worker adapter.")
@@ -19,6 +21,6 @@ func ShowBoundAnswer(Dependencies, string, string) (BoundAnswerStatus, error) {
 	return BoundAnswerStatus{}, boundAnswerError("unsupported", "Product-answer continuation requires the qualified macOS worker adapter.")
 }
 
-func productCurrentAction(_ Dependencies, _ workflowState, o WorkflowRun) WorkflowAction {
-	return o.NextAction
+func productCurrentFacts(_ Dependencies, _ workflowState, _ WorkflowRun) *currentstate.Answer {
+	return nil
 }

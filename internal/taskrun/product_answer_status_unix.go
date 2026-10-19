@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+
+	"github.com/devdimensionlab/plybuild/internal/currentstate"
 )
 
 type productCompletedAnswer struct {
@@ -173,59 +175,35 @@ func productContinuationStatus(d Dependencies, c productAnswerClaim, o BoundAnsw
 	return o
 }
 
-var productAnswerRequired = WorkflowAction{"product_answer", "One product choice is required; the same developer session and Task reservation are retained."}
+var productAnswerRequired = WorkflowAction{"product_answer", currentstate.ProductChoiceRequired}
 
-// Question publication and parent pause persist guidance that later native
-// transitions never replace. Project it from the preserved question, answer
-// and continuation facts. This read never dispatches, consumes or repairs.
-func productCurrentAction(d Dependencies, s workflowState, o WorkflowRun) WorkflowAction {
-	a, w := o.NextAction, o.Worker
-	if w == nil || s.ProductQuestion == nil || len(o.Reasons) != 0 || (a.Actor != "product_answer" && (a.Actor != "parent_control" || w.Phase == "paused" || w.Phase == "stopped")) {
-		return a
+// Gather only preserved facts. Actor selection and precedence belong to
+// currentstate, shared with the worker and Week projections.
+func productCurrentFacts(d Dependencies, s workflowState, o WorkflowRun) *currentstate.Answer {
+	if o.Worker == nil || s.ProductQuestion == nil {
+		return nil
 	}
-	inspect := func(detail string) WorkflowAction {
-		return WorkflowAction{"human", detail + " Do not answer again or resend; inspect the preserved Run."}
+	unknown := func(detail string) *currentstate.Answer {
+		return &currentstate.Answer{State: "outcome_unknown", Detail: detail}
 	}
 	q, e := productQuestionRecordRead(s)
 	if e != nil {
-		return inspect("The product question record cannot be confirmed: " + e.Error() + ".")
+		return unknown("The product question record cannot be confirmed: " + e.Error() + ".")
 	}
 	c, e := productClaimForQuestion(s.Request.WorkspaceRoot, s.Result.RunID, q.Question.QuestionID)
-	if os.IsNotExist(e) && w.Phase == "awaiting_product_answer" {
-		return productAnswerRequired
-	}
 	if os.IsNotExist(e) {
-		return inspect("The product question has no recorded answer while the worker is " + w.Phase + ".")
+		return &currentstate.Answer{State: "unanswered"}
 	}
 	if e != nil {
-		return inspect("A recorded answer cannot be confirmed: " + e.Error() + ".")
+		return unknown("A recorded answer cannot be confirmed: " + e.Error() + ".")
 	}
 	status := productClaimStatus(d, s.Request.WorkspaceRoot, c)
-	answer := "Answer " + c.Request.RequestID
-	parent := ""
+	f := &currentstate.Answer{State: status.State, RequestID: c.Request.RequestID, Detail: "unknown outcome"}
 	for _, r := range status.Reasons {
-		parent += " Current parent condition: " + r.Detail
+		f.ParentDetail += " Current parent condition: " + r.Detail
+		f.Detail = r.Detail
 	}
-	switch status.State {
-	case "answer_recorded":
-		return WorkflowAction{"worker", answer + " is received; the worker owns its single same-session continuation, which has not started. Answer use is not confirmed; no new human answer is needed." + parent}
-	case "continuation_deferred":
-		return WorkflowAction{"parent_control", answer + " is received; its continuation waits for explicit parent resume. Answer use is not confirmed; no new human answer is needed."}
-	case "continuation_reserved":
-		return WorkflowAction{"worker", answer + " is received; the worker has reserved its single same-session continuation. Answer use is not confirmed; no new human answer is needed." + parent}
-	case "continuation_observed":
-		return WorkflowAction{"worker", answer + " is received and the same developer session is continuing with it. Answer use is not confirmed until that turn completes; no new human answer is needed." + parent}
-	case "continuation_completed":
-		if (o.Delivery != nil && o.Delivery.Phase == "completed") || w.Phase == "completed" || w.Stage == "completed" {
-			return WorkflowAction{"user", answer + " use is confirmed by the same developer session and the Task delivery is completed. No human answer or further action is needed for this answer."}
-		}
-		return WorkflowAction{"worker", answer + " use is confirmed by the same developer session; the worker owns the " + w.Stage + " stage of this Run. No human answer is needed." + parent}
-	}
-	detail := "unknown outcome"
-	if len(status.Reasons) != 0 {
-		detail = status.Reasons[len(status.Reasons)-1].Detail
-	}
-	return inspect(answer + " is received, but its continuation is not confirmed: " + detail)
+	return f
 }
 
 func productObservedThread(raw []byte, expected string) bool {

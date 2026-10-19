@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/currentstate"
 	"github.com/devdimensionlab/plybuild/internal/taskexecute"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -179,12 +180,13 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 
 func initialState(b Binding) State {
 	s := State{Kind: "ply.workflow.week", SchemaVersion: 1, ID: b.ID, ContractSHA256: b.SHA256, Phase: "ready", StartedAt: b.StartedAt, Deadline: b.Deadline, LastProgressAt: b.StartedAt, UpdatedAt: b.StartedAt, NextAction: weekStartSelected, DesiredAction: "continue", Entries: []Entry{}}
+	s.GuidanceOrigin = currentstate.OtherOrigin
 	if b.ControlContract != nil {
 		s.StartContract = &b.Contract
 		s.ControlContract = b.ControlContract
 	}
 	for _, sel := range b.Contract.Selected {
-		s.Entries = append(s.Entries, Entry{TaskID: sel.TaskID, State: "pending"})
+		s.Entries = append(s.Entries, Entry{TaskID: sel.TaskID, State: "pending", BlockOrigin: currentstate.OtherOrigin})
 	}
 	return s
 }
@@ -281,30 +283,15 @@ func (m Manager) Show(root, id string) (State, error) {
 			}
 		}
 	}
-	if ix := entryIndex(&s, s.ActiveTaskID); s.ActiveTaskID != "" && ix >= 0 && s.Entries[ix].RunID != "" && (s.Entries[ix].State == "awaiting_product_answer" || answerGuidance(s)) {
+	if ix := entryIndex(&s, s.ActiveTaskID); s.ActiveTaskID != "" && ix >= 0 && s.Entries[ix].RunID != "" {
 		// Cached answer guidance may predate the native Run's current boundary.
 		// Project that boundary as the next Tick would; nothing is dispatched.
 		entry := &s.Entries[ix]
 		if run, e := m.Native.Observe(b.Contract, entry.RunID); e != nil {
 			s.Phase, entry.State = "unknown", "unknown"
 			s.NextAction = "Native Run observation failed: " + e.Error() + "; inspect the same Run before answering"
-		} else if run.Completed {
-			entry.State = "completed"
-			complete := true
-			for _, e := range s.Entries {
-				complete = complete && e.State == "completed"
-			}
-			if s.DesiredAction == "continue" {
-				s.Phase, s.NextAction = "running", weekRunCompleted
-				if complete {
-					s.Phase, s.NextAction = "completed", weekQueueComplete
-				}
-			}
 		} else {
-			if s.DesiredAction == "continue" {
-				s.Phase = run.Phase
-			}
-			projectAnswerWait(&s, entry, run)
+			projectCurrentRun(&s, entry, run)
 		}
 	} else if s.ActiveTaskID == "" {
 		projectQueueGuidance(&s)
@@ -535,7 +522,7 @@ func (m Manager) Tick(b Binding, dir string, s *State) error {
 				}
 				// The native adapter reacquires the worker lock and proves result/process
 				// quiescence before this irreversible native queue release.
-				e.State = "blocked"
+				e.State, e.BlockOrigin = "blocked", currentstate.OtherOrigin
 				e.Reason = run.Reason
 				if er = m.save(b, dir, s); er != nil {
 					return er
@@ -668,17 +655,17 @@ func (m Manager) Tick(b Binding, dir string, s *State) error {
 		}
 		row, er := selectedRow(b.Contract, sel, q)
 		if er != nil {
-			e.State = "blocked"
+			e.State, e.BlockOrigin = "blocked", currentstate.OtherOrigin
 			e.Reason = er.Error()
 			continue
 		}
 		if row.State != "ready" {
-			e.State = "blocked"
+			e.State, e.BlockOrigin = "blocked", currentstate.OtherOrigin
 			e.Reason = "Native Goal is not buildable: " + queueReason(row.Reasons)
 			continue
 		}
 		if er = m.Native.Preview(b.Contract, sel, b.Control); er != nil {
-			e.State = "blocked"
+			e.State, e.BlockOrigin = "blocked", currentstate.OtherOrigin
 			e.Reason = "Native preflight: " + er.Error()
 			continue
 		}

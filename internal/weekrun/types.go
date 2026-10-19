@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/currentstate"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -61,24 +62,26 @@ type Binding struct {
 
 // productAnswerWait is current only while the native Run still asks for its
 // bound product answer.
-const productAnswerWait = "Wait for one bound product answer on the same native Task and developer session"
+const productAnswerWait = currentstate.ProductAnswerWait
 
 // After the answer wait, the week projects the native Run's own next actor.
-const nativeNextPrefix = "Native Run next actor "
-const weekStartSelected = "Start only the selected native Goals"
-const weekQueueComplete = "Selected queue complete; no additional work is authorized"
-const weekRunCompleted = "Native Run completed; the week controller selects the next eligible Goal"
+const nativeNextPrefix = currentstate.NativeNextPrefix
+const weekStartSelected = currentstate.WeekStartSelected
+const weekQueueComplete = currentstate.WeekQueueComplete
+const weekRunCompleted = currentstate.WeekRunCompleted
 
 type Entry struct {
-	TaskID       workspace.TaskID `json:"task_id"`
-	State        string           `json:"state"`
-	RunID        string           `json:"run_id,omitempty"`
-	Reason       string           `json:"reason,omitempty"`
-	BaseOID      string           `json:"base_oid,omitempty"`
-	BaseRevision int              `json:"base_revision,omitempty"`
+	BlockOrigin  currentstate.Origin `json:"block_origin,omitempty"`
+	TaskID       workspace.TaskID    `json:"task_id"`
+	State        string              `json:"state"`
+	RunID        string              `json:"run_id,omitempty"`
+	Reason       string              `json:"reason,omitempty"`
+	BaseOID      string              `json:"base_oid,omitempty"`
+	BaseRevision int                 `json:"base_revision,omitempty"`
 }
 
 type State struct {
+	GuidanceOrigin   currentstate.Origin      `json:"guidance_origin,omitempty"`
 	StartContract    *Contract                `json:"start_contract,omitempty"`
 	ControlContract  *taskrun.ControlContract `json:"control_contract,omitempty"`
 	ControlRevision  uint64                   `json:"control_revision,omitempty"`

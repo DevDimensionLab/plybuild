@@ -103,6 +103,7 @@ func TestNA01WeekShowProjectsStaleAnswerWaitReadOnly(t *testing.T) {
 	f := newMR05Week(t)
 	f.tick(t)
 	f.tick(t)
+	f.s.GuidanceOrigin = "" // Historical record predates explicit origins.
 	f.s.Phase, f.s.NextAction = "running", productAnswerWait
 	f.s.Entries[0].State = "awaiting_product_answer"
 	if e := publish(filepath.Join(f.dir, "state.json"), f.s, true); e != nil {
@@ -164,6 +165,7 @@ func TestNA01WeekShowAgreesWithNativeBoundaryBeforeTick(t *testing.T) {
 			f := newMR05Week(t)
 			f.tick(t)
 			f.tick(t)
+			f.s.GuidanceOrigin = "" // Historical record predates explicit origins.
 			f.s.Phase, f.s.NextAction = "awaiting_product_answer", productAnswerWait
 			f.s.Entries[0].State = "awaiting_product_answer"
 			if e := publish(filepath.Join(f.dir, "state.json"), f.s, true); e != nil {

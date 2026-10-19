@@ -433,6 +433,12 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 			next(t, "recipient", "Automatic acceptance and review passed")
 			week(t, "running", "running", false)
 			f.Step(t) // integrate stage
+			// CL02 releases source ownership during integration, then closes
+			// from the controller after the native attempt process has exited.
+			// Preserve both facts; an integration receipt alone is not closeout.
+			if o = f.Step(t); o.Delivery.Phase != "closing" || o.Delivery.OwnershipRelease == nil || o.DeliveryStatus.FinalDelivery.State != "delivered" {
+				t.Fatalf("native integration did not reach its released cleanup boundary: %+v", o)
+			}
 			if o = f.Step(t); o.Delivery.Phase != "completed" {
 				t.Fatalf("native integration did not complete: %+v", o.Delivery)
 			}

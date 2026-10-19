@@ -198,7 +198,7 @@ func (f *SL01NativeFixture) ProjectPersistedAnswerAction(t *testing.T, phase, st
 	w := *o.Worker
 	w.Phase, w.Stage, w.Job = phase, stage, nil
 	o.Worker, o.NextAction = &w, productAnswerRequired
-	return productCurrentAction(f.D, s, o)
+	return currentRunAction(f.D, s, o)
 }
 func (f *SL01NativeFixture) AssertNativeSource(t *testing.T) {
 	t.Helper()
