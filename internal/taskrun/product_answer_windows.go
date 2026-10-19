@@ -18,3 +18,7 @@ func ApplyBoundAnswer(Dependencies, BoundAnswerRequest) (BoundAnswerStatus, erro
 func ShowBoundAnswer(Dependencies, string, string) (BoundAnswerStatus, error) {
 	return BoundAnswerStatus{}, boundAnswerError("unsupported", "Product-answer continuation requires the qualified macOS worker adapter.")
 }
+
+func productCurrentAction(_ Dependencies, _ workflowState, o WorkflowRun) WorkflowAction {
+	return o.NextAction
+}

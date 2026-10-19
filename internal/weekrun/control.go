@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
@@ -510,6 +511,42 @@ func (m Manager) saveBoundFailure(b Binding, dir string, cause error) (State, er
 	return failed, err
 }
 
+// The bound answer wait is current only while the native Run still asks for
+// its answer. Afterwards its own next actor replaces the stale wait. Without
+// a native next actor there is no evidence of a received answer.
+func projectAnswerWait(s *State, entry *Entry, r Run) {
+	if r.Phase == "awaiting_product_answer" && (r.NextAction.Actor == "product_answer" || r.NextAction.Actor == "") {
+		s.Phase, entry.State, s.NextAction = "awaiting_product_answer", "awaiting_product_answer", productAnswerWait
+		return
+	}
+	if entry.State == "awaiting_product_answer" {
+		entry.State = "running"
+	}
+	if s.Phase == "awaiting_product_answer" {
+		s.Phase = "running"
+	}
+	if answerGuidance(*s) {
+		s.NextAction = "Observe the same native Run"
+		if r.NextAction.Actor != "" {
+			s.NextAction = nativeNextPrefix + r.NextAction.Actor + ": " + r.NextAction.Message
+		}
+	}
+}
+
+func answerGuidance(s State) bool {
+	return s.NextAction == productAnswerWait || strings.HasPrefix(s.NextAction, nativeNextPrefix)
+}
+
+// Without an active Run, answer guidance from an earlier Task is history.
+func projectQueueGuidance(s *State) {
+	if answerGuidance(*s) {
+		s.NextAction = weekStartSelected
+		if s.Phase == "completed" {
+			s.NextAction = weekQueueComplete
+		}
+	}
+}
+
 // The guard protects planning and reservation only. Native launch/resume and
 // launchd wait happen after release. Reconciliation reloads parent state, so a
 // pause published during dispatch cannot be overwritten by a stale tick.
@@ -628,9 +665,7 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 						dispatch = &Dispatch{Kind: "control", TaskID: entry.TaskID, RunID: entry.RunID}
 					}
 				} else if r.Phase == "awaiting_product_answer" {
-					s.Phase = "awaiting_product_answer"
-					entry.State = "awaiting_product_answer"
-					s.NextAction = "Wait for one bound product answer on the same native Task and developer session"
+					projectAnswerWait(&s, entry, r)
 					s.NextCheckAt = ""
 					s.ResumeRequested = false
 					g.ResumeAllowed = false
@@ -644,14 +679,17 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 				} else if r.Phase == "blocked" {
 					s.Phase = "blocked"
 					s.Reason = "The native Run requires local recovery."
+					projectAnswerWait(&s, entry, r)
 				} else if r.Phase == "paused" || r.Phase == "stopped" {
 					if s.ResumeRequested && g.ResumeAllowed {
 						dispatch = &Dispatch{Kind: "resume", TaskID: entry.TaskID, RunID: entry.RunID, Explicit: true}
 					} else {
 						s.Phase = r.Phase
 					}
+					projectAnswerWait(&s, entry, r)
 				} else {
 					s.Phase = r.Phase
+					projectAnswerWait(&s, entry, r)
 					s.NextCheckAt = r.RetryNotBefore
 					s.ResumeRequested = false
 					g.ResumeAllowed = false
@@ -717,6 +755,7 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 					s.Phase = "completed"
 				}
 			}
+			projectQueueGuidance(&s)
 		}
 		if s.DesiredAction != "continue" && s.ActiveTaskID == "" {
 			s.Phase = parkPhase(s.DesiredAction, expired)

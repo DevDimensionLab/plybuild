@@ -172,6 +172,59 @@ func productContinuationStatus(d Dependencies, c productAnswerClaim, o BoundAnsw
 	o.Evidence = append(o.Evidence, BoundAnswerEvidence{job.ID, "continuation_result", result.SHA256, r.FinishedAt})
 	return o
 }
+
+var productAnswerRequired = WorkflowAction{"product_answer", "One product choice is required; the same developer session and Task reservation are retained."}
+
+// Question publication and parent pause persist guidance that later native
+// transitions never replace. Project it from the preserved question, answer
+// and continuation facts. This read never dispatches, consumes or repairs.
+func productCurrentAction(d Dependencies, s workflowState, o WorkflowRun) WorkflowAction {
+	a, w := o.NextAction, o.Worker
+	if w == nil || s.ProductQuestion == nil || len(o.Reasons) != 0 || (a.Actor != "product_answer" && (a.Actor != "parent_control" || w.Phase == "paused" || w.Phase == "stopped")) {
+		return a
+	}
+	inspect := func(detail string) WorkflowAction {
+		return WorkflowAction{"human", detail + " Do not answer again or resend; inspect the preserved Run."}
+	}
+	q, e := productQuestionRecordRead(s)
+	if e != nil {
+		return inspect("The product question record cannot be confirmed: " + e.Error() + ".")
+	}
+	c, e := productClaimForQuestion(s.Request.WorkspaceRoot, s.Result.RunID, q.Question.QuestionID)
+	if os.IsNotExist(e) && w.Phase == "awaiting_product_answer" {
+		return productAnswerRequired
+	}
+	if os.IsNotExist(e) {
+		return inspect("The product question has no recorded answer while the worker is " + w.Phase + ".")
+	}
+	if e != nil {
+		return inspect("A recorded answer cannot be confirmed: " + e.Error() + ".")
+	}
+	status := productClaimStatus(d, s.Request.WorkspaceRoot, c)
+	answer := "Answer " + c.Request.RequestID
+	parent := ""
+	for _, r := range status.Reasons {
+		parent += " Current parent condition: " + r.Detail
+	}
+	switch status.State {
+	case "answer_recorded":
+		return WorkflowAction{"worker", answer + " is received; the worker owns its single same-session continuation, which has not started. Answer use is not confirmed; no new human answer is needed." + parent}
+	case "continuation_deferred":
+		return WorkflowAction{"parent_control", answer + " is received; its continuation waits for explicit parent resume. Answer use is not confirmed; no new human answer is needed."}
+	case "continuation_reserved":
+		return WorkflowAction{"worker", answer + " is received; the worker has reserved its single same-session continuation. Answer use is not confirmed; no new human answer is needed." + parent}
+	case "continuation_observed":
+		return WorkflowAction{"worker", answer + " is received and the same developer session is continuing with it. Answer use is not confirmed until that turn completes; no new human answer is needed." + parent}
+	case "continuation_completed":
+		return WorkflowAction{"worker", answer + " use is confirmed by the same developer session; the worker owns the " + w.Stage + " stage of this Run. No human answer is needed." + parent}
+	}
+	detail := "unknown outcome"
+	if len(status.Reasons) != 0 {
+		detail = status.Reasons[len(status.Reasons)-1].Detail
+	}
+	return inspect(answer + " is received, but its continuation is not confirmed: " + detail)
+}
+
 func productObservedThread(raw []byte, expected string) bool {
 	thread, started := "", false
 	for _, line := range bytes.Split(raw, []byte{'\n'}) {

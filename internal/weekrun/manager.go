@@ -178,7 +178,7 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 }
 
 func initialState(b Binding) State {
-	s := State{Kind: "ply.workflow.week", SchemaVersion: 1, ID: b.ID, ContractSHA256: b.SHA256, Phase: "ready", StartedAt: b.StartedAt, Deadline: b.Deadline, LastProgressAt: b.StartedAt, UpdatedAt: b.StartedAt, NextAction: "Start only the selected native Goals", DesiredAction: "continue", Entries: []Entry{}}
+	s := State{Kind: "ply.workflow.week", SchemaVersion: 1, ID: b.ID, ContractSHA256: b.SHA256, Phase: "ready", StartedAt: b.StartedAt, Deadline: b.Deadline, LastProgressAt: b.StartedAt, UpdatedAt: b.StartedAt, NextAction: weekStartSelected, DesiredAction: "continue", Entries: []Entry{}}
 	if b.ControlContract != nil {
 		s.StartContract = &b.Contract
 		s.ControlContract = b.ControlContract
@@ -280,6 +280,34 @@ func (m Manager) Show(root, id string) (State, error) {
 				s.NextAction = "Native worker reached its confirmed boundary; the controller will reconcile preserved work on resume"
 			}
 		}
+	}
+	if ix := entryIndex(&s, s.ActiveTaskID); s.ActiveTaskID != "" && ix >= 0 && s.Entries[ix].RunID != "" && (s.Entries[ix].State == "awaiting_product_answer" || answerGuidance(s)) {
+		// Cached answer guidance may predate the native Run's current boundary.
+		// Project that boundary as the next Tick would; nothing is dispatched.
+		entry := &s.Entries[ix]
+		if run, e := m.Native.Observe(b.Contract, entry.RunID); e != nil {
+			s.Phase, entry.State = "unknown", "unknown"
+			s.NextAction = "Native Run observation failed: " + e.Error() + "; inspect the same Run before answering"
+		} else if run.Completed {
+			entry.State = "completed"
+			complete := true
+			for _, e := range s.Entries {
+				complete = complete && e.State == "completed"
+			}
+			if s.DesiredAction == "continue" {
+				s.Phase, s.NextAction = "running", weekRunCompleted
+				if complete {
+					s.Phase, s.NextAction = "completed", weekQueueComplete
+				}
+			}
+		} else {
+			if s.DesiredAction == "continue" {
+				s.Phase = run.Phase
+			}
+			projectAnswerWait(&s, entry, run)
+		}
+	} else if s.ActiveTaskID == "" {
+		projectQueueGuidance(&s)
 	}
 	var c Control
 	if e := readJSON(filepath.Join(dir, "control.json"), &c); e == nil && c.ID != s.SeenControl {
@@ -675,7 +703,7 @@ func (m Manager) Tick(b Binding, dir string, s *State) error {
 		s.NextAction = "Independent selected work is finished; blocked Tasks and dependent Goals are preserved"
 	} else {
 		s.Phase = "completed"
-		s.NextAction = "Selected queue complete; no additional work is authorized"
+		s.NextAction = weekQueueComplete
 	}
 	s.LastProgressAt = stamp(m.now())
 	return m.save(b, dir, s)

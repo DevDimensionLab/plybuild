@@ -472,7 +472,7 @@ func workerPublishProductQuestion(d Dependencies, s workflowState, r workerAttem
 			current.ProductQuestion = &b
 			current.Result.Worker.Phase = "awaiting_product_answer"
 			current.Result.Worker.Reason = ""
-			current.Result.NextAction = WorkflowAction{"product_answer", "One product choice is required; the same developer session and Task reservation are retained."}
+			current.Result.NextAction = productAnswerRequired
 			return nil
 		})
 	})

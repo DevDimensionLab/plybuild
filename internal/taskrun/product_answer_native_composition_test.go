@@ -3,6 +3,7 @@
 package taskrun_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/json"
@@ -10,8 +11,10 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -174,6 +177,83 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 	if e := m.Tick(b, dir, &state); e != nil {
 		t.Fatal(e)
 	}
+	// NA01: each public worker/week read agrees on phase, entry and next actor.
+	// With PLY_BIN, the same reads also go through that public CLI executable.
+	cli := func(t *testing.T, v any, args ...string) bool {
+		t.Helper()
+		bin := os.Getenv("PLY_BIN")
+		if bin == "" {
+			return false
+		}
+		cmd := exec.Command(bin, append(args, "--workspace", f.Root, "--format", "json")...)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		raw, e := cmd.Output()
+		if e != nil || json.Unmarshal(raw, v) != nil {
+			t.Fatalf("public CLI %v: %v\n%s\n%s", args, e, raw, stderr.Bytes())
+		}
+		t.Logf("na01 public CLI %s %v", bin, args)
+		return true
+	}
+	next := func(t *testing.T, actor string, want ...string) {
+		t.Helper()
+		o, e := taskrun.ShowWorker(f.D, f.Root, f.RunID)
+		if e != nil || o.NextAction.Actor != actor {
+			t.Fatalf("worker next action %+v (phase %s stage %s), want actor %s: %v", o.NextAction, o.Worker.Phase, o.Worker.Stage, actor, e)
+		}
+		for _, w := range want {
+			if !strings.Contains(o.NextAction.Message, w) {
+				t.Fatalf("worker next action %q lacks %q", o.NextAction.Message, w)
+			}
+		}
+		var public taskrun.WorkflowRun
+		if cli(t, &public, "workflow", "worker", "show", f.RunID) && (public.NextAction != o.NextAction || public.Worker.Phase != o.Worker.Phase || public.Worker.Stage != o.Worker.Stage) {
+			t.Fatalf("public worker show %+v %s/%s differs from %+v %s/%s", public.NextAction, public.Worker.Phase, public.Worker.Stage, o.NextAction, o.Worker.Phase, o.Worker.Stage)
+		}
+	}
+	week := func(t *testing.T, phase, entry string, asksAnswer bool) {
+		t.Helper()
+		if e := m.Tick(b, dir, &state); e != nil {
+			t.Fatal(e)
+		}
+		shown, e := m.Show(f.Root, b.ID)
+		views := []weekrun.State{state, shown}
+		var public weekrun.State
+		if cli(t, &public, "workflow", "week", "show", b.ID) {
+			views = append(views, public)
+		}
+		for _, s := range views {
+			if e != nil || s.Phase != phase || s.Entries[0].State != entry || strings.Contains(s.NextAction, "product answer") != asksAnswer || s.NextAction != state.NextAction {
+				t.Fatalf("week %s/%s %q, want %s/%s asks=%v as %q: %v", s.Phase, s.Entries[0].State, s.NextAction, phase, entry, asksAnswer, state.NextAction, e)
+			}
+		}
+	}
+	// Question and answer reads keep their own public meaning at each stage.
+	asked := func(t *testing.T, question, answer, request string) {
+		t.Helper()
+		q, e := taskrun.ReadProductQuestion(f.D, f.Root, f.RunID)
+		if e != nil || q.QuestionState != question {
+			t.Fatalf("question state %s, want %s: %v", q.QuestionState, question, e)
+		}
+		var publicQ taskrun.ProductQuestionReadback
+		if cli(t, &publicQ, "workflow", "execute", "question", f.RunID) && publicQ.QuestionState != question {
+			t.Fatalf("public question state %s, want %s", publicQ.QuestionState, question)
+		}
+		if request == "" {
+			return
+		}
+		a, e := taskrun.ShowBoundAnswer(f.D, f.Root, request)
+		if e != nil || a.State != answer {
+			t.Fatalf("answer state %s, want %s: %v", a.State, answer, e)
+		}
+		var publicA taskrun.BoundAnswerStatus
+		if cli(t, &publicA, "workflow", "execute", "answer", "status", request) && publicA.State != answer {
+			t.Fatalf("public answer state %s, want %s", publicA.State, answer)
+		}
+	}
+	next(t, "product_answer", "product choice")
+	week(t, "awaiting_product_answer", "awaiting_product_answer", true)
+	asked(t, "active", "", "")
 	q, e := taskrun.ReadProductQuestion(f.D, f.Root, f.RunID)
 	if e != nil || q.Eligibility != "ready" {
 		t.Fatalf("read %+v %v", q, e)
@@ -214,6 +294,11 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 		t.Fatalf("apply %+v %v", status, e)
 	}
 	export("native-answer-recorded", status)
+	t.Run("na01_received_answer_is_not_requested_again", func(t *testing.T) {
+		next(t, "worker", p.Request.RequestID, "received", "use is not confirmed")
+		week(t, "running", "running", false)
+		asked(t, "answered", "answer_recorded", p.Request.RequestID)
+	})
 	f.Step(t) // immutable continuation reservation
 	t.Run("source_session_drift_blocks_start", func(t *testing.T) { f.AssertSourceSessionDriftBlocks(t, *p.Request, "start") })
 	release := f.StartHeldContinuation(t) // owned process held after real turn.started
@@ -229,6 +314,10 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 		t.Fatalf("live owned turn not observed %+v %v", status, e)
 	}
 	observedStart := *status.Receipt.ContinuationStartedAtUTC
+	t.Run("na01_started_continuation_is_not_confirmed_use", func(t *testing.T) {
+		next(t, "worker", p.Request.RequestID, "continuing", "use is not confirmed")
+		asked(t, "answered", "continuation_observed", p.Request.RequestID)
+	})
 	export("native-continuation-observed", status)
 	// Parent control completes while the provider is still held. Neither the
 	// parent nor TaskRun store guard may be held across the provider wait.
@@ -297,6 +386,11 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 	if o.Worker.Stage != "commit" || o.Worker.Job != nil || len(o.Worker.DeveloperSessions) != 1 || f.TurnCount(t) != 2 || o.Delivery.Phase == "completed" {
 		t.Fatalf("completed continuation was not consumed into ordinary commit exactly once: %+v", o.Worker)
 	}
+	t.Run("na01_resumed_commit_shows_confirmed_use", func(t *testing.T) {
+		next(t, "worker", p.Request.RequestID, "use is confirmed", "commit")
+		week(t, "running", "running", false)
+		asked(t, "answered", "continuation_completed", p.Request.RequestID)
+	})
 	status, e = taskrun.ApplyBoundAnswer(f.D, *p.Request)
 	if e != nil || status.State != "continuation_completed" || f.TurnCount(t) != 2 {
 		t.Fatalf("replay %+v %v", status, e)
@@ -308,6 +402,11 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 	if o.Worker.Stage != "reviewer" {
 		t.Fatal(o.Worker)
 	}
+	t.Run("na01_review_names_worker_not_human_answer", func(t *testing.T) {
+		next(t, "worker", "use is confirmed", "reviewer")
+		week(t, "running", "running", false)
+		asked(t, "answered", "continuation_completed", p.Request.RequestID)
+	})
 	t.Run("missing_answer_blocks_reviewer", func(t *testing.T) { f.AssertMissingAnswerBlocksReviewer(t) })
 	f.Step(t) // actual reserved reviewer intent and owned stand-in
 	t.Run("reviewer_intent_binds_selected_answer", func(t *testing.T) { f.AssertReviewerChoice(t) })

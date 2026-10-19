@@ -512,6 +512,34 @@ func TestSL01LaunchAuthorizationDoesNotAttestProviderDispatch(t *testing.T) {
 	if e != nil || q.Worker == nil || q.Worker.ContinuationsDispatched != 0 {
 		t.Fatalf("authorization falsely attested a physical dispatch: %+v %v", q.Worker, e)
 	}
+	// NA01: the recorded answer never hides the unknown launch outcome.
+	sl01NextAction(t, f, "human", c.Request.RequestID, "not confirmed", "Do not answer again or resend")
+}
+
+func sl01NextAction(t *testing.T, f *aw01Fixture, actor string, want ...string) {
+	t.Helper()
+	for i := 0; i < 2; i++ {
+		before, e := os.ReadFile(filepath.Join(f.s.Result.Paths.RunRoot, "state.json"))
+		if e != nil {
+			t.Fatal(e)
+		}
+		// This synthetic fixture reports binding drift through WorkflowShow,
+		// which keeps precedence; project its persisted Run directly.
+		f.reload()
+		a := productCurrentAction(f.d, f.s, f.s.Result)
+		if a.Actor != actor {
+			t.Fatalf("next action %+v (persisted %+v), want actor %s", a, f.s.Result.NextAction, actor)
+		}
+		for _, w := range want {
+			if !strings.Contains(a.Message, w) {
+				t.Fatalf("next action %q lacks %q", a.Message, w)
+			}
+		}
+		after, e := os.ReadFile(filepath.Join(f.s.Result.Paths.RunRoot, "state.json"))
+		if e != nil || string(after) != string(before) {
+			t.Fatalf("read changed native state: %v", e)
+		}
+	}
 }
 
 func TestSL01CompletedEvidenceRequiresOrderedTimesAndConsumedIdentity(t *testing.T) {
@@ -641,6 +669,7 @@ func TestSL01ApplyAndParentPauseSerializeInBothOrders(t *testing.T) {
 				if o, e := ApplyBoundAnswer(f.d, *p.Request); e != nil || o.State != "continuation_deferred" {
 					t.Fatalf("paused apply %+v %v", o, e)
 				}
+				sl01NextAction(t, f, "parent_control", p.Request.RequestID, "explicit parent resume", "no new human answer")
 				return
 			}
 			entered, release, done := make(chan struct{}), make(chan struct{}), make(chan error, 1)

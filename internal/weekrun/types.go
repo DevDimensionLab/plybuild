@@ -59,6 +59,16 @@ type Binding struct {
 	Environment     map[string]string        `json:"environment"`
 }
 
+// productAnswerWait is current only while the native Run still asks for its
+// bound product answer.
+const productAnswerWait = "Wait for one bound product answer on the same native Task and developer session"
+
+// After the answer wait, the week projects the native Run's own next actor.
+const nativeNextPrefix = "Native Run next actor "
+const weekStartSelected = "Start only the selected native Goals"
+const weekQueueComplete = "Selected queue complete; no additional work is authorized"
+const weekRunCompleted = "Native Run completed; the week controller selects the next eligible Goal"
+
 type Entry struct {
 	TaskID       workspace.TaskID `json:"task_id"`
 	State        string           `json:"state"`
@@ -131,6 +141,7 @@ type Run struct {
 	Reason              string
 	RetryNotBefore      string
 	LastProviderFailure string
+	NextAction          taskrun.WorkflowAction
 	BaseOID             string
 	BaseRevision        int
 	Completed           bool
