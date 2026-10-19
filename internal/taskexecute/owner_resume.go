@@ -29,6 +29,7 @@ type OwnerResumeResult struct {
 	ProviderSupport string                              `json:"provider_support,omitempty"`
 	Preview         *taskrun.DeliveryOwnerResumePreview `json:"preview,omitempty"`
 	Workflow        *taskrun.WorkflowRun                `json:"workflow,omitempty"`
+	InvokerPaneID   string                              `json:"invoker_pane_id,omitempty"`
 	NextAction      string                              `json:"next_action"`
 }
 
@@ -62,41 +63,24 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 	if err != nil {
 		return out, err
 	}
-	var matches []taskrun.OwnerRunCandidate
-	inTask := false
-	for _, c := range all.Runs {
-		if input.SpecID != "" && c.SpecID != input.SpecID {
-			continue
+	sel, choices, next := selectOwnerRun(all.Runs, cwd, input.SpecID)
+	if sel == nil {
+		out.NextAction = next
+		if len(choices) > 0 {
+			out.State, out.Choices = "ambiguous", choices
 		}
-		if c.TaskWorktree == cwd {
-			if !inTask {
-				matches, inTask = nil, true
-			}
-			matches = append(matches, c)
-		} else if !inTask && c.ReturnWorktree == cwd && (input.SpecID != "" || c.Phase != "completed") {
-			matches = append(matches, c)
-		}
+		return out, workspace.WorkInvalidArguments(next)
 	}
-	switch {
-	case len(matches) == 0:
-		out.NextAction = "Run from the exact Task worktree, or from its return worktree with --spec SPEC_ID; no Run was found for " + cwd + "."
-		return out, workspace.WorkInvalidArguments(out.NextAction)
-	case len(matches) > 1:
-		out.State, out.Choices = "ambiguous", matches
-		ids := []string{}
-		for _, c := range matches {
-			ids = append(ids, c.SpecID+" ("+c.Phase+")")
-		}
-		out.NextAction = "Choose one with --spec: " + strings.Join(ids, ", ") + ". Nothing was started."
-		return out, workspace.WorkInvalidArguments(out.NextAction)
-	}
-	selected := matches[0]
+	selected := *sel
 	out.Run = &selected
 	out.ProviderSupport = providerSupport[selected.Provider]
+	// A missing provider is reported by the phase-aware preview, which keeps
+	// completed, live-owner and blocked phases with their own next action.
 	provider, err := lookupExecutable("", selected.Provider)
 	if err != nil {
-		return out, err
+		provider = taskrun.Executable{}
 	}
+	out.InvokerPaneID = os.Getenv("HERDR_PANE_ID")
 	controlPath, err := d.Executable()
 	if err != nil {
 		return out, err
@@ -109,11 +93,11 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 	if destination == "" {
 		destination = os.Getenv("HERDR_WORKSPACE_ID")
 	}
-	in := taskrun.DeliveryOwnerResumeInput{RunID: selected.RunID, ProviderExecutable: provider, ControlExecutable: control, DestinationWorkspaceID: destination, Timeout: input.Timeout}
+	in := taskrun.DeliveryOwnerResumeInput{RunID: selected.RunID, ProviderExecutable: provider, ControlExecutable: control, DestinationWorkspaceID: destination, Timeout: input.Timeout, InvokerPaneID: out.InvokerPaneID}
 	preview, err := taskrun.WorkflowPreviewOwnerResume(d, root, in)
 	out.Preview = &preview
 	out.State, out.NextAction = preview.State, preview.NextAction.Message
-	if err != nil || preview.State != "ready" {
+	if err != nil || preview.State != "ready" && preview.State != "continue_ready" {
 		if preview.State == "" {
 			out.State = "blocked"
 		}
@@ -121,17 +105,22 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 	}
 	if input.Check {
 		out.NextAction = "Run the same command without --check to resume this owner in one new Herdr tab."
+		if preview.State == "continue_ready" {
+			out.NextAction = "Run the same command without --check to send the one reserved continuation to the same live session."
+		}
 		return out, nil
 	}
 	if os.Getenv("HERDR_ENV") != "1" {
 		return out, fmt.Errorf("owner resume requires a local Herdr terminal (HERDR_ENV=1)")
 	}
-	preserved, err := PreserveControl(control, preview.Directory)
-	if err != nil {
-		return out, err
-	}
-	if preserved != preview.ControlExecutable {
-		return out, fmt.Errorf("preserved resume control differs from the preview")
+	if preview.State == "ready" {
+		preserved, err := PreserveControl(control, preview.Directory)
+		if err != nil {
+			return out, err
+		}
+		if preserved != preview.ControlExecutable {
+			return out, fmt.Errorf("preserved resume control differs from the preview")
+		}
 	}
 	run, err := taskrun.WorkflowResumeOwner(d, root, in, preview.Confirmation)
 	out.Workflow = &run
@@ -143,4 +132,43 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 		}
 	}
 	return out, err
+}
+
+// selectOwnerRun prefers the Task worktree's own Run. From the return
+// worktree, Runs that can no longer resume (completed, retired, released)
+// only answer an explicit --spec when no active Run of it exists.
+func selectOwnerRun(all []taskrun.OwnerRunCandidate, cwd, spec string) (*taskrun.OwnerRunCandidate, []taskrun.OwnerRunCandidate, string) {
+	terminal := func(c taskrun.OwnerRunCandidate) bool {
+		return c.Phase == "completed" || c.Phase == "retired" || c.Phase == "owner_released"
+	}
+	var own, active, ended []taskrun.OwnerRunCandidate
+	for _, c := range all {
+		switch {
+		case spec != "" && c.SpecID != spec:
+		case c.TaskWorktree == cwd:
+			own = append(own, c)
+		case c.ReturnWorktree == cwd && terminal(c):
+			ended = append(ended, c)
+		case c.ReturnWorktree == cwd:
+			active = append(active, c)
+		}
+	}
+	matches := own
+	if len(matches) == 0 {
+		matches = active
+	}
+	if len(matches) == 0 && spec != "" {
+		matches = ended
+	}
+	switch {
+	case len(matches) == 0:
+		return nil, nil, "Run from the exact Task worktree, or from its return worktree with --spec SPEC_ID; no Run was found for " + cwd + "."
+	case len(matches) > 1:
+		choices := []string{}
+		for _, c := range matches {
+			choices = append(choices, "cd "+c.TaskWorktree+" && ply workflow execute --resume  (Task "+c.TaskID+", Spec "+c.SpecID+", "+c.Phase+")")
+		}
+		return nil, matches, "Several Runs match; nothing was started. Resume one from its own Task worktree: " + strings.Join(choices, "; ")
+	}
+	return &matches[0], nil, ""
 }

@@ -58,6 +58,13 @@ func sourceContains(source, path string) bool {
 }
 
 func observeAbsentDeliveryOwner(d Dependencies, s workflowState) (HumanOwnerRecoveryObservation, error) {
+	return observeAbsentDeliveryOwnerExcept(d, s, "")
+}
+
+// observeAbsentDeliveryOwnerExcept also accepts the identified invoking pane
+// when Herdr lists it as a plain terminal without any agent or session. An
+// agent in that pane, or any other Task pane, still counts as a writer.
+func observeAbsentDeliveryOwnerExcept(d Dependencies, s workflowState, invoker string) (HumanOwnerRecoveryObservation, error) {
 	out := HumanOwnerRecoveryObservation{Transport: s.Result.Transport, ProcessLiveness: "unknown"}
 	_, err := workflowCall(d, s.Request, "pane", "get", s.Result.Transport.PaneID)
 	var call *HerdrCallError
@@ -92,6 +99,9 @@ func observeAbsentDeliveryOwner(d Dependencies, s workflowState) (HumanOwnerReco
 				return out, workflowError(4, "owner_unknown: incomplete or ambiguous Herdr "+kind+" identity")
 			}
 			seen[a.PaneID] = true
+			if kind == "pane" && invoker != "" && a.PaneID == invoker && a.Agent == "" && a.Session == nil && a.PaneID != s.Result.Transport.PaneID && a.TerminalID != s.Result.Transport.TerminalID {
+				continue
+			}
 			if a.PaneID == s.Result.Transport.PaneID || a.TerminalID == s.Result.Transport.TerminalID || a.Name == workflowAgentName(s.Result.RunID) || a.Session != nil && a.Session.Value == s.Result.Transport.AgentSessionID && a.Session.Agent == s.Request.Runtime.Provider || sourceContains(s.Observed.Target.WorktreeLocator, a.ForegroundCWD) || sourceContains(s.Observed.Target.WorktreeLocator, a.CWD) {
 				return out, workflowError(4, "owner_active: stop the known Task/session writer in Herdr pane "+a.PaneID+" and leave the Task worktree before recovery")
 			}

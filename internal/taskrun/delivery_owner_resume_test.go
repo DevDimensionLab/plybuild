@@ -29,6 +29,14 @@ if model.get("closed_transport") and cmd == ["agent", "list"]:
     raise SystemExit(0)
 `
 
+// Real providers can be idle in Herdr before their resumed session is
+// discovered. The first N observations of the new pane report no session.
+const ownerResumeSessionStandin = `
+if cmd == ["agent", "get"] and model.get("replacement_count") and model.get("session_absent_gets", 0) > 0:
+    model["session_absent_gets"] -= 1
+    agent["agent_session"] = None
+`
+
 type ownerResumeFixture struct {
 	deliveryFixture
 	Owner WorkflowRun
@@ -48,7 +56,7 @@ func newOwnerResumeFixture(t *testing.T, provider string, qualified bool) ownerR
 		t.Fatal(err)
 	}
 	herdr = bytes.Replace(herdr, []byte("cmd = args[:2]\n"), []byte("cmd = args[:2]\n"+ownerResumeStandin+closedTransportInspectStandin), 1)
-	herdr = bytes.Replace(herdr, []byte("if \"foreground_cwd\" in model:\n"), []byte(closedTransportAgentStandin+"if \"foreground_cwd\" in model:\n"), 1)
+	herdr = bytes.Replace(herdr, []byte("if \"foreground_cwd\" in model:\n"), []byte(closedTransportAgentStandin+ownerResumeSessionStandin+"if \"foreground_cwd\" in model:\n"), 1)
 	if err = os.WriteFile(f.R.Herdr.Executable.Path, herdr, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -330,6 +338,8 @@ func TestOwnerResumeRejectsDifferentResumedSession(t *testing.T) {
 
 // RESUME01 scenario 4: lost replies and concurrent calls keep one attempt.
 func TestOwnerResumeLostRepliesAndConcurrencyKeepOneAttempt(t *testing.T) {
+	// r001-f03: an unknown tab creation is never replayed while a pane may
+	// exist; once Herdr proves it absent, a new generation is the next step.
 	t.Run("lost_tab_reply", func(t *testing.T) {
 		f := newOwnerResumeFixture(t, "claude", false)
 		p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
@@ -341,15 +351,30 @@ func TestOwnerResumeLostRepliesAndConcurrencyKeepOneAttempt(t *testing.T) {
 		if _, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation); err == nil {
 			t.Fatal("lost tab reply was reported as confirmed")
 		}
+		task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+		workflowTestModel(t, f.workflowFixture, map[string]any{"lost_command": "", "inventory": []any{map[string]any{"workspace_id": "w-fixture", "tab_id": "stray-tab", "pane_id": "stray-pane", "terminal_id": "stray-terminal", "cwd": task}}})
 		for n := 0; n < 2; n++ {
 			again, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
-			if err == nil || again.State != "blocked" || again.Reason != "resume_unknown" {
-				t.Fatalf("unknown tab creation could be replaced: %+v %v", again, err)
+			if err == nil || again.State != "blocked" || again.Reason != "owner_active" || again.NextAction.Message == "" {
+				t.Fatalf("possibly created tab was not reported with a next step: %+v %v", again, err)
 			}
 			_, _ = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
 		}
 		if workflowTestCalls(t, f.workflowFixture, "tab create") != 2 || workflowTestCalls(t, f.workflowFixture, "agent start") != 1 {
 			t.Fatal("uncertain tab creation was replayed")
+		}
+		workflowTestModel(t, f.workflowFixture, map[string]any{"inventory": []any{}})
+		next, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err != nil || next.State != "ready" || next.Generation != 2 {
+			t.Fatalf("proven-absent unknown tab has no executable next step: %+v %v", next, err)
+		}
+		ownerResumePreserve(t, f, next)
+		o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, next.Confirmation)
+		if err != nil || o.OwnerResume == nil || o.OwnerResume.Generation != 2 || o.OwnerResume.Step != "prompt_sent" {
+			t.Fatalf("second generation did not resume: %+v %v", o.OwnerResume, err)
+		}
+		if workflowTestCalls(t, f.workflowFixture, "agent prompt") != 2 {
+			t.Fatal("resume prompt count differs from one")
 		}
 	})
 	t.Run("lost_prompt_reply", func(t *testing.T) {
@@ -371,6 +396,21 @@ func TestOwnerResumeLostRepliesAndConcurrencyKeepOneAttempt(t *testing.T) {
 		}
 		if workflowTestCalls(t, f.workflowFixture, "agent prompt") != 2 {
 			t.Fatal("uncertain resume prompt was resent")
+		}
+		// r001-f03: the human gets an executable step, and an actual callback
+		// through the resumed control proves the prompt arrived.
+		again, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err == nil || again.Reason != "prompt_unconfirmed" || !strings.Contains(again.NextAction.Message, o.Transport.PaneID) || again.NextAction.Actor != "user" {
+			t.Fatalf("uncertain prompt has no executable next step: %+v %v", again, err)
+		}
+		owner := f.D
+		owner.Executable = func() (string, error) { return p.ControlExecutable.Path, nil }
+		o = ownerResumeReport(t, f.deliveryFixture, o, owner, "resumed-after-lost-prompt")
+		if o.OwnerResume.Step != "prompt_sent" || o.OwnerResume.OwnerCallback != "observed" {
+			t.Fatalf("resumed callback did not settle the uncertain prompt: %+v", o.OwnerResume)
+		}
+		if live, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In); err != nil || live.State != "live_owner" {
+			t.Fatalf("resumed owner not live: %+v %v", live, err)
 		}
 	})
 	t.Run("concurrent_calls", func(t *testing.T) {
@@ -580,4 +620,144 @@ func TestOwnerResumeAfterStartupRecoveryKeepsRecoveryHistory(t *testing.T) {
 	}
 	f.D.Executable = func() (string, error) { return rp.ControlExecutable.Path, nil }
 	ownerResumeReport(t, f, resumed, f.D, "after-resume")
+}
+
+// r001-f01: the human runs --resume from a plain shell in the Task worktree
+// inside Herdr. That identified invoker pane runs no provider and is not a
+// remaining writer; any other Task pane or an agent in the invoker still is.
+func TestOwnerResumeAllowsIdentifiedInvokerShellInTaskWorktree(t *testing.T) {
+	task := func(f ownerResumeFixture) string { return f.Prepared.Preparation.Preparation.Plan.WorktreePath }
+	shell := func(f ownerResumeFixture, id string) map[string]any {
+		return map[string]any{"workspace_id": "w-fixture", "tab_id": "tab-" + id, "pane_id": id, "terminal_id": "term-" + id, "cwd": task(f), "foreground_cwd": task(f)}
+	}
+	t.Run("invoker_shell", func(t *testing.T) {
+		f := newOwnerResumeFixture(t, "claude", false)
+		f.In.InvokerPaneID = "invoker-pane"
+		workflowTestModel(t, f.workflowFixture, map[string]any{"inventory": []any{shell(f, "invoker-pane")}})
+		p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err != nil || p.State != "ready" || p.InvokerPaneID != "invoker-pane" {
+			t.Fatalf("invoking shell blocked its own resume: %+v %v", p, err)
+		}
+		ownerResumePreserve(t, f, p)
+		if o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation); err != nil || o.OwnerResume == nil || o.OwnerResume.Step != "prompt_sent" {
+			t.Fatalf("resume from the Task worktree failed: %v", err)
+		}
+	})
+	t.Run("unidentified_task_shell", func(t *testing.T) {
+		f := newOwnerResumeFixture(t, "claude", false)
+		f.In.InvokerPaneID = "invoker-pane"
+		workflowTestModel(t, f.workflowFixture, map[string]any{"inventory": []any{shell(f, "invoker-pane"), shell(f, "other-pane")}})
+		if p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In); err == nil || p.Reason != "owner_active" {
+			t.Fatalf("another Task pane was excluded: %+v %v", p, err)
+		}
+	})
+	t.Run("agent_in_invoker", func(t *testing.T) {
+		f := newOwnerResumeFixture(t, "claude", false)
+		f.In.InvokerPaneID = "invoker-pane"
+		pane := shell(f, "invoker-pane")
+		pane["agent"] = "claude"
+		workflowTestModel(t, f.workflowFixture, map[string]any{"inventory": []any{pane}, "recovery_agents": []any{pane}})
+		if p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In); err == nil || p.Reason != "owner_active" {
+			t.Fatalf("an agent in the invoker pane was excluded: %+v %v", p, err)
+		}
+	})
+}
+
+// r001-f02/f03: a resumed session that Herdr discovers late is awaited, not
+// rejected; a deadline leaves the same reserved attempt continuable once.
+func TestOwnerResumeAwaitsLateSessionAndContinuesReservedAttempt(t *testing.T) {
+	t.Run("late_session_within_deadline", func(t *testing.T) {
+		f := newOwnerResumeFixture(t, "claude", false)
+		workflowTestModel(t, f.workflowFixture, map[string]any{"session_absent_gets": 2})
+		p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ownerResumePreserve(t, f, p)
+		o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+		if err != nil || o.OwnerResume == nil || o.OwnerResume.Step != "prompt_sent" {
+			t.Fatalf("late session discovery stranded the resume: %+v %v", o.OwnerResume, err)
+		}
+	})
+	t.Run("deadline_then_continue", func(t *testing.T) {
+		f := newOwnerResumeFixture(t, "claude", false)
+		workflowTestModel(t, f.workflowFixture, map[string]any{"session_absent_gets": 1000})
+		f.In.Timeout = 1500 * time.Millisecond
+		p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ownerResumePreserve(t, f, p)
+		if _, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation); err == nil {
+			t.Fatal("undiscovered session was reported as resumed")
+		}
+		if n := workflowTestCalls(t, f.workflowFixture, "agent prompt"); n != 1 {
+			t.Fatalf("input was sent before the session was observed: %d", n)
+		}
+		f.In.Timeout = 3 * time.Second
+		starting, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err == nil || starting.Reason != "session_pending" || starting.NextAction.Message == "" {
+			t.Fatalf("pending session has no next step: %+v %v", starting, err)
+		}
+		workflowTestModel(t, f.workflowFixture, map[string]any{"session_absent_gets": 0})
+		c, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+		if err != nil || c.State != "continue_ready" || c.Generation != 1 || c.Confirmation == "" {
+			t.Fatalf("observed same session cannot continue the reserved attempt: %+v %v", c, err)
+		}
+		o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, c.Confirmation)
+		if err != nil || o.OwnerResume == nil || o.OwnerResume.Generation != 1 || o.OwnerResume.Step != "prompt_sent" {
+			t.Fatalf("reserved attempt did not continue: %+v %v", o.OwnerResume, err)
+		}
+		if workflowTestCalls(t, f.workflowFixture, "tab create") != 2 || workflowTestCalls(t, f.workflowFixture, "agent start") != 2 || workflowTestCalls(t, f.workflowFixture, "agent prompt") != 2 {
+			t.Fatal("continuation repeated a tab, provider start or prompt")
+		}
+		if _, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, c.Confirmation); err != nil || workflowTestCalls(t, f.workflowFixture, "agent prompt") != 2 {
+			t.Fatalf("repeated continuation replayed the prompt: %v", err)
+		}
+	})
+}
+
+// r001-f06: a logical cwd through a symlink is the same physical worktree.
+func TestOwnerResumeAcceptsSymlinkedTaskCWD(t *testing.T) {
+	f := newOwnerResumeFixture(t, "claude", false)
+	link := filepath.Join(t.TempDir(), "task-link")
+	if err := os.Symlink(f.Prepared.Preparation.Preparation.Plan.WorktreePath, link); err != nil {
+		t.Fatal(err)
+	}
+	f.D.CWD = func() (string, error) { return link, nil }
+	if p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In); err != nil || p.State != "ready" {
+		t.Fatalf("symlinked Task cwd was rejected: %+v %v", p, err)
+	}
+}
+
+// r001-f04: without the provider on PATH the public CLI still reports the
+// actual phase and next action, and names the missing provider precisely.
+func TestOwnerResumePublicCLIWithoutProviderKeepsPhaseAndReason(t *testing.T) {
+	binary := deliveryCLIBinary(t)
+	f := newOwnerResumeFixture(t, "claude", false)
+	t.Setenv("HERDR_WORKSPACE_ID", "")
+	task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+	var path []string
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		if dir != filepath.Join(f.R.WorkspaceRoot, "provider-bin") {
+			if _, err := os.Stat(filepath.Join(dir, "claude")); err != nil {
+				path = append(path, dir)
+			}
+		}
+	}
+	t.Setenv("PATH", strings.Join(path, string(os.PathListSeparator)))
+	out, output, err := ownerResumeCLI(binary, task, "--resume", "--check", "--format", "json")
+	if err == nil || !strings.Contains(string(out["preview"]), `"reason":"provider_unavailable"`) || deliveryCLIString(t, out, "next_action") == "" {
+		t.Fatalf("missing provider hid the precise reason: %v\n%s", err, output)
+	}
+	if err := workflowUpdate(f.D, f.R.WorkspaceRoot, f.Owner.RunID, func(s *workflowState) error {
+		s.Result.Delivery.Phase = "completed"
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	out, output, err = ownerResumeCLI(binary, task, "--resume", "--check", "--format", "json")
+	if err != nil || deliveryCLIString(t, out, "state") != "completed" || deliveryCLIString(t, out, "next_action") == "" {
+		t.Fatalf("completed phase was hidden by provider lookup: %v\n%s", err, output)
+	}
 }
