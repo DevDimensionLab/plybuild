@@ -19,6 +19,8 @@ type Week struct {
 	GuidanceOrigin                   Origin
 	OtherEntriesComplete             bool
 	UnresolvedDispatch               bool
+	ControllerBlocked                bool
+	ReconciliationConfirmed          bool
 }
 
 type Entry struct {
@@ -27,16 +29,23 @@ type Entry struct {
 }
 
 type Native struct {
-	Phase     string
-	Completed bool
-	Action    Action
+	Phase       string
+	Completed   bool
+	Action      Action
+	Unavailable bool
+	Failure     string
 }
 
 // WeekEntry projects the same observed Run in Show and Tick. Only this
 // interpretation creates and clears answer-derived blocks. Ordinary blocks
 // (including failed queue release) remain owned by their execution path.
 func WeekEntry(s Week, e Entry, r Native) (Week, Entry) {
-	if s.UnresolvedDispatch {
+	if s.UnresolvedDispatch || s.ControllerBlocked && !s.ReconciliationConfirmed {
+		return s, e
+	}
+	if r.Unavailable {
+		s.Phase, e.State = "unknown", "unknown"
+		s.NextAction = "Native Run observation failed: " + r.Failure + "; inspect the same Run before answering"
 		return s, e
 	}
 	if r.Completed {
@@ -88,6 +97,9 @@ func nativeAction(a Action) string {
 }
 
 func WeekQueue(s Week) Week {
+	if s.ControllerBlocked {
+		return s
+	}
 	if s.GuidanceOrigin == NativeRun {
 		s.NextAction, s.GuidanceOrigin = WeekStartSelected, OtherOrigin
 		if s.Phase == "completed" {

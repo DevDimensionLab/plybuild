@@ -269,7 +269,7 @@ func (m Manager) Show(root, id string) (State, error) {
 	} else {
 		s.OwnerState = ownerState(dir)
 	}
-	if (s.OwnerState == "unowned" || s.OwnerState == "not_started") && s.ActiveTaskID != "" && s.DesiredAction != "continue" {
+	if !currentWeek(s).ControllerBlocked && (s.OwnerState == "unowned" || s.OwnerState == "not_started") && s.ActiveTaskID != "" && s.DesiredAction != "continue" {
 		ix := entryIndex(&s, s.ActiveTaskID)
 		if ix >= 0 && s.Entries[ix].RunID != "" {
 			run, e := m.Native.Observe(b.Contract, s.Entries[ix].RunID)
@@ -288,10 +288,9 @@ func (m Manager) Show(root, id string) (State, error) {
 		// Project that boundary as the next Tick would; nothing is dispatched.
 		entry := &s.Entries[ix]
 		if run, e := m.Native.Observe(b.Contract, entry.RunID); e != nil {
-			s.Phase, entry.State = "unknown", "unknown"
-			s.NextAction = "Native Run observation failed: " + e.Error() + "; inspect the same Run before answering"
+			projectCurrentRun(&s, entry, Run{ObservationError: e}, false)
 		} else {
-			projectCurrentRun(&s, entry, run)
+			projectCurrentRun(&s, entry, run, false)
 		}
 	} else if s.ActiveTaskID == "" {
 		projectQueueGuidance(&s)

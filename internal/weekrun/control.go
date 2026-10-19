@@ -606,7 +606,7 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 					return er
 				}
 				if r.Completed {
-					projectCurrentRun(&s, entry, r)
+					projectCurrentRun(&s, entry, r, true)
 					s.ActiveTaskID = ""
 					g.ActiveRun = ""
 					s.ResumeRequested = false
@@ -628,7 +628,7 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 						dispatch = &Dispatch{Kind: "control", TaskID: entry.TaskID, RunID: entry.RunID}
 					}
 				} else if r.Phase == "awaiting_product_answer" {
-					projectCurrentRun(&s, entry, r)
+					projectCurrentRun(&s, entry, r, true)
 					s.NextCheckAt = ""
 					s.ResumeRequested = false
 					g.ResumeAllowed = false
@@ -641,14 +641,14 @@ func (m Manager) tickBound(b Binding, dir string, out *State) error {
 					}
 				} else if r.Phase == "blocked" {
 					s.Reason = "The native Run requires local recovery."
-					projectCurrentRun(&s, entry, r)
+					projectCurrentRun(&s, entry, r, true)
 				} else if r.Phase == "paused" || r.Phase == "stopped" {
 					if s.ResumeRequested && g.ResumeAllowed {
 						dispatch = &Dispatch{Kind: "resume", TaskID: entry.TaskID, RunID: entry.RunID, Explicit: true}
 					}
-					projectCurrentRun(&s, entry, r)
+					projectCurrentRun(&s, entry, r, true)
 				} else {
-					projectCurrentRun(&s, entry, r)
+					projectCurrentRun(&s, entry, r, true)
 					s.NextCheckAt = r.RetryNotBefore
 					s.ResumeRequested = false
 					g.ResumeAllowed = false

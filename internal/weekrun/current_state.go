@@ -18,11 +18,14 @@ func isInitialState(b Binding, s State) bool {
 }
 
 func currentWeek(s State) currentstate.Week {
-	return currentstate.Week{Phase: s.Phase, DesiredAction: s.DesiredAction, NextAction: s.NextAction, GuidanceOrigin: s.GuidanceOrigin, UnresolvedDispatch: s.Dispatch != nil}
+	return currentstate.Week{Phase: s.Phase, DesiredAction: s.DesiredAction, NextAction: s.NextAction, GuidanceOrigin: s.GuidanceOrigin, UnresolvedDispatch: s.Dispatch != nil, ControllerBlocked: s.Phase == "blocked"}
 }
 
-func projectCurrentRun(s *State, entry *Entry, r Run) {
+// Only Tick, after successful guarded native reconciliation, can confirm the
+// recovery of a Week-owned obstacle. A read cannot attest that controller step.
+func projectCurrentRun(s *State, entry *Entry, r Run, reconciliationConfirmed bool) {
 	w := currentWeek(*s)
+	w.ReconciliationConfirmed = reconciliationConfirmed
 	w.OtherEntriesComplete = true
 	for i := range s.Entries {
 		if &s.Entries[i] != entry && s.Entries[i].State != "completed" {
@@ -31,7 +34,11 @@ func projectCurrentRun(s *State, entry *Entry, r Run) {
 	}
 	e := currentstate.Entry{State: entry.State, BlockOrigin: entry.BlockOrigin}
 	w.GuidanceOrigin, e.BlockOrigin = currentstate.LegacyWeekOrigins(w, e)
-	w, e = currentstate.WeekEntry(w, e, currentstate.Native{Phase: r.Phase, Completed: r.Completed, Action: currentstate.Action(r.NextAction)})
+	native := currentstate.Native{Phase: r.Phase, Completed: r.Completed, Action: currentstate.Action(r.NextAction), Unavailable: r.ObservationError != nil}
+	if r.ObservationError != nil {
+		native.Failure = r.ObservationError.Error()
+	}
+	w, e = currentstate.WeekEntry(w, e, native)
 	s.Phase, s.NextAction, s.GuidanceOrigin = w.Phase, w.NextAction, w.GuidanceOrigin
 	entry.State, entry.BlockOrigin = e.State, e.BlockOrigin
 }

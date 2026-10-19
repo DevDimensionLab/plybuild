@@ -129,3 +129,51 @@ func TestAR01OrdinaryBlockIgnoresNativeLookingDisplay(t *testing.T) {
 		t.Fatalf("Tick cleared an ordinary block: %+v", f.s)
 	}
 }
+
+func TestAR01WeekControllerFailureSurvivesHealthyRunRead(t *testing.T) {
+	f := newMR05Week(t)
+	f.tick(t)
+	f.tick(t)
+	r := f.n.runs["first"]
+	delete(f.n.runs, "first")
+	cause := f.m.Tick(f.b, f.dir, &f.s)
+	if cause == nil {
+		t.Fatal("fixture did not reach the native observation failure")
+	}
+	failed, err := f.m.saveBoundFailure(f.b, f.dir, cause)
+	if err != nil || failed.Phase != "blocked" || failed.Entries[0].State != "running" || failed.Dispatch != nil {
+		t.Fatalf("fixture did not preserve the controller-owned failure: %+v: %v", failed, err)
+	}
+	r.NextAction = taskrun.WorkflowAction{Actor: "worker", Message: "The native Run is healthy."}
+	f.n.runs["first"] = r
+	path := filepath.Join(f.dir, "state.json")
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	shown, err := f.m.Show(f.c.Workspace, f.s.ID)
+	if err != nil || shown.Phase != failed.Phase || shown.NextAction != failed.NextAction || shown.Reason != failed.Reason || shown.Entries[0].State != "running" {
+		t.Errorf("healthy Run hid the Week controller recovery block: %+v; failed %+v: %v", shown, failed, err)
+	}
+	basis, err := f.m.ControlBasis(f.c.Workspace, f.s.ID)
+	if err != nil || basis.UnavailableReason == nil || *basis.UnavailableReason != "control_unavailable" || basis.Phase != shown.Phase {
+		t.Errorf("Week Show disagrees with native control eligibility: shown %s, basis %+v: %v", shown.Phase, basis, err)
+	}
+	delete(f.n.runs, "first")
+	unavailable, err := f.m.Show(f.c.Workspace, f.s.ID)
+	if err != nil || unavailable.Phase != failed.Phase || unavailable.NextAction != failed.NextAction || unavailable.Entries[0].State != "running" {
+		t.Errorf("unavailable native read hid the Week recovery block: %+v: %v", unavailable, err)
+	}
+	f.n.runs["first"] = r
+	after, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(before, after) || len(f.n.starts) != 1 || len(f.n.resumes) != 0 || len(f.n.controls) != 0 || len(f.n.released) != 0 {
+		t.Fatal("failure reads changed history or dispatched native effects")
+	}
+	// Preserve the existing bound controller's effectful reconciliation: only
+	// that successful Tick can record recovery; Show cannot anticipate it.
+	f.tick(t)
+	recovered, err := f.m.Show(f.c.Workspace, f.s.ID)
+	if err != nil || recovered.Phase != "running" || f.s.Phase != recovered.Phase {
+		t.Fatalf("successful controller reconciliation did not record recovery: %+v: %v", recovered, err)
+	}
+}

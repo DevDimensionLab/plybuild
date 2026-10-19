@@ -135,6 +135,7 @@ type Control struct {
 }
 
 type Run struct {
+	ObservationError    error
 	ID                  string
 	Phase               string
 	Stage               string
