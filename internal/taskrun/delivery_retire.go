@@ -18,16 +18,17 @@ type DeliveryRetireInput struct {
 // owner. It preserves the Run, its refusals and its source as history. It
 // grants nothing to a later Task copy, which receives its own new mandate.
 type DeliveryRetirement struct {
-	Kind          string                        `json:"kind"`
-	SchemaVersion int                           `json:"schema_version"`
-	RunID         string                        `json:"run_id"`
-	RequestSHA256 string                        `json:"request_sha256"`
-	NativeSession string                        `json:"native_session"`
-	Input         DeliveryRetireInput           `json:"input"`
-	PaneClosed    bool                          `json:"pane_closed"`
-	Absence       HumanOwnerRecoveryObservation `json:"absence"`
-	ActiveStop    *FileBinding                  `json:"active_stop"`
-	RecordedAtUTC string                        `json:"recorded_at_utc"`
+	Kind           string                        `json:"kind"`
+	SchemaVersion  int                           `json:"schema_version"`
+	RunID          string                        `json:"run_id"`
+	RequestSHA256  string                        `json:"request_sha256"`
+	NativeSession  string                        `json:"native_session"`
+	Input          DeliveryRetireInput           `json:"input"`
+	PaneClosed     bool                          `json:"pane_closed"`
+	Absence        HumanOwnerRecoveryObservation `json:"absence"`
+	ActiveStop     *FileBinding                  `json:"active_stop"`
+	WriterLiveness *TaskWriterLiveness           `json:"writer_liveness,omitempty"`
+	RecordedAtUTC  string                        `json:"recorded_at_utc"`
 }
 
 func deliveryRetirement(s workflowState) (*DeliveryRetirement, error) {
@@ -101,15 +102,18 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 				return workflowError(4, "unknown_effect: preserved stop "+stop.Input.EventID+" has "+e+" effects for action "+stop.Input.Action+"; establish them from actual observations before replacement")
 			}
 		}
+		if s.OwnerResume != nil && (s.OwnerResumeStep == ownerResumeTabAttempted || s.OwnerResumeStep == ownerResumePromptAttempt) {
+			return workflowError(4, "unknown_effect: owner resume tab or continuation input has an unconfirmed effect; reconcile that same reserved attempt before retirement")
+		}
 		closed, err := deliveryRetireClosePane(d, *s)
 		if err != nil {
 			return err
 		}
-		absence, err := deliveryRetireAbsence(d, *s)
+		absence, liveness, err := deliveryRetireAbsence(d, *s)
 		if err != nil {
 			return err
 		}
-		r := DeliveryRetirement{Kind: "ply.workflow.owner-retirement", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, NativeSession: s.Result.Transport.AgentSessionID, Input: in, PaneClosed: closed, Absence: absence, ActiveStop: dl.ActiveStop, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+		r := DeliveryRetirement{Kind: "ply.workflow.owner-retirement", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, NativeSession: s.Result.Transport.AgentSessionID, Input: in, PaneClosed: closed, Absence: absence, ActiveStop: dl.ActiveStop, WriterLiveness: liveness, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		if _, err = deliveryAppendEvent(d, s, "owner-retirement", "owner_retirement", r); err != nil {
 			return err
 		}
@@ -174,7 +178,7 @@ func deliveryRetireClosePane(d Dependencies, s workflowState) (bool, error) {
 	return true, nil
 }
 
-func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryObservation, error) {
+func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryObservation, *TaskWriterLiveness, error) {
 	limit := d.HerdrTimeout
 	if limit <= 0 {
 		limit = 15 * time.Second
@@ -182,11 +186,29 @@ func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryO
 	deadline := time.Now().Add(limit)
 	for {
 		absence, err := observeAbsentDeliveryOwner(d, s)
+		var liveness *TaskWriterLiveness
+		// A resumed process may survive its terminal. Reuse the new-writer
+		// reconciliation before retiring that owner and releasing its queue.
+		if err == nil && s.OwnerResume != nil {
+			record, _, recordErr := workflowOwnerResumeRecord(s)
+			if recordErr != nil {
+				return absence, nil, recordErr
+			}
+			observed, observeErr := observeWriterLiveness(d, s, record.ProviderSession, 0)
+			liveness = &observed
+			if observeErr != nil {
+				err = workflowError(4, "writer liveness is unknown: "+observeErr.Error())
+			} else if len(observed.RemainingPIDs) > 0 {
+				err = workflowError(4, "local Task/session writer remains after pane closure; preserve the same attempt until it exits")
+			} else {
+				absence.ProcessLiveness = "no_task_or_session_process_observed"
+			}
+		}
 		if err == nil {
-			return absence, nil
+			return absence, liveness, nil
 		}
 		if !time.Now().Before(deadline) {
-			return absence, workflowError(4, "owner_active: a Task writer is still observed after closing the bound pane; nothing was recorded or released ("+err.Error()+")")
+			return absence, liveness, workflowError(4, "owner_active: writer absence is not established after closing the bound pane; nothing was recorded or released ("+err.Error()+")")
 		}
 		time.Sleep(100 * time.Millisecond)
 	}

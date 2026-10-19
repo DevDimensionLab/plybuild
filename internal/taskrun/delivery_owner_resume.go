@@ -233,12 +233,7 @@ func deliveryProviderSession(s workflowState) (string, error) {
 		}
 		return "", workflowError(4, "no Claude transcript for session "+id+" under "+dir)
 	case "codex":
-		dir := os.Getenv("CODEX_HOME")
-		if t := s.CodexTrust; t != nil && t.CodexHome != "" {
-			dir = t.CodexHome
-		} else if dir == "" {
-			dir = filepath.Join(home, ".codex")
-		}
+		dir := ownerResumeCodexHome(s)
 		found := ""
 		_ = filepath.WalkDir(filepath.Join(dir, "sessions"), func(path string, e fs.DirEntry, err error) error {
 			if err == nil && !e.IsDir() && strings.HasSuffix(e.Name(), "-"+id+".jsonl") {
@@ -253,6 +248,16 @@ func deliveryProviderSession(s workflowState) (string, error) {
 		return "", workflowError(4, "no Codex session for "+id+" under "+dir)
 	}
 	return "", workflowError(4, "provider has no supported resume adapter")
+}
+
+func ownerResumeCodexHome(s workflowState) string {
+	if t := s.CodexTrust; t != nil && t.CodexHome != "" {
+		return t.CodexHome
+	}
+	if home := os.Getenv("CODEX_HOME"); home != "" {
+		return home
+	}
+	return filepath.Join(os.Getenv("HOME"), ".codex")
 }
 
 // deliveryResumePhase names the actual current gate; it never infers progress.
@@ -334,8 +339,12 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 	pane := s.Result.Transport.PaneID
 	if a, err := workflowAgentRead(d, s, time.Time{}); err == nil && workflowLocation(s, a) == nil {
 		switch {
-		case a.Session == nil && pending && s.OwnerResumeStep == ownerResumeStartAttempted:
-			return p, ownerResumeBlock(&p, "session_pending", "the resumed provider in pane "+pane+" has not reported its session; no input was sent", WorkflowAction{"user", "Repeat ply workflow execute --resume once Herdr pane " + pane + " shows the provider ready. If it still reports no session (possible for Codex), close that pane in Herdr and repeat --resume to start a new generation after Herdr proves it absent, or retire this owner with workflow execute retire " + s.Result.RunID + " for a fresh Task copy. No input is ever sent to an unproven session."})
+		case a.Session == nil && a.CodexResumeIdentity == nil && pending && s.OwnerResumeStep == ownerResumeStartAttempted:
+			detail := "the resumed provider in pane " + pane + " has no verified session; no input was sent"
+			if a.SessionObservationError != nil {
+				detail += ": " + a.SessionObservationError.Error()
+			}
+			return p, ownerResumeBlock(&p, "session_pending", detail, WorkflowAction{"coordinator", "Repeat ply workflow execute --resume to observe only this same pane. If identity remains unavailable, close no further generations: use workflow execute retire " + s.Result.RunID + " to close its exact pane, prove writer absence and preserve the source and history. Unknown effects must be reconciled first."})
 		case workflowSession(s, a, false) == nil && !pending:
 			p.State, p.NextAction = "live_owner", WorkflowAction{"recipient", "The same owner is live in Herdr pane " + pane + "; continue there. No tab, provider or prompt is started."}
 			return p, nil
@@ -458,7 +467,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 		Remaining                        []int
 	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, p.DestinationWorkspaceID, p.ProviderSession, in.InvokerPaneID, authority, liveness.Method, liveness.RemainingPIDs})
 	p.State = "ready"
-	p.NextAction = WorkflowAction{"user", "Apply this checked resume to start the same " + p.Provider + " conversation in one new Herdr tab."}
+	p.NextAction = WorkflowAction{"user", "Apply this checked resume to start the same " + p.Provider + " conversation in one new Herdr tab. This preview checks startup prerequisites; the new live runtime session must still be independently observed before any continuation."}
 	return p, nil
 }
 
@@ -631,8 +640,17 @@ func ownerResumeFinish(d Dependencies, root, id string, generation int, deadline
 		return err
 	}
 	promptArgv := []string{"agent", "prompt", current.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000"}
+	// Reobserve at the prompt boundary; readiness evidence alone is not a
+	// durable grant to a process that has since exited or switched threads.
+	agent, err := workflowAgentGetUntil(d, current, false, deadline)
+	if err != nil {
+		return err
+	}
+	if !workflowSettled(agent) {
+		return workflowError(4, "resumed owner is no longer idle; no input sent")
+	}
 	err = ownerResumeAdvance(d, root, id, generation, ownerResumeStartAttempted, ownerResumePromptAttempt, func(s *workflowState) error {
-		return d.writeValue(filepath.Join(filepath.Dir(s.OwnerResume.Locator), "prompt-attempt.json"), map[string]any{"resume_sha256": s.OwnerResume.SHA256, "argv": promptArgv})
+		return d.writeValue(filepath.Join(filepath.Dir(s.OwnerResume.Locator), "prompt-attempt.json"), map[string]any{"resume_sha256": s.OwnerResume.SHA256, "argv": promptArgv, "codex_runtime_identity": agent.CodexResumeIdentity})
 	})
 	if err != nil {
 		return err
@@ -681,8 +699,19 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 			// Absent or unsettled is not different; only another session is.
 			if e := workflowLocation(s, a); e != nil {
 				err = e
-			} else if a.Session == nil {
-				err = workflowError(5, "resumed session not yet reported by Herdr; no input was sent")
+			} else if a.Session == nil && a.CodexResumeIdentity == nil {
+				err = workflowError(5, "resumed session not yet verified; no input was sent")
+				if a.SessionObservationError != nil {
+					err = a.SessionObservationError
+					var call *HerdrCallError
+					var failure *Error
+					// Failed inspection and known mismatches are not startup lag.
+					// Preserve the same attempt without automatically repeating a
+					// rejected read or sending input to an unproven process.
+					if errors.As(err, &call) || errors.As(err, &failure) && failure.Exit == 4 {
+						return err
+					}
+				}
 			} else if err = workflowSession(s, a, false); err != nil {
 				return workflowError(4, "resumed provider is not the same bound session; no input was sent: "+err.Error())
 			} else if workflowSettled(a) {
@@ -833,7 +862,7 @@ func OwnerResumeProviderSupport(provider string) string {
 	case "claude":
 		return "claude --resume SESSION_ID in a new Herdr tab (same session id; no --fork-session)"
 	case "codex":
-		return "codex resume SESSION_ID in a new Herdr tab (same session id); unverified with a real resumed Codex: Herdr may not report its session before a first turn, then the resume stops at session_pending without input"
+		return "codex resume SESSION_ID in a new Herdr tab; verify the same live session through Herdr or the pane-bound provider executable holding its exclusive Codex thread lock before one continuation. Unavailable or ambiguous runtime identity stops at session_pending; the coordinator can retire that exact attempt without losing work. Installed provider journey remains unverified until exercised."
 	}
 	return "no resume adapter"
 }

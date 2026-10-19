@@ -10,6 +10,10 @@ import (
 )
 
 type workflowAgent struct {
+	// Local evidence is kept separate from Herdr's hook-provided Session.
+	CodexResumeIdentity     *CodexResumeIdentity `json:"-"`
+	SessionObservationError error                `json:"-"`
+
 	WorkspaceID      string `json:"workspace_id"`
 	TabID            string `json:"tab_id"`
 	PaneID           string `json:"pane_id"`
@@ -138,6 +142,14 @@ func workflowIdentity(s workflowState, a workflowAgent, first bool) error {
 }
 func workflowSession(s workflowState, a workflowAgent, first bool) error {
 	t := s.Result.Transport
+	if a.Session == nil && !first && s.OwnerResume != nil && s.Request.Runtime.Provider == "codex" {
+		if proof := a.CodexResumeIdentity; proof != nil && proof.NativeSession == t.AgentSessionID && proof.PaneID == t.PaneID {
+			return nil
+		}
+		if a.SessionObservationError != nil {
+			return a.SessionObservationError
+		}
+	}
 	if a.Session == nil || a.Session.Agent != s.Request.Runtime.Provider || a.Session.Kind != "id" || !plain(a.Session.Value, 1, 256) || (!first || t.AgentSessionID != "") && a.Session.Value != t.AgentSessionID {
 		return workflowError(4, "fresh Herdr identity or native "+s.Request.Runtime.Provider+" session differs from the bound run")
 	}
@@ -182,6 +194,9 @@ func workflowAgentRead(d Dependencies, s workflowState, deadline time.Time) (wor
 	}
 	if e = json.Unmarshal(b, &response); e != nil {
 		return response.Agent, workflowError(5, "Herdr agent get failed: class=invalid_result exit=0; identity unknown; no prompt sent")
+	}
+	if response.Agent.Session == nil && s.OwnerResume != nil && s.Request.Runtime.Provider == "codex" {
+		response.Agent.CodexResumeIdentity, response.Agent.SessionObservationError = observeCodexResumeIdentity(d, s, response.Agent, deadline)
 	}
 	return response.Agent, nil
 }

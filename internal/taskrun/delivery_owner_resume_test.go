@@ -24,8 +24,22 @@ if model.get("closed_transport") and cmd == ["pane", "get"] and model.get("inspe
 if model.get("closed_transport") and cmd == ["agent", "get"] and args[2] == model.get("closed_pane", "w-fixture:p1"):
     print(json.dumps({"id":"fixture", "error":{"code":"agent_not_found", "message":"closed fixture agent"}}), file=sys.stderr)
     raise SystemExit(1)
+if cmd == ["pane", "close"]:
+    model["closed_transport"] = True
+    model["closed_pane"] = args[2]
+    path.write_text(json.dumps(model))
+    print(json.dumps({"result":{"ok":True}}))
+    raise SystemExit(0)
+if cmd == ["pane", "get"] and model.get("replacement_count") and args[2] != model.get("closed_pane", "w-fixture:p1"):
+    suffix = str(model["replacement_count"])
+    pane = {"workspace_id":model.get("destination", "w-fixture"),"tab_id":"recovery-tab-"+suffix,"pane_id":"recovery-pane-"+suffix,"terminal_id":"recovery-terminal-"+suffix}
+    print(json.dumps({"result":{"pane":pane}}))
+    raise SystemExit(0)
+if cmd == ["pane", "process-info"] and model.get("resume_inspection_denied"):
+    print(json.dumps({"error":{"code":"permission_denied"}}),file=sys.stderr)
+    raise SystemExit(1)
 if cmd == ["pane", "process-info"]:
-    print(json.dumps({"id":"fixture", "result":{"process_info":{"pane_id":args[3], "shell_pid":model.get("invoker_shell_pid"), "foreground_process_group_id":model.get("invoker_shell_pid"), "foreground_processes":[]}}}))
+    print(json.dumps({"id":"fixture", "result":{"process_info":{"pane_id":args[3], "shell_pid":model.get("invoker_shell_pid"), "foreground_process_group_id":model.get("invoker_shell_pid"), "foreground_processes":model.get("resume_processes", [])}}}))
     raise SystemExit(0)
 if model.get("closed_transport") and cmd == ["agent", "list"]:
     print(json.dumps({"id":"fixture", "result":{"agents":model.get("recovery_agents", [])}}))
@@ -65,6 +79,9 @@ func newOwnerResumeFixture(t *testing.T, provider string, qualified bool, before
 	}
 	f.R.Herdr.Executable.SHA256 = hash(herdr)
 	f.File = writeAny(t, f.R.WorkspaceRoot, "owner-resume-request.json", f.R)
+	// Process inspection is global. Give each isolated adapter its own native
+	// identity so a sibling fixture's real observer or writer cannot collide.
+	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_session_id": "resume-fixture-" + strings.TrimPrefix(hash([]byte(f.R.WorkspaceRoot)), "sha256:")[:32]})
 	var o WorkflowRun
 	if qualified {
 		o = deliveryCLIQualified(t, f)
