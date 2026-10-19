@@ -148,6 +148,9 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 			if p.Reason != "" {
 				fmt.Fprintf(out, "Reason: %s — %s\n", p.Reason, p.Detail)
 			}
+			if l := p.Liveness; l != nil {
+				fmt.Fprintf(out, "Writer liveness (%s): %d remaining process(es); %s\n", l.Method, len(l.RemainingPIDs), l.Limitation)
+			}
 			if p.State == "ready" && v.Workflow == nil {
 				fmt.Fprintf(out, "Preview only: old pane %s absent; one new tab is planned in Herdr workspace %s\nPlanned control: %s\n", p.PreviousTransport.PaneID, p.DestinationWorkspaceID, p.ControlExecutable.Path)
 			}

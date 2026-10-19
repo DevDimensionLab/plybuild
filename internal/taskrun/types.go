@@ -347,6 +347,15 @@ type ProcessRunner interface {
 
 // StartupProcess contains only the local identities needed to rule out a
 // provider still running under the preserved terminal shell.
+// LocalProcess is one local process identity and its current directory.
+type LocalProcess struct {
+	PID       int    `json:"pid"`
+	ParentPID int    `json:"parent_pid"`
+	CWD       string `json:"cwd"`
+	// Session is "transcript_open", "session_argument" or empty.
+	Session string `json:"session"`
+}
+
 type StartupProcess struct {
 	PID            int `json:"pid"`
 	ParentPID      int `json:"parent_pid"`
@@ -371,6 +380,11 @@ type Dependencies struct {
 	// StartupProcessTree observes the shell and all of its descendants. A nil
 	// observer uses a bounded local process-table read, without command lines.
 	StartupProcessTree func(shellPID int) ([]StartupProcess, error)
+	// LocalProcesses observes local process identities, their current
+	// directory and whether each holds the named provider transcript open or
+	// names the session in its arguments. Command lines are matched, never
+	// returned. A nil observer uses bounded lsof/ps reads.
+	LocalProcesses func(sessionID, transcript string) ([]LocalProcess, error)
 	// HerdrTimeout bounds transport calls and the shared start/readiness window,
 	// never the provider's task lifetime.
 	// Zero selects the documented adapter timeouts.

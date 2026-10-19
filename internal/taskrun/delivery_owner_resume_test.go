@@ -24,6 +24,9 @@ if model.get("closed_transport") and cmd == ["pane", "get"] and model.get("inspe
 if model.get("closed_transport") and cmd == ["agent", "get"] and args[2] == model.get("closed_pane", "w-fixture:p1"):
     print(json.dumps({"id":"fixture", "error":{"code":"agent_not_found", "message":"closed fixture agent"}}), file=sys.stderr)
     raise SystemExit(1)
+if cmd == ["pane", "process-info"]:
+    print(json.dumps({"id":"fixture", "result":{"process_info":{"pane_id":args[3], "shell_pid":model.get("invoker_shell_pid"), "foreground_process_group_id":model.get("invoker_shell_pid"), "foreground_processes":[]}}}))
+    raise SystemExit(0)
 if model.get("closed_transport") and cmd == ["agent", "list"]:
     print(json.dumps({"id":"fixture", "result":{"agents":model.get("recovery_agents", [])}}))
     raise SystemExit(0)
@@ -157,7 +160,7 @@ func TestOwnerResumeContinuesBegunWorkInSameSession(t *testing.T) {
 			f := newOwnerResumeFixture(t, provider, false)
 			before := deliveryRecoveryFiles(t, f.Owner.Paths.RunRoot)
 			p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
-			if err != nil || p.State != "ready" || p.Phase != "begun_work" || p.NativeSessionID != f.Owner.Transport.AgentSessionID || p.Absence == nil || p.Absence.ProcessLiveness != "unknown" || p.Confirmation == "" {
+			if err != nil || p.State != "ready" || p.Phase != "begun_work" || p.NativeSessionID != f.Owner.Transport.AgentSessionID || p.Absence == nil || p.Absence.ProcessLiveness != "no_task_or_session_process_observed" || p.Liveness == nil || p.Confirmation == "" {
 				t.Fatalf("begun work was not previewed for resume: %+v %v", p, err)
 			}
 			if !slices.Contains(p.ResumeArgv, f.Owner.Transport.AgentSessionID) {
@@ -973,5 +976,86 @@ func TestOwnerResumeKeepsStoredHumanInputAnswer(t *testing.T) {
 	}
 	if got, _ := os.ReadFile(result); string(got) != "variant=full\n" {
 		t.Fatalf("fixture result does not use the stored answer: %q", got)
+	}
+}
+
+// r003-f01: an empty Herdr inventory does not prove the old writer stopped.
+// A local process still in the Task worktree or holding the same provider
+// session, or an unavailable observation, blocks before any tab. Only the
+// invoking command chain up to the Herdr-identified invoker shell is excluded,
+// and the reconciled basis is recorded on the positive path.
+func TestOwnerResumeReconcilesWriterLivenessBeforeNewWriter(t *testing.T) {
+	self := os.Getpid()
+	cases := []struct {
+		name, state, reason, pid string
+		invoker                  bool
+		table                    func(task string) ([]LocalProcess, error)
+	}{
+		{"writer_in_task_worktree", "blocked", "writer_process_alive", "4242", false, func(task string) ([]LocalProcess, error) {
+			return []LocalProcess{{PID: 1, CWD: "/"}, {PID: 4242, ParentPID: 1, CWD: filepath.Join(task, "src")}, {PID: self, ParentPID: 1, CWD: "/elsewhere"}}, nil
+		}},
+		{"session_holder_elsewhere", "blocked", "writer_process_alive", "4343", false, func(string) ([]LocalProcess, error) {
+			return []LocalProcess{{PID: 1, CWD: "/"}, {PID: 4343, ParentPID: 1, CWD: "/somewhere/else", Session: "transcript_open"}, {PID: self, ParentPID: 1, CWD: "/elsewhere"}}, nil
+		}},
+		{"agent_ancestor_not_invoker", "blocked", "writer_process_alive", "800", true, func(task string) ([]LocalProcess, error) {
+			// An agent between the invoker shell and this process is a writer.
+			return []LocalProcess{{PID: 1, CWD: "/"}, {PID: 900, ParentPID: 1, CWD: task}, {PID: 800, ParentPID: 900, CWD: task}, {PID: self, ParentPID: 800, CWD: task}}, nil
+		}},
+		{"observation_unavailable", "blocked", "liveness_unknown", "", false, func(string) ([]LocalProcess, error) {
+			return nil, os.ErrPermission
+		}},
+		{"only_invoking_chain", "ready", "", "", true, func(task string) ([]LocalProcess, error) {
+			return []LocalProcess{{PID: 1, CWD: "/"}, {PID: 900, ParentPID: 1, CWD: task}, {PID: self, ParentPID: 900, CWD: task}, {PID: 901, ParentPID: self, CWD: task}}, nil
+		}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newOwnerResumeFixture(t, "claude", false)
+			task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+			if tc.invoker {
+				f.In.InvokerPaneID = "invoker-pane"
+				shellPID := 900
+				if tc.name == "agent_ancestor_not_invoker" {
+					shellPID = 900
+				}
+				workflowTestModel(t, f.workflowFixture, map[string]any{"invoker_shell_pid": shellPID, "inventory": []any{map[string]any{"workspace_id": "w-fixture", "tab_id": "tab-invoker", "pane_id": "invoker-pane", "terminal_id": "term-invoker", "cwd": task, "foreground_cwd": task}}})
+			}
+			f.D.LocalProcesses = func(session, transcript string) ([]LocalProcess, error) {
+				if session != f.Owner.Transport.AgentSessionID || !strings.HasSuffix(transcript, session+".jsonl") {
+					t.Fatalf("observer did not receive the bound session and transcript: %s %s", session, transcript)
+				}
+				return tc.table(task)
+			}
+			before := deliveryRecoveryFiles(t, f.Owner.Paths.RunRoot)
+			p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+			if p.State != tc.state || p.Reason != tc.reason || (tc.state == "ready") != (err == nil) {
+				t.Fatalf("liveness was not reconciled: %+v %v", p, err)
+			}
+			if tc.state == "blocked" {
+				if p.NextAction.Message == "" || tc.pid != "" && !strings.Contains(p.Detail, tc.pid) {
+					t.Fatalf("blocked liveness has no concrete next step: %+v", p)
+				}
+				if _, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, "sha256:"+strings.Repeat("1", 64)); err == nil {
+					t.Fatal("apply started a writer without reconciled liveness")
+				}
+				deliveryRecoveryUnchanged(t, before, "")
+				if workflowTestCalls(t, f.workflowFixture, "tab create") != 1 {
+					t.Fatal("a tab was created while writer liveness was unreconciled")
+				}
+				return
+			}
+			if p.Liveness == nil || p.Liveness.Method != "local_process_cwd_and_session_v1" || len(p.Liveness.RemainingPIDs) != 0 || p.Absence.ProcessLiveness != "no_task_or_session_process_observed" || !strings.Contains(p.Liveness.Limitation, "cwd") {
+				t.Fatalf("positive basis is not stated: %+v %+v", p.Liveness, p.Absence)
+			}
+			ownerResumePreserve(t, f, p)
+			o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+			if err != nil || o.OwnerResume == nil || o.OwnerResume.Step != "prompt_sent" {
+				t.Fatalf("reconciled resume failed: %v", err)
+			}
+			raw, err := os.ReadFile(o.OwnerResume.Binding.Locator)
+			if err != nil || !strings.Contains(string(raw), `"method":"local_process_cwd_and_session_v1"`) {
+				t.Fatalf("resume record lacks its liveness basis: %s %v", raw, err)
+			}
+		})
 	}
 }

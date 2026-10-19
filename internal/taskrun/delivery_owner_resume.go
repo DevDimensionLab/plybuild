@@ -46,6 +46,7 @@ type DeliveryOwnerResumePreview struct {
 	InvokerPaneID          string                         `json:"invoker_pane_id,omitempty"`
 	PreviousTransport      WorkflowTransport              `json:"previous_transport"`
 	Absence                *HumanOwnerRecoveryObservation `json:"absence,omitempty"`
+	Liveness               *TaskWriterLiveness            `json:"writer_liveness,omitempty"`
 	ResumeArgv             []string                       `json:"resume_argv,omitempty"`
 	Confirmation           string                         `json:"confirmation"`
 	NextAction             WorkflowAction                 `json:"next_action"`
@@ -53,6 +54,17 @@ type DeliveryOwnerResumePreview struct {
 
 // DeliveryOwnerResumeReadback separates the reserved start, the observed
 // resumed session, the sent continuation and the first functional callback.
+// TaskWriterLiveness is the reconciled local basis for starting a new writer:
+// no process outside the invoking command chain has its current directory in
+// the Task worktree. Excluded identities are diagnostic, not authority.
+type TaskWriterLiveness struct {
+	Method        string `json:"method"`
+	Scope         string `json:"scope"`
+	RemainingPIDs []int  `json:"remaining_pids"`
+	ExcludedPIDs  []int  `json:"excluded_pids"`
+	Limitation    string `json:"limitation"`
+}
+
 type DeliveryOwnerResumeReadback struct {
 	Generation         int               `json:"generation"`
 	Step               string            `json:"step"`
@@ -77,6 +89,7 @@ type deliveryOwnerResumeRecord struct {
 	PreviousTransport      WorkflowTransport             `json:"previous_transport"`
 	PreviousNextAction     WorkflowAction                `json:"previous_next_action"`
 	Absence                HumanOwnerRecoveryObservation `json:"absence"`
+	Liveness               TaskWriterLiveness            `json:"writer_liveness"`
 	ProviderSession        string                        `json:"provider_session"`
 	ProviderExecutable     Executable                    `json:"provider_executable"`
 	SourceControl          Executable                    `json:"source_control"`
@@ -360,6 +373,22 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 	if p.ProviderSession, err = deliveryProviderSession(s); err != nil {
 		return p, ownerResumeBlock(&p, "provider_session_missing", err.Error(), coordinator("The conversation cannot be resumed; retire this owner with workflow execute retire RUN_ID and start a fresh Task copy."))
 	}
+	// Herdr absence does not prove the earlier writer exited. Reconcile local
+	// processes in the Task worktree or holding this session first.
+	liveness, err := observeWriterLiveness(d, s, p.ProviderSession, invokerShellPID(d, s, in.InvokerPaneID))
+	p.Liveness = &liveness
+	if err != nil {
+		return p, ownerResumeBlock(&p, "liveness_unknown", "local writer liveness could not be observed: "+err.Error(), WorkflowAction{"user", "Restore local process inspection (lsof and ps) for this user and repeat ply workflow execute --resume. No writer is started while liveness is unknown."})
+	}
+	if len(liveness.RemainingPIDs) > 0 {
+		pids := make([]string, len(liveness.RemainingPIDs))
+		for i, pid := range liveness.RemainingPIDs {
+			pids[i] = strconv.Itoa(pid)
+		}
+		return p, ownerResumeBlock(&p, "writer_process_alive", "local processes remain in the Task worktree or hold session "+p.NativeSessionID+": pids "+strings.Join(pids, ", "), WorkflowAction{"user", "Stop those processes (one may be the earlier owner running outside Herdr). If one is your own shell, run ply workflow execute --spec SPEC_ID --resume from the return worktree instead. Then repeat the preview."})
+	}
+	absence.ProcessLiveness = "no_task_or_session_process_observed"
+	p.Absence = &absence
 	resolved, err := exec.LookPath(s.Request.Runtime.Provider)
 	if err == nil {
 		resolved, err = filepath.EvalSymlinks(resolved)
@@ -417,7 +446,9 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 		Provider, SourceControl, Control Executable
 		Destination, Session, Invoker    string
 		Absence                          HumanOwnerRecoveryObservation
-	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, p.DestinationWorkspaceID, p.ProviderSession, in.InvokerPaneID, authority})
+		LivenessMethod                   string
+		Remaining                        []int
+	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, p.DestinationWorkspaceID, p.ProviderSession, in.InvokerPaneID, authority, liveness.Method, liveness.RemainingPIDs})
 	p.State = "ready"
 	p.NextAction = WorkflowAction{"user", "Apply this checked resume to start the same " + p.Provider + " conversation in one new Herdr tab."}
 	return p, nil
@@ -492,7 +523,7 @@ func WorkflowResumeOwner(d Dependencies, root string, in DeliveryOwnerResumeInpu
 		if err = d.writeOnce(beforeBinding.Locator, before); err != nil {
 			return err
 		}
-		r := deliveryOwnerResumeRecord{Kind: "PlyDeliveryOwnerResume@1", SchemaVersion: 1, Generation: p.Generation, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, NativeSessionID: p.NativeSessionID, BeforeState: beforeBinding, PreviousTransport: s.Result.Transport, PreviousNextAction: previousNext, Absence: *p.Absence, ProviderSession: p.ProviderSession, ProviderExecutable: in.ProviderExecutable, SourceControl: in.ControlExecutable, ControlExecutable: p.ControlExecutable, ContinuationGeneration: deliveryContinuationGeneration(s), EventsAtResume: len(s.Result.Delivery.Events), DestinationWorkspaceID: p.DestinationWorkspaceID, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+		r := deliveryOwnerResumeRecord{Kind: "PlyDeliveryOwnerResume@1", SchemaVersion: 1, Generation: p.Generation, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, NativeSessionID: p.NativeSessionID, BeforeState: beforeBinding, PreviousTransport: s.Result.Transport, PreviousNextAction: previousNext, Absence: *p.Absence, Liveness: *p.Liveness, ProviderSession: p.ProviderSession, ProviderExecutable: in.ProviderExecutable, SourceControl: in.ControlExecutable, ControlExecutable: p.ControlExecutable, ContinuationGeneration: deliveryContinuationGeneration(s), EventsAtResume: len(s.Result.Delivery.Events), DestinationWorkspaceID: p.DestinationWorkspaceID, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		binding, err := workflowKeep(d, filepath.Join(p.Directory, "resume.json"), r)
 		if err != nil {
 			return err
