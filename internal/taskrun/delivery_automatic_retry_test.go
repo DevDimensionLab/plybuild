@@ -31,9 +31,21 @@ func TestAutomaticDeliveryCLIRetriesOnlyProvenNoEffectOnSameDelivery(t *testing.
 	if err = os.Remove(lock); err != nil {
 		t.Fatal(err)
 	}
+	// The owner's same Delivery integrates; CL02 cleanup then waits for the
+	// owner to leave and finishes from the return checkout.
+	pending, output, err := deliveryCLIRun(binary, cwd, "execute", id)
+	if err == nil || deliveryCLIString(t, pending, "state") != "pending_closeout" || string(pending["local_integration"]) == "null" {
+		t.Fatalf("same Delivery did not integrate with pending cleanup: %v\n%s", err, output)
+	}
+	cleanupOwnerLeaves(t, f)
+	source := cwd
+	cwd = f.Parent
 	done := deliveryCLIOK(t, binary, cwd, "execute", id)
 	if deliveryCLIString(t, done, "state") != "delivered" {
 		t.Fatalf("same Delivery did not resume a proven no-effect attempt: %+v", done)
+	}
+	if _, err = os.Lstat(source); !os.IsNotExist(err) {
+		t.Fatalf("released Task worktree remains: %v", err)
 	}
 	r, err = f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
 	if err != nil || len(r.IntegrationAuthorities) != 2 || len(r.IntegrationAttempts) != 2 || len(r.IntegrationResults) != 2 || len(r.HumanQARecords) != 0 {

@@ -345,16 +345,26 @@ func TestAutomaticAcceptanceCLIAfterMergeRecovery(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	done := deliveryCLIOK(t, binary, cwd, "execute", id)
+	// The owner's own recovery observes the integration; CL02 cleanup then
+	// waits for the owner to leave and finishes from the return checkout.
+	pending, output, err := deliveryCLIRun(binary, cwd, "execute", id)
+	if err == nil || deliveryCLIString(t, pending, "state") != "pending_closeout" || string(pending["local_integration"]) == "null" {
+		t.Fatalf("merge recovery did not observe integration with pending cleanup: %v\n%s", err, output)
+	}
+	cleanupOwnerLeaves(t, f)
+	done := deliveryCLIOK(t, binary, f.Parent, "execute", id)
 	if deliveryCLIString(t, done, "state") != "delivered" {
 		t.Fatalf("merge recovery incomplete: %+v", done)
 	}
-	deliveryCLIOK(t, binary, cwd, "execute", id)
+	if _, err = os.Lstat(cwd); !os.IsNotExist(err) {
+		t.Fatalf("released Task worktree remains: %v", err)
+	}
+	deliveryCLIOK(t, binary, f.Parent, "execute", id)
 	if workflowProviderDocument(t, model)["merge_count"] != float64(1) {
 		t.Fatal("merge repeated")
 	}
-	run := automaticCLIOK(t, binary, f, "execute", "show", o.RunID)
-	if run.Delivery.Phase != "completed" || run.DeliveryStatus.HumanJudgment != nil {
-		t.Fatal("wrong native closure or fabricated human QA")
+	run, output, err := cleanupCLIAt(binary, f.Parent, "execute", "show", o.RunID)
+	if err != nil || run.Delivery.Phase != "completed" || run.DeliveryStatus.HumanJudgment != nil {
+		t.Fatalf("wrong native closure or fabricated human QA: %v\n%s", err, output)
 	}
 }
