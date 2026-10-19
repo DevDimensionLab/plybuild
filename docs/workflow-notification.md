@@ -41,9 +41,10 @@ The [human-input skill](../skills/ply-human-input/SKILL.md) publishes the full Q
 then delegates one compact `feedback_required` alert to the existing authorized
 job binding. Its stable event is `human-input/QUESTION_ID`. Only a still-waiting Q
 needs an alert; restart and unknown transport reuse the original event and receipt.
-The human opens `/plyapp` → Questions → Open → Review answer and confirms with
-passkey. The complete question and consequences stay in Ply/app; the notification
-contains a short question directing the human there. The agent waits, acknowledges
+The human opens `/plyapp`, selects the question if needed, chooses or writes the
+answer, then confirms the exact answer with passkey. The complete question and
+consequences stay in Ply/app; the notification contains a short question
+directing the human there. The agent waits, acknowledges
 and uses the answer on that same Q. Missing route authority is `not_attempted`.
 The helper owns send/readback; acknowledgement of transport is separate from the
 human's answer. This path adds no app code, Task, daemon, route or credentials.
@@ -76,7 +77,7 @@ These remain declared statuses, not new native approvals. `next_actor` is still 
 or `coordinator`; the compact payload shows the concrete action without an actor prefix.
 Use `No action required.` when done has no remaining action. Necessary feedback requires
 an actual question containing `?`, `next_actor=user`, and `phase=after_start`. Point the
-answer to the active agent conversation, or `/plyapp` Questions for a published Q
+answer to the active agent conversation, or `/plyapp` for a published Q
 as described above. Slack thread replies are not connected.
 
 The strict request-v3 fields are:

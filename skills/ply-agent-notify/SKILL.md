@@ -69,7 +69,7 @@ question and answer. Reuse this job's authorized binding and one Q-derived event
 before invocation, the owner reads the same Q; answered/withdrawn needs no alert.
 For this branch only, the compact `feedback_required` summary is an alert containing
 `?`, such as `A necessary question is waiting. Can you answer it in /plyapp?`;
-`next_action` directs `/plyapp → Questions → Open → Review answer` and passkey.
+`next_action` is `Open /plyapp. Select a question if needed, choose or write your answer, then confirm the exact answer with passkey.`
 Keep the full question/reason/consequences in Ply/app rather than truncating or
 copying them into Slack. Do not export private details or answer text. Missing route
 authority is `not_attempted`, without setup or a new permission round. Other feedback
@@ -102,7 +102,7 @@ Ply Q alert branch above. Use the actual UTC
 instant once; the helper freezes its local timestamp and offset. The next actor is `coordinator`
 for coordinator continuation or `user` for a user return. When no follow-up is required, use
 `No action required.` Necessary answers belong in the active conversation, or in `/plyapp`
-Questions with passkey for a published Q. Slack thread replies are not connected to either.
+with passkey for a published Q. Slack thread replies are not connected to either.
 
 ## 3. Invoke the helper
 

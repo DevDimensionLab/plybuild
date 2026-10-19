@@ -145,7 +145,7 @@ class Journey:
         request = Path(first['request']); before = request.read_bytes(); event = (f/'event.json').read_bytes()
         posts = self.posts(f); assert len(posts) == 1
         text = json.loads(posts[0])['payload']['text']
-        assert '⚠️' in text and '/plyapp' in text and 'Questions' in text and 'passkey' in text
+        assert '⚠️' in text and '/plyapp' in text and 'passkey' in text
         assert len(text.splitlines()) == 3 and len(text) <= 480
         assert all(s not in text for s in ['PRIVATE_', q['text'], q['reason'], 'Short usage note', 'Full reference'])
         assert json.loads(before)['source']['activity'] == 'notification/job' != q['scope']['activity_id']

@@ -101,7 +101,7 @@ Do not ask for:
        "status":"needs_answer",
        "task_title":"⚠️ Human input needed",
        "summary":"A necessary question is waiting. Can you answer it in /plyapp?",
-       "next_action":"Open /plyapp → Questions → Open → Review answer, then confirm with passkey.",
+       "next_action":"Open /plyapp. Select a question if needed, choose or write your answer, then confirm the exact answer with passkey.",
        "next_actor":"user"
      }
    }
@@ -138,8 +138,9 @@ Do not ask for:
    or `agent_reported_continued`, resume Use and report from the stored answer
    and existing continuation; do not notify or repeat completed work.
 6. **Wait.** Tell the user in your conversation that the question is waiting.
-   The human opens `/plyapp` in Slack, then Questions → Open → Review answer
-   and confirms with passkey. Slack thread replies do not answer Q.
+   The human opens `/plyapp` in Slack, selects the question if needed, chooses
+   or writes the answer, then confirms the exact answer with passkey. Slack
+   thread replies do not answer Q.
    Then repeat
    `ply workflow input wait QUESTION_ID --workspace WS --timeout-seconds 300 --format json`
    while `outcome` is `still_waiting`. A timeout only means keep waiting: it
