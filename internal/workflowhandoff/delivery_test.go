@@ -34,7 +34,7 @@ func deliveryFixtureWrite(t *testing.T, path string, value any) {
 	}
 }
 
-func prepareDeliveryFixture(t *testing.T) deliveryFixture {
+func prepareDeliveryFixture(t *testing.T, install ...bool) deliveryFixture {
 	t.Helper()
 	root, epic, _, oid := prepareServiceWorkspace(t)
 	runGit(t, epic, "branch", "-m", "epic")
@@ -55,13 +55,17 @@ func prepareDeliveryFixture(t *testing.T) deliveryFixture {
 		t.Fatal(e)
 	}
 	file := filepath.Join(root, "goal.json")
+	executor := map[string]any{"provider": "codex", "model": "fixture-model", "effort": "high"}
+	if len(install) == 1 {
+		executor["allow_local_install"] = install[0]
+	}
 	deliveryFixtureWrite(t, file, map[string]any{
 		"kind": "WorkspaceTaskSpecDraft@2", "schema_version": 2, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "fixture/goal", "task_id": "task", "registry_upgrade": nil,
 		"recorder": map[string]any{"actor_claim": "fixture planner", "control_surface": "synthetic test", "recorded_at_utc": "2026-10-05T00:00:00Z"},
 		"spec_id":  "goal", "expected_previous": nil, "problem": problem, "title": "Delivery fixture", "contract_kind": "goal", "objective": "Add one observable behavior with a real shell acceptance check.",
 		"documents": []any{map[string]any{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": digestBytes(body), "size_bytes": len(body), "media_type": "text/markdown", "git_provenance": nil}}},
 		"design":    []any{map[string]any{"document_id": "design", "section": nil}}, "requirements": []any{map[string]any{"id": "behavior", "acceptance": "The README contains the exact delivery behavior."}}, "constraints": []string{"No external effects."},
-		"executor": map[string]any{"provider": "codex", "model": "fixture-model", "effort": "high"}, "change_reason": "Isolated test; not actual human approval.",
+		"executor": executor, "change_reason": "Isolated test; not actual human approval.",
 	})
 	spec, e := workspace.RecordTaskSpec(w, workspace.TaskContentInput{TaskID: "task", File: file})
 	if e != nil {
@@ -314,7 +318,9 @@ func TestDeliveryReviewRequiresExplicitCandidateBoundAssessment(t *testing.T) {
 }
 
 func TestDeliveryBudgetAndInstallScopeAreExplicit(t *testing.T) {
-	f := prepareDeliveryFixture(t)
+	// The Goal permits installation, but the first draft deliberately narrows
+	// the owner's authority. A later explicit draft may use the selected grant.
+	f := prepareDeliveryFixture(t, true)
 	s, e := f.d.Store.ReadByLocator(f.locator)
 	if e != nil {
 		t.Fatal(e)

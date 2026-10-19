@@ -62,7 +62,7 @@ func reviewRoundFixture(t *testing.T, provider ...string) (deliveryFixture, Work
 	var f deliveryFixture
 	var o WorkflowRun
 	if len(provider) > 0 && provider[0] == "claude" {
-		f = receiptFixture(t, "claude", deliveryFixtureOptions{Agreement: &agreement})
+		f = receiptFixture(t, "claude", deliveryFixtureOptions{Agreement: &agreement, AllowLocalInstall: true})
 		reviewRoundPatchHerdr(t, &f)
 		started := workflowTestStart(t, f.workflowFixture)
 		var err error
@@ -70,7 +70,7 @@ func reviewRoundFixture(t *testing.T, provider ...string) (deliveryFixture, Work
 			t.Fatal(err)
 		}
 	} else {
-		f = newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: &agreement})
+		f = newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: &agreement, AllowLocalInstall: true})
 		reviewRoundPatchHerdr(t, &f)
 		o = deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
 	}

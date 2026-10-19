@@ -196,6 +196,22 @@ type DeliveryDraftAuthority struct {
 	Agreement         *workspace.DeliveryAgreement
 }
 
+// DeliveryLocalInstallAllowed reads the effective authority of a validated
+// handoff. A request's descriptive flag must not widen or conceal this grant.
+func DeliveryLocalInstallAllowed(raw []byte) (bool, error) {
+	draft, err := decodeHandoffDraft(raw)
+	if err != nil {
+		return false, err
+	}
+	effects, _ := objectMember(draft.Authority, "allowed_effects")
+	for _, value := range effects.([]canonicaljson.Value) {
+		if objectString(value.(canonicaljson.Object), "type") == "install" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerClaim, publicationKey, acceptancePath string, options ...DeliveryDraftAuthority) ([]byte, error) {
 	if len(options) > 1 {
 		return nil, fmt.Errorf("at most one delivery authority scope is supported")

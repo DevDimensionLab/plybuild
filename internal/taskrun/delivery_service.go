@@ -12,23 +12,8 @@ import (
 )
 
 func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, error) {
-	// This is a creation check, deliberately outside historical request
-	// validation: old frozen requests retain their original authority and bytes.
-	if in.Delivery.AllowLocalInstall {
-		raw, err := workflowBound(in.Delivery.Goal, 4<<20)
-		if err != nil {
-			return WorkflowRequest{}, err
-		}
-		var goal struct {
-			ContractKind string                           `json:"contract_kind"`
-			Executor     workspace.TaskExecutorAssignment `json:"executor"`
-		}
-		if err := json.Unmarshal(raw, &goal); err != nil {
-			return WorkflowRequest{}, err
-		}
-		if goal.ContractKind == "goal" && !goal.Executor.LocalInstallAllowed() {
-			return WorkflowRequest{}, workflowError(4, "local installation was not selected by the frozen Goal executor")
-		}
+	if err := validateNewDeliveryInstall(in); err != nil {
+		return WorkflowRequest{}, err
 	}
 	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
@@ -40,6 +25,66 @@ func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, err
 		r.ControlContract = in.ControlContract
 	}
 	return r, validateDeliveryWorkflowRequest(r)
+}
+
+// These checks apply only to creation. Historical frozen request reading keeps
+// its original validation and authority, including omitted Goal fields.
+func validateNewDeliveryInstall(in DeliveryRequestInput) error {
+	install, err := workflowhandoff.DeliveryLocalInstallAllowed(in.HandoffDraft)
+	if err != nil {
+		return err
+	}
+	if install != in.Delivery.AllowLocalInstall {
+		return workflowError(4, "local installation authority differs between request and handoff")
+	}
+	draft, err := workflowhandoff.ValidateDeliveryTaskRunDraft(in.HandoffDraft)
+	if err != nil {
+		return err
+	}
+	var handoff struct {
+		Inputs []FileBinding `json:"inputs"`
+	}
+	if err := json.Unmarshal(in.HandoffDraft, &handoff); err != nil {
+		return err
+	}
+	for _, input := range handoff.Inputs {
+		if input.SHA256 != draft.Basis.Spec.ManifestSHA256 {
+			continue
+		}
+		raw, err := workflowBound(input, 4<<20)
+		if err != nil {
+			return err
+		}
+		var spec struct {
+			ContractKind     string                `json:"contract_kind"`
+			GoalOrigin       workspace.TaskGoalRef `json:"goal_origin"`
+			ExecutionRequest struct {
+				Goal workspace.TaskGoalContract `json:"goal"`
+			} `json:"execution_request"`
+		}
+		if err := json.Unmarshal(raw, &spec); err != nil {
+			return err
+		}
+		if spec.ContractKind != "execution" {
+			return nil
+		}
+		goal := spec.ExecutionRequest.Goal
+		if goal.TaskID == "" || goal.Goal != spec.GoalOrigin || !digestPattern.MatchString(goal.Goal.Spec.ManifestSHA256) {
+			return workflowError(4, "frozen execution Spec has an invalid structured Goal basis")
+		}
+		if install && !goal.Executor.LocalInstallAllowed() {
+			return workflowError(4, "local installation was not selected by the frozen Goal executor")
+		}
+		// The ceiling always comes from the exact execution Spec, including
+		// manual human-gated deliveries. Only legacy manual Goal locators may
+		// still name a design document instead of that Goal's manifest.
+		goalManifestRequired := in.Delivery.StartupProtocol == MandateReceiptV1 || in.Delivery.Agreement != nil && in.Delivery.Agreement.AutomaticAcceptance()
+		if goalManifestRequired && in.Delivery.Goal.SHA256 != goal.Goal.Spec.ManifestSHA256 {
+			return workflowError(4, "delivery Goal differs from the frozen execution Spec origin")
+		}
+		return nil
+	}
+	return workflowError(4, "frozen execution Spec input is missing")
 }
 
 func validateDeliveryWorkflowRequest(r WorkflowRequest) error {

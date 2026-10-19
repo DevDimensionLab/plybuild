@@ -21,10 +21,11 @@ type deliveryFixture struct {
 }
 
 type deliveryFixtureOptions struct {
-	Agreement     *workspace.DeliveryAgreement
-	ParentRef     string
-	Root          string
-	BeforePrepare func(workspace.Dependencies, string, string, workspace.TaskGoalRef)
+	Agreement         *workspace.DeliveryAgreement
+	AllowLocalInstall bool
+	ParentRef         string
+	Root              string
+	BeforePrepare     func(workspace.Dependencies, string, string, workspace.TaskGoalRef)
 }
 
 func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtureOptions) deliveryFixture {
@@ -68,7 +69,10 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 		"documents": []any{map[string]any{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": hash(contents), "size_bytes": len(contents), "media_type": "text/markdown", "git_provenance": nil}}},
 		"design":    []any{map[string]any{"document_id": "design", "section": nil}}, "constraints": []string{"Local isolated fixture only."},
 		"requirements": []any{map[string]any{"id": "behavior", "acceptance": "The actual acceptance entrypoint observes the fixture behavior."}},
-		"executor":     map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium", "allow_local_install": true},
+		"executor":     map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium"},
+	}
+	if option.AllowLocalInstall {
+		input["executor"].(map[string]any)["allow_local_install"] = true
 	}
 	if option.Agreement != nil {
 		a := *option.Agreement
@@ -111,7 +115,7 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	}
 	d := SystemDependencies(w)
 	preparation := *p.Preparation.Preparation
-	draft, e := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, "synthetic human", "fixture owner", "fixture/delivery", acceptance, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: true, Agreement: p.Delivery})
+	draft, e := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, "synthetic human", "fixture owner", "fixture/delivery", acceptance, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: option.AllowLocalInstall, Agreement: p.Delivery})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -147,7 +151,7 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	if p.Delivery != nil && p.Delivery.AutomaticAcceptance() {
 		goalBinding = FileBinding{filepath.Join(root, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(goal.Spec.ManifestSHA256, "sha256:")+".json"), goal.Spec.ManifestSHA256}
 	}
-	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{OwnerClaim: "fixture owner", Goal: goalBinding, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: true, LocalIntegration: boundary, ReasoningEffort: "medium", Agreement: p.Delivery}})
+	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{OwnerClaim: "fixture owner", Goal: goalBinding, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: option.AllowLocalInstall, LocalIntegration: boundary, ReasoningEffort: "medium", Agreement: p.Delivery}})
 	if e != nil {
 		t.Fatal(e)
 	}

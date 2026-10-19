@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -82,6 +83,122 @@ func TestInstallAuthorityRequiresExplicitFrozenGoalSelection(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestInstallAuthorityNewRequestMatchesHandoff(t *testing.T) {
+	for _, tc := range []struct {
+		name                                        string
+		draftInstall, requestInstall, worker, valid bool
+	}{
+		{"narrowed-handoff-cannot-prompt-true", false, true, false, false},
+		{"install-handoff-cannot-prompt-false", true, false, false, false},
+		{"narrowed-handoff-keeps-false", false, false, false, true},
+		{"explicit-install-keeps-true", true, true, false, true},
+		{"worker-cannot-hide-install-handoff", true, false, true, false},
+		{"worker-keeps-narrowed-handoff", false, false, true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.worker && runtime.GOOS != "darwin" {
+				t.Skip("worker requires macOS")
+			}
+			allow := true
+			a := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "synthetic mismatch regression", TimeoutSeconds: 30}}
+			d, in, _, _ := launcherFixtureWithInstall(t, "codex", "", &allow, a)
+			if tc.worker {
+				t.Setenv("HERDR_ENV", "")
+				t.Setenv("HERDR_WORKSPACE_ID", "")
+				in.Runtime.HerdrWorkspace = ""
+				in.Worker = &taskrun.WorkerContract{SchemaVersion: 1, MaxAttempts: 2, AgentTimeoutSeconds: 60}
+			}
+			d.Fault = func(point string) error {
+				if point == "workflow_after_reservation" {
+					return errors.New("synthetic stop before provider effects")
+				}
+				return nil
+			}
+			out, executeErr := Execute(d, in)
+			if out.RequestPath == "" {
+				t.Fatalf("no request produced: %v", executeErr)
+			}
+			var req taskrun.WorkflowRequest
+			if _, err := readPreservedJSON(out.RequestPath, &req); err != nil {
+				t.Fatal(err)
+			}
+			var err error
+			req.HandoffDraft, err = workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, req.PreparationID, "fixture human", req.Delivery.OwnerClaim, "fixture/mismatch", req.Delivery.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{StartupProtocol: req.Delivery.StartupProtocol, AllowLocalInstall: tc.draftInstall, Agreement: req.Delivery.Agreement})
+			if err != nil {
+				t.Fatal(err)
+			}
+			contract := *req.Delivery
+			contract.AllowLocalInstall = tc.requestInstall
+			_, err = taskrun.BuildDeliveryWorkflowRequest(taskrun.DeliveryRequestInput{RequestKey: req.RequestKey, WorkspaceRoot: req.WorkspaceRoot, PreparationID: req.PreparationID, PreparationSHA256: req.PreparationSHA256, HandoffDraft: req.HandoffDraft, Runtime: req.Runtime, HumanAuthority: req.HumanAuthority, HerdrExecutable: req.Herdr.Executable, HerdrWorkspaceID: req.Herdr.WorkspaceID, TabLabel: req.Herdr.TabLabel, Delivery: contract, Worker: req.Worker})
+			if (err == nil) != tc.valid {
+				t.Fatalf("request/handoff installation mismatch: valid=%t error=%v", tc.valid, err)
+			}
+			if !tc.valid && !strings.Contains(err.Error(), "installation authority differs") {
+				t.Fatalf("mismatch rejected for an unrelated reason: %v", err)
+			}
+		})
+	}
+}
+
+func TestInstallAuthorityGoalCeilingBindsManualLegacyProtocol(t *testing.T) {
+	d, in, root, _ := launcherFixtureWithInstall(t, "codex", "", nil)
+	d.Fault = func(point string) error {
+		if point == "workflow_after_reservation" {
+			return errors.New("synthetic stop before provider effects")
+		}
+		return nil
+	}
+	out, _ := Execute(d, in)
+	var req taskrun.WorkflowRequest
+	if _, err := readPreservedJSON(out.RequestPath, &req); err != nil {
+		t.Fatal(err)
+	}
+	allowed, err := workflowhandoff.DeliveryLocalInstallAllowed(req.HandoffDraft)
+	if err != nil || allowed {
+		t.Fatalf("forbidden install treated as permission: %t %v", allowed, err)
+	}
+	var draft map[string]any
+	if err := json.Unmarshal(req.HandoffDraft, &draft); err != nil {
+		t.Fatal(err)
+	}
+	delete(draft["delivery_binding"].(map[string]any), "startup_protocol")
+	authority := draft["authority"].(map[string]any)
+	effects := authority["allowed_effects"].([]any)
+	install := map[string]any{"id": "install", "type": "install", "sequence": len(effects) + 1, "max_occurrences": nil, "scope": map[string]any{"kind": "boolean", "allowed": false}}
+	authority["allowed_effects"] = append(effects, install)
+	forbidden := []any{}
+	for _, effect := range authority["forbidden_effects"].([]any) {
+		if effect.(map[string]any)["type"] != "install" {
+			forbidden = append(forbidden, effect)
+		}
+	}
+	authority["forbidden_effects"] = forbidden
+	invalid, err := json.Marshal(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := workflowhandoff.DeliveryLocalInstallAllowed(invalid); err == nil {
+		t.Fatal("allowed=false install scope was accepted")
+	}
+	install["scope"].(map[string]any)["allowed"] = true
+	req.HandoffDraft, err = json.Marshal(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	contract := *req.Delivery
+	contract.StartupProtocol, contract.AllowLocalInstall = "", true
+	design := filepath.Join(root, "design.md")
+	contents, err := os.ReadFile(design)
+	if err != nil {
+		t.Fatal(err)
+	}
+	contract.Goal = taskrun.FileBinding{Locator: design, SHA256: digestBytes(contents)}
+	_, err = taskrun.BuildDeliveryWorkflowRequest(taskrun.DeliveryRequestInput{RequestKey: req.RequestKey, WorkspaceRoot: req.WorkspaceRoot, PreparationID: req.PreparationID, PreparationSHA256: req.PreparationSHA256, HandoffDraft: req.HandoffDraft, Runtime: req.Runtime, HumanAuthority: req.HumanAuthority, HerdrExecutable: req.Herdr.Executable, HerdrWorkspaceID: req.Herdr.WorkspaceID, TabLabel: req.Herdr.TabLabel, Delivery: contract})
+	if err == nil || !strings.Contains(err.Error(), "not selected by the frozen Goal") {
+		t.Fatalf("manual legacy-protocol Goal ceiling was bypassed or rejected for wrong reason: %v", err)
 	}
 }
 
