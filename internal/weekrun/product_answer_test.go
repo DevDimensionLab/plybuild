@@ -198,3 +198,31 @@ func TestNA01WeekTickLeavesAnswerWaitAtNativeBoundary(t *testing.T) {
 		})
 	}
 }
+
+// NA01 review r001-f02: a received answer whose continuation is unknown or
+// failed while the native Run still waits is blocked, uncertain work, not
+// running work. Week phase blocked would end the controller and its controls,
+// so the week phase is the non-terminal unknown.
+func TestNA01WeekShowsUnconfirmedContinuationAsBlocked(t *testing.T) {
+	f := newMR05Week(t)
+	f.tick(t)
+	f.tick(t)
+	r := f.n.runs["first"]
+	r.Phase = "awaiting_product_answer"
+	r.NextAction = taskrun.WorkflowAction{Actor: "human", Message: "Answer native-answer-0001 is received, but its continuation is not confirmed: The single launch authorization exists; do not resend. Do not answer again or resend; inspect the preserved Run."}
+	f.n.runs["first"] = r
+	f.tick(t)
+	shown, e := f.m.Show(f.c.Workspace, f.s.ID)
+	for _, s := range []State{f.s, shown} {
+		if e != nil || s.Phase != "unknown" || s.Entries[0].State != "blocked" || !strings.Contains(s.NextAction, "native-answer-0001") || !strings.Contains(s.NextAction, "inspect the preserved Run") {
+			t.Fatalf("unconfirmed continuation shown as %s/%s %q: %v", s.Phase, s.Entries[0].State, s.NextAction, e)
+		}
+	}
+	// A confirmed later boundary replaces the blocker.
+	r.Phase, r.NextAction = "running", taskrun.WorkflowAction{Actor: "worker", Message: "Answer native-answer-0001 use is confirmed"}
+	f.n.runs["first"] = r
+	f.tick(t)
+	if f.s.Phase != "running" || f.s.Entries[0].State != "running" || !strings.Contains(f.s.NextAction, "use is confirmed") {
+		t.Fatalf("confirmed continuation did not replace the blocker: %s/%s %q", f.s.Phase, f.s.Entries[0].State, f.s.NextAction)
+	}
+}

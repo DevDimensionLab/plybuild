@@ -7,7 +7,8 @@
 # fixture (real native worker, answer store, continuation and week controller;
 # owned stand-in provider, no live provider, Slack, phone or passkey). At each
 # stage, unanswered -> received -> continuing -> confirmed use -> commit ->
-# review, PLY_BIN's public reads must agree with the native projections:
+# review -> native verify -> integration -> completed (single-attempt
+# journey), PLY_BIN's public reads must agree with the native projections:
 #   workflow worker show, workflow week show,
 #   workflow execute question, workflow execute answer status.
 # Run from a source tree at the delivered commit. Read commands only.

@@ -519,7 +519,17 @@ func projectAnswerWait(s *State, entry *Entry, r Run) {
 		s.Phase, entry.State, s.NextAction = "awaiting_product_answer", "awaiting_product_answer", productAnswerWait
 		return
 	}
-	if entry.State == "awaiting_product_answer" {
+	if r.Phase == "awaiting_product_answer" && r.NextAction.Actor == "human" {
+		// A received answer whose continuation cannot be confirmed blocks this
+		// entry. Week blocked is terminal for its controller; unknown is not.
+		s.Phase, entry.State = "unknown", "blocked"
+		s.NextAction = nativeNextPrefix + r.NextAction.Actor + ": " + r.NextAction.Message
+		return
+	}
+	if s.Phase == "unknown" && entry.State == "blocked" {
+		s.Phase = "running"
+	}
+	if entry.State == "awaiting_product_answer" || entry.State == "blocked" {
 		entry.State = "running"
 	}
 	if s.Phase == "awaiting_product_answer" {

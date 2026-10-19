@@ -281,7 +281,7 @@ func (m Manager) Show(root, id string) (State, error) {
 			}
 		}
 	}
-	if ix := entryIndex(&s, s.ActiveTaskID); s.ActiveTaskID != "" && ix >= 0 && s.Entries[ix].RunID != "" && (s.Entries[ix].State == "awaiting_product_answer" || answerGuidance(s)) {
+	if ix := entryIndex(&s, s.ActiveTaskID); s.ActiveTaskID != "" && ix >= 0 && s.Entries[ix].RunID != "" && (s.Entries[ix].State == "awaiting_product_answer" || s.Entries[ix].State == "blocked" || answerGuidance(s)) {
 		// Cached answer guidance may predate the native Run's current boundary.
 		// Project that boundary as the next Tick would; nothing is dispatched.
 		entry := &s.Entries[ix]

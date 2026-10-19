@@ -216,6 +216,9 @@ func productCurrentAction(d Dependencies, s workflowState, o WorkflowRun) Workfl
 	case "continuation_observed":
 		return WorkflowAction{"worker", answer + " is received and the same developer session is continuing with it. Answer use is not confirmed until that turn completes; no new human answer is needed." + parent}
 	case "continuation_completed":
+		if (o.Delivery != nil && o.Delivery.Phase == "completed") || w.Phase == "completed" || w.Stage == "completed" {
+			return WorkflowAction{"user", answer + " use is confirmed by the same developer session and the Task delivery is completed. No human answer or further action is needed for this answer."}
+		}
 		return WorkflowAction{"worker", answer + " use is confirmed by the same developer session; the worker owns the " + w.Stage + " stage of this Run. No human answer is needed." + parent}
 	}
 	detail := "unknown outcome"

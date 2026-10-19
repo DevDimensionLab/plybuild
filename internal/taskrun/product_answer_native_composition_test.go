@@ -418,4 +418,35 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 	} else {
 		t.Run("single_attempt_forbids_correction", func(t *testing.T) { f.AssertSingleAttemptForbidsCorrection(t) })
 	}
+	if attempts == 1 {
+		// NA01 review r001-f01: continue the same public journey through native
+		// verify, integration and completion.
+		t.Run("na01_delivery_and_completion", func(t *testing.T) {
+			if o = f.Step(t); o.Worker.Stage != "verify" || o.Worker.Job != nil {
+				t.Fatalf("reviewed candidate did not reach verify: %+v", o.Worker)
+			}
+			next(t, "worker", p.Request.RequestID, "use is confirmed", "verify")
+			week(t, "running", "running", false)
+			if o = f.Step(t); o.Delivery.Phase != "automatic_acceptance_passed" {
+				t.Fatalf("native verify did not qualify: %+v", o.Delivery)
+			}
+			next(t, "recipient", "Automatic acceptance and review passed")
+			week(t, "running", "running", false)
+			f.Step(t) // integrate stage
+			if o = f.Step(t); o.Delivery.Phase != "completed" {
+				t.Fatalf("native integration did not complete: %+v", o.Delivery)
+			}
+			next(t, "user", "delivery is closed")
+			week(t, "completed", "completed", false)
+			asked(t, "answered", "continuation_completed", p.Request.RequestID)
+			// A completed worker without a closeout record (older or pending
+			// closeout) never names the worker as owner of further work.
+			for _, phase := range []string{"completed", "running"} {
+				a := f.ProjectPersistedAnswerAction(t, phase, "completed")
+				if a.Actor == "worker" || a.Actor == "product_answer" || !strings.Contains(a.Message, "use is confirmed") || !strings.Contains(a.Message, "delivery is completed") {
+					t.Fatalf("completed worker (%s) projects %+v", phase, a)
+				}
+			}
+		})
+	}
 }

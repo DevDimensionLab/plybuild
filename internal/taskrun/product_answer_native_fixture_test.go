@@ -152,6 +152,14 @@ func TestSL01NativeAttemptProcess(t *testing.T) {
 	}
 	d := SystemDependencies(workspace.SystemDependencies())
 	d.ProductAnswerQualification = sl01SyntheticQualification
+	// The bound Ply executable is the fixture launcher, which execs this test
+	// binary for _attempt. Native callbacks therefore run as that launcher.
+	s, e := workflowRead(args[5], args[3])
+	if e != nil {
+		t.Fatal(e)
+	}
+	bound := s.Request.Runtime.PlyExecutable.Path
+	d.Executable = func() (string, error) { return bound, nil }
 	if e := RunWorkerAttempt(d, args[5], args[3], args[7]); e != nil {
 		t.Fatal(e)
 	}
@@ -175,6 +183,22 @@ func (f *SL01NativeFixture) Step(t *testing.T) WorkflowRun {
 		t.Fatal(e)
 	}
 	return o
+}
+
+// ProjectPersistedAnswerAction models older persisted guidance: the question's
+// product_answer action retained on a worker at the given phase/stage, without
+// a Task closeout record. It returns the read projection only.
+func (f *SL01NativeFixture) ProjectPersistedAnswerAction(t *testing.T, phase, stage string) WorkflowAction {
+	t.Helper()
+	s, e := workflowRead(f.Root, f.RunID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	o := s.Result
+	w := *o.Worker
+	w.Phase, w.Stage, w.Job = phase, stage, nil
+	o.Worker, o.NextAction = &w, productAnswerRequired
+	return productCurrentAction(f.D, s, o)
 }
 func (f *SL01NativeFixture) AssertNativeSource(t *testing.T) {
 	t.Helper()
