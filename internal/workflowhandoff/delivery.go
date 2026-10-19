@@ -212,6 +212,28 @@ func DeliveryLocalInstallAllowed(raw []byte) (bool, error) {
 	return false, nil
 }
 
+// deliveryCleanupAgreement selects the agreements whose new mandates grant
+// physical removal of the released Task source after automatic local delivery.
+func deliveryCleanupAgreement(a *workspace.DeliveryAgreement) bool {
+	return a != nil && a.Mode != workspace.DeliveryPullRequest && !a.HumanOwnedIntegration() && a.AutomaticAcceptance()
+}
+
+// DeliveryCleanupAllowed reads whether a validated frozen handoff grants
+// source cleanup. Older mandates forbid it and keep their retained source.
+func DeliveryCleanupAllowed(raw []byte) (bool, error) {
+	draft, err := decodeHandoffDraft(raw)
+	if err != nil {
+		return false, err
+	}
+	effects, _ := objectMember(draft.Authority, "allowed_effects")
+	for _, value := range effects.([]canonicaljson.Value) {
+		if objectString(value.(canonicaljson.Object), "type") == "cleanup" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerClaim, publicationKey, acceptancePath string, options ...DeliveryDraftAuthority) ([]byte, error) {
 	if len(options) > 1 {
 		return nil, fmt.Errorf("at most one delivery authority scope is supported")
@@ -317,11 +339,18 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 				add("delivery-pr", "pull_request", scope, 1)
 			} else if !agreement.HumanOwnedIntegration() {
 				add("delivery-integration", "integration", scope, 1)
+				if agreement.AutomaticAcceptance() {
+					// Native closeout removes the released source of this exact delivery.
+					add("delivery-cleanup", "cleanup", scope, 1)
+				}
 			}
 		}
 		forbidden := []canonicaljson.Value{}
 		for _, kind := range []string{"cleanup", "deploy", "merge", "pull_request", "push", "release"} {
 			if agreement != nil && agreement.Mode == workspace.DeliveryPullRequest && (kind == "pull_request" || kind == "push") {
+				continue
+			}
+			if kind == "cleanup" && deliveryCleanupAgreement(agreement) {
 				continue
 			}
 			forbidden = append(forbidden, deliveryObject(map[string]any{"type": kind, "reason": "Outside the selected local delivery contract."}))

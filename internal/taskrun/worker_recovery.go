@@ -4,6 +4,7 @@ package taskrun
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -64,6 +65,15 @@ func workerRecoverNative(d Dependencies, s workflowState) error {
 	}
 	if a.Kind != "integration" {
 		return fmt.Errorf("native integration reservation differs; no unobserved effect will be repeated")
+	}
+	// An ended integrate attempt may have released the source; then only
+	// closeout remains and it must run from outside the source.
+	current, err := workflowRead(s.Request.WorkspaceRoot, s.Result.RunID)
+	if err != nil {
+		return err
+	}
+	if err = os.Chdir(workerServeDirectory(current)); err != nil {
+		return err
 	}
 	o, err := WorkflowDeliveryIntegrate(d, s.Request.WorkspaceRoot, s.Result.RunID, s.Result.Paths.Context)
 	if err != nil {

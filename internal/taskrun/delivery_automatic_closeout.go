@@ -69,8 +69,60 @@ func automaticIntegratedResult(s workflowState, resultID workspace.TaskResultID)
 	return observation.Result, true, nil
 }
 
-// ResumeAutomaticLocalDelivery only completes native retained closeout after
-// an observed integration. Its release cannot authorize a second Git effect.
+// automaticReleaseRetainReason is the release text of a Run whose frozen
+// mandate forbids cleanup. Such Runs keep their worktree and branch.
+const automaticReleaseRetainReason = "Automatic local integration, queue closure and Epic base update are observed. Release source writing ownership for native closeout while retaining its worktree and branch."
+
+const automaticReleaseCleanupReason = "Automatic local integration, queue closure and Epic base update are observed. Release source writing ownership for native closeout; the source worktree is removed after its owner has left it."
+
+// automaticCloseoutKeeps binds the cleanup default to the Run's own frozen
+// mandate. Mandates without the cleanup effect, including every Run started
+// before it existed, keep their retained source; a newer CLI never widens them.
+func automaticCloseoutKeeps(s workflowState) (bool, error) {
+	allowed, err := workflowhandoff.DeliveryCleanupAllowed(s.Request.HandoffDraft)
+	return !allowed, err
+}
+
+// automaticOwnerLeft requires positive absence of every known Task writer
+// before removal: the bound Herdr pane and agent for an interactive owner, and
+// for every owner the local processes in the source or naming its session.
+func automaticOwnerLeft(d Dependencies, s workflowState) error {
+	if !headlessRun(s.Request) {
+		if _, e := observeAbsentDeliveryOwner(d, s); e != nil {
+			return workflowError(4, "owner_active: the released owner has not left the Task worktree ("+e.Error()+")")
+		}
+	}
+	transcript, _ := deliveryProviderSession(s)
+	observed, e := observeWriterLiveness(d, s, transcript, 0)
+	if e != nil {
+		return workflowError(4, "owner_unknown: local Task writer liveness is unknown: "+e.Error())
+	}
+	if len(observed.RemainingPIDs) > 0 {
+		return workflowError(4, fmt.Sprintf("owner_active: local Task writer processes remain %v", observed.RemainingPIDs))
+	}
+	return nil
+}
+
+// automaticCleanupPending selects an interactive automatic delivery whose
+// integration is observed and released but whose source removal remains.
+func automaticCleanupPending(s workflowState) bool {
+	a := deliveryEffectiveAgreement(s)
+	if !deliveryRun(s.Request) || headlessRun(s.Request) || a == nil || !a.AutomaticAcceptance() || a.HumanOwnedIntegration() || s.Result.Delivery == nil || s.Result.Delivery.Phase != "closing" || s.Result.Delivery.OwnershipRelease == nil {
+		return false
+	}
+	keep, err := automaticCloseoutKeeps(s)
+	return err == nil && !keep
+}
+
+func automaticCloseoutPendingAction(s workflowState, cause string) WorkflowAction {
+	if headlessRun(s.Request) {
+		return WorkflowAction{"recipient", "Local integration, queue closure and Epic base update are observed. Source cleanup is pending: " + cause + ". The worker finishes this same closeout after its integration attempt has ended; the Git integration is not repeated."}
+	}
+	return WorkflowAction{"coordinator", "Local integration, queue closure and Epic base update are observed. Source cleanup is pending: " + cause + ". The owner ends its session; the coordinator's ply workflow execute follow " + s.Result.RunID + " then finishes this same closeout from outside the source without repeating the Git integration."}
+}
+
+// ResumeAutomaticLocalDelivery only completes native closeout after an
+// observed integration. Its release cannot authorize a second Git effect.
 func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID workspace.TaskResultID) (workflowhandoff.DeliveryIntegrationResult, bool, error) {
 	s, err := workflowRead(root, id)
 	if err != nil {
@@ -86,6 +138,14 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		return out, true, err
 	}
 	authority.CandidateRunID = c.TaskResult.RunID
+	keep, err := automaticCloseoutKeeps(s)
+	if err != nil {
+		return out, true, err
+	}
+	reason := automaticReleaseCleanupReason
+	if keep {
+		reason = automaticReleaseRetainReason
+	}
 	err = deliveryReleaseUpdate(d, root, id, func(current *workflowState) error {
 		if _, found, e := automaticIntegratedResult(*current, resultID); e != nil || !found {
 			if e == nil {
@@ -121,10 +181,13 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		if e != nil {
 			return e
 		}
-		if e = preserveDeliveryRelease(d, current, c, "Automatic local integration, queue closure and Epic base update are observed. Release source writing ownership for native closeout while retaining its worktree and branch.", "automatic_delivery_completed", &Executable{Path: path, SHA256: hash(bytes)}, nil, nil); e != nil {
+		if e = preserveDeliveryRelease(d, current, c, reason, "automatic_delivery_completed", &Executable{Path: path, SHA256: hash(bytes)}, nil, nil); e != nil {
 			return e
 		}
-		current.Result.NextAction = WorkflowAction{"recipient", "Finish native Task closeout for the observed automatic delivery; retain the source worktree and branch. Resume the same operation after interruption."}
+		current.Result.NextAction = WorkflowAction{"recipient", "Finish native Task closeout for the observed automatic delivery; the source is removed after its owner has left it. Resume the same operation after interruption."}
+		if keep {
+			current.Result.NextAction = WorkflowAction{"recipient", "Finish native Task closeout for the observed automatic delivery; retain the source worktree and branch. Resume the same operation after interruption."}
+		}
 		return nil
 	})
 	if err != nil {
@@ -144,6 +207,14 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		}
 		return out, true, err
 	}
+	// The release closes owner callbacks, not the owner's processes. Removal
+	// waits until the owner and every local Task writer have left.
+	ownerLeft := func() error {
+		if keep {
+			return nil
+		}
+		return automaticOwnerLeft(d, s)
+	}
 	ownership := workspace.TaskCloseoutOwnership{Released: true, TaskID: c.TaskResult.TaskID, TaskResultID: resultID, ResultOID: c.OID, ResultTree: c.Tree, EvidenceLocator: release.Locator, EvidenceSHA256: release.SHA256}
 	guard := func() error {
 		observed, err := CheckLegacyTaskOwnership(d, root, c.TaskResult)
@@ -153,9 +224,13 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		if !observed.Ready {
 			return workflowError(4, "automatic closeout owner remains unresolved: "+observed.Reason)
 		}
-		return nil
+		return ownerLeft()
 	}
-	closeout, closeoutErr := workflowhandoff.CloseAutomaticDeliveryCandidate(d.Workflow, string(c.TaskResult.TaskID), resultID, authority, ownership, guard)
+	var closeout workspace.TaskCloseoutReceipt
+	closeoutErr := ownerLeft()
+	if closeoutErr == nil {
+		closeout, closeoutErr = workflowhandoff.CloseAutomaticDeliveryCandidate(d.Workflow, string(c.TaskResult.TaskID), resultID, authority, ownership, keep, guard)
+	}
 	if closeout.Kind != "" {
 		out.Closeout = &closeout
 	}
@@ -169,9 +244,21 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 			}
 			return e
 		}
-		if closeoutErr != nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "kept" {
+		resource := "retired"
+		if keep {
+			resource = "kept"
+		}
+		if closeoutErr != nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != resource {
 			current.Result.Delivery.Phase, current.Result.Round.State, current.Result.FinalReturn.State = "closing", "closing", "closing"
-			current.Result.NextAction = WorkflowAction{"recipient", "Local integration, queue closure and Epic base update are observed. Resume this same automatic delivery to finish native Task closeout; the source worktree and branch remain retained."}
+			if keep {
+				current.Result.NextAction = WorkflowAction{"recipient", "Local integration, queue closure and Epic base update are observed. Resume this same automatic delivery to finish native Task closeout; the source worktree and branch remain retained."}
+			} else {
+				cause := "native Task closeout is incomplete"
+				if closeoutErr != nil {
+					cause = closeoutErr.Error()
+				}
+				current.Result.NextAction = automaticCloseoutPendingAction(*current, cause)
+			}
 			return nil
 		}
 		_, e := deliveryAppendEvent(d, current, "automatic-closeout-"+c.Key, "closeout", map[string]any{"kind": "PlyDeliveryCloseout@1", "run_id": id, "request_sha256": s.Result.RequestSHA256, "candidate": c.Key, "result": closeout})
@@ -180,9 +267,14 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		}
 		current.Result.Delivery.Phase, current.Result.Round.State, current.Result.FinalReturn.State = "completed", "completed", "completed"
 		current.Result.NextAction = WorkflowAction{"user", fmt.Sprintf("The exact automatically accepted candidate is integrated in %s. Task, queue and Epic base are complete; its worktree and branch are retained.", authority.Agreement.TargetRef)}
+		if !keep {
+			current.Result.NextAction = WorkflowAction{"user", fmt.Sprintf("The exact automatically accepted candidate is integrated in %s. Task, queue and Epic base are complete; its released worktree and branch are removed and the candidate is archived at %s.", authority.Agreement.TargetRef, closeout.Plan.ArchiveRef)}
+		}
 		return nil
 	})
-	if err == nil {
+	if err == nil && closeoutErr != nil && !keep {
+		err = workflowError(5, "automatic local integration is observed; source cleanup is pending: "+closeoutErr.Error())
+	} else if err == nil {
 		err = closeoutErr
 	}
 	if err == nil && (out.Closeout == nil || out.Closeout.State != "complete") {

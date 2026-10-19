@@ -81,11 +81,11 @@ func validateDeliveryAgreementEffects(o canonicaljson.Object, a *workspace.Deliv
 			if objectString(so, "kind") != "task_worktree" {
 				return fmt.Errorf("delivery implementation filesystem writes must bind the Task worktree")
 			}
-		case "command_execute", "process_start", "install", "push", "pull_request", "integration":
+		case "command_execute", "process_start", "install", "push", "pull_request", "integration", "cleanup":
 		default:
 			return fmt.Errorf("effect %s is outside the single Task delivery mandate", kind)
 		}
-		if kind != "push" && kind != "pull_request" && kind != "integration" {
+		if kind != "push" && kind != "pull_request" && kind != "integration" && kind != "cleanup" {
 			continue
 		}
 		seen[kind]++
@@ -105,11 +105,14 @@ func validateDeliveryAgreementEffects(o canonicaljson.Object, a *workspace.Deliv
 	} else if seen["integration"] != 1 || seen["push"] != 0 || seen["pull_request"] != 0 {
 		return fmt.Errorf("local mandate requires only its exact integration effect")
 	}
+	if seen["cleanup"] > 1 || seen["cleanup"] == 1 && !deliveryCleanupAgreement(a) {
+		return fmt.Errorf("source cleanup is outside the selected delivery agreement")
+	}
 	return nil
 }
 
 func validateDeliveryEffectScope(kind string, v canonicaljson.Value) error {
-	if kind != "push" && kind != "pull_request" && kind != "integration" {
+	if kind != "push" && kind != "pull_request" && kind != "integration" && kind != "cleanup" {
 		return fmt.Errorf("unsupported scoped delivery effect")
 	}
 	m, err := exactObject(v, "delivery effect scope", "kind", "agreement")
@@ -119,6 +122,12 @@ func validateDeliveryEffectScope(kind string, v canonicaljson.Value) error {
 	a, err := workspace.DeliveryAgreementFromSpec(canonicaljson.Object{{Name: "delivery", Value: m["agreement"]}})
 	if err != nil {
 		return err
+	}
+	if kind == "cleanup" {
+		if a == nil || a.SourceRef == "" || !deliveryCleanupAgreement(a) {
+			return fmt.Errorf("effect is outside the selected delivery mode")
+		}
+		return nil
 	}
 	if a == nil || a.SourceRef == "" || (kind == "integration") == (a.Mode == workspace.DeliveryPullRequest) || kind == "integration" && a.HumanOwnedIntegration() {
 		return fmt.Errorf("effect is outside the selected delivery mode")

@@ -616,7 +616,7 @@ func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 		s.Result.NextAction = WorkflowAction{"user", fmt.Sprintf("The exact passed candidate is integrated locally in %s and the registered base is current.", a.Agreement.TargetRef)}
 		if !human && a.Agreement.AutomaticAcceptance() {
 			s.Result.Delivery.Phase, s.Result.Round.State, s.Result.FinalReturn.State = "closing", "closing", "closing"
-			s.Result.NextAction = WorkflowAction{"recipient", "Local integration, Task queue and Epic base are observed. Finish native Task closeout while retaining the source worktree and branch."}
+			s.Result.NextAction = WorkflowAction{"recipient", "Local integration, Task queue and Epic base are observed. Finish native Task closeout; the released source is removed after its owner has left it."}
 		}
 		return nil
 	})

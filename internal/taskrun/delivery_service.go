@@ -275,6 +275,9 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 	observationTimeout := func() error {
 		return workflowError(5, "Delivery continues in the same session; observation timed out without stopping or restarting it")
 	}
+	if o, handled, e := deliveryFollowCleanup(d, root, id, deadline); handled {
+		return o, e
+	}
 	for {
 		if !time.Now().Before(deadline) {
 			return deliveryReadback(d, root, id, observationTimeout())
@@ -376,4 +379,65 @@ func readDeliveryReceiptGoal(binding FileBinding) (deliveryReceiptGoal, error) {
 		return goal, workflowError(2, "mandate receipt requires the frozen goal title and objective")
 	}
 	return goal, nil
+}
+
+// deliveryFollowCleanup finishes a released automatic delivery's source
+// cleanup from the coordinator's checkout. After two settled observations the
+// released owner's exact pane is closed, every Task writer must be absent, and
+// the same recorded closeout continues. A working owner is only observed.
+func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time) (WorkflowRun, bool, error) {
+	s, e := workflowRead(root, id)
+	if e != nil {
+		return WorkflowRun{}, false, nil
+	}
+	if s.Result.Delivery != nil && s.Result.Delivery.Phase == "completed" && s.Result.Delivery.OwnershipRelease != nil {
+		if closeout, err := workflowTaskCloseout(root, s); err == nil && closeout != nil && closeout.WorktreeRemoved {
+			o, err := WorkflowShow(d, root, id)
+			return o, true, err
+		}
+	}
+	quiet := 0
+	for automaticCleanupPending(s) {
+		finish := false
+		if _, e = observeAbsentDeliveryOwner(d, s); e == nil {
+			finish = true
+		} else {
+			a, e := workflowAgentRead(d, s, deadline)
+			if e != nil {
+				return deliveryReadbackHandled(d, root, id, e)
+			}
+			if workflowSettled(a) {
+				quiet++
+			} else {
+				quiet = 0
+			}
+			if quiet >= 2 {
+				if _, e = deliveryRetireClosePane(d, s); e == nil {
+					_, _, e = deliveryRetireAbsence(d, s)
+				}
+				if e != nil {
+					return deliveryReadbackHandled(d, root, id, e)
+				}
+				finish = true
+			}
+		}
+		if finish {
+			c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
+			_, _, e = ResumeAutomaticLocalDelivery(d, root, id, c.TaskResult.ID)
+			return deliveryReadbackHandled(d, root, id, e)
+		}
+		if !time.Now().Add(250 * time.Millisecond).Before(deadline) {
+			return deliveryReadbackHandled(d, root, id, workflowError(5, "The released owner is still active; source cleanup waits until it settles. Observation timed out without stopping it"))
+		}
+		time.Sleep(250 * time.Millisecond)
+		if s, e = workflowRead(root, id); e != nil {
+			return deliveryReadbackHandled(d, root, id, e)
+		}
+	}
+	return WorkflowRun{}, false, nil
+}
+
+func deliveryReadbackHandled(d Dependencies, root, id string, err error) (WorkflowRun, bool, error) {
+	o, e := deliveryReadback(d, root, id, err)
+	return o, true, e
 }

@@ -427,7 +427,7 @@ func (s *Service) Check(cwd, id string) (Receipt, error) {
 			}
 			r.State, r.NativeClosed = "pending_closeout", false
 			r.Reasons = []string{"Local integration, queue closure and Epic base update are observed; native Task closeout remains pending."}
-			r.NextAction = "Execute this Delivery ID to resume native closeout while retaining the source worktree and branch. The Git integration will not be repeated."
+			r.NextAction = "Execute this Delivery ID from outside the Task source after its owner has left it to resume native closeout. The Git integration will not be repeated."
 			if observed.Completed {
 				r.Local = &LocalReceipt{TargetRef: r.Manifest.Agreement.TargetRef, TargetWorktree: r.Manifest.Agreement.TargetWorktree, BeforeOID: r.Manifest.ExpectedParentOID, AfterOID: observed.Integration.Readback.ParentOID, Integration: observed.Integration.Readback, Base: observed.Base, Queue: observed.Queue, ObservedAtUTC: s.now(), Closeout: observed.Closeout}
 			}
@@ -435,7 +435,7 @@ func (s *Service) Check(cwd, id string) (Receipt, error) {
 				r.Reasons = append(r.Reasons, err.Error())
 			} else if observed.Closeout != nil && observed.Closeout.State == "complete" && observed.Closeout.LifecycleCompleted {
 				r.State, r.NativeClosed, r.Reasons = "ready", true, []string{}
-				r.NextAction = "Execute this Delivery ID to record the already observed native completion. The worktree and branch are retained; no integration will be repeated."
+				r.NextAction = "Execute this Delivery ID to record the already observed native completion; its source resource is " + observed.Closeout.ResourceState + ". No integration will be repeated."
 			}
 			return r, nil
 		}

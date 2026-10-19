@@ -104,8 +104,10 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 		return s.Result, err
 	}
 	defer log.Close()
+	// Controllers stay outside the Task source they finally remove. Serve
+	// selects its own cwd; only callbacks and attempts work in the source.
 	cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_supervise", id, "--workspace", root, "--format", "json")
-	cmd.Dir, cmd.Stdout, cmd.Stderr = s.Observed.Target.WorktreeLocator, log, log
+	cmd.Dir, cmd.Stdout, cmd.Stderr = s.Request.WorkspaceRoot, log, log
 	cmd.Stdin = nil
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	if err = cmd.Start(); err != nil {
@@ -220,7 +222,7 @@ func ServeWorker(d Dependencies, root, id string) error {
 		return err
 	}
 	defer lock.Close()
-	if err = os.Chdir(s.Observed.Target.WorktreeLocator); err != nil {
+	if err = os.Chdir(workerServeDirectory(s)); err != nil {
 		return err
 	}
 	if s, err = workflowRead(root, id); err != nil {
@@ -429,7 +431,7 @@ func SuperviseWorker(d Dependencies, root, id string) error {
 			return err
 		}
 		cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_serve", id, "--workspace", root, "--format", "json")
-		cmd.Dir, cmd.Stdout, cmd.Stderr = s.Observed.Target.WorktreeLocator, os.Stdout, os.Stderr
+		cmd.Dir, cmd.Stdout, cmd.Stderr = s.Request.WorkspaceRoot, os.Stdout, os.Stderr
 		if e = cmd.Run(); e != nil {
 			fmt.Fprintln(os.Stderr, "worker controller ended:", e)
 		}
@@ -476,4 +478,14 @@ func workerSupervisorExit(d Dependencies, root, id string, lock *os.File) (bool,
 		return nil
 	})
 	return parked, err
+}
+
+// workerServeDirectory is the Task worktree while owner callbacks are open.
+// After the automatic release only closeout remains, which removes the source
+// and therefore runs from the workspace root.
+func workerServeDirectory(s workflowState) string {
+	if s.Result.Delivery != nil && s.Result.Delivery.OwnershipRelease != nil {
+		return s.Request.WorkspaceRoot
+	}
+	return s.Observed.Target.WorktreeLocator
 }

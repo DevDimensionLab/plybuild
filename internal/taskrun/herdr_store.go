@@ -443,6 +443,10 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			o.FinalReturn.State = "blocked"
 		}
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved binding drift; do not restart or delete run state."}
+		if automaticCleanupPending(s) {
+			// Integration is observed; the recorded cleanup cause stays current.
+			o.NextAction = s.Result.NextAction
+		}
 		var dependency *Error
 		if errors.As(e, &dependency) && dependency.Code == "delivery_runtime_observation_required" {
 			o.NextAction = WorkflowAction{"recipient", "Use the installed Ply's workflow execute continue with this run, its unchanged --context and the original owner's actual current --runtime-evidence. Keep the same session and original controls."}
