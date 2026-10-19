@@ -1,6 +1,7 @@
 package weekrun
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -224,5 +225,47 @@ func TestNA01WeekShowsUnconfirmedContinuationAsBlocked(t *testing.T) {
 	f.tick(t)
 	if f.s.Phase != "running" || f.s.Entries[0].State != "running" || !strings.Contains(f.s.NextAction, "use is confirmed") {
 		t.Fatalf("confirmed continuation did not replace the blocker: %s/%s %q", f.s.Phase, f.s.Entries[0].State, f.s.NextAction)
+	}
+}
+
+// NA01 review r002-f01: only the answer-derived block is cleared. An ordinary
+// blocked entry, here a native Run whose release failed, stays blocked in Show
+// and in a later Tick.
+func TestNA01WeekKeepsOrdinaryBlockedEntryAfterReleaseFailure(t *testing.T) {
+	f := newFixture(t, selection("first"), selection("second", "first"))
+	f.tick(t)
+	f.tick(t)
+	r := f.n.runs["first"]
+	r.Phase, r.Releasable, r.Reason = "blocked", true, "worker reached its explicit limit of 3 developer attempts"
+	r.OwnerState, r.SupervisorState = "unowned", "unowned"
+	f.n.runs["first"] = r
+	f.n.releaseAfterEffect = errors.New("release outcome unknown")
+	f.tick(t)
+	if f.s.Phase != "blocked" || f.s.Entries[0].State != "blocked" {
+		t.Fatalf("release failure fixture is not blocked: %s/%s %q", f.s.Phase, f.s.Entries[0].State, f.s.Reason)
+	}
+	shown, e := f.m.Show(f.c.Workspace, f.s.ID)
+	if e != nil || shown.Phase != "blocked" || shown.Entries[0].State != "blocked" {
+		t.Fatalf("Show rewrote the ordinary blocked entry: %s/%s %q: %v", shown.Phase, shown.Entries[0].State, shown.NextAction, e)
+	}
+}
+
+func TestNA01BoundWeekTickKeepsOrdinaryBlockedEntry(t *testing.T) {
+	f := newMR05Week(t)
+	f.tick(t)
+	f.tick(t)
+	f.s.Phase, f.s.Entries[0].State, f.s.NextAction = "blocked", "blocked", "Resolve native authentication or unknown effects; the same Run remains active"
+	if e := publish(filepath.Join(f.dir, "state.json"), f.s, true); e != nil {
+		t.Fatal(e)
+	}
+	r := f.n.runs["first"]
+	r.Phase, r.NextAction = "blocked", taskrun.WorkflowAction{Actor: "human", Message: "Worker blocked with preserved work"}
+	f.n.runs["first"] = r
+	f.tick(t)
+	shown, e := f.m.Show(f.c.Workspace, f.s.ID)
+	for _, s := range []State{f.s, shown} {
+		if e != nil || s.Phase != "blocked" || s.Entries[0].State != "blocked" {
+			t.Fatalf("ordinary blocked entry rewritten: %s/%s %q: %v", s.Phase, s.Entries[0].State, s.NextAction, e)
+		}
 	}
 }

@@ -526,10 +526,15 @@ func projectAnswerWait(s *State, entry *Entry, r Run) {
 		s.NextAction = nativeNextPrefix + r.NextAction.Actor + ": " + r.NextAction.Message
 		return
 	}
-	if s.Phase == "unknown" && entry.State == "blocked" {
-		s.Phase = "running"
+	// Clear only the answer-derived block set above; ordinary blocked entries
+	// keep their own state.
+	if entry.State == "blocked" && strings.HasPrefix(s.NextAction, nativeNextPrefix) {
+		entry.State = "running"
+		if s.Phase == "unknown" {
+			s.Phase = "running"
+		}
 	}
-	if entry.State == "awaiting_product_answer" || entry.State == "blocked" {
+	if entry.State == "awaiting_product_answer" {
 		entry.State = "running"
 	}
 	if s.Phase == "awaiting_product_answer" {
