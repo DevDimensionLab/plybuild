@@ -472,6 +472,7 @@ func workerPublishProductQuestion(d Dependencies, s workflowState, r workerAttem
 			current.ProductQuestion = &b
 			current.Result.Worker.Phase = "awaiting_product_answer"
 			current.Result.Worker.Reason = ""
+			current.Result.Worker.Outcome = ""
 			current.Result.NextAction = productAnswerRequired
 			return nil
 		})

@@ -201,6 +201,11 @@ func workerBlocked(d Dependencies, root, id string, cause error) error {
 	return workerStateUpdate(d, root, id, func(s *workflowState) error {
 		s.Result.Worker.Reason = cause.Error()
 		s.Result.Worker.ReasonCode = currentstate.Blocked
+		s.Result.Worker.Outcome = WorkerOutcomeUnknown
+		var outcome *workerOutcomeError
+		if errors.As(cause, &outcome) {
+			s.Result.Worker.Outcome = outcome.outcome
+		}
 		s.Result.Worker.Phase = "blocked"
 		s.Result.NextAction = WorkflowAction{"human", "Worker blocked with preserved work: " + cause.Error()}
 		return nil
@@ -269,6 +274,7 @@ func ServeWorker(d Dependencies, root, id string) error {
 				s.Result.Worker.Stage = "completed"
 				s.Result.Worker.Job = nil
 				s.Result.Worker.Reason = ""
+				s.Result.Worker.Outcome = ""
 				return nil
 			})
 		}
@@ -361,6 +367,7 @@ func workerConsumeResume(d Dependencies, s workflowState, expected workerControl
 			current.Result.Worker.Phase = "waiting"
 		}
 		current.Result.Worker.Reason = ""
+		current.Result.Worker.Outcome = ""
 		return nil
 	})
 }

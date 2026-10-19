@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -93,11 +92,8 @@ func WithParkedWorker(d Dependencies, root, id string, release func() error) err
 	}
 	if prep.Disposition != "released" {
 		w := s.Result.Worker
-		if prep.Disposition != "current" || (w.Phase != "blocked" && w.Phase != "stopped") || w.RetryNotBefore != "" || w.Job == nil || (w.Stage != "developer" && w.Stage != "reviewer" && w.Stage != "pretest") {
+		if prep.Disposition != "current" || !w.QueueReleaseAdvice() {
 			return fmt.Errorf("worker is not a releasable concrete failed attempt")
-		}
-		if !strings.HasPrefix(w.Reason, "worker reached its explicit limit") && !strings.HasPrefix(w.Reason, "developer blocked:") && !strings.HasPrefix(w.Reason, "review did not give an unambiguous pass: blocked;") {
-			return fmt.Errorf("unknown or resumable worker blocker cannot release queue ownership")
 		}
 		var control workerControl
 		if e := readValue(filepath.Join(workerDirectory(s), "control.json"), 64<<10, &control); e != nil && !os.IsNotExist(e) {

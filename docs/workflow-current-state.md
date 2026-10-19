@@ -46,6 +46,46 @@ their stored bytes. Initial-registration recovery also accepts the exact older
 initial shape without widening its recovery conditions. Frozen contracts are
 unchanged.
 
+## Concrete Worker outcomes and queue release
+
+Worker records `outcome` when it interprets a completed developer block, a
+blocked review or exhausted correction attempts. Other blockers record an
+explicit `unknown`, so even diagnostic text that resembles a concrete failure
+cannot change their meaning. Clearing or rewriting the diagnostic preserves
+this fact; starting a continuation or another stage clears it. Provider waits
+and AR01's `reason_code` keep their existing precedence.
+
+`WorkerStatus.QueueReleaseAdvice` owns concrete outcome classification and the
+parked phase, stage, reservation and retry conditions shared by Week observation
+and native release. Week's NativeAdapter no longer knows Worker diagnostic
+prefixes. `WithParkedWorker` reads the current state under the owner lock and
+still validates preparation identity/disposition, controls, bound attempt and
+process completion, provider evidence and the exact native queue before release.
+Advice observed earlier supplies no authority for that effect. Schema-1 Week
+continues independent work after release; bound Week still requires recovery of
+its retained Run. Stopped concrete failures retain native recovery support but
+do not become automatic Week release advice.
+Completed releases retain advice for reconciliation after a lost reply; the
+native preparation disposition prevents another effect or a new writer.
+
+This gives the Worker module depth: callers need one advisory decision instead
+of knowing the concrete failure vocabulary and its lifecycle conditions. It
+gives locality because outcome production, historical compatibility and native
+effect checks stay with Worker. The deletion test would restore failure lists
+and phase/stage/retry knowledge across both observation and release. No new
+adapter was introduced; NativeAdapter and fakeNative remain the existing seam.
+`legacyWorkerOutcome` alone interprets the historical native release prefixes
+when `outcome` is absent. It neither migrates old records nor makes the old
+Week-only `reviewer blocked:` prefix a supported native release outcome.
+
+AR02 regressions exercise actual Worker interpretation and a disposable native
+queue through NativeAdapter. They cover changed and empty diagnostics, explicit
+unknown effects, fresh ownership/control/process/provider failures after advice,
+one queue effect across repetition and a lost reply, retained source and resume
+rejection after release. Historical reads preserve state/request bytes.
+`test/worker-outcome-acceptance.sh` adds exact-candidate public Worker CLI checks
+and runs the AR01, Worker, Week and queue regressions with modeled provider facts.
+
 ## Verification
 
 `TestAR01ConsumedResumeIgnoresDisplayWording` and

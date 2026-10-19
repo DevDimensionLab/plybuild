@@ -20,17 +20,19 @@ func workerStage(d Dependencies, s workflowState, stage string) error {
 		s.Result.Worker.Job = nil
 		s.Result.Worker.Phase = "running"
 		s.Result.Worker.Reason = ""
+		s.Result.Worker.Outcome = ""
 		return nil
 	})
 }
 
 func workerCorrection(d Dependencies, s workflowState, feedback string) error {
 	if s.Result.Worker.Iteration >= s.Request.Worker.MaxAttempts {
-		return fmt.Errorf("worker reached its explicit limit of %d developer attempts: %s", s.Request.Worker.MaxAttempts, feedback)
+		return &workerOutcomeError{WorkerOutcomeAttemptsExhausted, fmt.Sprintf("worker reached its explicit limit of %d developer attempts: %s", s.Request.Worker.MaxAttempts, feedback)}
 	}
 	return workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(s *workflowState) error {
 		w := s.Result.Worker
 		w.Iteration++
+		w.Outcome = ""
 		w.Stage = "developer"
 		w.Job = nil
 		w.Feedback = feedback
@@ -162,7 +164,11 @@ func workerStep(d Dependencies, s workflowState) error {
 			return err
 		}
 		if answer.Status != "completed" {
-			return fmt.Errorf("developer blocked: %s", answer.BlockReason)
+			detail := fmt.Sprintf("developer blocked: %s", answer.BlockReason)
+			if answer.Status == "blocked" {
+				return &workerOutcomeError{WorkerOutcomeDeveloperBlocked, detail}
+			}
+			return fmt.Errorf("%s", detail)
 		}
 		binary := filepath.Join(w.Job.Directory, "output", "candidate")
 		if w.Job.Kind == "developer_answer" {
@@ -202,7 +208,11 @@ func workerStep(d Dependencies, s workflowState) error {
 			return workerCorrection(d, s, "Independent reviewer requested changes: "+strings.Join(answer.Findings, "\n")+". Full answer: "+r.Answer.Locator+". For each concrete bug, demonstrate a failing regression before the fix, then rerun acceptance. Preserve prior test evidence.")
 		}
 		if answer.Decision != "passed" || len(answer.Findings) != 0 {
-			return fmt.Errorf("review did not give an unambiguous pass: %s; %s", answer.Decision, answer.Summary)
+			detail := fmt.Sprintf("review did not give an unambiguous pass: %s; %s", answer.Decision, answer.Summary)
+			if answer.Decision == "blocked" {
+				return &workerOutcomeError{WorkerOutcomeReviewBlocked, detail}
+			}
+			return fmt.Errorf("%s", detail)
 		}
 		return workerRecordReview(d, s, r)
 	}

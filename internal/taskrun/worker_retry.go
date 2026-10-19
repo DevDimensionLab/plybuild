@@ -156,6 +156,7 @@ func workerWaitForProvider(d Dependencies, s workflowState, result workerAttempt
 		w.Phase = "waiting"
 		w.Reason = "usage_limit: same Run waits until " + w.RetryNotBefore
 		w.ReasonCode = currentstate.ProviderWait
+		w.Outcome = WorkerOutcomeUnknown
 		current.Result.NextAction = WorkflowAction{"worker_wait", w.Reason}
 		return nil
 	})
@@ -191,6 +192,7 @@ func workerContinueAfterWait(d Dependencies, s workflowState) error {
 	return workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(current *workflowState) error {
 		w := current.Result.Worker
 		w.Phase, w.RetryNotBefore, w.Reason = "running", "", ""
+		w.Outcome = ""
 		w.Job = nil
 		return nil
 	})

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"time"
 
@@ -106,7 +105,7 @@ func fromNative(r taskrun.WorkflowRun) Run {
 		out.RetryNotBefore = w.RetryNotBefore
 		out.LastProviderFailure = w.LastProviderFailure
 		out.NextAction = r.NextAction
-		out.Releasable = w.Phase == "blocked" && (strings.HasPrefix(w.Reason, "worker reached its explicit limit") || strings.HasPrefix(w.Reason, "developer blocked:") || strings.HasPrefix(w.Reason, "reviewer blocked:") || strings.HasPrefix(w.Reason, "review did not give an unambiguous pass: blocked;"))
+		out.Releasable = w.Phase == "blocked" && w.QueueReleaseAdvice()
 	}
 	return out
 }

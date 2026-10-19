@@ -201,6 +201,13 @@ func TestWorkerConcreteFailedReviewReleasesQueueOnceAndKeepsWork(t *testing.T) {
 	if err = workerBlocked(f.D, f.R.WorkspaceRoot, o.RunID, err); err != nil {
 		t.Fatal(err)
 	}
+	// Display wording is not the concrete outcome of the exhausted review.
+	if err = workerStateUpdate(f.D, f.R.WorkspaceRoot, o.RunID, func(s *workflowState) error {
+		s.Result.Worker.Reason = "No more authorized corrections; preserve this candidate."
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
 	before := gitOutput(t, s.Observed.Target.WorktreeLocator, "rev-parse", "HEAD")
 	f.D.WorkerOwner.lock.Close()
 	calls := 0

@@ -401,6 +401,7 @@ func workerConsumeBoundControl(d Dependencies, s workflowState) (bool, error) {
 					w.Phase = "waiting"
 				}
 				w.Reason = ""
+				w.Outcome = ""
 			} else {
 				w.Phase = effect
 			}

@@ -25,32 +25,33 @@ func workerNativeKind(kind string) bool {
 }
 
 type WorkerStatus struct {
-	SessionID           string       `json:"session_id"`
-	Phase               string       `json:"phase"`
-	Stage               string       `json:"stage"`
-	Generation          int          `json:"generation"`
-	OwnerPID            int          `json:"owner_pid"`
-	OwnerStartedAt      string       `json:"owner_started_at"`
-	OwnerState          string       `json:"owner_state,omitempty"`
-	ControlAction       string       `json:"control_action,omitempty"`
-	ControlRequestedAt  string       `json:"control_requested_at,omitempty"`
-	Iteration           int          `json:"iteration"`
-	Job                 *WorkerJob   `json:"job,omitempty"`
-	DeveloperSessions   []string     `json:"developer_sessions"`
-	Review              *FileBinding `json:"review,omitempty"`
-	ReviewProof         *FileBinding `json:"review_proof,omitempty"`
-	CandidateBinary     string       `json:"candidate_binary,omitempty"`
-	CandidateOID        string       `json:"candidate_oid,omitempty"`
-	CandidateTree       string       `json:"candidate_tree,omitempty"`
-	Pretest             *FileBinding `json:"pretest,omitempty"`
-	Feedback            string       `json:"feedback,omitempty"`
-	Reason              string       `json:"reason,omitempty"`
-	ReasonCode          string       `json:"reason_code,omitempty"`
-	UpdatedAt           string       `json:"updated_at"`
-	RetryNotBefore      string       `json:"retry_not_before,omitempty"`
-	ProviderRetries     int          `json:"provider_retries,omitempty"`
-	LastProviderFailure string       `json:"last_provider_failure,omitempty"`
-	QueueReleased       bool         `json:"queue_released,omitempty"`
+	SessionID           string        `json:"session_id"`
+	Phase               string        `json:"phase"`
+	Stage               string        `json:"stage"`
+	Generation          int           `json:"generation"`
+	OwnerPID            int           `json:"owner_pid"`
+	OwnerStartedAt      string        `json:"owner_started_at"`
+	OwnerState          string        `json:"owner_state,omitempty"`
+	ControlAction       string        `json:"control_action,omitempty"`
+	ControlRequestedAt  string        `json:"control_requested_at,omitempty"`
+	Iteration           int           `json:"iteration"`
+	Job                 *WorkerJob    `json:"job,omitempty"`
+	DeveloperSessions   []string      `json:"developer_sessions"`
+	Review              *FileBinding  `json:"review,omitempty"`
+	ReviewProof         *FileBinding  `json:"review_proof,omitempty"`
+	CandidateBinary     string        `json:"candidate_binary,omitempty"`
+	CandidateOID        string        `json:"candidate_oid,omitempty"`
+	CandidateTree       string        `json:"candidate_tree,omitempty"`
+	Pretest             *FileBinding  `json:"pretest,omitempty"`
+	Feedback            string        `json:"feedback,omitempty"`
+	Reason              string        `json:"reason,omitempty"`
+	ReasonCode          string        `json:"reason_code,omitempty"`
+	Outcome             WorkerOutcome `json:"outcome,omitempty"`
+	UpdatedAt           string        `json:"updated_at"`
+	RetryNotBefore      string        `json:"retry_not_before,omitempty"`
+	ProviderRetries     int           `json:"provider_retries,omitempty"`
+	LastProviderFailure string        `json:"last_provider_failure,omitempty"`
+	QueueReleased       bool          `json:"queue_released,omitempty"`
 }
 
 // A wake authorizes one native successor, never an arbitrary later generation.
