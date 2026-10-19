@@ -197,7 +197,9 @@ func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryO
 			observed, observeErr := observeWriterLiveness(d, s, record.ProviderSession, 0)
 			liveness = &observed
 			if observeErr != nil {
-				err = workflowError(4, "writer liveness is unknown: "+observeErr.Error())
+				// An unavailable/denied read is not an observation of a writer
+				// still exiting. Stop this attempt without replaying inspection.
+				return absence, liveness, workflowError(4, "writer liveness is unknown: "+observeErr.Error()+"; restore read access before continuing this same retirement; nothing was recorded or released")
 			} else if len(observed.RemainingPIDs) > 0 {
 				err = workflowError(4, "local Task/session writer remains after pane closure; preserve the same attempt until it exits")
 			} else {

@@ -356,3 +356,43 @@ func TestOwnerResumeFixturesDoNotShareWriterIdentity(t *testing.T) {
 		t.Fatalf("unrelated fixture writer collided: first=%s second=%s err=%v output=%s", first.Owner.Transport.AgentSessionID, second.Owner.Transport.AgentSessionID, err, output)
 	}
 }
+
+// r001-f01: failed local inspection is an unavailable observation, not a
+// positive observation of an exiting writer. Never poll a rejected read.
+func TestCodexResumeRetireDoesNotRepeatDeniedLocalInspection(t *testing.T) {
+	f := newOwnerResumeFixture(t, "codex", false)
+	f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) { return []LocalProcess{{PID: os.Getpid()}}, nil }
+	workflowTestModel(t, f.workflowFixture, map[string]any{"session_absent_gets": 100000, "resume_inspection_denied": true})
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumePreserve(t, f, p)
+	o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+	if err == nil || o.OwnerResume == nil || o.OwnerResume.Step != ownerResumeStartAttempted {
+		t.Fatalf("expected known no-input attempt: %+v %v", o.OwnerResume, err)
+	}
+	before := deliveryRecoveryFiles(t, o.Paths.RunRoot)
+	retireAsCoordinator(&f.deliveryFixture)
+	f.D.HerdrTimeout = 1200 * time.Millisecond
+	calls := 0
+	f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) { calls++; return nil, os.ErrPermission }
+	out, err := WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryRetireInput{Observer: "fixture root", Reason: "Preserve one denied local inspection without automatic replay"})
+	t.Logf("local inspection calls=%d; error=%v", calls, err)
+	if err == nil || !strings.Contains(err.Error(), "liveness") {
+		t.Fatalf("unavailable inspection did not stop retirement: %v", err)
+	}
+	if calls != 1 {
+		t.Fatalf("retirement automatically repeated denied local inspection %d times; want one", calls)
+	}
+	if retireQueueCurrent(t, f.deliveryFixture) == nil {
+		t.Fatal("denied inspection released queue")
+	}
+	if len(out.Delivery.Events) != len(o.Delivery.Events) {
+		t.Fatal("denied inspection recorded retirement")
+	}
+	deliveryRecoveryUnchanged(t, before, filepath.Join(o.Paths.RunRoot, "state.json"))
+	if workflowTestCalls(t, f.workflowFixture, "agent prompt") != 1 {
+		t.Fatal("denied retirement inspection sent input")
+	}
+}
