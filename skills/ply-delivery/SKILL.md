@@ -138,6 +138,11 @@ execute the same Delivery. Empty defaults do not remove existing people.
 
 Report `delivered` only with the durable receipt: PR URL and observed exact head,
 or local before/after refs plus registered base and current Task queue closure.
+For automatic local Epic delivery, `execute integrate` from the Task worktree
+normally ends with exit 5 and `owner_handoff`: integration, queue and Epic base are
+observed and the source cleanup waits for you to leave. That is delivered, not a
+stop. Do not retry or report a stop; end the session and return to the
+coordinator, whose `workflow execute follow` removes the worktree.
 Preserve partial facts and the CLI's next action when blocked, failed or unknown.
 Waiting is durable state; it starts no background worker. Distinguish technical
 qualification, actual human judgment and final delivery. Task completion never

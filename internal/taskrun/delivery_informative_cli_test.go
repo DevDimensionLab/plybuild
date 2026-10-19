@@ -44,7 +44,7 @@ func informativeCLIFixture(t *testing.T, binary string) (deliveryFixture, Workfl
 	}})
 	f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
 	f.D.Executable = func() (string, error) { return binary, nil }
-	f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)
+	ownerPaneStandin(t, &f)
 	o := workflowTestStart(t, f.workflowFixture)
 	acceptance := writeAny(t, f.R.WorkspaceRoot, "cli-runtime-acceptance.json", deliveryTestAcceptance(t, f, o))
 	o = automaticCLIOK(t, binary, f, "run", "accept", o.RunID, "--context", o.Paths.Context, "--file", acceptance)
@@ -58,8 +58,9 @@ func assertInformativeRetained(t *testing.T, f deliveryFixture, o WorkflowRun, r
 	t.Helper()
 	c := o.Delivery.Candidates[0]
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "kept" || closeout.WorktreeRemoved || closeout.BranchRemoved || closeout.Retention == nil {
-		t.Fatalf("native retained closeout incomplete: %+v %v", closeout, err)
+	resource := map[bool]string{true: "kept", false: "retired"}[closeout != nil && closeout.Plan.Keep]
+	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != resource || closeout.WorktreeRemoved == closeout.Plan.Keep || closeout.BranchRemoved == closeout.Plan.Keep || closeout.Retention == nil {
+		t.Fatalf("native closeout with retained evidence incomplete: %+v %v", closeout, err)
 	}
 	found := false
 	for _, e := range closeout.Retention.Entries {
@@ -85,8 +86,8 @@ func assertInformativeRetained(t *testing.T, f deliveryFixture, o WorkflowRun, r
 	if !found {
 		t.Fatal("report missing from retained evidence")
 	}
-	if _, err := os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); err != nil {
-		t.Fatal("source was not retained", err)
+	if _, err := os.Lstat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); closeout.Plan.Keep && err != nil || !closeout.Plan.Keep && !os.IsNotExist(err) {
+		t.Fatal("source state differs from the frozen cleanup grant", err)
 	}
 	if gitOutput(t, f.Parent, "rev-parse", "HEAD") != c.OID {
 		t.Fatal("wrong integrated target")
@@ -95,15 +96,19 @@ func assertInformativeRetained(t *testing.T, f deliveryFixture, o WorkflowRun, r
 	if err != nil || deliveryCLILatestBase(base).OID != c.OID {
 		t.Fatal("Epic base did not advance to exact candidate", err)
 	}
-	t.Logf("Native retained closeout: run=%s result=%s candidate=%s manifest=%s; report bytes/hash/size and source retained", o.RunID, c.TaskResult.ID, c.OID, closeout.Retention.ManifestSHA256)
+	t.Logf("Native closeout: run=%s result=%s candidate=%s manifest=%s; report bytes/hash/size retained, source %s", o.RunID, c.TaskResult.ID, c.OID, closeout.Retention.ManifestSHA256, closeout.ResourceState)
 }
 
 func TestInformativeHistoricalReportCLIRetainedCloseout(t *testing.T) {
 	binary := automaticCLIBinary(t)
 	f, o, report := informativeCLIFixture(t, binary)
-	o = automaticCLIOK(t, binary, f, "execute", "integrate", o.RunID, "--context", o.Paths.Context)
-	if o.Delivery.Phase != "completed" {
-		t.Fatal("native closeout did not finish")
+	handoff, output, err := automaticCLI(binary, f, "execute", "integrate", o.RunID, "--context", o.Paths.Context)
+	if err == nil || !bytes.Contains(output, []byte("owner_handoff:")) || handoff.Delivery == nil || handoff.Delivery.Phase != "closing" {
+		t.Fatalf("owner integrate did not end in the pending-cleanup handoff: %v\n%s", err, output)
+	}
+	cleanupOwnerLeaves(t, f)
+	if o, output, err = cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30"); err != nil || o.Delivery.Phase != "completed" {
+		t.Fatalf("native closeout did not finish: %v\n%s", err, output)
 	}
 	assertInformativeRetained(t, f, o, report)
 }

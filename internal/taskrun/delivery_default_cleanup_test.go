@@ -3,6 +3,7 @@ package taskrun
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -28,8 +29,23 @@ func cleanupCLIFixture(t *testing.T, binary string) (deliveryFixture, WorkflowRu
 	f.R.Delivery.Goal = FileBinding{filepath.Join(f.R.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
 	f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
 	f.D.Executable = func() (string, error) { return binary, nil }
-	// The bound pane stays open until it is closed; then the pane, its managed
-	// agent and every Task writer are positively absent in the synthetic Herdr.
+	ownerPaneStandin(t, &f)
+	o := workflowTestStart(t, f.workflowFixture)
+	acceptance := writeAny(t, f.R.WorkspaceRoot, "cli-runtime-acceptance.json", deliveryTestAcceptance(t, f, o))
+	o = automaticCLIOK(t, binary, f, "run", "accept", o.RunID, "--context", o.Paths.Context, "--file", acceptance)
+	deliveryTestCandidate(t, f, "default cleanup candidate")
+	o = automaticCLIOK(t, binary, f, automaticCLIVerifyArgs(o, deliveryTestReview(t, f, "cleanup"), binary)...)
+	if o.Delivery.Phase != "automatic_acceptance_passed" {
+		t.Fatalf("fixture candidate did not qualify: %+v", o.Delivery.Phase)
+	}
+	return f, o
+}
+
+// ownerPaneStandin lets the synthetic Herdr keep the bound owner pane open
+// until it is closed; then the pane, its managed agent and every Task writer
+// are positively absent. Call it before the Run starts.
+func ownerPaneStandin(t *testing.T, f *deliveryFixture) {
+	t.Helper()
 	herdr, err := os.ReadFile(f.R.Herdr.Executable.Path)
 	if err != nil {
 		t.Fatal(err)
@@ -40,15 +56,25 @@ func cleanupCLIFixture(t *testing.T, binary string) (deliveryFixture, WorkflowRu
 	}
 	f.R.Herdr.Executable.SHA256 = hash(herdr)
 	f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)
-	o := workflowTestStart(t, f.workflowFixture)
-	acceptance := writeAny(t, f.R.WorkspaceRoot, "cli-runtime-acceptance.json", deliveryTestAcceptance(t, f, o))
-	o = automaticCLIOK(t, binary, f, "run", "accept", o.RunID, "--context", o.Paths.Context, "--file", acceptance)
-	deliveryTestCandidate(t, f, "default cleanup candidate")
-	o = automaticCLIOK(t, binary, f, automaticCLIVerifyArgs(o, deliveryTestReview(t, f, "cleanup"), binary)...)
-	if o.Delivery.Phase != "automatic_acceptance_passed" {
-		t.Fatalf("fixture candidate did not qualify: %+v", o.Delivery.Phase)
+}
+
+// cleanupOwnerLeaves models the released owner's actual exit: its bound pane,
+// managed agent and Task processes are gone (requires ownerPaneStandin).
+func cleanupOwnerLeaves(t *testing.T, f deliveryFixture) {
+	t.Helper()
+	workflowTestModel(t, f.workflowFixture, map[string]any{"closed_transport": true})
+}
+
+// cleanupOwnerHandoff asserts the owner's integrate ended in the CL02 handoff
+// with the integration observed and the source still in place.
+func cleanupOwnerHandoff(t *testing.T, f deliveryFixture, o WorkflowRun, err error) {
+	t.Helper()
+	if err == nil || !strings.Contains(err.Error(), "owner_handoff:") || o.Delivery == nil || o.Delivery.Phase != "closing" || o.DeliveryStatus.FinalDelivery.State != "delivered" {
+		t.Fatalf("owner integrate did not end in the pending-cleanup handoff: %v", err)
 	}
-	return f, o
+	if _, statErr := os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); statErr != nil {
+		t.Fatal("active owner's worktree was removed")
+	}
 }
 
 // cleanupCLIAt runs the public CLI from an explicit cwd, such as the
@@ -146,6 +172,76 @@ func TestDefaultCleanupPublicFollowRemovesReleasedSourceAfterOwnerLeaves(t *test
 	}
 	if workflowTestCalls(t, f.workflowFixture, "pane close") != 1 {
 		t.Fatal("repetition closed a pane again")
+	}
+}
+
+// Review r001-f01: the coordinator's ordinary follow is usually already
+// running when the owner integrates. That same follow observes the change to
+// closing and finishes cleanup once the released owner settles.
+func TestDefaultCleanupFollowAlreadyRunningFinishesAfterOwnerIntegrates(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	f, o := cleanupCLIFixture(t, binary)
+	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_status": "working"})
+	observed := workflowTestCalls(t, f.workflowFixture, "agent get")
+	follow := exec.Command(binary, "workflow", "execute", "follow", o.RunID, "--timeout", "60", "--format", "json")
+	follow.Dir = f.Parent
+	var stdout, stderr bytes.Buffer
+	follow.Stdout, follow.Stderr = &stdout, &stderr
+	if err := follow.Start(); err != nil {
+		t.Fatal(err)
+	}
+	waited := make(chan error, 1)
+	go func() { waited <- follow.Wait() }()
+	deadline := time.Now().Add(15 * time.Second)
+	for workflowTestCalls(t, f.workflowFixture, "agent get") <= observed {
+		if time.Now().After(deadline) {
+			t.Fatal("follow did not start observing")
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	_, reflog := cleanupOwnerIntegrates(t, binary, f, o)
+	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_status": "idle"})
+	select {
+	case err := <-waited:
+		if err != nil {
+			t.Fatalf("running follow did not finish cleanup: %v\n%s%s", err, stdout.Bytes(), stderr.Bytes())
+		}
+	case <-time.After(90 * time.Second):
+		follow.Process.Kill()
+		t.Fatal("running follow did not return")
+	}
+	var done WorkflowRun
+	if err := json.Unmarshal(stdout.Bytes(), &done); err != nil {
+		t.Fatal(err)
+	}
+	assertCleanupRemoved(t, f, done, reflog)
+	if workflowTestCalls(t, f.workflowFixture, "pane close") != 1 {
+		t.Fatal("running follow did not close exactly the released owner's settled pane")
+	}
+}
+
+// Review r001-f02: the owner's normal integrate ends in a distinct handoff,
+// not a stop. Its writing is finished, the coordinator acts next, and a
+// repeated integrate is harmless: no new event and no new Git effect.
+func TestDefaultCleanupOwnerIntegrateIsHandoffNotStop(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	f, o := cleanupCLIFixture(t, binary)
+	pending, reflog := cleanupOwnerIntegrates(t, binary, f, o)
+	for attempt := 0; attempt < 2; attempt++ {
+		again, output, err := automaticCLI(binary, f, "execute", "integrate", o.RunID, "--context", o.Paths.Context)
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) || exit.ExitCode() != 5 || !bytes.Contains(output, []byte("owner_handoff:")) {
+			t.Fatalf("owner integrate is not the distinct pending-cleanup handoff: %v\n%s", err, output)
+		}
+		if again.NextAction.Actor != "coordinator" || pending.NextAction.Actor != "coordinator" {
+			t.Fatalf("owner is still named as the next actor: %+v", again.NextAction)
+		}
+		if len(again.Delivery.Events) != len(pending.Delivery.Events) || gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != reflog {
+			t.Fatal("repeated owner integrate changed native history or Git")
+		}
+	}
+	if _, err := os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); err != nil {
+		t.Fatal("owner handoff removed the active owner's worktree")
 	}
 }
 

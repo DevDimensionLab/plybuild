@@ -275,12 +275,14 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 	observationTimeout := func() error {
 		return workflowError(5, "Delivery continues in the same session; observation timed out without stopping or restarting it")
 	}
-	if o, handled, e := deliveryFollowCleanup(d, root, id, deadline); handled {
-		return o, e
-	}
 	for {
 		if !time.Now().Before(deadline) {
 			return deliveryReadback(d, root, id, observationTimeout())
+		}
+		// The owner's integrate may release the source while this follow is
+		// already observing; the same follow then finishes source cleanup.
+		if o, handled, e := deliveryFollowCleanup(d, root, id, deadline); handled {
+			return o, e
 		}
 		ready := false
 		e := workflowUpdate(d, root, id, func(s *workflowState) error {

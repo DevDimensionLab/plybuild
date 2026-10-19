@@ -15,6 +15,7 @@ func autoGateFixture(t *testing.T, requireHuman bool, owner string) (deliveryFix
 	t.Helper()
 	agreement := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, IntegrationOwner: owner, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "fixture orchestrator", RequireHumanQA: requireHuman, TimeoutSeconds: 30}}
 	f := newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: &agreement})
+	ownerPaneStandin(t, &f)
 	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
 	deliveryTestCandidate(t, f, "automatically accepted fixture candidate")
 	binary := filepath.Join(f.R.WorkspaceRoot, "candidate-executable")
@@ -53,6 +54,9 @@ func TestAutomaticDeliveryIntegratesWithoutHumanRecord(t *testing.T) {
 		t.Fatalf("native preview requires fabricated human QA: %+v %v", preview.Readback, err)
 	}
 	o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
+	cleanupOwnerHandoff(t, f, o, err)
+	cleanupOwnerLeaves(t, f)
+	o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
 	if err != nil || o.Delivery.Phase != "completed" || o.DeliveryStatus.FinalDelivery.State != "delivered" {
 		t.Fatalf("automatic local delivery did not complete: %+v %v", o.DeliveryStatus, err)
 	}
@@ -67,8 +71,8 @@ func TestAutomaticDeliveryIntegratesWithoutHumanRecord(t *testing.T) {
 		t.Fatal("automatic delivery did not update the agreed local Epic")
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "kept" || closeout.WorktreeRemoved || closeout.BranchRemoved {
-		t.Fatalf("automatic delivery did not complete retained native closeout: %+v %v", closeout, err)
+	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved {
+		t.Fatalf("automatic delivery did not complete native source cleanup: %+v %v", closeout, err)
 	}
 	observed, handled, err := ObserveAutomaticLocalDelivery(f.D, f.R.WorkspaceRoot, o.RunID, c.TaskResult.ID)
 	if err != nil || !handled || observed.Closeout == nil || !equal(observed.Closeout, closeout) {
@@ -109,6 +113,7 @@ func TestAutomaticDeliveryCloseoutInterruptionResumesWithoutIntegration(t *testi
 		t.Fatal("closeout fixture did not reach the actual Git integration")
 	}
 	before := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
+	cleanupOwnerLeaves(t, f)
 	done, err := WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
 	if err != nil || done.Delivery.Phase != "completed" {
 		t.Fatalf("released automatic owner could not resume only closeout: %+v %v", done.Delivery, err)
@@ -117,8 +122,8 @@ func TestAutomaticDeliveryCloseoutInterruptionResumesWithoutIntegration(t *testi
 		t.Fatal("native closeout resume repeated Git integration")
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "kept" {
-		t.Fatalf("resumed automatic delivery omitted retained closeout: %+v %v", closeout, err)
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" {
+		t.Fatalf("resumed automatic delivery omitted native source cleanup: %+v %v", closeout, err)
 	}
 }
 
@@ -144,6 +149,9 @@ func TestAutomaticDeliveryCLICloseoutRecoveryFromReleasedOwner(t *testing.T) {
 	if deliveryCLIString(t, checked, "state") != "pending_closeout" || string(checked["native_closed"]) != "false" || string(checked["local_integration"]) == "null" {
 		t.Fatalf("Delivery check concealed observed integration or misdirected closeout recovery: state=%s reasons=%s", checked["state"], checked["reasons"])
 	}
+	// The released owner leaves; closeout resumes from the return checkout.
+	cleanupOwnerLeaves(t, f)
+	cwd = f.Parent
 	delivered := deliveryCLIOK(t, binary, cwd, "execute", id)
 	if deliveryCLIString(t, delivered, "state") != "delivered" || string(delivered["native_closed"]) != "true" {
 		t.Fatalf("Delivery CLI failed to resume a released automatic owner: %+v", delivered)
@@ -152,8 +160,8 @@ func TestAutomaticDeliveryCLICloseoutRecoveryFromReleasedOwner(t *testing.T) {
 		t.Fatal("Delivery CLI closeout recovery repeated Git integration")
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "kept" {
-		t.Fatalf("Delivery CLI recovery omitted native retained closeout: %+v %v", closeout, err)
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" {
+		t.Fatalf("Delivery CLI recovery omitted native source cleanup: %+v %v", closeout, err)
 	}
 	checked = deliveryCLIOK(t, binary, cwd, "check", id)
 	if string(checked["native_closed"]) != "true" || deliveryCLIString(t, checked, "state") == "pending_closeout" {
@@ -167,9 +175,13 @@ func TestAutomaticDeliveryCLIPreviewObservesCompletedNativeCloseout(t *testing.T
 	cwd := f.Prepared.Preparation.Preparation.Plan.WorktreePath
 	registered := deliveryCLIOK(t, binary, cwd, "register", "--file", deliveryCLIRegisterInput(t, f, o, "automatic-native-closeout-preview"))
 	id := deliveryCLIString(t, registered, "id")
-	if _, err := WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context); err != nil {
+	handoff, err := WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
+	cleanupOwnerHandoff(t, f, handoff, err)
+	cleanupOwnerLeaves(t, f)
+	if _, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context); err != nil {
 		t.Fatal(err)
 	}
+	cwd = f.Parent
 	// The Delivery receipt is still registered; read actual native completion
 	// before execute has a chance to copy its result into that receipt.
 	checked := deliveryCLIOK(t, binary, cwd, "check", id)
@@ -272,8 +284,10 @@ func TestAutomaticDeliveryPreservesRequiredHumanAndIntegrationOwnerGates(t *test
 				if _, err := workflowhandoff.RecordDeliveryHumanQA(f.D.Workflow, "task", c.TaskResult, "pass", deliveryTestHuman(t, f, o, "pass")); err != nil {
 					t.Fatal(err)
 				}
-				if _, err := WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context); err != nil {
-					t.Fatalf("actual required human judgment did not unlock delivery: %v", err)
+				handoff, err := WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
+				cleanupOwnerHandoff(t, f, handoff, err)
+				if gitOutput(t, f.Parent, "rev-parse", "HEAD") != c.OID {
+					t.Fatal("actual required human judgment did not unlock delivery")
 				}
 			}
 		})

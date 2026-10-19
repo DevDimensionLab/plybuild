@@ -10,7 +10,9 @@ func TestAutomaticDeliveryTracePreservesNativeVerificationAndRetainedCloseout(t 
 	f, o, binary, _ := autoGateFixture(t, false, "")
 	var err error
 	o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
-	if err != nil {
+	cleanupOwnerHandoff(t, f, o, err)
+	cleanupOwnerLeaves(t, f)
+	if o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context); err != nil {
 		t.Fatal(err)
 	}
 	// The trace reads historical bytes and cannot depend on the original live
@@ -49,8 +51,8 @@ func TestAutomaticDeliveryTracePreservesNativeVerificationAndRetainedCloseout(t 
 		WorktreeRemoved    bool   `json:"worktree_removed"`
 		BranchRemoved      bool   `json:"branch_removed"`
 	}
-	if err = json.Unmarshal(closed[0].Data, &closeout); err != nil || closeout.ResourceState != "kept" || !closeout.LifecycleCompleted || closeout.WorktreeRemoved || closeout.BranchRemoved {
-		t.Fatalf("trace misstates retained automatic closeout: %s (%v)", closed[0].Data, err)
+	if err = json.Unmarshal(closed[0].Data, &closeout); err != nil || closeout.ResourceState != "retired" || !closeout.LifecycleCompleted || !closeout.WorktreeRemoved || !closeout.BranchRemoved {
+		t.Fatalf("trace misstates automatic source cleanup: %s (%v)", closed[0].Data, err)
 	}
 	releases := traceKind(run, "source_ownership_release")
 	if len(releases) != 1 || releases[0].Role != "ply" || releases[0].ActorClaim != "ply automatic delivery closeout" {

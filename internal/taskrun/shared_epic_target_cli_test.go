@@ -33,7 +33,7 @@ func TestSharedEpicTargetCLIJourneyIntegratesOnlyTheExactCandidate(t *testing.T)
 	f.R.Delivery.Goal = FileBinding{filepath.Join(f.R.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
 	f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
 	f.D.Executable = func() (string, error) { return binary, nil }
-	f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)
+	ownerPaneStandin(t, &f)
 	o := workflowTestStart(t, f.workflowFixture)
 	o = automaticCLIOK(t, binary, f, "run", "accept", o.RunID, "--context", o.Paths.Context, "--file", writeAny(t, f.R.WorkspaceRoot, "cli-runtime-acceptance.json", deliveryTestAcceptance(t, f, o)))
 

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -38,7 +39,7 @@ func automaticCLIFixture(t *testing.T, binary string, automatic bool, timeout in
 	f.R.Delivery.Goal = FileBinding{filepath.Join(f.R.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
 	f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
 	f.D.Executable = func() (string, error) { return binary, nil }
-	f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)
+	ownerPaneStandin(t, &f)
 	o := workflowTestStart(t, f.workflowFixture)
 	acceptance := writeAny(t, f.R.WorkspaceRoot, "cli-runtime-acceptance.json", deliveryTestAcceptance(t, f, o))
 	o = automaticCLIOK(t, binary, f, "run", "accept", o.RunID, "--context", o.Paths.Context, "--file", acceptance)
@@ -81,6 +82,33 @@ func assertAutomaticCLIClosure(t *testing.T, binary string, f deliveryFixture, o
 	if deliveryCLIString(t, ready, "state") != "ready" {
 		t.Fatalf("automatic gate not ready: %s", ready["reasons"])
 	}
+	cleanup, err := workflowhandoff.DeliveryCleanupAllowed(f.R.HandoffDraft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cleanup {
+		// CL02 default: the owner's own Delivery execute integrates and leaves
+		// cleanup pending; the coordinator's follow removes the released source
+		// after the owner leaves; Delivery then records the native completion.
+		pending, output, err := deliveryCLIRun(binary, cwd, "execute", id)
+		if err == nil || deliveryCLIString(t, pending, "state") != "pending_closeout" || string(pending["native_closed"]) != "false" || string(pending["local_integration"]) == "null" {
+			t.Fatalf("owner Delivery execute did not leave observed integration with pending cleanup: %v\n%s", err, output)
+		}
+		if gitOutput(t, f.Parent, "rev-parse", "HEAD") != c.OID {
+			t.Fatal("automatic Delivery did not integrate the exact candidate")
+		}
+		if _, err = os.Stat(cwd); err != nil {
+			t.Fatal("active owner's worktree was removed")
+		}
+		workflowTestModel(t, f.workflowFixture, map[string]any{"agent_status": "idle"})
+		if _, output, err = cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30"); err != nil {
+			t.Fatalf("coordinator follow did not finish cleanup: %v\n%s", err, output)
+		}
+		if _, err = os.Lstat(cwd); !os.IsNotExist(err) {
+			t.Fatalf("released Task worktree remains: %v", err)
+		}
+		cwd = f.Parent
+	}
 	done := deliveryCLIOK(t, binary, cwd, "execute", id)
 	if deliveryCLIString(t, done, "state") != "delivered" || string(done["native_closed"]) != "true" {
 		t.Fatalf("delivery incomplete: %+v", done)
@@ -98,9 +126,13 @@ func assertAutomaticCLIClosure(t *testing.T, binary string, f deliveryFixture, o
 	if err != nil || deliveryCLILatestBase(base).OID != c.OID {
 		t.Fatalf("Epic base not advanced: %v %+v", err, base)
 	}
-	status := automaticCLIOK(t, binary, f, "execute", "show", o.RunID)
-	if status.Delivery.Phase != "completed" || status.DeliveryStatus.FinalDelivery.State != "delivered" {
-		t.Fatalf("native closure invisible: %+v", status.DeliveryStatus)
+	status, output, err := cleanupCLIAt(binary, f.Parent, "execute", "show", o.RunID)
+	if err != nil || status.Delivery.Phase != "completed" || status.DeliveryStatus.FinalDelivery.State != "delivered" {
+		t.Fatalf("native closure invisible: %v %+v\n%s", err, status.DeliveryStatus, output)
+	}
+	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.Plan.Keep == cleanup {
+		t.Fatalf("native closeout differs from the frozen mandate's cleanup grant %t: %+v %v", cleanup, closeout, err)
 	}
 }
 

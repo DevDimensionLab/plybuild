@@ -86,21 +86,22 @@ func automaticCloseoutKeeps(s workflowState) (bool, error) {
 // automaticOwnerLeft requires positive absence of every known Task writer
 // before removal: the bound Herdr pane and agent for an interactive owner, and
 // for every owner the local processes in the source or naming its session.
-func automaticOwnerLeft(d Dependencies, s workflowState) error {
+// ownerPresent reports that the bound interactive owner itself remains.
+func automaticOwnerLeft(d Dependencies, s workflowState) (ownerPresent bool, err error) {
 	if !headlessRun(s.Request) {
 		if _, e := observeAbsentDeliveryOwner(d, s); e != nil {
-			return workflowError(4, "owner_active: the released owner has not left the Task worktree ("+e.Error()+")")
+			return true, workflowError(4, "owner_active: the released owner has not left the Task worktree ("+e.Error()+")")
 		}
 	}
 	transcript, _ := deliveryProviderSession(s)
 	observed, e := observeWriterLiveness(d, s, transcript, 0)
 	if e != nil {
-		return workflowError(4, "owner_unknown: local Task writer liveness is unknown: "+e.Error())
+		return false, workflowError(4, "owner_unknown: local Task writer liveness is unknown: "+e.Error())
 	}
 	if len(observed.RemainingPIDs) > 0 {
-		return workflowError(4, fmt.Sprintf("owner_active: local Task writer processes remain %v", observed.RemainingPIDs))
+		return false, workflowError(4, fmt.Sprintf("owner_active: local Task writer processes remain %v", observed.RemainingPIDs))
 	}
-	return nil
+	return false, nil
 }
 
 // automaticCleanupPending selects an interactive automatic delivery whose
@@ -209,11 +210,14 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 	}
 	// The release closes owner callbacks, not the owner's processes. Removal
 	// waits until the owner and every local Task writer have left.
+	ownerPresent := false
 	ownerLeft := func() error {
 		if keep {
 			return nil
 		}
-		return automaticOwnerLeft(d, s)
+		present, e := automaticOwnerLeft(d, s)
+		ownerPresent = present
+		return e
 	}
 	ownership := workspace.TaskCloseoutOwnership{Released: true, TaskID: c.TaskResult.TaskID, TaskResultID: resultID, ResultOID: c.OID, ResultTree: c.Tree, EvidenceLocator: release.Locator, EvidenceSHA256: release.SHA256}
 	guard := func() error {
@@ -228,6 +232,9 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 	}
 	var closeout workspace.TaskCloseoutReceipt
 	closeoutErr := ownerLeft()
+	// The interactive owner itself is the remaining writer: its delivery is
+	// done and it hands the source to the coordinator; this is not a stop.
+	handoff := closeoutErr != nil && ownerPresent
 	if closeoutErr == nil {
 		closeout, closeoutErr = workflowhandoff.CloseAutomaticDeliveryCandidate(d.Workflow, string(c.TaskResult.TaskID), resultID, authority, ownership, keep, guard)
 	}
@@ -272,7 +279,9 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		}
 		return nil
 	})
-	if err == nil && closeoutErr != nil && !keep {
+	if err == nil && handoff {
+		err = workflowError(5, "owner_handoff: delivered; local integration, queue and Epic base are observed and this owner's writing is finished. End this session and return to the coordinator, whose workflow execute follow removes the source; this is not a stop and integrate needs no retry ("+closeoutErr.Error()+")")
+	} else if err == nil && closeoutErr != nil && !keep {
 		err = workflowError(5, "automatic local integration is observed; source cleanup is pending: "+closeoutErr.Error())
 	} else if err == nil {
 		err = closeoutErr

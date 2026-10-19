@@ -52,8 +52,13 @@ func TestAutomaticDeliveryCLIClosesResolvedStopHistoryWithoutReplay(t *testing.T
 	}
 	integration := *interrupted.Delivery.Candidates[0].Integration
 	before := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
-	// This is the ordinary same-owner continuation, not a new delivery attempt.
-	done := automaticCLIOK(t, binary, f, "execute", "integrate", o.RunID, "--context", o.Paths.Context)
+	// The released owner leaves; the coordinator's ordinary follow continues
+	// the same closeout, not a new delivery attempt.
+	cleanupOwnerLeaves(t, f)
+	done, output, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30")
+	if err != nil {
+		t.Fatalf("follow did not finish closeout: %v\n%s", err, output)
+	}
 	if done.Delivery.Phase != "completed" || *done.Delivery.Candidates[0].Integration != integration {
 		t.Fatalf("closeout lost original integration: %+v", done.Delivery)
 	}
@@ -69,7 +74,7 @@ func TestAutomaticDeliveryCLIClosesResolvedStopHistoryWithoutReplay(t *testing.T
 		}
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || !closeout.LifecycleCompleted || closeout.ResourceState != "kept" {
+	if err != nil || closeout == nil || !closeout.LifecycleCompleted || closeout.ResourceState != "retired" {
 		t.Fatalf("Task not closed: %+v %v", closeout, err)
 	}
 	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
