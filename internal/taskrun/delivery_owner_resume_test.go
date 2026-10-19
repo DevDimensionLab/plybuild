@@ -43,7 +43,7 @@ type ownerResumeFixture struct {
 	In    DeliveryOwnerResumeInput
 }
 
-func newOwnerResumeFixture(t *testing.T, provider string, qualified bool) ownerResumeFixture {
+func newOwnerResumeFixture(t *testing.T, provider string, qualified bool, beforeClose ...func(deliveryFixture, WorkflowRun) WorkflowRun) ownerResumeFixture {
 	t.Helper()
 	var f deliveryFixture
 	if qualified {
@@ -73,6 +73,9 @@ func newOwnerResumeFixture(t *testing.T, provider string, qualified bool) ownerR
 			t.Fatal(err)
 		}
 		o = ownerResumeReport(t, f, o, f.D, "begun-work")
+	}
+	for _, fn := range beforeClose {
+		o = fn(f, o)
 	}
 	// The provider's own transcript for this session survives its closed tab.
 	t.Setenv("HOME", filepath.Join(f.R.WorkspaceRoot, "provider-home"))
@@ -759,5 +762,216 @@ func TestOwnerResumePublicCLIWithoutProviderKeepsPhaseAndReason(t *testing.T) {
 	out, output, err = ownerResumeCLI(binary, task, "--resume", "--check", "--format", "json")
 	if err != nil || deliveryCLIString(t, out, "state") != "completed" || deliveryCLIString(t, out, "next_action") == "" {
 		t.Fatalf("completed phase was hidden by provider lookup: %v\n%s", err, output)
+	}
+}
+
+// r002-f01: Herdr may never report a resumed Codex session. The public result
+// states that coverage honestly, and session_pending has a bounded exit:
+// closing that pane lets a new generation start once Herdr proves it absent.
+func TestOwnerResumeSessionPendingHasBoundedExit(t *testing.T) {
+	f := newOwnerResumeFixture(t, "codex", false)
+	workflowTestModel(t, f.workflowFixture, map[string]any{"session_absent_gets": 100000})
+	f.In.Timeout = 1500 * time.Millisecond
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumePreserve(t, f, p)
+	o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+	if err == nil {
+		t.Fatal("unreported Codex session was treated as resumed")
+	}
+	pending, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err == nil || pending.Reason != "session_pending" || !strings.Contains(pending.NextAction.Message, "close") || !strings.Contains(pending.NextAction.Message, "retire") {
+		t.Fatalf("session_pending has no bounded exit: %+v %v", pending.NextAction, err)
+	}
+	// The human closes the unproven pane; Herdr then proves it absent.
+	workflowTestModel(t, f.workflowFixture, map[string]any{"closed_pane": o.Transport.PaneID, "session_absent_gets": 0, "inventory": []any{}})
+	next, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil || next.State != "ready" || next.Generation != 2 {
+		t.Fatalf("closing the unproven pane did not allow a new generation: %+v %v", next, err)
+	}
+	if n := workflowTestCalls(t, f.workflowFixture, "agent prompt"); n != 1 {
+		t.Fatalf("a prompt was sent to an unproven session: %d", n)
+	}
+	if !strings.Contains(OwnerResumeProviderSupport("codex"), "unverified") || strings.Contains(OwnerResumeProviderSupport("claude"), "unverified") {
+		t.Fatalf("public provider coverage is not stated honestly: %q / %q", OwnerResumeProviderSupport("codex"), OwnerResumeProviderSupport("claude"))
+	}
+}
+
+// r002-f02: scenario 2 through the existing QA contract. The stored blocked
+// answer for the unchanged candidate survives the resume; the resumed control verifies a
+// changed candidate, the old answer cannot qualify it, and the resumed
+// control's own QA callback on the new candidate is accepted.
+func TestOwnerResumeKeepsStoredQAAndRequalifiesChangedCandidate(t *testing.T) {
+	var first DeliveryCandidate
+	f := newOwnerResumeFixture(t, "codex", true, func(f deliveryFixture, o WorkflowRun) WorkflowRun {
+		// The stored actual answer for this candidate: blocked, so the owner
+		// returns to correction work after the resume.
+		o, err := WorkflowDeliveryQA(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "blocked", deliveryTestHuman(t, f, o, "blocked"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		first = o.Delivery.Candidates[0]
+		return o
+	})
+	if first.HumanQA == nil || f.Owner.DeliveryStatus.HumanJudgment == nil || f.Owner.DeliveryStatus.HumanJudgment.Outcome != "blocked" {
+		t.Fatalf("fixture has no stored QA answer: %+v", f.Owner.DeliveryStatus.HumanJudgment)
+	}
+	oldAnswer := deliveryTestHuman(t, f.deliveryFixture, f.Owner, "pass")
+	// The pass attestation above names candidate 1 and is never submitted for it.
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumePreserve(t, f, p)
+	o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal(o.Delivery.Candidates[0], first) || !equal(o.DeliveryStatus.HumanJudgment, f.Owner.DeliveryStatus.HumanJudgment) {
+		t.Fatal("resume changed the stored QA answer for the unchanged candidate")
+	}
+	owner := f.D
+	owner.Executable = func() (string, error) { return p.ControlExecutable.Path, nil }
+	deliveryTestCandidate(t, f.deliveryFixture, "changed after resume")
+	o, err = WorkflowDeliveryVerify(owner, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f.deliveryFixture, "after-resume"))
+	if err != nil {
+		t.Fatalf("resumed control could not verify a changed candidate: %v", err)
+	}
+	if o.OwnerResume == nil || o.OwnerResume.OwnerCallback != "observed" {
+		t.Fatalf("resumed verify callback not observed: %+v", o.OwnerResume)
+	}
+	latest := o.Delivery.Candidates[len(o.Delivery.Candidates)-1]
+	if latest.OID == first.OID || latest.HumanQA != nil || o.DeliveryStatus.HumanJudgment != nil && o.DeliveryStatus.HumanJudgment.Current {
+		t.Fatalf("old QA was reused for the changed candidate: %+v", o.DeliveryStatus.HumanJudgment)
+	}
+	if _, err = WorkflowDeliveryQA(owner, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "pass", oldAnswer); err == nil {
+		t.Fatal("the old candidate's stored answer qualified the changed candidate")
+	}
+	o, err = WorkflowDeliveryQA(owner, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "pass", deliveryTestHuman(t, f.deliveryFixture, o, "pass"))
+	if err != nil {
+		t.Fatalf("resumed control QA callback on the changed candidate failed: %v", err)
+	}
+	if latest = o.Delivery.Candidates[len(o.Delivery.Candidates)-1]; latest.HumanQA == nil || o.DeliveryStatus.HumanJudgment == nil || !o.DeliveryStatus.HumanJudgment.Current || o.DeliveryStatus.HumanJudgment.CandidateOID != latest.OID {
+		t.Fatalf("resumed QA is not bound to the changed candidate: %+v", o.DeliveryStatus.HumanJudgment)
+	}
+	if !equal(o.Delivery.Candidates[0], first) {
+		t.Fatal("history of the first candidate changed")
+	}
+}
+
+func ownerResumeInput(t *testing.T, binary, cwd string, args ...string) map[string]json.RawMessage {
+	t.Helper()
+	c := exec.Command(binary, append([]string{"workflow", "input"}, args...)...)
+	c.Dir = cwd
+	var stdout, stderr bytes.Buffer
+	c.Stdout, c.Stderr = &stdout, &stderr
+	if err := c.Run(); err != nil {
+		t.Fatalf("workflow input %v: %v\n%s%s", args, err, stdout.String(), stderr.String())
+	}
+	var out map[string]json.RawMessage
+	if err := json.Unmarshal(stdout.Bytes(), &out); err != nil {
+		t.Fatalf("workflow input %v output: %v\n%s", args, err, stdout.String())
+	}
+	return out
+}
+
+// r002-f02 / RESUME01 scenario 2 (modeled provider, real human-input store):
+// the owner asked a cooperative-agent question and the human answered while
+// the tab was closed. After the resume, the same question, request and bytes
+// are read and used through the existing contract; nothing is republished.
+func TestOwnerResumeKeepsStoredHumanInputAnswer(t *testing.T) {
+	binary := deliveryCLIBinary(t)
+	var question, requestFile string
+	var request map[string]json.RawMessage
+	f := newOwnerResumeFixture(t, "claude", false, func(f deliveryFixture, o WorkflowRun) WorkflowRun {
+		task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+		draft := writeAny(t, f.R.WorkspaceRoot, "question.json", map[string]any{"kind": "ply.workflow.human-input-question-draft", "schema_version": 1, "publication_key": "resume01/choice", "project_id": "ply", "repo_id": "ply", "task_id": "task", "activity_id": "resume01/owner", "activity_title": "Resumed owner fixture", "provider": "claude", "session_id": o.Transport.AgentSessionID, "origin_cwd": task, "text": "Which synthetic variant should the fixture use?", "reason": "Synthetic isolated question; no real human product decision.", "answer_kind": "choice", "options": []any{map[string]any{"id": "short", "label": "Short", "consequence": "Short fixture."}, map[string]any{"id": "full", "label": "Full", "consequence": "Full fixture."}}})
+		asked := ownerResumeInput(t, binary, task, "ask", "--workspace", f.R.WorkspaceRoot, "--file", draft)
+		question = deliveryCLIString(t, asked, "question_id")
+		// The synthetic human answers while the owner's tab is closing.
+		preview := ownerResumeInput(t, binary, f.R.WorkspaceRoot, "answer", "preview", question, "--workspace", f.R.WorkspaceRoot, "--request-id", "resume01-answer-0001", "--option-id", "full")
+		if err := json.Unmarshal(preview["request"], &request); err != nil {
+			t.Fatal(err)
+		}
+		requestFile = writeAny(t, f.R.WorkspaceRoot, "answer-request.json", request)
+		ownerResumeInput(t, binary, f.R.WorkspaceRoot, "answer", "apply", "--workspace", f.R.WorkspaceRoot, "--file", requestFile)
+		return o
+	})
+	store := filepath.Join(f.R.WorkspaceRoot, ".ply", "human-input")
+	before := deliveryRecoveryFiles(t, store)
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumePreserve(t, f, p)
+	if _, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation); err != nil {
+		t.Fatal(err)
+	}
+	after := deliveryRecoveryFiles(t, store)
+	if len(after) != len(before) {
+		t.Fatal("resume published or removed human-input records")
+	}
+	deliveryRecoveryUnchanged(t, before, "")
+	// The resumed owner, same session and cwd, finds the same question again
+	// without a new publication and reads the exact stored answer.
+	task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+	again := ownerResumeInput(t, binary, task, "ask", "--workspace", f.R.WorkspaceRoot, "--file", filepath.Join(f.R.WorkspaceRoot, "question.json"))
+	if deliveryCLIString(t, again, "question_id") != question {
+		t.Fatal("resumed owner published a duplicate question")
+	}
+	if len(deliveryRecoveryFiles(t, store)) != len(before) {
+		t.Fatal("asking again after resume wrote a new publication")
+	}
+	waited := ownerResumeInput(t, binary, task, "wait", question, "--workspace", f.R.WorkspaceRoot, "--timeout-seconds", "1")
+	var answered struct {
+		Question struct {
+			State  string `json:"state"`
+			Answer struct {
+				RequestID     string  `json:"request_id"`
+				RequestSHA256 string  `json:"request_sha256"`
+				OptionID      *string `json:"option_id"`
+			} `json:"answer"`
+		} `json:"question"`
+	}
+	raw, _ := json.Marshal(waited)
+	if err = json.Unmarshal(raw, &answered); err != nil {
+		t.Fatal(err)
+	}
+	a := answered.Question.Answer
+	if answered.Question.State != "answered" || a.RequestID != "resume01-answer-0001" || a.OptionID == nil || *a.OptionID != "full" {
+		t.Fatalf("resumed owner did not read the stored answer: %s", raw)
+	}
+	ack := ownerResumeInput(t, binary, task, "acknowledge", question, "--workspace", f.R.WorkspaceRoot, "--request-id", a.RequestID, "--request-sha256", a.RequestSHA256)
+	if deliveryCLIString(t, ack, "state") != "agent_received" || deliveryCLIString(t, ack, "question_id") != question {
+		t.Fatalf("resumed owner did not receive the stored answer: %v", ack)
+	}
+	// Receipt is distinct from use: the resumed owner applies the selected
+	// option to a controlled fixture result, then reports the continuation.
+	result := filepath.Join(f.R.WorkspaceRoot, "resumed-variant.txt")
+	if err = os.WriteFile(result, []byte("variant="+*a.OptionID+"\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	summary := "Resumed owner applied variant " + *a.OptionID + " to the fixture result."
+	continued := ownerResumeInput(t, binary, task, "continue", question, "--workspace", f.R.WorkspaceRoot, "--request-id", a.RequestID, "--request-sha256", a.RequestSHA256, "--summary", summary)
+	var used struct {
+		QuestionID   string `json:"question_id"`
+		State        string `json:"state"`
+		Continuation struct {
+			RequestID     string `json:"request_id"`
+			RequestSHA256 string `json:"request_sha256"`
+			Summary       string `json:"summary"`
+		} `json:"continuation"`
+	}
+	raw, _ = json.Marshal(continued)
+	if err = json.Unmarshal(raw, &used); err != nil {
+		t.Fatal(err)
+	}
+	if used.QuestionID != question || used.State != "agent_reported_continued" || used.Continuation.RequestID != a.RequestID || used.Continuation.RequestSHA256 != a.RequestSHA256 || used.Continuation.Summary != summary {
+		t.Fatalf("continuation is not bound to the same question and answer: %s", raw)
+	}
+	if got, _ := os.ReadFile(result); string(got) != "variant=full\n" {
+		t.Fatalf("fixture result does not use the stored answer: %q", got)
 	}
 }

@@ -33,13 +33,6 @@ type OwnerResumeResult struct {
 	NextAction      string                              `json:"next_action"`
 }
 
-// providerSupport states the existing adapter honestly. Both use the
-// provider's own resume of the same session id; neither forks a new session.
-var providerSupport = map[string]string{
-	"claude": "claude --resume SESSION_ID in a new Herdr tab (same session id; no --fork-session)",
-	"codex":  "codex resume SESSION_ID in a new Herdr tab (same session id)",
-}
-
 // ResumeOwner finds the same existing Task Run from its Task or return
 // worktree, previews the resume and, unless checking, applies it once.
 func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeResult, error) {
@@ -73,7 +66,7 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 	}
 	selected := *sel
 	out.Run = &selected
-	out.ProviderSupport = providerSupport[selected.Provider]
+	out.ProviderSupport = taskrun.OwnerResumeProviderSupport(selected.Provider)
 	// A missing provider is reported by the phase-aware preview, which keeps
 	// completed, live-owner and blocked phases with their own next action.
 	provider, err := lookupExecutable("", selected.Provider)

@@ -314,7 +314,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 	if a, err := workflowAgentRead(d, s, time.Time{}); err == nil && workflowLocation(s, a) == nil {
 		switch {
 		case a.Session == nil && pending && s.OwnerResumeStep == ownerResumeStartAttempted:
-			return p, ownerResumeBlock(&p, "session_pending", "the resumed provider in pane "+pane+" has not reported its session yet; no input was sent", WorkflowAction{"user", "Wait until the provider in Herdr pane " + pane + " has finished starting, then repeat ply workflow execute --resume. Nothing is started or resent."})
+			return p, ownerResumeBlock(&p, "session_pending", "the resumed provider in pane "+pane+" has not reported its session; no input was sent", WorkflowAction{"user", "Repeat ply workflow execute --resume once Herdr pane " + pane + " shows the provider ready. If it still reports no session (possible for Codex), close that pane in Herdr and repeat --resume to start a new generation after Herdr proves it absent, or retire this owner with workflow execute retire " + s.Result.RunID + " for a fresh Task copy. No input is ever sent to an unproven session."})
 		case workflowSession(s, a, false) == nil && !pending:
 			p.State, p.NextAction = "live_owner", WorkflowAction{"recipient", "The same owner is live in Herdr pane " + pane + "; continue there. No tab, provider or prompt is started."}
 			return p, nil
@@ -768,4 +768,18 @@ func WorkflowOwnerRunCandidates(d Dependencies, root string) (OwnerRunCandidates
 		out.Runs = append(out.Runs, OwnerRunCandidate{RunID: s.Result.RunID, TaskID: draft.Binding.TaskID, SpecID: draft.Binding.SpecID, Provider: s.Request.Runtime.Provider, TaskWorktree: s.Observed.Target.WorktreeLocator, ReturnWorktree: s.Observed.Epic.WorktreeLocator, Phase: deliveryResumePhase(s)})
 	}
 	return out, nil
+}
+
+// ownerResumeProviderSupport states each existing adapter's coverage. Both
+// resume the same session id without forking. Herdr reports Claude sessions;
+// it may not report a resumed Codex session before its first turn, so a Codex
+// resume can stop at session_pending without any input being sent.
+func OwnerResumeProviderSupport(provider string) string {
+	switch provider {
+	case "claude":
+		return "claude --resume SESSION_ID in a new Herdr tab (same session id; no --fork-session)"
+	case "codex":
+		return "codex resume SESSION_ID in a new Herdr tab (same session id); unverified with a real resumed Codex: Herdr may not report its session before a first turn, then the resume stops at session_pending without input"
+	}
+	return "no resume adapter"
 }
