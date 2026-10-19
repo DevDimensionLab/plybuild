@@ -26,6 +26,7 @@ type OwnerResumeResult struct {
 	State           string                              `json:"state"`
 	Run             *taskrun.OwnerRunCandidate          `json:"run,omitempty"`
 	Choices         []taskrun.OwnerRunCandidate         `json:"choices,omitempty"`
+	Unreadable      []taskrun.OwnerRunUnreadable        `json:"unreadable,omitempty"`
 	ProviderSupport string                              `json:"provider_support,omitempty"`
 	Preview         *taskrun.DeliveryOwnerResumePreview `json:"preview,omitempty"`
 	Workflow        *taskrun.WorkflowRun                `json:"workflow,omitempty"`
@@ -56,9 +57,12 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 	if err != nil {
 		return out, err
 	}
-	sel, choices, next := selectOwnerRun(all.Runs, cwd, input.SpecID)
+	sel, choices, next := selectOwnerRun(all.Runs, all.Unreadable, cwd, input.SpecID)
 	if sel == nil {
-		out.NextAction = next
+		out.NextAction, out.Unreadable = next, all.Unreadable
+		if len(choices) == 0 && len(all.Unreadable) > 0 {
+			out.State = "unreadable"
+		}
 		if len(choices) > 0 {
 			out.State, out.Choices = "ambiguous", choices
 		}
@@ -130,7 +134,7 @@ func ResumeOwner(d taskrun.Dependencies, input OwnerResumeInput) (OwnerResumeRes
 // selectOwnerRun prefers the Task worktree's own Run. From the return
 // worktree, Runs that can no longer resume (completed, retired, released)
 // only answer an explicit --spec when no active Run of it exists.
-func selectOwnerRun(all []taskrun.OwnerRunCandidate, cwd, spec string) (*taskrun.OwnerRunCandidate, []taskrun.OwnerRunCandidate, string) {
+func selectOwnerRun(all []taskrun.OwnerRunCandidate, unreadable []taskrun.OwnerRunUnreadable, cwd, spec string) (*taskrun.OwnerRunCandidate, []taskrun.OwnerRunCandidate, string) {
 	terminal := func(c taskrun.OwnerRunCandidate) bool {
 		return c.Phase == "completed" || c.Phase == "retired" || c.Phase == "owner_released"
 	}
@@ -154,6 +158,14 @@ func selectOwnerRun(all []taskrun.OwnerRunCandidate, cwd, spec string) (*taskrun
 		matches = ended
 	}
 	switch {
+	case len(matches) == 0 && len(unreadable) > 0:
+		// A Run that fails its integrity read may be this worktree's own Run.
+		// Name it exactly; Ply never repairs or rewrites it.
+		parts := []string{}
+		for _, u := range unreadable {
+			parts = append(parts, u.RunID+": "+u.Error+" (inspect with ply workflow execute show "+u.RunID+")")
+		}
+		return nil, nil, "No readable Run matches " + cwd + ", and these Runs could not be read: " + strings.Join(parts, "; ") + ". Nothing was started; a Run that fails its read needs a Ply reader that supports its records."
 	case len(matches) == 0:
 		return nil, nil, "Run from the exact Task worktree, or from its return worktree with --spec SPEC_ID; no Run was found for " + cwd + "."
 	case len(matches) > 1:

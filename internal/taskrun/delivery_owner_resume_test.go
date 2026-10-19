@@ -491,7 +491,7 @@ func TestOwnerRunLookupIgnoresUnrelatedInvalidHistory(t *testing.T) {
 	for _, c := range all.Runs {
 		found = found || c.RunID == f.Owner.RunID && c.SpecID != "" && c.TaskWorktree == f.Prepared.Preparation.Preparation.Plan.WorktreePath
 	}
-	if !found || len(all.Unreadable) != 1 || all.Unreadable[0] != "wfr_"+strings.Repeat("a", 64) {
+	if !found || len(all.Unreadable) != 1 || all.Unreadable[0].RunID != "wfr_"+strings.Repeat("a", 64) || all.Unreadable[0].Error == "" {
 		t.Fatalf("valid Run or unreadable history not reported: %+v", all)
 	}
 	// The selected Run itself still fails closed on changed bytes.
@@ -1057,5 +1057,84 @@ func TestOwnerResumeReconcilesWriterLivenessBeforeNewWriter(t *testing.T) {
 				t.Fatalf("resume record lacks its liveness basis: %s %v", raw, err)
 			}
 		})
+	}
+}
+
+// ownerResumeLegacyRecord rewrites, inside this disposable fixture only, the
+// latest generation record into the exact shape written by 5f1908d (no
+// writer_liveness) and rebinds its digest, as that candidate would have.
+func ownerResumeLegacyRecord(t *testing.T, f ownerResumeFixture, o WorkflowRun) {
+	t.Helper()
+	path := o.OwnerResume.Binding.Locator
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var record map[string]any
+	if err = json.Unmarshal(raw, &record); err != nil {
+		t.Fatal(err)
+	}
+	delete(record, "writer_liveness")
+	legacy, err := Canonical(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.Chmod(path, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(path, legacy, 0600); err != nil {
+		t.Fatal(err)
+	}
+	statePath := filepath.Join(o.Paths.RunRoot, "state.json")
+	state, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	state = bytes.Replace(state, []byte(o.OwnerResume.Binding.SHA256), []byte(hash(legacy)), 1)
+	if err = os.WriteFile(statePath, state, 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// r004-f01: a generation record written before writer_liveness existed stays
+// readable as history (show, lookup, owner callback), states that its basis
+// was not recorded, and never stands in for the gate on a new start.
+func TestOwnerResumeReadsPreLivenessGenerationAsHistoryOnly(t *testing.T) {
+	binary := deliveryCLIBinary(t)
+	f := newOwnerResumeFixture(t, "claude", false)
+	t.Setenv("HERDR_WORKSPACE_ID", "")
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumePreserve(t, f, p)
+	o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumeLegacyRecord(t, f, o)
+	o, err = WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil || o.OwnerResume == nil || o.OwnerResume.LivenessBasis != "not_recorded_before_reconciliation" {
+		t.Fatalf("pre-liveness generation is unreadable or claims a basis: %+v %v", o.OwnerResume, err)
+	}
+	owner := f.D
+	owner.Executable = func() (string, error) { return p.ControlExecutable.Path, nil }
+	o = ownerResumeReport(t, f.deliveryFixture, o, owner, "after-legacy-record")
+	if o.OwnerResume.OwnerCallback != "observed" {
+		t.Fatal("owner callback lost on the historical generation")
+	}
+	task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+	check, output, err := ownerResumeCLI(binary, task, "--resume", "--check", "--format", "json")
+	if err != nil || deliveryCLIString(t, check, "state") != "live_owner" {
+		t.Fatalf("public lookup cannot read the historical generation: %v\n%s", err, output)
+	}
+	// The resumed tab closes; the next generation must pass the live gate.
+	workflowTestModel(t, f.workflowFixture, map[string]any{"closed_pane": o.Transport.PaneID, "inventory": []any{}})
+	f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) {
+		return []LocalProcess{{PID: 1, CWD: "/"}, {PID: 5151, ParentPID: 1, CWD: task}, {PID: os.Getpid(), ParentPID: 1, CWD: "/elsewhere"}}, nil
+	}
+	next, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err == nil || next.Reason != "writer_process_alive" || next.Generation != 0 && next.State == "ready" {
+		t.Fatalf("historical generation stood in for the liveness gate: %+v %v", next, err)
 	}
 }

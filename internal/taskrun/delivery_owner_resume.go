@@ -73,32 +73,36 @@ type DeliveryOwnerResumeReadback struct {
 	ProviderExecutable Executable        `json:"provider_executable"`
 	ControlExecutable  Executable        `json:"control_executable"`
 	SessionObserved    bool              `json:"session_observed"`
+	LivenessBasis      string            `json:"liveness_basis"`
 	OwnerCallback      string            `json:"owner_callback"`
 	CallbackEventID    string            `json:"callback_event_id,omitempty"`
 	Binding            FileBinding       `json:"binding"`
 }
 
 type deliveryOwnerResumeRecord struct {
-	Kind                   string                        `json:"kind"`
-	SchemaVersion          int                           `json:"schema_version"`
-	Generation             int                           `json:"generation"`
-	RunID                  string                        `json:"run_id"`
-	RequestSHA256          string                        `json:"request_sha256"`
-	NativeSessionID        string                        `json:"native_session_id"`
-	BeforeState            FileBinding                   `json:"before_state"`
-	PreviousTransport      WorkflowTransport             `json:"previous_transport"`
-	PreviousNextAction     WorkflowAction                `json:"previous_next_action"`
-	Absence                HumanOwnerRecoveryObservation `json:"absence"`
-	Liveness               TaskWriterLiveness            `json:"writer_liveness"`
-	ProviderSession        string                        `json:"provider_session"`
-	ProviderExecutable     Executable                    `json:"provider_executable"`
-	SourceControl          Executable                    `json:"source_control"`
-	ControlExecutable      Executable                    `json:"control_executable"`
-	ContinuationGeneration int                           `json:"continuation_generation"`
-	EventsAtResume         int                           `json:"events_at_resume"`
-	DestinationWorkspaceID string                        `json:"destination_workspace_id"`
-	Confirmation           string                        `json:"confirmation"`
-	RecordedAtUTC          string                        `json:"recorded_at_utc"`
+	Kind               string                        `json:"kind"`
+	SchemaVersion      int                           `json:"schema_version"`
+	Generation         int                           `json:"generation"`
+	RunID              string                        `json:"run_id"`
+	RequestSHA256      string                        `json:"request_sha256"`
+	NativeSessionID    string                        `json:"native_session_id"`
+	BeforeState        FileBinding                   `json:"before_state"`
+	PreviousTransport  WorkflowTransport             `json:"previous_transport"`
+	PreviousNextAction WorkflowAction                `json:"previous_next_action"`
+	Absence            HumanOwnerRecoveryObservation `json:"absence"`
+	// Liveness is absent in generations recorded before reconciliation
+	// existed. Such a record is readable history only; every new start
+	// observes liveness itself and never inherits a basis from history.
+	Liveness               *TaskWriterLiveness `json:"writer_liveness,omitempty"`
+	ProviderSession        string              `json:"provider_session"`
+	ProviderExecutable     Executable          `json:"provider_executable"`
+	SourceControl          Executable          `json:"source_control"`
+	ControlExecutable      Executable          `json:"control_executable"`
+	ContinuationGeneration int                 `json:"continuation_generation"`
+	EventsAtResume         int                 `json:"events_at_resume"`
+	DestinationWorkspaceID string              `json:"destination_workspace_id"`
+	Confirmation           string              `json:"confirmation"`
+	RecordedAtUTC          string              `json:"recorded_at_utc"`
 }
 
 const (
@@ -523,7 +527,7 @@ func WorkflowResumeOwner(d Dependencies, root string, in DeliveryOwnerResumeInpu
 		if err = d.writeOnce(beforeBinding.Locator, before); err != nil {
 			return err
 		}
-		r := deliveryOwnerResumeRecord{Kind: "PlyDeliveryOwnerResume@1", SchemaVersion: 1, Generation: p.Generation, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, NativeSessionID: p.NativeSessionID, BeforeState: beforeBinding, PreviousTransport: s.Result.Transport, PreviousNextAction: previousNext, Absence: *p.Absence, Liveness: *p.Liveness, ProviderSession: p.ProviderSession, ProviderExecutable: in.ProviderExecutable, SourceControl: in.ControlExecutable, ControlExecutable: p.ControlExecutable, ContinuationGeneration: deliveryContinuationGeneration(s), EventsAtResume: len(s.Result.Delivery.Events), DestinationWorkspaceID: p.DestinationWorkspaceID, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+		r := deliveryOwnerResumeRecord{Kind: "PlyDeliveryOwnerResume@1", SchemaVersion: 1, Generation: p.Generation, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, NativeSessionID: p.NativeSessionID, BeforeState: beforeBinding, PreviousTransport: s.Result.Transport, PreviousNextAction: previousNext, Absence: *p.Absence, Liveness: p.Liveness, ProviderSession: p.ProviderSession, ProviderExecutable: in.ProviderExecutable, SourceControl: in.ControlExecutable, ControlExecutable: p.ControlExecutable, ContinuationGeneration: deliveryContinuationGeneration(s), EventsAtResume: len(s.Result.Delivery.Events), DestinationWorkspaceID: p.DestinationWorkspaceID, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		binding, err := workflowKeep(d, filepath.Join(p.Directory, "resume.json"), r)
 		if err != nil {
 			return err
@@ -727,6 +731,10 @@ func ownerResumeReadback(s workflowState) (*DeliveryOwnerResumeReadback, error) 
 	}
 	out := &DeliveryOwnerResumeReadback{Generation: r.Generation, Step: s.OwnerResumeStep, NativeSessionID: r.NativeSessionID, PreviousTransport: r.PreviousTransport, ProviderExecutable: r.ProviderExecutable, ControlExecutable: r.ControlExecutable, Binding: *s.OwnerResume, OwnerCallback: "not_ready"}
 	out.SessionObserved = s.OwnerResumeStep == ownerResumePromptAttempt || s.OwnerResumeStep == ownerResumePromptSent
+	out.LivenessBasis = "not_recorded_before_reconciliation"
+	if r.Liveness != nil {
+		out.LivenessBasis = r.Liveness.Method
+	}
 	if s.OwnerResumeStep == ownerResumePromptSent {
 		out.OwnerCallback = "awaiting"
 		if s.OwnerResumeCallback != "" {
@@ -750,8 +758,14 @@ type OwnerRunCandidate struct {
 }
 
 type OwnerRunCandidates struct {
-	Runs       []OwnerRunCandidate `json:"runs"`
-	Unreadable []string            `json:"unreadable,omitempty"`
+	Runs       []OwnerRunCandidate  `json:"runs"`
+	Unreadable []OwnerRunUnreadable `json:"unreadable,omitempty"`
+}
+
+// OwnerRunUnreadable names a Run that failed its native integrity read.
+type OwnerRunUnreadable struct {
+	RunID string `json:"run_id"`
+	Error string `json:"error"`
 }
 
 // WorkflowOwnerRunCandidates reads every interactive delivery reservation in
@@ -781,7 +795,7 @@ func WorkflowOwnerRunCandidates(d Dependencies, root string) (OwnerRunCandidates
 		if err != nil {
 			// Unrelated history cannot block lookup. It stays visible, and the
 			// selected Run is reread with full integrity checks before any use.
-			out.Unreadable = append(out.Unreadable, id)
+			out.Unreadable = append(out.Unreadable, OwnerRunUnreadable{RunID: id, Error: err.Error()})
 			continue
 		}
 		if !deliveryRun(s.Request) || headlessRun(s.Request) {
