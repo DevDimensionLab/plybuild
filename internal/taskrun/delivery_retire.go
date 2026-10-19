@@ -185,32 +185,15 @@ func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryO
 	}
 	deadline := time.Now().Add(limit)
 	for {
-		absence, err := observeAbsentDeliveryOwner(d, s)
-		var liveness *TaskWriterLiveness
-		// A resumed process may survive its terminal. Reuse the new-writer
-		// reconciliation before retiring that owner and releasing its queue.
-		if err == nil && s.OwnerResume != nil {
-			record, _, recordErr := workflowOwnerResumeRecord(s)
-			if recordErr != nil {
-				return absence, nil, recordErr
-			}
-			observed, observeErr := observeWriterLiveness(d, s, record.ProviderSession, 0)
-			liveness = &observed
-			if observeErr != nil {
-				// An unavailable/denied read is not an observation of a writer
-				// still exiting. Stop this attempt without replaying inspection.
-				return absence, liveness, workflowError(4, "writer liveness is unknown: "+observeErr.Error()+"; restore read access before continuing this same retirement; nothing was recorded or released")
-			} else if len(observed.RemainingPIDs) > 0 {
-				err = workflowError(4, "local Task/session writer remains after pane closure; preserve the same attempt until it exits")
-			} else {
-				absence.ProcessLiveness = "no_task_or_session_process_observed"
-			}
+		observed := (taskWriters{d, s}).retirement()
+		if observed.state == taskWritersAbsent {
+			return observed.absence, observed.liveness, nil
 		}
-		if err == nil {
-			return absence, liveness, nil
+		if observed.state == taskWritersUnknown {
+			return observed.absence, observed.liveness, observed.err
 		}
 		if !time.Now().Before(deadline) {
-			return absence, liveness, workflowError(4, "owner_active: writer absence is not established after closing the bound pane; nothing was recorded or released ("+err.Error()+")")
+			return observed.absence, observed.liveness, workflowError(4, "owner_active: writer absence is not established after closing the bound pane; nothing was recorded or released ("+observed.err.Error()+")")
 		}
 		time.Sleep(100 * time.Millisecond)
 	}

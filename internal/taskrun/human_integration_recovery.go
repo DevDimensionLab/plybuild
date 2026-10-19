@@ -1,8 +1,6 @@
 package taskrun
 
 import (
-	"encoding/json"
-	"errors"
 	"path/filepath"
 	"strings"
 	"time"
@@ -55,64 +53,6 @@ func sourceContains(source, path string) bool {
 	}
 	path = filepath.Clean(path)
 	return path == source || strings.HasPrefix(path, source+string(filepath.Separator))
-}
-
-func observeAbsentDeliveryOwner(d Dependencies, s workflowState) (HumanOwnerRecoveryObservation, error) {
-	return observeAbsentDeliveryOwnerExcept(d, s, "")
-}
-
-// observeAbsentDeliveryOwnerExcept also accepts the identified invoking pane
-// when Herdr lists it as a plain terminal without any agent or session. An
-// agent in that pane, or any other Task pane, still counts as a writer.
-func observeAbsentDeliveryOwnerExcept(d Dependencies, s workflowState, invoker string) (HumanOwnerRecoveryObservation, error) {
-	out := HumanOwnerRecoveryObservation{Transport: s.Result.Transport, ProcessLiveness: "unknown"}
-	_, err := workflowCall(d, s.Request, "pane", "get", s.Result.Transport.PaneID)
-	var call *HerdrCallError
-	if !errors.As(err, &call) || !call.ReadOnly || call.Phase != "pane get" || call.ProviderCode != "pane_not_found" {
-		return out, workflowError(4, "owner_recovery_unavailable: the bound pane must be positively absent; use ordinary release for an existing terminal")
-	}
-	if err = deliveryRecoveryNoManagedAgent(d, s); err != nil {
-		return out, err
-	}
-	for _, kind := range []string{"pane", "agent"} {
-		raw, err := workflowCall(d, s.Request, kind, "list")
-		if err != nil {
-			return out, err
-		}
-		var inventory struct {
-			Panes  *[]workflowAgent `json:"panes"`
-			Agents *[]workflowAgent `json:"agents"`
-		}
-		if err = json.Unmarshal(raw, &inventory); err != nil {
-			return out, workflowError(4, "owner_unknown: cannot read complete Herdr "+kind+" inventory")
-		}
-		rows := inventory.Panes
-		if kind == "agent" {
-			rows = inventory.Agents
-		}
-		if rows == nil {
-			return out, workflowError(4, "owner_unknown: incomplete Herdr "+kind+" inventory")
-		}
-		seen := map[string]bool{}
-		for _, a := range *rows {
-			if !plain(a.WorkspaceID, 1, 128) || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || seen[a.PaneID] {
-				return out, workflowError(4, "owner_unknown: incomplete or ambiguous Herdr "+kind+" identity")
-			}
-			seen[a.PaneID] = true
-			if kind == "pane" && invoker != "" && a.PaneID == invoker && a.Agent == "" && a.Session == nil && a.PaneID != s.Result.Transport.PaneID && a.TerminalID != s.Result.Transport.TerminalID {
-				continue
-			}
-			if a.PaneID == s.Result.Transport.PaneID || a.TerminalID == s.Result.Transport.TerminalID || a.Name == workflowAgentName(s.Result.RunID) || a.Session != nil && a.Session.Value == s.Result.Transport.AgentSessionID && a.Session.Agent == s.Request.Runtime.Provider || sourceContains(s.Observed.Target.WorktreeLocator, a.ForegroundCWD) || sourceContains(s.Observed.Target.WorktreeLocator, a.CWD) {
-				return out, workflowError(4, "owner_active: stop the known Task/session writer in Herdr pane "+a.PaneID+" and leave the Task worktree before recovery")
-			}
-		}
-		if kind == "pane" {
-			out.PaneInventorySHA = hash(raw)
-		} else {
-			out.AgentInventorySHA = hash(raw)
-		}
-	}
-	return out, nil
 }
 
 // The confirmation binds only this candidate and its native history. Complete

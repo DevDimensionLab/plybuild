@@ -337,7 +337,14 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 		return p, ownerResumeBlock(&p, "session_unbound", "no native provider session is bound to this owner", coordinator("Inspect the Run; without a bound session only retirement and a fresh Task copy are supported."))
 	}
 	pane := s.Result.Transport.PaneID
-	if a, err := workflowAgentRead(d, s, time.Time{}); err == nil && workflowLocation(s, a) == nil {
+	a, inspectErr := workflowAgentRead(d, s, time.Time{})
+	if inspectErr != nil {
+		var call *HerdrCallError
+		if !errors.As(inspectErr, &call) || !call.ReadOnly || call.Phase != "agent get" || call.ProviderCode != "agent_not_found" {
+			return p, ownerResumeBlock(&p, "inspection_unavailable", inspectErr.Error(), coordinator("Restore Herdr inspection and repeat the preview; no new writer starts while identity is unknown."))
+		}
+	}
+	if inspectErr == nil && workflowLocation(s, a) == nil {
 		switch {
 		case a.Session == nil && a.CodexResumeIdentity == nil && pending && s.OwnerResumeStep == ownerResumeStartAttempted:
 			detail := "the resumed provider in pane " + pane + " has no verified session; no input was sent"
@@ -370,42 +377,14 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 			return p, ownerResumeBlock(&p, "session_mismatch", "pane "+pane+" runs a different provider session than the bound one", WorkflowAction{"user", "Close Herdr pane " + pane + " (it is not this owner), then repeat ply workflow execute --resume."})
 		}
 	}
-	_, err = workflowCall(d, s.Request, "pane", "get", s.Result.Transport.PaneID)
-	var call *HerdrCallError
-	if err == nil {
-		return p, ownerResumeBlock(&p, "terminal_present", "the bound pane still exists without the observed owner session", coordinator("Inspect Herdr pane "+s.Result.Transport.PaneID+"; close it only when no writer remains, then repeat the preview."))
+	writers, transcript := (taskWriters{d, s}).resume(in.InvokerPaneID)
+	if writers.absence.PaneInventorySHA != "" {
+		p.Absence = &writers.absence
 	}
-	if !errors.As(err, &call) || call.ProviderCode != "pane_not_found" {
-		return p, ownerResumeBlock(&p, "inspection_unavailable", "Herdr could not prove the bound pane absent: "+err.Error(), coordinator("Restore read access to Herdr from the Task or return worktree, then repeat the preview; absence is never assumed."))
+	p.Liveness, p.ProviderSession, p.InvokerPaneID = writers.liveness, transcript, in.InvokerPaneID
+	if writers.state != taskWritersAbsent {
+		return p, ownerResumeBlock(&p, writers.reason, writers.err.Error(), coordinator("Stop the named Task/session writer, or restore Herdr and local process inspection, then repeat the preview from the return worktree. No new writer starts while evidence is unknown."))
 	}
-	absence, err := observeAbsentDeliveryOwnerExcept(d, s, in.InvokerPaneID)
-	if err != nil {
-		reason := "inspection_unavailable"
-		if strings.Contains(err.Error(), "owner_active") {
-			reason = "owner_active"
-		}
-		return p, ownerResumeBlock(&p, reason, err.Error(), WorkflowAction{"user", "Close the remaining Task/session writer or tab named above in Herdr (or restore inventory access), then repeat ply workflow execute --resume."})
-	}
-	p.Absence, p.InvokerPaneID = &absence, in.InvokerPaneID
-	if p.ProviderSession, err = deliveryProviderSession(s); err != nil {
-		return p, ownerResumeBlock(&p, "provider_session_missing", err.Error(), coordinator("The conversation cannot be resumed; retire this owner with workflow execute retire RUN_ID and start a fresh Task copy."))
-	}
-	// Herdr absence does not prove the earlier writer exited. Reconcile local
-	// processes in the Task worktree or holding this session first.
-	liveness, err := observeWriterLiveness(d, s, p.ProviderSession, invokerShellPID(d, s, in.InvokerPaneID))
-	p.Liveness = &liveness
-	if err != nil {
-		return p, ownerResumeBlock(&p, "liveness_unknown", "local writer liveness could not be observed: "+err.Error(), WorkflowAction{"user", "Restore local process inspection (lsof and ps) for this user and repeat ply workflow execute --resume. No writer is started while liveness is unknown."})
-	}
-	if len(liveness.RemainingPIDs) > 0 {
-		pids := make([]string, len(liveness.RemainingPIDs))
-		for i, pid := range liveness.RemainingPIDs {
-			pids[i] = strconv.Itoa(pid)
-		}
-		return p, ownerResumeBlock(&p, "writer_process_alive", "local processes remain in the Task worktree or hold session "+p.NativeSessionID+": pids "+strings.Join(pids, ", "), WorkflowAction{"user", "Stop those processes (one may be the earlier owner running outside Herdr). If one is your own shell, run ply workflow execute --spec SPEC_ID --resume from the return worktree instead. Then repeat the preview."})
-	}
-	absence.ProcessLiveness = "no_task_or_session_process_observed"
-	p.Absence = &absence
 	resolved, err := exec.LookPath(s.Request.Runtime.Provider)
 	if err == nil {
 		resolved, err = filepath.EvalSymlinks(resolved)
@@ -456,7 +435,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 	if err != nil {
 		return p, err
 	}
-	authority := absence
+	authority := writers.absence
 	authority.PaneInventorySHA, authority.AgentInventorySHA = "", ""
 	p.Confirmation = digest(struct {
 		State                            string
@@ -465,7 +444,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 		Absence                          HumanOwnerRecoveryObservation
 		LivenessMethod                   string
 		Remaining                        []int
-	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, p.DestinationWorkspaceID, p.ProviderSession, in.InvokerPaneID, authority, liveness.Method, liveness.RemainingPIDs})
+	}{hash(state), in.ProviderExecutable, in.ControlExecutable, p.ControlExecutable, p.DestinationWorkspaceID, p.ProviderSession, in.InvokerPaneID, authority, writers.liveness.Method, writers.liveness.RemainingPIDs})
 	p.State = "ready"
 	p.NextAction = WorkflowAction{"user", "Apply this checked resume to start the same " + p.Provider + " conversation in one new Herdr tab. This preview checks startup prerequisites; the new live runtime session must still be independently observed before any continuation."}
 	return p, nil

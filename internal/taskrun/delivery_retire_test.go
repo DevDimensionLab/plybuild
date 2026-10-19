@@ -13,6 +13,9 @@ import (
 // The bound pane exists until the coordinator closes it. Closing it makes the
 // pane and its managed agent positively absent in the synthetic Herdr.
 const retireOpenPaneStandin = `
+if cmd == ["pane", "list"] and model.get("retire_inventory_denied"):
+    print(json.dumps({"error":{"code":"permission_denied", "message":"inspection denied"}}), file=sys.stderr)
+    raise SystemExit(1)
 if cmd == ["pane", "close"]:
     if not model.get("close_ignored"):
         model["closed_transport"] = True
@@ -26,6 +29,38 @@ if not model.get("closed_transport") and cmd == ["pane", "get"]:
     print(json.dumps({"id":"fixture", "result":{"pane":pane}}))
     raise SystemExit(0)
 `
+
+func TestAR03RetirementDoesNotReplayDeniedHerdrInspection(t *testing.T) {
+	f, o := retireFixture(t)
+	o = retireStopFixture(t, f, o, DeliveryEffectNotStarted)
+	workflowTestModel(t, f.workflowFixture, map[string]any{"retire_inventory_denied": true})
+	retireAsCoordinator(&f)
+	f.D.HerdrTimeout = 350 * time.Millisecond
+	before, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryRetireInput{Observer: "AR03 fixture root", Reason: "Preserve denied inspection"})
+	if err == nil {
+		t.Fatal("denied inspection permitted retirement")
+	}
+	after, readErr := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if !equal(before.Result.Delivery.Events, after.Result.Delivery.Events) {
+		t.Fatal("blocked retirement changed history")
+	}
+	if c := retireQueueCurrent(t, f); c == nil || c.PreparationID != f.R.PreparationID {
+		t.Fatal("blocked retirement released queue")
+	}
+	if _, e := os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); e != nil {
+		t.Fatal("blocked retirement removed source")
+	}
+	if n := workflowTestCalls(t, f.workflowFixture, "pane list"); n != 1 {
+		t.Fatalf("retirement replayed denied Herdr inspection %d times; want one; error=%v", n, err)
+	}
+}
 
 func retireFixture(t *testing.T) (deliveryFixture, WorkflowRun) {
 	t.Helper()

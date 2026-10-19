@@ -401,7 +401,11 @@ func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time) 
 	quiet := 0
 	for automaticCleanupPending(s) {
 		finish := false
-		if _, e = observeAbsentDeliveryOwner(d, s); e == nil {
+		observed := (taskWriters{d, s}).herdr("")
+		if observed.state == taskWritersUnknown {
+			return deliveryReadbackHandled(d, root, id, observed.err)
+		}
+		if observed.state == taskWritersAbsent {
 			finish = true
 		} else {
 			a, e := workflowAgentRead(d, s, deadline)

@@ -472,3 +472,42 @@ func pathWithinTest(parent, path string) bool {
 	rel, err := filepath.Rel(parent, path)
 	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
+
+func TestAR03CleanupUnknownInspectionPreservesDeliveredIntegration(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	f, o := cleanupCLIFixture(t, binary)
+	_, reflog := cleanupOwnerIntegrates(t, binary, f, o)
+	cleanupOwnerLeaves(t, f)
+	workflowTestModel(t, f.workflowFixture, map[string]any{"retire_inventory_denied": true})
+	before, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	calls := workflowTestCalls(t, f.workflowFixture, "pane list")
+	blocked, _, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "5")
+	if err == nil || blocked.DeliveryStatus.FinalDelivery.State != "delivered" || blocked.Delivery.Phase != "closing" {
+		t.Fatalf("unknown inspection lost delivered state: %+v %v", blocked, err)
+	}
+	if n := workflowTestCalls(t, f.workflowFixture, "pane list") - calls; n != 1 {
+		t.Fatalf("replayed denied inspection %d times", n)
+	}
+	after, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal(before.Result.Delivery.Events, after.Result.Delivery.Events) {
+		t.Fatal("failed cleanup rewrote history")
+	}
+	if _, err = os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); err != nil {
+		t.Fatal("failed cleanup removed source")
+	}
+	if gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != reflog {
+		t.Fatal("failed cleanup repeated integration")
+	}
+	workflowTestModel(t, f.workflowFixture, map[string]any{"retire_inventory_denied": false})
+	done, output, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30")
+	if err != nil {
+		t.Fatalf("same closeout did not resume: %v\n%s", err, output)
+	}
+	assertCleanupRemoved(t, f, done, reflog)
+}

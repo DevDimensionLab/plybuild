@@ -18,6 +18,9 @@ import (
 // Modeled scenarios: the Herdr and provider stand-ins below are synthetic.
 // They prove Ply's own reservations and bindings, not an actual provider resume.
 const ownerResumeStandin = `
+if model.get("closed_transport") and cmd == ["agent", "get"] and model.get("managed_inspection_denied"):
+    print(json.dumps({"error":{"code":"permission_denied", "message":"inspection denied"}}), file=sys.stderr)
+    raise SystemExit(1)
 if model.get("closed_transport") and cmd == ["pane", "get"] and model.get("inspection_denied"):
     print(json.dumps({"id":"fixture", "error":{"code":"permission_denied", "message":"inspection denied"}}), file=sys.stderr)
     raise SystemExit(1)

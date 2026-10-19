@@ -88,20 +88,8 @@ func automaticCloseoutKeeps(s workflowState) (bool, error) {
 // for every owner the local processes in the source or naming its session.
 // ownerPresent reports that the bound interactive owner itself remains.
 func automaticOwnerLeft(d Dependencies, s workflowState) (ownerPresent bool, err error) {
-	if !headlessRun(s.Request) {
-		if _, e := observeAbsentDeliveryOwner(d, s); e != nil {
-			return true, workflowError(4, "owner_active: the released owner has not left the Task worktree ("+e.Error()+")")
-		}
-	}
-	transcript, _ := deliveryProviderSession(s)
-	observed, e := observeWriterLiveness(d, s, transcript, 0)
-	if e != nil {
-		return false, workflowError(4, "owner_unknown: local Task writer liveness is unknown: "+e.Error())
-	}
-	if len(observed.RemainingPIDs) > 0 {
-		return false, workflowError(4, fmt.Sprintf("owner_active: local Task writer processes remain %v", observed.RemainingPIDs))
-	}
-	return false, nil
+	observed := (taskWriters{d, s}).cleanup()
+	return observed.herdrPresent, observed.err
 }
 
 // automaticCleanupPending selects an interactive automatic delivery whose

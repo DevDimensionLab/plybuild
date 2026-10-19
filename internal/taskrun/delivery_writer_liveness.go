@@ -135,7 +135,7 @@ func observeWriterLiveness(d Dependencies, s workflowState, transcript string, i
 	if observe == nil {
 		observe = systemLocalProcesses
 	}
-	table, err := observe(s.Result.Transport.AgentSessionID, transcript)
+	table, err := observe(deliveryOwnerSession(s), transcript)
 	if err != nil {
 		return out, err
 	}
@@ -145,9 +145,22 @@ func observeWriterLiveness(d Dependencies, s workflowState, transcript string, i
 	self := os.Getpid()
 	parent := map[int]int{}
 	children := map[int][]int{}
+	plainInvoker := false
 	for _, p := range table {
+		if p.PID <= 0 || p.ParentPID < 0 {
+			return out, errors.New("local process inspection returned an invalid identity")
+		}
+		if _, exists := parent[p.PID]; exists {
+			return out, errors.New("local process inspection returned duplicate identities")
+		}
 		parent[p.PID] = p.ParentPID
 		children[p.ParentPID] = append(children[p.ParentPID], p.PID)
+		if p.PID == invokerShell {
+			plainInvoker = p.Session == ""
+		}
+	}
+	if _, ok := parent[self]; !ok {
+		return out, errors.New("local process inspection is incomplete: observing process is missing")
 	}
 	excluded := map[int]bool{}
 	queue := []int{self}
@@ -160,7 +173,7 @@ func observeWriterLiveness(d Dependencies, s workflowState, transcript string, i
 		excluded[pid] = true
 		queue = append(queue, children[pid]...)
 	}
-	if invokerShell > 0 && parent[self] == invokerShell {
+	if invokerShell > 0 && plainInvoker && parent[self] == invokerShell {
 		excluded[invokerShell] = true
 	}
 	for _, p := range table {
