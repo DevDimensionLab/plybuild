@@ -58,6 +58,11 @@ func RunAction(r Run) Action {
 		}
 		return a
 	}
+	// A later reviewer/provider wait is current; confirmed answer use is
+	// history. An unresolved answer outcome still requires inspection.
+	if w.Phase == "waiting" && w.RetryNotBefore != "" && (w.Reason == "" || wait) && (r.Answer == nil || r.Answer.State == "continuation_completed") {
+		return Action{"worker_wait", "The same Run waits until " + w.RetryNotBefore + "; continuing still requires confirmed attempt completion."}
+	}
 	if r.Answer != nil {
 		return answerAction(r)
 	}
@@ -67,10 +72,6 @@ func RunAction(r Run) Action {
 	case "running":
 		if w.Reason == "" && w.RetryNotBefore == "" {
 			return Action{"worker", "Observe the same Run; cached worker state does not attest provider liveness or attempt completion."}
-		}
-	case "waiting":
-		if w.RetryNotBefore != "" && (w.Reason == "" || wait) {
-			return Action{"worker_wait", "The same Run waits until " + w.RetryNotBefore + "; continuing still requires confirmed attempt completion."}
 		}
 	}
 	return a

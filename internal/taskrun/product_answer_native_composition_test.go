@@ -66,7 +66,11 @@ func TestSL01NativeSingleAttemptZeroRetryAnswer(t *testing.T) {
 	sl01NativeAnswerJourney(t, 1, 0, true)
 }
 
-func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) {
+func TestAR01ConfirmedAnswerKeepsReviewerProviderWait(t *testing.T) {
+	sl01NativeAnswerJourney(t, 3, 2, false, true)
+}
+
+func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool, reviewerWait ...bool) {
 	var m weekrun.Manager
 	var n *sl01NativeParent
 	var b weekrun.Binding
@@ -408,6 +412,44 @@ func sl01NativeAnswerJourney(t *testing.T, attempts, retries int, capture bool) 
 		asked(t, "answered", "continuation_completed", p.Request.RequestID)
 	})
 	t.Run("missing_answer_blocks_reviewer", func(t *testing.T) { f.AssertMissingAnswerBlocksReviewer(t) })
+	if len(reviewerWait) != 0 && reviewerWait[0] {
+		t.Run("reviewer_usage_limit_after_confirmed_answer", func(t *testing.T) {
+			// The owned stand-in exits with a real usage-limit event stream.
+			// Its completed attempt reaches the normal controller retry path.
+			if e := os.WriteFile(filepath.Join(filepath.Dir(f.Turns), "usage-limit-role"), []byte("reviewer"), 0600); e != nil {
+				t.Fatal(e)
+			}
+			f.Step(t)      // reserve and execute the owned reviewer attempt
+			o := f.Step(t) // consume its observed provider failure
+			reset := o.Worker.RetryNotBefore
+			if o.Worker.Phase != "waiting" || reset == "" || o.Worker.LastProviderFailure == "" {
+				t.Fatalf("fixture did not reach the provider wait: %+v", o.Worker)
+			}
+			if o.NextAction.Actor != "worker_wait" || !strings.Contains(o.NextAction.Message, reset) {
+				t.Errorf("ShowWorker hid the current provider wait behind answer history: %+v; reset %s", o.NextAction, reset)
+			}
+			var public taskrun.WorkflowRun
+			if cli(t, &public, "workflow", "worker", "show", f.RunID) && public.NextAction != o.NextAction {
+				t.Errorf("public worker show disagrees on the provider wait: %+v / %+v", public.NextAction, o.NextAction)
+			}
+			shown, e := m.Show(f.Root, b.ID) // no Tick has projected this wait yet
+			if e != nil || shown.Phase != "waiting" || !strings.Contains(shown.NextAction, "worker_wait") || !strings.Contains(shown.NextAction, reset) {
+				t.Errorf("Week Show hid the current provider wait: %s %q; reset %s: %v", shown.Phase, shown.NextAction, reset, e)
+			}
+			week(t, "waiting", "running", false)
+			if !strings.Contains(state.NextAction, "worker_wait") || !strings.Contains(state.NextAction, reset) {
+				t.Errorf("Week Tick hid the current provider wait: %q; reset %s", state.NextAction, reset)
+			}
+			if _, e := m.Control(f.Root, b.ID, "pause"); e != nil {
+				t.Fatal(e)
+			}
+			if e := m.Tick(b, dir, &state); e != nil {
+				t.Fatal(e)
+			}
+			next(t, "worker", "pause requested", "safe boundary")
+		})
+		return
+	}
 	f.Step(t) // actual reserved reviewer intent and owned stand-in
 	t.Run("reviewer_intent_binds_selected_answer", func(t *testing.T) { f.AssertReviewerChoice(t) })
 	if f.TurnCount(t) != 3 {
