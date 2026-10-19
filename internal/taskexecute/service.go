@@ -337,7 +337,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	if intent.RequestKey != "" {
 		key = intent.RequestKey
 	}
-	ownerClaim, startSurface, localInstall := intent.Runtime.Runtime.Provider+" delivery owner", "human_authorized_herdr", true
+	ownerClaim, startSurface, localInstall := intent.Runtime.Runtime.Provider+" delivery owner", "human_authorized_herdr", intent.Goal.Goal.Executor.LocalInstallAllowed()
 	if input.Worker != nil {
 		ownerClaim, startSurface, localInstall = "Ply worker", "human_authorized_worker", false
 	}

@@ -46,6 +46,10 @@ func launcherFixtureForProvider(t *testing.T, provider string, delivery ...works
 }
 
 func launcherFixtureWithCLI(t *testing.T, provider, binary string, delivery ...workspace.DeliveryAgreement) (taskrun.Dependencies, Input, string, string) {
+	return launcherFixtureWithInstall(t, provider, binary, nil, delivery...)
+}
+
+func launcherFixtureWithInstall(t *testing.T, provider, binary string, install *bool, delivery ...workspace.DeliveryAgreement) (taskrun.Dependencies, Input, string, string) {
 	t.Helper()
 	root := physicalTemp(t)
 	repo, epic := filepath.Join(root, "main"), filepath.Join(root, "epic")
@@ -141,6 +145,9 @@ func launcherFixtureWithCLI(t *testing.T, provider, binary string, delivery ...w
 		draft["delivery"] = a
 	}
 	file := filepath.Join(root, "goal.json")
+	if install != nil {
+		draft["executor"].(map[string]any)["allow_local_install"] = *install
+	}
 	fixtureJSON(t, file, draft)
 	var s workspace.TaskContentMutationResult
 	if binary != "" {

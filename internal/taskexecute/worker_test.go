@@ -15,7 +15,8 @@ func TestExecuteHeadlessCheckAndRepeatPreserveOneNativeRun(t *testing.T) {
 		t.Skip("worker requires macOS runtime adapter")
 	}
 	a := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "synthetic worker test", TimeoutSeconds: 30}}
-	d, in, root, _ := launcherFixtureForProvider(t, "codex", a)
+	allowInstall := true
+	d, in, root, _ := launcherFixtureWithInstall(t, "codex", "", &allowInstall, a)
 	t.Setenv("HERDR_ENV", "")
 	t.Setenv("HERDR_WORKSPACE_ID", "")
 	in.Runtime.HerdrWorkspace = ""

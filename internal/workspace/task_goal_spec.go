@@ -18,6 +18,26 @@ type TaskExecutorAssignment struct {
 	Provider *string `yaml:"provider" json:"provider"`
 	Model    *string `yaml:"model" json:"model"`
 	Effort   *string `yaml:"effort" json:"effort"`
+	// Preserve omission in historical canonical execution requests. Only an
+	// explicit true in a newly selected Goal grants the owner installation.
+	AllowLocalInstall *bool `yaml:"allow_local_install,omitempty" json:"allow_local_install,omitempty"`
+}
+
+func (a TaskExecutorAssignment) LocalInstallAllowed() bool {
+	return a.AllowLocalInstall != nil && *a.AllowLocalInstall
+}
+
+func taskGoalExecutorRule(v canonicaljson.Value) error {
+	fields := map[string]contentRule{"provider": contentNullable(contentEnum("codex", "claude")), "model": contentNullable(contentText(256)), "effort": contentNullable(contentText(128))}
+	if _, present := contentFields(v)["allow_local_install"]; present {
+		fields["allow_local_install"] = func(v canonicaljson.Value) error {
+			if _, ok := v.(bool); !ok {
+				return fmt.Errorf("must be a boolean")
+			}
+			return nil
+		}
+	}
+	return contentExact(fields)(v)
 }
 
 type TaskGoalRequirement struct {
@@ -62,7 +82,7 @@ func taskGoalSpecSchema(published bool) map[string]contentRule {
 	s["requirements"] = contentList(128, contentExact(map[string]contentRule{"id": contentKey, "acceptance": contentText(2000)}), contentIDKey, false)
 	s["design"] = contentPartRefs()
 	s["constraints"] = contentStringList(128, contentText(2000))
-	s["executor"] = contentExact(map[string]contentRule{"provider": contentNullable(contentEnum("codex", "claude")), "model": contentNullable(contentText(256)), "effort": contentNullable(contentText(128))})
+	s["executor"] = taskGoalExecutorRule
 	doc := contentDocumentInputRule()
 	if published {
 		doc = contentDescriptorRule()

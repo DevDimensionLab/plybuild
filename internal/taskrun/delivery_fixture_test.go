@@ -68,7 +68,7 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 		"documents": []any{map[string]any{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": hash(contents), "size_bytes": len(contents), "media_type": "text/markdown", "git_provenance": nil}}},
 		"design":    []any{map[string]any{"document_id": "design", "section": nil}}, "constraints": []string{"Local isolated fixture only."},
 		"requirements": []any{map[string]any{"id": "behavior", "acceptance": "The actual acceptance entrypoint observes the fixture behavior."}},
-		"executor":     map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium"},
+		"executor":     map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium", "allow_local_install": true},
 	}
 	if option.Agreement != nil {
 		a := *option.Agreement

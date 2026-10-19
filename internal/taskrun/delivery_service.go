@@ -8,9 +8,28 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, error) {
+	// This is a creation check, deliberately outside historical request
+	// validation: old frozen requests retain their original authority and bytes.
+	if in.Delivery.AllowLocalInstall {
+		raw, err := workflowBound(in.Delivery.Goal, 4<<20)
+		if err != nil {
+			return WorkflowRequest{}, err
+		}
+		var goal struct {
+			ContractKind string                           `json:"contract_kind"`
+			Executor     workspace.TaskExecutorAssignment `json:"executor"`
+		}
+		if err := json.Unmarshal(raw, &goal); err != nil {
+			return WorkflowRequest{}, err
+		}
+		if goal.ContractKind == "goal" && !goal.Executor.LocalInstallAllowed() {
+			return WorkflowRequest{}, workflowError(4, "local installation was not selected by the frozen Goal executor")
+		}
+	}
 	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
 	r.ClaudeProjectTrust = in.ClaudeProjectTrust

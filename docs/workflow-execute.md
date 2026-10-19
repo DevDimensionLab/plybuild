@@ -72,7 +72,7 @@ snapshot fields. Its product fields are:
 | `documents`, `design` | Preserved design documents and `{document_id, section}` references |
 | `requirements` | Sorted unique `{id, acceptance}` entries describing observable results |
 | `constraints` | Sorted unique outcome and effect boundaries |
-| `executor` | Explicit nullable `provider`, `model`, `effort` choices |
+| `executor` | Explicit nullable `provider`, `model`, `effort` choices; optional boolean `allow_local_install` |
 | `delivery` (optional) | Versioned PR, local Epic, or explicit local branch agreement; see [Delivery](workflow-delivery.md) |
 | `change_reason` | Why this goal revision was published |
 
@@ -80,6 +80,30 @@ A goal has at least one design reference and requirement. It has no
 `implementation_basis`, detailed technical parts, completed-test claims, or human
 solution selection. The document store preserves actual bytes and digests using
 the existing file/snapshot source rules. Revised goals get new immutable revisions.
+
+New interactive executions grant the owner local installation only when the
+selected Goal includes `"allow_local_install": true` in `executor`. Omission or
+false reserves installation outside the owner mandate. For example:
+
+```json
+{"provider":"codex","model":null,"effort":null,"allow_local_install":false}
+```
+
+Choose this field from the human's actual scope before recording the Goal.
+Delivery mode, provider choice and prose constraints do not grant installation.
+The frozen selection supplies the generated mandate and initial owner prompt;
+draft/request creation rejects an option that widens it. Headless workers still
+cannot install, even when the Goal allows an interactive owner to do so. Separate
+reviewers retain their review-only role. Existing frozen requests and contracts
+keep their original bytes and authority; a revised Goal does not amend an old Run.
+
+`workflow execute verify` snapshots and runs the acceptance shell script, captures
+its output and qualifies candidate evidence. It does not itself perform ordinary
+installation or integration. Interactive automatic acceptance supplies an isolated
+HOME/TMPDIR and a restricted environment, but does not impose an OS sandbox: the
+script can exercise the caller's filesystem and process rights. Review its actual
+effects against the mandate. The installation field is authority, not a shell
+containment mechanism. Worker verification retains its separate sandbox policy.
 
 **WorkspaceTaskQueueDraft@2** retains `publication_key`, target IDs,
 `expected_revision`, `entries` and `registry_upgrade`. It adds `recorder` instead

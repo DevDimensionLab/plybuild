@@ -216,6 +216,9 @@ func TestFS01ReviewRoundsFromExistingTaskToDelivery(t *testing.T) {
 	if p := prompts[len(prompts)-1]; p[2] != "w-fixture:r1" || !strings.Contains(p[3], round.Brief.Locator) {
 		t.Fatalf("reviewer was not sent its brief: %v", prompts)
 	}
+	if p := prompts[len(prompts)-1][3]; !strings.Contains(p, "Review only;") || strings.Contains(p, "Local installation allowed:") {
+		t.Fatalf("reviewer inherited the installation-capable owner's assignment: %s", p)
+	}
 	brief, err := os.ReadFile(round.Brief.Locator)
 	if err != nil {
 		t.Fatal(err)

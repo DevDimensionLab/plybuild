@@ -1,6 +1,7 @@
 package workflowhandoff
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -228,6 +229,22 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		}
 		if eval.Basis == nil {
 			return fmt.Errorf("execution Spec basis missing")
+		}
+		// A caller's draft option may restrict, but cannot widen, installation
+		// selected by the frozen Goal. Legacy non-Goal Specs keep their contract.
+		if objectString(eval.Spec, "contract_kind") == "execution" && allowInstall {
+			request, _ := objectMember(eval.Spec, "execution_request")
+			raw, e := canonicaljson.Marshal(request)
+			if e != nil {
+				return e
+			}
+			var execution workspace.TaskGoalExecutePreview
+			if e = json.Unmarshal(raw, &execution); e != nil {
+				return e
+			}
+			if !execution.Goal.Executor.LocalInstallAllowed() {
+				return fmt.Errorf("local installation was not selected by the frozen Goal executor")
+			}
 		}
 		agreement, e := workspace.DeliveryAgreementFromSpec(eval.Spec)
 		if e != nil {
