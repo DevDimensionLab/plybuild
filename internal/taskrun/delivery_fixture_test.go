@@ -26,6 +26,7 @@ type deliveryFixtureOptions struct {
 	ParentRef         string
 	Root              string
 	BeforePrepare     func(workspace.Dependencies, string, string, workspace.TaskGoalRef)
+	InformativeReport func(string) []byte
 }
 
 func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtureOptions) deliveryFixture {
@@ -73,6 +74,15 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	}
 	if option.AllowLocalInstall {
 		input["executor"].(map[string]any)["allow_local_install"] = true
+	}
+	if option.InformativeReport != nil {
+		report := option.InformativeReport(root)
+		path := filepath.Join(root, "historical-report.txt")
+		if e = os.WriteFile(path, report, 0600); e != nil {
+			t.Fatal(e)
+		}
+		input["documents"] = append(input["documents"].([]any), map[string]any{"id": "historical-report", "source": map[string]any{"kind": "file", "locator": path, "sha256": hash(report), "size_bytes": len(report), "media_type": "text/plain", "git_provenance": nil}})
+		input["design"] = append(input["design"].([]any), map[string]any{"document_id": "historical-report", "section": nil})
 	}
 	if option.Agreement != nil {
 		a := *option.Agreement

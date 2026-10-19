@@ -111,49 +111,95 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 		return nil, err
 	}
 	entries := []closeoutEvidence{}
-	seen := map[string]string{}
+	seen := map[string]closeoutEvidence{}
+	expanded := map[string]bool{}
+	type inputReference struct{ id, path, sha string }
+	handoffInputs := map[string]map[inputReference]string{}
+	// Receipts echo input identity without its type. Resolve only those echoes
+	// after native declarations have been read, regardless of traversal order.
+	type inputObservation struct {
+		handoff string
+		inputs  any
+	}
+	observations := []inputObservation{}
 	total := 0
-	var add func(string, string, string, int64) error
-	var walk func(any) error
-	add = func(role, path, sha string, size int64) error {
-		if previous, ok := seen[path]; ok {
-			if previous != sha {
+	var add func(string, string, string, int64, bool) error
+	var walk func(any, map[inputReference]string) error
+	add = func(role, path, sha string, size int64, follow bool) error {
+		e, ok := seen[path]
+		if ok {
+			if e.sha != sha {
 				return fmt.Errorf("conflicting evidence references: %s", path)
 			}
-			return nil
-		}
-		if len(seen) >= 4096 {
-			return fmt.Errorf("retention graph exceeds 4096 objects")
-		}
-		b, err := readCloseoutEvidence(path, sha)
-		if err != nil {
-			if preserved, ok := snapshots[path]; ok && preserved.sha == sha {
-				b, err = preserved.bytes, nil
+		} else {
+			if len(seen) >= 4096 {
+				return fmt.Errorf("retention graph exceeds 4096 objects")
 			}
+			b, err := readCloseoutEvidence(path, sha)
+			if err != nil {
+				if preserved, ok := snapshots[path]; ok && preserved.sha == sha {
+					b, err = preserved.bytes, nil
+				}
+			}
+			if err != nil {
+				return err
+			}
+			total += len(b)
+			if total > 256<<20 {
+				return fmt.Errorf("retained evidence exceeds 256 MiB")
+			}
+			e = closeoutEvidence{role, path, sha, b}
+			seen[path] = e
+			entries = append(entries, e)
 		}
-		if err != nil {
-			return err
-		}
-		if size >= 0 && int64(len(b)) != size {
+		if size >= 0 && int64(len(e.bytes)) != size {
 			return fmt.Errorf("evidence size differs: %s", path)
 		}
-		total += len(b)
-		if total > 256<<20 {
-			return fmt.Errorf("retained evidence exceeds 256 MiB")
+		// A document edge preserves data without interpreting its contents as
+		// native control. A separate required evidence edge must still expand
+		// the same bytes, even if the document was encountered first.
+		if !follow || expanded[path] {
+			return nil
 		}
-		seen[path] = sha
-		entries = append(entries, closeoutEvidence{role, path, sha, b})
+		expanded[path] = true
 		var value any
-		if json.Unmarshal(b, &value) == nil {
-			return walk(value)
+		if json.Unmarshal(e.bytes, &value) == nil {
+			if document, ok := value.(map[string]any); ok {
+				switch document["kind"] {
+				case "ply.workflow.handoff":
+					inputs := map[inputReference]string{}
+					declared, _ := document["inputs"].([]any)
+					for _, v := range declared {
+						in, ok := v.(map[string]any)
+						if !ok {
+							continue
+						}
+						id, _ := in["id"].(string)
+						path, _ := in["locator"].(string)
+						sha, _ := in["sha256"].(string)
+						media, _ := in["media_type"].(string)
+						inputs[inputReference{id, path, sha}] = media
+					}
+					handoffInputs[e.sha] = inputs
+				case "ply.workflow.start-receipt":
+					// Native observations omit the type. Only the exact bound
+					// handoff input can supply it; arbitrary native refs cannot.
+					binding, _ := document["binding"].(map[string]any)
+					sha, _ := binding["handoff_sha256"].(string)
+					observations = append(observations, inputObservation{sha, document["observed_inputs"]})
+					// Only the decoded copy changes. Signed receipt bytes remain exact.
+					delete(document, "observed_inputs")
+				}
+			}
+			return walk(value, nil)
 		}
 		return nil
 	}
-	walk = func(value any) error {
+	walk = func(value any, observed map[inputReference]string) error {
 		switch v := value.(type) {
 		case []any:
 			for _, member := range v {
-				if err := walk(member); err != nil {
+				if err := walk(member, observed); err != nil {
 					return err
 				}
 			}
@@ -178,7 +224,27 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 				}
 				sha, _ := v[shaKey].(string)
 				if shaKey != "" && digestPattern.MatchString(sha) {
-					if err := add("referenced_evidence", path, sha, -1); err != nil {
+					// Document media types are bound by the enclosing native
+					// descriptor. JSON-looking report bytes are still document data.
+					media, _ := v["media_type"].(string)
+					follow := key != "locator" || (media != "text/plain" && media != "text/markdown")
+					if key == "locator" {
+						id, _ := v["id"].(string)
+						if observed != nil {
+							boundMedia, ok := observed[inputReference{id, path, sha}]
+							if !ok || (media != "" && media != boundMedia) {
+								return fmt.Errorf("observed input differs from its bound handoff: %s", path)
+							}
+							follow = boundMedia != "text/plain" && boundMedia != "text/markdown"
+						}
+					}
+					size := int64(-1)
+					if key == "locator" {
+						if declared, ok := v["size_bytes"].(float64); ok {
+							size = int64(declared)
+						}
+					}
+					if err := add("referenced_evidence", path, sha, size, follow); err != nil {
 						return err
 					}
 				}
@@ -186,7 +252,7 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 			// A bare manifest_sha256 field is informative: it names no store.
 			// Native Spec manifests are required from the TaskResult basis below.
 			for _, key := range keys {
-				if err := walk(v[key]); err != nil {
+				if err := walk(v[key], nil); err != nil {
 					return err
 				}
 			}
@@ -196,12 +262,12 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 	for _, e := range []struct{ role, path, sha string }{
 		{"handoff", tr.HandoffLocator, tr.HandoffSHA256}, {"acceptance", tr.StartReceiptLocator, tr.StartReceiptSHA256}, {"terminal", tr.TerminalResultLocator, tr.TerminalResultSHA256}, {"ownership", in.Ownership.EvidenceLocator, in.Ownership.EvidenceSHA256},
 	} {
-		if err := add(e.role, e.path, e.sha, -1); err != nil {
+		if err := add(e.role, e.path, e.sha, -1, true); err != nil {
 			return nil, err
 		}
 	}
 	for _, a := range tr.Artifacts {
-		if err := add(a.Role, a.Locator, a.SHA256, a.SizeBytes); err != nil {
+		if err := add(a.Role, a.Locator, a.SHA256, a.SizeBytes, true); err != nil {
 			return nil, err
 		}
 	}
@@ -210,7 +276,7 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 			continue
 		}
 		for _, a := range qa.Evidence {
-			if err := add("human_qa", a.Locator, a.SHA256, a.SizeBytes); err != nil {
+			if err := add("human_qa", a.Locator, a.SHA256, a.SizeBytes, true); err != nil {
 				return nil, err
 			}
 		}
@@ -220,13 +286,23 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 			continue
 		}
 		for _, sha := range []string{b.Basis.Problem.ManifestSHA256, b.Basis.Spec.ManifestSHA256, b.Basis.Assessment.ManifestSHA256, b.Basis.Selection.ManifestSHA256} {
-			if err := add("spec_manifest", taskContentPath(root, "manifests", sha), sha, -1); err != nil {
+			if err := add("spec_manifest", taskContentPath(root, "manifests", sha), sha, -1, true); err != nil {
 				return nil, err
 			}
 		}
 	}
 	if in.ObservedPR != nil {
-		if err := add("pr_integration", in.ObservedPR.EvidenceLocator, in.ObservedPR.EvidenceSHA256, -1); err != nil {
+		if err := add("pr_integration", in.ObservedPR.EvidenceLocator, in.ObservedPR.EvidenceSHA256, -1, true); err != nil {
+			return nil, err
+		}
+	}
+	for i := 0; i < len(observations); i++ {
+		observation := observations[i]
+		inputs, ok := handoffInputs[observation.handoff]
+		if !ok {
+			return nil, fmt.Errorf("observed inputs have no retained hash-bound handoff")
+		}
+		if err := walk(observation.inputs, inputs); err != nil {
 			return nil, err
 		}
 	}
