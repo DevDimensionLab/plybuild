@@ -1138,3 +1138,139 @@ func TestOwnerResumeReadsPreLivenessGenerationAsHistoryOnly(t *testing.T) {
 		t.Fatalf("historical generation stood in for the liveness gate: %+v %v", next, err)
 	}
 }
+
+// ownerResumeCloseResumedTab models the human closing the resumed owner's tab
+// after it worked; Herdr then reports neither its pane nor any Task writer.
+func ownerResumeCloseResumedTab(t *testing.T, f ownerResumeFixture, o WorkflowRun) {
+	t.Helper()
+	workflowTestModel(t, f.workflowFixture, map[string]any{"closed_pane": o.Transport.PaneID, "inventory": []any{}, "agent_status": "idle"})
+}
+
+func ownerResumeApplyNext(t *testing.T, f ownerResumeFixture, generation int) (WorkflowRun, DeliveryOwnerResumePreview) {
+	t.Helper()
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil || p.State != "ready" || p.Generation != generation {
+		t.Fatalf("generation %d not offered: %+v %v", generation, p, err)
+	}
+	ownerResumePreserve(t, f, p)
+	o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+	if err != nil || o.OwnerResume == nil || o.OwnerResume.Generation != generation || o.OwnerResume.Step != "prompt_sent" {
+		t.Fatalf("generation %d did not resume: %+v %v", generation, o.OwnerResume, err)
+	}
+	return o, p
+}
+
+// r005-f01: the same Task resumes twice in sequence. Each generation gets its
+// own actual owner callback through its own control; the earlier callback stays
+// history, the earlier control is closed, and show and lookup stay readable.
+func TestOwnerResumeTwiceEachWithOwnCallback(t *testing.T) {
+	binary := deliveryCLIBinary(t)
+	t.Setenv("HERDR_WORKSPACE_ID", "")
+	f := newOwnerResumeFixture(t, "claude", false)
+	o, p1 := ownerResumeApplyNext(t, f, 1)
+	first := f.D
+	first.Executable = func() (string, error) { return p1.ControlExecutable.Path, nil }
+	o = ownerResumeReport(t, f.deliveryFixture, o, first, "gen1-callback")
+	ownerResumeCloseResumedTab(t, f, o)
+	o, p2 := ownerResumeApplyNext(t, f, 2)
+	o, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil || o.OwnerResume.OwnerCallback != "awaiting" || o.OwnerResume.CallbackEventID != "" || o.OwnerResume.PreviousCallbackEventID != "gen1-callback" {
+		t.Fatalf("second generation inherited the first callback: %+v %v", o.OwnerResume, err)
+	}
+	r := DeliveryReport{Envelope: deliveryEnv("delivery-report"), RunID: o.RunID, RequestSHA256: o.RequestSHA256, SessionID: o.SessionID, EventID: "stale-gen1-control", PreviousEventSHA256: o.Delivery.LastEventSHA256, Phase: "working", Summary: "Late", Meaning: "Callback from the replaced first-generation control.", Evidence: []FileBinding{}, VerifierResults: []DeliveryVerifierResult{}}
+	if _, err = WorkflowDeliveryReport(first, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "stale-gen1.json", r)); err == nil {
+		t.Fatal("first-generation control still delivers callbacks")
+	}
+	second := f.D
+	second.Executable = func() (string, error) { return p2.ControlExecutable.Path, nil }
+	o = ownerResumeReport(t, f.deliveryFixture, o, second, "gen2-callback")
+	if o.OwnerResume.OwnerCallback != "observed" || o.OwnerResume.CallbackEventID != "gen2-callback" {
+		t.Fatalf("second generation's own callback not recorded: %+v", o.OwnerResume)
+	}
+	check, output, err := ownerResumeCLI(binary, f.Prepared.Preparation.Preparation.Plan.WorktreePath, "--resume", "--check", "--format", "json")
+	if err != nil || deliveryCLIString(t, check, "state") != "live_owner" {
+		t.Fatalf("lookup after two resumes failed: %v\n%s", err, output)
+	}
+}
+
+// r005-f01: e3a25d3 left a reserved, unsent generation 2 carrying generation
+// 1's callback marker. Exactly that inherited marker, proven by generation 2's
+// immutable before-state, reads as history without start authority; the next
+// generation is offered only after absence and liveness are reconciled again.
+func TestOwnerResumeReadsInheritedCallbackOfInterruptedGeneration(t *testing.T) {
+	f := newOwnerResumeFixture(t, "claude", false)
+	o, p1 := ownerResumeApplyNext(t, f, 1)
+	first := f.D
+	first.Executable = func() (string, error) { return p1.ControlExecutable.Path, nil }
+	o = ownerResumeReport(t, f.deliveryFixture, o, first, "gen1-callback")
+	ownerResumeCloseResumedTab(t, f, o)
+	p2, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ownerResumePreserve(t, f, p2)
+	f.D.Fault = func(point string) error {
+		if point == "owner_resume_before_tab_send" {
+			return os.ErrDeadlineExceeded
+		}
+		return nil
+	}
+	if _, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p2.Confirmation); err == nil {
+		t.Fatal("fault did not interrupt before the tab send")
+	}
+	f.D.Fault = nil
+	tabs := workflowTestCalls(t, f.workflowFixture, "tab create")
+	// Reproduce the e3a25d3 state bytes in this disposable fixture only.
+	statePath := filepath.Join(o.Paths.RunRoot, "state.json")
+	raw, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var state map[string]any
+	if err = json.Unmarshal(raw, &state); err != nil {
+		t.Fatal(err)
+	}
+	state["owner_resume_callback"] = "gen1-callback"
+	rewritten, err := Canonical(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(statePath, rewritten, 0600); err != nil {
+		t.Fatal(err)
+	}
+	o, err = WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	if err != nil || o.OwnerResume.Generation != 2 || o.OwnerResume.Step != "tab_create_attempted" || o.OwnerResume.OwnerCallback != "not_ready" || o.OwnerResume.CallbackEventID != "" || o.OwnerResume.PreviousCallbackEventID != "gen1-callback" {
+		t.Fatalf("inherited marker is not readable history: %+v %v", o.OwnerResume, err)
+	}
+	// Only the exact inherited marker is history; any other value is invalid.
+	state["owner_resume_callback"] = "invented-callback"
+	bad, _ := Canonical(state)
+	if err = os.WriteFile(statePath, bad, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID); err == nil {
+		t.Fatal("an arbitrary callback marker passed integrity")
+	}
+	if err = os.WriteFile(statePath, rewritten, 0600); err != nil {
+		t.Fatal(err)
+	}
+	// The next generation still requires reconciled liveness.
+	task := f.Prepared.Preparation.Preparation.Plan.WorktreePath
+	f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) {
+		return []LocalProcess{{PID: 1, CWD: "/"}, {PID: 6262, ParentPID: 1, CWD: task}, {PID: os.Getpid(), ParentPID: 1, CWD: "/elsewhere"}}, nil
+	}
+	if blocked, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In); err == nil || blocked.Reason != "writer_process_alive" {
+		t.Fatalf("inherited history granted a start: %+v %v", blocked, err)
+	}
+	f.D.LocalProcesses = nil
+	o, p3 := ownerResumeApplyNext(t, f, 3)
+	if workflowTestCalls(t, f.workflowFixture, "tab create") != tabs+1 {
+		t.Fatal("the interrupted generation's tab was replayed")
+	}
+	third := f.D
+	third.Executable = func() (string, error) { return p3.ControlExecutable.Path, nil }
+	o = ownerResumeReport(t, f.deliveryFixture, o, third, "gen3-callback")
+	if o.OwnerResume.OwnerCallback != "observed" || o.OwnerResume.CallbackEventID != "gen3-callback" {
+		t.Fatalf("generation 3 callback not recorded: %+v", o.OwnerResume)
+	}
+}

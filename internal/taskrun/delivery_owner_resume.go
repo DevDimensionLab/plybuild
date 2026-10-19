@@ -66,17 +66,18 @@ type TaskWriterLiveness struct {
 }
 
 type DeliveryOwnerResumeReadback struct {
-	Generation         int               `json:"generation"`
-	Step               string            `json:"step"`
-	NativeSessionID    string            `json:"native_session_id"`
-	PreviousTransport  WorkflowTransport `json:"previous_transport"`
-	ProviderExecutable Executable        `json:"provider_executable"`
-	ControlExecutable  Executable        `json:"control_executable"`
-	SessionObserved    bool              `json:"session_observed"`
-	LivenessBasis      string            `json:"liveness_basis"`
-	OwnerCallback      string            `json:"owner_callback"`
-	CallbackEventID    string            `json:"callback_event_id,omitempty"`
-	Binding            FileBinding       `json:"binding"`
+	Generation              int               `json:"generation"`
+	Step                    string            `json:"step"`
+	NativeSessionID         string            `json:"native_session_id"`
+	PreviousTransport       WorkflowTransport `json:"previous_transport"`
+	ProviderExecutable      Executable        `json:"provider_executable"`
+	ControlExecutable       Executable        `json:"control_executable"`
+	SessionObserved         bool              `json:"session_observed"`
+	LivenessBasis           string            `json:"liveness_basis"`
+	OwnerCallback           string            `json:"owner_callback"`
+	CallbackEventID         string            `json:"callback_event_id,omitempty"`
+	PreviousCallbackEventID string            `json:"previous_callback_event_id,omitempty"`
+	Binding                 FileBinding       `json:"binding"`
 }
 
 type deliveryOwnerResumeRecord struct {
@@ -140,9 +141,6 @@ func workflowOwnerResumeRecord(s workflowState) (*deliveryOwnerResumeRecord, *wo
 	if n < 1 || n > 128 || s.OwnerResume.Locator != filepath.Join(dir, "resume.json") {
 		return nil, nil, workflowError(4, "owner resume generation or path differs")
 	}
-	if s.OwnerResumeCallback != "" && s.OwnerResumeStep != ownerResumePromptSent {
-		return nil, nil, workflowError(4, "owner resume callback precedes its continuation prompt")
-	}
 	switch s.OwnerResumeStep {
 	case ownerResumeTabAttempted, ownerResumeStartAttempted, ownerResumePromptAttempt, ownerResumePromptSent:
 	default:
@@ -169,6 +167,12 @@ func workflowOwnerResumeRecord(s workflowState) (*deliveryOwnerResumeRecord, *wo
 	}
 	if ownerResumeGeneration(old) != n-1 || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.RunID != s.Result.RunID || old.Result.Handoff != s.Result.Handoff || old.Result.Paths != s.Result.Paths || old.ContextSHA256 != s.ContextSHA256 || old.Result.Transport.AgentSessionID != r.NativeSessionID || !equal(old.Acceptance, s.Acceptance) || !equal(old.StartSHA256, s.StartSHA256) || deliveryTransportIdentity(old.Result.Transport) != deliveryTransportIdentity(r.PreviousTransport) || deliveryContinuationGeneration(old) != r.ContinuationGeneration {
 		return nil, nil, workflowError(4, "owner resume history changed Task, mandate, context, authority or session")
+	}
+	// A callback marker equal to the immutable before-state's is inherited
+	// history from an earlier generation (as e3a25d3 left it); it is never this
+	// generation's callback. Any other marker needs this generation's prompt.
+	if s.OwnerResumeCallback != "" && s.OwnerResumeCallback != old.OwnerResumeCallback && s.OwnerResumeStep != ownerResumePromptSent {
+		return nil, nil, workflowError(4, "owner resume callback precedes its continuation prompt")
 	}
 	return &r, &old, nil
 }
@@ -532,7 +536,8 @@ func WorkflowResumeOwner(d Dependencies, root string, in DeliveryOwnerResumeInpu
 		if err != nil {
 			return err
 		}
-		s.OwnerResume, s.OwnerResumeStep = &binding, ownerResumeTabAttempted
+		// The earlier generation's callback stays in the bound before-state.
+		s.OwnerResume, s.OwnerResumeStep, s.OwnerResumeCallback = &binding, ownerResumeTabAttempted, ""
 		if err = d.writeValue(filepath.Join(p.Directory, "tab-create-attempt.json"), map[string]any{"resume_sha256": binding.SHA256, "argv": workflowTabCreateArgv(s, p.DestinationWorkspaceID)}); err != nil {
 			return err
 		}
@@ -710,7 +715,11 @@ func ownerResumePrompt(s workflowState) (string, error) {
 // deliveryCallback, which requires the resumed control, exact context and the
 // same live session. Coordinator events and installed-reader reports never call it.
 func ownerResumeNoteCallback(s *workflowState, eventID string) {
-	if s.OwnerResume == nil || s.OwnerResumeCallback != "" {
+	if s.OwnerResume == nil {
+		return
+	}
+	_, old, err := workflowOwnerResumeRecord(*s)
+	if err != nil || s.OwnerResumeCallback != "" && s.OwnerResumeCallback != old.OwnerResumeCallback {
 		return
 	}
 	switch s.OwnerResumeStep {
@@ -725,11 +734,11 @@ func ownerResumeNoteCallback(s *workflowState, eventID string) {
 }
 
 func ownerResumeReadback(s workflowState) (*DeliveryOwnerResumeReadback, error) {
-	r, _, err := workflowOwnerResumeRecord(s)
+	r, old, err := workflowOwnerResumeRecord(s)
 	if err != nil || r == nil {
 		return nil, err
 	}
-	out := &DeliveryOwnerResumeReadback{Generation: r.Generation, Step: s.OwnerResumeStep, NativeSessionID: r.NativeSessionID, PreviousTransport: r.PreviousTransport, ProviderExecutable: r.ProviderExecutable, ControlExecutable: r.ControlExecutable, Binding: *s.OwnerResume, OwnerCallback: "not_ready"}
+	out := &DeliveryOwnerResumeReadback{PreviousCallbackEventID: old.OwnerResumeCallback, Generation: r.Generation, Step: s.OwnerResumeStep, NativeSessionID: r.NativeSessionID, PreviousTransport: r.PreviousTransport, ProviderExecutable: r.ProviderExecutable, ControlExecutable: r.ControlExecutable, Binding: *s.OwnerResume, OwnerCallback: "not_ready"}
 	out.SessionObserved = s.OwnerResumeStep == ownerResumePromptAttempt || s.OwnerResumeStep == ownerResumePromptSent
 	out.LivenessBasis = "not_recorded_before_reconciliation"
 	if r.Liveness != nil {
@@ -737,7 +746,7 @@ func ownerResumeReadback(s workflowState) (*DeliveryOwnerResumeReadback, error) 
 	}
 	if s.OwnerResumeStep == ownerResumePromptSent {
 		out.OwnerCallback = "awaiting"
-		if s.OwnerResumeCallback != "" {
+		if s.OwnerResumeCallback != "" && s.OwnerResumeCallback != old.OwnerResumeCallback {
 			out.OwnerCallback = "observed"
 			out.CallbackEventID = s.OwnerResumeCallback
 		}
