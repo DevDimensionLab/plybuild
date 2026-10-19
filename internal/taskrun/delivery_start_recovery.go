@@ -119,6 +119,9 @@ func workflowStartupGeneration(s workflowState) string {
 }
 
 func workflowDeliveryGuideDirectory(s workflowState) string {
+	if s.OwnerResume != nil {
+		return filepath.Join(filepath.Dir(s.OwnerResume.Locator), "delivery")
+	}
 	if s.Recovery != nil {
 		return filepath.Join(deliveryRecoveryDirectory(s), "delivery")
 	}
@@ -126,6 +129,12 @@ func workflowDeliveryGuideDirectory(s workflowState) string {
 }
 
 func workflowRecoveryRecord(s workflowState) (*deliveryStartRecoveryRecord, error) {
+	// A later owner resume replaces only the transport; startup recovery
+	// validates against the transport it bound, before any resume.
+	s, err := ownerResumeBase(s, -1)
+	if err != nil {
+		return nil, err
+	}
 	if s.Recovery == nil {
 		if s.Result.StartupRecovery != nil || s.RecoveryTransport != nil {
 			return nil, workflowError(4, "startup recovery readback has no bound record")
@@ -214,8 +223,18 @@ func workflowEffectiveRuntimeMode(s workflowState, policy bool) (Runtime, error)
 	if err != nil {
 		return r, err
 	}
-	if continuation != nil {
+	resume, _, err := workflowOwnerResumeRecord(s)
+	if err != nil {
+		return r, err
+	}
+	if continuation != nil && (resume == nil || continuation.Generation > resume.ContinuationGeneration) {
 		r.PlyExecutable = continuation.ControlExecutable
+	} else if resume != nil {
+		r.PlyExecutable = resume.ControlExecutable
+	}
+	if resume != nil {
+		// The resumed provider is the one Ply actually launched for this session.
+		r.Executable = resume.ProviderExecutable
 	}
 	return r, nil
 }

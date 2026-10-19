@@ -244,6 +244,7 @@ func WorkflowDeliverySelectAcceptance(d Dependencies, root, id, contextPath, fil
 		if _, err = deliveryAppendEvent(d, s, "acceptance-selection", "acceptance_selection", r); err != nil {
 			return err
 		}
+		ownerResumeNoteCallback(s, "acceptance-selection")
 		s.Result.Delivery.AcceptanceSelection = &b
 		if err = workflowLoadAcceptanceSelection(s); err != nil {
 			return err

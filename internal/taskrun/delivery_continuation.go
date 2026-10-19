@@ -127,7 +127,12 @@ func workflowContinuationRecordMode(s workflowState, policy bool) (*deliveryCont
 	if err = decode(before, 8<<20, &old); err != nil {
 		return nil, err
 	}
-	if deliveryContinuationGeneration(old) != n-1 || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.Handoff != s.Result.Handoff || old.Result.RunID != s.Result.RunID || old.Result.SessionID != s.Result.SessionID || old.Result.Transport.AgentSessionID != s.Result.Transport.AgentSessionID || old.Result.Transport.TabID != s.Result.Transport.TabID || old.Result.Transport.PaneID != s.Result.Transport.PaneID || old.Result.Transport.TerminalID != s.Result.Transport.TerminalID || old.Result.Paths.Context != s.Result.Paths.Context || old.ContextSHA256 != s.ContextSHA256 || !equal(old.Acceptance, s.Acceptance) || !equal(old.StartSHA256, s.StartSHA256) {
+	// An owner resume after this continuation replaces only the transport.
+	base, err := ownerResumeBase(s, n)
+	if err != nil {
+		return nil, err
+	}
+	if deliveryContinuationGeneration(old) != n-1 || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.Handoff != s.Result.Handoff || old.Result.RunID != s.Result.RunID || old.Result.SessionID != s.Result.SessionID || old.Result.Transport.AgentSessionID != s.Result.Transport.AgentSessionID || old.Result.Transport.TabID != base.Result.Transport.TabID || old.Result.Transport.PaneID != base.Result.Transport.PaneID || old.Result.Transport.TerminalID != base.Result.Transport.TerminalID || old.Result.Paths.Context != s.Result.Paths.Context || old.ContextSHA256 != s.ContextSHA256 || !equal(old.Acceptance, s.Acceptance) || !equal(old.StartSHA256, s.StartSHA256) {
 		return nil, deliveryContinuityError("continuation_integrity", "continuation history changed Task, worktree, mandate, context, accepted authority or session ownership")
 	}
 	if policy {

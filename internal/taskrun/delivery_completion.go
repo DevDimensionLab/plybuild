@@ -92,6 +92,7 @@ func WorkflowDeliveryQA(d Dependencies, root, id, contextPath, outcome, evidence
 		if _, e := deliveryAppendEvent(d, s, attemptID, "human_qa", value); e != nil {
 			return e
 		}
+		ownerResumeNoteCallback(s, attemptID)
 		s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1].HumanQA = &qa
 		s.Result.Delivery.Attempt.State = "recorded"
 		s.Result.Delivery.Phase = "working"
@@ -219,6 +220,7 @@ func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (Wo
 		if err != nil {
 			return err
 		}
+		ownerResumeNoteCallback(s, eventID)
 		if integrationErr != nil || !result.Completed {
 			s.Result.NextAction = WorkflowAction{"recipient", "Inspect the preserved native integration and base-update state; resume only the same bound operation, without repeating an unknown effect."}
 			return nil

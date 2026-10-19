@@ -261,6 +261,9 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 		if _, e := deliveryAppendEvent(d, s, report.EventID, "report", report); e != nil {
 			return e
 		}
+		if !incomplete {
+			ownerResumeNoteCallback(s, report.EventID)
+		}
 		if incomplete {
 			if e := d.fault("delivery_after_incomplete_report_event"); e != nil {
 				return e
@@ -529,6 +532,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		if _, err := deliveryAppendEvent(d, current, receipt.AttemptID, "verification", receipt); err != nil {
 			return err
 		}
+		ownerResumeNoteCallback(current, receipt.AttemptID)
 		current.Result.Delivery.Attempt.State = "recorded"
 		current.Result.Delivery.Phase = "working"
 		current.Result.NextAction = WorkflowAction{"recipient", "Inspect the preserved verification and review evidence, fix within the selected goal, then verify again."}

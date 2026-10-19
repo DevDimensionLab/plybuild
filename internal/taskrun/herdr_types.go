@@ -111,6 +111,7 @@ type WorkflowRun struct {
 	DeliveryStatus  *DeliveryStatus                `json:"delivery_status,omitempty"`
 	ClaudeTrust     *ClaudeTrustEffect             `json:"claude_project_trust,omitempty"`
 	StartupRecovery *DeliveryStartRecoveryReadback `json:"startup_recovery,omitempty"`
+	OwnerResume     *DeliveryOwnerResumeReadback   `json:"owner_resume,omitempty"`
 	Closeout        *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
 	Worker          *WorkerStatus                  `json:"worker,omitempty"`
 }
@@ -193,6 +194,9 @@ type workflowState struct {
 	Recovery                      *FileBinding        `json:"startup_recovery,omitempty"`
 	RecoveryTransport             *FileBinding        `json:"startup_recovery_transport,omitempty"`
 	Continuation                  *FileBinding        `json:"delivery_continuation,omitempty"`
+	OwnerResume                   *FileBinding        `json:"owner_resume,omitempty"`
+	OwnerResumeStep               string              `json:"owner_resume_step,omitempty"`
+	OwnerResumeCallback           string              `json:"owner_resume_callback,omitempty"`
 	// Derived only after validating the immutable acceptance selection. These
 	// never replace the frozen request or become additional persisted authority.
 	EffectiveDeliveryAgreement   *workspace.DeliveryAgreement           `json:"-"`

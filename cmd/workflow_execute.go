@@ -17,13 +17,33 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	var target queueTargetFlags
 	var headless bool
 	var boundControl bool
+	var resume bool
+	var resumeTimeout int
 	var workerAttempts, workerTimeout, workerRetries int
 	c := &cobra.Command{
 		Use: "execute", Short: "Deliver the next goal from this Epic with its assigned agent",
-		Long:    "From the registered return worktree, use --headless for a durable one-Spec Codex worker on macOS. It requires an explicitly automatic local Epic agreement, uses the assigned model and effort with existing account login, and performs developer, sandboxed tests, independent read-only review, bounded corrections and native local delivery. It has no terminal dependency and performs no remote push. Control it with workflow worker show/pause/stop/resume. Pause and stop finish the active attempt before preserving a boundary. Unknown attempts remain blocked. Without --headless, from a Herdr terminal, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
-		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check",
+		Long:    "From the registered return worktree, use --headless for a durable one-Spec Codex worker on macOS. It requires an explicitly automatic local Epic agreement, uses the assigned model and effort with existing account login, and performs developer, sandboxed tests, independent read-only review, bounded corrections and native local delivery. It has no terminal dependency and performs no remote push. Control it with workflow worker show/pause/stop/resume. Pause and stop finish the active attempt before preserving a boundary. Unknown attempts remain blocked. Without --headless, from a Herdr terminal, select the next eligible queued goal (default) or --spec, create its feature worktree, and start its assigned interactive Claude or Codex owner in Herdr. The owner defines the detailed solution and tests, handles review and fixes, and follows the frozen delivery agreement after candidate-bound acceptance under its explicit policy. New local Epic agreements may select automatic acceptance; an existing schema 1 local Epic run can record an explicit human policy choice with execute acceptance. Historical agreements retain their human gate without that supported choice. A structured agreement selects a pull request, local Epic return, or explicit local branch return; historical goals keep their original local contract. Repeat the same command to inspect the preserved execution. After begun work loses its agent tab, run --resume from the Task worktree (or --spec SPEC_ID --resume from the return worktree): Ply finds the same Run without its ID, and --check previews without writes or start. When the old pane, agent and every Task writer are positively absent in Herdr and the provider still has the session transcript, it starts the same Claude (--resume) or Codex (resume) conversation in one new visible tab, verifies the same native session, preserves a new callback control (closing the old one) and sends one continuation prompt; the Run, context, mandate, answers, candidates and evidence are unchanged. A live owner, a remaining writer, an unknown earlier effect, a missing session or an uncertain resume step stops with a reason and next step; repeating never duplicates a tab, provider start or prompt. Plain execute and --restart keep their meaning. Add --restart with --spec to recover an interrupted Codex startup before the Task prompt; Ply finds the attempt and preserves the Task, worktree and history. If no attempt exists, it performs the ordinary first start. A missing Task terminal can be replaced in the current Herdr workspace after fresh checks. Possible Task input or an uncertain new-tab creation prevents another start. --check previews all effects. New Claude launches request persistent folder trust for the Task worktree in Claude's configuration. Tool permissions and native prompts remain under provider control; preserved launches retain their original trust and permission choices.",
+		Example: "  ply workflow execute --check\n  ply workflow execute\n  ply workflow execute --spec explain-errors\n  ply workflow execute --spec explain-errors --restart\n  ply workflow execute --spec explain-errors --restart --check\n  ply workflow execute --resume --check\n  ply workflow execute --spec explain-errors --resume",
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
+			if resume {
+				if in.Restart || headless || boundControl || c.Flags().Changed("next") || in.NotificationContext != "" || in.Runtime.PermissionProfile != "" {
+					return workspace.WorkInvalidArguments("--resume keeps the Run's frozen choices; combine it only with --spec, --check, --herdr-workspace, --timeout and --format")
+				}
+				if resumeTimeout < 1 || resumeTimeout > 3600 {
+					return workspace.WorkInvalidArguments("--timeout must be between 1 and 3600 seconds")
+				}
+				if err := executeFormat(format); err != nil {
+					return err
+				}
+				result, err := taskexecute.ResumeOwner(d, taskexecute.OwnerResumeInput{SpecID: in.SpecID, Check: in.Check, Timeout: time.Duration(resumeTimeout) * time.Second, DestinationWorkspaceID: in.Runtime.HerdrWorkspace})
+				if outErr := writeExecuteResult(c, format, result); outErr != nil {
+					return outErr
+				}
+				return workflowRunError(err)
+			} else if c.Flags().Changed("timeout") {
+				return workspace.WorkInvalidArguments("--timeout requires --resume")
+			}
 			if boundControl {
 				if !headless || in.SpecID == "" || in.Next {
 					return workspace.WorkInvalidArguments("--bound-control requires --headless and an explicit --spec")
@@ -66,6 +86,8 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&in.SpecID, "spec", "", "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected")
 	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup")
 	c.Flags().BoolVar(&in.Restart, "restart", false, "recover this --spec's interrupted Codex startup before Task input, preserving its worktree and history")
+	c.Flags().BoolVar(&resume, "resume", false, "resume the same begun owner after its tab closed: same Task, session and evidence; run from its Task worktree or with --spec from the return worktree")
+	c.Flags().IntVar(&resumeTimeout, "timeout", 120, "seconds to observe the resumed session with --resume; never stops the agent")
 	c.Flags().BoolVar(&headless, "headless", false, "start one durable Codex worker for an automatic local Epic goal without a terminal")
 	c.Flags().BoolVar(&boundControl, "bound-control", false, "opt a new --headless --spec Run into bound runtime control v1; --check previews the frozen contract")
 	c.Flags().IntVar(&workerAttempts, "worker-attempts", 3, "maximum development attempts for --headless (1-20)")
@@ -112,6 +134,30 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 		return e
 	}
 	switch v := result.(type) {
+	case taskexecute.OwnerResumeResult:
+		out := c.OutOrStdout()
+		fmt.Fprintf(out, "Owner resume: %s\n", v.State)
+		for _, choice := range v.Choices {
+			fmt.Fprintf(out, "Choice: --spec %s · Task %s · %s\n", choice.SpecID, choice.TaskID, choice.Phase)
+		}
+		if r := v.Run; r != nil {
+			fmt.Fprintf(out, "Task: %s · Spec %s\nTask worktree: %s\nRun: %s\nPhase: %s\n", r.TaskID, r.SpecID, r.TaskWorktree, r.RunID, r.Phase)
+		}
+		if p := v.Preview; p != nil {
+			fmt.Fprintf(out, "Provider: %s · session %s · %s\n", p.Provider, p.NativeSessionID, v.ProviderSupport)
+			if p.Reason != "" {
+				fmt.Fprintf(out, "Reason: %s — %s\n", p.Reason, p.Detail)
+			}
+			if p.State == "ready" && v.Workflow == nil {
+				fmt.Fprintf(out, "Preview only: old pane %s absent; one new tab is planned in Herdr workspace %s\nPlanned control: %s\n", p.PreviousTransport.PaneID, p.DestinationWorkspaceID, p.ControlExecutable.Path)
+			}
+		}
+		if v.Workflow != nil {
+			return writeExecuteResult(c, format, *v.Workflow)
+		}
+		if v.NextAction != "" {
+			fmt.Fprintln(out, "Next: "+v.NextAction)
+		}
 	case taskexecute.RecoveryResult:
 		fmt.Fprintf(c.OutOrStdout(), "Startup recovery: %s\n", v.State)
 		if v.Preview != nil && v.Preview.State != "existing" && v.Run == nil {
@@ -202,6 +248,9 @@ func writeExecuteResult(c *cobra.Command, format string, result any) error {
 			fmt.Fprintf(c.OutOrStdout(), "Delivery: %s\nRuntime permission: %s\n", v.Delivery.Phase, v.Delivery.PermissionState)
 		}
 		writeDeliveryStatus(c.OutOrStdout(), v.DeliveryStatus)
+		if r := v.OwnerResume; r != nil {
+			fmt.Fprintf(c.OutOrStdout(), "Owner resume: generation %d · step %s · same session observed %t · owner callback %s\nResumed control: %s\n", r.Generation, r.Step, r.SessionObserved, r.OwnerCallback, r.ControlExecutable.Path)
+		}
 		writeWorkflowClaudeTrust(c.OutOrStdout(), v.ClaudeTrust)
 		for _, r := range v.Reasons {
 			fmt.Fprintln(c.OutOrStdout(), "Needs attention: "+r.Detail)

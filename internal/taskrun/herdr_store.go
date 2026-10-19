@@ -50,6 +50,9 @@ func workflowRead(root, id string) (workflowState, error) {
 	if _, e = workflowRecoveryRecord(saved); e != nil {
 		return saved, e
 	}
+	if _, _, e = workflowOwnerResumeRecord(saved); e != nil {
+		return saved, e
+	}
 	if e = workflowLoadAcceptanceSelection(&saved); e != nil {
 		return saved, e
 	}
@@ -354,6 +357,9 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	}
 	o := s.Result
 	o.DeliveryStatus = deliveryStatus(d, s)
+	if o.OwnerResume, e = ownerResumeReadback(s); e != nil {
+		return o, e
+	}
 	// Project the choice from the bound request, including historical state
 	// written before the optional readback field existed. No state rewrite.
 	o.Provider = s.Request.Runtime.Provider
