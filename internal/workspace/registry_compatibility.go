@@ -64,23 +64,28 @@ func RegistryError(err error) *RegistryDiagnostic {
 
 // Inspect actual syntax and the declared format before strict typed decoding.
 // Unknown fields in a supported format are invalid input, never guessed versions.
-func registryDeclaredFormat(b []byte) (int, error) {
+func parseRegistryYAML(b []byte) (*yaml.Node, error) {
 	d := yaml.NewDecoder(bytes.NewReader(b))
 	var doc yaml.Node
 	if err := d.Decode(&doc); err != nil {
-		return 0, registryDiagnostic("registry_malformed_yaml", err.Error(), 0)
+		return nil, registryDiagnostic("registry_malformed_yaml", err.Error(), 0)
 	}
 	var extra yaml.Node
 	if err := d.Decode(&extra); err != io.EOF {
-		return 0, registryDiagnostic("registry_malformed_yaml", "expected exactly one YAML document", 0)
+		return nil, registryDiagnostic("registry_malformed_yaml", "expected exactly one YAML document", 0)
 	}
 	if len(doc.Content) != 1 || doc.Content[0].Kind != yaml.MappingNode {
-		return 0, registryDiagnostic("registry_invalid_content", "registry must be a mapping", 0)
+		return nil, registryDiagnostic("registry_invalid_content", "registry must be a mapping", 0)
 	}
 	root := doc.Content[0]
 	if err := validateQueueYAMLMap(root); err != nil {
-		return 0, registryDiagnostic("registry_invalid_content", err.Error(), 0)
+		return nil, registryDiagnostic("registry_invalid_content", err.Error(), 0)
 	}
+	return root, nil
+}
+
+// Inspect the already validated syntax tree before typed decoding.
+func registryDeclaredFormat(root *yaml.Node) (int, error) {
 	for i := 0; i < len(root.Content); i += 2 {
 		if root.Content[i].Value != "format_version" {
 			continue
@@ -113,6 +118,74 @@ func classifyRegistryDecode(err error, version int) error {
 		}
 	}
 	return registryDiagnostic(code, err.Error(), version)
+}
+
+// Node.Decode does not expose KnownFields. Collect the same unknown-field
+// diagnostics against the typed schema, retaining the decoder's type errors.
+// Maps intentionally remain open (queue requests have their own semantic rules).
+func decodeRegistryNode(root *yaml.Node, registry *WorkItemRegistry) error {
+	var messages []string
+	var walk func(*yaml.Node, reflect.Type, bool)
+	walk = func(n *yaml.Node, typ reflect.Type, checkTypes bool) {
+		for typ.Kind() == reflect.Pointer {
+			typ = typ.Elem()
+		}
+		if n.Tag == "!!null" {
+			return
+		}
+		switch typ.Kind() {
+		case reflect.Struct:
+			if n.Kind != yaml.MappingNode {
+				break
+			}
+			fields := yamlStructShapeFields(typ)
+			for i := 0; i < len(n.Content); i += 2 {
+				key, value := n.Content[i], n.Content[i+1]
+				found := false
+				for _, field := range fields {
+					if field.name == key.Value {
+						walk(value, field.typeOf, checkTypes)
+						found = true
+						break
+					}
+				}
+				if !found {
+					messages = append(messages, fmt.Sprintf("line %d: field %s not found in type %s", key.Line, key.Value, typ))
+				}
+			}
+			return
+		case reflect.Slice, reflect.Array:
+			if n.Kind == yaml.SequenceNode {
+				for _, child := range n.Content {
+					walk(child, typ.Elem(), checkTypes)
+				}
+				return
+			}
+		}
+		if checkTypes {
+			if err := n.Decode(reflect.New(typ).Interface()); err != nil {
+				var typed *yaml.TypeError
+				if errors.As(err, &typed) {
+					messages = append(messages, typed.Errors...)
+				}
+			}
+		}
+	}
+	walk(root, reflect.TypeOf(*registry), false)
+	if err := root.Decode(registry); err != nil {
+		var typed *yaml.TypeError
+		if !errors.As(err, &typed) {
+			return err
+		}
+		// Revisit only invalid input to interleave unknown-field and type errors
+		// in traversal order, including flow mappings on the same source line.
+		messages = nil
+		walk(root, reflect.TypeOf(*registry), true)
+	}
+	if len(messages) == 0 {
+		return nil
+	}
+	return &yaml.TypeError{Errors: messages}
 }
 
 func validateRegistryBoundary(r WorkItemRegistry) error {

@@ -410,24 +410,16 @@ func encodeWorkItemRegistry(registry WorkItemRegistry) ([]byte, error) {
 }
 
 func decodeWorkItemRegistry(contents []byte) (registry WorkItemRegistry, err error) {
-	version, err := registryDeclaredFormat(contents)
+	root, err := parseRegistryYAML(contents)
+	if err != nil {
+		return registry, err
+	}
+	version, err := registryDeclaredFormat(root)
 	if err != nil {
 		return registry, err
 	}
 	defer func() { err = classifyRegistryDecode(err, version) }()
-	if len(contents) == 0 {
-		return WorkItemRegistry{}, errors.New("registry is empty")
-	}
-	decoder := yaml.NewDecoder(bytes.NewReader(contents))
-	decoder.KnownFields(true)
-	if err := decoder.Decode(&registry); err != nil {
-		return WorkItemRegistry{}, err
-	}
-	var extra yaml.Node
-	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
-		if err == nil {
-			return WorkItemRegistry{}, errors.New("registry contains multiple YAML documents")
-		}
+	if err := decodeRegistryNode(root, &registry); err != nil {
 		return WorkItemRegistry{}, err
 	}
 	if registry.Epics == nil || registry.Tasks == nil || registry.WorktreeOperations == nil {
@@ -442,7 +434,7 @@ func decodeWorkItemRegistry(contents []byte) (registry WorkItemRegistry, err err
 			return WorkItemRegistry{}, errors.New("format 2 Task lifecycle collections must be explicit arrays")
 		}
 	}
-	if err := validateWorkItemRegistryYAMLShape(contents, registry.FormatVersion); err != nil {
+	if err := validateWorkItemRegistryNodeShape(root, registry.FormatVersion); err != nil {
 		return WorkItemRegistry{}, err
 	}
 	if err := validateWorkItemRegistry(registry); err != nil {
@@ -464,6 +456,10 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 		}
 		return err
 	}
+	return validateWorkItemRegistryNodeShape(document.Content[0], version)
+}
+
+func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
 	fields := []yamlShapeField{
 		{name: "format_version", typeOf: reflect.TypeOf(int(0))},
 		{name: "epics", typeOf: reflect.TypeOf([]EpicRecord{})},
@@ -493,7 +489,7 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 	if version == 5 {
 		fields = append(fields, yamlShapeField{name: "format_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
 	}
-	return validateYAMLMappingShape(document.Content[0], fields, "work-item registry")
+	return validateYAMLMappingShape(root, fields, "work-item registry")
 }
 
 func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context string) error {
