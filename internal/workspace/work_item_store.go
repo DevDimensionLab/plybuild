@@ -247,7 +247,7 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
 	if requireClosure && registry.FormatVersion >= 4 {
-		storage := &TaskContentStorage{scope: store.scope}
+		storage := observeTaskContent(&TaskContentStorage{scope: store.scope, fault: store.fail})
 		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 			return WorkItemRegistry{}, err
 		}
@@ -273,7 +273,7 @@ func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry
 	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
 		return err
 	}
-	storage := &TaskContentStorage{scope: store.scope}
+	storage := observeTaskContent(&TaskContentStorage{scope: store.scope, fault: store.fail})
 	if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
 		return err
 	}
