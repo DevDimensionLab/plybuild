@@ -141,16 +141,29 @@ func decodeRegistryNode(root *yaml.Node, registry *WorkItemRegistry) error {
 			fields := yamlStructShapeFields(typ)
 			for i := 0; i < len(n.Content); i += 2 {
 				key, value := n.Content[i], n.Content[i+1]
+				// Syntax validation guarantees !!str keys, but an explicit tag
+				// can also occur on a collection. Match yaml's string decoding
+				// before field lookup; a failed key skips its value entirely.
+				name := key.Value
+				if key.Kind != yaml.ScalarNode {
+					if err := key.Decode(&name); err != nil {
+						var typed *yaml.TypeError
+						if checkTypes && errors.As(err, &typed) {
+							messages = append(messages, typed.Errors...)
+						}
+						continue
+					}
+				}
 				found := false
 				for _, field := range fields {
-					if field.name == key.Value {
+					if field.name == name {
 						walk(value, field.typeOf, checkTypes)
 						found = true
 						break
 					}
 				}
 				if !found {
-					messages = append(messages, fmt.Sprintf("line %d: field %s not found in type %s", key.Line, key.Value, typ))
+					messages = append(messages, fmt.Sprintf("line %d: field %s not found in type %s", key.Line, name, typ))
 				}
 			}
 			return

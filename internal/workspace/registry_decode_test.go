@@ -42,6 +42,49 @@ func TestRegistryNodeDecodeMatchesStrictDiagnostics(t *testing.T) {
 	}
 }
 
+func TestRegistryTaggedCollectionKeysPreserveStrictDiagnostics(t *testing.T) {
+	valid := "format_version: 1\nepics: []\ntasks: []\nworktree_operations: []\n"
+	for name, input := range map[string]string{
+		"sequence key":           valid + "? !!str [bad]\n: true\n",
+		"mapping key":            valid + "? !!str {bad: value}\n: true\n",
+		"key before unknown":     valid + "? !!str [bad]\n: {ignored: true}\nunknown: true\n",
+		"unknown before key":     valid + "unknown: true\n? !!str [bad]\n: true\n",
+		"type before key":        strings.Replace(valid, "epics: []", "epics: wrong", 1) + "? !!str [bad]\n: true\n",
+		"nested key before type": "format_version: 1\nepics:\n- ? !!str [bad]\n  : true\n  id: []\ntasks: []\nworktree_operations: []\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			decoder := yaml.NewDecoder(strings.NewReader(input))
+			decoder.KnownFields(true)
+			var old WorkItemRegistry
+			wantErr := decoder.Decode(&old)
+			if wantErr == nil {
+				t.Fatal("strict decoder must reject a collection key")
+			}
+			t.Run("oracle", func(t *testing.T) {
+				root, err := parseRegistryYAML([]byte(input))
+				if err != nil {
+					t.Fatal(err)
+				}
+				var got WorkItemRegistry
+				if err := decodeRegistryNode(root, &got); err == nil || err.Error() != wantErr.Error() {
+					t.Fatalf("diagnostics differ:\nwant %v\ngot %v", wantErr, err)
+				}
+			})
+			t.Run("consumed snapshot", func(t *testing.T) {
+				root := t.TempDir()
+				if err := writeRegistryDecodeFixture(root, []byte(input)); err != nil {
+					t.Fatal(err)
+				}
+				_, err := newSystemWorkItemStore().Snapshot(root)
+				got, want := RegistryError(err), RegistryError(classifyRegistryDecode(wantErr, 1))
+				if got == nil || got.Code != want.Code || got.Detail != want.Detail || got.FormatVersion != 1 || got.Artifact != workItemsPath(root) {
+					t.Fatalf("consumed diagnostic differs:\nwant %+v\ngot %+v (%v)", want, got, err)
+				}
+			})
+		})
+	}
+}
+
 func TestRegistryConsumedSnapshotRejectsInvalidSyntaxAndShape(t *testing.T) {
 	valid := []byte("format_version: 1\nepics: []\ntasks: []\nworktree_operations: []\n")
 	for _, tc := range []struct {
