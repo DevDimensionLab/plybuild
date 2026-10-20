@@ -207,7 +207,7 @@ func TestRV01DetachedCoordinatorNamesItsVerifiedLivePane(t *testing.T) {
 	if err := request(""); err == nil || !strings.Contains(err.Error(), "unknown") || !strings.Contains(err.Error(), "--coordinator-pane") {
 		t.Fatalf("a detached caller was bound without a verified pane: %v", err)
 	}
-	if err := request("w1:p1"); err == nil || !strings.Contains(err.Error(), "not a live Herdr pane") {
+	if err := request("w1:p1"); err == nil || !strings.Contains(err.Error(), "could not be verified as a live Herdr pane") {
 		t.Fatalf("a stale pane was accepted as coordinator: %v", err)
 	}
 	if err := request(o.Transport.PaneID); err == nil || !strings.Contains(err.Error(), "cannot coordinate its own review") {

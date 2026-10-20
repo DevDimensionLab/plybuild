@@ -309,7 +309,7 @@ func deliveryCallerPane(d Dependencies, s workflowState, explicit string) (strin
 			return "", workflowError(4, fmt.Sprintf("--coordinator-pane %s contradicts pane %s, whose shell holds this process", explicit, strings.Join(inferred, ", ")))
 		}
 		if invokerShellPID(d, s, explicit) == 0 {
-			return "", workflowError(4, fmt.Sprintf("--coordinator-pane %s is not a live Herdr pane; pass the coordinator's verified live pane ID", explicit))
+			return "", workflowError(4, fmt.Sprintf("--coordinator-pane %s could not be verified as a live Herdr pane (its process info is unavailable or shows no shell); inspect it with `herdr pane process-info --pane %s` and pass the coordinator's verified live pane ID", explicit, explicit))
 		}
 		return explicit, nil
 	}
