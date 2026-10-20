@@ -11,13 +11,15 @@ import (
 )
 
 type ReportStartupStatus struct {
-	Protocol        string       `json:"protocol"`
-	Receipt         *FileBinding `json:"receipt"`
-	ProviderStop    *FileBinding `json:"provider_stop"`
-	Stop            *FileBinding `json:"stop"`
-	Retirement      *FileBinding `json:"retirement"`
-	SandboxCoverage string       `json:"sandbox_coverage"`
-	RuntimeDecision string       `json:"runtime_decision"`
+	SourceSHA256      string        `json:"source_sha256"`
+	EffectResolutions []FileBinding `json:"effect_resolutions"`
+	Protocol          string        `json:"protocol"`
+	Receipt           *FileBinding  `json:"receipt"`
+	ProviderStop      *FileBinding  `json:"provider_stop"`
+	Stop              *FileBinding  `json:"stop"`
+	Retirement        *FileBinding  `json:"retirement"`
+	SandboxCoverage   string        `json:"sandbox_coverage"`
+	RuntimeDecision   string        `json:"runtime_decision"`
 }
 
 const ReportLegacyAcceptanceV1 = "legacy_acceptance_v1"
@@ -168,38 +170,10 @@ func workflowRetireReport(d Dependencies, s *workflowState, in DeliveryRetireInp
 	if s.StartSHA256 != nil || len(s.Records) != 0 || s.Result.Transport.AgentSessionID == "" || s.Phase != "following" && s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" {
 		return workflowError(4, "report retirement requires a bound pre-work owner; reconcile existing work or unknown startup effects")
 	}
-	if s.ReportProviderStop != nil {
-		raw, err := workflowBound(*s.ReportProviderStop, 2<<20)
-		if err != nil {
-			return err
-		}
-		var stop DeliveryStopRecord
-		if err = decode(raw, 2<<20, &stop); err != nil {
-			return err
-		}
-		if stop.Input.EffectStatus == DeliveryEffectUnknown || stop.Input.EffectStatus == DeliveryEffectPartial || stop.Input.EffectStatus == "" {
-			return workflowError(4, "unknown_effect: preserved provider stop requires actual effect observation before retirement")
-		}
+	if err := workflowReportEffectsPermitRetirement(d, *s); err != nil {
+		return err
 	}
-	if s.ReportStop != nil {
-		raw, err := workflowBound(*s.ReportStop, 1<<20)
-		if err != nil {
-			return err
-		}
-		var r WorkflowReport
-		if err = decode(raw, 1<<20, &r); err != nil {
-			return err
-		}
-		var stops []struct {
-			Type string `json:"type"`
-		}
-		json.Unmarshal(r.StopReasons, &stops)
-		for _, stop := range stops {
-			if stop.Type == "unknown_or_partial_effect" {
-				return workflowError(4, "unknown_effect: establish the actual prior effect before retirement")
-			}
-		}
-	}
+
 	clean := func() error {
 		target, err := d.Workspace.WorkGit.ObserveWorktree(s.Observed.Target.WorktreeLocator)
 		if err != nil {
@@ -372,4 +346,14 @@ func workflowReportQueueReleased(d Dependencies, root, id string) (bool, error) 
 		}
 	}
 	return false, nil
+}
+
+func workflowReportStopped(s workflowState) bool {
+	return !deliveryRun(s.Request) && (s.ReportStop != nil || s.ReportProviderStop != nil || s.ReportRetirement != nil)
+}
+func workflowReportStopAction(s workflowState) WorkflowAction {
+	if s.ReportRetirement != nil {
+		return WorkflowAction{"coordinator", "Report owner retired with history preserved; replacement needs a fresh prepared Task mandate."}
+	}
+	return WorkflowAction{"coordinator", "Preserved pre-start stop blocks owner work and successful round review. Reconcile any unknown effects with workflow run resolve-stop, then retire only after source and writer-absence checks; do not replay the refused callback."}
 }

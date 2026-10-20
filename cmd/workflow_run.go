@@ -24,7 +24,7 @@ func workflowRunError(e error) error {
 }
 func newWorkflowRunCommand(d taskrun.Dependencies) *cobra.Command {
 	run := &cobra.Command{Use: "run", Short: "Run a prepared Task in Herdr and review its reports", Long: "Start one authorized Claude or Codex session for an existing Task preparation, follow immutable round reports, and request bounded corrections in the same session. Reviewed reports do not publish TaskResult or attest provider inactivity. Human QA and integration remain separate gates.", Example: "  ply workflow run start --file /absolute/prepared-task-request.json --check\n  ply workflow run show wfr_<digest>", Args: cobra.NoArgs, RunE: func(c *cobra.Command, a []string) error { return c.Help() }}
-	run.AddCommand(newWorkflowExecuteCheckInCommand(d), newWorkflowExecuteRetireCommand(d))
+	run.AddCommand(newWorkflowExecuteCheckInCommand(d), newWorkflowExecuteRetireCommand(d), newWorkflowRunResolveStopCommand(d))
 	usage := func(detail string) error {
 		return &taskrun.Error{Code: "workflow_run_invalid_arguments", Detail: detail, Exit: 2}
 	}

@@ -213,7 +213,25 @@ artifacts. The report is an immutable stop observation, not a completed round or
 native terminal. The coordinator can also preserve refused callback transport
 with `workflow execute observe-stop`, naming the actual provider/session, action,
 evidence and known effect status. A preserved stop blocks work; receipt cannot
-clear it or replay the refused action.
+clear it or replay the refused action. `follow` returns that stop immediately,
+even if the owner has exited, without polling transport or turning the
+observation into a working-round report.
+
+When the original report effects were unknown, read `report_startup.source_sha256`
+from `workflow run show`, then append the coordinator's actual action-result or
+effect-inspection evidence:
+
+```sh
+ply workflow run resolve-stop wfr_<digest> --stop sha256:<original-stop> --source sha256:<current-source> --effect-status not_started --basis action_result --observer 'Actual coordinator' --reason 'Concrete observed result' --evidence /absolute/native-result.json
+```
+
+The observation binds the original refusal, Run, request, session, exact source
+and a frozen copy of the actual evidence. Writer absence alone is not evidence
+of past effects. Only observed `not_started` or `none_observed` effects can
+qualify retirement; known or observed `partial` effects stay blocked. An
+unchanged-source retry reuses the immutable observation, including recovery of
+a lost publication reply. The refusal still blocks receipt and working callbacks;
+this reconciliation never continues or impersonates the owner.
 
 For a selected replacement of a pre-work report owner:
 

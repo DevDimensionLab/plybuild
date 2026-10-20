@@ -459,6 +459,15 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 		ready := false
 		var observationErr error
 		e := workflowUpdate(d, root, id, func(s *workflowState) error {
+			if workflowReportStopped(*s) {
+				if e := workflowFreshArtifacts(d, *s, false, false); e != nil {
+					return e
+				}
+				s.Result.Round.State = "stopped"
+				s.Result.NextAction = workflowReportStopAction(*s)
+				ready = true
+				return nil
+			}
 			if e := workflowFresh(d, *s, true); e != nil {
 				return e
 			}
@@ -524,6 +533,9 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 			s, e := workflowRead(root, id)
 			if e != nil {
 				return WorkflowRun{}, e
+			}
+			if workflowReportStopped(s) {
+				return WorkflowShow(d, root, id)
 			}
 			// Tab labels express transport status only. They never grant review.
 			_, e = workflowCall(d, s.Request, "tab", "rename", s.Result.Transport.TabID, "finished "+s.Request.Herdr.TabLabel)

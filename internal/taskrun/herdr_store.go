@@ -387,6 +387,20 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			protocol = ReportLegacyAcceptanceV1
 		}
 		o.ReportStartup = &ReportStartupStatus{Protocol: protocol, Stop: s.ReportStop, ProviderStop: s.ReportProviderStop, Retirement: s.ReportRetirement, SandboxCoverage: "unknown", RuntimeDecision: "per_action_not_observed"}
+		o.ReportStartup.SourceSHA256, _ = workflowTarget(d, s)
+		o.ReportStartup.EffectResolutions = []FileBinding{}
+		for _, stop := range []*FileBinding{s.ReportStop, s.ReportProviderStop} {
+			if stop == nil {
+				continue
+			}
+			_, binding, err := readReportStopResolution(s, *stop)
+			if err != nil {
+				return o, err
+			}
+			if binding != nil {
+				o.ReportStartup.EffectResolutions = append(o.ReportStartup.EffectResolutions, *binding)
+			}
+		}
 		if reportReceipt(s.Request) && s.StartSHA256 != nil {
 			o.ReportStartup.Receipt = s.Acceptance
 		}
@@ -460,7 +474,12 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			return o, nil
 		}
 	}
-	if s.ReportRetirement != nil {
+	if workflowReportStopped(s) {
+		o.Round.State = "stopped"
+		o.NextAction = workflowReportStopAction(s)
+		if e = workflowFreshArtifacts(d, s, false, false); e != nil {
+			o.Reasons = append(o.Reasons, Reason{"report_stop_artifact_drift", e.Error()})
+		}
 		return o, nil
 	}
 	if e = workflowFresh(d, s, true); e != nil {
