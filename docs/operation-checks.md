@@ -2,12 +2,12 @@
 
 The pre-change cost on the fixed RO01B six-Goal fixture is 79 physical content
 reads for preview and 1705 for materialization/preparation, with 18 registry
-parses, 32 content closures and 26 queue closures during the latter. Parsing
+decoder calls, 32 content closures and 26 queue closures during the latter. Parsing
 and cross-observation generation reuse belong to later work.
 
 | Check | Failure protected against | Actual dependency / phase | Cost and decision before implementation |
 | --- | --- | --- | --- |
-| Strict registry decoding, identities, lifecycle, cross references | Unknown authoritative fields, forged relationships or impossible transitions | Entire shared registry, every observation and publication | Retain every parse and structural check; shared mutations must preserve unrelated records. |
+| Strict registry decoding, identities, lifecycle, cross references | Unknown authoritative fields, forged relationships or impossible transitions | Entire shared registry, every observation and publication | Retain every decoder call and structural check; shared mutations must preserve unrelated records. |
 | External content publication closure | Missing/changed immutable Goal, Spec, request, documents, result authority | Selected Task before startup/materialization and every publication | Scope complete closure to the selected Task; unrelated history cannot authorize or affect this operation. Full Snapshot and explicit historical reads retain validation. |
 | Queue content closure | Substituted selections, preparation basis or upgrade backup | Selected Task and affected shared target | Retain selected Task preparation/selection checks and affected target backup checks; retain structural validation of all queue events. |
 | Recovery search | Retrying another preserved execution or hiding an interrupted outcome | Selector, target queue, matching Task execution histories | Resolve candidates from registry metadata before reading external manifests; never skip a matching interrupted execution. |
@@ -93,7 +93,7 @@ heap-in-use retained in raw samples; they are not process RSS or peak memory.
 
 The preliminary run reduced reads/allocations but regressed median latency:
 preview 195.91 to 220.78 ms; preparation 2119.44 to 2321.78 ms. It added one
-registry parse and closure pair (18/32/26 to 19/33/27). These samples and their
+registry decoder call and closure pair (18/32/26 to 19/33/27). These samples and their
 source/binary hashes are preserved in `ro02/measurement/preliminary`. Investigation
 found repeated live target/Git resolution inside recovery and an extra complete
 preview before the mutation lock. Both avoidable costs were removed: the planner
@@ -111,14 +111,14 @@ settle; retained checks and remaining costs are reported with the final results.
 | Preparation physical content reads | 1705 | 725 |
 | Preview allocated bytes / allocations | 10,459,936 / 172,060 | 7,056,656 / 113,198 |
 | Preparation allocated bytes / allocations | 305,385,320 / 5,480,520 | 179,340,328 / 3,259,962 |
-| Preview parses / content closures / queue closures | 1 / 1 / 1 | 1 / 1 / 1 |
-| Preparation parses / content closures / queue closures | 18 / 32 / 26 | 18 / 32 / 26 |
+| Preview decoder calls / content closures / queue closures | 1 / 1 / 1 | 1 / 1 / 1 |
+| Preparation decoder calls / content closures / queue closures | 18 / 32 / 26 | 18 / 32 / 26 |
 
 Median latency decreased 5.6% for preview and 8.8% for preparation; preview
 ranges overlap, so five samples do not establish a general latency guarantee.
 Allocated bytes decreased 32.5% and 41.3%; allocation counts decreased 34.2%
 and 40.5%. The removed preliminary duplicate observation is visible in the
-unchanged final parse/closure counts. The 18 remaining parses protect fresh
+unchanged final decoder/closure counts. The 18 remaining decoder calls protect fresh
 shared snapshots/publication/recovery; closures still validate the selected
 Task and affected target on every such phase. These are retained costs, not
 claims of completed parsing or confirmed-generation optimization.
@@ -143,3 +143,21 @@ the owner sandbox); its failure is retained. The replacement consumed CLI test
 uses `PLY_DELIVERY_TEST_BINARY` for read-only `workflow run start --check`
 previews around a real unrelated publication and verifies unchanged confirmation
 before the native fixture startup. No cleanup or liveness assertion is inferred.
+
+## Confirmed registry generations (RO04B)
+
+A locked work-item session now owns a confirmed structural generation. It
+reuses that generation while the physical file identity and native state remain
+unchanged, and confirms its own publication after replacement and directory
+sync. Each returned snapshot and retained publication is independently owned.
+Current content scope and external content closure are still checked on every
+observation/publication. Failed publications discard confirmation; recovery and
+a new lock period observe physical bytes. No state crosses sessions.
+
+The historical RO02 table above counts decoder calls, not actual YAML parser
+invocations. RO03 introduced separate parser instrumentation; RO04B retains
+separate physical-read, decoder, YAML-parser, closure and publication counts.
+Workspace operation timings do not measure Herdr/provider startup, and separate
+A–D percentage changes must not be added. The fresh RO04B per-stage and
+cumulative measurements, exact archives, binaries, drivers and fixture binding
+are preserved in `/private/tmp/ro04b-avw4iiq_`. Historical reports are unchanged.

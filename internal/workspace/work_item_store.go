@@ -41,8 +41,11 @@ type systemWorkItemStore struct {
 	contentScope *taskContentScope
 }
 type systemWorkItemStoreSession struct {
-	store *systemWorkItemStore
-	root  string
+	store     *systemWorkItemStore
+	root      string
+	confirmed *WorkItemRegistry
+	observed  os.FileInfo
+	closed    bool
 }
 
 type workItemRegistryV1Wire struct {
@@ -117,7 +120,10 @@ func (store *systemWorkItemStore) WithLock(root string, operation func(WorkItemS
 	if err != nil {
 		return err
 	}
-	opErr := operation(&systemWorkItemStoreSession{store: store, root: root})
+	session := &systemWorkItemStoreSession{store: store, root: root}
+	opErr := operation(session)
+	session.closed = true
+	session.confirmed, session.observed = nil, nil
 	releaseErr := store.release(lock)
 	if opErr != nil {
 		if releaseErr != nil {
@@ -129,10 +135,33 @@ func (store *systemWorkItemStore) WithLock(root string, operation func(WorkItemS
 }
 
 func (session *systemWorkItemStoreSession) Snapshot() (WorkItemRegistry, error) {
-	return session.store.read(session.root)
+	if session.closed {
+		return session.store.read(session.root)
+	}
+	info, err := os.Lstat(workItemsPath(session.root))
+	if session.confirmed != nil && err == nil && session.observed != nil && os.SameFile(info, session.observed) && sameRegistryFileState(info, session.observed) {
+		if err := session.store.validateClosure(session.root, *session.confirmed); err != nil {
+			return WorkItemRegistry{}, err
+		}
+		return cloneWorkItemRegistry(*session.confirmed), nil
+	}
+	session.confirmed, session.observed = nil, nil
+	registry, err := session.store.read(session.root)
+	if err != nil {
+		return WorkItemRegistry{}, err
+	}
+	session.confirm(registry, info)
+	return registry, nil
 }
 func (session *systemWorkItemStoreSession) Publish(registry WorkItemRegistry) error {
-	return session.store.publish(session.root, registry)
+	if session.closed {
+		return workError(ErrorWorkStoreConflict, "work-item session lock period has ended", nil)
+	}
+	err := session.publish(registry)
+	if err != nil {
+		session.confirmed, session.observed = nil, nil
+	}
+	return err
 }
 
 func publishWorkItemRegistryRecover(session WorkItemStoreSession, registry WorkItemRegistry) (WorkItemRegistry, error) {
@@ -237,6 +266,9 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 	if !info.Mode().IsRegular() || info.Mode()&fs.ModeSymlink != 0 {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("work-item registry %s is not a regular file", path), nil)
 	}
+	if fault := store.fail("registry-read"); fault != nil {
+		return WorkItemRegistry{}, fault
+	}
 	contents, err := os.ReadFile(path)
 	if err != nil {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("cannot read work-item registry %s", path), err)
@@ -248,12 +280,8 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 		}
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
-	if requireClosure && registry.FormatVersion >= 4 && !(store.scope == nil && store.contentScope != nil && store.contentScope.task == "") {
-		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
-		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
-			return WorkItemRegistry{}, err
-		}
-		if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
+	if requireClosure {
+		if err := store.validateClosure(root, registry); err != nil {
 			return WorkItemRegistry{}, err
 		}
 	}
@@ -261,11 +289,25 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 	return registry, nil
 }
 
-func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry) error {
+func (store *systemWorkItemStore) validateClosure(root string, registry WorkItemRegistry) error {
+	if registry.FormatVersion >= 4 && !(store.scope == nil && store.contentScope != nil && store.contentScope.task == "") {
+		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
+		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
+			return err
+		}
+		if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) error {
+	store, root := session.store, session.root
 	if store.contentScope != nil && store.contentScope.task == "" {
 		return queueError("task_goal_execution_conflict", "operation content dependencies are not bound")
 	}
-	old, err := store.read(root)
+	old, err := session.Snapshot()
 	if err != nil {
 		return err
 	}
@@ -343,6 +385,10 @@ func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry
 	if err := temporary.Sync(); err != nil {
 		return abort("sync", err)
 	}
+	writtenInfo, err := temporary.Stat()
+	if err != nil {
+		return abort("stat", err)
+	}
 	if err := temporary.Close(); err != nil {
 		return abort("close", err)
 	}
@@ -365,12 +411,22 @@ func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry
 		return abort("replace", err)
 	}
 	replaced = true
+	// Bind confirmation to the file we wrote, before any post-rename hook or
+	// directory sync. Rename may update native change time, so compare identity,
+	// size and modification time to the temporary file, then retain the new stat.
+	publishedInfo, statErr := os.Lstat(destination)
+	if statErr != nil || !os.SameFile(writtenInfo, publishedInfo) || writtenInfo.Size() != publishedInfo.Size() || !writtenInfo.ModTime().Equal(publishedInfo.ModTime()) || writtenInfo.Mode() != publishedInfo.Mode() {
+		publishedInfo = nil
+	}
 	if fault := store.fail("directory-sync"); fault != nil {
 		return workError(ErrorWorkIO, "sync work-item registry directory", fault)
 	}
 	if err := platformSyncDirectory(directory); err != nil {
 		return workError(ErrorWorkIO, "sync work-item registry directory", err)
 	}
+	registry.RawSHA256 = digestTaskBytes(contents)
+	registry.upgradePermit = nil
+	session.confirm(registry, publishedInfo)
 	return nil
 }
 
