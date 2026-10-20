@@ -324,6 +324,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 	var verifierID string
 	recoverReceipt := false
 	alreadyQualified := false
+	// Scratch allocated by this call; it is handed onward only with a
+	// committed verification reservation.
+	var allocated *workflowhandoff.AutomaticVerificationInstructions
 	e := workflowUpdate(d, root, id, func(current *workflowState) error {
 		if e := deliveryCallback(d, *current, contextPath, true); e != nil {
 			return e
@@ -416,6 +419,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		if e = prepareAutomaticVerification(d, *current, &receipt, path, binary); e != nil {
 			return e
 		}
+		allocated = receipt.Automatic
 		if e = d.writeOnce(snapshot.Locator, acceptanceRaw); e != nil {
 			return e
 		}
@@ -428,6 +432,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		return nil
 	})
 	if e != nil {
+		removeAutomaticScratch(allocated)
 		o, _ := WorkflowShow(d, root, id)
 		return o, e
 	}
@@ -441,6 +446,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		}
 		stdout, stderr, stopSignals := runDeliveryVerification(d, &receipt)
 		defer stopSignals()
+		removeAutomaticScratch(receipt.Automatic)
 		publicationErr := d.fault("delivery_before_verification_receipt")
 		path := s.Result.Delivery.Attempt.Path
 		receipt.Stdout = FileBinding{filepath.Join(path, "stdout.txt"), hash(stdout.data)}

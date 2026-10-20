@@ -8,9 +8,11 @@ import (
 	"os/signal"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // WorkflowDeliveryVerifyWithBinary runs the existing native candidate verifier,
@@ -19,7 +21,56 @@ func WorkflowDeliveryVerifyWithBinary(d Dependencies, root, id, contextPath, rev
 	return workflowDeliveryVerify(d, root, id, contextPath, reviewPath, "", binary)
 }
 
-func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deliveryVerificationReceipt, path, binary string) error {
+// automaticScratchBases lists, in preference order, the temporary roots that
+// may hold an attempt's private scratch. Tests replace it.
+var automaticScratchBases = func() []string { return []string{os.TempDir(), "/tmp"} }
+
+// A Run lives inside its workspace, so test fixtures that initialize their own
+// workspace under TMPDIR need physical scratch outside every Ply workspace.
+// An inherited TMPDIR inside a workspace falls through to the next base.
+func automaticScratch(attemptID string) (string, error) {
+	for _, base := range automaticScratchBases() {
+		base, err := filepath.EvalSymlinks(base)
+		if err != nil || !filepath.IsAbs(base) || insidePlyWorkspace(base) {
+			continue
+		}
+		dir, err := os.MkdirTemp(base, "ply-"+attemptID+"-")
+		if err != nil {
+			continue
+		}
+		if privateDir(dir) == nil {
+			return dir, nil
+		}
+		_ = os.Remove(dir)
+	}
+	return "", workflowError(4, "automatic acceptance is blocked: no private temporary directory outside a Ply workspace is available")
+}
+
+func insidePlyWorkspace(path string) bool {
+	for p := path; ; p = filepath.Dir(p) {
+		if _, err := os.Lstat(filepath.Join(p, workspace.MarkerDirectory, workspace.MarkerFile)); !os.IsNotExist(err) {
+			return true
+		}
+		if p == filepath.Dir(p) {
+			return false
+		}
+	}
+}
+
+// Evidence is kept in the attempt directory; the external scratch is
+// disposable once the test's process group has finished.
+func removeAutomaticScratch(v *workflowhandoff.AutomaticVerificationInstructions) {
+	if v == nil {
+		return
+	}
+	for _, entry := range v.Environment {
+		if path, ok := strings.CutPrefix(entry, "TMPDIR="); ok {
+			_ = os.RemoveAll(path)
+		}
+	}
+}
+
+func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deliveryVerificationReceipt, path, binary string) (err error) {
 	a := deliveryEffectiveAgreement(s)
 	if a == nil || !a.AutomaticAcceptance() {
 		if binary != "" {
@@ -45,11 +96,18 @@ func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deli
 		return err
 	}
 	binding := FileBinding{Locator: binary, SHA256: hash(binaryBytes)}
-	for _, name := range []string{"home", "tmp"} {
-		if err := privateDir(filepath.Join(path, name)); err != nil {
-			return err
-		}
+	if err := privateDir(filepath.Join(path, "home")); err != nil {
+		return err
 	}
+	scratch, err := automaticScratch(receipt.AttemptID)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = os.RemoveAll(scratch)
+		}
+	}()
 	binarySnapshot := filepath.Join(path, "candidate-executable")
 	if err := d.writeOnce(binarySnapshot, binaryBytes); err != nil {
 		return err
@@ -62,12 +120,12 @@ func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deli
 		CandidateBinary:         workflowhandoff.AutomaticBinaryBinding{Locator: binding.Locator, SHA256: binding.SHA256},
 		CandidateBinarySnapshot: workflowhandoff.AutomaticBinaryBinding{Locator: binarySnapshot, SHA256: binding.SHA256},
 		ExecutedArgv:            []string{"/bin/sh", receipt.AcceptanceSnapshot.Locator},
-		Environment:             []string{"HOME=" + filepath.Join(path, "home"), "TMPDIR=" + filepath.Join(path, "tmp"), "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + binarySnapshot, "PLY_CANDIDATE_OID=" + receipt.CandidateOID, "PLY_CANDIDATE_TREE=" + receipt.CandidateTree},
+		Environment:             []string{"HOME=" + filepath.Join(path, "home"), "TMPDIR=" + scratch, "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + binarySnapshot, "PLY_CANDIDATE_OID=" + receipt.CandidateOID, "PLY_CANDIDATE_TREE=" + receipt.CandidateTree},
 		ExecutorClaim:           s.Request.Runtime.Provider + " / " + s.Request.Delivery.OwnerClaim,
 		ExecutorSessionID:       deliveryOwnerSession(s), ExpectedExit: 0,
 	}
 	if headlessRun(s.Request) {
-		policy, err := workerVerifierPolicy(d, s, path)
+		policy, err := workerVerifierPolicy(d, s, path, scratch)
 		if err != nil {
 			return err
 		}

@@ -124,13 +124,12 @@ func workerToolPolicy(s workflowState, prefix []string, disable bool) ([]string,
 	return nil, map[string]any{"kind": "PlyWorkerToolPolicy@1", "mcp_servers": servers, "disabled_features": workerDisabledFeatures, "user_config": "exec --ignore-user-config; discovered MCP names have transport-complete inert overrides, independently disabled", "exec_rules": "ignored by exec --ignore-rules", "scope": "Shell/filesystem enforcement is separately probed; app, browser, computer-use, plugin and MCP surfaces are disabled"}, nil
 }
 
-func workerVerifierPolicy(d Dependencies, s workflowState, directory string) (string, error) {
+func workerVerifierPolicy(d Dependencies, s workflowState, directory, tmp string) (string, error) {
 	quote := func(s string) string { b, _ := json.Marshal(s); return string(b) }
 	// Tests can read their candidate and dependencies but write only the native
 	// attempt's scratch space. They cannot alter Task, Git, worker or evidence.
 	policy := "(version 1)\n(deny default)\n(allow process*)\n(allow signal)\n(allow sysctl-read)\n(allow mach-lookup)\n(allow file-read*)\n(allow file-write* (literal \"/dev/null\"))\n"
-	for _, name := range []string{"home", "tmp"} {
-		path := filepath.Join(directory, name)
+	for _, path := range []string{filepath.Join(directory, "home"), tmp} {
 		if err := privateDir(path); err != nil {
 			return "", err
 		}

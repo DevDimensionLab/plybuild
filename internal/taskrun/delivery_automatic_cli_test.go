@@ -368,3 +368,82 @@ func TestAutomaticAcceptanceCLIAfterMergeRecovery(t *testing.T) {
 		t.Fatalf("wrong native closure or fabricated human QA: %v\n%s", err, output)
 	}
 }
+
+// TM01: ordinary automatic acceptance creates a disposable workspace fixture
+// in its default temp directory, as Go os.TempDir does. The script sets no
+// TMPDIR/GOTMPDIR itself.
+func TestAutomaticAcceptanceCLIDefaultTempHostsWorkspaceFixture(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	for _, nestedAmbient := range []bool{false, true} {
+		t.Run(fmt.Sprint(nestedAmbient), func(t *testing.T) {
+			f, o := automaticCLIFixture(t, binary, true, 60)
+			if nestedAmbient {
+				// The verifier's own inherited temp choice lies inside the workspace.
+				ambient := filepath.Join(f.R.WorkspaceRoot, "ambient-tmp")
+				if err := os.Mkdir(ambient, 0700); err != nil {
+					t.Fatal(err)
+				}
+				t.Setenv("TMPDIR", ambient)
+			}
+			deliveryTestCandidate(t, f, "temp fixture")
+			script := "#!/bin/sh\nset -eu\nfixture=$(mktemp -d \"$TMPDIR/fixture.XXXXXX\")\ncd \"$fixture\"\n\"$PLY_CANDIDATE_BINARY\" workspace init\nprintf 'fixture created\\n'\n"
+			if err := os.WriteFile(f.AcceptancePath, []byte(script), 0600); err != nil {
+				t.Fatal(err)
+			}
+			review := deliveryTestReview(t, f, "temp-fixture")
+			o, output, err := automaticCLI(binary, f, automaticCLIVerifyArgs(o, review, binary)...)
+			if err != nil || o.DeliveryStatus.Acceptance == nil || o.DeliveryStatus.Acceptance.Outcome != "pass" {
+				var stderr []byte
+				if o.Delivery.Attempt != nil {
+					stderr, _ = os.ReadFile(filepath.Join(o.Delivery.Attempt.Path, "stderr.txt"))
+				}
+				t.Fatalf("default temp could not host a workspace fixture: %v\nverifier stderr: %s\n%s", err, stderr, output)
+			}
+			r := automaticTestReceipt(t, o)
+			scratch := automaticTestScratch(t, r)
+			workspaceRoot, err := filepath.EvalSymlinks(f.R.WorkspaceRoot)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if resolved, err := filepath.EvalSymlinks(filepath.Dir(scratch)); err != nil || resolved != filepath.Dir(scratch) || strings.HasPrefix(scratch+"/", workspaceRoot+"/") {
+				t.Fatalf("scratch %s is not physical or lies inside workspace %s: %v", scratch, workspaceRoot, err)
+			}
+			if _, err := os.Lstat(scratch); !os.IsNotExist(err) {
+				t.Fatalf("attempt scratch was not removed after its preserved result: %v", err)
+			}
+			if raw, err := os.ReadFile(r.Stdout.Locator); err != nil || !strings.Contains(string(raw), "fixture created") {
+				t.Fatalf("stdout evidence lost with scratch: %q %v", raw, err)
+			}
+			// Completed receipt recovery never needs the removed scratch.
+			reused := automaticCLIOK(t, binary, f, "execute", "verify", o.RunID, "--context", o.Paths.Context, "--review", review, "--reuse", o.Delivery.Candidates[0].Key)
+			if reused.Delivery.Candidates[0].TaskResult.ID != o.Delivery.Candidates[0].TaskResult.ID {
+				t.Fatal("receipt recovery published another candidate")
+			}
+			assertAutomaticCLIClosure(t, binary, f, o)
+		})
+	}
+}
+
+func automaticTestReceipt(t *testing.T, o WorkflowRun) deliveryVerificationReceipt {
+	t.Helper()
+	raw, err := os.ReadFile(filepath.Join(o.Delivery.Attempt.Path, "verification.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var r deliveryVerificationReceipt
+	if err = json.Unmarshal(raw, &r); err != nil || r.Automatic == nil {
+		t.Fatalf("automatic receipt unreadable: %v", err)
+	}
+	return r
+}
+
+func automaticTestScratch(t *testing.T, r deliveryVerificationReceipt) string {
+	t.Helper()
+	for _, entry := range r.Automatic.Environment {
+		if value, ok := strings.CutPrefix(entry, "TMPDIR="); ok {
+			return value
+		}
+	}
+	t.Fatal("receipt has no TMPDIR")
+	return ""
+}

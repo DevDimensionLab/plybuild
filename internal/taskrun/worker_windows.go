@@ -20,7 +20,7 @@ func ServeWorker(Dependencies, string, string) error                    { return
 func SuperviseWorker(Dependencies, string, string) error                { return workerUnsupported() }
 func RunWorkerAttempt(Dependencies, string, string, string) error       { return workerUnsupported() }
 func WithParkedWorker(Dependencies, string, string, func() error) error { return workerUnsupported() }
-func workerVerifierPolicy(Dependencies, workflowState, string) (string, error) {
+func workerVerifierPolicy(Dependencies, workflowState, string, string) (string, error) {
 	return "", workerUnsupported()
 }
 func workerValidateReview(s workflowState, _ FileBinding, _, _ string) error {

@@ -287,7 +287,7 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 		in.Argv = append(in.Argv, extra...)
 		in.Argv = append(in.Argv, "-c", "model_reasoning_effort="+strconv.Quote(s.Request.Delivery.ReasoningEffort), "exec", "--ignore-user-config", "--ignore-rules", "--model", s.Request.Runtime.Model, "--json", "--output-schema", schema.Locator, "-o", filepath.Join(dir, "answer.json"), "-")
 	} else if w.Stage == "pretest" {
-		policy, err := workerVerifierPolicy(d, s, dir)
+		policy, err := workerVerifierPolicy(d, s, dir, filepath.Join(dir, "tmp"))
 		if err != nil {
 			return err
 		}
