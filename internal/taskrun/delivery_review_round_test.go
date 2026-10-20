@@ -16,6 +16,23 @@ import (
 // The synthetic Herdr gives each reviewer tab its own pane and native session.
 // It is a stand-in: no real Claude or Codex reviewer is started by these tests.
 const reviewRoundHerdrStandin = `
+# Each pane has its own shell. pane_shells binds panes to shells explicitly;
+# without it the caller's HERDR_PANE_ID is fresh and holds the caller shell.
+if cmd in (["pane", "list"], ["pane", "process-info"]):
+    shells = model.get("pane_shells")
+    if shells is None:
+        caller = os.environ.get("HERDR_PANE_ID", "")
+        shells = {caller: model["caller_shell"]} if caller else {}
+    shells = {"w-fixture:p1": 99999, **shells}
+    if cmd == ["pane", "list"]:
+        print(json.dumps({"id":"fixture", "result":{"panes":[{"workspace_id":"w-fixture", "pane_id":p, "focused":p == model.get("focused_pane")} for p in sorted(shells)]}}))
+        raise SystemExit(0)
+    pane = args[args.index("--pane") + 1]
+    if pane not in shells:
+        print(json.dumps({"id":"fixture", "error":{"code":"pane_not_found", "message":"pane not found"}}))
+        raise SystemExit(1)
+    print(json.dumps({"id":"fixture", "result":{"process_info":{"pane_id":pane, "shell_pid":shells[pane]}}}))
+    raise SystemExit(0)
 if cmd == ["tab", "create"] and args[args.index("--label") + 1].startswith("review "):
     n = model.get("review_tabs", 0) + 1
     model["review_tabs"] = n
@@ -75,6 +92,8 @@ func reviewRoundFixture(t *testing.T, provider ...string) (deliveryFixture, Work
 		o = deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
 	}
 	f.D.HerdrTimeout = 3 * time.Second
+	// A shell of the caller's own process ancestry, as a Herdr pane holds it.
+	workflowTestModel(t, f.workflowFixture, map[string]any{"caller_shell": os.Getppid()})
 	binary := filepath.Join(f.R.WorkspaceRoot, "candidate-executable")
 	if err := os.WriteFile(binary, []byte("#!/bin/sh\nprintf 'fixture candidate\\n'\n"), 0700); err != nil {
 		t.Fatal(err)

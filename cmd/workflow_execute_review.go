@@ -23,6 +23,7 @@ func newWorkflowExecuteReviewCommand(d taskrun.Dependencies) *cobra.Command {
 		return workflowRunError(err)
 	}}
 	c.Flags().StringVar(&in.Coordinator, "coordinator", "", "actual review coordinator claim (required)")
+	c.Flags().StringVar(&in.CoordinatorPane, "coordinator-pane", "", "the coordinator's verified live Herdr pane when this command does not run under that pane's shell (default: the pane whose shell holds this process)")
 	c.Flags().StringVar(&in.HerdrWorkspace, "herdr-workspace", "", "Herdr workspace for the reviewer tab (default: the owner's workspace)")
 	c.Flags().BoolVar(&in.NewRound, "new-round", false, "supersede an unknown reviewer start for the same candidate with a fresh round; the old reviewer can no longer return")
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")

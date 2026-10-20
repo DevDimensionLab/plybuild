@@ -2,11 +2,13 @@ package taskrun
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -18,9 +20,10 @@ import (
 // coordinator or reviewer supplies only actual judgment.
 
 type DeliveryReviewRequestInput struct {
-	Coordinator    string `json:"coordinator"`
-	HerdrWorkspace string `json:"herdr_workspace"`
-	NewRound       bool   `json:"new_round"`
+	Coordinator     string `json:"coordinator"`
+	CoordinatorPane string `json:"coordinator_pane"`
+	HerdrWorkspace  string `json:"herdr_workspace"`
+	NewRound        bool   `json:"new_round"`
 }
 
 type deliveryReviewContext struct {
@@ -207,7 +210,6 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 	if resolved, err := filepath.EvalSymlinks(executable); err == nil {
 		executable = resolved
 	}
-	coordinatorPane := os.Getenv("HERDR_PANE_ID")
 	var s workflowState
 	var round deliveryReviewRecord
 	var launch *deliveryReviewLaunch
@@ -228,7 +230,11 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		} else if r != nil {
 			return workflowError(4, "owner_retired: review the fresh Task copy's Run instead")
 		}
-		if coordinatorPane != "" && coordinatorPane == s.Result.Transport.PaneID {
+		coordinatorPane, e := deliveryCallerPane(d, s, in.CoordinatorPane)
+		if e != nil {
+			return e
+		}
+		if coordinatorPane == s.Result.Transport.PaneID {
 			return workflowError(4, "the owner cannot coordinate its own review; the coordinator runs this from its own session")
 		}
 		x, e := deliveryTarget(d, s)
@@ -287,6 +293,77 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 	return o, err
 }
 
+// deliveryCallerPane binds the coordinator's actual Herdr pane. It is the
+// pane whose shell holds this process; an inherited HERDR_PANE_ID is only the
+// first pane checked, since it can name a pane the caller left. A detached
+// caller (for example a provider daemon's tool process) names its verified
+// pane explicitly; Ply checks it against fresh Herdr state and the observed
+// ancestry. Focus is never used, and an unknown or ambiguous caller stops
+// before any review effect.
+func deliveryCallerPane(d Dependencies, s workflowState, explicit string) (string, error) {
+	next := "; run `ply workflow execute review` from the coordinator's own Herdr pane shell, or pass --coordinator-pane with its verified live pane ID"
+	inferred, ancestry := deliveryCallerPaneFromAncestry(d, s)
+	if explicit != "" {
+		if len(inferred) == 1 && inferred[0] != explicit {
+			return "", workflowError(4, fmt.Sprintf("--coordinator-pane %s contradicts pane %s, whose shell holds this process", explicit, inferred[0]))
+		}
+		if invokerShellPID(d, s, explicit) == 0 {
+			return "", workflowError(4, fmt.Sprintf("--coordinator-pane %s is not a live Herdr pane; pass the coordinator's verified live pane ID", explicit))
+		}
+		return explicit, nil
+	}
+	switch {
+	case len(inferred) == 1:
+		return inferred[0], nil
+	case len(inferred) > 1:
+		return "", workflowError(4, fmt.Sprintf("the coordinator's Herdr pane is ambiguous: %s all hold this process%s", strings.Join(inferred, ", "), next))
+	}
+	return "", workflowError(4, fmt.Sprintf("the coordinator's Herdr pane is unknown: %s (HERDR_PANE_ID %q)%s", ancestry, os.Getenv("HERDR_PANE_ID"), next))
+}
+
+// deliveryCallerPaneFromAncestry returns the panes whose shell is an ancestor
+// of this process, or why none could be observed.
+func deliveryCallerPaneFromAncestry(d Dependencies, s workflowState) ([]string, string) {
+	observe := d.LocalProcesses
+	if observe == nil {
+		observe = systemLocalProcesses
+	}
+	table, e := observe("", "")
+	if e != nil {
+		return nil, "local process inspection failed: " + e.Error()
+	}
+	parent := map[int]int{}
+	for _, p := range table {
+		parent[p.PID] = p.ParentPID
+	}
+	ancestors := map[int]bool{}
+	for pid, ok := parent[os.Getpid()]; ok && pid > 1 && !ancestors[pid]; pid, ok = parent[pid] {
+		ancestors[pid] = true
+	}
+	if hint := os.Getenv("HERDR_PANE_ID"); hint != "" && ancestors[invokerShellPID(d, s, hint)] {
+		return []string{hint}, ""
+	}
+	raw, e := workflowCall(d, s.Request, "pane", "list")
+	var list struct {
+		Panes []struct {
+			PaneID string `json:"pane_id"`
+		} `json:"panes"`
+	}
+	if e == nil {
+		e = json.Unmarshal(raw, &list)
+	}
+	if e != nil {
+		return nil, "Herdr pane list failed: " + e.Error()
+	}
+	matches := []string{}
+	for _, p := range list.Panes {
+		if ancestors[invokerShellPID(d, s, p.PaneID)] {
+			matches = append(matches, p.PaneID)
+		}
+	}
+	return matches, "no pane shell holds this process"
+}
+
 // deliveryReviewReserve records the one reviewer start of a round before any
 // Herdr effect. An existing reservation is only observed, never replayed.
 func deliveryReviewReserve(d Dependencies, s workflowState, r deliveryReviewRecord, workspaceID string, out **deliveryReviewLaunch) error {
@@ -319,6 +396,7 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 		}
 	}
 	b.WriteString("\nReview exactly this candidate against the Goal and Spec: the diff from the base, tests and actual evidence. Do not edit the Task worktree, commit, verify or integrate.\n")
+	fmt.Fprintf(&b, "Keep the candidate exact while testing. This pane runs with GOFLAGS=%s: Go modules stay readonly, so never pass -mod=mod, run go mod tidy, go get or change global Go or provider configuration. After the tests, `git -C %s status --porcelain` must print nothing and `git -C %s rev-parse HEAD` must print %s. If not, the tests did not run on the exact candidate: Never reset, clean or stash it; return blocked or changes_requested with the observed status and diff. Ply refuses passed while the Task worktree is dirty.\n", deliveryReviewGoFlags(), ShellQuote(s.Observed.Target.WorktreeLocator), ShellQuote(s.Observed.Target.WorktreeLocator), r.CandidateOID)
 	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return.\n\n")
 	fmt.Fprintf(&b, "Copy %s to your own file and fill in the decision, summary, findings and evidence gaps (reviewer_claim and reviewer_session_id are optional: Ply binds the session it started for you). Return from this reviewer pane, inside the workspace %s:\n\n", template, root)
 	fmt.Fprintf(&b, "    %s workflow execute review-return %s --context %s --file <your-review.json>\n\n", ShellQuote(executable), r.RunID, ShellQuote(context))
@@ -461,6 +539,18 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 		result, e := deliveryParseReviewReturn(raw, r.Request.Round)
 		if e != nil {
 			return e
+		}
+		if result.Decision == "passed" {
+			// A later owner commit leaves the pass bound to this round's
+			// candidate; uncommitted drift means the tests ran on another tree.
+			if x, e := deliveryTarget(d, s); e != nil {
+				paths := []string{}
+				for _, entry := range x.StatusEntries {
+					path, _ := base64.StdEncoding.DecodeString(entry.PathBase64)
+					paths = append(paths, strconv.Quote(string(path)))
+				}
+				return workflowError(4, fmt.Sprintf("passed is refused: the Task worktree is not the clean exact candidate %s (changed: %s); Ply does not reset it. Return blocked or changes_requested with the observed status and diff", r.Request.CandidateOID, strings.Join(paths, ", ")))
+			}
 		}
 		if result.ReviewerSession != "" && result.ReviewerSession != start.Agent.SessionID {
 			return workflowError(4, "reviewer_session_id differs from the reviewer session Ply started and observed; omit it or give that session")

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -84,6 +85,7 @@ func deliveryReviewPlan(d Dependencies, s workflowState, round int, workspaceID 
 			argv[i+1] = fmt.Sprintf("review %d %s", round, s.Request.Herdr.TabLabel)
 		}
 	}
+	argv = append(argv, "--env", "GOFLAGS="+deliveryReviewGoFlags())
 	return deliveryReviewLaunch{Kind: "ply.workflow.review-launch", SchemaVersion: 1, RunID: s.Result.RunID, Round: round, Provider: runtime.Provider, Model: runtime.Model, PermissionMode: runtime.PermissionBinding.ProfileID, WorkspaceID: workspaceID, AgentName: deliveryReviewAgentName(s.Result.RunID, round), CWD: s.Observed.Target.WorktreeLocator, TabArgv: argv, ReservedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}, nil
 }
 
@@ -261,4 +263,11 @@ func deliveryReviewClaudeEnvironment(d Dependencies, s workflowState, dir, pane 
 		time.Sleep(10 * time.Millisecond)
 	}
 	return workflowError(5, "reviewer Claude shell environment is unconfirmed; no reviewer was started. Inspect pane "+pane+"; its shell input is not replayed")
+}
+
+// deliveryReviewGoFlags is the reviewer's process-local GOFLAGS: the ambient
+// flags with readonly Go modules last, so an ambient -mod=mod cannot let the
+// reviewer's tests rewrite the candidate's module metadata.
+func deliveryReviewGoFlags() string {
+	return strings.TrimSpace(os.Getenv("GOFLAGS") + " -mod=readonly")
 }
