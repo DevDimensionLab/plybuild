@@ -10,8 +10,13 @@ import (
 
 func contentFixtureDraft(t *testing.T, root, kind, key string, fields map[string]canonicaljson.Value) TaskContentInput {
 	t.Helper()
+	return contentFixtureDraftFor(t, root, "task", kind, key, fields)
+}
+
+func contentFixtureDraftFor(t *testing.T, root string, id TaskID, kind, key string, fields map[string]canonicaljson.Value) TaskContentInput {
+	t.Helper()
 	fields["publication_key"] = key
-	fields["task_id"] = "task"
+	fields["task_id"] = string(id)
 	fields["registry_upgrade"] = nil
 	fields["recorder"] = contentObject(map[string]canonicaljson.Value{"actor_claim": "fixture agent", "control_surface": "isolated test fixture", "recorded_at_utc": "2026-09-29T12:00:00Z"})
 	b, e := canonicaljson.Marshal(contentEnvelope(kind, fields))
@@ -22,7 +27,7 @@ func contentFixtureDraft(t *testing.T, root, kind, key string, fields map[string
 	if e = os.WriteFile(path, b, 0o600); e != nil {
 		t.Fatal(e)
 	}
-	return TaskContentInput{TaskID: "task", File: path}
+	return TaskContentInput{TaskID: id, File: path}
 }
 
 func contentFixtureProblem(t *testing.T, f workItemJourneyFixture, key string) TaskContentInput {
@@ -47,15 +52,20 @@ func contentFixtureProblem(t *testing.T, f workItemJourneyFixture, key string) T
 }
 func contentFixtureSpec(t *testing.T, f workItemJourneyFixture, key string, previous *TaskRevisionRef) TaskContentInput {
 	t.Helper()
+	return contentFixtureSpecFor(t, f, "task", key, previous)
+}
+
+func contentFixtureSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID, key string, previous *TaskRevisionRef) TaskContentInput {
+	t.Helper()
 	root := filepath.Dir(f.wrapper)
 	r, e := f.dependencies.WorkItems.Snapshot(root)
 	if e != nil {
 		t.Fatal(e)
 	}
-	task, _ := findTask(r, "task")
+	task, _ := findTask(r, id)
 	epic, _ := findEpic(r, task.ParentEpicID)
 	parent, _ := findEpicRepo(*epic, task.RepoID)
-	problem := taskContentState(r, "task").ProblemHead
+	problem := taskContentState(r, id).ProblemHead
 	doc := filepath.Join(root, "solution.md")
 	b := []byte("# Fixture solution\n\nPreserve behavior, scope, verification and recovery.\n")
 	if e = os.WriteFile(doc, b, 0o600); e != nil {
@@ -64,12 +74,17 @@ func contentFixtureSpec(t *testing.T, f workItemJourneyFixture, key string, prev
 	ref := contentObject(map[string]canonicaljson.Value{"document_id": "solution", "section": nil})
 	refs := []canonicaljson.Value{ref}
 	part := contentObject(map[string]canonicaljson.Value{"state": "present", "reason": nil, "documents": refs})
-	return contentFixtureDraft(t, root, "WorkspaceTaskSpecDraft@1", key, map[string]canonicaljson.Value{"spec_id": "solution", "expected_previous": contentRefValue(previous), "problem": contentRefValue(problem), "title": "Fixture solution", "parts": contentObject(map[string]canonicaljson.Value{"abstract": part, "functional": part, "technical": part}), "documents": []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "solution", "source": contentObject(map[string]canonicaljson.Value{"kind": "file", "locator": doc, "sha256": digestTaskBytes(b), "size_bytes": int64(len(b)), "media_type": "text/markdown", "git_provenance": nil})})}, "supporting": []canonicaljson.Value{}, "requirements": []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "f-01", "functional_refs": refs, "acceptance": "Fixture behavior is preserved.", "verification_ids": []canonicaljson.Value{"unit"}, "technical_refs": refs})}, "removed_requirement_ids": []canonicaljson.Value{}, "phases": []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "implement", "purpose": "Implement the fixture solution.", "requirement_ids": []canonicaljson.Value{"f-01"}, "entry_criteria": []canonicaljson.Value{}, "exit_criteria": []canonicaljson.Value{"Fixture verified."}, "verification_ids": []canonicaljson.Value{"unit"}})}, "implementation_basis": contentObject(map[string]canonicaljson.Value{"project_id": string(task.ProjectID), "repo_id": string(task.RepoID), "git_common_dir": task.GitCommonDir, "epic_id": string(task.ParentEpicID), "parent_worktree_id": string(parent.Worktree.ID), "parent_ref": parent.Worktree.Ref, "parent_oid": parent.Worktree.OID, "parent_tree": parent.Worktree.Tree, "start_oid": parent.Worktree.OID, "start_tree": parent.Worktree.Tree}), "dependencies": []canonicaljson.Value{}, "change_reason": "Register a fixture solution."})
+	return contentFixtureDraftFor(t, root, id, "WorkspaceTaskSpecDraft@1", key, map[string]canonicaljson.Value{"spec_id": "solution", "expected_previous": contentRefValue(previous), "problem": contentRefValue(problem), "title": "Fixture solution", "parts": contentObject(map[string]canonicaljson.Value{"abstract": part, "functional": part, "technical": part}), "documents": []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "solution", "source": contentObject(map[string]canonicaljson.Value{"kind": "file", "locator": doc, "sha256": digestTaskBytes(b), "size_bytes": int64(len(b)), "media_type": "text/markdown", "git_provenance": nil})})}, "supporting": []canonicaljson.Value{}, "requirements": []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "f-01", "functional_refs": refs, "acceptance": "Fixture behavior is preserved.", "verification_ids": []canonicaljson.Value{"unit"}, "technical_refs": refs})}, "removed_requirement_ids": []canonicaljson.Value{}, "phases": []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "implement", "purpose": "Implement the fixture solution.", "requirement_ids": []canonicaljson.Value{"f-01"}, "entry_criteria": []canonicaljson.Value{}, "exit_criteria": []canonicaljson.Value{"Fixture verified."}, "verification_ids": []canonicaljson.Value{"unit"}})}, "implementation_basis": contentObject(map[string]canonicaljson.Value{"project_id": string(task.ProjectID), "repo_id": string(task.RepoID), "git_common_dir": task.GitCommonDir, "epic_id": string(task.ParentEpicID), "parent_worktree_id": string(parent.Worktree.ID), "parent_ref": parent.Worktree.Ref, "parent_oid": parent.Worktree.OID, "parent_tree": parent.Worktree.Tree, "start_oid": parent.Worktree.OID, "start_tree": parent.Worktree.Tree}), "dependencies": []canonicaljson.Value{}, "change_reason": "Register a fixture solution."})
 }
 func fixtureSelectTaskSpec(t *testing.T, f workItemJourneyFixture) TaskSpecBasis {
 	t.Helper()
+	return fixtureSelectTaskSpecFor(t, f, "task", "fixture")
+}
+
+func fixtureSelectTaskSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID, keyPrefix string) TaskSpecBasis {
+	t.Helper()
 	root := filepath.Dir(f.wrapper)
-	spec, e := RecordTaskSpec(f.dependencies, contentFixtureSpec(t, f, "fixture/spec", nil))
+	spec, e := RecordTaskSpec(f.dependencies, contentFixtureSpecFor(t, f, id, keyPrefix+"/spec", nil))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -78,7 +93,7 @@ func fixtureSelectTaskSpec(t *testing.T, f workItemJourneyFixture) TaskSpecBasis
 	for _, id := range []string{"acceptance_coverage", "implementation_basis", "problem_coverage", "recovery", "scope_and_phases", "three_parts"} {
 		checks = append(checks, contentObject(map[string]canonicaljson.Value{"id": id, "outcome": "pass", "reason": "Fixture assessment of the preserved solution.", "evidence_document_ids": []canonicaljson.Value{}}))
 	}
-	assessment, e := AssessTaskSpec(f.dependencies, contentFixtureDraft(t, root, "WorkspaceTaskSpecAssessmentDraft@1", "fixture/assessment", map[string]canonicaljson.Value{"spec_id": "solution", "spec": contentRefValue(ref), "expected_previous_assessment": nil, "outcome": "ready", "reason": "Fixture readiness claim.", "open_questions": []canonicaljson.Value{}, "checks": checks, "documents": []canonicaljson.Value{}}))
+	assessment, e := AssessTaskSpec(f.dependencies, contentFixtureDraftFor(t, root, id, "WorkspaceTaskSpecAssessmentDraft@1", keyPrefix+"/assessment", map[string]canonicaljson.Value{"spec_id": "solution", "spec": contentRefValue(ref), "expected_previous_assessment": nil, "outcome": "ready", "reason": "Fixture readiness claim.", "open_questions": []canonicaljson.Value{}, "checks": checks, "documents": []canonicaljson.Value{}}))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -86,8 +101,8 @@ func fixtureSelectTaskSpec(t *testing.T, f workItemJourneyFixture) TaskSpecBasis
 	if e != nil {
 		t.Fatal(e)
 	}
-	p := taskContentState(r, "task").ProblemHead
-	_, e = SelectTaskSolution(f.dependencies, contentFixtureDraft(t, root, "WorkspaceTaskSolutionSelectionDraft@1", "fixture/selection", map[string]canonicaljson.Value{"expected_previous_selection": nil, "action": "select", "solution": contentObject(map[string]canonicaljson.Value{"spec_id": "solution", "spec": contentRefValue(ref), "problem": contentRefValue(p), "assessment": contentRefValue(&TaskDecisionRef{*assessment.OutcomeRef.ID, assessment.OutcomeRef.ManifestSHA256})}), "reason": "Fixture selection.", "human_decision": contentObject(map[string]canonicaljson.Value{"actor_claim": "fixture human, not actual approval", "decided_at_utc": "2026-09-29T12:00:00Z", "source": "explicit_human_instruction", "statement": "Fixture only: select this solution for the isolated test."})}))
+	p := taskContentState(r, id).ProblemHead
+	_, e = SelectTaskSolution(f.dependencies, contentFixtureDraftFor(t, root, id, "WorkspaceTaskSolutionSelectionDraft@1", keyPrefix+"/selection", map[string]canonicaljson.Value{"expected_previous_selection": nil, "action": "select", "solution": contentObject(map[string]canonicaljson.Value{"spec_id": "solution", "spec": contentRefValue(ref), "problem": contentRefValue(p), "assessment": contentRefValue(&TaskDecisionRef{*assessment.OutcomeRef.ID, assessment.OutcomeRef.ManifestSHA256})}), "reason": "Fixture selection.", "human_decision": contentObject(map[string]canonicaljson.Value{"actor_claim": "fixture human, not actual approval", "decided_at_utc": "2026-09-29T12:00:00Z", "source": "explicit_human_instruction", "statement": "Fixture only: select this solution for the isolated test."})}))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -95,7 +110,7 @@ func fixtureSelectTaskSpec(t *testing.T, f workItemJourneyFixture) TaskSpecBasis
 	if e != nil {
 		t.Fatal(e)
 	}
-	task, _ := findTask(r, "task")
+	task, _ := findTask(r, id)
 	ps, rs, e := f.dependencies.Projects.Snapshot(root)
 	if e != nil {
 		t.Fatal(e)

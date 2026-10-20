@@ -722,7 +722,8 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 		}
 	}
 	for _, candidate := range registry.IntegrationAuthorities {
-		if candidate.Plan.Epic.ParentRef == parent.Worktree.Ref && findIntegrationResultForAuthority(registry, candidate.ID) == nil {
+		// Repository identity is the Git common-dir, so worktree aliases share one lock.
+		if candidate.Plan.Repository.GitCommonDir == task.GitCommonDir && candidate.Plan.Epic.ParentRef == parent.Worktree.Ref && findIntegrationResultForAuthority(registry, candidate.ID) == nil {
 			conflict("parent_integration_already_active")
 		}
 	}
