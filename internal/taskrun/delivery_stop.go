@@ -250,6 +250,15 @@ func deliveryLoadObservedStop(s *workflowState) error {
 			binding := event.Binding
 			pending = append(pending, binding)
 			s.Result.Delivery.ActiveStop = &binding
+		case "quota_stop_reconciliation":
+			r, err := deliveryReadQuotaReconciliation(*s, event.Binding)
+			if err != nil {
+				return err
+			}
+			if r.Input.EventID != event.ID || s.Result.Delivery.ActiveStop == nil || r.Stop != *s.Result.Delivery.ActiveStop {
+				return workflowError(4, "quota correction event or pending stop binding changed")
+			}
+			// The original stop stays pending for every owner operation.
 		case "stop_resolution":
 			b, err := workflowBound(event.Binding, 1<<20)
 			if err != nil {
@@ -295,6 +304,21 @@ func deliveryRecoverStopEvents(s *workflowState) error {
 		}
 		if err = json.Unmarshal(raw, &header); err != nil {
 			return err
+		}
+		if header.Kind == "ply.workflow.quota-stop-reconciliation" {
+			var r deliveryQuotaReconciliation
+			if err = decode(raw, 1<<20, &r); err != nil {
+				return err
+			}
+			for _, prior := range s.Result.Delivery.Events {
+				if prior.ID == r.Input.EventID {
+					return workflowError(4, "unindexed quota correction reuses a recorded event ID")
+				}
+			}
+			binding := FileBinding{path, hash(raw)}
+			s.Result.Delivery.Events = append(s.Result.Delivery.Events, DeliveryEventRecord{r.Input.EventID, "quota_stop_reconciliation", binding})
+			s.Result.Delivery.LastEventSHA256 = &binding.SHA256
+			continue
 		}
 		if header.Kind == "ply.workflow.owner-retirement" {
 			var r DeliveryRetirement
@@ -347,4 +371,10 @@ func deliveryProjectStop(s workflowState, o *WorkflowRun) {
 		startup = "check-in is still required if mandate receipt is absent."
 	}
 	o.NextAction = WorkflowAction{"coordinator", "A sourced provider stop is preserved at " + s.Result.Delivery.ActiveStop.Locator + ". Inspect and repair its cause within the existing mandate. The same owner must use execute resolve-stop with this observation digest, the actual clarified cause and the changed action it will take before continuing; " + startup + " Do not resend denied input, infer permission or release the writer."}
+	for _, event := range s.Result.Delivery.Events {
+		if event.Kind == "quota_stop_reconciliation" {
+			o.NextAction = WorkflowAction{"coordinator", "A retirement-only quota correction is preserved; the original stop still blocks owner continuation. Use execute retire for the selected replacement. Retirement rechecks the exact native source, all unresolved stops and attempts, then closes the bound pane and proves every writer absent before queue release."}
+			break
+		}
+	}
 }

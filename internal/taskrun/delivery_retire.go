@@ -99,6 +99,13 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		}
 		for _, stop := range stops {
 			if e := stop.Input.EffectStatus; e == DeliveryEffectUnknown || e == DeliveryEffectPartial {
+				corrected, err := deliveryQuotaAllowsRetirement(*s, stop)
+				if err != nil {
+					return err
+				}
+				if corrected {
+					continue
+				}
 				return workflowError(4, "unknown_effect: preserved stop "+stop.Input.EventID+" has "+e+" effects for action "+stop.Input.Action+"; establish them from actual observations before replacement")
 			}
 		}
@@ -112,6 +119,19 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		absence, liveness, err := deliveryRetireAbsence(d, *s)
 		if err != nil {
 			return err
+		}
+		// Absence establishes no writer remains, but cannot establish what the
+		// writer did between the first source check and the actual pane close.
+		for _, stop := range stops {
+			if e := stop.Input.EffectStatus; e == DeliveryEffectUnknown || e == DeliveryEffectPartial {
+				corrected, err := deliveryQuotaAllowsRetirement(*s, stop)
+				if err != nil {
+					return workflowError(4, "quota_source_changed_after_close: writer absence observed; retirement and queue release remain blocked. "+err.Error())
+				}
+				if !corrected {
+					return workflowError(4, "quota correction absent after close; retirement and queue release remain blocked")
+				}
+			}
 		}
 		r := DeliveryRetirement{Kind: "ply.workflow.owner-retirement", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, NativeSession: s.Result.Transport.AgentSessionID, Input: in, PaneClosed: closed, Absence: absence, ActiveStop: dl.ActiveStop, WriterLiveness: liveness, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		if _, err = deliveryAppendEvent(d, s, "owner-retirement", "owner_retirement", r); err != nil {

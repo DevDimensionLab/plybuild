@@ -17,6 +17,9 @@ if cmd == ["pane", "list"] and model.get("retire_inventory_denied"):
     print(json.dumps({"error":{"code":"permission_denied", "message":"inspection denied"}}), file=sys.stderr)
     raise SystemExit(1)
 if cmd == ["pane", "close"]:
+    if model.get("quota_append_on_close"):
+        with open(model["quota_source_path"], "a") as transcript:
+            transcript.write(model["quota_append_on_close"])
     if not model.get("close_ignored"):
         model["closed_transport"] = True
     path.write_text(json.dumps(model))

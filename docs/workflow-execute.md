@@ -278,6 +278,80 @@ launch or change permission mode. FL01 does not repair that configuration lock.
 
 ### Retire a selected owner for a fresh Task copy
 
+For a misclassified **pre-execution Claude quota stop**, a coordinator can add
+one source-checked retirement annotation. This applies only when the stop's
+partial/unknown label described unfinished work and the named continuation
+never started after quota. It cannot clear an earlier tool's uncertain effects.
+
+```shell
+ply workflow execute reconcile-quota-stop RUN_ID \
+  --event-id quota-correction-01 --stop sha256:EXACT_STOP_DIGEST \
+  --provider claude --native-session EXACT_SESSION \
+  --action 'Exact original stopped continuation action' \
+  --quota-event NATIVE_QUOTA_UUID --last-tool-result LAST_BASH_RESULT_UUID \
+  --source-sha256 sha256:COMPLETE_NATIVE_TRANSCRIPT_DIGEST \
+  --observer 'Actual coordinator' \
+  --reason 'Why unfinished work was mistaken for an executed continuation'
+```
+
+Use `execute show RUN_ID --format json` to inspect the bound session and stop.
+Inspect only necessary native transcript structure, then compute its full fresh
+SHA-256 (for example `shasum -a 256 /absolute/native/session.jsonl`). Ply locates
+that session through its existing provider-session locator; it accepts no
+arbitrary evidence path. The native file must be a private physical regular
+file, at most 32 MiB. It must bind the exact session, with the selected Bash
+call/result and quota in the exact Task cwd, and contain the
+selected `usage_limit_reached` API rejection (429), and end the preceding tool
+activity at the selected synchronous Bash result with `interrupted=false`.
+The selected result starts the precise stop window: no later tool call/result
+or assistant activity is allowed apart from the exact quota rejection. At that
+boundary every observed tool call must have a matching return, every async
+Agent launch needs its matching native `session-task` completion notification,
+and no interrupted tool or unsupported background effect may remain. Counts, peer
+handbacks, tool output and free text cannot replace that notification. No later
+tool use/result, task completion or assistant activity is permitted. Rule
+refusals and unresolved native attempts remain blocked.
+
+Matched returns before this boundary remain historical source only; the audit's
+fixed scope explicitly says their effects are **not assessed**. A metadata gap
+or error string in such an earlier return is not the named next continuation;
+historical cwd changes likewise remain source rather than a new effect claim.
+It cannot itself establish the selected boundary: that requires the exact
+successful synchronous native Bash result with `interrupted=false`. Nor can
+`is_error`, text or a later successful result hide a tool that actually started
+inside the window. Selecting an earlier result fails if any tool ran afterwards.
+Every other unresolved native unknown/partial stop still blocks retirement,
+including one concerning an earlier action.
+
+The immutable event binds Run, request, stop, action, provider, session, exact
+native event IDs, original source path/hash and a private copied transcript.
+Its scope attests only the unstarted continuation after the selected result;
+it grants no historical effect attestation.
+Original stop/evidence bytes remain unchanged. The same event/input retry is
+idempotent, including after a lost response; different input cannot overwrite
+it. A changed source requires a new event ID and fresh full validation. The
+latest valid audit for the exact stop is considered; older snapshots stay
+immutable. A new ID for an already audited identical source is rejected. The annotation keeps the
+stop active and grants no acceptance, continuation, owner input or release.
+`resolve-stop` retains its owner-only behavior and still refuses partial/unknown
+effects. Historical contracts remain readable; older controls fail closed.
+
+Only ordinary `execute retire` consumes this annotation. It rechecks the exact
+unchanged native source before pane close and again after actual close and
+writer absence, considers every other unresolved stop/attempt, and still
+proves all writers absent before queue release. A
+changed or missing native source remains blocked, even if a correction retry
+returns its preserved observation. A close may already have happened: the
+error preserves before/after source hashes, records no retirement and releases
+no queue slot. Repeating retirement with the stale audit stops before another
+close. If fresh inspection shows only benign final metadata, use a new audit
+event ID and its fresh full source hash; ordinary retirement then observes the
+already absent pane without replaying close. Actual new tool/assistant activity
+fails that audit and requires its real effect to be established through the
+existing stop workflow; this command cannot clear it. Preserve that sourced
+observation with `observe-stop` when needed. There is no force or generic
+partial-to-none operation.
+
 When the coordinator selects replacement (for example standing cattle or
 Codex backup), one operation from the containing workspace ends the old owner:
 

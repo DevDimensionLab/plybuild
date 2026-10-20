@@ -62,6 +62,38 @@ func newWorkflowExecuteResolveStopCommand(d taskrun.Dependencies) *cobra.Command
 	return c
 }
 
+func newWorkflowExecuteReconcileQuotaStopCommand(d taskrun.Dependencies) *cobra.Command {
+	var in taskrun.DeliveryQuotaReconcileInput
+	var format string
+	c := &cobra.Command{Use: "reconcile-quota-stop RUN_ID", Short: "Audit a mistaken pre-execution Claude quota effect for retirement only", Long: "Coordinator annotation of one exact unresolved work stop. Ply locates the bound Claude native transcript itself, requires the supplied source hash, exact usage_limit_reached event and successful synchronous Bash result, and rejects tools or assistant activity after that selected boundary. At the boundary no outstanding tool, async effect or actual interruption may remain. Matched historical returns are source only; their effects are not assessed. The source is copied privately and the original stop remains immutable and active. This grants no owner continuation, acceptance, input or writer release. Only ordinary execute retire consumes the correction, rechecks the unchanged native source, all other stops and attempts, and proves every writer absent. No arbitrary evidence file or bypass flag is accepted. Identical event retries reuse the same observation; conflicting input is rejected.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+		if err := executeFormat(format); err != nil {
+			return err
+		}
+		ws, err := d.Workflow.Workspace.ObserveContaining()
+		if err != nil {
+			return err
+		}
+		out, err := taskrun.WorkflowReconcileQuotaStop(d, ws.Observation.Root, args[0], in)
+		if e := writeExecuteResult(c, format, out); e != nil {
+			return e
+		}
+		return workflowRunError(err)
+	}}
+	c.Flags().StringVar(&in.EventID, "event-id", "", "stable immutable correction event ID")
+	c.Flags().StringVar(&in.StopSHA256, "stop", "", "exact current stop SHA-256")
+	c.Flags().StringVar(&in.Provider, "provider", "", "bound provider (claude)")
+	c.Flags().StringVar(&in.NativeSession, "native-session", "", "exact bound native session")
+	c.Flags().StringVar(&in.Action, "action", "", "exact stopped continuation action, not an earlier tool or unfinished code")
+	c.Flags().StringVar(&in.QuotaEvent, "quota-event", "", "exact native quota rejection UUID")
+	c.Flags().StringVar(&in.LastToolResult, "last-tool-result", "", "UUID of the last completed synchronous Bash result before quota")
+	c.Flags().StringVar(&in.SourceSHA256, "source-sha256", "", "SHA-256 of the complete native transcript including trailing events")
+	c.Flags().StringVar(&in.Observer, "observer", "", "actual coordinator correcting the observation")
+	c.Flags().StringVar(&in.Reason, "reason", "", "why partial/unknown described unfinished work rather than this unstarted continuation")
+	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	setWorkFlagErrors(c)
+	return c
+}
+
 func newWorkflowExecuteRetireCommand(d taskrun.Dependencies) *cobra.Command {
 	var in taskrun.DeliveryRetireInput
 	var format string
