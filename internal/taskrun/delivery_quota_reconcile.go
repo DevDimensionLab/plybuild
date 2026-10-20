@@ -11,6 +11,7 @@ import (
 )
 
 const quotaSourceLimit = 32 << 20
+const capacityRetirementScope = "native_completion_of_commands_active_at_capacity_and_full_tail;precapacity_terminal_results_preserved_as_history;retirement_only;no_effect_replay"
 const quotaRetirementScope = "only_the_unstarted_continuation_after_last_tool_result;historical_effects_not_assessed"
 
 // This is a retirement-only annotation of one mistaken pre-execution quota
@@ -23,6 +24,8 @@ type DeliveryQuotaReconcileInput struct {
 	Action         string `json:"action"`
 	QuotaEvent     string `json:"quota_event"`
 	LastToolResult string `json:"last_tool_result"`
+	ProcessID      string `json:"process_id,omitempty"`
+	CommandSHA256  string `json:"command_sha256,omitempty"`
 	SourceSHA256   string `json:"source_sha256"`
 	Observer       string `json:"observer"`
 	Reason         string `json:"reason"`
@@ -38,6 +41,7 @@ type deliveryQuotaReconciliation struct {
 	Stop          FileBinding                 `json:"stop"`
 	Source        FileBinding                 `json:"source"`
 	Evidence      FileBinding                 `json:"evidence"`
+	History       []DeliveryEventRecord       `json:"history,omitempty"`
 	RecordedAtUTC string                      `json:"recorded_at_utc"`
 }
 
@@ -96,7 +100,7 @@ func WorkflowReconcileQuotaStop(d Dependencies, root, id string, in DeliveryQuot
 				return workflowError(4, "this exact stop and source already have an immutable quota correction; reuse its event ID")
 			}
 		}
-		path, err := deliveryProviderSession(*s)
+		path, err := deliveryReconciliationSession(*s)
 		if err != nil {
 			return err
 		}
@@ -114,7 +118,10 @@ func WorkflowReconcileQuotaStop(d Dependencies, root, id string, in DeliveryQuot
 		if err := d.writeOnce(copyPath, raw); err != nil {
 			return err
 		}
-		r := deliveryQuotaReconciliation{Kind: "ply.workflow.quota-stop-reconciliation", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, Scope: quotaRetirementScope, Input: in, Stop: stop, Source: source, Evidence: FileBinding{copyPath, source.SHA256}, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+		r := deliveryQuotaReconciliation{Kind: "ply.workflow.quota-stop-reconciliation", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, Scope: deliveryReconciliationScope(in.Provider), Input: in, Stop: stop, Source: source, Evidence: FileBinding{copyPath, source.SHA256}, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+		if in.Provider == "codex" {
+			r.History = append([]DeliveryEventRecord(nil), dl.Events...)
+		}
 		_, err = deliveryAppendEvent(d, s, in.EventID, "quota_stop_reconciliation", r)
 		return err
 	})
@@ -141,11 +148,11 @@ func deliveryQuotaStopBinding(s workflowState, binding FileBinding, in DeliveryQ
 		return err
 	}
 	if stop.Kind != "ply.workflow.coordinator-stop" || stop.RunID != s.Result.RunID ||
-		in.Provider != "claude" || in.Provider != s.Request.Runtime.Provider || in.Provider != stop.Input.Provider ||
+		(in.Provider != "claude" && in.Provider != "codex") || in.Provider != s.Request.Runtime.Provider || in.Provider != stop.Input.Provider ||
 		in.NativeSession != s.Result.Transport.AgentSessionID || in.NativeSession != stop.Input.NativeSession ||
 		in.StopSHA256 != binding.SHA256 || in.Action != stop.Input.Action || stop.Input.Stage != "work" || stop.Input.Rule != "" ||
 		(stop.Input.EffectStatus != DeliveryEffectPartial && stop.Input.EffectStatus != DeliveryEffectUnknown) {
-		return workflowError(4, "quota correction must bind the exact Claude work stop, session and action; rule refusals cannot be corrected")
+		return workflowError(4, "quota correction must bind the exact provider work stop, session and action; rule refusals cannot be corrected")
 	}
 	return nil
 }
@@ -159,8 +166,28 @@ func deliveryReadQuotaReconciliation(s workflowState, binding FileBinding) (deli
 	if err := decode(raw, 1<<20, &r); err != nil {
 		return r, err
 	}
-	if r.Kind != "ply.workflow.quota-stop-reconciliation" || r.SchemaVersion != 1 || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.Scope != quotaRetirementScope || r.Source.SHA256 != r.Input.SourceSHA256 || r.Evidence.SHA256 != r.Source.SHA256 {
+	if r.Kind != "ply.workflow.quota-stop-reconciliation" || r.SchemaVersion != 1 || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.Scope != deliveryReconciliationScope(r.Input.Provider) || r.Source.SHA256 != r.Input.SourceSHA256 || r.Evidence.SHA256 != r.Source.SHA256 {
 		return r, workflowError(4, "quota correction Run, request or source binding changed")
+	}
+	if r.Input.Provider == "codex" {
+		index := -1
+		for i, event := range s.Result.Delivery.Events {
+			if event.ID == r.Input.EventID && event.Kind == "quota_stop_reconciliation" {
+				index = i
+				break
+			}
+		}
+		if index != len(r.History) {
+			return r, workflowError(4, "capacity audit does not bind its exact preceding native history")
+		}
+		if len(r.History) == 0 || len(r.History) > len(s.Result.Delivery.Events) || !equal(r.History, s.Result.Delivery.Events[:len(r.History)]) {
+			return r, workflowError(4, "capacity audit native event history changed")
+		}
+		for _, event := range r.History {
+			if _, err := workflowBound(event.Binding, 2<<20); err != nil {
+				return r, err
+			}
+		}
 	}
 	if err := deliveryQuotaStopBinding(s, r.Stop, r.Input); err != nil {
 		return r, err
@@ -204,7 +231,7 @@ func deliveryQuotaAllowsRetirement(s workflowState, stop DeliveryStopRecord) (bo
 		if err := deliveryQuotaAttemptGuard(s); err != nil {
 			return false, err
 		}
-		path, err := deliveryProviderSession(s)
+		path, err := deliveryReconciliationSession(s)
 		if err != nil {
 			return false, err
 		}
@@ -252,6 +279,9 @@ type quotaTranscriptRow struct {
 }
 
 func deliveryValidateQuotaTranscript(s workflowState, in DeliveryQuotaReconcileInput, raw []byte) error {
+	if in.Provider == "codex" {
+		return deliveryValidateCapacityTranscript(s, in, raw)
+	}
 	fail := func(reason string) error { return workflowError(4, "native pre-execution quota proof: "+reason) }
 	if len(raw) == 0 || raw[len(raw)-1] != '\n' {
 		return fail("incomplete JSONL source")

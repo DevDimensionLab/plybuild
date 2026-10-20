@@ -66,8 +66,12 @@ func TestAR03RetirementDoesNotReplayDeniedHerdrInspection(t *testing.T) {
 }
 
 func retireFixture(t *testing.T) (deliveryFixture, WorkflowRun) {
+	return retireProviderFixture(t, "claude")
+}
+
+func retireProviderFixture(t *testing.T, provider string) (deliveryFixture, WorkflowRun) {
 	t.Helper()
-	f := receiptFixture(t, "claude", deliveryFixtureOptions{Agreement: &workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "fixture orchestrator", TimeoutSeconds: 30}}})
+	f := receiptFixture(t, provider, deliveryFixtureOptions{Agreement: &workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "fixture orchestrator", TimeoutSeconds: 30}}})
 	herdr, err := os.ReadFile(f.R.Herdr.Executable.Path)
 	if err != nil {
 		t.Fatal(err)
@@ -79,7 +83,7 @@ func retireFixture(t *testing.T) (deliveryFixture, WorkflowRun) {
 	f.R.Herdr.Executable.SHA256 = hash(herdr)
 	f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)
 	o := workflowTestStart(t, f.workflowFixture)
-	o, err = WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, DeliveryBeginInput{Provider: "claude", NativeSession: o.Transport.AgentSessionID}, true)
+	o, err = WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, DeliveryBeginInput{Provider: provider, NativeSession: o.Transport.AgentSessionID}, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +109,7 @@ func retireAsCoordinator(f *deliveryFixture) {
 func retireStopFixture(t *testing.T, f deliveryFixture, o WorkflowRun, effect string) WorkflowRun {
 	t.Helper()
 	proof := writeAny(t, f.R.WorkspaceRoot, "refusal-"+effect+".json", map[string]string{"source": "synthetic provider refusal", "effect_status": effect})
-	stopped, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryStopInput{EventID: "refusal-" + effect, Provider: "claude", NativeSession: o.Transport.AgentSessionID, Stage: "work", Observer: "fixture coordinator", Reason: "Synthetic refused action", EvidencePath: proof, Action: "synthetic refused action", EffectStatus: effect})
+	stopped, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryStopInput{EventID: "refusal-" + effect, Provider: f.R.Runtime.Provider, NativeSession: o.Transport.AgentSessionID, Stage: "work", Observer: "fixture coordinator", Reason: "Synthetic refused action", EvidencePath: proof, Action: "synthetic refused action", EffectStatus: effect})
 	if err != nil {
 		t.Fatal(err)
 	}

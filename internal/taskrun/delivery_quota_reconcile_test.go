@@ -9,6 +9,17 @@ import (
 	"testing"
 )
 
+// Native source guards require physical ancestors. macOS TMPDIR can traverse
+// /var -> /private/var; canonicalize only this synthetic provider HOME.
+func quotaFixtureHome(t *testing.T) string {
+	t.Helper()
+	home, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return home
+}
+
 func quotaTranscript(t *testing.T, f deliveryFixture, o WorkflowRun) string {
 	t.Helper()
 	path := ownerResumeTranscript(t, f, o)
@@ -76,7 +87,7 @@ func quotaWriteRows(t *testing.T, path string, rows []map[string]any) []byte {
 // matching native session-task completion before quota satisfies this boundary;
 // assistant text, peer handbacks and tool output cannot substitute for it.
 func TestQuotaReconcileTranscriptBoundaries(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	t.Setenv("HOME", quotaFixtureHome(t))
 	t.Setenv("CLAUDE_CONFIG_DIR", "")
 	f, o := retireFixture(t)
 	o = retireStopFixture(t, f, o, DeliveryEffectPartial)
@@ -209,7 +220,7 @@ func TestQuotaReconcileTranscriptBoundaries(t *testing.T) {
 // selected successful result. Matched historical returns are not that action,
 // and accepting this window must make no statement about their earlier effects.
 func TestQuotaReconcileWindowPreservesHistoricalEffects(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	t.Setenv("HOME", quotaFixtureHome(t))
 	t.Setenv("CLAUDE_CONFIG_DIR", "")
 	f, o := retireFixture(t)
 	o = retireStopFixture(t, f, o, DeliveryEffectPartial)
@@ -274,7 +285,7 @@ func TestQuotaReconcileWindowPreservesHistoricalEffects(t *testing.T) {
 func TestQuotaReconcileRetainsSafetyGates(t *testing.T) {
 	for _, mode := range []string{"earlier_unknown", "changed_source", "missing_source", "tampered_copy", "remaining_writer", "ignored_close", "native_attempt", "wrong_action", "wrong_session", "wrong_digest", "rule_stop"} {
 		t.Run(mode, func(t *testing.T) {
-			t.Setenv("HOME", t.TempDir())
+			t.Setenv("HOME", quotaFixtureHome(t))
 			t.Setenv("CLAUDE_CONFIG_DIR", "")
 			f, o := retireFixture(t)
 			if mode == "earlier_unknown" {
@@ -364,7 +375,7 @@ func TestQuotaReconcileRetainsSafetyGates(t *testing.T) {
 }
 
 func TestQuotaReconcileNeverReopensOwnerAndRecoversLostState(t *testing.T) {
-	t.Setenv("HOME", t.TempDir())
+	t.Setenv("HOME", quotaFixtureHome(t))
 	t.Setenv("CLAUDE_CONFIG_DIR", "")
 	f, o := retireFixture(t)
 	o = retireStopFixture(t, f, o, DeliveryEffectPartial)
@@ -406,7 +417,7 @@ func TestQuotaReconcileNeverReopensOwnerAndRecoversLostState(t *testing.T) {
 func TestQuotaReconcileSourceChangeDuringPaneClose(t *testing.T) {
 	for _, mode := range []string{"tool_started", "benign_final_metadata"} {
 		t.Run(mode, func(t *testing.T) {
-			t.Setenv("HOME", t.TempDir())
+			t.Setenv("HOME", quotaFixtureHome(t))
 			t.Setenv("CLAUDE_CONFIG_DIR", "")
 			f, o := retireFixture(t)
 			o = retireStopFixture(t, f, o, DeliveryEffectPartial)
@@ -482,7 +493,7 @@ func TestQuotaReconcileSourceChangeDuringPaneClose(t *testing.T) {
 // active until ordinary retirement establishes actual writer absence.
 func TestQuotaReconcileCLIJourney(t *testing.T) {
 	binary := automaticCLIBinary(t)
-	t.Setenv("HOME", t.TempDir())
+	t.Setenv("HOME", quotaFixtureHome(t))
 	t.Setenv("CLAUDE_CONFIG_DIR", "")
 	f, o := retireFixture(t)
 	o = retireStopFixture(t, f, o, DeliveryEffectPartial)

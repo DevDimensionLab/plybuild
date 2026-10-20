@@ -373,7 +373,7 @@ func deliveryProjectStop(s workflowState, o *WorkflowRun) {
 	o.NextAction = WorkflowAction{"coordinator", "A sourced provider stop is preserved at " + s.Result.Delivery.ActiveStop.Locator + ". Inspect and repair its cause within the existing mandate. The same owner must use execute resolve-stop with this observation digest, the actual clarified cause and the changed action it will take before continuing; " + startup + " Do not resend denied input, infer permission or release the writer."}
 	for _, event := range s.Result.Delivery.Events {
 		if event.Kind == "quota_stop_reconciliation" {
-			o.NextAction = WorkflowAction{"coordinator", "A retirement-only quota correction is preserved; the original stop still blocks owner continuation. Use execute retire for the selected replacement. Retirement rechecks the exact native source, all unresolved stops and attempts, then closes the bound pane and proves every writer absent before queue release."}
+			o.NextAction = WorkflowAction{"coordinator", "A retirement-only provider reconciliation is preserved; the original stop still blocks owner continuation. Use execute retire for the selected replacement. Retirement rechecks the exact native source, all unresolved stops and attempts, then closes the bound pane and proves every writer absent before queue release."}
 			break
 		}
 	}

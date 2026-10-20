@@ -278,6 +278,72 @@ launch or change permission mode. FL01 does not repair that configuration lock.
 
 ### Retire a selected owner for a fresh Task copy
 
+For a **Codex capacity stop with eventual command completion**, use the separate
+retirement-only audit:
+
+```shell
+ply workflow execute reconcile-capacity-stop RUN_ID \
+  --event-id capacity-audit-01 --stop sha256:EXACT_STOP_DIGEST \
+  --provider codex --native-session EXACT_SESSION \
+  --action 'Exact original stopped action' \
+  --capacity-event EXACT_SERVER_OVERLOADED_TIMESTAMP \
+  --command-id EXACT_COMMAND_EXECUTION_ID --process-id EXACT_PROCESS_ID \
+  --command-sha256 sha256:COMPACT_JSON_ARGV_DIGEST \
+  --source-sha256 sha256:COMPLETE_NATIVE_TRANSCRIPT_DIGEST \
+  --observer 'Actual coordinator' --reason 'Actual completion evidence'
+```
+
+Ply locates exactly one bound native session file; it accepts no supplied evidence
+path. The audit binds the Run, request, original stop, full native stop/resolution
+event history, session metadata/Task cwd and complete source bytes. The command
+digest hashes the compact native JSON `command` argv array, preserving its strings.
+The timestamp selects the exact `task_complete` with `server_overloaded`, not a
+permission error. The selected running process needs a structured executor result
+and a matching successful native `CommandExecution` whose start precedes capacity
+and whose completion follows it. Missing, duplicated or conflicting identities,
+returns, native timestamps and unsupported source forms are rejected.
+
+Executor source must use literal `text(await tools.exec_command({...}));` and
+empty-input `write_stdin` statements, or the exact literal
+`const results=await Promise.allSettled([...]);results.forEach(text);` form.
+Every declaration needs its own native result, matched to its command bytes or
+poll process and native completion. Variables, loops, computed arguments,
+unprinted calls/results and unsupported forms are rejected. A script-selected
+finished output cannot conceal a second invocation. This bounded grammar does
+not evaluate JavaScript or classify shell contents.
+
+Every reported running process in the **entire source**, including before this
+turn, needs native terminal completion. Yielded executor cells need their exact
+completed wait. From the selected launch through the full later tail, supported
+executor calls need matched returns and native command completions. Unknown tools,
+activity, errors or effects remain blocked. Tool output alone cannot prove an
+execution completed; a sibling command's completion cannot close a running process.
+Fully native-recorded commands terminal **before capacity** remain historical
+completed work, including their actual nonzero exits. A terminal nonzero native
+executor result without a command item stays historical failure and cannot
+satisfy any running-process completion proof. Existing denial/resolution history
+is bound explicitly; separately recorded uncertain effects still block retirement.
+This claims neither that
+the commands were read-only nor that they had no effects. Failures active at
+capacity or later are rejected. The sole narrow exception is the exact same
+owner's single literal native `resolve-stop` invocation for this Run/context/stop,
+with exit 4 and the matching native refusal that partial/unknown effects cannot
+be cleared. Extra shell commands, changed identities and permission failures do
+not satisfy that exception. Completed `clock.sleep` is supported; other extensions
+are not assumed harmless. Native stops and unresolved attempts remain independent
+blockers.
+
+The append-only audit uses the existing private reconciliation journal; its
+Codex scope and source copy preserve all actual failures and prior resolved stops.
+An identical event retry returns the original observation. It never clears the
+original stop, resumes the owner, replays a command or releases writing ownership.
+Only ordinary `execute retire` consumes it, checks the exact source before and
+after closing the owner, preserves every other unresolved stop/attempt, and
+requires positive absence of every known writer before releasing this queue slot.
+Source drift requires fresh inspection and a new audit, never a blind close retry.
+
+The existing Claude pre-execution quota contract remains separate:
+
 For a misclassified **pre-execution Claude quota stop**, a coordinator can add
 one source-checked retirement annotation. This applies only when the stop's
 partial/unknown label described unfinished work and the named continuation
