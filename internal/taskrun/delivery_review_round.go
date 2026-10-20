@@ -248,8 +248,15 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		}
 		n := len(rounds)
 		same := n > 0 && rounds[n-1].Request.CandidateOID == x.OID && rounds[n-1].Request.CandidateTree == x.Tree
-		if in.NewRound && (!same || rounds[n-1].Result != nil || deliveryReviewStartState(rounds[n-1].Dir).State == "started") {
-			return workflowError(4, "--new-round only replaces an unknown reviewer start for the same candidate before any return")
+		if in.NewRound {
+			if !same || !deliveryReviewEvidenceBlocked(rounds[n-1].Result) && (rounds[n-1].Result != nil || deliveryReviewStartState(rounds[n-1].Dir).State == "started") {
+				return workflowError(4, "--new-round requires the same candidate and either an unknown reviewer start before any return or a sealed blocked review with evidence gaps and no findings")
+			}
+			for _, r := range rounds {
+				if r.Request.CandidateOID == x.OID && r.Request.CandidateTree == x.Tree && r.Result != nil && r.Result.Decision != "passed" && !deliveryReviewEvidenceBlocked(r.Result) {
+					return workflowError(4, fmt.Sprintf("review round %d still governs this candidate (%s); correct it and commit a new candidate", r.Request.Round, deliveryReviewFindingIDs(&r)))
+				}
+			}
 		}
 		if same && !in.NewRound {
 			round = rounds[n-1]
@@ -262,8 +269,8 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 			r.Previous = &rounds[number-2].Binding
 		}
 		if in.NewRound {
-			// The coordinator replaces an unknown reviewer start. The old
-			// round keeps its history but can no longer return or govern.
+			// The coordinator replaces an unknown start or reassesses an
+			// evidence-only blocked return. Preserve all prior round bytes.
 			r.Supersedes = &rounds[n-1].Binding
 		}
 		if r.Context, e = workflowKeep(d, filepath.Join(dir, "context.json"), deliveryReviewContext{"ply.workflow.review-context", 1, id, s.Result.RequestSHA256, number, x.OID, x.Tree}); e != nil {
@@ -585,9 +592,13 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 	return o, err
 }
 
-// deliveryReviewJudge decides one exact candidate across all its rounds. Any
-// sealed negative return for it governs. Otherwise its latest round that the
-// coordinator has not superseded decides: open rounds are awaited.
+func deliveryReviewEvidenceBlocked(r *deliveryReviewResult) bool {
+	return r != nil && r.Decision == "blocked" && len(r.Findings) == 0 && len(r.EvidenceGaps) > 0
+}
+
+// deliveryReviewJudge decides one exact candidate across all its rounds.
+// Superseded evidence-only blocks remain history; all other sealed negative
+// returns still govern. Otherwise the latest active round decides.
 func deliveryReviewJudge(rounds []deliveryReviewRecord, oid, tree string) (string, *deliveryReviewRecord) {
 	var latest, negative *deliveryReviewRecord
 	for i := range rounds {
@@ -595,8 +606,12 @@ func deliveryReviewJudge(rounds []deliveryReviewRecord, oid, tree string) (strin
 		if r.Request.CandidateOID != oid || r.Request.CandidateTree != tree {
 			continue
 		}
-		if r.Result != nil && r.Result.Decision != "passed" {
-			negative = r
+		if r.Result != nil && r.Result.Decision != "passed" && !(r.Superseded && deliveryReviewEvidenceBlocked(r.Result)) {
+			// A later evidence gap cannot hide known product findings (or
+			// another negative judgment outside the reassessment path).
+			if negative == nil || deliveryReviewEvidenceBlocked(negative.Result) || !deliveryReviewEvidenceBlocked(r.Result) {
+				negative = r
+			}
 		}
 		if r.Superseded {
 			continue
@@ -640,6 +655,9 @@ func deliveryNativeCandidateReview(d Dependencies, s workflowState, oid, tree st
 	case "awaiting":
 		return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s has not returned yet; its judgment governs this candidate", match.Request.Round, oid))
 	case "negative":
+		if deliveryReviewEvidenceBlocked(match.Result) {
+			return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s is blocked by evidence gaps; after supplying evidence the coordinator explicitly requests reassessment with `ply workflow execute review %s --coordinator <claim> --new-round`", match.Request.Round, oid, s.Result.RunID))
+		}
 		return "", workflowError(4, fmt.Sprintf("review round %d for candidate %s is %s (%s); correct them and commit a new candidate for a new review round", match.Request.Round, oid, match.Result.Decision, deliveryReviewFindingIDs(match)))
 	}
 	if _, e = workflowBound(*match.Return, 1<<20); e != nil {
@@ -675,11 +693,11 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 		if start.Pane != nil {
 			x.ReviewerPane = start.Pane.PaneID
 		}
-		if r.Superseded {
-			x.State = "superseded"
-		}
 		if res := r.Result; res != nil {
 			x.State, x.Decision, x.Summary, x.ReviewerClaim, x.ReviewerSession, x.Findings, x.EvidenceGaps = res.ReviewState, res.Decision, res.Summary, res.ReviewerClaim, res.ReviewerSession, res.Findings, res.EvidenceGaps
+		}
+		if r.Superseded {
+			x.State = "superseded"
 		}
 		out.Rounds = append(out.Rounds, x)
 	}
@@ -717,7 +735,11 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 		out.Next = WorkflowAction{"owner", fmt.Sprintf("Correct the %d finding(s) from round %d and commit; the coordinator then requests a new round.", len(current.Findings), current.Round)}
 	default:
 		out.CurrentCandidate = "review_blocked"
-		out.Next = WorkflowAction{"coordinator", fmt.Sprintf("Round %d is blocked; resolve its stated findings or evidence gaps before a new round.", current.Round)}
+		if current.Decision == "blocked" && len(current.Findings) == 0 && len(current.EvidenceGaps) > 0 {
+			out.Next = WorkflowAction{"coordinator", fmt.Sprintf("Round %d is blocked by evidence gaps; supply the evidence, then explicitly reassess this candidate with `ply workflow execute review %s --coordinator <claim> --new-round`.", current.Round, id)}
+		} else {
+			out.Next = WorkflowAction{"owner", fmt.Sprintf("Round %d is blocked; resolve its stated findings or blocker and commit a new candidate for review.", current.Round)}
+		}
 	}
 	return out, nil
 }

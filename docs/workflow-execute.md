@@ -448,7 +448,15 @@ same candidate returns the existing round. An unknown start is shown as a stop;
 after inspecting the tab, `--new-round` starts a fresh reviewer for the same
 candidate. The replaced round is recorded as superseded: its history and
 unknown start are kept, but its reviewer can no longer return and the fresh
-round decides. A round with a sealed return cannot be replaced.
+round decides. When new evidence resolves a sealed `blocked` review with stated
+evidence gaps and no findings, the coordinator explicitly uses `--new-round`
+to reassess the same exact candidate. The original request, return, evidence
+and reviewer session remain unchanged history. Ordinary repeats remain
+idempotent, and the fresh round must return before verification can use it.
+Known product findings, `changes_requested`, and blocks without stated evidence
+gaps still govern the unchanged candidate and require a corrected commit.
+An earlier sealed callback can only repeat its original bytes; it cannot
+change the current judgment.
 
 From its own pane, the reviewer returns an ordinary JSON file with `decision`
 (`passed`, `changes_requested` or `blocked`), `summary`, `findings`
@@ -469,7 +477,8 @@ Findings return to the owner, who corrects, commits and asks the coordinator
 for a new round. That round binds the new candidate explicitly and keeps the
 earlier rounds and their evidence. If the owner commits while a round is still
 open, the return stays bound to the reviewed candidate and status shows the
-drift. Any sealed negative return for a candidate keeps governing it. `verify`
+drift. Product findings keep governing their exact candidate; an evidence-only
+block governs until the coordinator explicitly supersedes it for reassessment. `verify`
 without `--review` uses the completed passed round for exactly the current
 candidate and carries earlier candidates' findings as fixes; any other
 candidate has no pass to inherit. `execute show` lists each round, its findings
