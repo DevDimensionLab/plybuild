@@ -215,6 +215,9 @@ func WorkflowDeliveryReceipt(d Dependencies, root, id, contextPath string, in De
 	if err != nil {
 		return WorkflowRun{}, err
 	}
+	if reportReceipt(s.Request) && receipt {
+		return WorkflowReportReceipt(d, root, id, contextPath, in)
+	}
 	if mandateReceipt(s.Request) != receipt {
 		return deliveryReadback(d, root, id, workflowError(4, "startup entrypoint differs from frozen contract; use its callback guide"))
 	}

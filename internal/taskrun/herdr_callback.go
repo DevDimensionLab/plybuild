@@ -12,6 +12,9 @@ func filepathForRound(s workflowState, name string) string {
 	return filepath.Join(s.Result.Paths.RunRoot, "rounds", workflowRoundName(s.Result.Round.Number), name)
 }
 func workflowCallback(d Dependencies, s workflowState, contextPath string) error {
+	if s.ReportRetirement != nil {
+		return workflowError(4, "owner_retired: report owner callbacks are closed")
+	}
 	if headlessRun(s.Request) {
 		if err := workerLiveOwner(d, s); err != nil {
 			return err
@@ -123,7 +126,13 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		if c.NativeSessionID != nil && *c.NativeSessionID != deliveryOwnerSession(*s) {
 			return workflowError(4, "native session claim differs from Herdr")
 		}
+		if !deliveryRun(s.Request) && (s.ReportStop != nil || s.ReportProviderStop != nil) {
+			return workflowError(4, "preserved report stop blocks work; coordinator must retire the owner before replacement")
+		}
 		if a.Acceptance == "started" {
+			if reportReceipt(s.Request) && (c.RuntimeID == nil || *c.RuntimeID != s.Request.Runtime.Provider) {
+				return workflowError(4, "receipt provider differs from frozen report owner")
+			}
 			if deliveryObservedStop(*s) {
 				return workflowError(4, "resolve the preserved provider stop before acceptance; do not replay a denied callback")
 			}
@@ -137,8 +146,10 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 				if e := positiveDeliveryClaim(a, *permission, s.Request); e != nil {
 					return e
 				}
-			} else if e := positiveClaim(native, workflowNativeRequest(s.Request)); e != nil {
-				return e
+			} else if !reportReceipt(s.Request) {
+				if e := positiveClaim(native, workflowNativeRequest(s.Request)); e != nil {
+					return e
+				}
 			}
 			// The recipient's claim cannot establish that Herdr still hosts the
 			// selected provider/session. Observe it before granting Task writes.
@@ -182,7 +193,7 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		}
 		s.Acceptance = &binding
 		s.Result.RuntimeFacts = RuntimeFacts{s.Request.Runtime.Model, c.ModelID, "unknown", ptr("recipient_claim"), ptr(binding.SHA256)}
-		if mandateReceipt(s.Request) {
+		if mandateReceipt(s.Request) || reportReceipt(s.Request) {
 			s.Result.RuntimeFacts.Source = ptr("recipient_observation")
 		}
 		if c.ModelID != nil {
@@ -309,16 +320,24 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 			}
 			return workflowError(4, "round report slot is immutable")
 		}
+		var a Acceptance
+		if s.Acceptance != nil {
+			claim, e := workflowBound(*s.Acceptance, 256<<10)
+			if e != nil {
+				return e
+			}
+			if e = decode(claim, 256<<10, &a); e != nil {
+				return e
+			}
+		}
+		if (s.Acceptance == nil || s.StartSHA256 == nil || a.Acceptance != "started") && (r.Outcome == "blocked" || r.Outcome == "stopped") {
+			return workflowPreservePreStartStop(d, s, r)
+		}
+		if s.ReportStop != nil || s.ReportProviderStop != nil {
+			return workflowError(4, "preserved pre-start stop blocks working reports; retire this owner")
+		}
 		if s.Acceptance == nil || s.StartSHA256 == nil {
 			return workflowError(4, "report requires positive native runtime acceptance")
-		}
-		var a Acceptance
-		claim, e := workflowBound(*s.Acceptance, 256<<10)
-		if e != nil {
-			return e
-		}
-		if e = decode(claim, 256<<10, &a); e != nil {
-			return e
 		}
 		if a.Acceptance != "started" {
 			return workflowError(4, "negative acceptance cannot report a working round")

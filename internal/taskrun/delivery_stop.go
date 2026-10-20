@@ -56,6 +56,9 @@ func WorkflowObserveDeliveryStop(d Dependencies, root, id string, in DeliverySto
 		return WorkflowRun{}, err
 	}
 	err = workflowUpdate(d, root, id, func(s *workflowState) error {
+		if !deliveryRun(s.Request) {
+			return workflowObserveReportStop(d, s, in, evidence, raw)
+		}
 		if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "stop observation requires an interactive delivery")
 		}

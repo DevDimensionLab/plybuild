@@ -186,20 +186,51 @@ start. Native and Herdr runs share target exclusion. Even an accepted report kee
 the target reserved until a later qualified native TaskResult binds its terminal.
 
 The generated instructions name the private context and redacted native handoff.
-Acceptance is the recipient's first action:
+New report requests default to `mandate_receipt_v1`; their request and Handoff@2
+freeze that choice. Before Task writes, acknowledge the exact mandate, Task,
+provider and native session:
 
 ```sh
-ply workflow run accept wfr_<digest> --context /absolute/current/context.json --file /absolute/acceptance.json
+ply workflow run check-in wfr_<digest> --context /absolute/current/context.json --provider codex --native-session <bound-session>
 ply workflow run report wfr_<digest> --context /absolute/current/context.json --file /absolute/round-report.json
 ```
 
-Acceptance uses native Acceptance@2 fields with kind
-`ply.workflow.run-acceptance`, schema version 1. A known different model is rejected;
-an unknown actual model may be null. Necessary runtime and permission facts must
-be known for positive acceptance. Before the first positive acceptance, Ply also
-checks the fresh Herdr provider, session and location; the agent may be working
-while its callback runs. Negative claims remain visible without an
-invented start receipt.
+Omitted model, profile, policy and sandbox coverage remain unknown. Optional
+observations never establish sandbox coverage or blanket future permission.
+Ply reuses native identity, target and input validation; runtime reviews concrete
+actions. The launch profile is a request, not observed effective policy. Receipt
+adds no commit, push, installation, human QA or delivery authority.
+
+Persisted legacy report contracts retain `workflow run accept` and their original
+positive runtime-attestation requirements. Repeating the original start request
+never converts an existing reservation to the new protocol. An explicit
+`startup_protocol: "legacy_acceptance_v1"` remains available for legacy callers.
+
+A `blocked` or `stopped` pre-start round report can be preserved without positive
+acceptance or a native start receipt, including after negative acceptance. It
+must report unknown technical qualification and no work effects, tests or managed
+artifacts. The report is an immutable stop observation, not a completed round or
+native terminal. The coordinator can also preserve refused callback transport
+with `workflow execute observe-stop`, naming the actual provider/session, action,
+evidence and known effect status. A preserved stop blocks work; receipt cannot
+clear it or replay the refused action.
+
+For a selected replacement of a pre-work report owner:
+
+```sh
+ply workflow run retire wfr_<digest> --observer 'Actual coordinator' --reason 'Actual replacement reason'
+```
+
+Retirement observes an already absent pane and agent, complete Herdr inventories
+and local Task/session processes. The source must remain clean at its original
+commit, with no native start/terminal or unresolved effects. An installed CLI
+update does not require the historical launcher bytes or an owner callback for
+this coordinator-only exit. Wrong identity, unavailable inspection, a remaining
+writer or unknown prior effect still blocks retirement. The original request,
+acceptance and denial evidence remain history; callbacks close and only the exact
+preparation/queue reservation is released. Identical retries recover durable
+retirement after interruption. Prepare a fresh Task copy in the same authorized
+scope for replacement; it receives its own mandate and acceptance.
 
 A round report uses all native TaskRun Report fields with kind
 `ply.workflow.round-report`, schema version 1, plus `round`, `control_id`, and

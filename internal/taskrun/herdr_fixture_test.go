@@ -162,7 +162,7 @@ func newWorkflowFixture(t *testing.T, root, ply string) workflowFixture {
 	if e := os.WriteFile(herdr, []byte("#!"+python+"\n"+workflowStandin), 0700); e != nil {
 		t.Fatal(e)
 	}
-	r := WorkflowRequest{Envelope: workflowEnv("herdr-run-request"), RequestKey: native.RequestKey, WorkspaceRoot: root, PreparationID: native.PreparationID, PreparationSHA256: native.PreparationSHA256, HandoffDraft: native.HandoffDraft, Runtime: native.Runtime, Agreement: native.Agreement, HumanAuthority: HumanAuthority{"fixture human", "human_authorized_herdr", true}, ReturnMode: "reviewed_report_only"}
+	r := WorkflowRequest{StartupProtocol: ReportLegacyAcceptanceV1, Envelope: workflowEnv("herdr-run-request"), RequestKey: native.RequestKey, WorkspaceRoot: root, PreparationID: native.PreparationID, PreparationSHA256: native.PreparationSHA256, HandoffDraft: native.HandoffDraft, Runtime: native.Runtime, Agreement: native.Agreement, HumanAuthority: HumanAuthority{"fixture human", "human_authorized_herdr", true}, ReturnMode: "reviewed_report_only"}
 	r.Herdr.Executable = Executable{herdr, hashFileTest(t, herdr)}
 	r.Herdr.WorkspaceID = "w-fixture"
 	r.Herdr.TabLabel = "Fixture Task"

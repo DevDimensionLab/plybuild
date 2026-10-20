@@ -66,6 +66,18 @@ func workflowRead(root, id string) (workflowState, error) {
 	} else if saved.Result.Worker != nil {
 		return saved, workflowError(4, "interactive state cannot acquire a worker")
 	}
+	if !deliveryRun(saved.Request) {
+		if e = workflowLoadReportObservations(&saved); e != nil {
+			return saved, e
+		}
+		if r, e := workflowReportRetirement(saved); e != nil {
+			return saved, e
+		} else if r != nil {
+			binding := FileBinding{filepath.Join(saved.Result.Paths.RunRoot, "report-retirement.json"), digest(r)}
+			saved.ReportRetirement = &binding
+			saved.Result.Round.State, saved.Result.FinalReturn.State = "stopped", "retired"
+		}
+	}
 	return saved, nil
 }
 func workflowSave(d Dependencies, s workflowState) error {
@@ -143,6 +155,19 @@ func workflowReservations(d Dependencies, root string, target workspace.PlanWork
 		}
 		x := s.Observed.Target
 		if x.WorktreeLocator != target.WorktreeLocator && !(x.GitCommonDir == target.GitCommonDir && x.Ref == target.Ref) {
+			continue
+		}
+		if s.ReportRetirement != nil {
+			if _, e := workflowReportRetirement(s); e != nil {
+				return e
+			}
+			released, e := workflowReportQueueReleased(d, root, s.Request.PreparationID)
+			if e != nil {
+				return e
+			}
+			if !released {
+				return workflowError(4, "retired report retains its reservation until exact queue release; retry the same retire input")
+			}
 			continue
 		}
 		released := false
@@ -279,7 +304,7 @@ func workflowFreshArtifacts(d Dependencies, s workflowState, target, policy bool
 			return e
 		}
 	}
-	for _, b := range []*FileBinding{s.Acceptance, s.StartDraft} {
+	for _, b := range []*FileBinding{s.Acceptance, s.StartDraft, s.ReportStop, s.ReportRetirement, s.ReportProviderStop} {
 		if b != nil {
 			if _, e := workflowBound(*b, 1<<20); e != nil {
 				return e
@@ -356,6 +381,19 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		return WorkflowRun{}, e
 	}
 	o := s.Result
+	if !deliveryRun(s.Request) {
+		protocol := s.Request.StartupProtocol
+		if protocol == "" {
+			protocol = ReportLegacyAcceptanceV1
+		}
+		o.ReportStartup = &ReportStartupStatus{Protocol: protocol, Stop: s.ReportStop, ProviderStop: s.ReportProviderStop, Retirement: s.ReportRetirement, SandboxCoverage: "unknown", RuntimeDecision: "per_action_not_observed"}
+		if reportReceipt(s.Request) && s.StartSHA256 != nil {
+			o.ReportStartup.Receipt = s.Acceptance
+		}
+		if s.ReportRetirement != nil {
+			o.NextAction = WorkflowAction{"coordinator", "Report owner retired; original request and denial history preserved. A replacement requires a fresh prepared Task mandate."}
+		}
+	}
 	o.DeliveryStatus = deliveryStatus(d, s)
 	if o.OwnerResume, e = ownerResumeReadback(s); e != nil {
 		return o, e
@@ -421,6 +459,9 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		if closeout.WorktreeRemoved || workspace.TaskCloseoutSourceRemovalPending(*closeout) {
 			return o, nil
 		}
+	}
+	if s.ReportRetirement != nil {
+		return o, nil
 	}
 	if e = workflowFresh(d, s, true); e != nil {
 		o.Reasons = append(o.Reasons, Reason{"workflow_run_drift", e.Error()})

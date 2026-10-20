@@ -11,6 +11,7 @@ import (
 )
 
 type WorkflowRequest struct {
+	StartupProtocol string `json:"startup_protocol,omitempty"`
 	Envelope
 	RequestKey         string              `json:"request_key"`
 	WorkspaceRoot      string              `json:"workspace_root"`
@@ -91,6 +92,7 @@ type WorkflowAction struct {
 	Message string `json:"message"`
 }
 type WorkflowRun struct {
+	ReportStartup *ReportStartupStatus `json:"report_startup,omitempty"`
 	Envelope
 	Provider        string                         `json:"provider,omitempty"`
 	RunID           string                         `json:"run_id"`
@@ -180,6 +182,9 @@ type workflowState struct {
 	ControlReceipt                *ControlReceipt     `json:"control_receipt,omitempty"`
 	ControlWake                   *workerControlWake  `json:"control_wake,omitempty"`
 	ControlSuccessor              *workerControlWake  `json:"control_successor,omitempty"`
+	ReportProviderStop            *FileBinding        `json:"report_provider_stop,omitempty"`
+	ReportStop                    *FileBinding        `json:"report_stop,omitempty"`
+	ReportRetirement              *FileBinding        `json:"report_retirement,omitempty"`
 	Request                       WorkflowRequest     `json:"request"`
 	Observed                      Observed            `json:"observed"`
 	Result                        WorkflowRun         `json:"result"`

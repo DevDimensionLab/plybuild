@@ -68,6 +68,9 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		return WorkflowRun{}, workflowError(2, "actual observer and bounded reason are required")
 	}
 	err := workflowUpdate(d, root, id, func(s *workflowState) error {
+		if !deliveryRun(s.Request) {
+			return workflowRetireReport(d, s, in)
+		}
 		if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "retirement requires an interactive delivery owner; use workflow worker for headless Runs")
 		}
@@ -223,6 +226,9 @@ func deliveryRetireReleaseQueue(d Dependencies, root, id, reason string) error {
 	s, err := workflowRead(root, id)
 	if err != nil {
 		return err
+	}
+	if !deliveryRun(s.Request) {
+		return workflowReleaseReportQueue(d, s)
 	}
 	a := s.Request.Delivery.Agreement
 	if a == nil {

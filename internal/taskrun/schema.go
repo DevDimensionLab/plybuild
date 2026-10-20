@@ -279,6 +279,15 @@ func parseRequestForSurface(b []byte, herdr bool) (Request, error) {
 			return r, invalid("invalid executable binding")
 		}
 	}
+	if !herdr {
+		var draft map[string]json.RawMessage
+		if e := json.Unmarshal(r.HandoffDraft, &draft); e != nil {
+			return r, invalid(e.Error())
+		}
+		if _, present := draft["report_startup_protocol"]; present {
+			return r, invalid("report mandate receipts require the Herdr report contract; native terminal/factory semantics are unchanged")
+		}
+	}
 	if _, e := workflowhandoff.ValidateTaskRunDraft(r.HandoffDraft); e != nil {
 		return r, invalid(e.Error())
 	}

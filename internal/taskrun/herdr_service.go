@@ -55,6 +55,9 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 		return r, e
 	}
 	if r.SchemaVersion == 2 {
+		if r.StartupProtocol != "" {
+			return r, workflowError(2, "report startup protocol cannot grant delivery authority")
+		}
 		return r, validateDeliveryWorkflowRequest(r)
 	}
 	if r.GoalStartEnvironment != nil {
@@ -65,6 +68,40 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	}
 	if r.Envelope != workflowEnv("herdr-run-request") || r.ReturnMode != "reviewed_report_only" || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !r.Coordinator.MayRequestChanges || !plain(r.Coordinator.ActorClaim, 1, 256) || !plain(r.Herdr.TabLabel, 1, 80) || !plain(r.Herdr.WorkspaceID, 1, 128) {
 		return r, workflowError(2, "invalid workflow request, authority or Herdr binding")
+	}
+	if protocol, present := fields["startup_protocol"]; present && (string(protocol) == "null" || string(protocol) == `""`) {
+		return r, workflowError(2, "startup_protocol must be an explicit supported string when present")
+	}
+	if r.StartupProtocol == "" {
+		if existing, err := workflowRead(r.WorkspaceRoot, workflowID(r)); err == nil && existing.Request.StartupProtocol == "" {
+			if !equal(existing.Request, r) {
+				return r, workflowError(4, "existing report request bytes differ; preserve the original contract")
+			}
+			return existing.Request, nil
+		}
+
+		// Only new input is normalized; persisted reservations are never reparsed.
+		r.StartupProtocol = MandateReceiptV1
+	}
+	if r.StartupProtocol != MandateReceiptV1 && r.StartupProtocol != ReportLegacyAcceptanceV1 {
+		return r, workflowError(2, "unsupported report startup protocol")
+	}
+	if reportReceipt(r) {
+		var draft map[string]json.RawMessage
+		if e = json.Unmarshal(r.HandoffDraft, &draft); e != nil {
+			return r, e
+		}
+		if string(draft["schema_version"]) != "2" {
+			return r, workflowError(2, "report mandate receipt requires a Task Spec handoff")
+		}
+		if protocol, present := draft["report_startup_protocol"]; present && string(protocol) != `"mandate_receipt_v1"` {
+			return r, workflowError(2, "handoff report startup protocol differs")
+		}
+		draft["report_startup_protocol"] = json.RawMessage(`"mandate_receipt_v1"`)
+		r.HandoffDraft, e = Canonical(draft)
+		if e != nil {
+			return r, e
+		}
 	}
 	// Reuse native Task validation through the explicitly Herdr-only surface.
 	b, e = Canonical(workflowNativeRequest(r))
@@ -349,7 +386,12 @@ func workflowInstructions(s workflowState, findings []WorkflowFinding) string {
 		return deliveryInstructions(s)
 	}
 	o := s.Result
-	return fmt.Sprintf("Execute only the frozen prepared Task mandate at %s and its exact Spec inputs. The private context is %s. Read the immutable request reservation at %s. Keep its scope, human gates and agreement unchanged. Your first action before target writes is: %s workflow run accept %s --context %s --file <private-acceptance.json>. Acceptance kind ply.workflow.run-acceptance schema_version 1 uses native Acceptance@2 fields. Report actual runtime, policy and native session %s; unknown model is null, never infer it. Negative authority stops work. After your last write in each round submit kind ply.workflow.round-report schema_version 1 with all native TaskRun Report fields, the task-requirements artifact and this binding: run_id=%s request_sha256=%s session_id=%s round=%d control_id=%s previous_report_sha256=%s. Run: %s workflow run report %s --context %s --file <private-round-report.json>. Agreement A: initial execution, at most 3 corrections, 5400 active seconds, 2 environment measures; cumulative usage includes internal corrections. Budget floor: %s. Remaining budget: %s. Stop at the first reached limit. No new agents, scope expansion, TaskResult publication, installation, human QA or integration. After reporting, wait for coordinator review in this same session. Findings: %s", filepath.Join(o.Paths.RunRoot, "mandate.json"), o.Paths.Context, workflowIndex(s.Request.WorkspaceRoot, o.RunID), ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), o.Transport.AgentSessionID, o.RunID, o.RequestSHA256, o.SessionID, o.Round.Number, workflowJSON(o.Round.ControlID), workflowJSON(o.Round.PreviousReportSHA256), ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), workflowJSON(o.Budget.Floor), workflowJSON(map[string]int{"correction_rounds": 3 - o.Budget.Floor.CorrectionRounds, "active_seconds": 5400 - o.Budget.Floor.ActiveSeconds, "environment_measures": 2 - o.Budget.Floor.EnvironmentMeasures}), workflowJSON(findings))
+	startup := fmt.Sprintf("Your first action before target writes is: %s workflow run accept %s --context %s --file <private-acceptance.json>. Acceptance kind ply.workflow.run-acceptance schema_version 1 uses native Acceptance@2 fields. Report actual runtime, policy and native session %s; unknown model is null, never infer it. Negative authority stops work. ", ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), o.Transport.AgentSessionID)
+	if reportReceipt(s.Request) {
+		startup = fmt.Sprintf("Before Task writes acknowledge the exact mandate and native session: %s workflow run check-in %s --context %s --provider %s --native-session %s. Unknown model, profile, policy and sandbox coverage stay unknown. Launch configuration is not observed runtime policy; runtime reviews concrete actions. Preserve real refusals and unresolved effects; a blocked/stopped pre-start report grants no work acceptance. ", ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), s.Request.Runtime.Provider, ShellQuote(o.Transport.AgentSessionID))
+	}
+	prompt := fmt.Sprintf("Execute only the frozen prepared Task mandate at %s and its exact Spec inputs. The private context is %s. Read the immutable request reservation at %s. Keep its scope, human gates and agreement unchanged. %sAfter your last write in each round submit kind ply.workflow.round-report schema_version 1 with all native TaskRun Report fields, the task-requirements artifact and this binding: run_id=%s request_sha256=%s session_id=%s round=%d control_id=%s previous_report_sha256=%s. Run: %s workflow run report %s --context %s --file <private-round-report.json>. Agreement A: initial execution, at most 3 corrections, 5400 active seconds, 2 environment measures; cumulative usage includes internal corrections. Budget floor: %s. Remaining budget: %s. Stop at the first reached limit. No new agents, scope expansion, TaskResult publication, installation, human QA or integration. After reporting, wait for coordinator review in this same session. Findings: %s", filepath.Join(o.Paths.RunRoot, "mandate.json"), o.Paths.Context, workflowIndex(s.Request.WorkspaceRoot, o.RunID), startup, o.RunID, o.RequestSHA256, o.SessionID, o.Round.Number, workflowJSON(o.Round.ControlID), workflowJSON(o.Round.PreviousReportSHA256), ShellQuote(s.Request.Runtime.PlyExecutable.Path), o.RunID, ShellQuote(o.Paths.Context), workflowJSON(o.Budget.Floor), workflowJSON(map[string]int{"correction_rounds": 3 - o.Budget.Floor.CorrectionRounds, "active_seconds": 5400 - o.Budget.Floor.ActiveSeconds, "environment_measures": 2 - o.Budget.Floor.EnvironmentMeasures}), workflowJSON(findings))
+	return prompt
 }
 func workflowJSON(v any) string { b, _ := Canonical(v); return string(b) }
 

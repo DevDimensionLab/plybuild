@@ -13,6 +13,10 @@ import (
 // Null limits are preserved in the contract. They are not a claim of unlimited
 // runtime permission, nor a fabricated count of implementation iterations.
 func validateDeliveryBinding(o canonicaljson.Object) error {
+	if protocol, found := objectMember(o, "report_startup_protocol"); found && (taskSpecVersion(o) != 2 || protocol != workspace.DeliveryMandateReceiptV1) {
+		return fmt.Errorf("report receipt requires Handoff@2 and mandate_receipt_v1")
+	}
+
 	v, found := objectMember(o, "delivery_binding")
 	if taskSpecVersion(o) != 3 {
 		if found {

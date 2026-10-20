@@ -25,7 +25,7 @@ func taskSpecBasis(value canonicaljson.Object) (*workspace.TaskSpecBasis, error)
 	return workspace.ValidateTaskSpecBasisValue(v)
 }
 func taskSpecLegacyProjection(value canonicaljson.Object) canonicaljson.Object {
-	return replaceObjectMember(removeObjectMember(removeObjectMember(value, "task_spec_binding"), "delivery_binding"), "schema_version", int64(1))
+	return replaceObjectMember(removeObjectMember(removeObjectMember(removeObjectMember(value, "report_startup_protocol"), "task_spec_binding"), "delivery_binding"), "schema_version", int64(1))
 }
 func decodeHandoffDraft(input []byte) (handoffDraft, error) {
 	v, e := canonicaljson.DecodeStrict(input)
@@ -107,6 +107,9 @@ func decodeStartDraft(input []byte) (startDraft, error) {
 	}
 	if _, e = taskSpecBasis(o); e != nil {
 		return startDraft{}, schemaError("start draft", e)
+	}
+	if _, found := objectMember(o, "report_startup_protocol"); found {
+		return startDraft{}, schemaError("start draft", fmt.Errorf("report_startup_protocol belongs to the handoff"))
 	}
 	if _, found := objectMember(o, "delivery_binding"); found {
 		return startDraft{}, schemaError("start draft", fmt.Errorf("delivery_binding belongs to the handoff, not a start receipt"))

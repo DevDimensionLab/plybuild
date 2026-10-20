@@ -120,6 +120,9 @@ func createWithActivity(dependencies Dependencies, input CreateInput, existingAc
 			handoffValue = append(handoffValue, canonicaljson.Member{Name: "delivery_binding", Value: delivery})
 		}
 	}
+	if protocol, found := objectMember(draft.Value, "report_startup_protocol"); found {
+		handoffValue = append(handoffValue, canonicaljson.Member{Name: "report_startup_protocol", Value: protocol})
+	}
 	handoffBytes, err := canonicaljson.Marshal(handoffValue)
 	if err != nil {
 		return CreateResult{}, schemaError("handoff", err)
@@ -520,7 +523,10 @@ func validateStartBinding(dependencies Dependencies, snapshot Snapshot, draft st
 			return err
 		}
 	}
-	if deliveryStartupProtocol(snapshot.Handoff.Value) == workspace.DeliveryMandateReceiptV1 {
+	if objectString(snapshot.Handoff.Value, "report_startup_protocol") == workspace.DeliveryMandateReceiptV1 && objectMapString(principalFields, "start_surface") != "human_authorized_herdr" {
+		return classified(ErrorConflict, "report receipt requires the authorized Herdr report surface", nil)
+	}
+	if deliveryStartupProtocol(snapshot.Handoff.Value) == workspace.DeliveryMandateReceiptV1 || objectString(snapshot.Handoff.Value, "report_startup_protocol") == workspace.DeliveryMandateReceiptV1 {
 		// Receipt binds the mandate and observed identity, not sandbox coverage.
 		match, _ := objectMember(sandbox, "matches_contract")
 		if match != nil {
