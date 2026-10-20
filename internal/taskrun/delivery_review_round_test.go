@@ -357,15 +357,24 @@ func TestFS01ChangedCandidateCannotInheritPass(t *testing.T) {
 	}
 	round := reviewRoundLatest(t, requested)
 	passed := reviewRoundReturnFile(t, f, "passed.json", `{"decision":"passed","summary":"Looks right","findings":[],"evidence_gaps":[]}`)
-	// The owner moves on while the review is still open: the return remains
-	// bound to the reviewed candidate and shows the drift.
-	reviewRoundCandidate(t, f, "fixed attempt, later edit")
+	// The owner moves on while the review is still open. The reviewer's tests
+	// can only have run on the later candidate, so a pass for the round's
+	// candidate is refused (RV01 r001-f02) and nothing is reset; a truthful
+	// late negative judgment is still sealed and shows the drift.
+	later, _ := reviewRoundCandidate(t, f, "fixed attempt, later edit")
 	reviewRoundIn(t, round.ReviewerPane)
-	o, err = WorkflowDeliveryReviewReturn(coordinator, f.R.WorkspaceRoot, o.RunID, round.Context.Locator, passed)
+	if _, err = WorkflowDeliveryReviewReturn(coordinator, f.R.WorkspaceRoot, o.RunID, round.Context.Locator, passed); err == nil || !strings.Contains(err.Error(), later) || !strings.Contains(err.Error(), "does not reset") {
+		t.Fatalf("a pass was sealed for a candidate other than the tested HEAD: %v", err)
+	}
+	if head := gitOutput(t, f.Prepared.Preparation.Preparation.Plan.WorktreePath, "rev-parse", "HEAD"); head != later {
+		t.Fatalf("the later candidate was reset: %s", head)
+	}
+	blocked := reviewRoundReturnFile(t, f, "blocked.json", `{"decision":"blocked","summary":"HEAD moved to a later candidate during review","findings":[],"evidence_gaps":["Tests ran on the later candidate, not the round's"]}`)
+	o, err = WorkflowDeliveryReviewReturn(coordinator, f.R.WorkspaceRoot, o.RunID, round.Context.Locator, blocked)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r := reviewRoundLatest(t, o); r.Decision != "passed" || r.Current || o.DeliveryStatus.Review.CurrentCandidate != "not_reviewed" || o.DeliveryStatus.Review.Next.Actor != "coordinator" {
+	if r := reviewRoundLatest(t, o); r.Decision != "blocked" || r.Current || o.DeliveryStatus.Review.CurrentCandidate != "not_reviewed" || o.DeliveryStatus.Review.Next.Actor != "coordinator" {
 		t.Fatalf("drift after review is not visible: %+v", o.DeliveryStatus.Review)
 	}
 	if _, err = WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "", binary); err == nil || !strings.Contains(err.Error(), "review") {

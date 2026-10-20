@@ -235,3 +235,27 @@ func TestRV01DetachedCoordinatorNamesItsVerifiedLivePane(t *testing.T) {
 		t.Fatalf("the verified coordinator pane was not bound: %+v %+v", r, round)
 	}
 }
+
+// Review r001-f01: when several pane shells hold the caller, a named pane
+// must be one of them; an unrelated live pane is never bound.
+func TestRV01ExplicitPaneMustBeAmongObservedAncestryPanes(t *testing.T) {
+	f, o, _ := reviewRoundFixture(t)
+	reviewRoundCandidate(t, f, "fixed attempt")
+	coordinator := reviewRoundAsCoordinator(f)
+	reviewRoundIn(t, "w1:p1")
+	workflowTestModel(t, f.workflowFixture, map[string]any{"pane_shells": map[string]any{"w-fixture:a": os.Getppid(), "w-fixture:b": os.Getppid(), "w-fixture:user": 99999}, "focused_pane": "w-fixture:user"})
+	_, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator", CoordinatorPane: "w-fixture:user"})
+	if err == nil || !strings.Contains(err.Error(), "w-fixture:a, w-fixture:b") {
+		t.Fatalf("an unrelated live pane was bound while ancestry names other panes: %v", err)
+	}
+	if n := len(reviewRoundArgv(t, f, "tab create")); n != 1 {
+		t.Fatalf("a refused coordinator created a reviewer tab (%d tab creates)", n)
+	}
+	requested, err := WorkflowDeliveryRequestReview(coordinator, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root coordinator", CoordinatorPane: "w-fixture:b"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r := reviewRoundRequestFile(t, reviewRoundLatest(t, requested)); r.CoordinatorPane != "w-fixture:b" {
+		t.Fatalf("the named ancestry pane was not bound: %+v", r)
+	}
+}
