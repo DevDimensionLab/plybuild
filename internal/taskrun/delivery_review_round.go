@@ -397,7 +397,7 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 		}
 	}
 	b.WriteString("\nReview exactly this candidate against the Goal and Spec: the diff from the base, tests and actual evidence. Do not edit the Task worktree, commit, verify or integrate.\n")
-	fmt.Fprintf(&b, "Keep the candidate exact while testing. This pane runs with GOFLAGS=%s: Go modules stay readonly, so never pass -mod=mod, run go mod tidy, go get or change global Go or provider configuration. After the tests, `git -C %s status --porcelain` must print nothing and `git -C %s rev-parse HEAD` must print %s. If not, the tests did not run on the exact candidate: Never reset, clean or stash it; return blocked or changes_requested with the observed status and diff. Ply refuses passed while the Task worktree is dirty or at another HEAD.\n", deliveryReviewGoFlags(), ShellQuote(s.Observed.Target.WorktreeLocator), ShellQuote(s.Observed.Target.WorktreeLocator), r.CandidateOID)
+	fmt.Fprintf(&b, "Keep the candidate exact while testing. This pane runs with GOFLAGS=%s: Go modules stay readonly, so never pass -mod=mod, run go mod tidy, go get or change global Go or provider configuration. After the tests, `git -C %s status --porcelain` must print nothing and `git -C %s rev-parse HEAD` must print %s. If not, Ply cannot confirm an exact-candidate pass from the current source: Never reset, clean or stash it; return blocked or changes_requested with the observed status and diff. Ply refuses passed while the Task worktree is dirty or at another HEAD.\n", deliveryReviewGoFlags(), ShellQuote(s.Observed.Target.WorktreeLocator), ShellQuote(s.Observed.Target.WorktreeLocator), r.CandidateOID)
 	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return.\n\n")
 	fmt.Fprintf(&b, "Copy %s to your own file and fill in the decision, summary, findings and evidence gaps (reviewer_claim and reviewer_session_id are optional: Ply binds the session it started for you). Return from this reviewer pane, inside the workspace %s:\n\n", template, root)
 	fmt.Fprintf(&b, "    %s workflow execute review-return %s --context %s --file <your-review.json>\n\n", ShellQuote(executable), r.RunID, ShellQuote(context))
@@ -542,9 +542,10 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 			return e
 		}
 		if result.Decision == "passed" {
-			// A pass needs the tests to have run on this round's candidate:
-			// a dirty worktree or a later HEAD is another tree. Sealed
-			// returns stay as they are and a negative return is still sealed.
+			// Ply confirms a pass only while the observed current source is
+			// this round's exact candidate; a dirty worktree or another HEAD
+			// cannot confirm it. Sealed returns stay as they are and a
+			// negative return is still sealed.
 			x, e := deliveryTarget(d, s)
 			if e != nil {
 				paths := []string{}
@@ -555,7 +556,7 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 				return workflowError(4, fmt.Sprintf("passed is refused: the Task worktree is not the clean exact candidate %s (changed: %s); Ply does not reset it. Return blocked or changes_requested with the observed status and diff", r.Request.CandidateOID, strings.Join(paths, ", ")))
 			}
 			if x.OID != r.Request.CandidateOID || x.Tree != r.Request.CandidateTree {
-				return workflowError(4, fmt.Sprintf("passed is refused: the Task worktree is at %s, not round %d's candidate %s, so the tests did not run on it; Ply does not reset it. Return blocked or changes_requested for this round; the coordinator requests a new round for %s", x.OID, r.Request.Round, r.Request.CandidateOID, x.OID))
+				return workflowError(4, fmt.Sprintf("passed is refused: the Task worktree is now at %s, not round %d's candidate %s, so Ply cannot confirm an exact-candidate pass from the current source; Ply does not reset it. Return blocked or changes_requested for this round; the coordinator requests a new round for %s", x.OID, r.Request.Round, r.Request.CandidateOID, x.OID))
 			}
 		}
 		if result.ReviewerSession != "" && result.ReviewerSession != start.Agent.SessionID {
