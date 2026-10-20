@@ -3,6 +3,7 @@ package workspace
 import (
 	"os"
 	"reflect"
+	"time"
 )
 
 // A generation belongs only to this lock period. External content is deliberately
@@ -66,6 +67,12 @@ func cloneRegistryValue(v reflect.Value) reflect.Value {
 		}
 		return out
 	case reflect.Struct:
+		// YAML timestamp scalars in queue request interfaces are time.Time.
+		// It is an immutable value whose private representation must survive a
+		// copy; recursing into its unexported fields would zero the instant.
+		if v.Type() == reflect.TypeOf(time.Time{}) {
+			return v
+		}
 		out := reflect.New(v.Type()).Elem()
 		for i := 0; i < v.NumField(); i++ {
 			if out.Field(i).CanSet() {

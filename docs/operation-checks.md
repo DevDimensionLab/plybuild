@@ -160,4 +160,6 @@ separate physical-read, decoder, YAML-parser, closure and publication counts.
 Workspace operation timings do not measure Herdr/provider startup, and separate
 A–D percentage changes must not be added. The fresh RO04B per-stage and
 cumulative measurements, exact archives, binaries, drivers and fixture binding
-are preserved in `/private/tmp/ro04b-avw4iiq_`. Historical reports are unchanged.
+are preserved in `/private/tmp/ro04b-r2-t7no_lf5`. The initial reviewed
+candidate evidence remains in `/private/tmp/ro04b-avw4iiq_`. Historical reports
+are unchanged.

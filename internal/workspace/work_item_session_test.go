@@ -1,10 +1,12 @@
 package workspace
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestWorkItemSessionConfirmedGeneration(t *testing.T) {
@@ -513,5 +515,77 @@ func TestWorkItemSessionDetectsInPlaceDriftWithRestoredMtime(t *testing.T) {
 		return nil
 	}); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestWorkItemSessionPreservesQueueTimestampScalars(t *testing.T) {
+	for _, boundary := range []string{"snapshot", "publication"} {
+		t.Run(boundary, func(t *testing.T) {
+			f := newWorkItemJourneyFixture(t)
+			queueSetFixture(t, f, "timestamp/queue", []QueueEntry{})
+			root := filepath.Dir(f.wrapper)
+			path := workItemsPath(root)
+			raw, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// YAML accepts an unquoted timestamp as time.Time in a request interface.
+			// Its canonical JSON value and request digest remain the same UTC string.
+			quoted := []byte(`decided_at_utc: "2026-09-30T00:00:00Z"`)
+			if bytes.Count(raw, quoted) != 1 {
+				t.Fatal("expected one queue decision timestamp")
+			}
+			raw = bytes.Replace(raw, quoted, []byte("decided_at_utc: 2026-09-30T00:00:00Z"), 1)
+			if err = os.WriteFile(path, raw, 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err = f.dependencies.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+				first, err := s.Snapshot()
+				if err != nil {
+					return err
+				}
+				request := first.TaskQueueEvents[0].Request
+				decision := request["human_decision"].(map[string]any)
+				instant, ok := decision["decided_at_utc"].(time.Time)
+				if !ok || instant.IsZero() {
+					t.Fatal("fixture did not consume an accepted timestamp scalar")
+				}
+				want := first.TaskQueueEvents[0].RequestSHA256
+				if queueDigest(request) != want {
+					t.Fatal("fixture changed semantic request digest")
+				}
+				if boundary == "publication" {
+					if err = s.Publish(first); err != nil {
+						return err
+					}
+				}
+				// Changing the caller's nested map and its timestamp value cannot leak.
+				decision["decided_at_utc"] = instant.Add(time.Hour)
+				got, err := s.Snapshot()
+				if err != nil {
+					return err
+				}
+				if queueDigest(got.TaskQueueEvents[0].Request) != want {
+					t.Fatal("confirmed snapshot changed accepted timestamp scalar or retained caller aliases")
+				}
+				if err = s.Publish(got); err != nil {
+					return err
+				}
+				disk, err := f.dependencies.WorkItems.Snapshot(root)
+				if err != nil {
+					return err
+				}
+				confirmed, err := s.Snapshot()
+				if err != nil {
+					return err
+				}
+				if queueDigest(confirmed.TaskQueueEvents[0].Request) != queueDigest(disk.TaskQueueEvents[0].Request) || confirmed.RawSHA256 != disk.RawSHA256 {
+					t.Fatal("confirmed queue timestamp or hash differs from persisted request")
+				}
+				return nil
+			}); err != nil {
+				t.Fatal(err)
+			}
+		})
 	}
 }
