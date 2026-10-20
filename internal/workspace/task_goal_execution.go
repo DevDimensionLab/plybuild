@@ -97,7 +97,34 @@ func validateGoalExecuteInput(in TaskGoalExecuteInput) error {
 }
 
 func storedGoalExecution(d Dependencies, root string, r WorkItemRegistry, in TaskGoalExecuteInput, digest string) (*TaskGoalExecutePreview, *TaskRevisionRef, error) {
+	projects, repos, err := d.Projects.Snapshot(root)
+	if err != nil {
+		return nil, nil, err
+	}
+	target, _, err := resolveGoalQueueTarget(d, root, r, ProjectSnapshot{Projects: projects, Repos: repos}, in.Target, in.SpecID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return storedGoalExecutionInTarget(d, root, r, in, digest, target)
+}
+
+func storedGoalExecutionInTarget(d Dependencies, root string, r WorkItemRegistry, in TaskGoalExecuteInput, digest string, target QueueTarget) (*TaskGoalExecutePreview, *TaskRevisionRef, error) {
+	candidates := goalExecutionCandidates(root, r, in, target)
+	// A known confirmation can name a completed execution outside today's
+	// queue. Its native publication key is authoritative recovery metadata.
+	if digest != "" {
+		if pub := taskPublication(r, "goal-execute/"+strings.TrimPrefix(digest, "sha256:")+"/spec"); pub != nil {
+			task, _ := findTask(r, pub.TaskID)
+			if task != nil && task.ProjectID == target.ProjectID && task.RepoID == target.RepoID && task.ParentEpicID == target.EpicID {
+				candidates[task.ID] = true
+			}
+		}
+	}
+
 	for _, s := range r.TaskSpecRevisions {
+		if !candidates[s.TaskID] || (in.SpecID != "" && s.SpecID != in.SpecID) {
+			continue
+		}
 		v, e := readRegisteredTaskManifest(d.TaskContent, root, r, s.ManifestSHA256)
 		if e != nil {
 			return nil, nil, e
@@ -137,23 +164,28 @@ func storedGoalExecution(d Dependencies, root string, r WorkItemRegistry, in Tas
 }
 
 func buildGoalExecutionPreview(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in TaskGoalExecuteInput) (TaskGoalExecutePreview, error) {
+	target, repo, e := resolveGoalQueueTarget(d, root, r, projects, in.Target, in.SpecID)
+	if e != nil {
+		return TaskGoalExecutePreview{}, e
+	}
+	return buildGoalExecutionPreviewInTarget(d, root, r, projects, in, target, repo)
+}
+
+func buildGoalExecutionPreviewInTarget(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in TaskGoalExecuteInput, target QueueTarget, repo RepoRecord) (TaskGoalExecutePreview, error) {
+	var e error
 	if in.AcceptancePath != "" {
-		if old, _, e := storedGoalExecution(d, root, r, in, ""); e != nil {
+		if old, _, e := storedGoalExecutionInTarget(d, root, r, in, "", target); e != nil {
 			return TaskGoalExecutePreview{}, e
 		} else if old != nil {
 			return *old, nil
 		}
 	}
 	out := TaskGoalExecutePreview{Kind: "WorkspaceTaskGoalExecutePlan@1", SchemaVersion: 1, Workspace: root, Input: in, AcceptancePath: in.AcceptancePath}
-	target, repo, e := resolveGoalQueueTarget(d, root, r, projects, in.Target, in.SpecID)
-	if e != nil {
-		return out, e
-	}
 	out.Target, out.QueueID = target, queueID(root, target)
 	q := foldQueue(r, out.QueueID)
 	if q.Current != nil {
 		prep := findPreparation(r, *q.Current)
-		if old, e := resumeGoalPreview(d, root, r, in, prep.Plan.TaskID); e != nil {
+		if old, e := resumeGoalPreview(d, root, r, in, prep.Plan.TaskID, target); e != nil {
 			return out, e
 		} else if old != nil {
 			return *old, nil
@@ -169,7 +201,7 @@ func buildGoalExecutionPreview(d Dependencies, root string, r WorkItemRegistry, 
 		if preparationForTask(r, entry.TaskID) != nil {
 			continue
 		}
-		old, e := resumeGoalPreview(d, root, r, in, entry.TaskID)
+		old, e := resumeGoalPreview(d, root, r, in, entry.TaskID, target)
 		if e != nil {
 			return out, e
 		}
@@ -228,7 +260,7 @@ func buildGoalExecutionPreview(d Dependencies, root string, r WorkItemRegistry, 
 	if e = validateGoalExecuteInput(in); e != nil {
 		return out, e
 	}
-	if old, _, e := storedGoalExecution(d, root, r, in, ""); e != nil {
+	if old, _, e := storedGoalExecutionInTarget(d, root, r, in, "", target); e != nil {
 		return out, e
 	} else if old != nil {
 		return *old, nil
@@ -275,10 +307,13 @@ func PreviewTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput) (TaskGoal
 		return TaskGoalExecutePreview{}, e
 	}
 	var out TaskGoalExecutePreview
-	e = WithTaskSpecSnapshot(d, root, func(s *TaskSpecSession) error {
+	e = WithTaskSpecRegistrationSnapshot(d, root, func(s *TaskSpecSession) error {
 		var e error
 		out, e = buildGoalExecutionPreview(d, root, s.Registry, s.Projects, in)
-		return e
+		if e != nil {
+			return e
+		}
+		return validateGoalOperationContent(d, root, s.Registry, out.Goal.TaskID)
 	})
 	return out, e
 }
@@ -366,7 +401,7 @@ func materializeGoalExecution(d Dependencies, root string, session WorkItemStore
 	return TaskDecisionRef{*selection.ID, selection.ManifestSHA256}, nil
 }
 
-func resumeGoalPreview(d Dependencies, root string, r WorkItemRegistry, in TaskGoalExecuteInput, task TaskID) (*TaskGoalExecutePreview, error) {
+func resumeGoalPreview(d Dependencies, root string, r WorkItemRegistry, in TaskGoalExecuteInput, task TaskID, target QueueTarget) (*TaskGoalExecutePreview, error) {
 	for i := len(r.TaskSpecRevisions) - 1; i >= 0; i-- {
 		ref := r.TaskSpecRevisions[i]
 		if ref.TaskID != task {
@@ -390,7 +425,7 @@ func resumeGoalPreview(d Dependencies, root string, r WorkItemRegistry, in TaskG
 		if in.AcceptancePath == "" {
 			in.AcceptancePath = p.AcceptancePath
 		}
-		old, _, e := storedGoalExecution(d, root, r, in, contentString(m, "execution_request_sha256"))
+		old, _, e := storedGoalExecutionInTarget(d, root, r, in, contentString(m, "execution_request_sha256"), target)
 		return old, e
 	}
 	return nil, nil
@@ -583,6 +618,7 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 	if e != nil {
 		return out, e
 	}
+	d, bindContent := beginGoalOperationContent(d)
 	var p TaskGoalExecutePreview
 	var selected TaskDecisionRef
 	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
@@ -591,20 +627,27 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 			if e != nil {
 				return e
 			}
-			old, _, e := storedGoalExecution(d, root, r, in, confirmation)
+			target, repo, e := resolveGoalQueueTarget(d, root, r, projects, in.Target, in.SpecID)
+			if e != nil {
+				return e
+			}
+			old, _, e := storedGoalExecutionInTarget(d, root, r, in, confirmation, target)
 			if e != nil {
 				return e
 			}
 			if old != nil {
 				p = *old
 			} else {
-				p, e = buildGoalExecutionPreview(d, root, r, projects, in)
+				p, e = buildGoalExecutionPreviewInTarget(d, root, r, projects, in, target, repo)
 				if e != nil {
 					return e
 				}
 				if p.Confirmation != confirmation {
 					return queueError("task_goal_execution_conflict", "goal, queue, base or destination changed before execution")
 				}
+			}
+			if e = bindContent(root, r, p.Goal.TaskID); e != nil {
+				return e
 			}
 			if prep := preparationForTask(r, p.Goal.TaskID); prep != nil {
 				if prep.Plan.ParentOID != p.ParentOID || prep.Plan.WorktreePath != p.WorktreePath {
@@ -615,10 +658,6 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 			}
 			// Recheck the chosen identity, including on a retry after the goal
 			// queue entry has become a selected execution solution.
-			target, _, e := resolveQueueTarget(d, root, r, projects, QueueTargetInput{p.Target.ProjectID, p.Target.RepoID, p.Target.EpicID})
-			if e != nil {
-				return e
-			}
 			if target != p.Target {
 				return queueError("task_goal_execution_conflict", "execution target changed")
 			}

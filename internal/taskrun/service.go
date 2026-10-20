@@ -100,6 +100,7 @@ func previewLockedWithObservation(d Dependencies, r Request, file string, observ
 	p = Preview{Envelope: env("preview"), RequestSHA256: digest(r), RunID: RunID(r.RequestKey), Request: r, Paths: runPaths(r), Reasons: []Reason{}, NextArgv: []string{}}
 	obs, e := observe(d.Workflow, r.WorkspaceRoot, r.PreparationID, r.HandoffDraft)
 	p.Preparation = obs.Preparation
+	p.dependencySHA256 = obs.DependencySHA256
 	p.Observed = Observed{obs.MarkerSHA256, obs.RegistrySHA256, obs.Target, obs.Epic, []FileBinding{}}
 	if e != nil {
 		return p, conflict(e.Error())
@@ -160,7 +161,11 @@ func previewLockedWithObservation(d Dependencies, r Request, file string, observ
 	} else if !os.IsNotExist(e) {
 		return p, e
 	}
-	p.Confirmation = ptr(confirmation(p))
+	binding := p
+	if binding.dependencySHA256 != "" {
+		binding.Observed.RegistrySHA256 = binding.dependencySHA256
+	}
+	p.Confirmation = ptr(confirmation(binding))
 	p.NextArgv = []string{r.Runtime.PlyExecutable.Path, "workspace", "task", "run", "start", "--file", file, "--apply", "--confirm", *p.Confirmation}
 	encoded, e := Canonical(p)
 	if e != nil {

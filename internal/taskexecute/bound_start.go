@@ -50,6 +50,7 @@ type BoundStartBasis struct {
 	Environment          taskrun.GoalStartEnvironment     `json:"environment"`
 	PolicySources        []boundPolicySource              `json:"policy_sources"`
 	PermissionDefinition any                              `json:"permission_definition"`
+	DependencySHA256     string                           `json:"dependency_sha256,omitempty"`
 	RegistrySHA256       string                           `json:"registry_sha256"`
 	ProjectSHA256        string                           `json:"project_sha256"`
 	Trust                string                           `json:"trust"`
@@ -147,6 +148,9 @@ func boundHash(v any) string {
 }
 func boundBinding(r BoundStartRequest, b BoundStartBasis) string {
 	r.Binding = ""
+	if b.DependencySHA256 != "" {
+		b.RegistrySHA256 = ""
+	}
 	return boundHash(struct {
 		Request BoundStartRequest `json:"request"`
 		Basis   BoundStartBasis   `json:"basis"`
@@ -319,7 +323,7 @@ func buildBoundBasis(d taskrun.Dependencies, s *workspace.TaskSpecSession, r Bou
 		return BoundStartBasis{}, err
 	}
 	out := BoundStartBasis{Goal: p, Runtime: runtime, Environment: env, PolicySources: sources, PermissionDefinition: definition,
-		RegistrySHA256: s.Registry.RawSHA256, ProjectSHA256: boundHash(s.Projects),
+		DependencySHA256: workspace.TaskStartupDependencySHA256(s.Registry, p.Goal.TaskID), RegistrySHA256: s.Registry.RawSHA256, ProjectSHA256: boundHash(s.Projects),
 		Trust: "Native Codex onboarding only; no persistent or process-local trust grant by Ply.", RuntimeAcceptance: "requested_only; the recipient must confirm actual runtime and permissions before Task writes",
 		Effects: []string{"Preserve this immutable request identity before any execution effect", "Publish the exact Goal execution Spec, assessment and selection, and bind the queue", "Reserve and create the shown Task branch and worktree from the bound base", "Preserve launch policy, frozen Ply control, native Run and delivery handoff", "Create at most one Herdr tab in the shown workspace and start its assigned Codex agent", "Require actual runtime acceptance and the unchanged delivery/acceptance agreement; no new Git or delivery authority"}}
 	if _, err := taskrun.Canonical(out); err != nil {
@@ -375,7 +379,7 @@ func PreviewBoundStart(d taskrun.Dependencies, requestID string, input BoundStar
 		return out, err
 	}
 	r.Workspace = observed.Observation.Root
-	err = workspace.WithTaskSpecSnapshot(d.Workspace, r.Workspace, func(s *workspace.TaskSpecSession) error {
+	err = workspace.WithTaskSpecRegistrationSnapshot(d.Workspace, r.Workspace, func(s *workspace.TaskSpecSession) error {
 		var err error
 		out.Basis, err = buildBoundBasis(d, s, r)
 		return err
@@ -461,7 +465,11 @@ type approvedStartGuard struct {
 }
 
 func (g *approvedStartGuard) Check(root string, r workspace.WorkItemRegistry) error {
-	if root != g.request.Workspace || r.RawSHA256 != g.registry {
+	observed := r.RawSHA256
+	if g.basis.DependencySHA256 != "" {
+		observed = workspace.TaskStartupDependencySHA256(r, g.basis.Goal.Goal.TaskID)
+	}
+	if root != g.request.Workspace || observed != g.registry {
 		return boundError("bound_start_stale", "native registry changed before the approved start effect")
 	}
 	projects, repos, err := g.d.Workspace.Projects.Snapshot(root)
@@ -519,6 +527,9 @@ func (g *approvedStartGuard) git(requireTask bool) error {
 }
 func (g *approvedStartGuard) Committed(_ string, r workspace.WorkItemRegistry) {
 	g.registry = r.RawSHA256
+	if g.basis.DependencySHA256 != "" {
+		g.registry = workspace.TaskStartupDependencySHA256(r, g.basis.Goal.Goal.TaskID)
+	}
 }
 func (g *approvedStartGuard) runtime() error {
 	control, err := g.d.Executable()
@@ -582,7 +593,7 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 	}
 	var intent boundStartIntent
 	owned := false
-	err = workspace.WithTaskSpecSnapshot(d.Workspace, r.Workspace, func(s *workspace.TaskSpecSession) error {
+	err = workspace.WithTaskSpecRegistrationSnapshot(d.Workspace, r.Workspace, func(s *workspace.TaskSpecSession) error {
 		if old, e := readBoundIntent(r.Workspace, r.RequestID); e == nil {
 			if boundHash(old.Request) != boundHash(r) {
 				return boundError("bound_start_request_conflict", "request_id already has different immutable content")
@@ -629,10 +640,13 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 	}
 	guard := &approvedStartGuard{d: d, request: r, basis: intent.Basis, registry: intent.Basis.RegistrySHA256}
 	locked := d
+	if intent.Basis.DependencySHA256 != "" {
+		guard.registry = intent.Basis.DependencySHA256
+	}
 	locked.Workspace = workspace.WithTaskStartGuard(d.Workspace, guard)
 	locked.Workflow.TaskWorkspace = &locked.Workspace
 	locked.ApprovedGoalStart = func() error {
-		return workspace.WithTaskSpecSnapshot(locked.Workspace, r.Workspace, func(*workspace.TaskSpecSession) error { return nil })
+		return workspace.WithTaskSpecRegistrationSnapshot(locked.Workspace, r.Workspace, func(*workspace.TaskSpecSession) error { return nil })
 	}
 	in := Input{SpecID: r.Input.SpecID, Target: r.Input.Target, Runtime: boundRuntimeOptions(r.Input), ExpectedTaskID: intent.Basis.Goal.Goal.TaskID, ExpectedGoal: &intent.Basis.Goal.Goal.Goal, boundEnvironment: &intent.Basis.Environment, expectedRuntime: &intent.Basis.Runtime, boundRequestKey: boundRequestKey(r)}
 	result, runErr := Execute(locked, in)

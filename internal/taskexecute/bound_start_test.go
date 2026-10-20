@@ -534,3 +534,53 @@ func TestBoundStartRejectsUnbindablePermissionDefinition(t *testing.T) {
 		t.Fatal("invalid policy preview wrote state")
 	}
 }
+
+func boundPublishSiblingProblem(t *testing.T, d taskrun.Dependencies, root string) {
+	t.Helper()
+	r, err := d.Workspace.WorkItems.SnapshotRegistrations(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var previous workspace.TaskRevisionRef
+	for _, p := range r.TaskProblemRevisions {
+		if p.TaskID == "sibling" {
+			previous = workspace.TaskRevisionRef{Revision: p.Revision, ManifestSHA256: p.ManifestSHA256}
+		}
+	}
+	doc := filepath.Join(root, "sibling.md")
+	body := []byte("# Revised independent problem\n")
+	if err = os.WriteFile(doc, body, 0600); err != nil {
+		t.Fatal(err)
+	}
+	draft := map[string]any{"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "sibling/revision", "task_id": "sibling", "registry_upgrade": nil, "expected_previous": previous, "origin": map[string]any{"kind": "authored"}, "title": "Revised sibling", "summary": "Independent revised need", "problem_document_id": "problem", "documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": doc, "sha256": digestBytes(body), "size_bytes": len(body), "media_type": "text/markdown", "git_provenance": nil}}}, "sources": []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Independent publication", "recorder": map[string]any{"actor_claim": "fixture", "control_surface": "synthetic test", "recorded_at_utc": "2026-10-05T00:00:00Z"}}
+	b, err := json.Marshal(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(root, "sibling-problem.json")
+	if err = os.WriteFile(file, b, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = workspace.RecordTaskProblem(d.Workspace, workspace.TaskContentInput{TaskID: "sibling", File: file}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBoundStartUnrelatedContentDoesNotChangeConfirmation(t *testing.T) {
+	d, in, root, _ := boundFixture(t)
+	if _, err := workspace.CreateTask(d.Workspace, workspace.TaskCreateInput{TaskID: "sibling", Title: "Sibling", Description: "Independent content", ParentEpicID: "epic", ProjectID: "fixture", RepoID: "fixture"}); err != nil {
+		t.Fatal(err)
+	}
+	p := boundPreview(t, d, in)
+	boundPublishSiblingProblem(t, d, root)
+	after := boundPreview(t, d, in)
+	if after.Basis.RegistrySHA256 == p.Basis.RegistrySHA256 {
+		t.Fatal("fixture did not publish a real registry change")
+	}
+	if after.Request.Binding != p.Request.Binding {
+		t.Fatal("unrelated publication changed confirmation")
+	}
+	if _, err := ApplyBoundStart(d, p.Request); err != nil {
+		t.Fatal(err)
+	}
+}

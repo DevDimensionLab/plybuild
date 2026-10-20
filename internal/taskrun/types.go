@@ -105,6 +105,7 @@ type Paths struct {
 	ReportPath string `json:"report_path"`
 }
 type Preview struct {
+	dependencySHA256 string
 	Envelope
 	RequestSHA256 string                    `json:"request_sha256"`
 	RunID         string                    `json:"run_id"`

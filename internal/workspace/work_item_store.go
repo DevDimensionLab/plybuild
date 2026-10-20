@@ -36,8 +36,9 @@ type workItemStoreFaults struct {
 }
 
 type systemWorkItemStore struct {
-	faults *workItemStoreFaults
-	scope  *taskContentScope
+	faults       *workItemStoreFaults
+	scope        *taskContentScope
+	contentScope *taskContentScope
 }
 type systemWorkItemStoreSession struct {
 	store *systemWorkItemStore
@@ -218,7 +219,8 @@ func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
 // SnapshotRegistrations validates the registry itself without requiring the
 // content of unrelated workflow/queue objects. Registered lists verify current
 // problem heads individually so an unavailable title does not hide its Task.
-// Snapshot and every mutation retain their existing full closure checks.
+// Unscoped Snapshot and mutations retain full closure checks; Goal operations
+// bind their selected external dependencies before publication.
 func (store *systemWorkItemStore) SnapshotRegistrations(root string) (WorkItemRegistry, error) {
 	return store.readRegistry(root, false)
 }
@@ -246,8 +248,8 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 		}
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
-	if requireClosure && registry.FormatVersion >= 4 {
-		storage := observeTaskContent(&TaskContentStorage{scope: store.scope, fault: store.fail})
+	if requireClosure && registry.FormatVersion >= 4 && !(store.scope == nil && store.contentScope != nil && store.contentScope.task == "") {
+		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
 		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 			return WorkItemRegistry{}, err
 		}
@@ -260,6 +262,9 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 }
 
 func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry) error {
+	if store.contentScope != nil && store.contentScope.task == "" {
+		return queueError("task_goal_execution_conflict", "operation content dependencies are not bound")
+	}
 	old, err := store.read(root)
 	if err != nil {
 		return err
@@ -273,7 +278,7 @@ func (store *systemWorkItemStore) publish(root string, registry WorkItemRegistry
 	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
 		return err
 	}
-	storage := observeTaskContent(&TaskContentStorage{scope: store.scope, fault: store.fail})
+	storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
 	if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
 		return err
 	}
@@ -1468,4 +1473,11 @@ type workItemRegistryV4Wire struct {
 
 func workItemRegistryV4(r WorkItemRegistry) workItemRegistryV4Wire {
 	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskSpecPolicies: r.TaskSpecPolicies, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
+}
+
+func (store *systemWorkItemStore) closureScope() *taskContentScope {
+	if store.scope != nil {
+		return store.scope
+	}
+	return store.contentScope
 }

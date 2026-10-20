@@ -164,6 +164,10 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 		p.Reasons = append(p.Reasons, Reason{"workflow_start_blocked", e.Error()})
 		return p, e
 	}
+	confirmationObserved := p.Observed
+	if n.dependencySHA256 != "" {
+		confirmationObserved.RegistrySHA256 = n.dependencySHA256
+	}
 	p.Confirmation = ptr(digest(struct {
 		Request     WorkflowRequest
 		Observed    Observed
@@ -171,7 +175,7 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 		Effects     []string
 		Trust       *workflowTrustFacts `json:"codex_project_trust,omitempty"`
 		ClaudeTrust *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
-	}{r, p.Observed, p.Paths, p.Effects, p.CodexTrust, p.ClaudeTrust}))
+	}{r, confirmationObserved, p.Paths, p.Effects, p.CodexTrust, p.ClaudeTrust}))
 	return p, nil
 }
 func WorkflowPreviewStart(d Dependencies, file string) (any, error) {

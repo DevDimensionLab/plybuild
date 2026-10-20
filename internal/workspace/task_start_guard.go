@@ -47,13 +47,16 @@ func (s *TaskSpecSession) PreviewInitialTaskGoalExecution(in TaskGoalExecuteInpu
 	if err != nil {
 		return p, err
 	}
+	if err := validateGoalOperationContent(s.Dependencies, s.Root, s.Registry, p.Goal.TaskID); err != nil {
+		return p, err
+	}
 	q := foldQueue(s.Registry, p.QueueID)
 	if q.Current != nil || preparationForTask(s.Registry, p.Goal.TaskID) != nil {
 		return p, queueError("task_goal_initial_start_required", "an existing preparation requires its preserved Run, not a fresh bound start")
 	}
 	for _, entry := range q.Pending {
 		if entry.TaskID == p.Goal.TaskID && entry.Goal != nil && *entry.Goal == p.Goal.Goal {
-			old, _, err := storedGoalExecution(s.Dependencies, s.Root, s.Registry, p.Input, "")
+			old, _, err := storedGoalExecutionInTarget(s.Dependencies, s.Root, s.Registry, p.Input, "", p.Target)
 			if err != nil {
 				return p, err
 			}

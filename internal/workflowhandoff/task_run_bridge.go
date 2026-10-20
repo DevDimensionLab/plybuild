@@ -43,6 +43,7 @@ func WithTaskRunSnapshot(d Dependencies, root string, fn func(Dependencies) erro
 }
 
 type TaskRunObservation struct {
+	DependencySHA256             string
 	Preparation                  workspace.TaskPreparation
 	MarkerSHA256, RegistrySHA256 string
 	Target, Epic                 workspace.PlanWorktreeObservation
@@ -83,6 +84,9 @@ func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, deli
 	if p.Preparation != nil {
 		out.Preparation = *p.Preparation
 		out.RegistrySHA256 = s.Registry.RawSHA256
+		if delivery {
+			out.DependencySHA256 = workspace.TaskStartupDependencySHA256(s.Registry, p.Preparation.Plan.TaskID)
+		}
 		ws, err := d.Workspace.ObserveRoot(root)
 		if err == nil {
 			out.MarkerSHA256 = ws.Observation.MarkerSHA256
@@ -140,7 +144,7 @@ func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, deli
 			return out, fmt.Errorf("target or Epic changed since preparation")
 		}
 	}
-	return TaskRunObservation{*p.Preparation, obs.workspace.Observation.MarkerSHA256, s.Registry.RawSHA256, target, epic}, nil
+	return TaskRunObservation{Preparation: *p.Preparation, MarkerSHA256: obs.workspace.Observation.MarkerSHA256, RegistrySHA256: s.Registry.RawSHA256, DependencySHA256: out.DependencySHA256, Target: target, Epic: epic}, nil
 }
 
 // TaskRunHandoffView omits the secret and is safe in the recipient instructions.
