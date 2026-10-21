@@ -36,6 +36,7 @@ if model.get("bootstrap_mode"):
 with (root / "herdr-calls.jsonl").open("a") as f:
     f.write(json.dumps(call) + "\n")
 cmd = args[:2]
+observation_delay = 0
 if cmd == ["agent", "start"]:
     model["name"] = args[2]
 agent = {"workspace_id":"w-fixture", "tab_id":"tab-fixture", "pane_id":"w-fixture:p1",
@@ -65,7 +66,8 @@ if bootstrap_mode:
 if cmd == ["agent", "get"] and model.get("observations"):
     index = model.get("observation_index", 0)
     observation = model["observations"][min(index, len(model["observations"]) - 1)]
-    agent.update({k: v for k, v in observation.items() if k != "drop_fields"})
+    observation_delay = observation.get("delay_millis", 0) / 1000
+    agent.update({k: v for k, v in observation.items() if k not in ("drop_fields", "delay_millis")})
     for field in observation.get("drop_fields", []):
         agent.pop(field, None)
     model["observation_index"] = index + 1
@@ -100,6 +102,7 @@ else:
 pending = path.with_name(path.name + "." + str(os.getpid()) + ".tmp")
 pending.write_text(json.dumps(model))
 pending.replace(path)
+time.sleep(observation_delay)
 if bootstrap_mode == "lost_reply" and cmd == ["agent", "prompt"] and args[3] == model["bootstrap_expected_prompt"]:
     raise SystemExit(7)
 failure = model.get("failure", {})

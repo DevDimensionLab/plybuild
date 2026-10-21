@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -272,12 +273,13 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 		return WorkflowRun{}, e
 	}
 	deadline, quiet, previous := time.Now().Add(timeout), 0, ""
-	observationTimeout := func() error {
-		return workflowError(5, "Delivery continues in the same session; observation timed out without stopping or restarting it")
+	observation := followObservation{}
+	observationReadback := func(err error) (WorkflowRun, error) {
+		return workflowFollowReadback(d, root, id, err)
 	}
 	for {
 		if !time.Now().Before(deadline) {
-			return deliveryReadback(d, root, id, observationTimeout())
+			return observationReadback(workflowObservationWindowExpired)
 		}
 		// The owner's integrate may release the source while this follow is
 		// already observing; the same follow then finishes source cleanup.
@@ -285,6 +287,8 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			return o, e
 		}
 		ready := false
+		var observationErr error
+		continueRead := false
 		e := workflowUpdate(d, root, id, func(s *workflowState) error {
 			if e := workflowFresh(d, *s, true); e != nil {
 				return e
@@ -293,7 +297,7 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			// the observer's budget. That does not make the delivery unknown and
 			// must not start a transport call with an already expired deadline.
 			if !time.Now().Before(deadline) {
-				return observationTimeout()
+				return workflowObservationWindowExpired
 			}
 			// Follow only observes the bound session. A transient read cwd is
 			// not a Task mutation; owner callbacks recheck the live cwd.
@@ -304,7 +308,13 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 				}
 			}
 			if e != nil {
-				return e
+				// A failed read supplies no current liveness, including when our
+				// own shorter window killed it. Preserve delivery and owner facts.
+				s.Result.Transport.State = "unknown"
+				s.Result.Transport.Observation = "cached"
+				quiet = 0
+				observationErr, continueRead = observation.failure(d, id, deadline, e)
+				return nil
 			}
 			workflowObserve(d, s, a)
 			phase := s.Result.Delivery.Phase
@@ -322,8 +332,13 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			return nil
 		})
 		if e != nil {
-			o, _ := WorkflowShow(d, root, id)
-			return o, e
+			if errors.Is(e, workflowObservationWindowExpired) {
+				return observationReadback(e)
+			}
+			return deliveryReadback(d, root, id, e)
+		}
+		if observationErr != nil && !continueRead {
+			return observationReadback(observationErr)
 		}
 		if ready {
 			s, e := workflowRead(root, id)
@@ -341,13 +356,10 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			o.Transport.Observation = "fresh"
 			return o, e
 		}
-		pause := 250 * time.Millisecond
-		if left := time.Until(deadline); left < pause {
-			pause = left
+		if time.Until(deadline) <= workflowFollowInterval {
+			return observationReadback(workflowObservationWindowExpired)
 		}
-		if pause > 0 {
-			time.Sleep(pause)
-		}
+		time.Sleep(workflowFollowInterval)
 	}
 }
 

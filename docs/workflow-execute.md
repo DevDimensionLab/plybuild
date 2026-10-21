@@ -452,9 +452,20 @@ Show is read-only. Follow observes the same provider/session. It checks the
 bound pane, terminal and native session, not the owner's current foreground
 cwd: a transient read outside the Task does not hide that the same session is
 working, idle or done. Owner callbacks still require the exact Task cwd. A timeout ends
-observation and leaves the provider running. Repeating execute reuses the
+observation without stopping or restarting the provider; it establishes no current
+liveness. The exit-5 result includes the same Run's supported `follow` command.
+Repeating execute reuses the
 preserved launch; it never creates a second tab to conceal an uncertain start.
 The interactive Herdr session is also where the human can steer the owner.
+
+Follow distinguishes its overall window from the independent Herdr request
+budget (normally 15 seconds). A read clipped by the overall window returns
+ordinary observation expiry. An independent `agent get` timeout permits at most
+one read continuation within that same window, after the normal polling interval.
+It logs the Run, source and budgets through the existing warning logger. Persistent
+read failure returns unknown transport, never cached working as fresh liveness.
+Each continuation rechecks authority and session identity; provider input is never
+resent. Preserved stops and delivery results remain separate facts.
 
 If a native trust dialog outlasts the initial startup window, resolve it in the
 preserved tab, then continue that same startup:

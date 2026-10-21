@@ -20,7 +20,10 @@ type HerdrCallError struct {
 	Class        string
 	ProviderCode string
 	ReadOnly     bool
-	cause        *Error
+	// ObserverDeadline distinguishes the caller's shorter observation window
+	// from the independent per-request budget. It never describes provider life.
+	ObserverDeadline bool
+	cause            *Error
 }
 
 func (e *HerdrCallError) Error() string {
@@ -40,7 +43,7 @@ func (e *HerdrCallError) Unwrap() error {
 // Child output is untrusted and may contain capabilities or terminal contents.
 // Retain only fixed classifications, exit status, sizes and known provider codes.
 // Never include argv payloads, raw streams, error messages or arbitrary codes.
-func workflowCallFailure(args []string, contextErr, processErr error, stdout, stderr workflowLimitedOutput, class string) error {
+func workflowCallFailure(args []string, contextErr, processErr error, stdout, stderr workflowLimitedOutput, class string) *HerdrCallError {
 	phase := "transport"
 	readOnly := false
 	if len(args) >= 2 {

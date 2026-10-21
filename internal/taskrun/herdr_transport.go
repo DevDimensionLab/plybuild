@@ -89,7 +89,7 @@ func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, ar
 	if e := verifyExecutable(r.Herdr.Executable); e != nil {
 		return nil, e
 	}
-	limit := 15 * time.Second
+	limit := workflowHerdrReadTimeout
 	if len(args) > 1 && args[0] == "agent" && args[1] == "start" {
 		limit = 35 * time.Second
 	}
@@ -97,7 +97,8 @@ func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, ar
 		limit = d.HerdrTimeout
 	}
 	callDeadline := time.Now().Add(limit)
-	if !deadline.IsZero() && deadline.Before(callDeadline) {
+	observerDeadline := !deadline.IsZero() && !callDeadline.Before(deadline)
+	if observerDeadline {
 		callDeadline = deadline
 	}
 	ctx, cancel := context.WithDeadline(context.Background(), callDeadline)
@@ -108,7 +109,9 @@ func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, ar
 	c.Stdout = &stdout
 	c.Stderr = &stderr
 	if e := c.Run(); e != nil {
-		return nil, workflowCallFailure(args, ctx.Err(), e, stdout, stderr, "")
+		failure := workflowCallFailure(args, ctx.Err(), e, stdout, stderr, "")
+		failure.ObserverDeadline = observerDeadline && failure.Class == "timeout"
+		return nil, failure
 	}
 	if stdout.overflow || stderr.overflow {
 		return nil, workflowCallFailure(args, nil, nil, stdout, stderr, "output_limit")
@@ -455,9 +458,11 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 	lastRound := -1
 	lastReport := ""
 	var lastQuiet time.Time
+	observation := followObservation{}
 	for {
 		ready := false
 		var observationErr error
+		continueRead := false
 		e := workflowUpdate(d, root, id, func(s *workflowState) error {
 			if workflowReportStopped(*s) {
 				if e := workflowFreshArtifacts(d, *s, false, false); e != nil {
@@ -471,24 +476,21 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 			if e := workflowFresh(d, *s, true); e != nil {
 				return e
 			}
-			observing := d
-			remaining := time.Until(deadline)
-			if remaining <= 0 {
-				return workflowError(5, "observation timeout")
+			if !time.Now().Before(deadline) {
+				return workflowObservationWindowExpired
 			}
-			if observing.HerdrTimeout <= 0 || observing.HerdrTimeout > remaining {
-				observing.HerdrTimeout = remaining
-			}
-			a, e := workflowAgentGet(observing, *s, false)
+			a, e := workflowAgentGetUntil(d, *s, false, deadline)
 			if e != nil {
-				observationErr = e
+				observationErr, continueRead = observation.failure(d, id, deadline, e)
+				quiet = 0
 				s.Result.Transport.State = "unknown"
-				s.Result.Transport.Observation = "fresh"
-				s.Result.Transport.ObservedAt = d.Now().UTC().Format(time.RFC3339Nano)
-				if s.Result.Round.State != "sealed" {
-					s.Result.Round.State = "unknown"
+				s.Result.Transport.Observation = "cached"
+				if observationErr != workflowObservationWindowExpired {
+					if s.Result.Round.State != "sealed" {
+						s.Result.Round.State = "unknown"
+					}
+					s.Result.NextAction = WorkflowAction{"coordinator", "Inspect this run's uncertain transport identity; no input was sent."}
 				}
-				s.Result.NextAction = WorkflowAction{"coordinator", "Inspect this run's uncertain transport identity; no input was sent."}
 				return nil
 			}
 			workflowObserve(d, s, a)
@@ -522,12 +524,15 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 			}
 			return nil
 		})
-		if e == nil {
-			e = observationErr
-		}
 		if e != nil {
+			if e == workflowObservationWindowExpired {
+				return workflowFollowReadback(d, root, id, e)
+			}
 			o, _ := WorkflowShow(d, root, id)
-			return o, workflowError(5, "Transport observation is unknown: "+e.Error())
+			return o, e
+		}
+		if observationErr != nil && !continueRead {
+			return workflowFollowReadback(d, root, id, observationErr)
 		}
 		if ready {
 			s, e := workflowRead(root, id)
@@ -546,15 +551,9 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 			}
 			return o, e
 		}
-		if !time.Now().Before(deadline) {
-			o, _ := WorkflowShow(d, root, id)
-			o.Transport.Observation = "fresh"
-			return o, workflowError(5, "Waiting for this round's report and two fresh settled observations; the agent was not stopped")
+		if time.Until(deadline) <= workflowFollowInterval {
+			return workflowFollowReadback(d, root, id, workflowObservationWindowExpired)
 		}
-		pause := 250 * time.Millisecond
-		if remaining := time.Until(deadline); remaining < pause {
-			pause = remaining
-		}
-		time.Sleep(pause)
+		time.Sleep(workflowFollowInterval)
 	}
 }

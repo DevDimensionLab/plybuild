@@ -21,6 +21,13 @@ All six leaves support `--format text|json`; text is the default. Preview and
 `show` do not write, create locks or contact Herdr. `show` labels saved transport
 observations as cached and checks artifact freshness even after acceptance.
 `follow` makes fresh observations; its timeout stops observation, not the agent.
+Its exit-5 observation result includes the same Run's next `follow` command.
+The overall observation window is distinct from the Herdr request budget:
+expiry of the window preserves the round, while a failed read leaves current
+transport unknown. An independent `agent get` timeout permits at most one read
+continuation within the original window, with a sourced warning through the
+existing logger. The continuation rechecks the same session and sends no provider
+input. Preserved stops return before polling, and session drift remains an error.
 
 The request is strict JSON with kind `ply.workflow.herdr-run-request` and
 `schema_version: 1`. Supply these required fields:
