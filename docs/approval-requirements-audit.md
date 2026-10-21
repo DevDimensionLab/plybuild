@@ -352,3 +352,12 @@ interruptions, reply recovery without a second copy, changed inputs and guarded
 rollback across later operations. Separate exact-candidate review, native final
 acceptance/delivery and root's first ordinary CLI installation remain to be
 observed. This is not completion of P3 or the broader audit.
+
+Native AL08 review round 001 found `r001-f01`: an incoming legacy release
+failed to archive the outgoing qualified receipt, so an old qualified retry
+could replace that later selection. The permanent regression
+`TestQualifiedInstallCannotReplayAfterLegacyRelease` reproduced this before the
+fix. The shared history boundary now follows the outgoing qualified operation,
+regardless of the incoming install path; explicit legacy rollback/reinstall
+remains supported. The finding and failed review remain native history; a fresh
+exact-candidate review and ordinary root installation are still required.

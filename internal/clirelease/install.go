@@ -176,7 +176,10 @@ func (i Installer) install(m Manifest, b []byte, expected, destination string) (
 			return r, fmt.Errorf("install_destination_changed: neither recorded preimage nor candidate is installed")
 		}
 	} else {
-		if err == nil && previous.ManifestSHA256 != expected && m.Qualification != nil {
+		// Supersession belongs to the outgoing qualified operation, regardless
+		// of whether the new selection is a qualified candidate or a legacy
+		// release. Legacy packages retain their explicit reinstall semantics.
+		if err == nil && previous.ManifestSHA256 != expected && previous.Manifest.Qualification != nil {
 			if !digestPattern.MatchString(previous.ManifestSHA256) {
 				return r, fmt.Errorf("install_receipt_invalid: invalid operation digest")
 			}

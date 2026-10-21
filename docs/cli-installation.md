@@ -128,7 +128,8 @@ binary SHA-256, destination and caller. One destination/caller is retained per
 Run in `.ply/workflow-runs/cli-installations/RUN/request.json`; changed inputs
 conflict rather than creating another operation. The existing release installer
 owns the destination lock, hash-addressed backup, pending effect receipt and
-atomic replacement. Superseded receipts remain in `DEST.install-history`.
+atomic replacement. Superseded qualified receipts remain in `DEST.install-history`, including when
+a legacy release replaces them. Explicit legacy package reinstall remains supported.
 An older operation cannot replace or roll back a later selected installation.
 
 `verified` requires the observed destination hash and an actual installed
