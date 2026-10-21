@@ -115,6 +115,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.AddCommand(newWorkflowExecuteReconcileQuotaStopCommand(d))
 	c.AddCommand(newWorkflowExecuteReconcileCapacityStopCommand(d))
 	c.AddCommand(newWorkflowExecuteRetireCommand(d))
+	c.AddCommand(newWorkflowExecuteBackupGoalCommand(d))
 	c.AddCommand(newWorkflowExecuteReviewCommand(d))
 	c.AddCommand(newWorkflowExecuteReviewReturnCommand(d))
 	c.AddCommand(newWorkflowExecuteQARecoveryCommand(d))

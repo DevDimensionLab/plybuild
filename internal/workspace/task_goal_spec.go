@@ -3,6 +3,7 @@ package workspace
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
@@ -264,4 +265,33 @@ func validateExecutionGoalOrigin(d Dependencies, root string, r WorkItemRegistry
 		}
 	}
 	return nil
+}
+
+// ValidateTaskExecutorChoice validates resolved choices, independently of local
+// account, executable and permission settings. Callers resolve defaults first.
+func ValidateTaskExecutorChoice(provider, model, effort string) error {
+	if provider != "codex" && provider != "claude" {
+		return fmt.Errorf("unsupported implementor %q; choose codex or claude", provider)
+	}
+	if model == "" || strings.TrimSpace(model) != model || contentText(256)(model) != nil {
+		return fmt.Errorf("the implementor model is unknown; record a model in the goal or existing provider settings")
+	}
+	if effort != "" && effort != "low" && effort != "medium" && effort != "high" && effort != "xhigh" && effort != "max" && effort != "minimal" && effort != "none" {
+		return fmt.Errorf("unsupported reasoning effort %q", effort)
+	}
+	if provider == "claude" && (effort == "minimal" || effort == "none") {
+		return fmt.Errorf("Claude does not support reasoning effort %q", effort)
+	}
+	return nil
+}
+
+// TaskExecutorDefaults is shared with interactive launch; never use the old
+// Goal's provider-specific model/effort as the new provider's defaults.
+func TaskExecutorDefaults(provider string, settings map[string]any) (string, string) {
+	if provider == "codex" {
+		model, _ := settings["model"].(string)
+		effort, _ := settings["model_reasoning_effort"].(string)
+		return model, effort
+	}
+	return "opus", "medium"
 }

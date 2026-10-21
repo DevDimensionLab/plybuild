@@ -232,7 +232,11 @@ func contentDocumentInputRule() contentRule {
 		case "file":
 			return contentExact(map[string]contentRule{"kind": contentEnum("file"), "locator": contentPath, "sha256": contentDigest, "size_bytes": contentInteger(1, taskDocumentLimit), "media_type": contentEnum("text/markdown", "text/plain"), "git_provenance": contentNullable(contentGitRule())})(v)
 		case "snapshot":
-			return contentExact(map[string]contentRule{"kind": contentEnum("snapshot"), "manifest_sha256": contentDigest, "document_id": contentKey})(v)
+			rules := map[string]contentRule{"kind": contentEnum("snapshot"), "manifest_sha256": contentDigest, "document_id": contentKey}
+			if _, ok := contentFields(v)["task_id"]; ok {
+				rules["task_id"] = contentSlug
+			}
+			return contentExact(rules)(v)
 		default:
 			return fmt.Errorf("source kind must be file or snapshot")
 		}

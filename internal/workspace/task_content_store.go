@@ -346,7 +346,11 @@ func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id
 		var err error
 		if contentString(src, "kind") == "snapshot" {
 			digest := contentString(src, "manifest_sha256")
-			if !contentManifestOwned(r, id, digest) {
+			owner := id
+			if explicit := contentString(src, "task_id"); explicit != "" {
+				owner = TaskID(explicit)
+			}
+			if !contentManifestOwned(r, owner, digest) {
 				return nil, nil, contentError("task_content_integrity_conflict", "snapshot manifest is not registered to this Task", nil)
 			}
 			manifest, e := readContentManifest(d.TaskContent, root, digest)
@@ -680,7 +684,11 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 			}
 		} else {
 			digest := contentString(source, "manifest_sha256")
-			if !contentManifestOwned(r, pub.TaskID, digest) {
+			owner := pub.TaskID
+			if explicit := contentString(source, "task_id"); explicit != "" {
+				owner = TaskID(explicit)
+			}
+			if !contentManifestOwned(r, owner, digest) {
 				return fmt.Errorf("snapshot source is not owned by Task")
 			}
 			origin, err := readContentManifest(s, root, digest)

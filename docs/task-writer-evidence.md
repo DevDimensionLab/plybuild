@@ -34,3 +34,40 @@ classification from resume, retirement and automatic cleanup. Deleting it would
 put that knowledge back into those callers. The composition and unknown/present
 distinction now have locality in one implementation, while historical records
 and action-specific effects retain their existing authority.
+
+## Registering a fresh backup Goal
+
+From the containing workspace or registered return checkout:
+
+```sh
+ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-v1 --provider codex --format json
+# Reuse the same arguments and returned confirmation for explicit publication:
+ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-v1 --provider codex --apply --confirmation sha256:... --format json
+```
+
+This G04 dependency requires an already natively retired interactive Goal
+Spec@2 Run with an automatic local Epic agreement, released source preparation,
+unchanged pre-work source and no candidate or review round. Preview reads only;
+apply publishes a fresh Task/Problem/Goal and appends its exact reference while
+retaining the current preparation and all pending references/order. It creates
+no branch/worktree and starts no provider. Identical retries recover the same
+native publication keys, including an interrupted partial publication. Inspect
+Task publications and queue after an uncertain acknowledgement before repeating
+identical input; changed identity/provider/settings conflict rather than replace.
+
+Provider and fresh Task/Spec IDs are required. Model and effort are optional:
+omission resolves through normal fresh native defaults (Codex's existing local
+settings, or Claude's native defaults). Preview shows resolved values and source;
+no old provider-specific model/effort is copied. Optional overrides use shared
+launch validation. Registration does not require Herdr launch configuration or
+provider permission acceptance. The returned `workflow execute --spec ... --check`
+is a separate read-only preflight from the return checkout and may report missing
+launch configuration; it is not a provider start.
+
+Original product requirements and immutable document descriptors remain binding.
+A normative runtime identity addendum records the source Run/request/Goal/ref and
+fresh executor; it overrides historical runtime prose without deleting arbitrary
+product text. No old acceptance, permissions, tests, review, QA, candidate,
+qualification, result or delivery transfers. Native retirement-to-start,
+post-work/source transfer, review quota, report/legacy, PR and cross-repository
+cases remain later G04 work; registration alone does not complete G04.

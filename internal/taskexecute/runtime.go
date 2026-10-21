@@ -77,7 +77,8 @@ func PreviewRuntime(assignment workspace.TaskExecutorAssignment, control string,
 		Sources:   []taskrun.FileBinding{},
 		Assurance: "Requested launch contract only; recipient must confirm actual permissions before Task writes. Runtime enforcement remains authoritative.",
 	}
-	model, effort, profile := "opus", "medium", "auto"
+	model, effort := workspace.TaskExecutorDefaults(provider, nil)
+	profile := "auto"
 	if provider == "codex" {
 		codexHome := opts.CodexHome
 		if codexHome == "" {
@@ -102,8 +103,7 @@ func PreviewRuntime(assignment workspace.TaskExecutorAssignment, control string,
 		if err = toml.Unmarshal(b, &cfg); err != nil {
 			return out, fmt.Errorf("read Codex settings: %w", err)
 		}
-		model, _ = cfg["model"].(string)
-		effort, _ = cfg["model_reasoning_effort"].(string)
+		model, effort = workspace.TaskExecutorDefaults(provider, cfg)
 		profile, _ = cfg["default_permissions"].(string)
 		if opts.PermissionProfile != "" {
 			profile = opts.PermissionProfile
@@ -127,15 +127,10 @@ func PreviewRuntime(assignment workspace.TaskExecutorAssignment, control string,
 	}
 	model = stringChoice(assignment.Model, model)
 	effort = stringChoice(assignment.Effort, effort)
-	if model == "" || strings.TrimSpace(model) != model {
-		return out, fmt.Errorf("the implementor model is unknown; record a model in the goal or existing provider settings")
+	if err := workspace.ValidateTaskExecutorChoice(provider, model, effort); err != nil {
+		return out, err
 	}
-	if effort != "" && effort != "low" && effort != "medium" && effort != "high" && effort != "xhigh" && effort != "max" && effort != "minimal" && effort != "none" {
-		return out, fmt.Errorf("unsupported reasoning effort %q", effort)
-	}
-	if provider == "claude" && (effort == "minimal" || effort == "none") {
-		return out, fmt.Errorf("Claude does not support reasoning effort %q", effort)
-	}
+
 	var err error
 	providerBin, err := lookupExecutable(opts.ProviderExecutable, provider)
 	if err != nil {
