@@ -148,8 +148,28 @@ The grant uses Codex CLI configuration before startup and makes no persistent tr
 change. It preserves the requested model, configuration and permission profiles,
 sandbox, `on-request` and `auto_review`. Explicit distrust, incompatible managed
 policy, unknown search roots, symlinks or project config/hooks/rules/instructions
-that could become active prevent a new grant before any tab is created. Inspect
-the reported path and effective policy before requesting a new preview.
+that could become active prevent the grant. They do not stop the start.
+
+The grant is optional, so only a malformed grant (exit 2) rejects the request.
+Preview and run readback keep the requested grant separate from its effective
+outcome, `codex_project_trust.effect` in preview and `codex_project_trust.state`
+in the run:
+
+- `redundant`: the observed native configuration already trusts this
+  repository. The grant is a no-op.
+- `withheld`: Ply cannot confirm the grant. The reason names the path and the
+  fact, the start continues without the override, and Ply logs a `warn` to
+  stderr. JSON on stdout is unchanged.
+- `applied` (run state; empty preview effect): the process-local override is
+  passed to Codex as before.
+
+In the first two cases native Codex trust, sandbox and approval policy decide
+as they would without the grant. Explicit `untrusted` or an unknown trust level
+never becomes trusted. If the trust facts change between preview and apply, the
+confirmation no longer matches and a fresh preview is needed. If they change
+after the reservation but before the provider starts, Ply withholds the grant
+and continues the same reserved start without a second tab, provider start or
+prompt. A recorded `withheld` outcome is final for that Run.
 
 Ply reserves the target before creating a background tab, binds its pane and
 terminal, starts the selected agent once, then binds the actual native session before sending
@@ -164,7 +184,7 @@ It neither invents a session ID nor parses terminal text to obtain one.
 Agent start, the optional readiness exchange and fresh observations share one
 90-second window. If
 an ungranted legacy request encounters native onboarding, the attempt remains
-subject to the same deadline. A confirmed process-local grant handles project trust
+subject to the same deadline. An applied process-local grant handles project trust
 before launch. Ply addresses only the exact reserved workspace/tab/pane/terminal
 and named agent, checking both Herdr's provider and the native session's provider;
 it never answers trust dialogs. An early nonzero start reply can be followed by

@@ -569,7 +569,7 @@ func WorkflowRecoverDeliveryStart(d Dependencies, root string, in DeliveryStartR
 				return err
 			}
 		} else {
-			if err = d.writeValue(workflowStartupPath(s, "agent-start-attempt.json"), map[string]any{"recovery_sha256": binding.SHA256, "argv": workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)}); err != nil {
+			if err = d.writeValue(workflowStartupPath(s, "agent-start-attempt.json"), map[string]any{"recovery_sha256": binding.SHA256, "argv": workflowStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)}); err != nil {
 				return err
 			}
 			s.Phase = "agent_start_attempted"
@@ -609,7 +609,7 @@ func WorkflowRecoverDeliveryStart(d Dependencies, root string, in DeliveryStartR
 	if workflowStartupGeneration(current) != generation {
 		return deliveryReadback(d, root, in.RunID, workflowError(4, "startup generation changed; prior recovery owner has stopped"))
 	}
-	_, startErr := workflowStartupCall(d, s, deadline, workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)...)
+	_, startErr := workflowStartupCall(d, s, deadline, workflowStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)...)
 	if startErr != nil {
 		if err = workflowUpdate(d, root, in.RunID, func(s *workflowState) error {
 			if workflowStartupGeneration(*s) != generation {

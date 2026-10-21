@@ -70,7 +70,7 @@ question still recurs for any repository that contains an `AGENTS.md`.
 | Delivered | AL01: report requests default to `mandate_receipt_v1`. Unknown model/profile/policy facts stay unknown, stops can be reported before acceptance, and a legacy pre-work owner can be retired (commits `c5946ce`, `d335e70`). | `internal/taskrun/report_startup.go:1`, `docs/workflow-run.md:189-202` |
 | Delivered | Earlier work: execute `check-in` replaced `begin --permission-confirmed`, `resolve-stop` needs no permission confirmation, and verify reuses the passed review round. | `docs/workflow-execute.md:194-224`, `docs/workflow-execute.md:243-268`, `cmd/workflow_execute.go:298` |
 | Runtime boundary | Codex `on-request` with `auto_review`, Claude `auto`/`manual` modes, and native trust or login dialogs belong to the provider. Ply never answers them, and nothing here changes them. | `internal/taskrun/herdr_transport.go:331-350`, `docs/workflow-execute.md:176-184` |
-| Remaining | The trust stop and its human-directed wording (P1). | `internal/taskrun/herdr_codex_trust.go:60` |
+| Delivered | AL03 (P1): the optional Codex grant becomes `redundant` (no-op) or `withheld` with a stderr `warn`, and the ordinary start continues. Drift after the reservation but before launch withholds the grant. See [P1 outcome](#p1-outcome-al03). | `internal/taskrun/herdr_codex_trust.go`, `docs/workflow-run.md` |
 | Remaining | Report Runs lock on executable or trust drift after launch (P2). | `internal/taskrun/herdr_store.go:241`, `internal/taskrun/schema.go:350` |
 | Remaining | Report Runs force Claude into manual mode (P3); resume steps are labelled as human actions (P4). | `internal/taskrun/herdr_transport.go:335`, `internal/workspaceview/progress.go:173` |
 
@@ -161,6 +161,20 @@ fixtures. They are not AL02 tests.
   routes an agent-observable fact to the human; all existing trust tests still pass.
 - **Depends on:** none. Before removing `AGENTS.md` from the block list, check the
   documented Codex behaviour for it.
+
+### P1 outcome (AL03)
+
+| Journey | Before (observed, AL02) | After (modeled: fixture and candidate CLI) |
+| --- | --- | --- |
+| Grant plus `AGENTS.md`, root already trusted | Preview stopped with exit 4; 1 human question; 96 s to a usable preview | Preview reports `redundant`. Apply makes 1 tab, 1 agent start without `trust_level`, 1 prompt. 0 questions |
+| Grant plus `AGENTS.md`, root not trusted; explicit `untrusted`; unknown level | Preview stopped with exit 4 | Preview reports `withheld` and logs a `warn` on stderr. The ordinary start continues under native policy. 0 questions |
+| Trust drift after reservation, before launch | Reserved start stopped mid-launch | Grant withheld and recorded; later callbacks are not blocked by trust |
+
+The plyapp journey was not repeated, since this Task may not restart the
+planner's Run. The "after" column comes from the regression fixtures and
+the candidate CLI journey, not from a live provider. Cost: one more read of the
+Codex config files during preview. Benefit: the human question disappears, and
+no trust effect is applied that Ply cannot confirm.
 
 ### P2 (high): report Runs survive drift after launch
 

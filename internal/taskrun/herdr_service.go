@@ -182,9 +182,9 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 		e = verifyExecutable(r.Herdr.Executable)
 	}
 	if e == nil && r.CodexProjectTrust != nil {
-		p.CodexTrust, e = workflowObserveTrust(r, p.Observed.Target.WorktreeLocator)
+		p.CodexTrust, e = workflowDecideTrust(r, p.Observed.Target.WorktreeLocator)
 		if e == nil {
-			p.Effects = append(p.Effects, "Trust only Codex repository "+r.CodexProjectTrust.RepositoryRoot+" for this process (process-local); preserve the bound model, config profile, permission profile, sandbox, on-request and auto_review. No persistent configuration change.")
+			p.Effects = append(p.Effects, workflowCodexTrustEffectText(p.CodexTrust))
 		}
 	}
 	if e == nil && r.ClaudeProjectTrust != nil {
@@ -229,7 +229,11 @@ func WorkflowPreviewStart(d Dependencies, file string) (any, error) {
 		}
 		return nil, e
 	}
-	return workflowPreview(d, r, file)
+	p, e := workflowPreview(d, r, file)
+	if e == nil && p.CodexTrust != nil && p.CodexTrust.Effect != "" {
+		workflowLogCodexTrust(r, "preview", p.CodexTrust.Effect, p.CodexTrust.Reason)
+	}
+	return p, e
 }
 func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 	r, e := ReadWorkflowRequest(file)

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/sirupsen/logrus"
 )
 
 // This grant belongs to the Herdr request, never to native TaskRun Runtime.
@@ -40,6 +41,17 @@ type workflowTrustFacts struct {
 	Paths                 []workflowTrustPath `json:"paths"`
 	PermissionProfile     string              `json:"permission_profile"`
 	EffectivePolicySHA256 string              `json:"effective_policy_sha256"`
+	// Empty keeps a confirmable grant's historical bytes. Otherwise the
+	// request's grant has no effect and native Codex trust and policy apply.
+	Effect string `json:"effect,omitempty"`
+	Reason string `json:"reason,omitempty"`
+}
+
+// CodexTrustEffect is the launch outcome of the requested grant.
+type CodexTrustEffect struct {
+	State          string `json:"state"`
+	RepositoryRoot string `json:"repository_root"`
+	Reason         string `json:"reason,omitempty"`
 }
 
 func workflowValidateTrust(r WorkflowRequest) error {
@@ -57,7 +69,157 @@ func workflowValidateTrust(r WorkflowRequest) error {
 }
 
 func workflowTrustStop(path, reason string) error {
-	return workflowError(4, "Codex project trust cannot be confirmed at "+path+": "+reason+". Have the human inspect this path and policy before requesting a new preview; no trust was granted.")
+	return workflowError(4, "Codex project trust cannot be confirmed at "+path+": "+reason)
+}
+
+// workflowDecideTrust lets only a malformed grant reject the start. A root
+// that the native configuration already trusts needs no grant. Any fact Ply
+// cannot confirm withholds just the grant; native Codex trust and policy apply.
+func workflowDecideTrust(r WorkflowRequest, cwd string) (*workflowTrustFacts, error) {
+	if e := workflowValidateTrust(r); e != nil || r.CodexProjectTrust == nil {
+		return nil, e
+	}
+	root := r.CodexProjectTrust.RepositoryRoot
+	if layout, e := workflowTrustLayout(cwd); e == nil && layout.RepositoryRoot == root && workflowTrustNativeTrusted(r, cwd) {
+		return &workflowTrustFacts{RepositoryRoot: root, Paths: []workflowTrustPath{}, Effect: "redundant", Reason: "native Codex configuration already trusts this repository"}, nil
+	}
+	f, e := workflowObserveTrust(r, cwd)
+	if e != nil {
+		return &workflowTrustFacts{RepositoryRoot: root, Paths: []workflowTrustPath{}, Effect: "withheld", Reason: workflowErrorDetail(e)}, nil
+	}
+	return f, nil
+}
+
+// workflowTrustNativeTrusted only classifies a grant as a no-op. Both answers
+// leave the grant without effect unless the full observation confirms it.
+func workflowTrustNativeTrusted(r WorkflowRequest, cwd string) bool {
+	home, e := os.UserHomeDir()
+	if e != nil {
+		return false
+	}
+	codexHome := filepath.Join(home, ".codex")
+	if v := os.Getenv("CODEX_HOME"); v != "" {
+		codexHome = v
+	}
+	etc, e := filepath.EvalSymlinks("/etc")
+	if e != nil {
+		return false
+	}
+	paths := []string{filepath.Join(etc, "codex/config.toml"), filepath.Join(codexHome, "config.toml"), filepath.Join(etc, "codex/managed_config.toml"), filepath.Join(codexHome, "managed_config.toml")}
+	if r.Runtime.ConfigProfile != nil {
+		if !regexp.MustCompile(`^[A-Za-z0-9_-]+$`).MatchString(*r.Runtime.ConfigProfile) {
+			return false
+		}
+		paths = append(paths, filepath.Join(codexHome, *r.Runtime.ConfigProfile+".config.toml"))
+	}
+	root := r.CodexProjectTrust.RepositoryRoot
+	relevant := func(p string) bool {
+		return p == root || p == cwd || strings.HasPrefix(root, p+string(os.PathSeparator)) || strings.HasPrefix(cwd, p+string(os.PathSeparator))
+	}
+	trusted := false
+	for _, path := range paths {
+		if _, e := os.Lstat(path); os.IsNotExist(e) {
+			continue
+		}
+		b, e := readFile(path, 4<<20, false)
+		if e != nil {
+			return false
+		}
+		var cfg map[string]any
+		if toml.Unmarshal(b, &cfg) != nil {
+			return false
+		}
+		for p, entry := range workflowTOMLTable(cfg["projects"]) {
+			if !relevant(p) {
+				continue
+			}
+			level := workflowTOMLTable(entry)["trust_level"]
+			if level != nil && level != "trusted" {
+				return false
+			}
+			trusted = trusted || p == root && level == "trusted"
+		}
+	}
+	return trusted
+}
+
+func workflowErrorDetail(e error) string {
+	if t, ok := e.(*Error); ok {
+		return t.Detail
+	}
+	return e.Error()
+}
+
+func workflowCodexTrustEffectText(f *workflowTrustFacts) string {
+	switch f.Effect {
+	case "redundant":
+		return "Codex project trust grant for " + f.RepositoryRoot + " is a no-op: native Codex configuration already trusts this repository. Native Codex trust and policy apply; no configuration changes."
+	case "withheld":
+		return "Withhold the optional Codex project trust grant for " + f.RepositoryRoot + ": " + f.Reason + ". Start normally under native Codex trust and policy; no trust is granted and no configuration changes."
+	}
+	return "Trust only Codex repository " + f.RepositoryRoot + " for this process (process-local); preserve the bound model, config profile, permission profile, sandbox, on-request and auto_review. No persistent configuration change."
+}
+
+// workflowLogCodexTrust warns on stderr-routed logs when Ply withholds the
+// requested grant; a redundant grant is ordinary information.
+func workflowLogCodexTrust(r WorkflowRequest, operation, state, reason string) {
+	if state == "applied" {
+		return
+	}
+	entry := logrus.WithFields(logrus.Fields{"run_id": workflowID(r), "preparation_id": r.PreparationID, "operation": operation, "codex_project_trust": state, "repository_root": r.CodexProjectTrust.RepositoryRoot, "reason": reason, "handling": "ordinary start continues under native Codex trust and policy; no trust granted"})
+	if state == "redundant" {
+		entry.Info("Codex project trust grant is a no-op")
+		return
+	}
+	entry.Warn("Codex project trust grant withheld")
+}
+
+// workflowCodexGrant reports whether the provider receives the trust override.
+func workflowCodexGrant(s workflowState) bool {
+	return s.Request.CodexProjectTrust != nil && s.CodexTrust != nil && s.CodexTrust.Effect == "" && (s.Result.CodexTrust == nil || s.Result.CodexTrust.State == "applied")
+}
+
+// workflowEffectiveRequest keeps the exact stored request and only derives
+// provider arguments without a grant that has no effect.
+func workflowEffectiveRequest(s workflowState) WorkflowRequest {
+	r := s.Request
+	if !workflowCodexGrant(s) {
+		r.CodexProjectTrust = nil
+	}
+	return r
+}
+
+// workflowTrustLaunch records the effective grant before the provider starts.
+// Drift since confirmation withholds the grant instead of stopping the reserved
+// start; a recorded withheld or no-op outcome is final for this Run.
+func workflowTrustLaunch(d Dependencies, s workflowState) (workflowState, error) {
+	if s.Request.CodexProjectTrust == nil || s.CodexTrust == nil {
+		return s, workflowTrustFresh(s)
+	}
+	if s.Result.CodexTrust != nil && s.Result.CodexTrust.State != "applied" {
+		return s, nil
+	}
+	effect := CodexTrustEffect{State: "applied", RepositoryRoot: s.Request.CodexProjectTrust.RepositoryRoot}
+	if s.CodexTrust.Effect != "" {
+		effect.State, effect.Reason = s.CodexTrust.Effect, s.CodexTrust.Reason
+	} else if e := workflowTrustFresh(s); e != nil {
+		effect.State, effect.Reason = "withheld", "trust facts changed after confirmation: "+workflowErrorDetail(e)
+	}
+	if equal(s.Result.CodexTrust, &effect) {
+		return s, nil
+	}
+	if e := workflowUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(current *workflowState) error {
+		current.Result.CodexTrust = &effect
+		if effect.State == "withheld" {
+			current.Result.Reasons = append(current.Result.Reasons, Reason{"codex_trust_withheld", "Optional Codex project trust grant withheld: " + effect.Reason + "; the ordinary start continues under native Codex trust and policy."})
+		}
+		return nil
+	}); e != nil {
+		return s, e
+	}
+	s.Result.CodexTrust = &effect
+	workflowLogCodexTrust(s.Request, "launch", effect.State, effect.Reason)
+	return s, nil
 }
 
 func workflowTrustPathAt(path string) (workflowTrustPath, error) {
@@ -403,6 +565,10 @@ func workflowTrustFresh(s workflowState) error {
 		if s.CodexTrust != nil {
 			return workflowError(4, "unexpected saved Codex trust binding")
 		}
+		return nil
+	}
+	// A grant without effect has no trust facts to protect.
+	if s.CodexTrust != nil && s.CodexTrust.Effect != "" || s.Result.CodexTrust != nil && s.Result.CodexTrust.State == "withheld" {
 		return nil
 	}
 	fresh, e := workflowObserveTrust(s.Request, s.Observed.Target.WorktreeLocator)

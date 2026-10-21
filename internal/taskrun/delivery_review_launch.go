@@ -179,7 +179,7 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 			return e
 		}
 	}
-	argv := workflowStartArgv(s.Request, l.CWD, pane.PaneID)
+	argv := workflowStartArgv(workflowEffectiveRequest(s), l.CWD, pane.PaneID)
 	argv[2] = l.AgentName
 	if _, e = workflowKeep(d, filepath.Join(r.Dir, "start-attempt.json"), map[string]any{"argv": argv}); e != nil {
 		return e

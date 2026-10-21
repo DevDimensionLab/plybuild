@@ -227,7 +227,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e != nil {
 		return e
 	}
-	if e = workflowTrustFresh(s); e != nil {
+	if s, e = workflowTrustLaunch(d, s); e != nil {
 		return e
 	}
 	if e = workflowClaudeTrustFresh(d, s); e != nil {
@@ -266,7 +266,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 			return e
 		}
 	}
-	if e = workflowTrustFresh(s); e != nil {
+	if s, e = workflowTrustLaunch(d, s); e != nil {
 		return e
 	}
 	if e = workflowClaudeTrustFresh(d, s); e != nil {
@@ -281,7 +281,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e = workflowLaunchClaudeTrust(d, s); e != nil {
 		return e
 	}
-	argv := workflowStartArgv(r, s.Observed.Target.WorktreeLocator, a.PaneID)
+	argv := workflowStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, a.PaneID)
 	// SessionStart can be deferred until a first, tool-free readiness turn.
 	// Keep launch, that exchange, session binding and Task input in one window.
 	limit := 90 * time.Second
@@ -314,7 +314,7 @@ func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
 	if env := r.GoalStartEnvironment; env != nil {
 		tabArgs = []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + env.Path, "--env", "HOME=" + env.Home, "--env", "CODEX_HOME=" + env.CodexHome, "--no-focus"}
 	}
-	if s.CodexTrust != nil {
+	if workflowCodexGrant(s) {
 		// Use the exact existing user/config locations observed by preview.
 		// No alternate home or persistent configuration is created.
 		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)

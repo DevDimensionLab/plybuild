@@ -430,7 +430,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 	if _, err = os.Lstat(filepath.Join(p.Directory, "resume.json")); !os.IsNotExist(err) {
 		return p, workflowError(4, "owner resume generation already has preserved artifacts")
 	}
-	p.ResumeArgv = ownerResumeStartArgv(s.Request, s.Observed.Target.WorktreeLocator, "<new-pane>", p.NativeSessionID)
+	p.ResumeArgv = ownerResumeStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, "<new-pane>", p.NativeSessionID)
 	state, err := readFile(filepath.Join(s.Result.Paths.RunRoot, "state.json"), 8<<20, true)
 	if err != nil {
 		return p, err
@@ -572,7 +572,7 @@ func WorkflowResumeOwner(d Dependencies, root string, in DeliveryOwnerResumeInpu
 	if a.WorkspaceID != record.DestinationWorkspaceID || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.PaneID == previous.PaneID || a.TerminalID == previous.TerminalID || cwd != s.Observed.Target.WorktreeLocator {
 		return deliveryReadback(d, root, in.RunID, workflowError(5, "resume tab identity or Task directory is unknown; do not repeat creation"))
 	}
-	startArgv := ownerResumeStartArgv(s.Request, s.Observed.Target.WorktreeLocator, a.PaneID, record.NativeSessionID)
+	startArgv := ownerResumeStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, a.PaneID, record.NativeSessionID)
 	err = ownerResumeAdvance(d, root, in.RunID, generation, ownerResumeTabAttempted, ownerResumeStartAttempted, func(s *workflowState) error {
 		transport, err := workflowKeep(d, filepath.Join(filepath.Dir(s.OwnerResume.Locator), "transport.json"), deliveryRecoveryTransport{WorkspaceID: a.WorkspaceID, TabID: a.TabID, PaneID: a.PaneID, TerminalID: a.TerminalID, CWD: cwd})
 		if err != nil {
