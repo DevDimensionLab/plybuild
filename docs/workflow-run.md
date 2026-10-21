@@ -382,7 +382,8 @@ After either seal the coordinator closes the provider session and settles the
 Task preparation. A report-only Run does not order human QA or integration;
 each needs its own selected gate.
 
-A coordinator-observed provider stop after check-in is not a pre-start stop.
+A coordinator-observed provider stop after the recorded native start (check-in,
+or positive acceptance under a legacy contract) is not a pre-start stop.
 Owner work may exist, so pre-work retirement does not apply. Reconcile the actual
 effects with `resolve-stop` and preserve the source.
 

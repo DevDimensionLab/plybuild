@@ -244,10 +244,32 @@ func TestAL10ProviderStopAfterReceiptIsNotCalledPreStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if shown, _ := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID); strings.Contains(shown.NextAction.Message, "pre-start") || strings.Contains(shown.NextAction.Message, "without acceptance") || !strings.Contains(shown.NextAction.Message, "after mandate receipt") {
+	if shown, _ := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID); strings.Contains(shown.NextAction.Message, "pre-start") || strings.Contains(shown.NextAction.Message, "without acceptance") || !strings.Contains(shown.NextAction.Message, "recorded native start") {
 		t.Fatalf("stop after receipt is mislabeled: %q", shown.NextAction.Message)
 	}
 	if _, err = WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, al10Report(t, f, o, "after-stop", "blocked", "not_run", nil, nil)); err == nil || strings.Contains(err.Error(), "pre-start") {
 		t.Fatalf("preserved stop after receipt: %v", err)
+	}
+}
+
+func TestAL10ProviderStopAfterLegacyAcceptanceNamesRecordedStart(t *testing.T) {
+	f := workflowTestFixture(t)
+	if f.R.StartupProtocol == MandateReceiptV1 {
+		t.Fatal("fixture is not a frozen legacy acceptance contract")
+	}
+	o := workflowTestAccept(t, f, workflowTestStart(t, f))
+	evidence := writeAny(t, f.R.WorkspaceRoot, "denied-legacy-report.json", map[string]any{"source": "synthetic runtime", "action": "report callback", "result": "denied after acceptance"})
+	in := DeliveryStopInput{EventID: "denied-legacy-report", Provider: "codex", NativeSession: o.Transport.AgentSessionID, Stage: "report", Observer: "fixture coordinator", Reason: "Synthetic provider refused report transport", Action: "report callback", EffectStatus: DeliveryEffectUnknown, EvidencePath: evidence}
+	if _, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, in); err != nil {
+		t.Fatal(err)
+	}
+	shown, _ := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+	for _, wrong := range []string{"mandate receipt", "pre-start", "without acceptance"} {
+		if strings.Contains(shown.NextAction.Message, wrong) {
+			t.Fatalf("legacy stop after positive acceptance says %q: %q", wrong, shown.NextAction.Message)
+		}
+	}
+	if !strings.Contains(shown.NextAction.Message, "recorded native start") {
+		t.Fatalf("stop does not name the recorded native start: %q", shown.NextAction.Message)
 	}
 }

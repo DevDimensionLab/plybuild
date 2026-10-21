@@ -362,7 +362,7 @@ func workflowReportStopAction(s workflowState) WorkflowAction {
 		return WorkflowAction{"coordinator", "Report owner retired with history preserved; replacement needs a fresh prepared Task mandate."}
 	}
 	if s.ReportStop == nil && s.StartSHA256 != nil {
-		return WorkflowAction{"coordinator", "Provider stop observed after mandate receipt is preserved; owner work may exist and pre-work retirement does not apply. Reconcile actual effects with workflow run resolve-stop and preserve the source; do not replay the refused callback."}
+		return WorkflowAction{"coordinator", "Provider stop observed after the recorded native start is preserved; owner work may exist and pre-work retirement does not apply. Reconcile actual effects with workflow run resolve-stop and preserve the source; do not replay the refused callback."}
 	}
 	if s.ReportStop == nil {
 		return WorkflowAction{"coordinator", "Provider stop preserved without acceptance. Preserve the refusal; retire only after known effects and positive writer absence, then use a fresh mandate."}
