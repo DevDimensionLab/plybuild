@@ -168,6 +168,25 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		if request.WorkspaceRoot != plan.Workspace || request.Delivery == nil || request.Delivery.AcceptancePath != plan.AcceptancePath || request.Delivery.Goal.SHA256 != plan.Goal.Goal.Spec.ManifestSHA256 || request.RequestKey != "execute/"+strings.TrimPrefix(plan.Confirmation, "sha256:") {
 			return out, fmt.Errorf("preserved execution request differs from the selected goal")
 		}
+		if !input.Restart {
+			if err = checkPreservedRuntimeChoices(request.Herdr.WorkspaceID, request.Runtime.PermissionBinding.ProfileID, input.Runtime); err != nil {
+				return out, err
+			}
+		}
+		// The request and its existing launcher intent describe the same
+		// effective choices. Surface that snapshot rather than resolving new
+		// defaults for a preserved launch, even before a Run exists.
+		var intent launchIntent
+		if _, err = readPreservedJSON(filepath.Join(directory, "intent.json"), &intent); err != nil {
+			return out, err
+		}
+		if intent.Kind != "ply.workflow.execute-intent" || intent.SchemaVersion != 1 ||
+			boundHash(intent.Runtime.Runtime) != boundHash(request.Runtime) ||
+			intent.Runtime.Herdr != request.Herdr.Executable || intent.Runtime.HerdrWorkspace != request.Herdr.WorkspaceID ||
+			intent.Runtime.ReasoningEffort != request.Delivery.ReasoningEffort {
+			return out, fmt.Errorf("preserved execution intent runtime differs from its native request")
+		}
+		out.Runtime = &intent.Runtime
 		idBytes, err := taskrun.Canonical([]string{request.WorkspaceRoot, request.RequestKey})
 		if err != nil {
 			return out, err
@@ -248,6 +267,11 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		expected, expectedErr := taskrun.Canonical(plan)
 		if intent.Kind != "ply.workflow.execute-intent" || intent.SchemaVersion != 1 || actualErr != nil || expectedErr != nil || !bytes.Equal(actual, expected) {
 			return out, fmt.Errorf("preserved execution intent has changed inputs; inspect %s before another start", intentPath)
+		}
+		if !input.Restart {
+			if err = checkPreservedRuntimeChoices(intent.Runtime.HerdrWorkspace, intent.Runtime.Runtime.PermissionBinding.ProfileID, input.Runtime); err != nil {
+				return out, err
+			}
 		}
 		assignment := plan.Goal.Executor
 		if intent.Runtime.Runtime.Provider != stringChoice(assignment.Provider, "codex") ||
@@ -423,4 +447,17 @@ func startRequest(d taskrun.Dependencies, out Result, check bool) (Result, error
 		out.State = "start_unknown"
 	}
 	return out, err
+}
+
+// Omitted choices retain the existing native launch. Explicit choices must
+// match before either an intent or a request can report readiness or start;
+// a Run need not exist yet. Restart has its own explicit recovery semantics.
+func checkPreservedRuntimeChoices(destination, profile string, requested RuntimeOptions) error {
+	if requested.HerdrWorkspace != "" && requested.HerdrWorkspace != destination {
+		return fmt.Errorf("execute_runtime_conflict: requested Herdr destination %q differs from preserved destination %q; inspect the same native execution", requested.HerdrWorkspace, destination)
+	}
+	if requested.PermissionProfile != "" && requested.PermissionProfile != profile {
+		return fmt.Errorf("execute_runtime_conflict: requested permission profile %q differs from preserved profile %q; inspect the same native execution", requested.PermissionProfile, profile)
+	}
+	return nil
 }

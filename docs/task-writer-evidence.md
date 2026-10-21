@@ -78,7 +78,10 @@ configuration; live Herdr, base and resource checks remain with native execute.
 Registration and execution have separate fields in the opt-in response. A later
 startup failure preserves the registered refs and the native next action. Repeat
 identical input for the same native Run/pane/session readback, including after
-Task preparation. An uncertain launch never automatically restarts, resumes or
+Task preparation. Once a native intent or request exists, explicit destination/profile
+choices must match it before readiness or startup, even before Run publication.
+Omitted choices retain that launch and preview shows its preserved effective
+profile. An uncertain launch never automatically restarts, resumes or
 switches providers. A new launch creates its own mandate and callback context;
 startup is not an owner receipt, runtime permission observation or product work.
 An unrelated current preparation blocks startup without changing its queue.

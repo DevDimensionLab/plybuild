@@ -165,3 +165,125 @@ func TestBackupStartRejectsOriginRuntimeAndCollision(t *testing.T) {
 		t.Fatal("collision changed existing execution")
 	}
 }
+
+func TestBackupStartRejectsChangedRuntimeBeforeRunPublication(t *testing.T) {
+	for _, boundary := range []string{"execute_before_preparation", "workflow_before_reservation"} {
+		for _, choice := range []string{"destination", "permission-profile"} {
+			t.Run(boundary+"/"+choice, func(t *testing.T) {
+				d, root, id, in, runtime := backupStartFixture(t)
+				p, err := BackupGoal(d, root, id, in, runtime, false, "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				d.Fault = func(point string) error {
+					if point == boundary {
+						return fmt.Errorf("modeled interruption before Run publication")
+					}
+					return nil
+				}
+				interrupted, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+				if err == nil || !interrupted.Registration.Applied || interrupted.Execution == nil || (interrupted.Execution.Run != nil && interrupted.Execution.Run.RunID != "") {
+					t.Fatalf("missing pre-Run boundary: %+v %v", interrupted, err)
+				}
+				d.Fault = nil
+				before := recoveryFiles(t, filepath.Join(root, ".ply"))
+				transportBefore, err := os.ReadFile(filepath.Join(root, "bin", "recovery-model.json"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				changed := runtime
+				if choice == "destination" {
+					changed.HerdrWorkspace = "changed-destination"
+				} else {
+					changed.PermissionProfile = ":read-only"
+				}
+				// A fresh confirmation cannot legitimize different choices for the
+				// already preserved native intent/request, even with no Run yet.
+				preview, err := BackupGoal(d, root, id, in, changed, false, "")
+				if err == nil || preview.State == "ready" || preview.Confirmation != "" {
+					t.Errorf("changed %s advertised before existing intent validation: state=%s confirmation=%s error=%v", choice, preview.State, preview.Confirmation, err)
+				}
+				changedConfirmation := boundHash(struct {
+					Registration string
+					Runtime      RuntimeOptions
+				}{p.Registration.Confirmation, changed})
+				rejected, err := BackupGoal(d, root, id, in, changed, true, changedConfirmation)
+				if err == nil || !strings.Contains(err.Error(), "execute_runtime_conflict") || rejected.Confirmation != "" {
+					t.Fatalf("changed apply bypassed native intent validation: %+v %v", rejected, err)
+				}
+				if !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) {
+					t.Fatal("changed runtime preview/apply mutated partial state")
+				}
+
+				transportUnchanged, _ := os.ReadFile(filepath.Join(root, "bin", "recovery-model.json"))
+				if !bytes.Equal(transportBefore, transportUnchanged) {
+					t.Fatal("changed runtime preview invoked transport")
+				}
+				// Same-input preview and recovery retain the original durable identity.
+				same, err := BackupGoal(d, root, id, in, runtime, false, "")
+				if err != nil {
+					t.Fatal(err)
+				}
+				if same.Confirmation != p.Confirmation {
+					t.Fatal("same-input confirmation changed")
+				}
+				recovered, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if recovered.Execution == nil || recovered.Execution.Run == nil || recovered.Execution.Run.Transport.WorkspaceID != runtime.HerdrWorkspace || recovered.Registration.Goal != interrupted.Registration.Goal {
+					t.Fatal("same-input recovery lost original identity")
+				}
+				var request taskrun.WorkflowRequest
+				if _, err = readPreservedJSON(recovered.Execution.RequestPath, &request); err != nil {
+					t.Fatal(err)
+				}
+				if request.Runtime.PermissionBinding.ProfileID != "fixture" {
+					t.Fatal("same-input recovery changed permission profile")
+				}
+				transportAfter, _ := os.ReadFile(filepath.Join(root, "bin", "recovery-model.json"))
+				if bytes.Equal(transportBefore, transportAfter) {
+					t.Fatal("same-input recovery never started modeled transport")
+				}
+			})
+		}
+	}
+}
+
+func TestBackupStartPreRunReadbackShowsPreservedEffectiveProfile(t *testing.T) {
+	for _, boundary := range []string{"execute_before_preparation", "workflow_before_reservation"} {
+		t.Run(boundary, func(t *testing.T) {
+			d, root, id, in, runtime := backupStartFixture(t)
+			runtime.PermissionProfile = ":read-only"
+			p, err := BackupGoal(d, root, id, in, runtime, false, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			d.Fault = func(point string) error {
+				if point == boundary {
+					return fmt.Errorf("modeled pre-Run interruption")
+				}
+				return nil
+			}
+			interrupted, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+			if err == nil || interrupted.Execution == nil || (interrupted.Execution.Run != nil && interrupted.Execution.Run.RunID != "") {
+				t.Fatal("missing preserved pre-Run fixture")
+			}
+			d.Fault = nil
+			before := recoveryFiles(t, filepath.Join(root, ".ply"))
+			// Native execute's omitted choice retains its existing launch. It must
+			// show the preserved effective profile, not today's default 'fixture'.
+			runtime.PermissionProfile = ""
+			readback, err := BackupGoal(d, root, id, in, runtime, false, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if readback.Runtime == nil || readback.Runtime.Runtime.PermissionBinding.ProfileID != ":read-only" {
+				t.Fatalf("omitted choice misrepresents preserved profile: %+v", readback.Runtime)
+			}
+			if !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) {
+				t.Fatal("profile readback rewrote partial state")
+			}
+		})
+	}
+}

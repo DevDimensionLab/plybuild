@@ -39,11 +39,11 @@ func BackupGoal(d taskrun.Dependencies, root, source string, in taskrun.BackupGo
 	if err != nil {
 		return out, err
 	}
-	out.Confirmation = boundHash(struct {
+	startConfirmation := boundHash(struct {
 		Registration string
 		Runtime      RuntimeOptions
 	}{registration.Confirmation, runtime})
-	if apply && confirmation != out.Confirmation {
+	if apply && confirmation != startConfirmation {
 		return out, workspace.WorkInvalidArguments("backup start confirmation differs from previewed registration/runtime choices")
 	}
 	if err = checkOrigin(d, registration.Target); err != nil {
@@ -65,6 +65,7 @@ func BackupGoal(d taskrun.Dependencies, root, source string, in taskrun.BackupGo
 	if queued {
 		out.Registration.Applied = true
 	}
+	var preservedRuntime *RuntimePreview
 	if queued && registration.Goal.Spec.ManifestSHA256 != "" {
 		execute.ExpectedGoal = &registration.Goal
 		checked := execute
@@ -76,32 +77,37 @@ func BackupGoal(d taskrun.Dependencies, root, source string, in taskrun.BackupGo
 			out.NextAction = "Inspect the registered Goal and native execute diagnosis; repeat identical input only after its cause is resolved."
 			return out, e
 		}
+		preservedRuntime = existing.Runtime
 		if existing.State == "existing" {
-			var request taskrun.WorkflowRequest
-			if _, e = readPreservedJSON(existing.RequestPath, &request); e != nil {
-				return out, e
-			}
-			if request.Herdr.WorkspaceID != runtime.HerdrWorkspace || runtime.PermissionProfile != "" && request.Runtime.PermissionBinding.ProfileID != runtime.PermissionProfile {
-				return out, fmt.Errorf("backup_start_runtime_conflict: preserved native destination or permission profile differs")
-			}
+			out.Runtime = preservedRuntime
+			out.Confirmation = startConfirmation
 			out.State, out.NextAction = "existing", existing.NextAction
 			out.Readiness = "Existing native execution observed; no new startup or runtime acceptance implied."
 			return out, nil
 		}
 	}
-	control, err := d.Executable()
-	if err != nil {
-		return out, err
-	}
-	preview, err := PreviewRuntime(registration.Executor, control, runtime)
-	if err != nil {
-		if registration.Goal.Spec.ManifestSHA256 != "" {
-			out.State = "registered_start_blocked"
+	var preview RuntimePreview
+	if preservedRuntime != nil {
+		preview = *preservedRuntime
+	} else {
+		control, e := d.Executable()
+		if e != nil {
+			return out, e
 		}
-		return out, err
+		preview, err = PreviewRuntime(registration.Executor, control, runtime)
+		if err != nil {
+			if registration.Goal.Spec.ManifestSHA256 != "" {
+				out.State = "registered_start_blocked"
+			}
+			return out, err
+		}
 	}
 	out.Runtime = &preview
 	out.Readiness = "Local runtime binaries, provider defaults/profile, return cwd and Herdr destination resolved. Native execute rechecks queue/base/resources and live Herdr at apply; no runtime permission or owner receipt observed."
+	if preservedRuntime != nil {
+		out.Readiness = "Preserved native runtime/destination/profile choices retained; omitted choices keep the existing launch. Native execute owns remaining startup checks; no owner receipt or runtime permission implied."
+	}
+	out.Confirmation = startConfirmation
 	out.State = "ready"
 	out.NextAction = "Repeat with --start --apply and this confirmation to register and start through native execute."
 	if !apply {
