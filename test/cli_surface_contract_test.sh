@@ -6,6 +6,11 @@ export LC_ALL=C LANG=C GOENV=off GOWORK=off
 repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 temp_root=$(mktemp -d "${TMPDIR:-/tmp}/ply-cli-surface.XXXXXX")
 cleanup_temp_root() {
+	local exit_status=$?
+	if [[ $exit_status -ne 0 ]]; then
+		printf 'cli surface contract: failure evidence retained at %s\n' "$temp_root" >&2 || true
+		exit "$exit_status"
+	fi
 	find "$temp_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
 	rm -rf -- "$temp_root"
 }
@@ -22,10 +27,17 @@ fail() {
 	exit 1
 }
 
-(
+if (
 	cd "$repo_root"
 	GOCACHE="$temp_root/gocache" "$go_bin" build -o "$binary" ./cmd/ply
-) || fail 'could not build fresh CLI artifact'
+) >"$temp_root/build.stdout" 2>"$temp_root/build.stderr"; then
+	:
+else
+	build_exit=$?
+	cat "$temp_root/build.stderr" >&2 || true
+	printf 'cli surface contract: could not build fresh CLI artifact\n' >&2 || true
+	exit "$build_exit"
+fi
 
 for surface in root status upgrade build; do
 	case $surface in
