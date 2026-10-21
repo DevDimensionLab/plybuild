@@ -83,7 +83,7 @@ with tempfile.TemporaryDirectory(prefix='ply-pm01-fixture-') as temporary:
         assert registry.read_bytes() == registered
     after = json.loads(cli(root, 'project', 'show', 'shared', '--format', 'json'))
     assert after['project'] == dict(before['project'], repo_count=2)
-    assert after['repositories'] == [dict(repo_id='extra', locator=str(extra), git_common_dir=str(extra / '.git')),
+    assert after['repositories'] == [dict(repo_id='extra', locator=str(extra), git_common_dir=str(extra / '.git'), wrapper=None),
                                      before['repositories'][0]]
     listed = json.loads(cli(root, 'project', 'list', '--format', 'json'))
     assert len(listed['projects']) == 1 and listed['projects'][0]['repo_count'] == 2
