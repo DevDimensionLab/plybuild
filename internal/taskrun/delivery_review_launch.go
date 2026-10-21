@@ -18,7 +18,7 @@ import (
 
 // Shared by newly generated briefs and launch prompts. Historical round files
 // remain immutable; this text grants no runtime authority or owner callback role.
-const deliveryReviewerTestMandate = "You may run relevant ordinary tests within the agreed read-only source, cache and private temporary directory boundaries, subject to actual runtime review of each action. Keep the exact candidate unchanged and Go modules readonly with -mod=readonly. Do not edit the Task worktree or commit. The owner-only native commands `workflow execute verify` and `workflow execute integrate` must not be invoked by the reviewer. This test mandate does not override an actual refusal or unknown prior effect; preserve and report actual outcomes and evidence gaps."
+const deliveryReviewerTestMandate = "You may run relevant ordinary tests within the agreed read-only source, cache and private temporary directory boundaries, subject to actual runtime review of each action. Keep the exact candidate unchanged and Go modules readonly with -mod=readonly. Do not edit the Task worktree or commit. For the assigned product Task/Run and its delivery, `workflow execute verify` and `workflow execute integrate` are owner-only callbacks; the reviewer cannot invoke them for that product Run. Relevant ordinary tests in separate isolated fixtures may exercise synthetic owner callbacks, including verify/integrate. These fixtures do not grant owner authority over the assigned product Task/Run or its delivery. This test mandate does not override an actual refusal or unknown prior effect; preserve and report actual outcomes and evidence gaps."
 
 type deliveryReviewLaunch struct {
 	Kind           string   `json:"kind"`

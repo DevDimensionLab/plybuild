@@ -18,12 +18,12 @@ func al15ReviewInstructions(t *testing.T, f deliveryFixture, round DeliveryRevie
 	prompts := reviewRoundArgv(t, f, "agent prompt")
 	prompt := prompts[len(prompts)-1][3]
 	for name, text := range map[string]string{"brief": string(brief), "launch prompt": prompt} {
-		for _, want := range []string{"relevant ordinary tests", "source", "cache", "temporary", "runtime", "workflow execute verify", "workflow execute integrate", "owner-only", "-mod=readonly"} {
+		for _, want := range []string{"relevant ordinary tests", "source", "cache", "temporary", "runtime", "workflow execute verify", "workflow execute integrate", "owner-only", "-mod=readonly", "assigned product Task/Run", "isolated fixtures", "synthetic owner callbacks", "do not grant", "actual refusal", "unknown prior effect"} {
 			if !strings.Contains(text, want) {
 				t.Errorf("%s lacks %q: %s", name, want, text)
 			}
 		}
-		for _, ambiguous := range []string{"commit, verify or integrate"} {
+		for _, ambiguous := range []string{"commit, verify or integrate", "must not be invoked by the reviewer"} {
 			if strings.Contains(text, ambiguous) {
 				t.Errorf("%s retains ambiguous prohibition: %s", name, text)
 			}

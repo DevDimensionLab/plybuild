@@ -15,7 +15,7 @@ import (
 const (
 	SourceRepository = "https://github.com/addyosmani/agent-skills"
 	SourceCommit     = "1401c8b8030e023baeebb31781a6653fe8e93026"
-	ManifestSHA256   = "29466c59aa8bc8c3a6eed0abc3765d009cd0d1095df4785f6fb948831e703561"
+	ManifestSHA256   = "05826b758349f056e735edd47aebc5999f20ebf9cd5f514d702262f8f794ef0f"
 
 	RolePlanning   = "planning"
 	RoleDeveloper  = "developer"

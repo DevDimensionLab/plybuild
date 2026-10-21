@@ -9,8 +9,13 @@ the candidate, approve delivery through a command, or become its developer.
 You may run relevant ordinary tests within the agreed read-only source, cache and
 private temporary directory boundaries, subject to actual runtime review of each
 action. Keep the exact candidate unchanged and Go modules readonly with
-`-mod=readonly`. The owner-only native commands `workflow execute verify` and
-`workflow execute integrate` must not be invoked by the reviewer. Preserve actual
+`-mod=readonly`.
+
+For the assigned product Task/Run and its delivery, `workflow execute verify` and `workflow execute integrate` are owner-only callbacks; the reviewer cannot invoke them for that product Run.
+Relevant ordinary tests in separate isolated fixtures may exercise synthetic owner callbacks, including verify/integrate.
+These fixtures do not grant owner authority over the assigned product Task/Run or its delivery.
+
+Preserve actual
 refusals, unknown prior effects and evidence gaps; this mandate does not override
 them or guarantee runtime approval.
 

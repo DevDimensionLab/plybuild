@@ -223,3 +223,22 @@ func contains(items []string, want string) bool {
 	}
 	return false
 }
+
+func TestAL17ReviewerBundleScopesOwnerCallbacks(t *testing.T) {
+	raw, err := embedded.ReadFile("adapters/reviewer.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle := string(raw)
+	for _, want := range []string{"assigned product Task/Run", "isolated fixtures", "synthetic owner callbacks", "do not grant", "-mod=readonly", "actual runtime review"} {
+		if !strings.Contains(bundle, want) {
+			t.Errorf("reviewer bundle lacks %q", want)
+		}
+	}
+	if strings.Contains(bundle, "must not be invoked by the reviewer") {
+		t.Error("reviewer bundle retains unscoped command ban")
+	}
+	if _, err := Bundle(RoleReviewer); err != nil {
+		t.Fatal(err)
+	}
+}
