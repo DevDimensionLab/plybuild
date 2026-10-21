@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Review rounds are ordinary transitions of the same delivery Run. Each round
@@ -405,7 +408,7 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 	}
 	b.WriteString("\nReview exactly this candidate against the Goal and Spec: the diff from the base, tests and actual evidence. Do not edit the Task worktree, commit, verify or integrate.\n")
 	fmt.Fprintf(&b, "Keep the candidate exact while testing. This pane runs with GOFLAGS=%s: Go modules stay readonly, so never pass -mod=mod, run go mod tidy, go get or change global Go or provider configuration. After the tests, `git -C %s status --porcelain` must print nothing and `git -C %s rev-parse HEAD` must print %s. If not, Ply cannot confirm an exact-candidate pass from the current source: Never reset, clean or stash it; return blocked or changes_requested with the observed status and diff. Ply refuses passed while the Task worktree is dirty or at another HEAD.\n", deliveryReviewGoFlags(), ShellQuote(s.Observed.Target.WorktreeLocator), ShellQuote(s.Observed.Target.WorktreeLocator), r.CandidateOID)
-	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return.\n\n")
+	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return. Evidence gaps and finding evidence may contain ordinary long prose, paragraphs and tabs within the 256 KiB total JSON file limit; no manual splitting is needed.\n\n")
 	fmt.Fprintf(&b, "Copy %s to your own file and fill in the decision, summary, findings and evidence gaps (reviewer_claim and reviewer_session_id are optional: Ply binds the session it started for you). Return from this reviewer pane, inside the workspace %s:\n\n", template, root)
 	fmt.Fprintf(&b, "    %s workflow execute review-return %s --context %s --file <your-review.json>\n\n", ShellQuote(executable), r.RunID, ShellQuote(context))
 	b.WriteString("Ply assigns finding IDs and ordering. Repeating the same file is safe; a changed judgment for this candidate needs a new round from the coordinator.\n")
@@ -427,12 +430,29 @@ type deliveryReviewReturnInput struct {
 	EvidenceGaps []string `json:"evidence_gaps"`
 }
 
+// Explanatory evidence shares the return file's total size budget. Preserve
+// paragraphs and indentation, but refuse empty text and non-prose controls.
+func deliveryReviewProse(s string) bool {
+	if !utf8.ValidString(s) || strings.TrimSpace(s) == "" {
+		return false
+	}
+	for _, c := range s {
+		if unicode.IsControl(c) && c != '\n' && c != '\r' && c != '\t' {
+			return false
+		}
+	}
+	return true
+}
+
 func deliveryParseReviewReturn(raw []byte, round int) (deliveryReviewResult, error) {
 	var in deliveryReviewReturnInput
 	dec := json.NewDecoder(bytes.NewReader(raw))
 	dec.DisallowUnknownFields()
 	if e := dec.Decode(&in); e != nil {
 		return deliveryReviewResult{}, workflowError(2, "review return must be one JSON object with reviewer_claim, reviewer_session_id, decision, summary, findings and evidence_gaps: "+e.Error())
+	}
+	if e := dec.Decode(new(any)); e != io.EOF {
+		return deliveryReviewResult{}, workflowError(2, "review return must be one JSON object with no trailing data")
 	}
 	if in.Kind != nil && *in.Kind != "ply.workflow.review-return" || in.SchemaVersion != nil && *in.SchemaVersion != 1 {
 		return deliveryReviewResult{}, workflowError(2, "review return kind must be ply.workflow.review-return schema_version 1 when given")
@@ -458,15 +478,15 @@ func deliveryParseReviewReturn(raw []byte, round int) (deliveryReviewResult, err
 		if x.Severity != "low" && x.Severity != "medium" && x.Severity != "high" && x.Severity != "critical" {
 			return out, workflowError(2, fmt.Sprintf("findings[%d].severity must be low, medium, high or critical", i))
 		}
-		if !plain(x.Summary, 1, 600) || x.Evidence != "" && !plain(x.Evidence, 1, 2000) {
-			return out, workflowError(2, fmt.Sprintf("findings[%d] needs a one-line summary (1-600 characters) and optional one-line evidence (at most 2000)", i))
+		if !plain(x.Summary, 1, 600) || x.Evidence != "" && !deliveryReviewProse(x.Evidence) {
+			return out, workflowError(2, fmt.Sprintf("findings[%d] needs a one-line summary (1-600 characters) and optional explanatory evidence without control characters other than line breaks and tabs", i))
 		}
 		out.Findings = append(out.Findings, x)
 	}
 	for i, g := range in.EvidenceGaps {
 		g = strings.TrimSpace(g)
-		if !plain(g, 1, 600) {
-			return out, workflowError(2, fmt.Sprintf("evidence_gaps[%d] must be 1-600 characters on one line", i))
+		if !deliveryReviewProse(g) {
+			return out, workflowError(2, fmt.Sprintf("evidence_gaps[%d] must be nonempty explanatory text without control characters other than line breaks and tabs", i))
 		}
 		out.EvidenceGaps = append(out.EvidenceGaps, g)
 	}

@@ -580,6 +580,18 @@ decision and its findings, and truthful evidence gaps are kept. Ply assigns
 finding IDs and ordering and accepts ordinary file modes and letter case. A
 sealed round cannot be overwritten; a changed judgment needs a new round.
 
+Evidence gaps and finding evidence accept ordinary long Unicode prose with
+paragraphs, line breaks and tabs; keep the explanation together without slicing
+it into short entries. The entire return file still has a 256 KiB limit and
+must contain exactly one JSON object, with optional trailing whitespace.
+Empty evidence gaps and control characters other than line breaks and tabs are
+refused. Review summaries remain 1–2000 characters on one line, finding summaries
+1–600, and optional reviewer identities at most 256. At most 100 findings and
+100 evidence gaps are accepted. `passed` requires no open findings,
+`changes_requested` requires a concrete finding, and `blocked` requires a finding
+or an evidence gap explaining the cause. These text rules do not qualify or
+deliver a candidate, change session binding, or rewrite earlier sealed returns.
+
 Findings return to the owner, who corrects, commits and asks the coordinator
 for a new round. That round binds the new candidate explicitly and keeps the
 earlier rounds and their evidence. If the owner commits while a round is still
