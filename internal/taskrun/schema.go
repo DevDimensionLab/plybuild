@@ -275,12 +275,12 @@ func ReadRequest(path string) (Request, error) {
 	return parseRequest(b)
 }
 func parseRequest(b []byte) (Request, error) {
-	return parseRequestForSurface(b, false)
+	return parseRequestForSurface(b, false, false)
 }
 
 // Herdr shares the native Task contract, but owns its provider-specific launch.
 // Ordinary terminal and factory requests must remain Codex-only.
-func parseRequestForSurface(b []byte, herdr bool) (Request, error) {
+func parseRequestForSurface(b []byte, herdr, receipt bool) (Request, error) {
 	var r Request
 	if e := decode(b, 1<<20, &r); e != nil {
 		return r, e
@@ -310,7 +310,25 @@ func parseRequestForSurface(b []byte, herdr bool) (Request, error) {
 	if !providerOK || (r.SchemaVersion == 1 && rt.Mode != "interactive" || r.SchemaVersion == 2 && (rt.Mode != "exec" || rt.ConfigProfile != nil)) || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
 		return r, invalid("invalid provider runtime; Herdr supports codex or claude (null config_profile, manual or auto permission mode); native starts require Codex")
 	}
-	if p.AuthorityKind != "reported_contract_with_effective_policy" || !plain(p.ProfileID, 1, 256) || !digestPattern.MatchString(p.EffectivePolicySHA256) || len(p.Evidence) == 0 {
+	// Only receipt report handoffs may bind the requested launch without a
+	// separate policy document. Frozen positive-acceptance contracts keep their
+	// evidence requirements; this launch selection says nothing about runtime
+	// permission or sandbox coverage.
+	receiptLaunch := herdr && receipt && r.SchemaVersion == 1 && p.AuthorityKind == "launch_contract_pending_runtime_acceptance"
+	if receiptLaunch {
+		if !plain(p.ProfileID, 1, 256) {
+			return r, invalid("a selected launch permission profile is required")
+		}
+		if p.EffectivePolicySHA256 != "" {
+			bound := false
+			for _, evidence := range p.Evidence {
+				bound = bound || evidence.SHA256 == p.EffectivePolicySHA256
+			}
+			if !digestPattern.MatchString(p.EffectivePolicySHA256) || !bound {
+				return r, invalid("optional policy digest requires matching evidence")
+			}
+		}
+	} else if p.AuthorityKind != "reported_contract_with_effective_policy" || !plain(p.ProfileID, 1, 256) || !digestPattern.MatchString(p.EffectivePolicySHA256) || len(p.Evidence) == 0 {
 		return r, invalid("effective policy evidence is required")
 	}
 	last := ""

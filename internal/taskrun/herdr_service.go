@@ -108,7 +108,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if e != nil {
 		return r, e
 	}
-	if _, e = parseRequestForSurface(b, true); e != nil {
+	if _, e = parseRequestForSurface(b, true, reportReceipt(r)); e != nil {
 		return r, e
 	}
 	if !digestPattern.MatchString(r.Herdr.Executable.SHA256) {

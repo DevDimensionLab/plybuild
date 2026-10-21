@@ -38,7 +38,7 @@ The request is strict JSON with kind `ply.workflow.herdr-run-request` and
 | `workspace_root` | Absolute physical containing workspace |
 | `preparation_id`, `preparation_sha256` | Exact current native Task preparation |
 | `handoff_draft` | Native Handoff@2 bound to that preparation and frozen Task Spec, four total rounds |
-| `runtime` | Interactive runtime: selected provider, requested model, nullable config profile, physical hash-bound agent/Ply executables and full permission evidence |
+| `runtime` | Interactive runtime: selected provider, requested model, nullable config profile, physical hash-bound agent/Ply executables and the selected launch permission profile |
 | `agreement` | Native A: 3 corrections, 5400 active seconds, 2 environment measures |
 | `human_authority` | Nonempty `actor_claim`, `start_surface: "human_authorized_herdr"`, `authorized: true` |
 | `herdr` | Physical hash-bound `executable`, `workspace_id`, and `tab_label` of 1–80 characters |
@@ -66,8 +66,29 @@ Preview and run readback expose `provider` in JSON and `Agent` in text.
 | `config_profile` | Null or a Codex config profile | Null |
 | `permission_binding.profile_id` | Bound Codex managed permission profile | `"manual"` or `"auto"`, Claude's native permission mode |
 
-Both providers still require the full effective-policy evidence and hash-bound
-Ply executable. A mode name alone is not permission evidence. Claude's `manual`
+New receipt reports bind the selected launch directly. Use this permission
+binding with the provider's profile from the table above (this example selects
+Claude auto); no separate effective-policy document is required:
+
+```json
+{
+  "authority_kind": "launch_contract_pending_runtime_acceptance",
+  "profile_id": "auto",
+  "effective_policy_sha256": "",
+  "evidence": []
+}
+```
+
+The hash-bound agent/Ply executables, Task Spec, human authority and Herdr
+session still apply. Optional evidence keeps its typed, sorted locator/hash
+bindings and is checked for changes. A nonempty optional policy hash must match
+supplied evidence. These are launch inputs, not observed runtime policy.
+Unknown model, profile, policy and sandbox facts remain unknown at check-in;
+receipt grants no blanket permission. Frozen legacy positive-acceptance report
+contracts still require their effective-policy evidence. Native terminal,
+factory and Delivery contracts retain their own requirements.
+
+Claude's `manual`
 mode retains its normal approval prompts. In `auto` mode Claude's own runtime
 still evaluates each action; an actual refusal stays preserved and a later
 receipt, label or actor cannot clear it. Preview, launch argv and readback show
@@ -94,7 +115,7 @@ Persistent Claude folder trust requires the separate grant below.
 
 For a separate actual-provider check, prepare a disposable native Task with a
 read-only inspection goal and `reviewed_report_only` return mode. Bind the
-current installed Ply and Claude executables and permission evidence in a new
+current installed Ply and Claude executables and the launch binding above in a new
 request; set provider `claude`, mode `interactive`, null `config_profile`, and
 `permission_binding.profile_id: "auto"`. Use the preview and confirmed start
 commands above from the coordinator's Herdr workspace. Keep the request and
