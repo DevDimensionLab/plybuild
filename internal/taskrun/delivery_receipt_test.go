@@ -210,6 +210,11 @@ func TestDeliveryReceiptGuideAndVisibleMandate(t *testing.T) {
 		t.Fatal(err)
 	}
 	guide := string(b)
+	for _, expected := range []string{"Progress is optional; verifier_results may be empty", "never a prerequisite\nfor starting separate review", "IDs are local stable declaration keys", "^TestDeliveryReportVerifierFieldDiagnostics$", "exit=null and a truthful reason"} {
+		if !strings.Contains(guide, expected) {
+			t.Fatalf("callback guide lacks optional progress guidance %q", expected)
+		}
+	}
 	if !strings.Contains(guide, "mandate_receipt_v1") || !strings.Contains(guide, "matches_contract=null") || strings.Contains(guide, "## Advanced acceptance file contract") || strings.Contains(guide, "--permission-confirmed") {
 		t.Fatalf("guide routes new contract to legacy self-attestation: %s", guide)
 	}

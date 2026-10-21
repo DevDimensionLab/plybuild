@@ -147,7 +147,29 @@ Evidence entries use locator and sha256. Each verifier_results entry has id,
 outcome (passed, failed, not_run or unknown), argv, cwd, exit, evidence and reason.
 not_run and unknown require exit=null; never fabricate an unrun exit code.
 Optional process_observation and preventive_followup use string or null.
-Reporting progress does not qualify a candidate or a human verdict.
+Progress is optional; verifier_results may be empty. It is never a prerequisite
+for starting separate review and does not qualify a candidate or a human verdict.
+IDs are local stable declaration keys, not test names or a registered catalogue:
+use 1..128 lowercase ASCII letters, digits, '.', '_', '/' or '-', starting with
+a letter or digit; no '//', trailing '/' or '..' path segment, and no duplicates.
+A reason is required: 1..2000 Unicode codepoints, no surrounding whitespace or
+control characters. Explain the actual observation; correct fields without
+inventing a pass or exit. Keep actual test names in argv and bound raw evidence.
+For example, only after actually running the command from the stated cwd and
+observing exit 0, replace the paths and digest with the real captured log binding:
+
+    "verifier_results": [{
+      "id": "focused-test", "outcome": "passed",
+      "argv": ["go", "test", "./internal/taskrun", "-run", "^TestDeliveryReportVerifierFieldDiagnostics$", "-count=1"],
+      "cwd": "/absolute/task", "exit": 0,
+      "evidence": [{"locator": "/absolute/private/test.log", "sha256": "sha256:<actual-log-digest>"}],
+      "reason": "The named focused test executed and exited 0; raw output is bound."
+    }]
+
+For an unexecuted check use not_run (or unknown when its result is unknown),
+exit=null and a truthful reason; never copy the example's outcome as evidence.
+Future coordinator review, installation and smoke checks remain future duties
+until observed separately.
 
 %s workflow execute report %s --context %s --file <copied-report.json>
 

@@ -175,12 +175,18 @@ func validateDeliveryReportContent(r DeliveryReport) error {
 	if r.PreviousEventSHA256 != nil && !digestPattern.MatchString(*r.PreviousEventSHA256) {
 		return workflowError(2, "invalid delivery predecessor digest")
 	}
-	seen := map[string]bool{}
-	for _, v := range r.VerifierResults {
-		if !key(v.ID) || seen[v.ID] || !plain(v.Reason, 1, 2000) {
-			return workflowError(2, "invalid or duplicate verifier declaration")
+	seen := map[string]int{}
+	for i, v := range r.VerifierResults {
+		if !key(v.ID) {
+			return workflowError(2, fmt.Sprintf("verifier_results[%d].id %q: use a stable declaration key of 1..128 lowercase ASCII letters, digits, '.', '_', '/' or '-'; start with a letter or digit, with no '//', trailing '/' or '..' path segment. Put actual test names in argv/evidence", i, v.ID))
 		}
-		seen[v.ID] = true
+		if first, ok := seen[v.ID]; ok {
+			return workflowError(2, fmt.Sprintf("verifier_results[%d].id %q: duplicates verifier_results[%d].id; use a unique declaration key", i, v.ID, first))
+		}
+		if !plain(v.Reason, 1, 2000) {
+			return workflowError(2, fmt.Sprintf("verifier_results[%d].reason (id %q): provide 1..2000 Unicode codepoints explaining the actual observation, with no surrounding whitespace or control characters; do not invent a result", i, v.ID))
+		}
+		seen[v.ID] = i
 		switch v.Outcome {
 		case "passed", "failed":
 			if v.Exit == nil || *v.Exit < 0 || *v.Exit > 255 || len(v.Argv) == 0 || !filepath.IsAbs(v.CWD) || (v.Outcome == "passed") != (*v.Exit == 0) {
