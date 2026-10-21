@@ -50,7 +50,7 @@ func ownerPaneStandin(t *testing.T, f *deliveryFixture) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	herdr = bytes.Replace(herdr, []byte("cmd = args[:2]\n"), []byte("cmd = args[:2]\n"+retireOpenPaneStandin+closedTransportInspectStandin+integrationOwnerRecoveryStandin), 1)
+	herdr = bytes.Replace(herdr, []byte("cmd = args[:2]\n"), []byte("cmd = args[:2]\n"+al21CloseoutRaceStandin+retireOpenPaneStandin+closedTransportInspectStandin+integrationOwnerRecoveryStandin), 1)
 	if err = os.WriteFile(f.R.Herdr.Executable.Path, herdr, 0700); err != nil {
 		t.Fatal(err)
 	}

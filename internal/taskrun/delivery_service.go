@@ -10,6 +10,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/sirupsen/logrus"
 )
 
 func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, error) {
@@ -283,7 +284,7 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 		}
 		// The owner's integrate may release the source while this follow is
 		// already observing; the same follow then finishes source cleanup.
-		if o, handled, e := deliveryFollowCleanup(d, root, id, deadline); handled {
+		if o, handled, e := deliveryFollowCleanup(d, root, id, deadline, &observation); handled {
 			return o, e
 		}
 		ready := false
@@ -399,7 +400,7 @@ func readDeliveryReceiptGoal(binding FileBinding) (deliveryReceiptGoal, error) {
 // cleanup from the coordinator's checkout. After two settled observations the
 // released owner's exact pane is closed, every Task writer must be absent, and
 // the same recorded closeout continues. A working owner is only observed.
-func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time) (WorkflowRun, bool, error) {
+func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time, observation *followObservation) (WorkflowRun, bool, error) {
 	s, e := workflowRead(root, id)
 	if e != nil {
 		return WorkflowRun{}, false, nil
@@ -412,6 +413,10 @@ func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time) 
 	}
 	quiet := 0
 	for automaticCleanupPending(s) {
+		if !time.Now().Before(deadline) {
+			o, err := workflowFollowReadback(d, root, id, workflowObservationWindowExpired)
+			return o, true, err
+		}
 		finish := false
 		observed := (taskWriters{d, s}).herdr("")
 		if observed.state == taskWritersUnknown {
@@ -421,10 +426,40 @@ func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time) 
 			finish = true
 		} else {
 			a, e := workflowAgentRead(d, s, deadline)
-			if e != nil {
-				return deliveryReadbackHandled(d, root, id, e)
+			if e == nil {
+				if e = workflowPlace(s, a); e == nil {
+					e = workflowSession(s, a, false)
+				}
 			}
-			if workflowSettled(a) {
+			if e != nil {
+				// A read failure cannot establish liveness or absence. In
+				// particular, agent_not_found may race the preceding pane get.
+				if err := workflowUpdate(d, root, id, func(current *workflowState) error {
+					current.Result.Transport.State = "unknown"
+					current.Result.Transport.Observation = "cached"
+					return nil
+				}); err != nil {
+					return deliveryReadbackHandled(d, root, id, err)
+				}
+				quiet = 0
+				var call *HerdrCallError
+				if errors.As(e, &call) && call.ReadOnly && call.Phase == "agent get" && call.ProviderCode == "agent_not_found" {
+					logrus.WithFields(logrus.Fields{"run_id": id, "source": "Herdr agent get", "read_error": e.Error(), "handling": "reconcile fresh writer evidence for the same closeout"}).Warn("Released owner observation unavailable; continuing writer inspection")
+					fresh := (taskWriters{d, s}).herdr("")
+					if fresh.state != taskWritersAbsent {
+						return deliveryReadbackHandled(d, root, id, fresh.err)
+					}
+					// Resume rechecks local writers, authority and exact source
+					// before any removal; this inventory alone grants no cleanup.
+					finish = true
+				} else {
+					failure, resume := observation.failure(d, id, deadline, e)
+					if !resume {
+						o, err := workflowFollowReadback(d, root, id, failure)
+						return o, true, err
+					}
+				}
+			} else if workflowSettled(a) {
 				quiet++
 			} else {
 				quiet = 0
