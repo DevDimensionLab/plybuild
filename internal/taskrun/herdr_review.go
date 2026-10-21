@@ -58,7 +58,10 @@ func workflowSeal(d Dependencies, s *workflowState, r WorkflowReview) error {
 	s.Result.FinalReturn.ReportSHA256 = &r.ReportSHA256
 	s.Result.Round.State = "sealed"
 	s.Phase = "sealed"
-	s.Result.NextAction = WorkflowAction{"coordinator", "Report review is complete. TaskResult is not published; provider inactivity is not attested. Prepare separate human QA and integration gates."}
+	s.Result.NextAction = WorkflowAction{"coordinator", "Report return accepted and sealed. TaskResult is not published; provider inactivity is not attested. Close the provider session and settle the Task preparation; any later human QA or integration needs its own selected gate."}
+	if r.Decision != "accepted" {
+		s.Result.NextAction = WorkflowAction{"coordinator", "Report return sealed as blocked with its actual unfinished outcomes; no TaskResult, technical pass, human QA or integration follows. Close the provider session and settle the Task preparation; continued work needs a fresh mandate."}
+	}
 	return nil
 }
 func WorkflowReviewRun(d Dependencies, root, id, file string) (WorkflowRun, error) {

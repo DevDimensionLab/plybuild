@@ -334,6 +334,32 @@ verifier results and cumulative `budget_usage`. Write each round's evidence to
 new paths in the native reply staging directory. Previously reported artifacts
 must remain unchanged. Reporting is the last target write of that round.
 
+After check-in, a round that did not finish is still reported truthfully. A
+`blocked`, `conflict`, `budget_exhausted` or `unknown` report may give each
+requirement its actual `failed`, `not_run` or `unknown` outcome, with the actual
+verifier exit and reason. Ply still checks the exact Task, Spec, session,
+candidate (including dirty authorized work), requirement ID set, cited verifiers
+and artifacts, budget floor and round binding. The report is preserved,
+immutable and idempotent on identical retry. It is not a technical pass,
+TaskResult, human QA or integration. Only a `complete` report requires every
+requirement `passed`; the same unfinished requirements still refuse `complete`.
+Ply logs a warning on stderr naming the Run, round and source file. JSON stdout
+stays unchanged.
+
+`evidence_gaps` lists only missing evidence that a qualification actually
+requires. Any entry blocks `accepted`. Do not use it for facts the protocol
+allows to stay unknown, such as model, profile, policy or sandbox coverage
+omitted at check-in, or a declared way of measuring time. Report those through
+the existing fields, without attesting them:
+
+```json
+"evidence_gaps": [],
+"process_observation": "Model and effective policy were not observable and remain unknown from check-in; active_seconds is wall-clock time measured by the recipient."
+```
+
+Do not hide a missing verifier result, artifact or required observation to get
+a pass. Keep it as an evidence gap or as a `not_run`/`unknown` requirement.
+
 After two fresh idle/done observations at most one second apart, `follow` makes
 the report ready for review. A `finished` tab label expresses transport status.
 It never means technical approval, provider inactivity or a human pass.
@@ -352,6 +378,13 @@ Unknown/decreasing usage or any reached A limit prevents another correction.
 evidence and a clean candidate. It seals the native workflow terminal once.
 `blocked` preserves the reported outcome and coordinator stop without fabricating
 a terminal. Identical reviews are idempotent; conflicting decisions are rejected.
+After either seal the coordinator closes the provider session and settles the
+Task preparation. A report-only Run does not order human QA or integration;
+each needs its own selected gate.
+
+A coordinator-observed provider stop after check-in is not a pre-start stop.
+Owner work may exist, so pre-work retirement does not apply. Reconcile the actual
+effects with `resolve-stop` and preserve the source.
 
 Exit codes are 0 for successful operations/readback, 2 for invalid input, 4 for
 conflicts or rejected transitions, and 5 for awaited reports or uncertain effects.

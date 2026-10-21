@@ -275,7 +275,7 @@ func workflowObserveReportStop(d Dependencies, s *workflowState, in DeliveryStop
 	}
 	s.ReportProviderStop = &binding
 	s.Result.Round.State = "stopped"
-	s.Result.NextAction = WorkflowAction{"coordinator", "Provider stop preserved without acceptance. Preserve the refusal; retire only after known effects and positive writer absence, then use a fresh mandate."}
+	s.Result.NextAction = workflowReportStopAction(*s)
 	return nil
 }
 
@@ -360,6 +360,12 @@ func workflowReportStopped(s workflowState) bool {
 func workflowReportStopAction(s workflowState) WorkflowAction {
 	if s.ReportRetirement != nil {
 		return WorkflowAction{"coordinator", "Report owner retired with history preserved; replacement needs a fresh prepared Task mandate."}
+	}
+	if s.ReportStop == nil && s.StartSHA256 != nil {
+		return WorkflowAction{"coordinator", "Provider stop observed after mandate receipt is preserved; owner work may exist and pre-work retirement does not apply. Reconcile actual effects with workflow run resolve-stop and preserve the source; do not replay the refused callback."}
+	}
+	if s.ReportStop == nil {
+		return WorkflowAction{"coordinator", "Provider stop preserved without acceptance. Preserve the refusal; retire only after known effects and positive writer absence, then use a fresh mandate."}
 	}
 	return WorkflowAction{"coordinator", "Preserved pre-start stop blocks owner work and successful round review. Reconcile any unknown effects with workflow run resolve-stop, then retire only after source and writer-absence checks; do not replay the refused callback."}
 }

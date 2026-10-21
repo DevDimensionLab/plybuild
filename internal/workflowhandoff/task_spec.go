@@ -451,6 +451,16 @@ func historicalHandoffTaskSpec(d Dependencies, snapshot Snapshot) (*workspace.Ta
 	return b, &eval, nil
 }
 func taskRequirementsCoverage(d Dependencies, snapshot Snapshot, b *workspace.TaskSpecBasis, eval *workspace.TaskSpecEvaluation) error {
+	return requirementsCoverage(d, snapshot, b, eval, workspace.ValidateTaskRequirementEvidence)
+}
+
+// incompleteRequirementsCoverage binds a non-complete report's requirement
+// evidence exactly without requiring every requirement to have passed.
+func incompleteRequirementsCoverage(d Dependencies, snapshot Snapshot, b *workspace.TaskSpecBasis, eval *workspace.TaskSpecEvaluation) error {
+	return requirementsCoverage(d, snapshot, b, eval, workspace.ValidateIncompleteTaskRequirementEvidence)
+}
+
+func requirementsCoverage(d Dependencies, snapshot Snapshot, b *workspace.TaskSpecBasis, eval *workspace.TaskSpecEvaluation, validate func([]byte, workspace.TaskSpecBasis, canonicaljson.Object, string, string, []workspace.TaskVerifierResultRecord, []workspace.TaskArtifactRecord) error) error {
 	if b == nil {
 		return nil
 	}
@@ -481,7 +491,7 @@ func taskRequirementsCoverage(d Dependencies, snapshot Snapshot, b *workspace.Ta
 			if int64(len(raw)) != a.SizeBytes || digestBytes(raw) != a.SHA256 {
 				return fmt.Errorf("task-requirements artifact differs")
 			}
-			return workspace.ValidateTaskRequirementEvidence(raw, *b, eval.Spec, objectString(t, "oid"), objectString(t, "tree"), verifiers, artifacts)
+			return validate(raw, *b, eval.Spec, objectString(t, "oid"), objectString(t, "tree"), verifiers, artifacts)
 		}
 	}
 	return fmt.Errorf("required task-requirements artifact is missing")

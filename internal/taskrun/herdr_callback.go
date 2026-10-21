@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"encoding/json"
+	"github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
 
@@ -230,6 +231,11 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		}
 		if a.Acceptance == "started" {
 			s.Result.Round.State = "working"
+			if permission == nil && reportReceipt(s.Request) {
+				s.Result.NextAction = WorkflowAction{"recipient", "Mandate received. Do the bounded Task work, then submit this round with workflow run report; unfinished requirements stay failed, not_run or unknown."}
+			} else if permission == nil {
+				s.Result.NextAction = WorkflowAction{"recipient", "Runtime accepted. Do the bounded Task work, then submit this round with workflow run report."}
+			}
 			if permission != nil {
 				s.Result.Delivery.Phase = "working"
 				s.Result.Delivery.PermissionState = "recipient_confirmed_contract"
@@ -309,6 +315,7 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 		return WorkflowRun{}, e
 	}
 	canonical, _ := Canonical(r)
+	preservedIncomplete := false
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
 		if e := workflowCallback(d, *s, contextPath); e != nil {
 			return e
@@ -339,7 +346,7 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 			return workflowPreservePreStartStop(d, s, r)
 		}
 		if s.ReportStop != nil || s.ReportProviderStop != nil {
-			return workflowError(4, "preserved pre-start stop blocks working reports; retire this owner")
+			return workflowError(4, workflowReportStopAction(*s).Message)
 		}
 		if s.Acceptance == nil || s.StartSHA256 == nil {
 			return workflowError(4, "report requires positive native runtime acceptance")
@@ -410,10 +417,14 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 		s.Result.Budget.WithinAgreement = budgetValid(r.BudgetUsage)
 		s.Result.Budget.MeasurementSource = "reported"
 		s.Result.NextAction = WorkflowAction{"coordinator", "Follow the same session, then review this immutable report."}
+		preservedIncomplete = r.Outcome != "complete"
 		return nil
 	})
 	if e == nil {
 		warnSharedInput(inputRoundReport, file)
+	}
+	if e == nil && preservedIncomplete {
+		logrus.WithFields(logrus.Fields{"run_id": id, "round": r.Round, "source": file, "outcome": r.Outcome, "handling": "preserved with its actual requirement outcomes; no technical pass, TaskResult, human QA or integration"}).Warn("Non-complete round report preserved")
 	}
 	o, _ := WorkflowShow(d, root, id)
 	return o, e

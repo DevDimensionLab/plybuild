@@ -674,7 +674,20 @@ func validateStoredTaskSpecGuard(r WorkItemRegistry, p WorkspaceTaskIntegrationP
 	return nil
 }
 
+// ValidateTaskRequirementEvidence is the complete/passed boundary: every frozen
+// requirement must be passed.
 func ValidateTaskRequirementEvidence(raw []byte, b TaskSpecBasis, spec canonicaljson.Object, oid, tree string, verifiers []TaskVerifierResultRecord, artifacts []TaskArtifactRecord) error {
+	return validateTaskRequirementEvidence(raw, b, spec, oid, tree, verifiers, artifacts, true)
+}
+
+// ValidateIncompleteTaskRequirementEvidence keeps the same exact binding for a
+// non-complete report, whose requirements may truthfully be failed, not_run or
+// unknown. It never qualifies a candidate.
+func ValidateIncompleteTaskRequirementEvidence(raw []byte, b TaskSpecBasis, spec canonicaljson.Object, oid, tree string, verifiers []TaskVerifierResultRecord, artifacts []TaskArtifactRecord) error {
+	return validateTaskRequirementEvidence(raw, b, spec, oid, tree, verifiers, artifacts, false)
+}
+
+func validateTaskRequirementEvidence(raw []byte, b TaskSpecBasis, spec canonicaljson.Object, oid, tree string, verifiers []TaskVerifierResultRecord, artifacts []TaskArtifactRecord, requirePassed bool) error {
 	if len(raw) > taskManifestLimit {
 		return fmt.Errorf("task-requirements exceeds 256 KiB")
 	}
@@ -710,7 +723,7 @@ func ValidateTaskRequirementEvidence(raw []byte, b TaskSpecBasis, spec canonical
 		if contentIDKey(reqs[i]) != contentString(entry, "id") {
 			return fmt.Errorf("requirement evidence ID set differs")
 		}
-		if contentString(entry, "outcome") != "passed" {
+		if requirePassed && contentString(entry, "outcome") != "passed" {
 			return fmt.Errorf("requirement %s has outcome %s", contentString(entry, "id"), contentString(entry, "outcome"))
 		}
 		for _, id := range contentArray(entry, "verifier_ids") {
