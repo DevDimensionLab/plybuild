@@ -329,27 +329,41 @@ ply workflow run resolve-stop wfr_<digest> --stop sha256:<original-stop> --sourc
 
 The observation binds the original refusal, Run, request, session, exact source
 and a frozen copy of the actual evidence. Writer absence alone is not evidence
-of past effects. Only observed `not_started` or `none_observed` effects can
-qualify retirement; known or observed `partial` effects stay blocked. An
+of past effects. For pre-work retirement, only observed `not_started` or `none_observed` effects
+qualify; known or observed `partial` effects stay blocked in that path. Post-start
+resource retirement preserves unknown/partial effects without requiring resolution. An
 unchanged-source retry reuses the immutable observation, including recovery of
 a lost publication reply. The refusal still blocks receipt and working callbacks;
 this reconciliation never continues or impersonates the owner.
 
-For a selected replacement of a pre-work report owner:
+For a selected replacement or resource closure of a stopped report owner:
 
 ```sh
 ply workflow run retire wfr_<digest> --observer 'Actual coordinator' --reason 'Actual replacement reason'
 ```
 
 Retirement observes an already absent pane and agent, complete Herdr inventories
-and local Task/session processes. The source must remain clean at its original
-commit, with no native start/terminal or unresolved effects. An installed CLI
+and local Task/session processes. Pre-work source must remain clean at its original
+commit, with no native start/terminal or unresolved effects. After native start
+(receipt or legacy acceptance), a preserved coordinator stop is required. The
+exact worktree/ref/repository and preparation are checked; dirty work and unique
+commits are retained. The retirement records actual commit, tree, clean status
+and source digest, plus original effects and any prior source-bound resolutions.
+Unknown and partial effects remain unresolved; resource closure does not
+reclassify them, replay an action or qualify work. Accepted native terminal
+history cannot be retired. The first recorded retirement with original unknown/partial
+effects emits one sourced warning through the existing logger on stderr, naming
+the Run, original effects, source digest and retained record. JSON stdout stays
+clean, and identical retries do not repeat the warning. An installed CLI
 update does not require the historical launcher bytes or an owner callback for
 this coordinator-only exit. Wrong identity, unavailable inspection, a remaining
-writer or unknown prior effect still blocks retirement. The original request,
+or unobservable writer still blocks retirement; unknown effects also block the
+pre-work path. No source is deleted, reset or committed by retirement. The original request,
 acceptance and denial evidence remain history; callbacks close and only the exact
-preparation/queue reservation is released. Identical retries recover durable
-retirement after interruption. Prepare a fresh Task copy in the same authorized
+preparation/queue reservation is released. An already supported `advanced` or
+`released` historical preparation is reconciled without touching the current
+queue owner. This creates no TaskResult, accepted success, human QA or integration.
+Identical retries recover durable retirement after interruption. Prepare a fresh Task copy in the same authorized
 scope for replacement; it receives its own mandate and acceptance.
 
 A round report uses all native TaskRun Report fields with kind
@@ -410,8 +424,11 @@ each needs its own selected gate.
 
 A coordinator-observed provider stop after the recorded native start (check-in,
 or positive acceptance under a legacy contract) is not a pre-start stop.
-Owner work may exist, so pre-work retirement does not apply. Reconcile the actual
-effects with `resolve-stop` and preserve the source.
+Owner work may exist. The coordinator can use `run retire` after positive writer
+absence and exact source/preparation checks, retaining all work and effects.
+`resolve-stop` remains available for actual effect evidence, but resource closure
+does not require converting uncertainty to a no-effect claim. An unresolved
+effect still authorizes no replay or successful delivery.
 
 Exit codes are 0 for successful operations/readback, 2 for invalid input, 4 for
 conflicts or rejected transitions, and 5 for awaited reports or uncertain effects.

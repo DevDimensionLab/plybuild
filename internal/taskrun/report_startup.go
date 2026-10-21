@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -170,62 +173,175 @@ func workflowRetireReport(d Dependencies, s *workflowState, in DeliveryRetireInp
 	if err != nil {
 		return err
 	}
-	if facts.Start != nil || facts.Terminal != nil {
-		return workflowError(4, "native start/terminal exists; reconcile prior effects before pre-work retirement")
+	if facts.Terminal != nil || s.Result.FinalReturn.TerminalSHA256 != nil || s.Result.FinalReturn.State == "accepted" {
+		return workflowError(4, "accepted native terminal history cannot be retired")
 	}
-	if s.StartSHA256 != nil || len(s.Records) != 0 || s.Result.Transport.AgentSessionID == "" || s.Phase != "following" && s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" {
+	started := s.StartSHA256 != nil
+	if (facts.Start != nil) != started || s.Result.Transport.AgentSessionID == "" {
+		return workflowError(4, "report retirement requires the exact bound native start and owner")
+	}
+	if started {
+		if s.ReportProviderStop == nil {
+			return workflowError(4, "post-start report retirement requires a preserved coordinator stop; inspect actual work and effects first")
+		}
+	} else if len(s.Records) != 0 || s.Phase != "following" && s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" {
 		return workflowError(4, "report retirement requires a bound pre-work owner; reconcile existing work or unknown startup effects")
 	}
-	if err := workflowReportEffectsPermitRetirement(d, *s); err != nil {
-		return err
-	}
-
-	clean := func() error {
-		target, err := d.Workspace.WorkGit.ObserveWorktree(s.Observed.Target.WorktreeLocator)
-		if err != nil {
+	if !started {
+		if err := workflowReportEffectsPermitRetirement(d, *s); err != nil {
 			return err
 		}
-		if !target.Clean || target.OID != s.Observed.Target.OID || target.Ref != s.Observed.Target.Ref || target.GitCommonDir != s.Observed.Target.GitCommonDir {
-			return workflowError(4, "report source changed; reconcile actual effects before retirement")
-		}
-		return nil
 	}
-	if err := clean(); err != nil {
+	if _, err := workflowReportPreparation(d, *s); err != nil {
 		return err
 	}
-	// Report retirement observes absence; it does not close a potentially live
-	// legacy writer or repeat a denied owner callback.
+	source, err := workflowReportSource(d, *s, started)
+	if err != nil {
+		return err
+	}
+	// Report retirement observes absence; it never closes or impersonates a
+	// writer. Dirty/unique post-start work is retained at its actual digest.
 	writers := (taskWriters{d, *s}).cleanup()
 	if writers.state != taskWritersAbsent {
 		return writers.err
 	}
-	if err := clean(); err != nil {
+	after, err := workflowReportSource(d, *s, started)
+	if err != nil {
 		return err
 	}
-	r := DeliveryRetirement{Kind: "ply.workflow.owner-retirement", SchemaVersion: 1, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, NativeSession: s.Result.Transport.AgentSessionID, Input: in, Absence: writers.absence, WriterLiveness: writers.liveness, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+	if !equal(source, after) {
+		return workflowError(4, "report source changed during retirement; inspect actual effects before retry")
+	}
+	if !started {
+		if err := workflowReportEffectsPermitRetirement(d, *s); err != nil {
+			return err
+		}
+	}
+	effects, err := workflowReportRetainedEffects(*s)
+	if err != nil {
+		return err
+	}
+	r := DeliveryRetirement{Kind: "ply.workflow.owner-retirement", SchemaVersion: 1, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, NativeSession: s.Result.Transport.AgentSessionID, Input: in, ReportSource: &source, ReportEffects: effects, Absence: writers.absence, WriterLiveness: writers.liveness, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 	binding, err := workflowKeep(d, filepath.Join(s.Result.Paths.RunRoot, "report-retirement.json"), r)
 	if err != nil {
 		return err
+	}
+	uncertain := []string{}
+	for _, effect := range effects {
+		if effect.OriginalEffect == DeliveryEffectUnknown || effect.OriginalEffect == DeliveryEffectPartial || effect.ResolutionEffect != nil && *effect.ResolutionEffect == DeliveryEffectPartial {
+			uncertain = append(uncertain, effect.OriginalEffect)
+		}
+	}
+	if len(uncertain) > 0 {
+		logrus.WithFields(logrus.Fields{"run": s.Result.RunID, "original_effect": strings.Join(uncertain, ","), "retained_record": binding.Locator, "source": source.SourceSHA256}).Warn("Report resource ownership retired with original uncertain/partial effects retained; no replay or qualification")
 	}
 	if err = d.fault("report_after_retirement"); err != nil {
 		return err
 	}
 	s.ReportRetirement = &binding
 	s.Result.Round.State, s.Result.FinalReturn.State = "stopped", "retired"
-	s.Result.NextAction = WorkflowAction{"coordinator", "Report owner retired with history preserved. Release only its exact preparation; replacement requires a fresh mandate."}
+	s.Result.NextAction = WorkflowAction{"coordinator", "Report owner retired with source/history retained; no successful delivery. Release only its exact preparation; replacement requires a fresh mandate."}
 	return nil
 }
 
-func workflowReleaseReportQueue(d Dependencies, s workflowState) error {
+// ReportRetainedSource records actual source facts, without qualifying work or
+// requiring an absent owner to commit/reset unique changes.
+type ReportRetainedSource struct {
+	Worktree     string `json:"worktree"`
+	Ref          string `json:"ref"`
+	OID          string `json:"oid"`
+	Tree         string `json:"tree"`
+	Clean        bool   `json:"clean"`
+	SourceSHA256 string `json:"source_sha256"`
+}
+
+// ReportRetainedEffect preserves effect claims at retirement. Resource closure
+// is not an effect resolution: unknown/partial effects remain exactly that.
+type ReportRetainedEffect struct {
+	Stop                   FileBinding  `json:"stop"`
+	OriginalEffect         string       `json:"original_effect"`
+	Resolution             *FileBinding `json:"resolution,omitempty"`
+	ResolutionEffect       *string      `json:"resolution_effect,omitempty"`
+	ResolutionSourceSHA256 *string      `json:"resolution_source_sha256,omitempty"`
+}
+
+func workflowReportRetainedEffects(s workflowState) ([]ReportRetainedEffect, error) {
+	out := []ReportRetainedEffect{}
+	for _, stop := range []*FileBinding{s.ReportStop, s.ReportProviderStop} {
+		if stop == nil {
+			continue
+		}
+		effect, err := reportOriginalEffect(s, *stop)
+		if err != nil {
+			return nil, err
+		}
+		r, binding, err := readReportStopResolution(s, *stop)
+		if err != nil {
+			return nil, err
+		}
+		e := ReportRetainedEffect{Stop: *stop, OriginalEffect: effect, Resolution: binding}
+		if r != nil {
+			e.ResolutionEffect = &r.Input.EffectStatus
+			e.ResolutionSourceSHA256 = &r.Input.SourceSHA256
+		}
+		out = append(out, e)
+	}
+	return out, nil
+}
+
+func workflowReportSource(d Dependencies, s workflowState, started bool) (ReportRetainedSource, error) {
+	t, err := d.Workspace.WorkGit.ObserveWorktree(s.Observed.Target.WorktreeLocator)
+	if err != nil {
+		return ReportRetainedSource{}, err
+	}
+	bound := s.Observed.Target
+	if t.Locator != bound.WorktreeLocator || t.Ref != bound.Ref || t.GitCommonDir != bound.GitCommonDir || !t.InventoryMatch {
+		return ReportRetainedSource{}, workflowError(4, "report source identity differs; no retirement or queue release")
+	}
+	if !started && (!t.Clean || t.OID != bound.OID) {
+		return ReportRetainedSource{}, workflowError(4, "pre-work report source changed; reconcile actual effects before retirement")
+	}
+	sha, err := workflowTarget(d, s)
+	if err != nil {
+		return ReportRetainedSource{}, err
+	}
+	return ReportRetainedSource{t.Locator, t.Ref, t.OID, t.Tree, t.Clean, sha}, nil
+}
+
+func workflowReportPreparation(d Dependencies, s workflowState) (workspace.TaskPreparationReadback, error) {
 	p, err := workspace.ShowTaskPreparation(d.Workspace, s.Request.PreparationID)
+	if err != nil {
+		return p, err
+	}
+	if p.Preparation == nil || digest(*p.Preparation) != s.Request.PreparationSHA256 || p.Plan == nil || p.Plan.WorktreePath != s.Observed.Target.WorktreeLocator || p.Plan.ParentOID != s.Observed.Target.OID || "refs/heads/"+p.Plan.Branch != s.Observed.Target.Ref || p.Plan.Target.GitCommonDir != s.Observed.Target.GitCommonDir {
+		return p, workflowError(4, "retired report preparation binding differs")
+	}
+	if p.Disposition != "current" && p.Disposition != "released" && p.Disposition != "advanced" {
+		return p, workflowError(4, "report preparation is not current or supported-closed; inspect its actual queue resource")
+	}
+	return p, nil
+}
+
+func workflowReleaseReportQueue(d Dependencies, s workflowState) error {
+	p, err := workflowReportPreparation(d, s)
 	if err != nil {
 		return err
 	}
-	if p.Plan == nil || p.Plan.WorktreePath != s.Observed.Target.WorktreeLocator || p.Plan.ParentOID != s.Observed.Target.OID {
-		return workflowError(4, "retired report preparation binding differs")
-	}
-	if p.Disposition == "released" {
+	if p.Disposition == "released" || p.Disposition == "advanced" {
 		return nil
+	}
+	// A recovered retirement is history, not current writer absence. Recheck
+	// the dependent release after a lost reply, without replaying any callback.
+	r, err := workflowReportRetirement(s)
+	if err != nil || r == nil {
+		return workflowError(4, "report retirement must be recorded before queue release")
+	}
+	writers := (taskWriters{d, s}).cleanup()
+	if writers.state != taskWritersAbsent {
+		return writers.err
+	}
+	if _, err := workflowReportSource(d, s, s.StartSHA256 != nil); err != nil {
+		return err
 	}
 	t := p.Plan.Target
 	target := workspace.QueueTargetInput{ProjectID: t.ProjectID, RepoID: t.RepoID, EpicID: t.EpicID}
@@ -236,7 +352,7 @@ func workflowReleaseReportQueue(d Dependencies, s workflowState) error {
 	if q.Current == nil || q.Current.PreparationID != s.Request.PreparationID {
 		return workflowError(4, "retired report does not own current queue slot; no release performed")
 	}
-	_, err = workspace.CloseTaskQueue(d.Workspace, target, s.Request.PreparationID, q.Revision, "Retired pre-work report owner", "release")
+	_, err = workspace.CloseTaskQueue(d.Workspace, target, s.Request.PreparationID, q.Revision, "Retired report owner; source retained", "release")
 	return err
 }
 
@@ -347,7 +463,7 @@ func workflowReportQueueReleased(d Dependencies, root, id string) (bool, error) 
 		return false, workflowError(4, "retired report preparation is missing")
 	}
 	for _, event := range r.TaskQueueEvents {
-		if event.QueueID == queueID && event.Kind == "release" && event.Request["preparation_id"] == id {
+		if event.QueueID == queueID && (event.Kind == "release" || event.Kind == "advance") && event.Request["preparation_id"] == id {
 			return true, nil
 		}
 	}
@@ -359,10 +475,10 @@ func workflowReportStopped(s workflowState) bool {
 }
 func workflowReportStopAction(s workflowState) WorkflowAction {
 	if s.ReportRetirement != nil {
-		return WorkflowAction{"coordinator", "Report owner retired with history preserved; replacement needs a fresh prepared Task mandate."}
+		return WorkflowAction{"coordinator", "Report owner retired with source/history and unresolved effects retained, without successful Task delivery; replacement needs a fresh prepared Task mandate."}
 	}
 	if s.ReportStop == nil && s.StartSHA256 != nil {
-		return WorkflowAction{"coordinator", "Provider stop observed after the recorded native start is preserved; owner work may exist and pre-work retirement does not apply. Reconcile actual effects with workflow run resolve-stop and preserve the source; do not replay the refused callback."}
+		return WorkflowAction{"coordinator", "Post-start provider stop preserved. Inspect and preserve actual effects; use workflow run retire after exact source/resource and writer-absence checks. Unknown/partial effects stay unresolved and authorize no replay. Source and all effects, including uncertainty, are retained without successful delivery; do not replay the refused callback."}
 	}
 	if s.ReportStop == nil {
 		return WorkflowAction{"coordinator", "Provider stop preserved without acceptance. Preserve the refusal; retire only after known effects and positive writer absence, then use a fresh mandate."}

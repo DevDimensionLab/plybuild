@@ -444,7 +444,7 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			o.ReportStartup.Receipt = s.Acceptance
 		}
 		if s.ReportRetirement != nil {
-			o.NextAction = WorkflowAction{"coordinator", "Report owner retired; original request and denial history preserved. A replacement requires a fresh prepared Task mandate."}
+			o.NextAction = WorkflowAction{"coordinator", "Report owner retired with source/history and unresolved effects retained, without successful Task delivery. A replacement requires a fresh prepared Task mandate."}
 		}
 	}
 	o.DeliveryStatus = deliveryStatus(d, s)

@@ -28,6 +28,8 @@ type DeliveryRetirement struct {
 	Absence        HumanOwnerRecoveryObservation `json:"absence"`
 	ActiveStop     *FileBinding                  `json:"active_stop"`
 	WriterLiveness *TaskWriterLiveness           `json:"writer_liveness,omitempty"`
+	ReportEffects  []ReportRetainedEffect        `json:"report_effects,omitempty"`
+	ReportSource   *ReportRetainedSource         `json:"report_source,omitempty"`
 	RecordedAtUTC  string                        `json:"recorded_at_utc"`
 }
 
