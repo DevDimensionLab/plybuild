@@ -91,3 +91,68 @@ This runs isolated compatibility/transition/installation checks and the product'
 delivery acceptance. Separately record independent review of the source candidate.
 The final real Silver Bullet registration/check uses the installed release and
 the existing workspace; isolated fixtures cannot replace that final evidence.
+
+## Coordinator installation after native self-hosted delivery
+
+For a Ply project/repo local Epic Run with passed exact-candidate review and
+executed automatic acceptance, use `workflow execute install-cli`. This reads
+native qualification, the retained candidate snapshot, observed integration and
+completed native closeout. It does not rebuild, reopen the Task, or change the
+owner's frozen `allow_local_install=false`. The caller must separately have the
+coordinator's installation mandate; `--coordinator` records attribution and does
+not confer permission. The destination is always explicit. Other products'
+candidates are rejected, including executables outside Ply's main packages.
+
+Run from the registered delivery target checkout, after owner exit and native
+`workflow execute follow` closeout. The first installation uses the already
+retained qualified snapshot as controller while the ordinary CLI is still old:
+
+```sh
+# Obtain this path from the native verification receipt's
+# automatic.candidate_binary_snapshot.locator; never copy/rebuild a bootstrap.
+CONTROLLER=/absolute/workspace/.ply/workflow-runs/runs/wfr_RUN/delivery/attempts/verify-00000001/candidate-executable
+"$CONTROLLER" workflow execute install-cli wfr_RUN \
+  --destination /Users/perottochristensen/go/bin/ply \
+  --coordinator 'Actual authorized coordinator' --check --format json
+"$CONTROLLER" workflow execute install-cli wfr_RUN \
+  --destination /Users/perottochristensen/go/bin/ply \
+  --coordinator 'Actual authorized coordinator' --format json
+"$CONTROLLER" workflow execute install-cli wfr_RUN \
+  --destination /Users/perottochristensen/go/bin/ply \
+  --coordinator 'Actual authorized coordinator' --observe --format json
+```
+
+`--check` writes nothing and returns the bound controller and provenance.
+The operation binds Run/project/repo/Epic, source OID/tree, verification and
+binary SHA-256, destination and caller. One destination/caller is retained per
+Run in `.ply/workflow-runs/cli-installations/RUN/request.json`; changed inputs
+conflict rather than creating another operation. The existing release installer
+owns the destination lock, hash-addressed backup, pending effect receipt and
+atomic replacement. Superseded receipts remain in `DEST.install-history`.
+An older operation cannot replace or roll back a later selected installation.
+
+`verified` requires the observed destination hash and an actual installed
+`version --format json` smoke. The durable `smoke.json` preserves stdout,
+stderr, actual process exit (null if none was observed), and errors. Warnings
+use the existing logger on stderr; JSON stdout remains machine-readable.
+`effect_unknown` requires observation, not a fresh operation. `--observe` reads
+the current destination and preserved smoke without replacing bytes or repeating
+a failed smoke. A pending receipt requires resuming identical installation
+inputs: matching qualified bytes reconcile the replacement without another copy;
+matching preimage permits completing the reserved replacement. Unknown bytes
+stop. `smoke_not_recorded` permits resuming the same operation to run the smoke.
+A preserved `smoke_failed` blocks installation retries rather than hiding failure
+with another copy. Keep both the controller and evidence after source removal.
+
+After a known install/smoke failure, use the same command with `--rollback`.
+Rollback checks the exact operation, current candidate/preimage, and backup hash;
+it refuses unrelated later bytes. The failed smoke remains preserved, and the
+old executable is restored atomically. A rolled-back operation cannot reinstall
+itself. This restores binary bytes only, not application data or registry schema.
+
+The minimal implementation reuses `internal/clirelease`'s transactional installer
+rather than executing a generated shell/Python profile. The existing generic
+`internal/integration` adapter runs arbitrary product-specific install commands;
+it cannot itself supply the retained self-hosted byte source or destination
+backup transaction. The native delivery reader supplies those bindings and a
+bounded installed CLI probe. No new service or approval platform is involved.

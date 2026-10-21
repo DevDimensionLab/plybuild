@@ -104,6 +104,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	addBoundStartCommands(c, d)
 	addBoundAnswerCommands(c, d)
 	c.AddCommand(newWorkflowExecuteReleaseCommand(d))
+	c.AddCommand(newWorkflowExecuteInstallCLICommand(d))
 	c.AddCommand(newWorkflowExecuteRecoverStartCommand(d))
 	c.AddCommand(newWorkflowExecuteContinueCommand(d))
 	c.AddCommand(newWorkflowExecuteAcceptanceCommand(d))

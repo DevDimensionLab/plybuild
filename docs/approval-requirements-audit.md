@@ -332,3 +332,23 @@ mode under the generic role `private file`.
 - **Done when:** a root job installs through a native receipt, without a
   script copy.
 - **Depends on:** after P1–P4.
+
+AL08 implementation outcome for P5: `workflow execute install-cli` now reads
+completed self-hosted Ply delivery and its retained qualified executable, with a
+separate attributed coordinator operation after closeout. It reuses the atomic
+backup/receipt/recovery engine in `internal/clirelease/install.go`; the native
+reader and installed smoke live in `internal/taskrun/delivery_cli_install.go`.
+The generic integration install-profile adapter remains available for other
+products, but generating another command profile would retain the per-job
+installation scripting that I2 identified. Usage is in
+[CLI installation](cli-installation.md#coordinator-installation-after-native-self-hosted-delivery).
+
+Evidence is limited to isolated targets: `TestQualifiedCLIInstallationPublicConsumer`
+consumes native verify/integrate/closeout and then runs the retained candidate
+controller after source removal; `TestQualifiedCLIInstallationInterruptionAndKnownSmokeFailure`
+preserves actual failed-process evidence and observes changed bytes without
+retrying it. `internal/clirelease/qualified_test.go` covers backup/replace
+interruptions, reply recovery without a second copy, changed inputs and guarded
+rollback across later operations. Separate exact-candidate review, native final
+acceptance/delivery and root's first ordinary CLI installation remain to be
+observed. This is not completion of P3 or the broader audit.

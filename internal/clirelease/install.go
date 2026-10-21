@@ -133,6 +133,14 @@ func (i Installer) install(m Manifest, b []byte, expected, destination string) (
 		return r, err
 	}
 	defer unlock()
+	if m.Qualification != nil {
+		archived := filepath.Join(destination+".install-history", expected[len("sha256:"):]+".json")
+		if _, err := readReceipt(archived); err == nil {
+			return r, fmt.Errorf("install_superseded: this operation is historical; observe the later installation")
+		} else if !errors.Is(err, fs.ErrNotExist) {
+			return r, err
+		}
+	}
 	current, old, err := installedDigest(destination)
 	if err != nil {
 		return r, err
@@ -141,11 +149,17 @@ func (i Installer) install(m Manifest, b []byte, expected, destination string) (
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return r, err
 	}
+	if err == nil && previous.State == "rolled_back" && previous.ManifestSHA256 == expected && m.Qualification != nil {
+		return previous, fmt.Errorf("install_rolled_back: this operation was rolled back; select a new qualified operation")
+	}
 	if err == nil && previous.State == "pending" && (previous.Destination != destination || previous.ManifestSHA256 != expected) {
 		return previous, fmt.Errorf("install_pending: recover the recorded package before another installation")
 	}
 	if err == nil && previous.ManifestSHA256 == expected && previous.Destination == destination && previous.State != "rolled_back" {
 		r = previous
+		if m.Qualification != nil && r.State == "installed" && current != m.SHA256 {
+			return r, fmt.Errorf("install_destination_changed: completed installation no longer present; observe without retry")
+		}
 		if !reflect.DeepEqual(r.Manifest, m) || r.BeforeSHA256 != "absent" && !digestPattern.MatchString(r.BeforeSHA256) {
 			return r, fmt.Errorf("install_receipt_invalid: release or preimage differs")
 		}
@@ -162,7 +176,31 @@ func (i Installer) install(m Manifest, b []byte, expected, destination string) (
 			return r, fmt.Errorf("install_destination_changed: neither recorded preimage nor candidate is installed")
 		}
 	} else {
+		if err == nil && previous.ManifestSHA256 != expected && m.Qualification != nil {
+			if !digestPattern.MatchString(previous.ManifestSHA256) {
+				return r, fmt.Errorf("install_receipt_invalid: invalid operation digest")
+			}
+			history := destination + ".install-history"
+			if err := os.Mkdir(history, 0700); err != nil && !errors.Is(err, fs.ErrExist) {
+				return r, err
+			}
+			st, err := os.Lstat(history)
+			if err != nil || !st.IsDir() || st.Mode()&fs.ModeSymlink != 0 {
+				return r, fmt.Errorf("install_history_invalid")
+			}
+			archive := filepath.Join(history, previous.ManifestSHA256[len("sha256:"):]+".json")
+			if prior, err := readReceipt(archive); errors.Is(err, fs.ErrNotExist) {
+				if err := saveReceipt(i, archive, previous); err != nil {
+					return r, err
+				}
+			} else if err != nil || !reflect.DeepEqual(prior, previous) {
+				return r, fmt.Errorf("install_history_invalid: previous receipt differs")
+			}
+		}
 		r = Receipt{Kind: "PlyInstallReceipt@1", SchemaVersion: 1, Destination: destination, Manifest: m, ManifestSHA256: expected, BeforeSHA256: current, State: "pending"}
+		if err := i.check("before-backup"); err != nil {
+			return r, err
+		}
 		if current != "absent" {
 			if err := os.Mkdir(backups, 0o700); err != nil && !errors.Is(err, fs.ErrExist) {
 				return r, err
@@ -179,6 +217,9 @@ func (i Installer) install(m Manifest, b []byte, expected, destination string) (
 			} else if err != nil || Digest(saved) != current {
 				return r, fmt.Errorf("install_backup_invalid: preserved preimage differs")
 			}
+		}
+		if err := i.check("after-backup"); err != nil {
+			return r, err
 		}
 		if err := saveReceipt(i, receiptPath, r); err != nil {
 			return r, err
@@ -252,6 +293,10 @@ func (i Installer) install(m Manifest, b []byte, expected, destination string) (
 
 // Rollback restores only the exact preserved binary. It never downgrades data.
 func (i Installer) Rollback(destination, expected string) (Receipt, error) {
+	return i.rollback(destination, expected, "")
+}
+
+func (i Installer) rollback(destination, expected, operation string) (Receipt, error) {
 	var r Receipt
 	receiptPath, backups, err := destinationPaths(destination)
 	if err != nil {
@@ -265,6 +310,9 @@ func (i Installer) Rollback(destination, expected string) (Receipt, error) {
 	r, err = readReceipt(receiptPath)
 	if err != nil {
 		return r, err
+	}
+	if operation != "" && r.ManifestSHA256 != operation {
+		return r, fmt.Errorf("rollback_binding_changed: later installation has a different identity")
 	}
 	if !digestPattern.MatchString(expected) || expected != r.Manifest.SHA256 || r.Destination != destination || !digestPattern.MatchString(r.BeforeSHA256) || r.Backup != filepath.Join(backups, r.BeforeSHA256[len("sha256:"):]) {
 		return r, fmt.Errorf("rollback_binding_invalid: exact installed digest and preserved preimage are required")
