@@ -1,6 +1,7 @@
 package taskrun
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -8,26 +9,54 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/devdimensionlab/plybuild/internal/buildinfo"
 )
 
 // Consumes the built candidate's public CLI and real native verify/integrate/
 // closeout boundaries; the disposable fixture is not an ordinary installation.
 func TestQualifiedCLIInstallationPublicConsumer(t *testing.T) {
-	binary := automaticCLIBinary(t)
+	qualifiedCLIInstallationConsumer(t, automaticCLIBinary(t))
+}
+
+func qualifiedCLIInstallationConsumer(t *testing.T, binary string) {
+	t.Helper()
 	f, o := cleanupCLIFixture(t, binary)
 	destination := filepath.Join(f.R.WorkspaceRoot, "installed-ply")
 	old := []byte("#!/bin/sh\necho old\n")
 	if err := os.WriteFile(destination, old, 0755); err != nil {
 		t.Fatal(err)
 	}
+	var lastStderr bytes.Buffer
+	call := 0
 	invoke := func(controller, dest string, extra ...string) (CLIInstallation, []byte, error) {
 		args := []string{"workflow", "execute", "install-cli", o.RunID, "--destination", dest, "--coordinator", "synthetic authorized coordinator", "--format", "json"}
 		args = append(args, extra...)
 		c := exec.Command(controller, args...)
 		c.Dir = f.Parent
+		lastStderr.Reset()
+		c.Stderr = &lastStderr
 		out, err := c.Output()
+		call++
+		if root := os.Getenv("PLY_AL16_CLI_EVIDENCE"); root != "" {
+			dir := filepath.Join(root, t.Name())
+			if e := os.MkdirAll(dir, 0700); e != nil {
+				t.Fatal(e)
+			}
+			prefix := filepath.Join(dir, fmt.Sprintf("%02d", call))
+			exit := -1
+			if c.ProcessState != nil {
+				exit = c.ProcessState.ExitCode()
+			}
+			argv, _ := json.Marshal(c.Args)
+			for suffix, data := range map[string][]byte{".stdout": out, ".stderr": lastStderr.Bytes(), ".exit": []byte(fmt.Sprintln(exit)), ".argv.json": argv} {
+				if e := os.WriteFile(prefix+suffix, data, 0600); e != nil {
+					t.Fatal(e)
+				}
+			}
+		}
 		if exit, ok := err.(*exec.ExitError); ok {
-			t.Logf("CLI actual exit=%d stderr=%s", exit.ExitCode(), exit.Stderr)
+			t.Logf("CLI actual exit=%d stderr=%s", exit.ExitCode(), lastStderr.String())
 		}
 		var r CLIInstallation
 		if decodeErr := json.Unmarshal(out, &r); decodeErr != nil {
@@ -58,11 +87,35 @@ func TestQualifiedCLIInstallationPublicConsumer(t *testing.T) {
 	if err != nil || installed.State != "verified" || installed.Smoke == nil || installed.Smoke.Exit == nil || *installed.Smoke.Exit != 0 {
 		t.Fatalf("install: %v %s", err, raw)
 	}
-	t.Logf("actual installed smoke exit=%d stdout=%s", *installed.Smoke.Exit, installed.Smoke.Stdout)
+	t.Logf("actual installed smoke exit=%d stdout=%s install stderr=%s", *installed.Smoke.Exit, installed.Smoke.Stdout, lastStderr.String())
+	var identity buildinfo.Identity
+	if err := json.Unmarshal([]byte(installed.Smoke.Stdout), &identity); err != nil {
+		t.Fatal(err)
+	}
+	if identity.SourceCommit == "" {
+		for _, fact := range []string{"embedded source identity is unknown", "qualification_oid", installed.Source.OID, "qualification_tree", installed.Source.Tree, installed.Source.BinarySHA256, "installed executable", "continues"} {
+			if !strings.Contains(lastStderr.String(), fact) {
+				t.Fatalf("missing sourced warning %q: %s", fact, lastStderr.String())
+			}
+		}
+	} else if strings.Contains(lastStderr.String(), "embedded source identity is unknown") {
+		t.Fatalf("known identity warned as unknown: %s", lastStderr.String())
+	}
+	candidateBytes, err := os.ReadFile(controller)
+	if err != nil {
+		t.Fatal(err)
+	}
+	installedBytes, err := os.ReadFile(destination)
+	if err != nil || !bytes.Equal(candidateBytes, installedBytes) {
+		t.Fatal("qualified bytes changed", err)
+	}
 	backup := installed.Receipt.Backup
 	repeated, raw, err := invoke(controller, destination)
-	if err != nil || repeated.Receipt.Backup != backup {
+	if err != nil || repeated.Receipt.Backup != backup || !equal(repeated.Receipt, installed.Receipt) {
 		t.Fatalf("lost reply recovery %v %s", err, raw)
+	}
+	if strings.Contains(lastStderr.String(), "embedded source identity is unknown") {
+		t.Fatalf("repeat warning storm: %s", lastStderr.String())
 	}
 	if _, raw, err := invoke(controller, destination+"-changed"); err == nil {
 		t.Fatalf("changed destination reused operation %s", raw)

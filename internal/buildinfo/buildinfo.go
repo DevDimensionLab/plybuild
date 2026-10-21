@@ -13,6 +13,10 @@ import (
 var Version = "dev"
 var SourceCommit string
 
+// SourceDirty is the build-time Git status supplied alongside SourceCommit for
+// linked worktrees where Go may omit VCS settings. Empty retains Go's fallback.
+var SourceDirty string
+
 type Identity struct {
 	Kind            string `json:"kind"`
 	SchemaVersion   int    `json:"schema_version"`
@@ -36,6 +40,9 @@ func Current() (Identity, error) {
 				i.Dirty = s.Value == "true"
 			}
 		}
+	}
+	if SourceDirty != "" {
+		i.Dirty = SourceDirty == "true"
 	}
 	p, err := os.Executable()
 	if err != nil {

@@ -310,6 +310,18 @@ func InstallQualifiedCLI(d Dependencies, root, id, destination, coordinator, act
 			if err = d.writeValue(smokePath, smoke); err != nil {
 				return err
 			}
+			// Log only when recording the first successful installed smoke. Check,
+			// observe and identical retries reuse it without repeating this warning.
+			var embedded buildinfo.Identity
+			if smoke.Error == "" && smoke.Exit != nil && *smoke.Exit == 0 && json.Unmarshal([]byte(smoke.Stdout), &embedded) == nil && embedded.SourceCommit == "" {
+				logrus.WithFields(logrus.Fields{
+					"run_id": id, "embedded_identity_source": "installed executable version --format json",
+					"qualification_source": out.Source.VerificationSHA256,
+					"qualification_oid":    out.Source.OID, "qualification_tree": out.Source.Tree,
+					"binary_sha256": out.Source.BinarySHA256,
+					"handling":      "installation continues with exact qualified bytes; embedded commit remains unknown; use make build for future candidates",
+				}).Warn("Qualified CLI embedded source identity is unknown")
+			}
 		}
 		out.Smoke = &smoke
 		actual, _, err := installedCLIBytes(destination)

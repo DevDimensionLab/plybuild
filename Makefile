@@ -24,7 +24,13 @@ override PLY_QUALITY_MUTATIONS := cli-context config-cloud maven-sorting templat
 .PHONY: acceptance acceptance-docker acceptance-snapshot all build compat-api compat-cli compatibility docker-build docker-run docker-publish format install lint preflight quality release release-brew run snapshot test test-agent-auto test-agent-start test-cli-surface test-compatibility test-distribution test-install test-lint test-preflight test-quality test-toolchain test-workflow-handoff test-workspace-task-integration test-workspace-work-items upgrade
 
 build:
-	$(GO) build -o $(PLY_BUILD_OUTPUT) ./cmd/ply
+	@commit=; dirty=; \
+	if [ "$$(git -C "$(REPO_ROOT)" rev-parse --show-toplevel 2>/dev/null)" = "$(REPO_ROOT)" ] && \
+	   commit=$$(git -C "$(REPO_ROOT)" rev-parse --verify HEAD 2>/dev/null) && \
+	   status=$$(git -C "$(REPO_ROOT)" status --porcelain 2>/dev/null); then \
+		dirty=false; [ -z "$$status" ] || dirty=true; \
+	else commit=; fi; \
+	cd "$(REPO_ROOT)" && $(GO) build -ldflags "-X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceCommit=$$commit -X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceDirty=$$dirty" -o "$(PLY_BUILD_OUTPUT)" ./cmd/ply
 
 docker-build:
 	docker build --tag ply:latest .
