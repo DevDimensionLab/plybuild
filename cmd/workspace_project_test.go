@@ -230,3 +230,28 @@ func executeProjectCommand(t *testing.T, services workspaceProjectServices, args
 	err := command.Execute()
 	return stdout.String(), stderr.String(), err
 }
+
+func TestWorkspaceProjectMemberDispatchAndValidation(t *testing.T) {
+	calls := 0
+	services := workspaceProjectServices{addMember: func(id workspace.ProjectID, repo workspace.RepoInput) (workspace.ProjectResult, error) {
+		calls++
+		if id != "shared" || repo.RepoID != "extra" || repo.Path != "../external=repo" {
+			t.Fatalf("input = %s %#v", id, repo)
+		}
+		return workspace.ProjectResult{Workspace: "/workspace", Project: workspace.ProjectRecord{ID: id, Name: "Shared", Wrapper: "/wrapper"}, Repos: []workspace.RepoRecord{{ID: "extra", Locator: "/external", GitCommonDir: "/external/.git"}}, Created: calls == 1}, nil
+	}}
+	for _, want := range []string{"Added repository member", "Already registered repository member"} {
+		out, _, err := executeProjectCommand(t, services, "add-member", "shared", "--repo", "extra=../external=repo")
+		if err != nil || !strings.Contains(out, want) || !strings.Contains(out, "git common directory: /external/.git") {
+			t.Fatalf("out = %q err = %v", out, err)
+		}
+	}
+	for _, args := range [][]string{{"add-member"}, {"add-member", "shared", "--repo", "extra="}, {"add-member", "shared", "--repo", "extra"}, {"add-member", "BAD", "--repo", "extra=path"}, {"add-member", "shared", "--repo", "BAD=path"}, {"add-member", "shared", "--repo", "extra=path", "unexpected"}} {
+		if _, _, err := executeProjectCommand(t, services, args...); err == nil {
+			t.Fatalf("accepted %v", args)
+		}
+	}
+	if calls != 2 {
+		t.Fatalf("calls = %d", calls)
+	}
+}

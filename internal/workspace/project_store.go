@@ -73,6 +73,19 @@ func (store *systemProjectStore) WithSnapshotLock(workspaceRoot string, operatio
 }
 
 func (store *systemProjectStore) Add(workspaceRoot string, project ProjectRecord, repositories []RepoRecord) (ProjectRecord, []RepoRecord, bool, error) {
+	return store.mutate(workspaceRoot, func(registry projectRegistry) (projectRegistry, ProjectRecord, []RepoRecord, bool, error) {
+		return applyProject(registry, project, repositories)
+	})
+}
+
+func (store *systemProjectStore) AddMember(workspaceRoot string, id ProjectID, repository RepoRecord) (ProjectRecord, []RepoRecord, bool, error) {
+	return store.mutate(workspaceRoot, func(registry projectRegistry) (projectRegistry, ProjectRecord, []RepoRecord, bool, error) {
+		return applyProjectMember(registry, id, repository)
+	})
+}
+
+// mutate serializes read, identity validation and atomic publication together.
+func (store *systemProjectStore) mutate(workspaceRoot string, apply func(projectRegistry) (projectRegistry, ProjectRecord, []RepoRecord, bool, error)) (ProjectRecord, []RepoRecord, bool, error) {
 	lock, err := store.acquire(workspaceRoot)
 	if err != nil {
 		return ProjectRecord{}, nil, false, err
@@ -86,7 +99,7 @@ func (store *systemProjectStore) Add(workspaceRoot string, project ProjectRecord
 		if err != nil {
 			return err
 		}
-		updated, resultProject, resultRepositories, wasCreated, err := applyProject(registry, project, repositories)
+		updated, resultProject, resultRepositories, wasCreated, err := apply(registry)
 		if err != nil {
 			return err
 		}

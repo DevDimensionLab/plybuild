@@ -82,6 +82,20 @@ execute-preview binds the
 actual Task source branch. A started run retains its frozen agreement. A later
 goal revision cannot change that run's target or permissions.
 
+## Existing Project membership
+
+When the user authorizes adding a repository to an existing shared Project, use
+`ply workspace project add-member PROJECT_ID --repo REPO_ID=PATH` from its containing
+workspace. Verify the stored locator and Git common directory with
+`ply workspace project show PROJECT_ID --format json` and the membership count with
+`ply workspace project list --format json`. The operation appends one explicit member,
+accepts dirty worktrees outside the wrapper, and requires no execution Epic. Matching
+Git identity retries preserve the existing locator; identity conflicts fail without
+partial membership. Preserve the chosen Project and its execution/history bindings.
+Membership registration is separate from Task execution and delivery; it does not
+extend an existing Epic to another repository. Use this only with membership authority,
+not merely because an implementation Task mentions a future consumer registration.
+
 ## Register and check
 
 After meaningful verification and review qualify the exact candidate, write a

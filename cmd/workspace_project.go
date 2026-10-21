@@ -9,13 +9,17 @@ import (
 )
 
 type workspaceProjectServices struct {
-	add  func(workspace.ProjectAddInput) (workspace.ProjectResult, error)
-	show func(workspace.ProjectID) (workspace.ProjectResult, error)
-	list func() (workspace.ProjectListResult, error)
+	addMember func(workspace.ProjectID, workspace.RepoInput) (workspace.ProjectResult, error)
+	add       func(workspace.ProjectAddInput) (workspace.ProjectResult, error)
+	show      func(workspace.ProjectID) (workspace.ProjectResult, error)
+	list      func() (workspace.ProjectListResult, error)
 }
 
 func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Command {
 	command := newWorkspaceProjectCommandWithServices(workspaceProjectServices{
+		addMember: func(id workspace.ProjectID, repo workspace.RepoInput) (workspace.ProjectResult, error) {
+			return workspace.AddProjectMember(dependencies, id, repo)
+		},
 		add: func(input workspace.ProjectAddInput) (workspace.ProjectResult, error) {
 			return workspace.AddProject(dependencies, input)
 		},
@@ -160,7 +164,42 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 	listCommand.Flags().StringVar(&listFormat, "format", "text", "output format (text or json)")
 	setProjectFlagErrors(listCommand)
 
-	projectCommand.AddCommand(addCommand, showCommand, listCommand)
+	var memberValue string
+	memberCommand := &cobra.Command{
+		Use:     "add-member <project-id>",
+		Short:   "Add one explicit repository member to an existing project",
+		Long:    "Add one repository member as metadata. Dirty worktrees and repositories outside the wrapper are accepted. Identical Git identity retries preserve the stored locator. This requires no Epic and changes no Task, Run, history, Git refs or source.",
+		Example: "  ply workspace project add-member plyapp --repo plyapp-pwa=../plyapp-pwa/main",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return workspace.ProjectInvalidArguments("expected exactly one project ID")
+			}
+			_, _, err := workspace.ParseProjectMemberInput(args[0], memberValue)
+			return err
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, repo, err := workspace.ParseProjectMemberInput(args[0], memberValue)
+			if err != nil {
+				return err
+			}
+			result, err := services.addMember(id, repo)
+			if err != nil {
+				return err
+			}
+			action := "Added repository member"
+			if !result.Created {
+				action = "Already registered repository member"
+			}
+			if _, err := fmt.Fprintf(cmd.OutOrStdout(), "%s %s in project %s.\n", action, repo.RepoID, id); err != nil {
+				return err
+			}
+			return renderProject(cmd, result, false)
+		},
+	}
+	memberCommand.Flags().StringVarP(&memberValue, "repo", "r", "", "repository member as <repo-id>=<path>")
+	_ = memberCommand.MarkFlagRequired("repo")
+	setProjectFlagErrors(memberCommand)
+	projectCommand.AddCommand(addCommand, memberCommand, showCommand, listCommand)
 	return projectCommand
 }
 

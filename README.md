@@ -120,8 +120,22 @@ discovery or Git mutation. Read registrations with `ply workspace project show <
 See the [workspace read contract](docs/read-contract.md) for independent Task filters,
 versioned JSON schemas, and `ply capabilities`.
 
-Retrying the same registration is idempotent. Changing membership, relocating repositories, and
-`project init` are not part of this command.
+Retrying the same registration is idempotent. To append one member to an existing project:
+
+```shell script
+ply workspace project add-member plyapp --repo plyapp-pwa=../plyapp-pwa/main
+ply workspace project show plyapp --format json
+ply workspace project list --format json
+```
+
+`add-member` preserves the project name, wrapper, existing members and stored repository
+locators. A known repository ID with the same physical Git common directory can be reused;
+identical retries (including symlinks and linked worktrees) do not rewrite registration.
+Conflicting IDs or Git identities and unavailable worktrees fail without partial membership.
+This metadata operation accepts dirty repositories and paths outside the wrapper, requires no
+Epic, and leaves Tasks, queues, Runs, history, Git refs and source unchanged. It does not relocate
+or remove members, rebind execution, or grant cross-repository Epic support. `project init`
+remains outside these commands.
 
 Adopt one existing clean worktree as the repository anchor for a workspace-owned Epic:
 
