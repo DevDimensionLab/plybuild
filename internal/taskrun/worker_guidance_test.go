@@ -557,12 +557,12 @@ func TestAW01GuidanceCloseoutAndDriftPriority(t *testing.T) {
 				f.reads(func(t *testing.T, o WorkflowRun) {
 					switch scenario {
 					case "complete":
-						if o.Closeout == nil || o.Closeout.State != "complete" || o.Round.State != "completed" || o.FinalReturn.State != "completed" || o.NextAction.Actor != "user" || !strings.Contains(o.NextAction.Message, "exact Task delivery is closed") {
+						if o.Closeout == nil || o.Closeout.State != "complete" || o.Round.State != "completed" || o.FinalReturn.State != "completed" || o.NextAction.Actor != "none" || !strings.Contains(o.NextAction.Message, "exact Task delivery is closed") {
 							t.Fatalf("complete closeout lost priority: %+v", o)
 						}
 					case "cleanup_pending":
 						code, _, message := workspace.TaskCloseoutPendingAction(receipt)
-						if o.Closeout == nil || o.NextAction != (WorkflowAction{"user", message}) || !aw01HasReason(o, code) {
+						if o.Closeout == nil || o.NextAction != (WorkflowAction{"recipient", message}) || !aw01HasReason(o, code) {
 							t.Fatalf("pending closeout lost priority: %+v", o)
 						}
 					case "closeout_unavailable":
