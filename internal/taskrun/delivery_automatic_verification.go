@@ -184,10 +184,11 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 		return err
 	}
 	if live {
-		for _, b := range []FileBinding{r.Acceptance, r.Review} {
-			if _, err := workflowBound(b, 256<<20); err != nil {
-				return fmt.Errorf("automatic acceptance input changed: %w", err)
-			}
+		if _, err := inputBound(r.Acceptance, inputAcceptance, 256<<20); err != nil {
+			return fmt.Errorf("automatic acceptance input changed: %w", err)
+		}
+		if _, err := inputBound(r.Review, inputCandidateReview, 256<<20); err != nil {
+			return fmt.Errorf("automatic acceptance input changed: %w", err)
 		}
 		raw, err := readFile(r.Automatic.CandidateBinary.Locator, workflowhandoff.AutomaticCandidateBinaryLimit, false)
 		if err != nil || hash(raw) != r.Automatic.CandidateBinary.SHA256 {

@@ -164,7 +164,7 @@ func validateBeginNotification(in DeliveryBeginInput) error {
 	if strings.TrimSpace(in.NotificationAuthority) == "" || len(in.NotificationAuthority) > 4096 {
 		return workflowError(2, "the existing user authorization for this notification route is required")
 	}
-	b, err := readFile(in.NotificationRoute, 16<<10, true)
+	b, err := readFileAs(in.NotificationRoute, privateNotificationRoute, 16<<10, ownerOnlyAccess)
 	if err != nil {
 		return err
 	}

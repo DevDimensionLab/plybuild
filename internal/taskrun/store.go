@@ -132,7 +132,10 @@ func writeValue(path string, v any) error {
 	return writeOnce(path, b)
 }
 func readValue(path string, max int, v any) error {
-	b, e := readFile(path, max, true)
+	return readPrivateValue(path, "private file", max, v)
+}
+func readPrivateValue(path, role string, max int, v any) error {
+	b, e := readFileAs(path, role, max, ownerOnlyAccess)
 	if e != nil {
 		return e
 	}

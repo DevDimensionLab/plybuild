@@ -72,7 +72,7 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
-	b, e := readFile(file, 256<<10, true)
+	b, e := readFileAs(file, privateRuntimeAcceptance, 256<<10, ownerOnlyAccess)
 	if e != nil {
 		return WorkflowRun{}, e
 	}

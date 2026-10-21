@@ -182,16 +182,51 @@ func physical(path string, missing bool) error {
 	}
 	return nil
 }
+
+// fileAccess is the mode requirement of a file role.
+type fileAccess int
+
+const (
+	anyAccess fileAccess = iota
+	// Native stores, controls and authority-bearing inputs.
+	ownerOnlyAccess
+	// Ordinary hash-bound inputs: others may read, not write.
+	ownerWritableAccess
+)
+
 func readFile(path string, max int, private bool) ([]byte, error) {
+	if private {
+		return readFileAs(path, "private file", max, ownerOnlyAccess)
+	}
+	return readFileAs(path, "input file", max, anyAccess)
+}
+
+// readFileAs names the role, path, failing requirement, observed metadata and
+// supported handling in every retained refusal, never the file's contents.
+func readFileAs(path, role string, max int, access fileAccess) ([]byte, error) {
 	if e := physical(path, false); e != nil {
+		if t, ok := e.(*Error); ok {
+			return nil, failure(t.Code, t.Exit, fmt.Sprintf("%s %s: %s; use the absolute physical path of a regular file, without symlinks", role, path, t.Detail))
+		}
 		return nil, e
 	}
 	before, e := os.Lstat(path)
 	if e != nil {
 		return nil, e
 	}
-	if !before.Mode().IsRegular() || before.Size() > int64(max) || (private && before.Mode().Perm()&0077 != 0) {
-		return nil, invalid("expected bounded private regular file")
+	refuse := func(requirement, handling string) error {
+		return invalid(fmt.Sprintf("%s %s: %s; observed %s, mode %04o, %d bytes; %s", role, path, requirement, fileKind(before.Mode()), before.Mode().Perm(), before.Size(), handling))
+	}
+	perm := before.Mode().Perm()
+	switch {
+	case !before.Mode().IsRegular():
+		return nil, refuse("requires a regular file", "submit a regular file at this path")
+	case before.Size() > int64(max):
+		return nil, refuse(fmt.Sprintf("requires at most %d bytes", max), "keep this input within the limit and move bulk output to a separate bounded file")
+	case access == ownerOnlyAccess && perm&0077 != 0:
+		return nil, refuse("requires owner-only permissions because it holds native or authority-bearing data", "check that no other user changed it, then restore owner-only mode (chmod go-rwx)")
+	case access == ownerWritableAccess && perm&0022 != 0:
+		return nil, refuse("must not be writable by group or other users, who could choose its bytes", "remove that write access (chmod go-w) and submit the same path again; read access for others is accepted")
 	}
 	f, e := openRead(path)
 	if e != nil {
@@ -200,7 +235,7 @@ func readFile(path string, max int, private bool) ([]byte, error) {
 	defer f.Close()
 	actual, e := f.Stat()
 	if e != nil || !os.SameFile(before, actual) {
-		return nil, conflict("file changed while opening")
+		return nil, conflict(role + " " + path + ": file changed while opening; submit it again once its writer has finished")
 	}
 	b, e := io.ReadAll(io.LimitReader(f, int64(max)+1))
 	if e != nil {
@@ -208,9 +243,27 @@ func readFile(path string, max int, private bool) ([]byte, error) {
 	}
 	after, e := os.Lstat(path)
 	if e != nil || !os.SameFile(actual, after) || len(b) > max {
-		return nil, conflict("file changed while reading")
+		return nil, conflict(role + " " + path + ": file changed while reading; submit it again once its writer has finished")
 	}
 	return b, nil
+}
+
+func fileKind(m os.FileMode) string {
+	switch {
+	case m.IsRegular():
+		return "regular file"
+	case m.IsDir():
+		return "directory"
+	case m&os.ModeSymlink != 0:
+		return "symlink"
+	case m&os.ModeNamedPipe != 0:
+		return "named pipe"
+	case m&os.ModeSocket != 0:
+		return "socket"
+	case m&os.ModeDevice != 0:
+		return "device"
+	}
+	return "irregular file"
 }
 func ReadRequest(path string) (Request, error) {
 	var r Request

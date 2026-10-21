@@ -50,7 +50,13 @@ func deliveryReusableVerification(d Dependencies, s workflowState, receipt deliv
 // These are the exact inputs checked by receipt reuse and by historical report
 // qualification. Reading them grants no new verification, candidate or phase.
 func deliveryVerificationInputs(receipt deliveryVerificationReceipt) error {
-	for _, b := range []FileBinding{receipt.Acceptance, receipt.AcceptanceSnapshot, receipt.Review, receipt.Stdout, receipt.Stderr} {
+	if _, err := inputBound(receipt.Acceptance, inputAcceptance, 4<<20); err != nil {
+		return fmt.Errorf("receipt input %s no longer matches: %w", receipt.Acceptance.Locator, err)
+	}
+	if _, err := inputBound(receipt.Review, inputCandidateReview, 4<<20); err != nil {
+		return fmt.Errorf("receipt input %s no longer matches: %w", receipt.Review.Locator, err)
+	}
+	for _, b := range []FileBinding{receipt.AcceptanceSnapshot, receipt.Stdout, receipt.Stderr} {
 		if _, err := workflowBound(b, 4<<20); err != nil {
 			return fmt.Errorf("receipt input %s no longer matches: %w", b.Locator, err)
 		}

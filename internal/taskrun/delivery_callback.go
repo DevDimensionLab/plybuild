@@ -146,19 +146,20 @@ func validateDeliveryReport(r DeliveryReport) error {
 	if err := validateDeliveryReportContent(r); err != nil {
 		return err
 	}
-	for _, b := range r.Evidence {
-		if _, e := workflowBound(b, 64<<20); e != nil {
+	for _, b := range deliveryReportEvidence(r) {
+		if _, e := inputBound(b, inputReportEvidence, 64<<20); e != nil {
 			return e
 		}
 	}
-	for _, v := range r.VerifierResults {
-		for _, b := range v.Evidence {
-			if _, e := workflowBound(b, 64<<20); e != nil {
-				return e
-			}
-		}
-	}
 	return nil
+}
+
+func deliveryReportEvidence(r DeliveryReport) []FileBinding {
+	out := append([]FileBinding{}, r.Evidence...)
+	for _, v := range r.VerifierResults {
+		out = append(out, v.Evidence...)
+	}
+	return out
 }
 
 // The historical inventory validates the preserved report itself. Referenced
@@ -210,7 +211,7 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
-	raw, e := readFile(file, 1<<20, true)
+	raw, e := readInput(file, inputDeliveryReport, 1<<20)
 	if e != nil {
 		return WorkflowRun{}, e
 	}
@@ -280,6 +281,12 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 		}
 		return nil
 	})
+	if e == nil {
+		warnSharedInput(inputDeliveryReport, file)
+		for _, b := range deliveryReportEvidence(report) {
+			warnSharedInput(inputReportEvidence, b.Locator)
+		}
+	}
 	return deliveryReadback(d, root, id, e)
 }
 
@@ -390,7 +397,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		if e != nil {
 			return e
 		}
-		acceptance, acceptanceRaw, e := deliveryReadBinding(current.Request.Delivery.AcceptancePath, 4<<20)
+		acceptance, acceptanceRaw, e := readInputBinding(current.Request.Delivery.AcceptancePath, inputAcceptance, 4<<20)
 		if e != nil {
 			return e
 		}
@@ -399,7 +406,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				return e
 			}
 		}
-		review, _, e := deliveryReadBinding(reviewPath, 1<<20)
+		review, _, e := readInputBinding(reviewPath, inputCandidateReview, 1<<20)
 		if e != nil {
 			return e
 		}
@@ -440,6 +447,8 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		return deliveryReadback(d, root, id, nil)
 	}
 	if !recoverReceipt {
+		warnSharedInput(inputAcceptance, receipt.Acceptance.Locator)
+		warnSharedInput(inputCandidateReview, receipt.Review.Locator)
 		if e = d.fault("delivery_after_verification_reservation"); e != nil {
 			o, _ := WorkflowShow(d, root, id)
 			return o, e
@@ -480,10 +489,10 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 	if receipt.Exit != nil && *receipt.Exit == 0 && receipt.Error == "" {
 		e = validateAutomaticReceipt(s, receipt, true)
 		if e == nil {
-			_, e = workflowBound(receipt.Acceptance, 4<<20)
+			_, e = inputBound(receipt.Acceptance, inputAcceptance, 4<<20)
 		}
 		if e == nil {
-			_, e = workflowBound(receipt.Review, 1<<20)
+			_, e = inputBound(receipt.Review, inputCandidateReview, 1<<20)
 		}
 		if e == nil {
 			x, err := deliveryTarget(d, s)

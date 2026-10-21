@@ -337,8 +337,11 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 	v.InputsMatch = v.Current && dependenciesMatch
 	// Live inputs determine whether evidence can still qualify this source.
 	// They cannot erase a completed command's separately preserved outcome.
-	for _, b := range []FileBinding{receipt.Acceptance, receipt.Review} {
-		if _, err := workflowBound(b, 4<<20); err != nil {
+	for _, input := range []struct {
+		role string
+		b    FileBinding
+	}{{inputAcceptance, receipt.Acceptance}, {inputCandidateReview, receipt.Review}} {
+		if _, err := inputBound(input.b, input.role, 4<<20); err != nil {
 			v.InputsMatch = false
 			problem("delivery_verification_inputs_changed", "Completed verification is preserved; input changed and receipt reuse requires matching inputs: "+err.Error())
 		}

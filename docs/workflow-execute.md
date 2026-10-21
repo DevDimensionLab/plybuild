@@ -488,8 +488,26 @@ Finding and fix `evidence_ids` refer to managed candidate artifacts, such as
 `verifier-stderr` for actual command output. They are not arbitrary note labels.
 The callback guide lists the available artifacts. Invalid review references are
 rejected before a candidate handoff is created. Preserve rejected inputs; a
-corrected review uses a new private file and a new verification after the prior
+corrected review uses a new file and a new verification after the prior
 attempt has a known recorded outcome. Never replay an uncertain attempt.
+
+### Input file requirements
+
+The delivery report, its evidence and verifier evidence files, the acceptance
+entrypoint and the `--review` file are ordinary inputs. Each is bound by
+SHA-256, and Ply keeps its own private copy. A file that other local users can
+read, such as a 0644 log from a shell redirect or a 0755 script, is consumed
+without chmod. The callback logs one `warn` on stderr per such file, and stdout
+keeps a single JSON value. The candidate binary is read the same way and runs
+from a private 0700 snapshot. A file that group or other users can write is
+refused, because they could have chosen its bytes.
+
+Runtime acceptance, human QA attestations and evidence, the notification
+route, native run state and other Ply stores and controls must stay owner-only. Every refusal names the role and path,
+the failing requirement, the observed type, mode and size, and the supported
+next step. It never includes file contents. A physical path, a regular file and
+a size limit are still required. Bytes that change after binding never qualify
+a candidate.
 
 ### Independent review rounds
 

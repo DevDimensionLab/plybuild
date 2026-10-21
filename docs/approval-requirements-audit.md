@@ -219,6 +219,62 @@ The fixture Ply and provider bytes are synthetic. The CLI journey starts with a
 real build of the AL03 base (`f5535ef`) as the installed Ply and installs the
 candidate at the same path. No live plyapp Run was repeated.
 
+## AL05: file requirements for ordinary inputs
+
+Source of the friction: in AL02, verify stopped on a 0644 `acceptance.sh` with
+the generic error `expected bounded private regular file`. The owner first
+suspected the 0755 candidate binary. In AL04, a progress report was refused
+because a shell-redirected evidence log was 0644. A single check in
+`internal/taskrun/schema.go` (`readFile`) mixed type, size and private mode, and
+its error named neither the path nor the role.
+
+| Role | Source (base `7e049ed`) | Value of owner-only mode | Decision |
+| --- | --- | --- | --- |
+| Delivery report (`execute report --file`) | `workflowDeliveryReport` used `private=true` | None. Ply checks the content, copies the bytes into its private event store, and the report grants no authority | **remove**. Group/other write access stays refused |
+| Report evidence and verifier evidence | `validateDeliveryReport` used `workflowBound` (private). Also re-read by historical qualification | None. The owner's digest binds the bytes | **remove**, both at publication and on re-read |
+| Acceptance entrypoint | `deliveryReadBinding` at reservation, `workflowBound` after the run, in live revalidation, receipt reuse and status | None. The command runs a private snapshot, and the bytes are re-checked by hash | **remove** |
+| Candidate review (`--review`) | Same readers as the entrypoint | None. Its candidate, reviewer and findings are validated, and its digest is bound | **remove** |
+| Candidate binary | `prepareAutomaticVerification` already used `private=false` and a 0700 snapshot | n/a | **keep** (baseline, proved by a test) |
+| Runtime acceptance, notification route | `WorkflowAccept`, `deliveryBegin` | Carry authority claims or a notification authorization | **keep**, with the role named in the error |
+| Native run state, stores, controls | `readValue`, `PrivateRead`, `workflowBound` | Ply creates them 0600. Any other mode means a change outside Ply | **keep**. Run state is named; other callers report `private file` |
+
+After the change, a refusal reads like this example: `delivery report <path>: must not be writable by group
+or other users, who could choose its bytes; observed regular file, mode 0664,
+412 bytes; remove that write access (chmod go-w) and submit the same path
+again`. Accepted shared-readable inputs log `warn` with role, path and mode,
+once per callback, after Ply has consumed the input (report published or
+verification reserved).
+
+Still protected: absolute physical paths without symlinks, regular files, size
+limits, inode replacement while the file is opened or read, the owner's digest
+for evidence, and re-reading by digest after binding. Executed bytes are always
+the bound snapshot.
+
+**Known limit, not changed:** `readFile` detects only inode replacement
+(`os.SameFile`) and growth past the limit. An in-place rewrite of the same inode
+with the same size during the read is not detected there. No read seam exists
+to test it. What actually protects the ordinary roles today: evidence must match
+the digest the owner submitted. For the acceptance entrypoint and review, the
+bytes that were read are the bytes bound, snapshotted and executed, and any
+later difference fails the post-run digest check. The fault-boundary test
+`TestAL05InPlaceOverwriteAfterBindingDoesNotQualify` proves that last part
+after binding, not during the read. The remaining work is in the backlog as
+`planning/koe/ply-filbinding-samtidig-overskriving-under-lesing.md`: a read
+seam in `readFileAs`, a test that rewrites the same inode with the same size
+during the read, and a decision on whether a changed mtime or size refuses.
+
+Not changed by AL05: legacy `workflow run` report and review files, the
+observe-stop/resolve-stop evidence and runtime evidence paths. They keep
+owner-only mode, and their errors now name the path, requirement and observed
+mode under the generic role `private file`.
+
+| Journey | Before | After (fixture and candidate CLI) |
+| --- | --- | --- |
+| 0644 report with a 0644 evidence log | exit 2, generic error, then manual chmod | Published; one `warn` per file; 0 questions |
+| 0644 `acceptance.sh`, 0644 review, 0755 binary | Verify refused; owner debugged the binary | Qualified and delivered through `workflow delivery execute` |
+| Lost report reply | n/a | Same event; no second report |
+| 0664/0666 input, directory, symlink, oversized, changed evidence | Generic error | Refused; the error names the role, path, requirement and observation; no event |
+
 ### P3 (medium): Claude `auto` for report Runs
 
 - **Evidence:** `internal/taskrun/herdr_transport.go:335` and

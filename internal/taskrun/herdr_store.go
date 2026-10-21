@@ -22,7 +22,7 @@ func workflowRead(root, id string) (workflowState, error) {
 	if !regexp.MustCompile(`^wfr_[0-9a-f]{64}$`).MatchString(id) {
 		return s, workflowError(2, "invalid run ID")
 	}
-	e := readValue(workflowIndex(root, id), 4<<20, &s)
+	e := readPrivateValue(workflowIndex(root, id), privateRunState, 4<<20, &s)
 	if e != nil {
 		return s, e
 	}
@@ -37,7 +37,7 @@ func workflowRead(root, id string) (workflowState, error) {
 	} else if s.Request.Worker != nil || s.Result.Worker != nil {
 		return s, workflowError(4, "interactive reservation cannot acquire a worker")
 	}
-	e = readValue(filepath.Join(s.Result.Paths.RunRoot, "state.json"), 8<<20, &saved)
+	e = readPrivateValue(filepath.Join(s.Result.Paths.RunRoot, "state.json"), privateRunState, 8<<20, &saved)
 	if os.IsNotExist(e) {
 		s.Result.Round.State = "unknown"
 		return s, nil
