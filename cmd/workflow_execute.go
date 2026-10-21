@@ -8,6 +8,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/taskexecute"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -116,7 +117,25 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 	c.AddCommand(newWorkflowExecuteReviewCommand(d))
 	c.AddCommand(newWorkflowExecuteReviewReturnCommand(d))
 	c.AddCommand(newWorkflowExecuteQARecoveryCommand(d))
+	executeLogsToStderr(c)
 	return c
+}
+
+// Every execute command can read or call back a report Run whose launch facts
+// changed. Its warnings go to stderr, as in workflow run, so a JSON result stays
+// the only value on stdout.
+func executeLogsToStderr(c *cobra.Command) {
+	for _, child := range c.Commands() {
+		executeLogsToStderr(child)
+	}
+	if run := c.RunE; run != nil {
+		c.RunE = func(c *cobra.Command, args []string) error {
+			previousOutput := logrus.StandardLogger().Out
+			logrus.SetOutput(c.ErrOrStderr())
+			defer logrus.SetOutput(previousOutput)
+			return run(c, args)
+		}
+	}
 }
 
 func executeFormat(format string) error {

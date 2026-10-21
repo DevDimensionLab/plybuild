@@ -55,6 +55,11 @@ func workflowCallback(d Dependencies, s workflowState, contextPath string) error
 	if e != nil || actual != runtime.PlyExecutable.Path {
 		return workflowError(4, "callback is not the bound Ply executable")
 	}
+	if workflowReportLaunched(s) {
+		// The bound path stays the control identity; workflowFresh already
+		// logged changed bytes from an ordinary install at that path.
+		return nil
+	}
 	return verifyExecutable(runtime.PlyExecutable)
 }
 func workflowClaim(s workflowState, id, request, session string) error {

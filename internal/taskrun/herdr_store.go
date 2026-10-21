@@ -10,6 +10,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/sirupsen/logrus"
 )
 
 func workflowRoundName(n int) string { return fmt.Sprintf("%03d", n) }
@@ -226,7 +227,45 @@ func workflowFreshRuntime(d Dependencies, s workflowState, target bool, runtime 
 	return workflowFreshRuntimeOperation(d, s, target, runtime, continued != nil && continued.RuntimeObservation != nil)
 }
 
+// An interactive report owner's native session is bound, so its launch has
+// consumed the provider executable and any process-local trust grant. Report
+// callbacks and observations never launch again; Delivery keeps its own
+// continuation and headless workers still execute the bound control.
+func workflowReportLaunched(s workflowState) bool {
+	return !deliveryRun(s.Request) && !headlessRun(s.Request) && s.Result.Transport.AgentSessionID != ""
+}
+
+// Launch facts are history after workflowReportLaunched. Observed drift is
+// logged and the report-only operation continues under unchanged authority.
+func workflowReportLaunchDrift(s workflowState, fact, bound string, err error) {
+	logrus.WithFields(logrus.Fields{"run_id": s.Result.RunID, "fact": fact, "bound": bound, "observed": err.Error(), "handling": "post-launch report operation continues under the unchanged mandate, session and report-only authority; a new launch still requires current facts"}).Warn("Report launch fact changed after launch")
+}
+
 func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool, runtime Runtime, historicalLauncher bool) error {
+	if workflowReportLaunched(s) {
+		// Only a confirmed grant's observation can become history. A missing or
+		// contradictory saved binding stays an integrity error.
+		if s.Request.CodexProjectTrust == nil || s.CodexTrust == nil {
+			if e := workflowTrustFresh(s); e != nil {
+				return e
+			}
+		} else if e := workflowTrustFresh(s); e != nil {
+			workflowReportLaunchDrift(s, "codex_project_trust", s.Request.CodexProjectTrust.RepositoryRoot, e)
+		}
+		for i, x := range []Executable{runtime.Executable, runtime.PlyExecutable} {
+			if e := verifyExecutable(x); e != nil {
+				workflowReportLaunchDrift(s, []string{"provider_executable", "ply_executable"}[i], x.Path+" "+x.SHA256, e)
+			}
+		}
+		// Frozen policy evidence is an artifact, not an installed launcher.
+		if _, e := runtimeOperationBindings(runtime, nil); e != nil {
+			return e
+		}
+		if e := verifyExecutable(s.Request.Herdr.Executable); e != nil {
+			return e
+		}
+		return workflowFreshArtifacts(d, s, target, true)
+	}
 	if e := workflowTrustFresh(s); e != nil {
 		return e
 	}

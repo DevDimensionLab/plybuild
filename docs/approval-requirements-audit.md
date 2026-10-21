@@ -194,6 +194,31 @@ no trust effect is applied that Ply cannot confirm.
   drift, with history and effect identity preserved.
 - **Depends on:** P1 for the trust part; it touches the same file.
 
+### P2 outcome (AL04)
+
+| Control | What it protected | Now |
+| --- | --- | --- |
+| Provider executable bytes on every report operation | That the launch used the bound provider | Checked until the native session is bound. After that, a change or removal is logged with `warn` |
+| Ply executable bytes on every report callback | That the bound control runs the callback | The bound path, context, cwd, run, request and session stay required. Changed bytes from an install at that path are logged with `warn` |
+| Codex trust facts on every operation | That the grant matched the confirmed facts at launch | Checked before launch, as in AL03. After launch, drift of a confirmed grant is logged with `warn`. A contradictory saved binding stays an error |
+
+This uses no new control copy or continuation for report Runs: report authority
+is code, test and report only, and these operations launch nothing. Delivery,
+headless workers, Herdr, frozen inputs, policy evidence, stops and retirement are
+unchanged. `workflow execute` commands send warnings to stderr, as `workflow run`
+already does, so stdout keeps a single JSON value.
+
+| Journey | Before (observed source/fixture) | After (fixture and candidate CLI) |
+| --- | --- | --- |
+| Report owner after a Ply install at the bound path | Locked: `executable bytes changed` | Same round reported and reviewed; 0 questions; `warn` |
+| Provider changed or removed, Codex config and `.git/config` edited after launch | Locked | Same round reported; no new tab or provider start |
+| Lost report reply | n/a (locked) | Same report record; no second dispatch |
+| Prompt reply lost, then install | Show reported drift | Prompt state stays unknown and is not resent; the owner checks in and reports |
+
+The fixture Ply and provider bytes are synthetic. The CLI journey starts with a
+real build of the AL03 base (`f5535ef`) as the installed Ply and installs the
+candidate at the same path. No live plyapp Run was repeated.
+
 ### P3 (medium): Claude `auto` for report Runs
 
 - **Evidence:** `internal/taskrun/herdr_transport.go:335` and
