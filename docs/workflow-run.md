@@ -134,8 +134,13 @@ the report return without publishing a TaskResult or integrating changes.
 Preserve any actual refusal or unknown effect and stop the dependent action.
 
 Synthetic CLI regressions qualify the implementation, not an actual Claude
-pilot. The separate AL06C actual-provider check remains pending until that
-journey is observed; AL06B alone does not complete P3.
+pilot. AL06B delivered the technical change; the separate revised AL06C2 pilot
+subsequently completed actual Claude auto reads, two correction rounds and an
+accepted report-only return. Its provider ended and preparation choice closed;
+no TaskResult or full Task delivery/closeout was claimed. The first AL06C1 Run
+remains stopped with source/history preserved, not accepted or retired. See the
+[reconciled audit](approval-requirements-audit.md#p3-outcome-al06b-and-al06c2)
+for the distinct native outcomes and evidence limits.
 
 ### Optional Claude folder trust
 

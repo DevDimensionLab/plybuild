@@ -1,9 +1,162 @@
-# Approval requirements audit (AL02)
+# Approval requirements audit — reconciled through AL11
 
-Base: `d335e70e` on `ply_agentic_workflow_support` (AL01 delivered). This audit
-changes no product code. It inventories the approval requirements and stop rules
-that still remain, records a decision for each one, and proposes bounded repairs
-for root to register as separate Specs.
+Current source: `c6477d6094628d74eb6a1d04b41207174d9f93ea`, 21 October 2026,
+on `ply_agentic_workflow_support`. AL12 reconciles documentation only. The
+[historical AL02 baseline](#historical-al02-baseline--21-october-2026) below
+preserves the original inventory, measured costs and proposed P1–P5 decisions
+at `d335e70e`. Its line references describe that old source. The current
+decisions and evidence below supersede its remaining-work claims.
+
+The selected backlog is still open. Delivered repairs, an accepted report-only
+pilot and unresolved product findings are different outcomes. This audit does
+not deliver the unresolved findings or declare the whole backlog complete.
+
+## Current delivered behavior and decisions
+
+| Area | Current decision and delivered behavior | Current source and regression reference |
+| --- | --- | --- |
+| AL01 receipt, retained | **keep** Mandate receipt acknowledges the exact owner/cwd/mandate; unknown runtime facts stay unknown. A real refusal remains a refusal. | [report_startup.go](../internal/taskrun/report_startup.go), [execute receipt and stops](workflow-execute.md) |
+| AL02 audit | Documentation delivered at `922961b`; no product change or ordinary CLI installation. | Historical baseline below; native `al02-reviewed.json`, `al02-closeout-follow.json`, `al02-task-final.json` |
+| P1 / AL03 | **reconcile/remove, delivered** Optional Codex trust is `redundant` or `withheld` with a useful stderr warning; the ordinary start continues. Pre-launch drift withholds only the grant. | [herdr_codex_trust.go](../internal/taskrun/herdr_codex_trust.go), [trust tests](../internal/taskrun/herdr_codex_trust_test.go): `TestWorkflowCodexTrustDriftAfterReservationWithholdsGrant`, `TestWorkflowCodexTrustCandidateCLIJourney` |
+| P2 / AL04 | **reconcile, delivered** After a report session is bound, provider/Ply executable or confirmed trust drift warns and reporting continues under the same report-only authority. Herdr, saved identity, frozen artifacts and contradictory trust bindings still fail validation. This did not implement the originally proposed immutable control copy/continuation for reports. | [herdr_store.go](../internal/taskrun/herdr_store.go): `workflowFreshRuntimeOperation`; [report_continuity_test.go](../internal/taskrun/report_continuity_test.go): `TestAL04ReportCLIJourneyAcrossInstall`, `TestAL04PartialPromptEffectAfterDrift` |
+| AL05 input roles | **simplify, delivered** Ordinary reports, evidence, acceptance scripts and candidate reviews accept 0644, bind actual bytes and warn. Group/other writable inputs are refused with role/path/reason. Authority-bearing inputs and native state retain owner-only mode. Mode bits do not authenticate authorship. | [schema.go](../internal/taskrun/schema.go): `readFileAs`; [al05_file_inputs_test.go](../internal/taskrun/al05_file_inputs_test.go): `TestAL05OrdinaryRoundReportIsConsumed`, `TestAL05ChangedOrdinaryInputsDoNotQualify` |
+| P3 / AL06B + AL06C2 | **simplify, technical change delivered and actual pilot accepted** Report requests freeze `manual` or `auto` and forward that mode to Claude. Actual read-only Claude auto pilot completed separately; see the P3 outcome for AL06/AL06C1 failures and the report-only boundary. | [schema.go](../internal/taskrun/schema.go), [herdr_transport.go](../internal/taskrun/herdr_transport.go), [report_claude_mode_test.go](../internal/taskrun/report_claude_mode_test.go): `TestAL06ClaudeAutoReportCLIJourney`, `TestAL06ClaudeReceiptPreservesUnknownOrDifferentObservation` |
+| P4 / AL07 | **simplify, delivered** Already-authorized automatic closeout/installation recovery names the coordinator; unknown installation asks for observation. Completed/retired history exposes no fictitious reviewer. Human-owned and headless journeys retain their proper actors. | [read_closeout.go](../internal/taskrun/read_closeout.go), [progress.go](../internal/workspaceview/progress.go), [al07_read_actions_test.go](../internal/taskrun/al07_read_actions_test.go): `TestAL07ConsumedInventoryRecovery`, `TestAL07CandidateCLIReadActionsDoNotWrite` |
+| P5 / AL08 | **implement, delivered and actually installed** Native `workflow execute install-cli` consumes the retained qualified executable after native delivery/closeout, with attributed coordinator operation, backup, receipt and recovery. It replaces per-job `install-qualified.py` copies for this self-hosted Epic. | [CLI installation](cli-installation.md#coordinator-installation-after-native-self-hosted-delivery), [delivery_cli_install.go](../internal/taskrun/delivery_cli_install.go), [qualified_test.go](../internal/clirelease/qualified_test.go): `TestQualifiedInstallCannotReplayAfterLegacyRelease` |
+| AL09 follow | **reconcile, delivered** Both follow paths distinguish the observation window from the Herdr request budget. At most one read continuation handles a request timeout; persistent failure stays unknown with a next follow command. No prompt/start is replayed. A later tab-disappearance race is still open. | [follow_observation.go](../internal/taskrun/follow_observation.go), [al09_follow_observation_test.go](../internal/taskrun/al09_follow_observation_test.go): `TestAL09FollowWindowClipsHealthyRequest`, `TestAL09ReportFollowObservation` |
+| AL10 unfinished reports | **implement, delivered** Blocked/unknown report-only returns preserve failed/not_run/unknown requirements with exact Spec/candidate/artifact binding. Only complete reports require all requirements passed. Warning includes Run/round/source; receipt/legacy and post-start guidance name the actual phase. No technical pass, TaskResult, QA or integration is created by an incomplete report. | [herdr_callback.go](../internal/taskrun/herdr_callback.go), [task_spec_guard.go](../internal/workspace/task_spec_guard.go), [report_incomplete_test.go](../internal/taskrun/report_incomplete_test.go): `TestAL10IncompleteReportCorrectsToCompleteAcceptedReturn`, `TestAL10ProviderStopAfterLegacyAcceptanceNamesRecordedStart` |
+| S4 / AL11 | **simplify, delivered**, replacing historical **keep**. A new receipt report can bind `launch_contract_pending_runtime_acceptance`, selected profile, empty policy hash and empty evidence; a redundant coordinator policy document is unnecessary. Optional evidence remains hash-checked. Legacy positive-acceptance, terminal/factory and Delivery contracts retain their requirements. | [launch binding](workflow-run.md#choose-claude-or-codex), [schema.go](../internal/taskrun/schema.go): `parseRequestForSurface`; [report_launch_contract_test.go](../internal/taskrun/report_launch_contract_test.go): `TestAL11LaunchContractBoundaries`, `TestAL11ReportLaunchContractCLIJourney` |
+
+## Evidence levels and native outcomes
+
+Evidence directory (local raw records, not portable product prerequisites):
+`/Users/perottochristensen/.local/share/ply/planning/backlog-sequential-20261021/`.
+The following records were read alongside the source. Native results outrank
+stale planning status; this table is a source index, not a second status system.
+
+| Work | Delivered source | Native/evidence records in that directory |
+| --- | --- | --- |
+| AL02 | `922961b` | `al02-reviewed.json`, `al02-closeout-follow.json`, `al02-task-final.json` (retained native artifacts) |
+| AL03 | `f5535ef` | `al03-reviewed.json`, `al03-closeout-follow.json`, `al03-installation.json` |
+| AL04 | `7e049ed` | `al04-review2-readback.json`, `al04-closeout-follow.json`, `al04-installation.json` |
+| AL05 | `c02e3ee` | `al05-review3-readback.json`, `al05-native-final-readback.json`, `al05-closeout-follow.json`, `al05-installation.json` |
+| AL06B | `1040987` | `al06b-review1-readback.json`, `al06b-native-final-readback.json`, `al06b-closeout-follow.json`, `al06b-installation.json` |
+| AL07 | `7fde35b` | `al07-review2-readback.json`, `al07-native-final-readback.json`, `al07-closeout-follow.json`, `al07-installation.json` |
+| AL08 | `2941fcc` | `al08-review2-readback.json`, `al08-native-verify3.json`, `al08-follow-current.json`, `al08-installation.json`, `al08-native-install.json` |
+| AL09 | `3e09cab` | `al09-review1-readback.json`, `al09-native-verify2.json`, `al09-closeout-follow.json`, `al09-installation.json` |
+| AL10 | `4f822789` | `al10-review2-readback.json`, `al10-native-verify2-verification.json`, `al10-completed.json`, `al10-installation.json` |
+| AL11 | `c6477d6` | `al11-review1-readback.json`, `al11-native-verify2-verification.json`, `al11-completed.json`, `al11-installation.json` |
+
+These product Tasks have exact passed independent review, native verification
+and local Epic delivery/closeout evidence; the installed smoke records are
+separate. Completed historical readback may show `current=false` or
+`inputs_match=false` after source removal: that is not a reversal of its durable
+delivery receipt. AL06 and AL06C are deliberately not rows of delivered Tasks.
+
+**Actually executed CLI/native:** Candidate and installed CLI journeys consume
+real CLI processes and disposable native stores. AL03–AL07 have coordinator
+installation receipts; AL08–AL11 use native `install-cli` receipts and installed
+feature smoke. This proves the consumed CLI behavior, not live provider policy.
+
+**Modeled provider/Herdr:** Those regression journeys use synthetic provider
+and Herdr stand-ins. The P1/P2 after-columns below are fixture results, not
+remeasurements of the original plyapp journey. No new after-timing or broad
+question-count study was performed by AL12. AL09 reproduced a clipped-deadline
+mechanism; missing timing in old failures prevents claiming it caused all of them.
+
+**Actual Claude auto pilot:** `al06c-result.json` and its native report/review
+records demonstrate actual reads, two corrections and an accepted report-only
+return. They do not turn synthetic refusal tests into real runtime denials or
+claim every possible provider action is authorized. See P3 outcome below.
+
+**Known evidence limits:** AL05's earlier broad development run stopped
+incomplete at `TestDeliveryCLILocalJourneys/local_branch_integration/master`
+(44 observed passes, no observed failure); it is not green broad-suite evidence
+(`al05-broad-development-incomplete.json`). AL10's broad development run was
+also stopped/incomplete, with no actual Go exit observed; it is not green
+(`al10-broad-development-observed.json`, `al10-owner-al10-broad-stopped.log`).
+AL11's initial unit red exists in
+the owner transcript, not a dedicated log. Its first green attempt failed in
+the helper that mixed warning stderr with JSON stdout; that log was overwritten
+by the passing rerun. `al11-owner-intermediate-attempts.txt` preserves the limit;
+the later passing logs and old-CLI red are separate evidence, not reconstructed
+missing logs. No Go suite was run for this documentation reconciliation.
+
+## Retained boundaries and responsible actors
+
+The human chooses product scope, target and required product judgment once.
+The owner reuses that frozen mandate for authorized work/commits; the coordinator
+owns routine review, already-authorized recovery and installation. Missing
+scope or an unselected effect is a real decision for the human. Required human
+QA remains human-owned; automatic acceptance does not fabricate that judgment.
+
+Exact preview/apply binding, owner/session/candidate identity, separate review,
+byte-bound acceptance and preservation of unknown/partial effects remain useful
+product checks. They are agent-owned commands, not repeated human approvals.
+Receipt is not runtime permission: Codex on-request/auto_review and Claude
+manual/auto still control their own actions, trust and login dialogs. Ply does
+not answer those dialogs. Actual denials stay preserved; source reading or
+policy labels cannot clear them. Unknown earlier effects block dependent work
+until evidence resolves them; they do not justify locking unrelated safe work.
+
+The user's continuation principle still applies: remove a redundant condition,
+reconcile ordinary state or give a useful warning with Run/path/cause/handling
+through the existing logger. A warning is not an acknowledgement gate. Keep a
+stop where the next effect lacks authority, identity or a known prior outcome,
+and identify its supported next action and actor. No new process gate is added
+by this audit. Document-only acceptance uses the unchanged qualified CLI and
+source/reference checks, with no artificial rebuild or installation.
+
+## Concrete unresolved work
+
+These are existing selected backlog items for root to coordinate. AL12 changes
+their documentation, not their product behavior. Each link identifies the
+existing task to avoid duplicating findings in a new ledger.
+
+| Open finding | Actual evidence and boundary | Existing backlog / next useful check |
+| --- | --- | --- |
+| Report closeout after start | AL06C1 ended the provider and released preparation after a sourced stop; it was not accepted/delivered/retired. AL10 corrected misleading wording only. `report_startup.go` still refuses pre-work retirement once native start exists. | [post-start closeout](/Users/perottochristensen/github/ply/planning/koe/ply-rapportstopp-etter-start-skal-kunne-avsluttes.md): consumed started-report stop, known absence, same-source closeout, lost reply and live/unknown-effect controls |
+| Review-return text limit | `deliveryParseReviewReturn` still requires each evidence gap to be one line and 1–600 characters. AL05, AL07 and AL10 reviewers reformatted actual returns; this was input validation, not a provider refusal. | [review text](/Users/perottochristensen/github/ply/planning/koe/ply-reviewretur-skal-tale-vanlig-forklaringstekst.md): accept ordinary longer/multiline explanation within a useful total bound, preserve findings and exact retry |
+| Final follow race | During AL10 closeout the finished owner tab disappeared between observations; `agent_not_found` returned unknown. Next follow closed the same delivery. AL09's budget repair remains delivered. | [follow race](/Users/perottochristensen/github/ply/planning/koe/ply-follow-skal-tale-forbigaende-observasjonsfeil.md#ny-avgrenset-race-under-al10-closeout): deterministic inventory/get disappearance; reconcile positive absence, preserve conflicting/unknown observations |
+| Concurrent in-place file rewrite | Source-only gap: same inode/same size during `readFileAs` is not a reproduced product failure. AL05's post-binding fault proves later digest mismatch, not stable bytes during reading. | [file binding](/Users/perottochristensen/github/ply/planning/koe/ply-filbinding-samtidig-overskriving-under-lesing.md): deterministic read-boundary seam and behavior before selecting a fix |
+| Useful build identity | AL09, AL10 and AL11 installed version output has empty `source_commit`; native commit/tree/hash receipts remain exact. The cause of absent embedded metadata is unproven. | [build identity](/Users/perottochristensen/github/ply/planning/koe/ply-kvalifisert-cli-skal-ha-nyttig-buildidentitet.md): inspect actual build flags/fallback; preserve unknown, avoid a new mandatory build gate |
+| Simple authorized quota backup | Original AL06 owner/reviewer hit real session quota; AL10 owner hit actual weekly limit after successful integration (UI reset 25 October 17:00 Europe/Oslo). Standing Codex backup enabled continuation but is not a delivered native backup feature. | [quota backup](/Users/perottochristensen/github/ply/planning/koe/providerkvote-for-forste-handling-skal-gi-enkel-backup.md): preserve old work/stop, exact owner absence and fresh backup mandate; no quota probe, account/policy change or denied-action replay |
+
+The older unfinished-requirements report finding overlaps AL10 and is delivered
+at that scope; it must not become a duplicate of the separate post-start
+closeout gap. The final follow race belongs to the existing follow task;
+AL11's empty embedded commit overlaps the existing build-identity task. No new
+product defect was reproduced by AL12's source reconciliation.
+
+## Reusable difficult tests already delivered
+
+These are existing behavior tests, not new prose-checking tests or tests rerun
+by AL12. CLI tests below execute the selected binary with modeled provider/Herdr.
+
+| Boundary | Permanent regression and what it proves |
+| --- | --- |
+| Grant drift / lost start reply | `TestWorkflowCodexTrustDriftAfterReservationWithholdsGrant`, `TestWorkflowCodexTrustLostStartReplyKeepsDecision`: withhold only the grant; no duplicate start |
+| Report continuity / partial prompt | `TestAL04IdentityHistoryAndArtifactGuardsAfterDrift`, `TestAL04PartialPromptEffectAfterDrift`: preserve identity/history and unknown prompt state without replay |
+| File drift / ordinary modes | `TestAL05InPlaceOverwriteAfterBindingDoesNotQualify`, `TestAL05CandidateCLIJourneyWithOrdinaryModes`: later changed bytes do not qualify; normal 0644 input works |
+| Claude receipt / refusal | `TestAL06ClaudeAutoLostStartAndPreservedRefusal`, `TestAL06ClaudeReceiptPreservesUnknownOrDifferentObservation`: synthetic denial survives retry; first unknown/different observation remains immutable |
+| Recovery actors / historical reads | `TestAL07ConsumedInventoryRecovery`, `TestAL07CandidateCLIReadActionsDoNotWrite`: correct coordinator action, observe unknown install, no write during readback |
+| Installation interruption / later selection | `TestQualifiedCLIInstallationInterruptionAndKnownSmokeFailure`, `TestQualifiedInstallCannotReplayAfterLegacyRelease`: known failure evidence, guarded recovery and no old operation replacing a later selection |
+| Follow budget / persistent failure | `TestAL09FollowWindowClipsHealthyRequest`, `TestAL09FollowRequestTimeoutContinuation`, `TestAL09ReportFollowObservation`: distinguish window expiry from request failure, one read continuation, unknown remains unknown |
+| Incomplete report / correction | `TestAL10IncompleteReportAfterReceiptIsPreservedWithoutQualification`, `TestAL10IncompleteReportCorrectsToCompleteAcceptedReturn`: truthful unfinished requirements, no false qualification, same-session correction |
+| Launch-only contract / legacy | `TestAL11LaunchContractBoundaries`, `TestAL11ReportLaunchContractCLIJourney`: no redundant policy file for new receipt reports; optional evidence drift, wrong identity, invalid mode and legacy boundaries remain checked |
+
+The linked current source files above locate these tests. Installation tests
+also live in [delivery_cli_install_test.go](../internal/taskrun/delivery_cli_install_test.go).
+The unresolved table identifies difficult scenarios still to implement; none
+is silently counted as tested by this inventory.
+
+# Historical AL02 baseline — 21 October 2026
+
+Base: `d335e70e` on `ply_agentic_workflow_support` (AL01 delivered). AL02 changed
+no product code. The inventory, source line numbers, costs and
+repair proposals in this historical section describe that base, before AL03–AL11.
+They are retained as the original reasoning, not as current open requirements.
+Outcome subsections explicitly identify later delivered behavior.
 
 Two principles from [planning/goal.md](/Users/perottochristensen/github/ply/planning/goal.md)
 guide the decisions. First, "Utviklingsløpet skal fortsette; stopp krever en god
@@ -18,7 +171,7 @@ comes before compensation. Each decision is therefore one of the following:
 - **keep**: the requirement stays, with a stated stop basis and a supported path forward.
 
 Where work can safely continue past a doubt, the recommended signal is a `warn`
-in Ply's existing logrus logger (`cmd/root.go:109`). It must not be a new receipt
+in Ply's existing logrus logger (historical `cmd/root.go:109`). It must not be a new receipt
 gate or a human acknowledgement.
 
 Evidence classes:
@@ -30,7 +183,7 @@ Evidence classes:
 No new timing measurement and no external provider start were made for this
 audit. The only times quoted below come from existing transcript timestamps.
 
-## Reported AGENTS/policy question
+## Historical reported AGENTS/policy question
 
 The human reported this question from the plyapp planner: "Plys automatiske
 Codex-tillitskontroll krever at du inspiserer …/AGENTS.md og policyen før en ny
@@ -42,7 +195,7 @@ start-preview …". It is traced to the actual rule as follows.
 | Preview walked the cwd and repository ancestry and found the tracked `AGENTS.md` in the Task worktree. This triggers the stop "project config, hooks, rules or instructions could be activated". | `internal/taskrun/herdr_codex_trust.go:215-240`, `internal/taskrun/herdr_codex_trust.go:231` |
 | The stop text tells the caller to involve the human: "Have the human inspect this path and policy before requesting a new preview". This is the only product message that sends an agent-observable fact to the human. | `internal/taskrun/herdr_codex_trust.go:60` |
 | Native output arrived at 20:28:33Z. The planner then asked the human at 20:29:04Z, and the human answered "for noe tull" at 20:29:39Z. | `/Users/perottochristensen/.codex/sessions/2026/10/20/rollout-2026-10-20T21-46-08-01a15ad9-8ab6-7ac0-a473-9a13b8025f83.jsonl:676`, `…01a15ad9-8ab6-7ac0-a473-9a13b8025f83.jsonl` lines 684 and 693 |
-| The planner found that the root was already `trusted` in `~/.codex/config.toml`, removed the grant and withdrew the question. Preview without the grant succeeded at 20:30:09Z. | `/Users/perottochristensen/github/plyapp/planning/reports/pwa-status-http-implementation-20261020/trust-resolution.json`, transcript line 714 |
+| The planner found that the root was already `trusted` in `~/.codex/config.toml`, removed the grant and withdrew the question. Preview without the grant succeeded at 20:30:09Z. | `/Users/perottochristensen/github/plyapp/planning/reports/pwa-status-http-implementation-20261020/trust-resolution.json`, transcript lines 714 (withdrawal) and 717 (successful preview) |
 
 **Cause, verified:** the product's stop wording, combined with a redundant
 optional grant. Standing agent policy already forbids routine confirmations
@@ -61,20 +214,10 @@ profile/policy acceptance lock) was a separate defect and was fixed by AL01.
 
 Cost observed in this journey: 1 human question, a 35 s human answer, and 96 s
 from the stop to an accepted preview. AL01 did not touch this rule, so the
-question still recurs for any repository that contains an `AGENTS.md`.
+question still recurred at the AL02 base for a request carrying that optional
+grant. AL03 subsequently removed this whole-start lock (P1 outcome below).
 
-## Delivered versus remaining
-
-| Status | Item | Source |
-| --- | --- | --- |
-| Delivered | AL01: report requests default to `mandate_receipt_v1`. Unknown model/profile/policy facts stay unknown, stops can be reported before acceptance, and a legacy pre-work owner can be retired (commits `c5946ce`, `d335e70`). | `internal/taskrun/report_startup.go:1`, `docs/workflow-run.md:189-202` |
-| Delivered | Earlier work: execute `check-in` replaced `begin --permission-confirmed`, `resolve-stop` needs no permission confirmation, and verify reuses the passed review round. | `docs/workflow-execute.md:194-224`, `docs/workflow-execute.md:243-268`, `cmd/workflow_execute.go:298` |
-| Runtime boundary | Codex `on-request` with `auto_review`, Claude `auto`/`manual` modes, and native trust or login dialogs belong to the provider. Ply never answers them, and nothing here changes them. | `internal/taskrun/herdr_transport.go:331-350`, `docs/workflow-execute.md:176-184` |
-| Delivered | AL03 (P1): the optional Codex grant becomes `redundant` (no-op) or `withheld` with a stderr `warn`, and the ordinary start continues. Drift after the reservation but before launch withholds the grant. See [P1 outcome](#p1-outcome-al03). | `internal/taskrun/herdr_codex_trust.go`, `docs/workflow-run.md` |
-| Remaining | Report Runs lock on executable or trust drift after launch (P2). | `internal/taskrun/herdr_store.go:241`, `internal/taskrun/schema.go:350` |
-| Remaining | Report Runs force Claude into manual mode (P3); resume steps are labelled as human actions (P4). | `internal/taskrun/herdr_transport.go:335`, `internal/workspaceview/progress.go:173` |
-
-## Inventory
+## Historical inventory at d335e70e
 
 | ID | Journey | Layer | Requirement | Source | Value | Mandate | Actor | Cost | Evidence | Decision | Path forward |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -91,7 +234,7 @@ question still recurs for any repository that contains an `AGENTS.md`.
 | C3 | code-test | instruction | Personal rules: no commit without explicit instruction; stop and ask when unsure | `/Users/perottochristensen/.claude/CLAUDE.md:68-70` | Stops unrequested Git effects | The mandate explicitly authorizes commits | owner agent | 0 questions when the mandate is read | source | **reuse-mandate** The frozen mandate is that explicit instruction; no edit to personal policy | n/a |
 | C4 | code-test | instruction | The orchestrator approves routine subagent work and access itself | `/Users/perottochristensen/.agents/AGENTS.md:19-35` | Removes routine human approval | Standing rule | coordinator | Reduces cost | source | **keep** This is the rule F2 violated | n/a |
 | R1 | review | product | Independent review round started by the coordinator on the same Run | `/Users/perottochristensen/.agents/skills/ply-delivery/SKILL.md:52-58` | A separate reviewer for the exact candidate | Agreement gate | coordinator | 0 questions (AL01 had 2 rounds) | observed | **keep** Real quality gate with no human | Findings, a new commit, then a new round |
-| V1 | verification | product | Automatic acceptance needs the exact clean candidate, a built `--candidate-binary` and the frozen acceptance script | `cmd/workflow_execute.go:400` | Binds what was tested to what is delivered | Agreement | owner agent | 1 build per candidate, 0 questions | source | **keep** Cheap and agent-owned; a doc-only Task builds the unchanged tree | A completed receipt is recovered without rerun |
+| V1 | verification | product | Automatic acceptance needs the exact clean candidate, a built `--candidate-binary` and the frozen acceptance script | `cmd/workflow_execute.go:400` | Binds what was tested to what is delivered | Agreement | owner agent | 1 build per candidate, 0 questions | source | **keep** Exact candidate binding is agent-owned; AL02 used the unchanged CLI for document-only acceptance | A completed receipt is recovered without rerun |
 | D1 | delivery | product | Automatic local Epic integration has no human gate when `require_human_qa=false` | `internal/workflowhandoff/delivery.go:376-377` | n/a | Agreement | owner agent | 0 questions | source | **keep** Already gate-free | n/a |
 | D2 | delivery | product | Human QA when the agreement requires it | `docs/workflow-execute.md:557-566` | Real product judgment | Chosen in the agreement | human | 1 question | source | **keep** A genuine product decision | Fail or blocked is preserved and vetoes delivery |
 | D3 | delivery | instruction | Ask for the delivery mode only when it is missing | `/Users/perottochristensen/.agents/skills/ply-delivery/SKILL.md:77` | A missing target is a real choice | Reuses an earlier choice | human | 0 when given | source | **keep** Asks only for a missing choice | n/a |
@@ -102,9 +245,9 @@ question still recurs for any repository that contains an `AGENTS.md`.
 | X3 | recovery | product | Closeout `resume_closeout` and `resume_installation` are shown with actor `human` | `internal/workspaceview/progress.go:173`, `internal/taskrun/read_inventory.go:440` | None. Resuming an authorized operation is coordinator work (`workflow execute follow`) | Agreement | coordinator | 1 misleading human action | source, modeled | **simplify** Label the coordinator (P4) | n/a |
 | X4 | recovery | product | A blocked, paused or stopped headless worker sets next actor `human` | `internal/taskrun/worker_unix.go:210` | Control of a headless worker | Pause or stop was chosen by a principal | human | 1 action | source | **keep** Change only if evidence shows a coordinator-resolvable cause | `worker resume` on the same Run |
 
-## Question counts by journey
+## Historical question counts and modeled proposals
 
-| Journey | Earlier contract | Current base | After proposals | Evidence |
+| Journey | Earlier contract | AL02 base (d335e70e) | Proposed, not measured after | Evidence |
 | --- | --- | --- | --- | --- |
 | Codex report start with the optional grant in a repo that has `AGENTS.md` | 1 question; stop 20:28:33Z, answer after 35 s, accepted preview after 96 s | 1 | 0 (P1) | observed |
 | Same start without the grant | 0 | 0 | 0 | observed |
@@ -117,7 +260,7 @@ question still recurs for any repository that contains an `AGENTS.md`.
 | Recovery: resolve a stop | 1 permission confirmation | 0 | 0 | source |
 | Recovery: interrupted closeout shown to the human | 1 | 1 | 0 (P4) | modeled |
 
-## Hard reusable scenarios
+## Historical hard-scenario requirements
 
 These scenarios become product tests in the repair Specs, in the existing taskrun
 fixtures. They are not AL02 tests.
@@ -130,7 +273,7 @@ fixtures. They are not AL02 tests.
 | drift | P1: trust facts change between preview and apply; P2: executables change after launch | Before launch the grant is withheld and a warning logged; after launch callbacks warn and continue |
 | partial effect | P2: tab created, prompt state unknown | The effect stays unknown and only the dependent step is blocked |
 
-## Ordered repair proposals
+## Original repair proposals and subsequent outcomes
 
 ### P1 (high): Codex trust stop becomes agent-owned and local
 
@@ -293,7 +436,7 @@ mode under the generic role `private file`.
 | Lost report reply | n/a | Same event; no second report |
 | 0664/0666 input, directory, symlink, oversized, changed evidence | Generic error | Refused; the error names the role, path, requirement and observation; no event |
 
-### P3 (medium): Claude `auto` for report Runs
+### P3 (medium, delivered technical change and actual pilot): Claude `auto` for report Runs
 
 - **Evidence:** `internal/taskrun/herdr_transport.go:335` and
   `internal/taskrun/schema.go:251`, while Delivery accepts `auto`
@@ -308,7 +451,35 @@ mode under the generic role `private file`.
 - **Depends on:** after P1, because both edit `cmd/workflow_run.go:43` and
   `docs/workflow-run.md`.
 
-### P4 (low): resume steps belong to the coordinator
+### P3 outcome (AL06B and AL06C2)
+
+AL06B (`1040987`) accepts and forwards frozen `manual`/`auto` report choices;
+unsupported modes fail before effects. The original AL06 Claude owner committed
+a dry-run candidate, then owner continuation and the separate review hit an
+actual session quota. That Run was retired, not delivered; its dry-run evidence
+was preserved. Fresh Codex AL06B ownership did not inherit its acceptance.
+AL06B's fixture/CLI tests alone were not an actual Claude pilot.
+
+The first actual pilot, AL06C1 (`wfr_476ec245…`), encountered the coordinator's
+incorrect recipient Spec after actual reads. Preserve the rejected reports and
+sourced stop: provider ended, source retained, preparation advanced, Run neither
+accepted, delivered nor retired. Queue release is not Run closeout.
+
+Revised AL06C2 (`wfr_d94e2170…`) used actual Claude, with UI showing Opus 5.5
+and auto mode/classifier for real read actions. The native report was accepted
+after two correction rounds; each read verifier exited 0. The coordinator
+recorded 0 human mode changes and 0 routine human questions, ended the provider
+and closed the preparation choice. Unknown runtime model/profile/policy/sandbox
+facts in the receipt stayed unknown. Report acceptance is not TaskResult,
+full Task delivery or full Task closeout; the clean source was retained.
+`al06c-result.json`, `al06c2-round0-review.json`, `al06c2-accepted.stderr` and
+`al06c2-provider-ended.json` preserve the outcome and the earlier acceptance
+rejection. Pretty and canonical reports parsed equally but had different byte
+hashes; the native predecessor hash was used. P3's technical and actual-provider
+checks are satisfied at these distinct evidence levels. Post-start report
+closeout remains a separate unresolved finding.
+
+### P4 (low, delivered AL07): resume steps belong to the coordinator
 
 - **Evidence:** `internal/workspaceview/progress.go:173` and
   `internal/taskrun/read_inventory.go:440`.
@@ -321,7 +492,18 @@ mode under the generic role `private file`.
   authorized operation.
 - **Depends on:** none.
 
-### P5 (low): native installation for the self-hosted Epic
+### P4 outcome (AL07)
+
+`6198dd9` corrected startup protocol guidance and coordinator-owned recovery
+labels; `7fde35b` repaired the headless regression found by native review1.
+The passed exact review2, verification, closeout and installed CLI/history reads
+are recorded in `al07-native-final-readback.json`, `al07-closeout-follow.json`
+and `al07-installation.json`. Completed/retired historical readback no longer
+invents an available reviewer or a human action. Human-owned integration keeps
+its human actor; headless recovery keeps the recipient. Unknown installation
+means observe first, not reinstall. These read paths do not perform effects.
+
+### P5 (low, delivered AL08): native installation for the self-hosted Epic
 
 - **Evidence:** the identical copied `install-qualified.py` (inventory row I2),
   and `internal/integration/execute.go:245`.
@@ -343,15 +525,18 @@ products, but generating another command profile would retain the per-job
 installation scripting that I2 identified. Usage is in
 [CLI installation](cli-installation.md#coordinator-installation-after-native-self-hosted-delivery).
 
-Evidence is limited to isolated targets: `TestQualifiedCLIInstallationPublicConsumer`
+Implementation regressions use isolated targets: `TestQualifiedCLIInstallationPublicConsumer`
 consumes native verify/integrate/closeout and then runs the retained candidate
 controller after source removal; `TestQualifiedCLIInstallationInterruptionAndKnownSmokeFailure`
 preserves actual failed-process evidence and observes changed bytes without
 retrying it. `internal/clirelease/qualified_test.go` covers backup/replace
 interruptions, reply recovery without a second copy, changed inputs and guarded
-rollback across later operations. Separate exact-candidate review, native final
-acceptance/delivery and root's first ordinary CLI installation remain to be
-observed. This is not completion of P3 or the broader audit.
+rollback across later operations. Subsequently, separate exact-candidate review2
+passed, native verification and
+integration/closeout completed, and root installed through native `install-cli`
+and ran the installed public-consumer scenario (18.820 s). The recorded receipt
+is `al08-installation.json` in the evidence directory above. This completes P5,
+not the broader audit.
 
 Native AL08 review round 001 found `r001-f01`: an incoming legacy release
 failed to archive the outgoing qualified receipt, so an old qualified retry
@@ -359,5 +544,6 @@ could replace that later selection. The permanent regression
 `TestQualifiedInstallCannotReplayAfterLegacyRelease` reproduced this before the
 fix. The shared history boundary now follows the outgoing qualified operation,
 regardless of the incoming install path; explicit legacy rollback/reinstall
-remains supported. The finding and failed review remain native history; a fresh
-exact-candidate review and ordinary root installation are still required.
+remains supported. The finding and failed review remain native history; the
+corrected `2941fcc` candidate subsequently passed review2, verification,
+closeout and the actual root installation recorded above.
