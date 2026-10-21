@@ -57,12 +57,16 @@ Preview and run readback expose `provider` in JSON and `Agent` in text.
 | `model` | An installed Codex model name | A Claude model name or supported alias, such as `"sonnet"` |
 | `executable` | Physical path and SHA-256 of the selected Codex binary | Physical path and SHA-256 of the selected Claude binary |
 | `config_profile` | Null or a Codex config profile | Null |
-| `permission_binding.profile_id` | Bound Codex managed permission profile | `"manual"`, Claude's native permission mode |
+| `permission_binding.profile_id` | Bound Codex managed permission profile | `"manual"` or `"auto"`, Claude's native permission mode |
 
 Both providers still require the full effective-policy evidence and hash-bound
 Ply executable. A mode name alone is not permission evidence. Claude's `manual`
-mode retains its normal approval prompts. Other Claude permission modes are not
-part of this contract. The separate native terminal and factory starts remain
+mode retains its normal approval prompts. In `auto` mode Claude's own runtime
+still evaluates each action; an actual refusal stays preserved and a later
+receipt, label or actor cannot clear it. Preview, launch argv and readback show
+the same frozen selection. Any other Claude permission mode is rejected before
+reservation or launch; select `manual` or `auto` in a new request. Existing
+report Runs keep their frozen mode. The separate native terminal and factory starts remain
 Codex-only.
 
 Digests use `sha256:` plus 64 lowercase hexadecimal characters. Apply requires
@@ -74,10 +78,36 @@ before making Task writes.
 
 Codex retains the requested model, optional config profile, managed permission
 profile, `on-request`, and `approvals_reviewer="auto_review"`. Claude receives
-`--model MODEL --permission-mode manual` and inherits the tab's cwd; fresh Herdr
+`--model MODEL --permission-mode MODE` with the selected `manual` or `auto` and inherits the tab's cwd; fresh Herdr
 observations must also report that exact foreground cwd. Codex flags and trust
 grants are never sent to Claude. Ply never answers native login or permission dialogs.
 Persistent Claude folder trust requires the separate grant below.
+
+### Claude auto report pilot
+
+For a separate actual-provider check, prepare a disposable native Task with a
+read-only inspection goal and `reviewed_report_only` return mode. Bind the
+current installed Ply and Claude executables and permission evidence in a new
+request; set provider `claude`, mode `interactive`, null `config_profile`, and
+`permission_binding.profile_id: "auto"`. Use the preview and confirmed start
+commands above from the coordinator's Herdr workspace. Keep the request and
+confirmation unchanged when observing a lost reply so it reuses the same Run.
+
+In the launched Claude session, use the generated context and its exact bound
+Ply executable for `workflow run check-in RUN_ID --context CONTEXT --provider
+claude --native-session SESSION`. Optional `--profile` records only an actually
+observed runtime label. An unknown or different first observation is preserved
+without changing the requested launch mode; an identical retry is idempotent,
+and a later receipt cannot rewrite that observation. Do the read-only work,
+submit the generated round report through `workflow run report`, and let the
+coordinator `follow` and `review` it with the generated review format. If changes
+are requested, correct and report in the same session; an accepted review seals
+the report return without publishing a TaskResult or integrating changes.
+Preserve any actual refusal or unknown effect and stop the dependent action.
+
+Synthetic CLI regressions qualify the implementation, not an actual Claude
+pilot. The separate AL06C actual-provider check remains pending until that
+journey is observed; AL06B alone does not complete P3.
 
 ### Optional Claude folder trust
 

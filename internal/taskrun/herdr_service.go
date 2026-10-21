@@ -157,7 +157,7 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 	p := WorkflowPreview{Envelope: workflowEnv("run-preview"), RunID: workflowID(r), RequestSHA256: digest(r), Reasons: []Reason{}, Effects: []string{"Reserve this Task target and one native handoff", "Create one background Herdr tab and one Codex session", "If needed, send one tool-free readiness message before binding the native session and sending the Task", "Preserve acceptance, immutable round reports and coordinator review", "Return a reviewed report; do not publish TaskResult or attest provider inactivity"}, Paths: workflowPaths(r, 0)}
 	p.Provider = r.Runtime.Provider
 	if r.Runtime.Provider == "claude" {
-		p.Effects[1] = "Create one background Herdr tab and one Claude session in manual permission mode"
+		p.Effects[1] = "Create one background Herdr tab and one Claude session in " + r.Runtime.PermissionBinding.ProfileID + " permission mode"
 	}
 	var n Preview
 	var e error

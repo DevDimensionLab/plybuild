@@ -302,9 +302,13 @@ func parseRequestForSurface(b []byte, herdr bool) (Request, error) {
 	}
 	rt := r.Runtime
 	p := rt.PermissionBinding
-	providerOK := rt.Provider == "codex" || herdr && r.SchemaVersion == 1 && rt.Provider == "claude" && rt.ConfigProfile == nil && p.ProfileID == "manual"
+	claude := herdr && r.SchemaVersion == 1 && rt.Provider == "claude" && rt.ConfigProfile == nil
+	if claude && p.ProfileID != ClaudePermissionManual && p.ProfileID != ClaudePermissionAuto {
+		return r, invalid(fmt.Sprintf("unsupported Claude permission mode %q; select permission_binding.profile_id manual or auto in a new request", p.ProfileID))
+	}
+	providerOK := rt.Provider == "codex" || claude
 	if !providerOK || (r.SchemaVersion == 1 && rt.Mode != "interactive" || r.SchemaVersion == 2 && (rt.Mode != "exec" || rt.ConfigProfile != nil)) || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
-		return r, invalid("invalid provider runtime; Herdr supports codex or claude (null config_profile, manual permission mode); native starts require Codex")
+		return r, invalid("invalid provider runtime; Herdr supports codex or claude (null config_profile, manual or auto permission mode); native starts require Codex")
 	}
 	if p.AuthorityKind != "reported_contract_with_effective_policy" || !plain(p.ProfileID, 1, 256) || !digestPattern.MatchString(p.EffectivePolicySHA256) || len(p.Evidence) == 0 {
 		return r, invalid("effective policy evidence is required")

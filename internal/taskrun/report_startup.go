@@ -24,6 +24,12 @@ type ReportStartupStatus struct {
 
 const ReportLegacyAcceptanceV1 = "legacy_acceptance_v1"
 
+// Supported native Claude permission modes for interactive Herdr report Runs.
+const (
+	ClaudePermissionManual = "manual"
+	ClaudePermissionAuto   = "auto"
+)
+
 func reportReceipt(r WorkflowRequest) bool {
 	return r.SchemaVersion == 1 && r.ReturnMode == "reviewed_report_only" && r.Delivery == nil && r.StartupProtocol == MandateReceiptV1
 }

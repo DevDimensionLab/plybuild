@@ -96,7 +96,11 @@ func TestAL01LegacyRetirementSurvivesCLIUpgrade(t *testing.T) {
 
 func al01ReceiptFixture(t *testing.T, binary string) workflowFixture {
 	t.Helper()
-	f := workflowTestFixture(t)
+	return al01ReceiptFixtureFrom(t, workflowTestFixture(t), binary)
+}
+
+func al01ReceiptFixtureFrom(t *testing.T, f workflowFixture, binary string) workflowFixture {
+	t.Helper()
 	f.R.StartupProtocol = ""
 	f.R.RequestKey += "-receipt"
 	var draft map[string]any
