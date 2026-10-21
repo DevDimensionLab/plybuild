@@ -513,3 +513,52 @@ func TestAutomaticAcceptanceCLIFailedChildEvidenceAfterExit(t *testing.T) {
 	}
 	t.Logf("Failed Run %s attempt %s retained child evidence at %s", r.RunID, r.AttemptID, scratch)
 }
+
+// A bounded green verification/readback control. Stop before any integration,
+// follow or closeout, which are outside this scratch-lifetime regression.
+func TestAutomaticAcceptanceCLIGreenScratchCleanupAfterExit(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	f, o := automaticCLIFixture(t, binary, true, 30)
+	deliveryTestCandidate(t, f, "green scratch cleanup")
+	script := "#!/bin/sh\nset -eu\nprintf 'disposable child data\\n' > \"$TMPDIR/child.log\"\nprintf 'green scratch used\\n'\n"
+	if err := os.WriteFile(f.AcceptancePath, []byte(script), 0600); err != nil {
+		t.Fatal(err)
+	}
+	review := deliveryTestReview(t, f, "green-scratch")
+	invoke := func(name string, args ...string) WorkflowRun {
+		t.Helper()
+		argv := append([]string{"workflow"}, append(args, "--format", "json")...)
+		c := exec.Command(binary, argv...)
+		c.Dir = f.Prepared.Preparation.Preparation.Plan.WorktreePath
+		var stdout, stderr bytes.Buffer
+		c.Stdout, c.Stderr = &stdout, &stderr
+		err := c.Run()
+		if dir := os.Getenv("PLY_AL25_EVIDENCE_DIR"); dir != "" {
+			rawArgv, _ := json.Marshal(append([]string{binary}, argv...))
+			for suffix, raw := range map[string][]byte{"stdout": stdout.Bytes(), "stderr": stderr.Bytes(), "argv.json": rawArgv, "exit": []byte(fmt.Sprint(c.ProcessState.ExitCode())), "cwd": []byte(c.Dir)} {
+				if e := os.WriteFile(filepath.Join(dir, name+"."+suffix), raw, 0600); e != nil {
+					t.Fatal(e)
+				}
+			}
+		}
+		var run WorkflowRun
+		if e := json.Unmarshal(stdout.Bytes(), &run); e != nil || err != nil {
+			t.Fatalf("%s failed or returned invalid JSON: %v %v\n%s\n%s", name, err, e, stdout.Bytes(), stderr.Bytes())
+		}
+		return run
+	}
+	passed := invoke("green-verify", automaticCLIVerifyArgs(o, review, binary)...)
+	r := automaticTestReceipt(t, passed)
+	scratch := automaticTestScratch(t, r)
+	readback := invoke("green-readback", "execute", "show", o.RunID)
+	if readback.DeliveryStatus.Verification.Outcome != "passed" || len(readback.Delivery.Candidates) != 1 || readback.Delivery.Attempt.ID != r.AttemptID || r.RunID != o.RunID || r.Exit == nil || *r.Exit != 0 || r.Outcome != "pass" {
+		t.Fatalf("green readback differs from successful attempt: %+v %+v", readback.DeliveryStatus.Verification, r)
+	}
+	if _, err := os.Lstat(scratch); !os.IsNotExist(err) {
+		t.Fatalf("successful attempt scratch remains after CLI exits: %v", err)
+	}
+	if raw, err := os.ReadFile(r.Stdout.Locator); err != nil || string(raw) != "green scratch used\n" {
+		t.Fatalf("green stdio evidence did not survive cleanup: %q %v", raw, err)
+	}
+	t.Logf("Passed Run %s attempt %s cleaned scratch %s; stdio and readback survive", r.RunID, r.AttemptID, scratch)
+}
