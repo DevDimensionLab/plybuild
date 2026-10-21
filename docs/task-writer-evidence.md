@@ -35,7 +35,7 @@ put that knowledge back into those callers. The composition and unknown/present
 distinction now have locality in one implementation, while historical records
 and action-specific effects retain their existing authority.
 
-## Registering a fresh backup Goal
+## Registering and optionally starting a fresh backup Goal
 
 From the containing workspace or registered return checkout:
 
@@ -64,10 +64,29 @@ provider permission acceptance. The returned `workflow execute --spec ... --chec
 is a separate read-only preflight from the return checkout and may report missing
 launch configuration; it is not a provider start.
 
+To register and start together, run from the registered return checkout:
+
+```sh
+ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-v1 --provider codex --start --format json
+# Use this opt-in preview's confirmation, keeping the same runtime options:
+ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-v1 --provider codex --start --apply --confirmation sha256:... --format json
+```
+
+`--herdr-workspace` and `--permission-profile` use the existing native controls
+and defaults. The read-only preview resolves local runtime and destination
+configuration; live Herdr, base and resource checks remain with native execute.
+Registration and execution have separate fields in the opt-in response. A later
+startup failure preserves the registered refs and the native next action. Repeat
+identical input for the same native Run/pane/session readback, including after
+Task preparation. An uncertain launch never automatically restarts, resumes or
+switches providers. A new launch creates its own mandate and callback context;
+startup is not an owner receipt, runtime permission observation or product work.
+An unrelated current preparation blocks startup without changing its queue.
+
 Original product requirements and immutable document descriptors remain binding.
 A normative runtime identity addendum records the source Run/request/Goal/ref and
 fresh executor; it overrides historical runtime prose without deleting arbitrary
 product text. No old acceptance, permissions, tests, review, QA, candidate,
-qualification, result or delivery transfers. Native retirement-to-start,
+qualification, result or delivery transfers. Active retirement before this supported boundary,
 post-work/source transfer, review quota, report/legacy, PR and cross-repository
-cases remain later G04 work; registration alone does not complete G04.
+cases remain later G04 work; this bounded registration/start feature does not complete G04.

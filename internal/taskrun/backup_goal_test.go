@@ -316,6 +316,41 @@ func TestBackupGoalCandidateCLI(t *testing.T) {
 			t.Fatalf("readback %v: %v %s", read, err, raw)
 		}
 	}
+
+	// AL28 public parser/readiness/guards use local binary stand-ins only.
+	// Preview never invokes Herdr; positive start is covered by the native
+	// service test with its existing modeled transport/process adapters.
+	bin := t.TempDir()
+	for _, name := range []string{"herdr", "codex"} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte("#!/bin/sh\nexit 97\n"), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("HERDR_WORKSPACE_ID", "w-modeled-preview")
+	before = deliveryCLISnapshot(t, f.R.WorkspaceRoot)
+	raw, err = cli(append(append([]string{}, args...), "--start", "--permission-profile", ":workspace")...)
+	if err != nil {
+		t.Fatalf("start preview: %v %s %s", err, raw, lastStderr)
+	}
+	var start map[string]any
+	if err = json.Unmarshal(raw, &start); err != nil {
+		t.Fatal(err)
+	}
+	if start["state"] != "ready" || start["runtime"] == nil {
+		t.Fatalf("missing start readiness: %s", raw)
+	}
+	_, err = cli(append(append([]string{}, args...), "--start", "--apply", "--confirmation", "wrong")...)
+	if err == nil || !strings.Contains(lastStderr, "confirmation") {
+		t.Fatalf("start confirmation guard: %v %s", err, lastStderr)
+	}
+	_, err = cli(append(append([]string{}, args...), "--start", "--permission-profile", "undefined-profile")...)
+	if err == nil || !strings.Contains(lastStderr, "not defined") {
+		t.Fatalf("profile guard: %v %s", err, lastStderr)
+	}
+	if before != deliveryCLISnapshot(t, f.R.WorkspaceRoot) {
+		t.Fatal("start preview/guards wrote state")
+	}
 	// Ordinary execute check can truthfully report missing local launch settings.
 	// Registration itself requires neither a Herdr workspace nor permissions.
 	before = deliveryCLISnapshot(t, f.R.WorkspaceRoot)
@@ -338,4 +373,38 @@ func mustBackupJSON(t *testing.T, value any) []byte {
 		t.Fatal(err)
 	}
 	return raw
+}
+
+func TestBackupGoalRetryAfterNativePreparation(t *testing.T) {
+	f, old := backupRetiredFixture(t)
+	in := BackupGoalInput{TaskID: "backup", SpecID: "backup-goal", Provider: "claude"}
+	p, err := WorkflowBackupGoal(f.D, f.R.WorkspaceRoot, old.RunID, in, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	a, err := WorkflowBackupGoal(f.D, f.R.WorkspaceRoot, old.RunID, in, true, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := workspace.PreviewTaskGoalExecution(f.D.Workspace, workspace.TaskGoalExecuteInput{SpecID: in.SpecID, Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = workspace.PrepareTaskGoalExecution(f.D.Workspace, plan.Input, plan.Confirmation, workspace.QueueHumanDecision{ActorClaim: "modeled coordinator", DecidedAtUTC: "2026-10-05T00:00:00Z", Source: "explicit_human_instruction", Statement: "Start isolated backup fixture."})
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, _ := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	retry, err := WorkflowBackupGoal(f.D, f.R.WorkspaceRoot, old.RunID, in, true, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after, _ := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	if retry.Goal != a.Goal || !equal(before, after) {
+		t.Fatal("bound retry changed registration")
+	}
+	in.Provider = "codex"
+	if _, err = WorkflowBackupGoal(f.D, f.R.WorkspaceRoot, old.RunID, in, true, p.Confirmation); err == nil {
+		t.Fatal("changed binding accepted")
+	}
 }

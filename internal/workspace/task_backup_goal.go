@@ -79,7 +79,13 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 		task := TaskRecord{ID: in.TaskID, Title: source.Title, Description: description, ParentEpicID: target.EpicID, ProjectID: target.ProjectID, RepoID: target.RepoID, GitCommonDir: target.GitCommonDir, WorktreeState: WorkItemUnbound}
 		existing, _ := findTask(r, in.TaskID)
 		createKey := "task-create/" + string(in.TaskID)
-		if existing != nil && (!contentTypedEqual(*existing, task) || taskPublication(r, createKey) == nil) {
+		// Preparation changes only the runtime binding. Recognize our exact
+		// publication identity before comparing it with the original draft.
+		identity := task
+		if existing != nil {
+			identity.Worktree, identity.WorktreeState = existing.Worktree, existing.WorktreeState
+		}
+		if existing != nil && (!contentTypedEqual(*existing, identity) || taskPublication(r, createKey) == nil) {
 			return queueError("backup_goal_identity_conflict", "fresh Task ID already belongs to different input")
 		}
 		for _, pub := range r.TaskContentPublications {
