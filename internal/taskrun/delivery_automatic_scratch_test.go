@@ -5,9 +5,11 @@ package taskrun
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -59,7 +61,7 @@ func TestAutomaticScratchAllocationFailureBlocksBeforeTest(t *testing.T) {
 	}
 }
 
-func TestAutomaticScratchFailedTestIsCleanedAndEvidenceSurvives(t *testing.T) {
+func TestAutomaticScratchFailedTestRetainsChildEvidence(t *testing.T) {
 	script := "#!/bin/sh\nset -eu\nprintf data > \"$TMPDIR/written\"\nprintf 'scratch used\\n'\nprintf 'failing on purpose\\n' >&2\nexit 3\n"
 	f, o, binary, review := autoScratchFixture(t, script)
 	nested := filepath.Join(f.R.WorkspaceRoot, "nested-tmp")
@@ -80,8 +82,11 @@ func TestAutomaticScratchFailedTestIsCleanedAndEvidenceSurvives(t *testing.T) {
 	if filepath.Dir(scratch) != outside || !strings.Contains(filepath.Base(scratch), r.AttemptID) {
 		t.Fatalf("scratch %s is not the attempt-bound directory under the first base outside the workspace", scratch)
 	}
-	if _, err := os.Lstat(scratch); !os.IsNotExist(err) {
-		t.Fatalf("failed attempt scratch remains: %v", err)
+	if raw, err := os.ReadFile(filepath.Join(scratch, "written")); err != nil || string(raw) != "data" {
+		t.Fatalf("failed attempt child evidence disappeared: %q %v", raw, err)
+	}
+	if info, err := os.Stat(scratch); err != nil || info.Mode().Perm() != 0700 {
+		t.Fatalf("retained scratch is not private: %v %v", info, err)
 	}
 	for path, want := range map[string]string{r.Stdout.Locator: "scratch used", r.Stderr.Locator: "failing on purpose"} {
 		if raw, err := os.ReadFile(path); err != nil || !strings.Contains(string(raw), want) {
@@ -159,5 +164,68 @@ func TestAutomaticScratchPreparationFailureRemovesScratch(t *testing.T) {
 				t.Fatalf("failed preparation leaked scratch: %v %v", entries, err)
 			}
 		})
+	}
+}
+
+func TestAutomaticScratchCompletionOnlyCleansOwnPass(t *testing.T) {
+	for _, outcome := range []string{"pass", "fail", "blocked", ""} {
+		t.Run(outcome, func(t *testing.T) {
+			base := t.TempDir()
+			own := filepath.Join(base, "own")
+			sibling := filepath.Join(base, "other-active-attempt")
+			for _, path := range []string{own, sibling} {
+				if err := os.Mkdir(path, 0700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(path, "child.log"), []byte("evidence"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			r := deliveryVerificationReceipt{RunID: "fixture-run", AttemptID: "fixture-attempt", Outcome: outcome, Automatic: &workflowhandoff.AutomaticVerificationInstructions{Environment: []string{"TMPDIR=" + own}}}
+			finishAutomaticScratch(r)
+			if _, err := os.Stat(own); (outcome == "pass" && !os.IsNotExist(err)) || (outcome != "pass" && err != nil) {
+				t.Fatalf("wrong cleanup for outcome %q: %v", outcome, err)
+			}
+			if raw, err := os.ReadFile(filepath.Join(sibling, "child.log")); err != nil || string(raw) != "evidence" {
+				t.Fatalf("another attempt was changed: %q %v", raw, err)
+			}
+		})
+	}
+}
+
+// Policy construction only: this does not invoke the OS sandbox or establish
+// live enforcement. The refused sandbox test remains unchanged and excluded.
+func TestAutomaticScratchHeadlessPolicyConstruction(t *testing.T) {
+	f, o, _, _ := autoScratchFixture(t, "#!/bin/sh\nexit 0\n")
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	autoScratchBases(t, base)
+	path := filepath.Join(o.Paths.RunRoot, "delivery", "policy-only")
+	scratch, err := automaticScratch("policy-only")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(scratch) })
+	policyPath, err := workerVerifierPolicy(f.D, workflowState{}, path, scratch)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(policyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy := string(raw)
+	if !strings.Contains(policy, "(deny default)") || strings.Count(policy, "(allow file-write*") != 3 {
+		t.Fatalf("unexpected write policy: %s", policy)
+	}
+	for _, permitted := range []string{filepath.Join(path, "home"), scratch} {
+		if !strings.Contains(policy, "(allow file-write* (subpath "+strconv.Quote(permitted)+"))") {
+			t.Fatalf("missing bounded write path %s: %s", permitted, policy)
+		}
+	}
+	if strings.Contains(policy, "(subpath "+strconv.Quote(base)+")") || insidePlyWorkspace(scratch) {
+		t.Fatalf("policy scratch escapes its physical attempt boundary: %s", policy)
 	}
 }

@@ -447,3 +447,69 @@ func automaticTestScratch(t *testing.T, r deliveryVerificationReceipt) string {
 	t.Fatal("receipt has no TMPDIR")
 	return ""
 }
+
+// AL25: bootstrap/provider ownership is modeled by the existing fixture. Verify
+// and subsequent readback are real, separate candidate CLI processes.
+func TestAutomaticAcceptanceCLIFailedChildEvidenceAfterExit(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	f, o := automaticCLIFixture(t, binary, true, 30)
+	deliveryTestCandidate(t, f, "failed child evidence")
+	script := "#!/bin/sh\nset -eu\nmkdir -m 700 \"$TMPDIR/child\"\nprintf 'useful child failure\\n' > \"$TMPDIR/child/failure.log\"\nprintf 'child evidence: %s/child/failure.log\\n' \"$TMPDIR\"\nprintf 'synthetic verifier failed\\n' >&2\nexit 3\n"
+	if err := os.WriteFile(f.AcceptancePath, []byte(script), 0600); err != nil {
+		t.Fatal(err)
+	}
+	review := deliveryTestReview(t, f, "child-evidence")
+	invoke := func(name string, args ...string) (WorkflowRun, []byte, error) {
+		t.Helper()
+		argv := append([]string{"workflow"}, append(args, "--format", "json")...)
+		c := exec.Command(binary, argv...)
+		c.Dir = f.Prepared.Preparation.Preparation.Plan.WorktreePath
+		var stdout, stderr bytes.Buffer
+		c.Stdout, c.Stderr = &stdout, &stderr
+		err := c.Run()
+		var run WorkflowRun
+		if e := json.Unmarshal(stdout.Bytes(), &run); e != nil {
+			t.Fatalf("%s did not return one valid JSON result: %v\n%s\n%s", name, e, stdout.Bytes(), stderr.Bytes())
+		}
+		if dir := os.Getenv("PLY_AL25_EVIDENCE_DIR"); dir != "" {
+			rawArgv, _ := json.Marshal(append([]string{binary}, argv...))
+			for suffix, raw := range map[string][]byte{"stdout": stdout.Bytes(), "stderr": stderr.Bytes(), "argv.json": rawArgv, "exit": []byte(fmt.Sprint(c.ProcessState.ExitCode())), "cwd": []byte(c.Dir)} {
+				if e := os.WriteFile(filepath.Join(dir, name+"."+suffix), raw, 0600); e != nil {
+					t.Fatal(e)
+				}
+			}
+		}
+		return run, stderr.Bytes(), err
+	}
+	failed, stderr, err := invoke("failed-verify", automaticCLIVerifyArgs(o, review, binary)...)
+	if err == nil || failed.DeliveryStatus.Verification.Outcome != "failed" || len(failed.Delivery.Candidates) != 0 {
+		t.Fatalf("failure was not preserved: %v %+v", err, failed.DeliveryStatus.Verification)
+	}
+	r := automaticTestReceipt(t, failed)
+	scratch := automaticTestScratch(t, r)
+	if os.Getenv("PLY_AL25_EVIDENCE_DIR") == "" {
+		t.Cleanup(func() { _ = os.RemoveAll(scratch) })
+	}
+	for _, fact := range []string{"level=warning", "Retained automatic verifier scratch", r.RunID, r.AttemptID, scratch} {
+		if !bytes.Contains(stderr, []byte(fact)) {
+			t.Fatalf("missing diagnostic %q: %s", fact, stderr)
+		}
+	}
+	readback, _, err := invoke("failed-readback", "execute", "show", o.RunID)
+	if err != nil || readback.DeliveryStatus.Verification.Outcome != "failed" || len(readback.Delivery.Candidates) != 0 || readback.Delivery.Attempt.ID != r.AttemptID || r.RunID != o.RunID || r.Exit == nil || *r.Exit != 3 || r.Outcome != "fail" {
+		t.Fatalf("public readback changed failed attempt: %v %+v", err, readback.DeliveryStatus.Verification)
+	}
+	if raw, err := os.ReadFile(filepath.Join(scratch, "child", "failure.log")); err != nil || string(raw) != "useful child failure\n" {
+		t.Fatalf("child evidence missing after both CLI exits: %q %v", raw, err)
+	}
+	if info, err := os.Stat(scratch); err != nil || info.Mode().Perm() != 0700 {
+		t.Fatalf("retained evidence is not private: %v %v", info, err)
+	}
+	if dir := os.Getenv("PLY_AL25_EVIDENCE_DIR"); dir != "" {
+		raw, _ := json.MarshalIndent(r, "", "  ")
+		if err := os.WriteFile(filepath.Join(dir, "failed-receipt.json"), raw, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Logf("Failed Run %s attempt %s retained child evidence at %s", r.RunID, r.AttemptID, scratch)
+}

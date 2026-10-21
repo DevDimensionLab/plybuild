@@ -455,7 +455,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		}
 		stdout, stderr, stopSignals := runDeliveryVerification(d, &receipt)
 		defer stopSignals()
-		removeAutomaticScratch(receipt.Automatic)
+		finishAutomaticScratch(receipt)
 		publicationErr := d.fault("delivery_before_verification_receipt")
 		path := s.Result.Delivery.Attempt.Path
 		receipt.Stdout = FileBinding{filepath.Join(path, "stdout.txt"), hash(stdout.data)}

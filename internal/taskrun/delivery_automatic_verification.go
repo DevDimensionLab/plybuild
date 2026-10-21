@@ -13,6 +13,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/sirupsen/logrus"
 )
 
 // WorkflowDeliveryVerifyWithBinary runs the existing native candidate verifier,
@@ -57,8 +58,8 @@ func insidePlyWorkspace(path string) bool {
 	}
 }
 
-// Evidence is kept in the attempt directory; the external scratch is
-// disposable once the test's process group has finished.
+// Remove only scratch allocated by this invocation before it starts, or after
+// a successful test. Failed/blocked scratch can contain useful child evidence.
 func removeAutomaticScratch(v *workflowhandoff.AutomaticVerificationInstructions) {
 	if v == nil {
 		return
@@ -66,6 +67,27 @@ func removeAutomaticScratch(v *workflowhandoff.AutomaticVerificationInstructions
 	for _, entry := range v.Environment {
 		if path, ok := strings.CutPrefix(entry, "TMPDIR="); ok {
 			_ = os.RemoveAll(path)
+		}
+	}
+}
+
+// The receipt already binds the physical TMPDIR to this Run and attempt. Keep
+// unsuccessful scratch in place so child locators remain useful after CLI exit;
+// unknown/interrupted results must not trigger deletion either.
+func finishAutomaticScratch(r deliveryVerificationReceipt) {
+	if r.Automatic == nil {
+		return
+	}
+	if r.Outcome == "pass" {
+		removeAutomaticScratch(r.Automatic)
+		return
+	}
+	for _, entry := range r.Automatic.Environment {
+		if path, ok := strings.CutPrefix(entry, "TMPDIR="); ok {
+			logrus.WithFields(logrus.Fields{
+				"run_id": r.RunID, "attempt_id": r.AttemptID,
+				"outcome": r.Outcome, "scratch": path,
+			}).Warn("Retained automatic verifier scratch locator; unsuccessful verification cleanup skipped")
 		}
 	}
 }
