@@ -311,10 +311,27 @@ func TestAL05NativePrivateRolesStayProtected(t *testing.T) {
 // The exact built CLI consumes ordinary inputs, keeps one JSON value on stdout
 // and warns on stderr, then delivers the same candidate without a mode question.
 func TestAL05CandidateCLIJourneyWithOrdinaryModes(t *testing.T) {
-	binary := automaticCLIBinary(t)
-	if err := os.Chmod(binary, 0755); err != nil {
+	supplied := automaticCLIBinary(t)
+	suppliedInfo, err := os.Stat(supplied)
+	if err != nil {
 		t.Fatal(err)
 	}
+	// Native verify supplies Ply's private candidate snapshot; never chmod it.
+	t.Cleanup(func() {
+		if info, err := os.Stat(supplied); err != nil || info.Mode() != suppliedInfo.Mode() {
+			t.Errorf("supplied candidate binary %s changed mode: %v %v", supplied, info, err)
+		}
+	})
+	dir, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	binary := filepath.Join(dir, "ply")
+	b, err := os.ReadFile(supplied)
+	if err != nil {
+		t.Fatal(err)
+	}
+	al05Write(t, binary, b, 0755)
 	f, o := automaticCLIFixture(t, binary, true, 30)
 	root := f.R.WorkspaceRoot
 	deliveryTestCandidate(t, f, "expected")
