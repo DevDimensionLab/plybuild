@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-// Exercises the actual supplied candidate executable. Only the provider is a
-// deterministic stand-in; the separate real Claude qualification is not mocked.
+// Exercises the actual supplied candidate executable with modeled provider and
+// Herdr fixtures. Notification binding does not send Slack or attest runtime authority.
 func TestDeliveryStartupCLI(t *testing.T) {
 	binary := automaticCLIBinary(t)
 	for _, provider := range []string{"codex", "claude"} {
@@ -51,12 +51,27 @@ func TestDeliveryStartupCLI(t *testing.T) {
 			if _, _, err := automaticCLI(binary, f, args...); err == nil {
 				t.Fatal("begin ignored active provider stop")
 			}
-			resolve := []string{"execute", "resolve-stop", o.RunID, "--context", o.Paths.Context, "--stop", o.Delivery.ActiveStop.SHA256, "--resolution", "Synthetic denial cause repaired; current isolated permission confirmed", "--permission-confirmed"}
+			stop := *o.Delivery.ActiveStop
+			denialEvent := o.Delivery.Events[0]
+			cause := "Fixture coordinator clarified the synthetic report transport denial; no real provider action was refused"
+			action := "Continue isolated fixture startup readback while preserving the rejected report"
+			resolve := []string{"execute", "resolve-stop", o.RunID, "--context", o.Paths.Context, "--stop", stop.SHA256, "--resolution", cause, "--action", action}
 			o = automaticCLIOK(t, binary, f, resolve...)
 			o = automaticCLIOK(t, binary, f, resolve...)
 			o = automaticCLIOK(t, binary, f, args...)
 			if o.Delivery.Phase != "working" || o.Delivery.ActiveStop != nil || len(o.Delivery.Events) != 2 {
 				t.Fatal("supported continuation failed or lost history")
+			}
+			var record DeliveryStopResolution
+			raw, err := workflowBound(o.Delivery.Events[1].Binding, 1<<20)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = json.Unmarshal(raw, &record); err != nil {
+				t.Fatal(err)
+			}
+			if !equal(o.Delivery.Events[0], denialEvent) || record.Stop != stop || record.RunID != o.RunID || record.NativeSession != o.Transport.AgentSessionID || record.RequestSHA256 != o.RequestSHA256 || record.Resolution != cause || record.ContinuationAction != action || record.PermissionConfirmed {
+				t.Fatal("continuation changed the refusal or lost its cause/action binding")
 			}
 			if len(workflowProviderCalls(t, f.workflowFixture, "agent start")) != 1 {
 				t.Fatal("continuation launched another provider")
