@@ -2,6 +2,8 @@ package taskexecute
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -304,7 +306,27 @@ func TestBackupStartPreRunReadbackShowsPreservedEffectiveProfile(t *testing.T) {
 }
 
 func TestSelectedBackupStartPhaseRecovery(t *testing.T) {
+	testSelectedBackupStartPhaseRecovery(t, false)
+}
+
+func TestBackupCommittedStartRecovery(t *testing.T) { testSelectedBackupStartPhaseRecovery(t, true) }
+
+func testSelectedBackupStartPhaseRecovery(t *testing.T, committed bool) {
+	t.Helper()
 	d, root, id, in, runtime := backupStartSourceFixture(t, false)
+	if committed {
+		registry, err := d.Workspace.WorkItems.Snapshot(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		path := registry.Tasks[0].Worktree.Locator
+		if err := os.WriteFile(filepath.Join(path, "useful.txt"), []byte("useful source work\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		fixtureGit(t, path, "add", "useful.txt")
+		fixtureGit(t, path, "commit", "-m", "useful committed source")
+		in.PreserveCommitted = true
+	}
 	before := recoveryFiles(t, filepath.Join(root, ".ply"))
 	p, err := BackupGoal(d, root, id, in, runtime, false, "")
 	if err != nil {
@@ -350,11 +372,81 @@ func TestSelectedBackupStartPhaseRecovery(t *testing.T) {
 	if err != nil || started.Execution == nil || started.Execution.Run == nil {
 		t.Fatalf("start: %+v %v", started, err)
 	}
+	if committed {
+		artifact := started.Registration.Committed
+		raw, err := os.ReadFile(started.Execution.Run.Paths.Context)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Context links the exact handoff; its preserved input closure is native.
+		if !bytes.Contains(raw, []byte(started.Execution.Run.Handoff.SHA256)) {
+			t.Fatal("context lost handoff identity")
+		}
+		request, err := os.ReadFile(started.Execution.Run.Handoff.Locator)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Contains(request, []byte(artifact.SHA256)) {
+			t.Fatal("fresh native context missing committed input")
+		}
+	}
 	after := recoveryFiles(t, filepath.Join(root, ".ply"))
 	retry, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
 	if err != nil || retry.Execution.Run.RunID != started.Execution.Run.RunID || !reflect.DeepEqual(after, recoveryFiles(t, filepath.Join(root, ".ply"))) {
 		t.Fatalf("duplicate launch: %v", err)
 	}
+	if committed {
+		// A second fresh backup retains the earlier immutable dry-run document
+		// alongside its own Run/hash-scoped input. Native retirement stays modeled.
+		oldArtifact := started.Registration.Committed
+		source := started.Execution.Run
+		if _, err = taskrun.WorkflowRetireDelivery(d, root, source.RunID, taskrun.DeliveryRetireInput{Observer: "modeled coordinator", Reason: "Second isolated backup"}); err != nil {
+			t.Fatal(err)
+		}
+		registry, err := d.Workspace.WorkItems.Snapshot(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		path := ""
+		for _, task := range registry.Tasks {
+			if task.ID == in.TaskID {
+				path = task.Worktree.Locator
+			}
+		}
+		if path == "" {
+			t.Fatal("fresh source missing")
+		}
+		if err = os.WriteFile(filepath.Join(path, "second.txt"), []byte("second useful source\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		fixtureGit(t, path, "add", "second.txt")
+		fixtureGit(t, path, "commit", "-m", "second committed source")
+		next := taskrun.BackupGoalInput{TaskID: "backup-two", SpecID: "backup-two-goal", Provider: "codex", PreserveCommitted: true}
+		preview, err := taskrun.WorkflowBackupGoal(d, root, source.RunID, next, false, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		registered, err := taskrun.WorkflowBackupGoal(d, root, source.RunID, next, true, preview.Confirmation)
+		if err != nil {
+			t.Fatal(err)
+		}
+		shown, err := workspace.ShowTaskSpec(d.Workspace, workspace.TaskContentQuery{TaskID: next.TaskID, SpecID: next.SpecID, Revision: 1})
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw, _ := json.Marshal(shown.Value)
+		if !bytes.Contains(raw, []byte(oldArtifact.SHA256)) || !bytes.Contains(raw, []byte(registered.Committed.SHA256)) || oldArtifact.DocumentID() == registered.Committed.DocumentID() {
+			t.Fatal("carried source input was lost or collided")
+		}
+		oldBytes, err := os.ReadFile(oldArtifact.Locator)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if fmt.Sprintf("sha256:%x", sha256.Sum256(oldBytes)) != oldArtifact.SHA256 {
+			t.Fatal("carried document bytes changed")
+		}
+	}
+
 }
 
 func TestSelectedBackupStartRecoversAfterNativeFollow(t *testing.T) {

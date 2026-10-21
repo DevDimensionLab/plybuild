@@ -121,3 +121,33 @@ product text. No old acceptance, permissions, tests, review, QA, candidate,
 qualification, result or delivery transfers. Retirement outside the selected known pre-work boundary,
 post-work/source transfer, review quota, report/legacy, PR and cross-repository
 cases remain later G04 work; this bounded registration/start feature does not complete G04.
+
+
+### Preserving useful committed work as dry-run input
+
+Add `--preserve-committed` to the same `backup-goal` preview/apply arguments
+(and optionally `--retire` and `--start`) for clean committed work after the
+Run's bound original base. Without this flag, the unchanged pre-work guard and
+registration/start defaults remain in force.
+
+Preview shows the source Run/Task/pinned Goal, original base commit/tree,
+actual clean source commit/tree and the exact input locator, SHA-256 and size.
+It preserves nothing and closes/starts nothing. Apply retains a deterministic
+Git binary patch, including source provenance, text/binary changes, deletions
+and file modes, in native TaskContent CAS. The new Goal adds it as a design
+input with a content-scoped `backup-committed-dryrun-<sha256>` document ID; any
+earlier dry-run documents remain immutable. Normal `required_inputs`, fresh
+execution and handoff carry the preserved bytes independently of the old Task
+worktree. Existing document/constraint counts and the 4 MiB document bound
+still apply; invalid or oversized input is diagnosed before selected close or
+publication. Source identity/hash is checked again at native close and absence.
+
+The fresh executor must assess the draft, optionally apply or adapt it, test,
+commit and deliver under its own mandate. This command applies no patch and
+inherits no old permission, tests, review, QA, result, qualification or delivery.
+Only same-repository automatic local Epic Goal Spec@2 pre-review sources are
+supported. Dirty/untracked work, review history/quota, legacy/report/headless,
+PR and cross-repository transfer remain later work; this is a bounded part of
+G04, not general code transfer. Keep the exact preview confirmation and fresh
+IDs after an interrupted preservation/publication/start and inspect the native
+readback; changed source or input conflicts instead of silently replacing it.

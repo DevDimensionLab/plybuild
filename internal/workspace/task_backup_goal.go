@@ -12,22 +12,24 @@ import (
 // the native retired owner. Content publication and append share the existing
 // registry lock; each durable intermediate publication has an exact retry key.
 type BackupGoalRegistration struct {
-	SourcePreparation  string           `json:"source_preparation"`
-	SourceTask         TaskID           `json:"source_task"`
-	SourceGoal         TaskGoalRef      `json:"source_goal"`
-	Target             QueueTargetInput `json:"target"`
-	TaskID             TaskID           `json:"task_id"`
-	SpecID             string           `json:"spec_id"`
-	Provider           string           `json:"provider"`
-	Model              string           `json:"model"`
-	Effort             string           `json:"effort"`
-	ExecutorSource     string           `json:"executor_source"`
-	Provenance         string           `json:"provenance"`
-	RecordedAtUTC      string           `json:"recorded_at_utc"`
-	PublicationKey     string           `json:"publication_key"`
-	SelectedRetirement string           `json:"selected_retirement,omitempty"`
+	Committed          *BackupCommittedWork `json:"committed,omitempty"`
+	SourcePreparation  string               `json:"source_preparation"`
+	SourceTask         TaskID               `json:"source_task"`
+	SourceGoal         TaskGoalRef          `json:"source_goal"`
+	Target             QueueTargetInput     `json:"target"`
+	TaskID             TaskID               `json:"task_id"`
+	SpecID             string               `json:"spec_id"`
+	Provider           string               `json:"provider"`
+	Model              string               `json:"model"`
+	Effort             string               `json:"effort"`
+	ExecutorSource     string               `json:"executor_source"`
+	Provenance         string               `json:"provenance"`
+	RecordedAtUTC      string               `json:"recorded_at_utc"`
+	PublicationKey     string               `json:"publication_key"`
+	SelectedRetirement string               `json:"selected_retirement,omitempty"`
 }
 type BackupGoalRegistrationResult struct {
+	Committed      *BackupCommittedWork       `json:"committed,omitempty"`
 	Kind           string                     `json:"kind"`
 	SchemaVersion  int                        `json:"schema_version"`
 	Provenance     string                     `json:"provenance"`
@@ -72,9 +74,19 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 		if qSource.Terminal[in.SourcePreparation] != "released" && !previewCurrent {
 			return queueError("backup_goal_source_unresolved", "retired source preparation has not been natively released")
 		}
+		if err := validateBackupCommitted(in.Committed, root); err != nil {
+			return err
+		}
 		a := source.Delivery
 		if a == nil || a.Mode != DeliveryLocalEpic || !a.AutomaticAcceptance() || a.TargetWorktree != target.ParentLocator || a.TargetRef != target.ParentRef || a.ProjectID != target.ProjectID || a.RepoID != target.RepoID || a.EpicID != target.EpicID {
 			return queueError("backup_goal_target_conflict", "source must bind the same automatic local Epic target")
+		}
+		if in.Committed != nil {
+			for _, input := range source.RequiredInputs {
+				if input.ID == "task-goal-doc/goal/"+in.Committed.DocumentID() {
+					return queueError("backup_goal_committed_document_conflict", "source document already uses this exact committed input ID")
+				}
+			}
 		}
 		// A single run-scoped key fences changed fresh IDs/provider as well as retries.
 		token := queueDigest(in)
@@ -107,9 +119,12 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 			}
 		}
 		normative := fmt.Sprintf("Fresh runtime binding (normative for runtime identity over preserved source prose): Task %s, Spec %s, provider %s; model %s, effort %s. Defaults/overrides: %s. %s No old acceptance, permission, review, tests, QA, result, candidate, qualification or delivery is inherited. Product requirements and documents remain binding. No source patch transfer or provider start.", in.TaskID, in.SpecID, in.Provider, in.Model, in.Effort, in.ExecutorSource, in.Provenance)
+		if in.Committed != nil {
+			normative = fmt.Sprintf("Fresh runtime binding (normative for runtime identity over preserved source prose): Task %s, Spec %s, provider %s; model %s, effort %s. Defaults/overrides: %s. %s Preserved committed dry-run input %s (%s, %d bytes), original base %s tree %s, source %s tree %s. The fresh executor must assess, optionally apply/adapt, test, commit and deliver under its own mandate. No automatic code application. No old acceptance, permission, tests, review, QA, result, candidate, qualification or delivery is inherited. Product requirements/documents remain binding.", in.TaskID, in.SpecID, in.Provider, in.Model, in.Effort, in.ExecutorSource, in.Provenance, in.Committed.DocumentID(), in.Committed.SHA256, in.Committed.SizeBytes, in.Committed.BaseOID, in.Committed.BaseTree, in.Committed.SourceOID, in.Committed.SourceTree)
+		}
 		constraints := append(append([]string{}, source.Constraints...), normative)
 		sort.Strings(constraints)
-		out = BackupGoalRegistrationResult{Kind: "ply.workflow.backup-goal", SchemaVersion: 1, Provenance: in.Provenance, Effects: []string{"publish fresh Task/Problem/Goal", "append exact Goal to existing queue", "no branch/worktree or provider start", "no inherited runtime acceptance or result"}, ExecutorSource: in.ExecutorSource, Executor: executor, TaskID: in.TaskID, Requirements: source.Requirements, Constraints: constraints, Target: target, Delivery: a, Confirmation: token, NextArgv: []string{"ply", "workflow", "execute", "--spec", in.SpecID, "--check"}}
+		out = BackupGoalRegistrationResult{Kind: "ply.workflow.backup-goal", SchemaVersion: 1, Committed: in.Committed, Provenance: in.Provenance, Effects: []string{"publish fresh Task/Problem/Goal", "append exact Goal to existing queue", "no branch/worktree or provider start", "no inherited runtime acceptance or result"}, ExecutorSource: in.ExecutorSource, Executor: executor, TaskID: in.TaskID, Requirements: source.Requirements, Constraints: constraints, Target: target, Delivery: a, Confirmation: token, NextArgv: []string{"ply", "workflow", "execute", "--spec", in.SpecID, "--check"}}
 		out.Queue, err = buildQueueReadback(d, root, r, projects, in.Target, false)
 		if err != nil {
 			return err
@@ -136,6 +151,18 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 				id := contentString(contentFields(doc), "id")
 				docs = append(docs, contentRefValue(map[string]any{"id": id, "source": map[string]any{"kind": "snapshot", "task_id": in.SourceTask, "manifest_sha256": hash, "document_id": id}}))
 			}
+			if in.Committed != nil && kind == "WorkspaceTaskSpecDraft@2" {
+				docs = append(docs, in.Committed.document())
+				design := append([]canonicaljson.Value{}, contentArray(m, "design")...)
+				design = append(design, contentRefValue(map[string]any{"document_id": in.Committed.DocumentID(), "section": nil}))
+				sort.Slice(design, func(i, j int) bool {
+					return contentPartKey(design[i]) < contentPartKey(design[j])
+				})
+				m["design"] = design
+			}
+			sort.Slice(docs, func(i, j int) bool {
+				return contentString(contentFields(docs[i]), "id") < contentString(contentFields(docs[j]), "id")
+			})
 			m["documents"] = docs
 			return contentObject(m)
 		}
@@ -180,6 +207,11 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 		}
 		if confirmation != token {
 			return queueError("backup_goal_confirmation_conflict", "preview confirmation differs from the fresh binding")
+		}
+		if in.Committed != nil {
+			if _, err = d.TaskContent.Publish(root, "objects", in.Committed.Bytes); err != nil {
+				return fmt.Errorf("committed input preservation requires identical retry: %w", err)
+			}
 		}
 		if existing == nil {
 			if _, err = createTaskProblem(d, root, session, r, projects, task, nil); err != nil {

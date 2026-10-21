@@ -15,7 +15,7 @@ func TestBackupGoalOptInFlags(t *testing.T) {
 		t.Fatal("missing explicit opt-in")
 	}
 	defaults := newWorkflowExecuteBackupGoalCommand(taskrun.Dependencies{})
-	for _, flag := range []string{"start", "apply"} {
+	for _, flag := range []string{"start", "apply", "preserve-committed"} {
 		if value, _ := defaults.Flags().GetBool(flag); value {
 			t.Fatalf("%s changed registration-only default", flag)
 		}

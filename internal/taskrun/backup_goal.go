@@ -11,12 +11,13 @@ import (
 )
 
 type BackupGoalInput struct {
-	TaskID   workspace.TaskID     `json:"task_id"`
-	SpecID   string               `json:"spec_id"`
-	Provider string               `json:"provider"`
-	Model    string               `json:"model"`
-	Effort   string               `json:"effort"`
-	Retire   *DeliveryRetireInput `json:"retire,omitempty"`
+	TaskID            workspace.TaskID     `json:"task_id"`
+	SpecID            string               `json:"spec_id"`
+	Provider          string               `json:"provider"`
+	Model             string               `json:"model"`
+	Effort            string               `json:"effort"`
+	Retire            *DeliveryRetireInput `json:"retire,omitempty"`
+	PreserveCommitted bool                 `json:"preserve_committed,omitempty"`
 }
 
 // workflowBackupGoal validates and registers a fresh copy. Preview never acquires a writer
@@ -85,7 +86,7 @@ func workflowBackupGoal(d Dependencies, root, id string, in BackupGoalInput, app
 		if e != nil {
 			return e
 		}
-		if x.OID != s.Observed.Target.OID || x.Tree != s.Observed.Target.Tree {
+		if !in.PreserveCommitted && (x.OID != s.Observed.Target.OID || x.Tree != s.Observed.Target.Tree) {
 			return workflowError(4, "backup_goal_post_work_unsupported: source changed; no patch transfer is supported")
 		}
 		raw, e := workflowBound(s.Request.Delivery.Goal, 4<<20)
@@ -114,13 +115,28 @@ func workflowBackupGoal(d Dependencies, root, id string, in BackupGoalInput, app
 			return workflowError(4, "backup_goal_unsupported: requires automatic local Epic delivery")
 		}
 		source := workspace.TaskGoalRef{SpecID: goal.SpecID, Spec: workspace.TaskRevisionRef{Revision: goal.Revision, ManifestSHA256: s.Request.Delivery.Goal.SHA256}}
+		var committed *workspace.BackupCommittedWork
+		if in.PreserveCommitted {
+			git, ok := d.Workspace.IntegrationGit.(workspace.BackupCommittedGit)
+			if !ok {
+				return workflowError(4, "backup_goal_committed_observer_unavailable")
+			}
+			committed, e = git.ObserveBackupCommitted(s.Observed.Target.WorktreeLocator, s.Observed.Target.GitCommonDir, s.Observed.Target.Ref, s.Observed.Target.OID, s.Observed.Target.Tree, x.OID, x.Tree)
+			if e != nil {
+				return e
+			}
+			committed.RunID, committed.RequestSHA256, committed.TaskID, committed.Goal = id, s.Result.RequestSHA256, goal.TaskID, source
+			if e = committed.Bind(root); e != nil {
+				return e
+			}
+		}
 		provenance := fmt.Sprintf("Copied from retired Run %s request %s, Task %s, Goal %s@%d %s, source ref %s. Retirement is historical prerequisite, not new runtime authority.", id, s.Result.RequestSHA256, goal.TaskID, goal.SpecID, goal.Revision, source.Spec.ManifestSHA256, s.Observed.Target.Ref)
 		retirementBinding := ""
 		if selected != nil {
 			retirementBinding = selected.Binding
 			provenance = fmt.Sprintf("Selected pre-work backup from Run %s request %s, Task %s, Goal %s@%d %s, source ref %s. Native retirement is required before publication, not new runtime authority.", id, s.Result.RequestSHA256, goal.TaskID, goal.SpecID, goal.Revision, source.Spec.ManifestSHA256, s.Observed.Target.Ref)
 		}
-		out.BackupGoalRegistrationResult, e = workspace.RegisterBackupGoal(d.Workspace, workspace.BackupGoalRegistration{SourcePreparation: s.Request.PreparationID, SourceTask: goal.TaskID, SourceGoal: source, Target: workspace.QueueTargetInput{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID}, TaskID: in.TaskID, SpecID: in.SpecID, Provider: in.Provider, Model: in.Model, Effort: in.Effort, ExecutorSource: executorSource, Provenance: provenance, RecordedAtUTC: stamp, SelectedRetirement: retirementBinding, PublicationKey: "backup-goal/" + id}, apply, confirmation)
+		out.BackupGoalRegistrationResult, e = workspace.RegisterBackupGoal(d.Workspace, workspace.BackupGoalRegistration{Committed: committed, SourcePreparation: s.Request.PreparationID, SourceTask: goal.TaskID, SourceGoal: source, Target: workspace.QueueTargetInput{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID}, TaskID: in.TaskID, SpecID: in.SpecID, Provider: in.Provider, Model: in.Model, Effort: in.Effort, ExecutorSource: executorSource, Provenance: provenance, RecordedAtUTC: stamp, SelectedRetirement: retirementBinding, PublicationKey: "backup-goal/" + id}, apply, confirmation)
 		return e
 	}
 	if apply {
