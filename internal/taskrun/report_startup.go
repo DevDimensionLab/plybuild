@@ -174,7 +174,7 @@ func workflowRetireReport(d Dependencies, s *workflowState, in DeliveryRetireInp
 		return err
 	}
 	if facts.Terminal != nil || s.Result.FinalReturn.TerminalSHA256 != nil || s.Result.FinalReturn.State == "accepted" {
-		return workflowError(4, "accepted native terminal history cannot be retired")
+		return workflowError(4, "native terminal history cannot be retired; inspect the preserved terminal outcome and coordinate existing preparation closure without rewriting history")
 	}
 	started := s.StartSHA256 != nil
 	if (facts.Start != nil) != started || s.Result.Transport.AgentSessionID == "" {

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -373,5 +374,69 @@ func TestAL14CLIReconcilesClosedPreparation(t *testing.T) {
 	out, err := al14Combined(t, c)
 	if err == nil || !strings.Contains(string(out), "immutable") {
 		t.Fatalf("conflicting retirement: %v %s", err, out)
+	}
+}
+
+// A supported BLOCKED native terminal is completed history, not successful
+// acceptance. The retirement guard must diagnose it without changing resources.
+// Provider/Herdr and failed verifier claims are modeled; native publication is real.
+func TestAL14BlockedNativeTerminalRetirementDiagnosisPreservesHistory(t *testing.T) {
+	f := al01ReceiptFixture(t, "")
+	o := al10CheckedIn(t, f)
+	report := al10Report(t, f, o, "blocked-terminal-diagnosis", "blocked", "failed", nil, nil)
+	if _, err := WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, report); err != nil {
+		t.Fatal(err)
+	}
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	terminal, err := workflowhandoff.SubmitResultDocument(f.D.Workflow, workflowhandoff.SubmitInput{HandoffLocator: s.Result.Handoff.Locator, DraftPath: s.Records[0].Terminal.Locator})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var published struct {
+		Outcome string `json:"reported_outcome"`
+	}
+	if err := json.Unmarshal(mustReadAL01(t, terminal.Locator), &published); err != nil || published.Outcome != "blocked" {
+		t.Fatalf("fixture did not publish blocked terminal: %s %v", published.Outcome, err)
+	}
+	target := workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}
+	before, err := workspace.ListTaskQueue(f.D.Workspace, target, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	preserved := map[string]string{}
+	for _, p := range []string{terminal.Locator, s.Acceptance.Locator, s.StartDraft.Locator, s.Records[0].Report.Locator, s.Records[0].Terminal.Locator, filepath.Join(o.Paths.RunRoot, "state.json")} {
+		preserved[p] = hashFileTest(t, p)
+	}
+	f.D.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
+	inspections := 0
+	f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) {
+		inspections++
+		return nil, fmt.Errorf("terminal guard must precede process inspection")
+	}
+	_, err = WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryRetireInput{Observer: "modeled coordinator", Reason: "Inspect completed blocked history"})
+	if err == nil || strings.Contains(err.Error(), "accepted") || !strings.Contains(err.Error(), "native terminal history cannot be retired") || !strings.Contains(err.Error(), "inspect the preserved terminal outcome") || !strings.Contains(err.Error(), "existing preparation closure") {
+		t.Errorf("blocked terminal diagnosis/next action: %v", err)
+	}
+	if inspections != 0 {
+		t.Fatal("terminal guard reached process inspection")
+	}
+	for p, h := range preserved {
+		if hashFileTest(t, p) != h {
+			t.Fatalf("immutable terminal/report history changed: %s", p)
+		}
+	}
+	after, err := workspace.ListTaskQueue(f.D.Workspace, target, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before.Revision != after.Revision || !equal(before.Current, after.Current) {
+		t.Fatal("terminal refusal changed the preparation queue")
+	}
+	saved, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil || saved.ReportRetirement != nil || saved.Result.FinalReturn.State == "accepted" {
+		t.Fatalf("terminal refusal fabricated retirement/acceptance: %v", err)
 	}
 }

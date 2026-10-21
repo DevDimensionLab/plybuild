@@ -19,7 +19,7 @@ PLY_AL14_EVIDENCE_DIR=$(mktemp -d "$(dirname "$PLY_CANDIDATE_BINARY")/al14-cli.X
 export PLY_AL14_EVIDENCE_DIR
 printf 'Raw CLI evidence: %s\n' "$PLY_AL14_EVIDENCE_DIR"
 log="$PLY_AL14_EVIDENCE_DIR/tests.stdout"
-if go test -v -count=1 -timeout=240s ./internal/taskrun -run '^(TestAL14CLIPostStartRetainsWorkAndHistory|TestAL14PostStartGuardsAndRecovery|TestAL14CLIReconcilesClosedPreparation|TestAL01RetirementGuardsAndDurableRetry|TestAL01ReportEffectReconciliationPreservesUncertaintyAndSource|TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect)$' >"$log" 2>"$PLY_AL14_EVIDENCE_DIR/tests.stderr"; then
+if go test -v -count=1 -timeout=240s ./internal/taskrun -run '^(TestAL14CLIPostStartRetainsWorkAndHistory|TestAL14PostStartGuardsAndRecovery|TestAL14CLIReconcilesClosedPreparation|TestAL14BlockedNativeTerminalRetirementDiagnosisPreservesHistory|TestAL01RetirementGuardsAndDurableRetry|TestAL01ReportEffectReconciliationPreservesUncertaintyAndSource|TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect)$' >"$log" 2>"$PLY_AL14_EVIDENCE_DIR/tests.stderr"; then
  printf '0\n' >"$PLY_AL14_EVIDENCE_DIR/tests.exit"
 else
  result=$?
@@ -28,7 +28,7 @@ else
  exit "$result"
 fi
 cat "$log" "$PLY_AL14_EVIDENCE_DIR/tests.stderr"
-for name in TestAL14CLIPostStartRetainsWorkAndHistory TestAL14PostStartGuardsAndRecovery TestAL14CLIReconcilesClosedPreparation TestAL01RetirementGuardsAndDurableRetry TestAL01ReportEffectReconciliationPreservesUncertaintyAndSource TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect; do
+for name in TestAL14CLIPostStartRetainsWorkAndHistory TestAL14PostStartGuardsAndRecovery TestAL14CLIReconcilesClosedPreparation TestAL14BlockedNativeTerminalRetirementDiagnosisPreservesHistory TestAL01RetirementGuardsAndDurableRetry TestAL01ReportEffectReconciliationPreservesUncertaintyAndSource TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect; do
  grep -q "^--- PASS: $name " "$log"
 done
 go vet ./internal/taskrun ./cmd
