@@ -11,7 +11,9 @@ test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 test -z "$(git status --porcelain)"
 test "$(go env GOVERSION)" = go1.26.7
-artifact_root=$(mktemp -d "$TMPDIR/al24-evidence.XXXXXX")
+# Native verification removes its TMPDIR after exit. Keep raw child evidence
+# in a separate private physical root so failed runs survive that cleanup.
+artifact_root=$(mktemp -d /private/tmp/ply-al24-acceptance.XXXXXX)
 printf 'AL24 raw evidence: %s\n' "$artifact_root"
 run() {
     name=$1
@@ -31,7 +33,8 @@ run() {
 run version "$PLY_CANDIDATE_BINARY" version --format json
 run build-metadata go version -m "$PLY_CANDIDATE_BINARY"
 run hash shasum -a 256 "$PLY_CANDIDATE_BINARY"
-run syntax bash -n test/cli_surface_contract_test.sh test/cli_surface_evidence_test.sh
+run contract-syntax bash -n test/cli_surface_contract_test.sh
+run regression-syntax bash -n test/cli_surface_evidence_test.sh
 run acceptance-syntax sh -n test/al24-acceptance.sh
 run regression bash test/cli_surface_evidence_test.sh "$artifact_root/regression"
 # This remains the existing real script, with its own fresh build and isolation.

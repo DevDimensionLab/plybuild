@@ -304,7 +304,7 @@ cmp -s "$temp_root/readme-workspace.expected" "$temp_root/readme-workspace.prefi
 	fail 'README existing workspace documentation changed'
 for text in \
 	'ply workspace epic adopt ply-agentic-workflow-support \' \
-	'It performs no Git change.' \
+	'It performs no Git change' \
 	'ply workspace task create workspace-work-item-bootstrap \' \
 	'binds exactly one registered' \
 	'ply workspace task worktree create workspace-work-item-bootstrap \' \

@@ -17,5 +17,7 @@ manually once its evidence is no longer needed.
 `test/al24-acceptance.sh` runs the regression and the real successful surface
 script against a clean native candidate, checking that successful cleanup leaves
 an unrelated sibling alone. It also records the supplied candidate binary's
-version, Go build metadata and hash. This checks the exercised local shell/CLI
+version, Go build metadata and hash. Raw acceptance evidence is retained in a
+private `/private/tmp/ply-al24-acceptance.*` directory, outside the native
+runner's automatically removed temporary parent. This checks the exercised local shell/CLI
 paths; it makes no claim about other platforms, providers or all signal cases.
