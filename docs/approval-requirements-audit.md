@@ -1,0 +1,221 @@
+# Approval requirements audit (AL02)
+
+Base: `d335e70e` on `ply_agentic_workflow_support` (AL01 delivered). This audit
+changes no product code. It inventories the approval requirements and stop rules
+that still remain, records a decision for each one, and proposes bounded repairs
+for root to register as separate Specs.
+
+Two principles from [planning/goal.md](/Users/perottochristensen/github/ply/planning/goal.md)
+guide the decisions. First, "Utviklingsløpet skal fortsette; stopp krever en god
+grunn": a locked development process is a product defect. Second, root cause
+comes before compensation. Each decision is therefore one of the following:
+
+- **remove**: delete the requirement.
+- **simplify**: keep its value at lower cost.
+- **reconcile**: have Ply resolve the state itself and continue.
+- **implement**: add the missing handling so the journey can continue.
+- **reuse-mandate**: the human already chose this, so do not ask again.
+- **keep**: the requirement stays, with a stated stop basis and a supported path forward.
+
+Where work can safely continue past a doubt, the recommended signal is a `warn`
+in Ply's existing logrus logger (`cmd/root.go:109`). It must not be a new receipt
+gate or a human acknowledgement.
+
+Evidence classes:
+
+- **observed**: persisted evidence that already exists, such as a transcript or a run file.
+- **source**: code or text read at the base.
+- **modeled**: a derived journey that was not run.
+
+No new timing measurement and no external provider start were made for this
+audit. The only times quoted below come from existing transcript timestamps.
+
+## Reported AGENTS/policy question
+
+The human reported this question from the plyapp planner: "Plys automatiske
+Codex-tillitskontroll krever at du inspiserer …/AGENTS.md og policyen før en ny
+start-preview …". It is traced to the actual rule as follows.
+
+| Step | Evidence |
+| --- | --- |
+| The planner added the optional `codex_project_trust` grant (`process-local`, root `/Users/perottochristensen/github/plyapp-server`) to its report start request. | `/Users/perottochristensen/github/plyapp/planning/reports/pwa-status-http-implementation-20261020/codex-start-request-extra-trust-rejected.json` |
+| Preview walked the cwd and repository ancestry and found the tracked `AGENTS.md` in the Task worktree. This triggers the stop "project config, hooks, rules or instructions could be activated". | `internal/taskrun/herdr_codex_trust.go:215-240`, `internal/taskrun/herdr_codex_trust.go:231` |
+| The stop text tells the caller to involve the human: "Have the human inspect this path and policy before requesting a new preview". This is the only product message that sends an agent-observable fact to the human. | `internal/taskrun/herdr_codex_trust.go:60` |
+| Native output arrived at 20:28:33Z. The planner then asked the human at 20:29:04Z, and the human answered "for noe tull" at 20:29:39Z. | `/Users/perottochristensen/.codex/sessions/2026/10/20/rollout-2026-10-20T21-46-08-01a15ad9-8ab6-7ac0-a473-9a13b8025f83.jsonl:676`, `…01a15ad9-8ab6-7ac0-a473-9a13b8025f83.jsonl` lines 684 and 693 |
+| The planner found that the root was already `trusted` in `~/.codex/config.toml`, removed the grant and withdrew the question. Preview without the grant succeeded at 20:30:09Z. | `/Users/perottochristensen/github/plyapp/planning/reports/pwa-status-http-implementation-20261020/trust-resolution.json`, transcript line 714 |
+
+**Cause, verified:** the product's stop wording, combined with a redundant
+optional grant. Standing agent policy already forbids routine confirmations
+(`/Users/perottochristensen/.agents/AGENTS.md:11-12`, `/Users/perottochristensen/.agents/AGENTS.md:19-35`,
+`/Users/perottochristensen/.agents/skills/ply-human-input/SKILL.md:22-26`). The
+product text overrode that policy. Earlier grants for `ply/main` passed because
+that repository has no `AGENTS.md`, which made the grant look like a safe pattern
+to copy.
+
+**Not proven:** why the planner added the grant. No skill or Ply document
+prescribes it for ordinary starts; the likeliest source is the earlier Ply-repo
+review requests. Also unverified is whether Codex activates a project
+`AGENTS.md` differently depending on trust, which decides whether `AGENTS.md`
+belongs in the block list at all. The second blocker in the same journey (the
+profile/policy acceptance lock) was a separate defect and was fixed by AL01.
+
+Cost observed in this journey: 1 human question, a 35 s human answer, and 96 s
+from the stop to an accepted preview. AL01 did not touch this rule, so the
+question still recurs for any repository that contains an `AGENTS.md`.
+
+## Delivered versus remaining
+
+| Status | Item | Source |
+| --- | --- | --- |
+| Delivered | AL01: report requests default to `mandate_receipt_v1`. Unknown model/profile/policy facts stay unknown, stops can be reported before acceptance, and a legacy pre-work owner can be retired (commits `c5946ce`, `d335e70`). | `internal/taskrun/report_startup.go:1`, `docs/workflow-run.md:189-202` |
+| Delivered | Earlier work: execute `check-in` replaced `begin --permission-confirmed`, `resolve-stop` needs no permission confirmation, and verify reuses the passed review round. | `docs/workflow-execute.md:194-224`, `docs/workflow-execute.md:243-268`, `cmd/workflow_execute.go:298` |
+| Runtime boundary | Codex `on-request` with `auto_review`, Claude `auto`/`manual` modes, and native trust or login dialogs belong to the provider. Ply never answers them, and nothing here changes them. | `internal/taskrun/herdr_transport.go:331-350`, `docs/workflow-execute.md:176-184` |
+| Remaining | The trust stop and its human-directed wording (P1). | `internal/taskrun/herdr_codex_trust.go:60` |
+| Remaining | Report Runs lock on executable or trust drift after launch (P2). | `internal/taskrun/herdr_store.go:241`, `internal/taskrun/schema.go:350` |
+| Remaining | Report Runs force Claude into manual mode (P3); resume steps are labelled as human actions (P4). | `internal/taskrun/herdr_transport.go:335`, `internal/workspaceview/progress.go:173` |
+
+## Inventory
+
+| ID | Journey | Layer | Requirement | Source | Value | Mandate | Actor | Cost | Evidence | Decision | Path forward |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| S1 | startup | product | Read-only preview, then `--apply --confirm <digest>` with `HERDR_ENV=1` | `docs/workflow-run.md:67-72` | Apply cannot run effects that differ from the checked preview | Start already requested | requesting agent | 1 extra command, 0 questions | source | **keep** The digest binds exact effects and needs no human | A fresh preview gives a new digest |
+| S2 | startup | product | The `workflow execute` command is the human mandate (goal, scope, delivery target) | `docs/workflow-execute.md:186-190` | Prevents agents from choosing product scope | This is the mandate | human | 1 action per Task | observed | **keep** This is a real product decision, taken once | n/a, not a stop |
+| S3 | startup | product | Report-run Claude starts are forced to `--permission-mode manual`; schema accepts only `manual` | `internal/taskrun/herdr_transport.go:335`, `internal/taskrun/schema.go:251`, `cmd/workflow_run.go:43` | None beyond the runtime itself. Delivery already allows `auto` (`internal/taskrun/delivery_service.go:115`) | Code/test mandate given | runtime | A native prompt for each non-allowlisted tool action | source, modeled | **simplify** Accept `auto` as Delivery does (P3) | Owner works under the runtime's own review |
+| S4 | startup | product | A report request must carry effective-policy evidence | `internal/taskrun/schema.go:254-256` | Records which launch policy was requested | Requester-produced | requesting agent | 1 artifact, 0 questions | source | **keep** Agent-owned, and after AL01 it is not an acceptance gate | n/a |
+| F1 | folder-trust | product | An optional Codex grant stops the whole start when `AGENTS.md`, `.codex` or `.agents` exists in the ancestry | `internal/taskrun/herdr_codex_trust.go:231` | Avoids silently trusting project config, hooks and rules | Ordinary start mandated; grant optional | requesting agent | 1 question, 96 s (observed) | observed, source | **reconcile** Withhold only the grant effect, `warn`, and continue the ordinary start; report a redundant grant when the root is already trusted (P1) | The Codex native trust policy still applies |
+| F2 | folder-trust | product | Stop text: "Have the human inspect this path and policy" | `internal/taskrun/herdr_codex_trust.go:60` | None. The agent can read the path and the config | Agent policy forbids the question | requesting agent | Caused the reported question | observed | **remove** Address the agent and state the handling Ply chose (P1) | n/a |
+| F3 | folder-trust | product | A confirmed grant rechecks every trust path hash on each later operation and stops with "changed since confirmation" | `internal/taskrun/herdr_codex_trust.go:413`, `internal/taskrun/herdr_store.go:230` | Valid only before launch. After launch the argv grant is already applied | Run accepted | ply | Any later edit to `~/.codex` blocks callbacks | source, modeled | **reconcile** Check before launch; after launch, `warn` and continue (P2) | Pre-launch drift withholds the grant |
+| F4 | folder-trust | product | Claude folder trust is written automatically for execute; a failed write warns and the start continues | `docs/workflow-execute.md:160-174`, `cmd/workflow_execute.go:227` | Avoids the native trust dialog | Bound in launch intent | ply | 0 questions; at most 1 native dialog if the lock fails (`docs/workflow-execute.md:274-277`) | source | **keep** Already follows the warn-and-continue model | The dialog is answered in the same tab, then `execute resume` |
+| C1 | code-test | product | Mandate receipt `check-in` before Task writes | `docs/workflow-execute.md:192-210` | Binds the exact mandate, session and cwd to the owner | Mandate | owner agent | 1 command, 0 questions | observed | **keep** Already a pure receipt, observed in this Run | Idempotent retry |
+| C2 | code-test | runtime | Per-action runtime review (Claude auto classifier, Codex on-request with auto_review) | `docs/workflow-execute.md:176-184` | Real sandbox and approval enforcement | Provider policy | runtime | Prompts only when the provider asks | source | **keep** Runtime boundary; denials are preserved | `observe-stop`, then `resolve-stop` |
+| C3 | code-test | instruction | Personal rules: no commit without explicit instruction; stop and ask when unsure | `/Users/perottochristensen/.claude/CLAUDE.md:68-70` | Stops unrequested Git effects | The mandate explicitly authorizes commits | owner agent | 0 questions when the mandate is read | source | **reuse-mandate** The frozen mandate is that explicit instruction; no edit to personal policy | n/a |
+| C4 | code-test | instruction | The orchestrator approves routine subagent work and access itself | `/Users/perottochristensen/.agents/AGENTS.md:19-35` | Removes routine human approval | Standing rule | coordinator | Reduces cost | source | **keep** This is the rule F2 violated | n/a |
+| R1 | review | product | Independent review round started by the coordinator on the same Run | `/Users/perottochristensen/.agents/skills/ply-delivery/SKILL.md:52-58` | A separate reviewer for the exact candidate | Agreement gate | coordinator | 0 questions (AL01 had 2 rounds) | observed | **keep** Real quality gate with no human | Findings, a new commit, then a new round |
+| V1 | verification | product | Automatic acceptance needs the exact clean candidate, a built `--candidate-binary` and the frozen acceptance script | `cmd/workflow_execute.go:400` | Binds what was tested to what is delivered | Agreement | owner agent | 1 build per candidate, 0 questions | source | **keep** Cheap and agent-owned; a doc-only Task builds the unchanged tree | A completed receipt is recovered without rerun |
+| D1 | delivery | product | Automatic local Epic integration has no human gate when `require_human_qa=false` | `internal/workflowhandoff/delivery.go:376-377` | n/a | Agreement | owner agent | 0 questions | source | **keep** Already gate-free | n/a |
+| D2 | delivery | product | Human QA when the agreement requires it | `docs/workflow-execute.md:557-566` | Real product judgment | Chosen in the agreement | human | 1 question | source | **keep** A genuine product decision | Fail or blocked is preserved and vetoes delivery |
+| D3 | delivery | instruction | Ask for the delivery mode only when it is missing | `/Users/perottochristensen/.agents/skills/ply-delivery/SKILL.md:77` | A missing target is a real choice | Reuses an earlier choice | human | 0 when given | source | **keep** Asks only for a missing choice | n/a |
+| I1 | installation | product | Native closeout `installation_pending` when the plan has an install profile | `internal/integration/execute.go:245` | Integration is not claimed complete before a required install | Agreement | ply | 0 questions | source | **keep** Resumable, with the source preserved | `resume_installation` |
+| I2 | installation | instruction | Self-hosted Ply CLI install after delivery uses the same ad-hoc `install-qualified.py`, copied into 4 job folders (identical sha256 `02736ab7…`) | `/Users/perottochristensen/.local/share/ply/planning/report-startup-lock-20261020/install-qualified.py:1` | Hash-checked install with a backup | Selected per job by the human | coordinator | A per-job copy outside native receipts | observed | **implement** Investigate the native install profile for the Epic (P5) | Script backup and rollback |
+| X1 | recovery | product | Report-run callbacks stop on changed Ply, provider or Herdr executable bytes; report Runs have no continuation path | `internal/taskrun/schema.go:350`, `internal/taskrun/herdr_store.go:241` | Prevents an unknown binary from acting as the bound control | Run accepted | ply | Observed lock: `task_run_conflict: executable bytes changed` after an ordinary CLI update (`/Users/perottochristensen/.local/share/ply/planning/report-startup-lock-20261020/affected-run.json`) | observed, source | **implement** Use Delivery's immutable control copy or continuation for report Runs (P2) | Today only AL01 retire, and only for pre-work owners |
+| X2 | recovery | product | Unknown or partial earlier effects block dependent work until reconciled with exact evidence | `docs/workflow-execute.md:262-265` | Prevents replay of an uncertain effect | n/a | ply | Blocks only the dependent effect | source | **keep** Truthfully unknown, handled locally | Exact-evidence reconcile (AL01) or retire |
+| X3 | recovery | product | Closeout `resume_closeout` and `resume_installation` are shown with actor `human` | `internal/workspaceview/progress.go:173`, `internal/taskrun/read_inventory.go:440` | None. Resuming an authorized operation is coordinator work (`workflow execute follow`) | Agreement | coordinator | 1 misleading human action | source, modeled | **simplify** Label the coordinator (P4) | n/a |
+| X4 | recovery | product | A blocked, paused or stopped headless worker sets next actor `human` | `internal/taskrun/worker_unix.go:210` | Control of a headless worker | Pause or stop was chosen by a principal | human | 1 action | source | **keep** Change only if evidence shows a coordinator-resolvable cause | `worker resume` on the same Run |
+
+## Question counts by journey
+
+| Journey | Earlier contract | Current base | After proposals | Evidence |
+| --- | --- | --- | --- | --- |
+| Codex report start with the optional grant in a repo that has `AGENTS.md` | 1 question; stop 20:28:33Z, answer after 35 s, accepted preview after 96 s | 1 | 0 (P1) | observed |
+| Same start without the grant | 0 | 0 | 0 | observed |
+| Report start to acceptance with unknown profile/policy | Locked, no supported path | 0 (AL01) | 0 | source |
+| Delivery start through execute and check-in (this Run) | 1 mandate plus a permission confirmation | 1 mandate | 1 mandate | observed |
+| Review rounds | 0 | 0 | 0 | observed |
+| Automatic local delivery | 0 | 0 | 0 | source |
+| Delivery with required human QA | 1 | 1 | 1 (kept) | source |
+| Recovery: report Run after a CLI update while the owner works | Locked | Locked unless pre-work (retire) | 0 (P2) | modeled |
+| Recovery: resolve a stop | 1 permission confirmation | 0 | 0 | source |
+| Recovery: interrupted closeout shown to the human | 1 | 1 | 0 (P4) | modeled |
+
+## Hard reusable scenarios
+
+These scenarios become product tests in the repair Specs, in the existing taskrun
+fixtures. They are not AL02 tests.
+
+| Scenario | Where it applies | The test must show |
+| --- | --- | --- |
+| stale lock/owner | P2: report owner after a CLI update; P4: closeout | The same Run continues, or is retired with history kept; no second writer |
+| interrupted agent | P2: owner callback after a provider update mid-Run | Work and session identity are preserved; continuation without replay |
+| lost receipt | P1/P2: preview/apply digest reply lost | A repeated start reads the same reservation; the grant is not applied twice |
+| drift | P1: trust facts change between preview and apply; P2: executables change after launch | Before launch the grant is withheld and a warning logged; after launch callbacks warn and continue |
+| partial effect | P2: tab created, prompt state unknown | The effect stays unknown and only the dependent step is blocked |
+
+## Ordered repair proposals
+
+### P1 (high): Codex trust stop becomes agent-owned and local
+
+- **Evidence:** the observed question above. `internal/taskrun/herdr_codex_trust.go:60`
+  and `internal/taskrun/herdr_codex_trust.go:231`.
+- **Scope:** `internal/taskrun/herdr_codex_trust.go` and `internal/taskrun/herdr_service.go:184-188`,
+  the trust section of `docs/workflow-run.md:131-145`, and the start help text in
+  `cmd/workflow_run.go:43`.
+  - If the observed config already trusts the root, the grant is redundant: the
+    preview reports it as a no-op.
+  - Otherwise, an unconfirmable grant removes only the trust effect from the
+    preview, logs a logrus `warn` (path, reason, handling), and continues the
+    ordinary start. The stderr pattern is `cmd/workflow_status.go:46`.
+  - Malformed grants keep exit 2. No change to persistent config, sandbox or
+    runtime approvals.
+- **Stop basis:** none remains for the whole start. Explicit `untrusted` still
+  withholds the grant, and Codex native policy applies.
+- **Regression journeys:**
+  - A fixture linked worktree with a tracked `AGENTS.md` and a trusted root:
+    preview with the grant gets a confirmation, zero human-directed text, and a
+    report-mode start.
+  - The same fixture with an untrusted root: start without the grant effect,
+    plus a warning.
+  - Explicit `untrusted`.
+  - Lost apply reply.
+  - The code/test forbidden effects (commit, push, install) are unchanged.
+- **Done when:** the plyapp journey needs 0 human questions; no product message
+  routes an agent-observable fact to the human; all existing trust tests still pass.
+- **Depends on:** none. Before removing `AGENTS.md` from the block list, check the
+  documented Codex behaviour for it.
+
+### P2 (high): report Runs survive drift after launch
+
+- **Evidence:** the observed `executable bytes changed` lock
+  (`/Users/perottochristensen/.local/share/ply/planning/report-startup-lock-20261020/affected-run.json`),
+  plus `internal/taskrun/herdr_store.go:241` and `internal/taskrun/schema.go:350`.
+  For trust drift: `internal/taskrun/herdr_store.go:230`.
+- **Scope:** reuse the Delivery mechanisms for report Runs: the immutable
+  per-attempt control executable and the existing continuation. Check trust
+  freshness only before launch; after launch, log a `warn`. No new receipt gate.
+- **Stop basis:** keep the stop for an unbound callback executable (identity
+  mismatch) and for unknown prior effects.
+- **Regression journeys:** CLI install mid-Run; provider update mid-Run; a
+  `~/.codex/config.toml` edit after launch; a partial tab/prompt effect;
+  legacy frozen Runs keep their contract.
+- **Done when:** a working report owner completes its round after each kind of
+  drift, with history and effect identity preserved.
+- **Depends on:** P1 for the trust part; it touches the same file.
+
+### P3 (medium): Claude `auto` for report Runs
+
+- **Evidence:** `internal/taskrun/herdr_transport.go:335` and
+  `internal/taskrun/schema.go:251`, while Delivery accepts `auto`
+  (`internal/taskrun/delivery_service.go:115`).
+- **Scope:** accept `manual` or `auto` in report requests and forward the
+  requested mode; update the help text and docs. Existing digests are unchanged.
+- **Stop basis:** unknown modes are still rejected.
+- **Regression journeys:** an `auto` report start launches with
+  `--permission-mode auto`; a `manual` request is byte-identical to today;
+  frozen requests are unchanged.
+- **Done when:** a Claude report Run has no Ply-forced per-tool prompts.
+- **Depends on:** after P1, because both edit `cmd/workflow_run.go:43` and
+  `docs/workflow-run.md`.
+
+### P4 (low): resume steps belong to the coordinator
+
+- **Evidence:** `internal/workspaceview/progress.go:173` and
+  `internal/taskrun/read_inventory.go:440`.
+- **Scope:** pending `resume_closeout` and `resume_installation` show the
+  coordinator or agent actor. Human-owned integration keeps the human
+  (`internal/taskrun/read_delivery.go:94`).
+- **Stop basis:** n/a; this is labelling only.
+- **Regression journeys:** an interrupted closeout (stale owner); install unknown.
+- **Done when:** status and inventory name no human for resuming an already
+  authorized operation.
+- **Depends on:** none.
+
+### P5 (low): native installation for the self-hosted Epic
+
+- **Evidence:** the identical copied `install-qualified.py` (inventory row I2),
+  and `internal/integration/execute.go:245`.
+- **Scope:** an investigation Spec. Can the Epic's install profile replace the
+  per-job script, with backup and rollback?
+- **Stop basis:** keep `install_unknown` until the installed result is observed.
+- **Regression journeys:** an interrupted install; a lost install receipt.
+- **Done when:** a root job installs through a native receipt, without a
+  script copy.
+- **Depends on:** after P1–P4.
