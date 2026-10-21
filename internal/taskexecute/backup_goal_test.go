@@ -356,3 +356,33 @@ func TestSelectedBackupStartPhaseRecovery(t *testing.T) {
 		t.Fatalf("duplicate launch: %v", err)
 	}
 }
+
+func TestSelectedBackupStartRecoversAfterNativeFollow(t *testing.T) {
+	d, root, id, in, runtime := backupStartSourceFixture(t, false)
+	p, err := BackupGoal(d, root, id, in, runtime, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	started, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+	if err != nil || started.Execution == nil || started.Execution.Run == nil {
+		t.Fatalf("start: %+v %v", started, err)
+	}
+	// Observe the retired source using the public service. Its modeled agent
+	// absence changes readback, but starts and stops no provider.
+	shown, followErr := taskrun.WorkflowFollow(d, root, id, 300*time.Millisecond)
+	t.Logf("retired source follow: %+v %v", shown.Transport, followErr)
+	if reflect.DeepEqual(shown.Transport, p.Registration.Retirement.Owner) {
+		t.Fatal("fixture did not change transport observation")
+	}
+	before := recoveryFiles(t, filepath.Join(root, ".ply"))
+	retry, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+	if err != nil {
+		t.Fatalf("same-input recovery after source follow: %v", err)
+	}
+	if retry.Execution == nil || retry.Execution.Run == nil || retry.Execution.Run.RunID != started.Execution.Run.RunID || !reflect.DeepEqual(retry.Execution.Run.Transport, started.Execution.Run.Transport) || retry.Registration.Goal != started.Registration.Goal || !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) {
+		t.Fatal("follow recovery changed refs or duplicated launch")
+	}
+	if !reflect.DeepEqual(retry.Registration.Retirement.Owner, shown.Transport) {
+		t.Fatal("full source observation lost from readback")
+	}
+}

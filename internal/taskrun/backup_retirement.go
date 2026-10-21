@@ -31,6 +31,14 @@ type BackupRetirement struct {
 	Completed     bool                              `json:"completed"`
 }
 
+type backupOwnerIdentity struct {
+	WorkspaceID    string `json:"workspace_id"`
+	TabID          string `json:"tab_id"`
+	PaneID         string `json:"pane_id"`
+	TerminalID     string `json:"terminal_id"`
+	AgentSessionID string `json:"agent_session_id"`
+}
+
 func backupRetirement(s workflowState, selected *DeliveryRetireInput, retired *DeliveryRetirement) (*BackupRetirement, string, error) {
 	if selected == nil {
 		return nil, retired.RecordedAtUTC, nil
@@ -72,7 +80,19 @@ func backupRetirement(s workflowState, selected *DeliveryRetireInput, retired *D
 		return nil, "", workflowError(4, "backup_goal_stop_binding_conflict: retirement stop/owner changed")
 	}
 	p := &BackupRetirement{RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256, PreparationID: s.Request.PreparationID, Source: s.Observed.Target, Owner: s.Result.Transport, Stop: stop, StopBinding: *dl.ActiveStop, Selected: *selected}
-	raw, err = Canonical(p)
+	// Bind semantic identity, not coordinator observations. Native follow can
+	// change state, observation time and launch-pending without replacing an
+	// owner. Keep the complete transport above for truthful readback.
+	raw, err = Canonical(struct {
+		RunID         string                            `json:"run_id"`
+		RequestSHA256 string                            `json:"request_sha256"`
+		PreparationID string                            `json:"preparation_id"`
+		Source        workspace.PlanWorktreeObservation `json:"source"`
+		Owner         backupOwnerIdentity               `json:"owner"`
+		StopBinding   FileBinding                       `json:"stop_binding"`
+		Selected      DeliveryRetireInput               `json:"selected"`
+	}{p.RunID, p.RequestSHA256, p.PreparationID, p.Source,
+		backupOwnerIdentity{p.Owner.WorkspaceID, p.Owner.TabID, p.Owner.PaneID, p.Owner.TerminalID, p.Owner.AgentSessionID}, p.StopBinding, p.Selected})
 	if err != nil {
 		return nil, "", err
 	}
