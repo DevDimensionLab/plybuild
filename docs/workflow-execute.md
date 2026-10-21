@@ -494,20 +494,32 @@ attempt has a known recorded outcome. Never replay an uncertain attempt.
 ### Input file requirements
 
 The delivery report, its evidence and verifier evidence files, the acceptance
-entrypoint and the `--review` file are ordinary inputs. Each is bound by
-SHA-256, and Ply keeps its own private copy. A file that other local users can
-read, such as a 0644 log from a shell redirect or a 0755 script, is consumed
-without chmod. The callback logs one `warn` on stderr per such file, and stdout
-keeps a single JSON value. The candidate binary is read the same way and runs
-from a private 0700 snapshot. A file that group or other users can write is
-refused, because they could have chosen its bytes.
+entrypoint, the `--review` file and the `workflow run report` round report are
+ordinary inputs. The caller chooses which file to submit. Ply binds the bytes
+it actually read by SHA-256 and validates their content. The reports are
+copied into Ply's private event store or report slot, and verification runs a
+private snapshot of the acceptance entrypoint. Evidence files and the review
+are not copied at submission: later reads re-read their original path and
+must match the bound digest, so keep them unchanged until delivery. A file that other local
+users can read, such as a 0644 log from a shell redirect or a 0755 script, is
+consumed without chmod. The callback logs one `warn` on stderr per such file,
+and stdout keeps a single JSON value. The candidate binary is read the same way
+and runs from a private 0700 snapshot.
 
-Runtime acceptance, human QA attestations and evidence, the notification
-route, native run state and other Ply stores and controls must stay owner-only. Every refusal names the role and path,
-the failing requirement, the observed type, mode and size, and the supported
-next step. It never includes file contents. A physical path, a regular file and
-a size limit are still required. Bytes that change after binding never qualify
-a candidate.
+Mode bits do not authenticate who owns or wrote a file, and Ply does not
+compare the file's UID. A 0644 file therefore proves nothing about its writer.
+The trust boundary is the caller's choice of path, plus the digest of the bytes
+Ply read. A file that group or other users can write is still refused, because
+they could change it at any time before Ply reads it.
+
+Runtime acceptance, coordinator review decisions, human QA attestations and
+evidence, the notification route, native run state and other Ply stores and
+controls must stay owner-only. Every refusal names the role and path, the
+failing requirement, the observed type, mode and size, and the supported next
+step. It never includes file contents. A missing or unreadable input also names
+its role and keeps the actual error (`errors.Is` with `fs.ErrNotExist` or
+`fs.ErrPermission`). A physical path, a regular file and a size limit are still
+required. Bytes that change after binding never qualify a candidate.
 
 ### Independent review rounds
 

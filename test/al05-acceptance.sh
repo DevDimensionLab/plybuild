@@ -3,6 +3,10 @@
 # continue at 0644 while private roles stay owner-only and every retained
 # refusal names its input. Runs against the exact candidate commit and binary.
 set -eu
+# Same tools as the development regressions: cached Go first, then Homebrew Git
+# before the system tools. Apple Git 2.39 lacks --show-ref-format.
+cached_go=/Users/perottochristensen/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.darwin-arm64/bin
+export PATH="$cached_go:/opt/homebrew/bin:$PATH"
 : "${PLY_CANDIDATE_BINARY:?exact private candidate binary required}"
 : "${PLY_CANDIDATE_OID:?exact candidate OID required}"
 : "${PLY_CANDIDATE_TREE:?exact candidate tree required}"
@@ -20,9 +24,8 @@ export GOTOOLCHAIN=local
 export GOFLAGS=-mod=readonly
 export GOMODCACHE=/Users/perottochristensen/go/pkg/mod
 export GOCACHE=/Users/perottochristensen/Library/Caches/go-build
-cached_go=/Users/perottochristensen/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.darwin-arm64/bin
-export PATH="$cached_go:$PATH"
 test "$(go env GOVERSION)" = go1.26.7
+test "$(command -v git)" = /opt/homebrew/bin/git
 
 # Runs one go test group, keeps go's actual exit and prints the raw log on
 # failure, or a short PASS summary on success.
@@ -40,8 +43,8 @@ group() {
 	fi
 }
 
-# Explicit timeouts stay inside the 1800s budget: about 4x the measured ~80s
-# for the AL05 tests, ~105s for the contrasts and ~1s for cmd.
+# Explicit timeouts stay inside the 1800s budget: about 3-4x the measured ~100s
+# for the AL05 tests, ~130s for the contrasts and ~1s for cmd.
 group al05 -timeout 6m -v ./internal/taskrun -run '^TestAL05'
 for name in \
 	TestAL05OrdinaryReportAndEvidenceAreConsumed \
@@ -51,13 +54,16 @@ for name in \
 	TestAL05ChangedOrdinaryInputsDoNotQualify \
 	TestAL05InPlaceOverwriteAfterBindingDoesNotQualify \
 	TestAL05NativePrivateRolesStayProtected \
-	TestAL05CandidateCLIJourneyWithOrdinaryModes; do
+	TestAL05CandidateCLIJourneyWithOrdinaryModes \
+	TestAL05OrdinaryRoundReportIsConsumed \
+	TestAL05MissingOrUnopenableInputKeepsErrnoAndNamesRole \
+	TestAL05RoundReportCLIJourney; do
 	grep -q "^--- PASS: $name " "$TMPDIR/al05.log"
 done
-# Existing consumers of the changed report, verify, receipt-reuse, status and
-# begin (notification route) readers.
-group contrasts -timeout 8m -v ./internal/taskrun -run '^(TestDeliveryOwnerActualAcceptanceAndTruthfulProgress|TestAutomaticVerificationMissingInputsCannotReusePriorPass|TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance|TestDeliveryRecordedVerificationRequalificationDoesNotRepeatAcceptance|TestDeliveryStatusPreservesCompletedReceiptBeforeQualification|TestDeliveryBeginBindsExistingAuthorizedNotificationNatively|TestDeliveryBeginNativeAcceptanceAndLostReply|TestAutomaticAcceptanceCLIGreenAndFailureCorrection)$'
-test "$(grep -c '^--- PASS' "$TMPDIR/contrasts.log")" = 8
+# Existing consumers of the changed report, verify, receipt-reuse, status,
+# begin (notification route) and round-report readers.
+group contrasts -timeout 8m -v ./internal/taskrun -run '^(TestDeliveryOwnerActualAcceptanceAndTruthfulProgress|TestAutomaticVerificationMissingInputsCannotReusePriorPass|TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance|TestDeliveryRecordedVerificationRequalificationDoesNotRepeatAcceptance|TestDeliveryStatusPreservesCompletedReceiptBeforeQualification|TestDeliveryBeginBindsExistingAuthorizedNotificationNatively|TestDeliveryBeginNativeAcceptanceAndLostReply|TestAutomaticAcceptanceCLIGreenAndFailureCorrection|TestWorkflowInterruptedReportCannotReplaceItsFrozenSemantics|TestAL04ReportOwnerCompletesRoundAfterPlyUpdate)$'
+test "$(grep -c '^--- PASS' "$TMPDIR/contrasts.log")" = 10
 # Unchanged CLI input and private-input boundaries.
 group cmd -timeout 2m -v ./cmd -run '^(TestDeliveryCLIRejectsAmbiguousOrMissingInputBeforeEffects|TestExecuteAcceptanceRequiresExactPrivateInputsBeforeWorkspaceAccess|TestExecuteCheckInHasNoBlanketPermissionFlag)$'
 test "$(grep -c '^--- PASS' "$TMPDIR/cmd.log")" = 3

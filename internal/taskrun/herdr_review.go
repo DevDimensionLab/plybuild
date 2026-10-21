@@ -68,7 +68,7 @@ func WorkflowReviewRun(d Dependencies, root, id, file string) (WorkflowRun, erro
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
-	b, e := readFile(file, 256<<10, true)
+	b, e := readFileAs(file, privateCoordinatorReview, 256<<10, ownerOnlyAccess)
 	if e != nil {
 		return WorkflowRun{}, e
 	}

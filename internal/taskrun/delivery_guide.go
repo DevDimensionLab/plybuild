@@ -60,9 +60,13 @@ This guide and the adjacent templates describe the frozen callback contract.
 They are not observed acceptance, review, verification or human QA. Copy a
 template to a new private file; never overwrite the templates or a submitted
 input. A delivery report, its evidence logs, the acceptance script and a review
-file only need to be writable by you alone; an ordinary 0644 file is accepted.
-Runtime acceptance, human QA and other authenticating or control files keep
-the owner-only (0600) requirement. Run callbacks from the bound Task worktree: %s.
+file are ordinary inputs: Ply binds the bytes it reads by SHA-256, so an
+ordinary 0644 file is accepted and a file writable by group or other users is
+refused. Evidence logs and the review are re-read from their path against that
+digest, so keep them unchanged. File modes do not prove who wrote a file;
+submit only files you chose. Runtime acceptance, human QA and other
+authenticating or control files keep the owner-only (0600) requirement.
+Run callbacks from the bound Task worktree: %s.
 
 Control executable: %s
 Run: %s

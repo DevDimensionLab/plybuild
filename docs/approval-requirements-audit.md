@@ -231,7 +231,9 @@ its error named neither the path nor the role.
 | Role | Source (base `7e049ed`) | Value of owner-only mode | Decision |
 | --- | --- | --- | --- |
 | Delivery report (`execute report --file`) | `workflowDeliveryReport` used `private=true` | None. Ply checks the content, copies the bytes into its private event store, and the report grants no authority | **remove**. Group/other write access stays refused |
-| Report evidence and verifier evidence | `validateDeliveryReport` used `workflowBound` (private). Also re-read by historical qualification | None. The owner's digest binds the bytes | **remove**, both at publication and on re-read |
+| Round report (`workflow run report --file`) | `WorkflowReportRound` used `private=true` (review r001-f01) | None. Its run, request, session and round control are checked, and it is canonicalized and kept in Ply's immutable report slot. Later reads use that copy | **remove**, same as the delivery report |
+| Coordinator review (`workflow run review --file`) | `WorkflowReviewRun` | It is the coordinator's control decision for the round, not owner evidence | **keep** owner-only, named `coordinator review` |
+| Report evidence and verifier evidence | `validateDeliveryReport` used `workflowBound` (private). Also re-read by historical qualification | None. The owner's digest binds the bytes. They are not copied, and every read re-reads the original path against that digest | **remove**, both at publication and on re-read |
 | Acceptance entrypoint | `deliveryReadBinding` at reservation, `workflowBound` after the run, in live revalidation, receipt reuse and status | None. The command runs a private snapshot, and the bytes are re-checked by hash | **remove** |
 | Candidate review (`--review`) | Same readers as the entrypoint | None. Its candidate, reviewer and findings are validated, and its digest is bound | **remove** |
 | Candidate binary | `prepareAutomaticVerification` already used `private=false` and a 0700 snapshot | n/a | **keep** (baseline, proved by a test) |
@@ -239,11 +241,27 @@ its error named neither the path nor the role.
 | Native run state, stores, controls | `readValue`, `PrivateRead`, `workflowBound` | Ply creates them 0600. Any other mode means a change outside Ply | **keep**. Run state is named; other callers report `private file` |
 
 After the change, a refusal reads like this example: `delivery report <path>: must not be writable by group
-or other users, who could choose its bytes; observed regular file, mode 0664,
+or other users, who could change it at any time before Ply reads it; observed regular file, mode 0664,
 412 bytes; remove that write access (chmod go-w) and submit the same path
 again`. Accepted shared-readable inputs log `warn` with role, path and mode,
 once per callback, after Ply has consumed the input (report published or
 verification reserved).
+
+Mode bits do not authenticate an owner (review r001-f03). Before AL05, owner-only
+mode incidentally excluded files owned by another non-root user, because those
+were unreadable at 0600. AL05 does not add a UID check. The caller chooses which
+path to submit, and a readable file owned by someone else is consumed like any
+other ordinary input. A 0644 mode is never treated as proof of who wrote the
+file. What actually binds the input is the digest of the bytes Ply read and
+content validation. Reports and the acceptance entrypoint are also copied
+privately (event store, report slot, executed attempt snapshot). Report
+evidence and the review are not copied at submission and are re-read from
+their original path against the digest; the review's bytes become a candidate
+artifact when a candidate is created. Group/other write access is refused
+because it lets others change the file at any time. Missing or unopenable
+ordinary inputs name their role and path and keep the actual errno
+(r001-f02). Native readers keep raw errors, so `os.IsNotExist` recovery is
+unchanged.
 
 Still protected: absolute physical paths without symlinks, regular files, size
 limits, inode replacement while the file is opened or read, the owner's digest
@@ -263,8 +281,8 @@ after binding, not during the read. The remaining work is in the backlog as
 seam in `readFileAs`, a test that rewrites the same inode with the same size
 during the read, and a decision on whether a changed mtime or size refuses.
 
-Not changed by AL05: legacy `workflow run` report and review files, the
-observe-stop/resolve-stop evidence and runtime evidence paths. They keep
+Not changed by AL05: the observe-stop/resolve-stop evidence and runtime
+evidence paths. They keep
 owner-only mode, and their errors now name the path, requirement and observed
 mode under the generic role `private file`.
 

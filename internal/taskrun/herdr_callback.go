@@ -300,7 +300,7 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
-	b, e := readFile(file, 1<<20, true)
+	b, e := readInput(file, inputRoundReport, 1<<20)
 	if e != nil {
 		return WorkflowRun{}, e
 	}
@@ -412,6 +412,9 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 		s.Result.NextAction = WorkflowAction{"coordinator", "Follow the same session, then review this immutable report."}
 		return nil
 	})
+	if e == nil {
+		warnSharedInput(inputRoundReport, file)
+	}
 	o, _ := WorkflowShow(d, root, id)
 	return o, e
 }

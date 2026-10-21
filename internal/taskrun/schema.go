@@ -190,8 +190,9 @@ const (
 	anyAccess fileAccess = iota
 	// Native stores, controls and authority-bearing inputs.
 	ownerOnlyAccess
-	// Ordinary hash-bound inputs: others may read, not write.
-	ownerWritableAccess
+	// Ordinary hash-bound inputs: group/other read is allowed, write is not.
+	// Mode bits say nothing about who owns or wrote the file.
+	noSharedWriteAccess
 )
 
 func readFile(path string, max int, private bool) ([]byte, error) {
@@ -225,8 +226,8 @@ func readFileAs(path, role string, max int, access fileAccess) ([]byte, error) {
 		return nil, refuse(fmt.Sprintf("requires at most %d bytes", max), "keep this input within the limit and move bulk output to a separate bounded file")
 	case access == ownerOnlyAccess && perm&0077 != 0:
 		return nil, refuse("requires owner-only permissions because it holds native or authority-bearing data", "check that no other user changed it, then restore owner-only mode (chmod go-rwx)")
-	case access == ownerWritableAccess && perm&0022 != 0:
-		return nil, refuse("must not be writable by group or other users, who could choose its bytes", "remove that write access (chmod go-w) and submit the same path again; read access for others is accepted")
+	case access == noSharedWriteAccess && perm&0022 != 0:
+		return nil, refuse("must not be writable by group or other users, who could change it at any time before Ply reads it", "remove that write access (chmod go-w) and submit the same path again; read access for others is accepted")
 	}
 	f, e := openRead(path)
 	if e != nil {

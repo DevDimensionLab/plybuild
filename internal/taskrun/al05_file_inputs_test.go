@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -364,4 +365,118 @@ func TestAL05CandidateCLIJourneyWithOrdinaryModes(t *testing.T) {
 		}
 	}
 	assertAutomaticCLIClosure(t, binary, f, verified)
+}
+
+// r001-f01: the submitted round report is an ordinary input like the delivery
+// report. The coordinator review stays owner-only as a control decision.
+func TestAL05OrdinaryRoundReportIsConsumed(t *testing.T) {
+	f := workflowTestFixture(t)
+	o := workflowTestAccept(t, f, workflowTestStart(t, f))
+	log := al04CaptureLog(t)
+	r := f.Report
+	r.Round, r.ControlID, r.PreviousReportSHA256 = o.Round.Number, o.Round.ControlID, o.Round.PreviousReportSHA256
+	b, err := Canonical(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writable := filepath.Join(f.R.WorkspaceRoot, "round-writable.json")
+	al05Write(t, writable, b, 0664)
+	_, err = WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writable)
+	al05AssertError(t, err, "round report", writable, "mode 0664", "chmod go-w")
+	file := filepath.Join(f.R.WorkspaceRoot, "round.json")
+	al05Write(t, file, b, 0644)
+	for i := 0; i < 2; i++ {
+		o, err = WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file)
+		if err != nil || o.Round.ReportSHA256 == nil {
+			t.Fatalf("ordinary 0644 round report did not continue: %v", err)
+		}
+	}
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil || len(s.Records) != 1 {
+		t.Fatalf("lost-reply retry duplicated the round record: %v %d", err, len(s.Records))
+	}
+	// Later reads use Ply's private copy of the report, not the submitted path.
+	al05AssertMode(t, s.Records[0].Report.Locator, 0600)
+	if _, err = workflowReadReport(s.Records[0]); err != nil {
+		t.Fatal(err)
+	}
+	al05AssertWarn(t, log, "round report", file, "mode=0644")
+	review := workflowTestReview(t, f, o, "accepted")
+	if err = os.Chmod(review, 0644); err != nil {
+		t.Fatal(err)
+	}
+	_, err = WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, review)
+	al05AssertError(t, err, "coordinator review", review, "owner-only", "mode 0644")
+}
+
+// r001-f02: a missing or unopenable ordinary input names its role, path and
+// next step and keeps the actual errno; native callers keep os.IsNotExist.
+func TestAL05MissingOrUnopenableInputKeepsErrnoAndNamesRole(t *testing.T) {
+	f := newDeliveryFixture(t, "codex")
+	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
+	root := f.R.WorkspaceRoot
+	missing := filepath.Join(root, "missing-report.json")
+	_, err := WorkflowDeliveryReport(f.D, root, o.RunID, o.Paths.Context, missing)
+	al05AssertError(t, err, "delivery report", missing, "no such file or directory", "existing regular file")
+	if !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("missing input lost its errno: %#v", err)
+	}
+	unreadable := al05WriteReport(t, filepath.Join(root, "unreadable.json"), al05Report(o, "unreadable", []FileBinding{}, al05Write(t, filepath.Join(root, "ok.log"), []byte("ok\n"), 0644)), 0200)
+	_, err = WorkflowDeliveryReport(f.D, root, o.RunID, o.Paths.Context, unreadable)
+	al05AssertError(t, err, "delivery report", unreadable, "permission denied")
+	if !errors.Is(err, fs.ErrPermission) {
+		t.Fatalf("unopenable input lost its errno: %#v", err)
+	}
+	gone := filepath.Join(root, "gone.log")
+	report := al05WriteReport(t, filepath.Join(root, "gone.json"), al05Report(o, "gone", []FileBinding{{gone, hash([]byte("x"))}}, FileBinding{gone, hash([]byte("x"))}), 0644)
+	_, err = WorkflowDeliveryReport(f.D, root, o.RunID, o.Paths.Context, report)
+	al05AssertError(t, err, "report evidence", gone, "no such file or directory")
+	// Native recovery still depends on the unwrapped not-exist error.
+	var v map[string]any
+	if err = readValue(filepath.Join(o.Paths.RunRoot, "absent.json"), 1<<10, &v); !os.IsNotExist(err) {
+		t.Fatalf("native missing-state recovery changed: %v", err)
+	}
+	s, err := workflowRead(root, o.RunID)
+	if err != nil || len(s.Result.Delivery.Events) != 0 {
+		t.Fatalf("refused input appended an event: %v", err)
+	}
+}
+
+// The candidate CLI consumes a 0644 round report: one record, warn on stderr.
+func TestAL05RoundReportCLIJourney(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	root, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	installed := filepath.Join(root, "ply")
+	al04Install(t, installed, mustReadAL01(t, binary))
+	f := al01ReceiptFixture(t, installed)
+	o := workflowTestStart(t, f)
+	cwd, _ := f.D.CWD()
+	al04CLI(t, installed, cwd, "run", "check-in", o.RunID, "--context", o.Paths.Context, "--provider", "codex", "--native-session", o.Transport.AgentSessionID)
+	r := f.Report
+	r.Round, r.ControlID, r.PreviousReportSHA256 = o.Round.Number, o.Round.ControlID, o.Round.PreviousReportSHA256
+	b, err := Canonical(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(f.R.WorkspaceRoot, "cli-round.json")
+	al05Write(t, file, b, 0644)
+	for i := 0; i < 2; i++ {
+		raw, stderr := al04CLI(t, installed, cwd, "run", "report", o.RunID, "--context", o.Paths.Context, "--file", file)
+		var got WorkflowRun
+		if err = json.Unmarshal(raw, &got); err != nil || got.Round.ReportSHA256 == nil {
+			t.Fatalf("CLI round report was not recorded: %v %s", err, raw)
+		}
+		for _, fact := range []string{"level=warning", "round report", file} {
+			if !strings.Contains(stderr, fact) {
+				t.Fatalf("stderr warn lacks %q: %s", fact, stderr)
+			}
+		}
+	}
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil || len(s.Records) != 1 {
+		t.Fatalf("repeated CLI round report produced another record: %v", err)
+	}
 }
