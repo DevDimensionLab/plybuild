@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 )
 
 type taskWriterState uint8
@@ -109,6 +110,9 @@ func (w taskWriters) local(o taskWriterEvidence, transcript string, shell int) t
 func (w taskWriters) herdr(invoker string) taskWriterEvidence {
 	d, s := w.d, w.s
 	out := taskWriterEvidence{absence: HumanOwnerRecoveryObservation{Transport: s.Result.Transport, ProcessLiveness: "unknown"}}
+	// This is the bound historical transport, not a fresh state observation.
+	// Only this evidence copy changes; immutable startup/retirement bytes stay put.
+	out.absence.Transport.Observation = "cached"
 	raw, err := workflowCall(d, s.Request, "pane", "get", s.Result.Transport.PaneID)
 	var call *HerdrCallError
 	if !errors.As(err, &call) || !call.ReadOnly || call.Phase != "pane get" || call.ProviderCode != "pane_not_found" {
@@ -174,6 +178,7 @@ func (w taskWriters) herdr(invoker string) taskWriterEvidence {
 			out.absence.AgentInventorySHA = hash(raw)
 		}
 	}
+	out.absence.InventoryObservedAt = d.Now().UTC().Format(time.RFC3339Nano)
 	out.state = taskWritersAbsent
 	return out
 }
