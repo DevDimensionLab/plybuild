@@ -170,7 +170,24 @@ func BuildTaskList(s *Snapshot, filters workspace.TaskListFilters, process map[w
 				p.State = "cleanup_pending"
 				reason, kind, detail := workspace.TaskCloseoutPendingAction(closeout)
 				p.Reasons = append(p.Reasons, reason)
-				p.NextActions = []Action{{Source: "integration", Kind: kind, Actor: "human", Reason: detail, Severity: "attention", SinceUTC: stringValue(closeout.UpdatedAtUTC), EvidenceIDs: []string{closeout.OperationID}}}
+				action := Action{Source: "integration", Kind: kind, Actor: "unknown", Reason: detail, Severity: "attention", SinceUTC: stringValue(closeout.UpdatedAtUTC), EvidenceIDs: []string{closeout.OperationID}}
+				// Reuse an exact native Run's frozen actor and supported guidance
+				// when available, including explicitly human-owned delivery.
+				if s.process != nil {
+					for _, run := range s.process.runs.Runs {
+						if run.Closeout != nil && run.Closeout.OperationID == closeout.OperationID && run.Closeout.Plan.TaskID == task.ID && run.Closeout.PlanSHA256 == closeout.PlanSHA256 && run.Closeout.Phase == closeout.Phase && run.Closeout.UpdatedAtUTC == closeout.UpdatedAtUTC && run.Delivery != nil && run.Delivery.Freshness == "fresh" && run.Freshness == "fresh" {
+							action.Actor = run.Delivery.NextAction.Actor
+							action.Reason = run.Delivery.NextAction.Reason
+						}
+					}
+				}
+				actions := []Action{action}
+				for _, existing := range p.NextActions {
+					if existing.Source == "journal" && existing.Actor == "human" {
+						actions = append(actions, existing)
+					}
+				}
+				p.NextActions = actions
 			}
 			p.Reasons = sortedUnique(p.Reasons)
 		}

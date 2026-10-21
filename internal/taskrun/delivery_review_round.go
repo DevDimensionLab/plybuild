@@ -707,8 +707,14 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 			current = &out.Rounds[r.Request.Round-1]
 		}
 	}
+	retired, err := deliveryRetirement(s)
+	if err != nil {
+		return nil, err
+	}
 	id := s.Result.RunID
 	switch {
+	case retired != nil:
+		out.Next = WorkflowAction{"none", "This owner is retired; review rounds remain history and no reviewer continuation is available for this Run."}
 	case s.Result.Delivery.Phase == "completed":
 		out.Next = WorkflowAction{"none", "Delivery is complete; review rounds remain history."}
 		if current != nil && current.Decision == "passed" {

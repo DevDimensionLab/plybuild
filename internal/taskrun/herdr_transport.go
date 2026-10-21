@@ -401,6 +401,9 @@ func workflowPromptGenerationUntil(d Dependencies, root, id string, findings []W
 		}
 		if s.Result.Round.Number == 0 && s.Acceptance == nil {
 			s.Result.NextAction = WorkflowAction{"recipient", "Accept the bound runtime before target writes, then report this round."}
+			if mandateReceipt(s.Request) {
+				s.Result.NextAction = WorkflowAction{"recipient", "Receive the frozen mandate with check-in in this same session before Task writes; runtime evaluates each action."}
+			}
 		}
 		s.Phase = "prompt_attempted"
 		return nil

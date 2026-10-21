@@ -397,6 +397,7 @@ func TestLocalIntegrationReservesOwnerThroughNativeEffects(t *testing.T) {
 }
 
 func TestHumanCloseoutRetainsOnlyItsOwnSourceReservation(t *testing.T) {
+	binary := automaticCLIBinary(t)
 	f, o := humanIntegrationCandidate(t, true)
 	c := o.Delivery.Candidates[0]
 	if _, err := ReleaseDeliveryOwnership(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "Synthetic release."); err != nil {
@@ -446,6 +447,11 @@ func TestHumanCloseoutRetainsOnlyItsOwnSourceReservation(t *testing.T) {
 		if err != nil || len(inventory.Runs) != 1 || inventory.Runs[0].Closeout == nil || inventory.Runs[0].Closeout.Phase != phase || !strings.Contains(inventory.Runs[0].Delivery.NextAction.Kind, "installation") {
 			t.Fatalf("pending installation lost in inventory: %+v %v", inventory, err)
 		}
+		action := inventory.Runs[0].Delivery.NextAction
+		if action.Actor != "human" || action.RecordedActor != "user" {
+			t.Fatalf("human-owned closeout lost its frozen actor: %+v", action)
+		}
+		al07AssertWorkspaceRecovery(t, binary, f, in.PlanID, "human", phase)
 		if _, err = os.Stat(c.TaskResult.SourceLocator); err != nil {
 			t.Fatal("pending installation removed source", err)
 		}

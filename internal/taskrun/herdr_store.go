@@ -503,13 +503,13 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		o.Closeout = closeout
 		if closeout.State == "complete" {
 			o.Round.State, o.FinalReturn.State = "completed", "completed"
-			o.NextAction = WorkflowAction{"user", "The exact Task delivery is closed; its source resource is " + closeout.ResourceState + " and retained evidence remains available."}
+			o.NextAction = workflowCloseoutAction(s, *closeout)
 			return o, nil
 		}
 		reason, _, detail := workspace.TaskCloseoutPendingAction(*closeout)
 		o.Reasons = append(o.Reasons, Reason{reason, detail})
-		o.NextAction = WorkflowAction{"user", detail}
-		if closeout.WorktreeRemoved || workspace.TaskCloseoutSourceRemovalPending(*closeout) {
+		o.NextAction = workflowCloseoutAction(s, *closeout)
+		if !deliveryObservedStop(s) && (s.Result.Delivery.Attempt == nil || s.Result.Delivery.Attempt.State != "attempted") && (closeout.WorktreeRemoved || workspace.TaskCloseoutSourceRemovalPending(*closeout)) {
 			return o, nil
 		}
 	}
@@ -545,6 +545,9 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		if automaticCleanupPending(s) {
 			// Integration is observed; the recorded cleanup cause stays current.
 			o.NextAction = s.Result.NextAction
+			if o.Closeout != nil {
+				o.NextAction = workflowCloseoutAction(s, *o.Closeout)
+			}
 		}
 		var dependency *Error
 		if errors.As(e, &dependency) && dependency.Code == "delivery_runtime_observation_required" {

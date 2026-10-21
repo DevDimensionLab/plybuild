@@ -431,13 +431,14 @@ func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
 		if row.Freshness == "fresh" && closeout.State == "complete" {
 			row.State, row.StateFreshness, row.Unresolved = "completed", "fresh", false
 		}
-		if row.Delivery != nil && row.Freshness == "fresh" {
+		if row.Delivery != nil && row.Freshness == "fresh" && !deliveryObservedStop(s) {
 			if closeout.State == "complete" {
-				row.Delivery.NextAction = InventoryDeliveryAction{Actor: "human", RecordedActor: "user", Kind: "task_closed", Reason: "The Task is closed with its source resource " + closeout.ResourceState + "; inspect retained history.", EvidenceIDs: []string{closeout.OperationID}}
+				row.Delivery.NextAction = InventoryDeliveryAction{Actor: "ply", RecordedActor: "none", Kind: "task_closed", Reason: workflowCloseoutAction(s, *closeout).Message, EvidenceIDs: []string{closeout.OperationID}}
 			} else {
 				reason, kind, detail := workspace.TaskCloseoutPendingAction(*closeout)
+				action := workflowCloseoutAction(s, *closeout)
 				row.Reasons = append(row.Reasons, Reason{reason, detail})
-				row.Delivery.NextAction = InventoryDeliveryAction{Actor: "human", RecordedActor: "user", Kind: kind, Reason: detail, EvidenceIDs: []string{closeout.OperationID}}
+				row.Delivery.NextAction = InventoryDeliveryAction{Actor: inventoryDeliveryActor(action.Actor), RecordedActor: action.Actor, Kind: kind, Reason: action.Message, EvidenceIDs: []string{closeout.OperationID}}
 			}
 		}
 	}
