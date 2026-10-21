@@ -478,13 +478,29 @@ func TestAR03CleanupUnknownInspectionPreservesDeliveredIntegration(t *testing.T)
 	f, o := cleanupCLIFixture(t, binary)
 	_, reflog := cleanupOwnerIntegrates(t, binary, f, o)
 	cleanupOwnerLeaves(t, f)
+	assertCleanupUnknownInspectionPreservesDeliveredIntegration(t, f, o, reflog, func() (WorkflowRun, error) {
+		blocked, _, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "5")
+		return blocked, err
+	})
+	done, output, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30")
+	if err != nil {
+		t.Fatalf("same closeout did not resume: %v\n%s", err, output)
+	}
+	assertCleanupRemoved(t, f, done, reflog)
+}
+
+// Reuse the AR03 negative case through either the public CLI or the existing
+// in-process adapters. An unavailable inventory never establishes absence.
+func assertCleanupUnknownInspectionPreservesDeliveredIntegration(t *testing.T, f deliveryFixture, o WorkflowRun, reflog string, follow func() (WorkflowRun, error)) {
+	t.Helper()
+	defer workflowTestModel(t, f.workflowFixture, map[string]any{"retire_inventory_denied": false})
 	workflowTestModel(t, f.workflowFixture, map[string]any{"retire_inventory_denied": true})
 	before, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	calls := workflowTestCalls(t, f.workflowFixture, "pane list")
-	blocked, _, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "5")
+	blocked, err := follow()
 	if err == nil || blocked.DeliveryStatus.FinalDelivery.State != "delivered" || blocked.Delivery.Phase != "closing" {
 		t.Fatalf("unknown inspection lost delivered state: %+v %v", blocked, err)
 	}
@@ -504,10 +520,4 @@ func TestAR03CleanupUnknownInspectionPreservesDeliveredIntegration(t *testing.T)
 	if gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != reflog {
 		t.Fatal("failed cleanup repeated integration")
 	}
-	workflowTestModel(t, f.workflowFixture, map[string]any{"retire_inventory_denied": false})
-	done, output, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30")
-	if err != nil {
-		t.Fatalf("same closeout did not resume: %v\n%s", err, output)
-	}
-	assertCleanupRemoved(t, f, done, reflog)
 }

@@ -65,7 +65,7 @@ func reviewRoundPatchHerdr(t *testing.T, f *deliveryFixture) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	herdr = bytes.Replace(herdr, []byte("cmd = args[:2]\n"), []byte("cmd = args[:2]\n"+reviewRoundHerdrStandin), 1)
+	herdr = bytes.Replace(herdr, []byte("cmd = args[:2]\n"), []byte("cmd = args[:2]\n"+retireOpenPaneStandin+closedTransportInspectStandin+integrationOwnerRecoveryStandin+reviewRoundHerdrStandin), 1)
 	if err = os.WriteFile(f.R.Herdr.Executable.Path, herdr, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -341,9 +341,30 @@ func TestFS01ReviewRoundsFromExistingTaskToDelivery(t *testing.T) {
 		t.Fatal("first negative review was not preserved")
 	}
 	o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
-	if err != nil || o.DeliveryStatus.FinalDelivery.State != "delivered" || gitOutput(t, f.Parent, "rev-parse", "HEAD") != second {
-		t.Fatalf("agreed Epic delivery did not complete: %+v %v", o.DeliveryStatus, err)
+	// Integration finishes while the modeled owner pane is still present.
+	// Reuse the ordinary cleanup fixture contract, then explicitly observe its
+	// exit before the coordinator follows the same delivered integration.
+	cleanupOwnerHandoff(t, f, o, err)
+	if gitOutput(t, f.Parent, "rev-parse", "HEAD") != second {
+		t.Fatal("agreed Epic delivery did not integrate the reviewed candidate")
 	}
+	reflog := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
+	cleanupOwnerLeaves(t, f)
+	reviewRoundIn(t, "w-fixture:root")
+	// The owner/provider are modeled, so use the existing process adapter as
+	// well. This table contains only the observer, with no Task/session writer;
+	// it makes no claim about real OS process inspection.
+	coordinator.LocalProcesses = func(string, string) ([]LocalProcess, error) {
+		return []LocalProcess{{PID: os.Getpid(), CWD: f.Parent}}, nil
+	}
+	assertCleanupUnknownInspectionPreservesDeliveredIntegration(t, f, o, reflog, func() (WorkflowRun, error) {
+		return WorkflowFollow(coordinator, f.R.WorkspaceRoot, o.RunID, 5*time.Second)
+	})
+	o, err = WorkflowFollow(coordinator, f.R.WorkspaceRoot, o.RunID, 30*time.Second)
+	if err != nil {
+		t.Fatalf("coordinator did not finish source cleanup: %v", err)
+	}
+	assertCleanupRemoved(t, f, o, reflog)
 }
 
 func TestFS01ChangedCandidateCannotInheritPass(t *testing.T) {
@@ -434,8 +455,15 @@ func reviewRoundCLI(t *testing.T, binary, cwd, pane string, args ...string) (str
 	c := exec.Command(binary, append([]string{"workflow", "execute"}, args...)...)
 	c.Dir = cwd
 	c.Env = append(os.Environ(), "HERDR_PANE_ID="+pane)
-	out, err := c.CombinedOutput()
-	return string(out), err
+	var stdout, stderr bytes.Buffer
+	c.Stdout, c.Stderr = &stdout, &stderr
+	err := c.Run()
+	exit := -1
+	if c.ProcessState != nil {
+		exit = c.ProcessState.ExitCode()
+	}
+	t.Logf("candidate CLI argv=%q cwd=%q exit=%d\nstdout:\n%s\nstderr:\n%s", c.Args, c.Dir, exit, stdout.String(), stderr.String())
+	return stdout.String() + stderr.String(), err
 }
 
 // FS01 AC01/AC03/AC07 through the exact candidate CLI: the coordinator and the
