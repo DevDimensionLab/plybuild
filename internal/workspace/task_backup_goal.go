@@ -12,19 +12,20 @@ import (
 // the native retired owner. Content publication and append share the existing
 // registry lock; each durable intermediate publication has an exact retry key.
 type BackupGoalRegistration struct {
-	SourcePreparation string           `json:"source_preparation"`
-	SourceTask        TaskID           `json:"source_task"`
-	SourceGoal        TaskGoalRef      `json:"source_goal"`
-	Target            QueueTargetInput `json:"target"`
-	TaskID            TaskID           `json:"task_id"`
-	SpecID            string           `json:"spec_id"`
-	Provider          string           `json:"provider"`
-	Model             string           `json:"model"`
-	Effort            string           `json:"effort"`
-	ExecutorSource    string           `json:"executor_source"`
-	Provenance        string           `json:"provenance"`
-	RecordedAtUTC     string           `json:"recorded_at_utc"`
-	PublicationKey    string           `json:"publication_key"`
+	SourcePreparation  string           `json:"source_preparation"`
+	SourceTask         TaskID           `json:"source_task"`
+	SourceGoal         TaskGoalRef      `json:"source_goal"`
+	Target             QueueTargetInput `json:"target"`
+	TaskID             TaskID           `json:"task_id"`
+	SpecID             string           `json:"spec_id"`
+	Provider           string           `json:"provider"`
+	Model              string           `json:"model"`
+	Effort             string           `json:"effort"`
+	ExecutorSource     string           `json:"executor_source"`
+	Provenance         string           `json:"provenance"`
+	RecordedAtUTC      string           `json:"recorded_at_utc"`
+	PublicationKey     string           `json:"publication_key"`
+	SelectedRetirement string           `json:"selected_retirement,omitempty"`
 }
 type BackupGoalRegistrationResult struct {
 	Kind           string                     `json:"kind"`
@@ -66,7 +67,9 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 		if err != nil {
 			return err
 		}
-		if foldQueue(r, queueID(root, target)).Terminal[in.SourcePreparation] != "released" {
+		qSource := foldQueue(r, queueID(root, target))
+		previewCurrent := !apply && in.SelectedRetirement != "" && qSource.Current != nil && *qSource.Current == in.SourcePreparation
+		if qSource.Terminal[in.SourcePreparation] != "released" && !previewCurrent {
 			return queueError("backup_goal_source_unresolved", "retired source preparation has not been natively released")
 		}
 		a := source.Delivery

@@ -13,6 +13,14 @@ import (
 // The bound pane exists until the coordinator closes it. Closing it makes the
 // pane and its managed agent positively absent in the synthetic Herdr.
 const retireOpenPaneStandin = `
+if cmd == ["pane", "list"] and model.get("retire_inventory_transient"):
+    print(json.dumps({"error":{"code":"temporarily_unavailable"}}), file=sys.stderr)
+    raise SystemExit(1)
+if cmd == ["pane", "close"] and model.get("retire_close_unknown"):
+    model["closed_transport"] = True
+    path.write_text(json.dumps(model))
+    print(json.dumps({"error":{"code":"unknown"}}), file=sys.stderr)
+    raise SystemExit(1)
 if cmd == ["pane", "list"] and model.get("retire_inventory_denied"):
     print(json.dumps({"error":{"code":"permission_denied", "message":"inspection denied"}}), file=sys.stderr)
     raise SystemExit(1)

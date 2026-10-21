@@ -45,7 +45,7 @@ ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-
 ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-v1 --provider codex --apply --confirmation sha256:... --format json
 ```
 
-This G04 dependency requires an already natively retired interactive Goal
+Without `--retire`, this G04 dependency requires an already natively retired interactive Goal
 Spec@2 Run with an automatic local Epic agreement, released source preparation,
 unchanged pre-work source and no candidate or review round. Preview reads only;
 apply publishes a fresh Task/Problem/Goal and appends its exact reference while
@@ -86,10 +86,38 @@ switches providers. A new launch creates its own mandate and callback context;
 startup is not an owner receipt, runtime permission observation or product work.
 An unrelated current preparation blocks startup without changing its queue.
 
+For a selected replacement after a preserved source-bound `not_started` pre-work
+stop, add the explicit retirement prefix to either flow:
+
+```sh
+ply workflow execute backup-goal RUN_ID --task fresh-backup --spec fresh-backup-v1 --provider codex --retire --coordinator 'actual coordinator' --reason 'selected replacement reason' --start --format json
+# Repeat the exact arguments with --apply --confirmation sha256:... from preview.
+```
+
+This saves the separate retirement and manual fresh Goal/queue construction.
+Preview includes the exact original stop/action, owner/session, source, selected
+coordinator/reason and fresh return/runtime choices; it closes or starts nothing.
+Apply validates the complete supported source and fresh choices before closing
+only the bound pane, then uses native writer absence and retirement before AL27
+publication and optional AL28 startup. Rule refusals, unknown/partial effects,
+resume history, changed source and candidate/review work block this prefix.
+A new failed retirement inspection/close is preserved as a native stop; an
+identical retry cannot repeat that denied or uncertain action automatically.
+
+Keep the same source, Task/Spec IDs, choices and confirmation after a lost reply.
+The confirmation binds original semantics and survives this operation's own
+retirement, registration and start phases. `retirement.completed`, registration
+`applied`/Goal refs and `execution` describe separate boundaries. A failure after
+retirement preserves history and releases only its old current slot; a failure
+after publication preserves the same new refs. Follow the returned diagnosis and
+next action; no rollback, duplicate Task, inherited permission or automatic
+restart/resume is implied. Existing already-retired calls and registration-only
+defaults retain their wire format without the prefix.
+
 Original product requirements and immutable document descriptors remain binding.
 A normative runtime identity addendum records the source Run/request/Goal/ref and
 fresh executor; it overrides historical runtime prose without deleting arbitrary
 product text. No old acceptance, permissions, tests, review, QA, candidate,
-qualification, result or delivery transfers. Active retirement before this supported boundary,
+qualification, result or delivery transfers. Retirement outside the selected known pre-work boundary,
 post-work/source transfer, review quota, report/legacy, PR and cross-repository
 cases remain later G04 work; this bounded registration/start feature does not complete G04.

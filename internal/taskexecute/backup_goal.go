@@ -11,15 +11,15 @@ import (
 // BackupStartResult keeps publication and startup as separate observed facts.
 // Registration-only callers retain the original AL27 response schema.
 type BackupStartResult struct {
-	Kind          string                                 `json:"kind"`
-	SchemaVersion int                                    `json:"schema_version"`
-	State         string                                 `json:"state"`
-	Registration  workspace.BackupGoalRegistrationResult `json:"registration"`
-	Confirmation  string                                 `json:"confirmation"`
-	Runtime       *RuntimePreview                        `json:"runtime,omitempty"`
-	Execution     *Result                                `json:"execution,omitempty"`
-	Readiness     string                                 `json:"readiness"`
-	NextAction    string                                 `json:"next_action"`
+	Kind          string                   `json:"kind"`
+	SchemaVersion int                      `json:"schema_version"`
+	State         string                   `json:"state"`
+	Registration  taskrun.BackupGoalResult `json:"registration"`
+	Confirmation  string                   `json:"confirmation"`
+	Runtime       *RuntimePreview          `json:"runtime,omitempty"`
+	Execution     *Result                  `json:"execution,omitempty"`
+	Readiness     string                   `json:"readiness"`
+	NextAction    string                   `json:"next_action"`
 }
 
 // BackupGoal adds explicitly selected interactive startup to AL27. Native
@@ -49,7 +49,7 @@ func BackupGoal(d taskrun.Dependencies, root, source string, in taskrun.BackupGo
 	if err = checkOrigin(d, registration.Target); err != nil {
 		return out, err
 	}
-	if registration.Queue.Current != nil && registration.Queue.Current.TaskID != in.TaskID {
+	if registration.Queue.Current != nil && registration.Queue.Current.TaskID != in.TaskID && (registration.Retirement == nil || registration.Queue.Current.PreparationID != registration.Retirement.PreparationID) {
 		return out, fmt.Errorf("backup_start_current_conflict: complete the current preparation before starting this backup")
 	}
 	target := workspace.QueueTargetInput{ProjectID: registration.Target.ProjectID, RepoID: registration.Target.RepoID, EpicID: registration.Target.EpicID}

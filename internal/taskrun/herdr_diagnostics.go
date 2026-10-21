@@ -120,7 +120,7 @@ func workflowFailureProviderCode(stdout, stderr workflowLimitedOutput) string {
 			return "unknown"
 		}
 		switch failure.Code {
-		case "agent_not_found", "pane_not_found":
+		case "agent_not_found", "pane_not_found", "permission_denied":
 		default:
 			return "unknown"
 		}

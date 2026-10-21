@@ -11,17 +11,18 @@ import (
 )
 
 type BackupGoalInput struct {
-	TaskID   workspace.TaskID `json:"task_id"`
-	SpecID   string           `json:"spec_id"`
-	Provider string           `json:"provider"`
-	Model    string           `json:"model"`
-	Effort   string           `json:"effort"`
+	TaskID   workspace.TaskID     `json:"task_id"`
+	SpecID   string               `json:"spec_id"`
+	Provider string               `json:"provider"`
+	Model    string               `json:"model"`
+	Effort   string               `json:"effort"`
+	Retire   *DeliveryRetireInput `json:"retire,omitempty"`
 }
 
-// WorkflowBackupGoal is registration only. Preview never acquires a writer
+// workflowBackupGoal validates and registers a fresh copy. Preview never acquires a writer
 // lock or touches the source. Apply holds the existing Run store lock while
 // validating retirement and publishing through native workspace seams.
-func WorkflowBackupGoal(d Dependencies, root, id string, in BackupGoalInput, apply bool, confirmation string) (out workspace.BackupGoalRegistrationResult, err error) {
+func workflowBackupGoal(d Dependencies, root, id string, in BackupGoalInput, apply bool, confirmation string) (out BackupGoalResult, err error) {
 	if err = containing(d, root); err != nil {
 		return out, err
 	}
@@ -43,9 +44,14 @@ func WorkflowBackupGoal(d Dependencies, root, id string, in BackupGoalInput, app
 		if e != nil {
 			return e
 		}
-		if retired == nil {
+		if retired == nil && in.Retire == nil {
 			return workflowError(4, "backup_goal_source_not_retired: use a confirmed natively retired owner; this operation cannot retire or stop it")
 		}
+		selected, stamp, e := backupRetirement(s, in.Retire, retired)
+		if e != nil {
+			return e
+		}
+		out.Retirement = selected
 		rounds, e := deliveryReviewRounds(s)
 		if e != nil {
 			return e
@@ -109,7 +115,12 @@ func WorkflowBackupGoal(d Dependencies, root, id string, in BackupGoalInput, app
 		}
 		source := workspace.TaskGoalRef{SpecID: goal.SpecID, Spec: workspace.TaskRevisionRef{Revision: goal.Revision, ManifestSHA256: s.Request.Delivery.Goal.SHA256}}
 		provenance := fmt.Sprintf("Copied from retired Run %s request %s, Task %s, Goal %s@%d %s, source ref %s. Retirement is historical prerequisite, not new runtime authority.", id, s.Result.RequestSHA256, goal.TaskID, goal.SpecID, goal.Revision, source.Spec.ManifestSHA256, s.Observed.Target.Ref)
-		out, e = workspace.RegisterBackupGoal(d.Workspace, workspace.BackupGoalRegistration{SourcePreparation: s.Request.PreparationID, SourceTask: goal.TaskID, SourceGoal: source, Target: workspace.QueueTargetInput{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID}, TaskID: in.TaskID, SpecID: in.SpecID, Provider: in.Provider, Model: in.Model, Effort: in.Effort, ExecutorSource: executorSource, Provenance: provenance, RecordedAtUTC: retired.RecordedAtUTC, PublicationKey: "backup-goal/" + id}, apply, confirmation)
+		retirementBinding := ""
+		if selected != nil {
+			retirementBinding = selected.Binding
+			provenance = fmt.Sprintf("Selected pre-work backup from Run %s request %s, Task %s, Goal %s@%d %s, source ref %s. Native retirement is required before publication, not new runtime authority.", id, s.Result.RequestSHA256, goal.TaskID, goal.SpecID, goal.Revision, source.Spec.ManifestSHA256, s.Observed.Target.Ref)
+		}
+		out.BackupGoalRegistrationResult, e = workspace.RegisterBackupGoal(d.Workspace, workspace.BackupGoalRegistration{SourcePreparation: s.Request.PreparationID, SourceTask: goal.TaskID, SourceGoal: source, Target: workspace.QueueTargetInput{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID}, TaskID: in.TaskID, SpecID: in.SpecID, Provider: in.Provider, Model: in.Model, Effort: in.Effort, ExecutorSource: executorSource, Provenance: provenance, RecordedAtUTC: stamp, SelectedRetirement: retirementBinding, PublicationKey: "backup-goal/" + id}, apply, confirmation)
 		return e
 	}
 	if apply {

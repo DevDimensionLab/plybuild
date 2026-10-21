@@ -24,11 +24,12 @@ type taskWriters struct {
 }
 
 type taskWriterEvidence struct {
-	state    taskWriterState
-	absence  HumanOwnerRecoveryObservation
-	liveness *TaskWriterLiveness
-	reason   string
-	err      error
+	state           taskWriterState
+	absence         HumanOwnerRecoveryObservation
+	liveness        *TaskWriterLiveness
+	reason          string
+	err             error
+	inspectionError error
 	// herdrPresent distinguishes interactive writer handoff from local
 	// writers and unknown inspection. Unknown never proves owner presence.
 	herdrPresent bool
@@ -36,6 +37,7 @@ type taskWriterEvidence struct {
 
 func (o taskWriterEvidence) unknown(reason string, err error) taskWriterEvidence {
 	o.state, o.reason = taskWritersUnknown, reason
+	o.inspectionError = err
 	o.err = workflowError(4, "owner_unknown: writer liveness is unknown; inspection unavailable: "+err.Error()+"; restore read access before continuing the same action; no writer absence was established")
 	return o
 }

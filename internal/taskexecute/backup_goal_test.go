@@ -17,6 +17,10 @@ import (
 // Native registry/Git/execute composition, with the existing synthetic Herdr
 // and injected process observations. No provider or OS liveness claim.
 func backupStartFixture(t *testing.T) (taskrun.Dependencies, string, string, taskrun.BackupGoalInput, RuntimeOptions) {
+	return backupStartSourceFixture(t, true)
+}
+
+func backupStartSourceFixture(t *testing.T, retire bool) (taskrun.Dependencies, string, string, taskrun.BackupGoalInput, RuntimeOptions) {
 	t.Helper()
 	a := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "modeled coordinator", TimeoutSeconds: 30}}
 	d, in, root, _ := launcherFixtureForProvider(t, "codex", a)
@@ -40,6 +44,17 @@ elif cmd == ["pane", "get"] and model.get("closed"):`, 1)
 	started, err := Execute(d, in)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if !retire {
+		proof := filepath.Join(t.TempDir(), "prework-stop.json")
+		if err := os.WriteFile(proof, []byte(`{"source":"modeled coordinator not_started observation"}`), 0600); err != nil {
+			t.Fatal(err)
+		}
+		_, err := taskrun.WorkflowObserveDeliveryStop(d, root, started.Run.RunID, taskrun.DeliveryStopInput{EventID: "prework-stop", Provider: "codex", NativeSession: started.Run.Transport.AgentSessionID, Stage: "work", Observer: "modeled coordinator", Reason: "Known first action not started", Action: "first product action", EffectStatus: taskrun.DeliveryEffectNotStarted, EvidencePath: proof})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return d, root, started.Run.RunID, taskrun.BackupGoalInput{TaskID: "backup", SpecID: "backup-goal", Provider: "codex", Retire: &taskrun.DeliveryRetireInput{Observer: "modeled coordinator", Reason: "Selected fresh backup"}}, in.Runtime
 	}
 	retired, err := taskrun.WorkflowRetireDelivery(d, root, started.Run.RunID, taskrun.DeliveryRetireInput{Observer: "modeled coordinator", Reason: "Fresh isolated backup"})
 	if err != nil {
@@ -285,5 +300,59 @@ func TestBackupStartPreRunReadbackShowsPreservedEffectiveProfile(t *testing.T) {
 				t.Fatal("profile readback rewrote partial state")
 			}
 		})
+	}
+}
+
+func TestSelectedBackupStartPhaseRecovery(t *testing.T) {
+	d, root, id, in, runtime := backupStartSourceFixture(t, false)
+	before := recoveryFiles(t, filepath.Join(root, ".ply"))
+	p, err := BackupGoal(d, root, id, in, runtime, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Runtime == nil || p.Registration.Retirement == nil || !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) {
+		t.Fatal("preview mutated or omitted prefix")
+	}
+	// Reject changed destination before closing the old owner.
+	changed := runtime
+	changed.HerdrWorkspace = "other"
+	if _, err = BackupGoal(d, root, id, in, changed, true, p.Confirmation); err == nil {
+		t.Fatal("changed destination accepted")
+	}
+	d.Fault = func(point string) error {
+		if point == "backup_after_retirement" {
+			return fmt.Errorf("modeled lost response after retirement")
+		}
+		return nil
+	}
+	stopped, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+	if err == nil || !stopped.Registration.Retirement.Completed || stopped.Registration.Applied {
+		t.Fatalf("lost retirement boundary: %+v %v", stopped, err)
+	}
+	d.Fault = func(point string) error {
+		if point == "execute_before_preparation" {
+			return fmt.Errorf("modeled lost response after registration")
+		}
+		return nil
+	}
+	registered, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+	if err == nil || !registered.Registration.Applied {
+		t.Fatal("lost registration boundary", err)
+	}
+	// AL28 still fences a changed profile even when the native intent has no Run.
+	changed = runtime
+	changed.PermissionProfile = ":read-only"
+	if _, err = BackupGoal(d, root, id, in, changed, false, ""); err == nil {
+		t.Fatal("changed profile accepted after registration")
+	}
+	d.Fault = nil
+	started, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+	if err != nil || started.Execution == nil || started.Execution.Run == nil {
+		t.Fatalf("start: %+v %v", started, err)
+	}
+	after := recoveryFiles(t, filepath.Join(root, ".ply"))
+	retry, err := BackupGoal(d, root, id, in, runtime, true, p.Confirmation)
+	if err != nil || retry.Execution.Run.RunID != started.Execution.Run.RunID || !reflect.DeepEqual(after, recoveryFiles(t, filepath.Join(root, ".ply"))) {
+		t.Fatalf("duplicate launch: %v", err)
 	}
 }

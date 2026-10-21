@@ -63,6 +63,10 @@ func deliveryRetirement(s workflowState) (*DeliveryRetirement, error) {
 // writer before it records retirement and releases only this queue slot.
 // Unresolved attempts and unknown or partial effects stop before any effect.
 func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireInput) (WorkflowRun, error) {
+	return workflowRetireDelivery(d, root, id, in, nil)
+}
+
+func workflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireInput, beforeClose func(workflowState) error) (WorkflowRun, error) {
 	if err := containing(d, root); err != nil {
 		return WorkflowRun{}, err
 	}
@@ -117,13 +121,26 @@ func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		if s.OwnerResume != nil && (s.OwnerResumeStep == ownerResumeTabAttempted || s.OwnerResumeStep == ownerResumePromptAttempt) {
 			return workflowError(4, "unknown_effect: owner resume tab or continuation input has an unconfirmed effect; reconcile that same reserved attempt before retirement")
 		}
+		if beforeClose != nil {
+			if err := beforeClose(*s); err != nil {
+				return err
+			}
+		}
 		closed, err := deliveryRetireClosePane(d, *s)
+		if err != nil {
+			if beforeClose != nil && backupRetirementMustPreserve(err) {
+				return &backupRetirementEffectError{Action: "inspect/close bound retirement pane", Err: err}
+			}
+			return err
+		}
+		absence, liveness, err := deliveryRetireAbsenceSelected(d, *s, beforeClose != nil)
 		if err != nil {
 			return err
 		}
-		absence, liveness, err := deliveryRetireAbsence(d, *s)
-		if err != nil {
-			return err
+		if beforeClose != nil {
+			if err := beforeClose(*s); err != nil {
+				return err
+			}
 		}
 		// Absence establishes no writer remains, but cannot establish what the
 		// writer did between the first source check and the actual pane close.
@@ -204,6 +221,10 @@ func deliveryRetireClosePane(d Dependencies, s workflowState) (bool, error) {
 }
 
 func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryObservation, *TaskWriterLiveness, error) {
+	return deliveryRetireAbsenceSelected(d, s, false)
+}
+
+func deliveryRetireAbsenceSelected(d Dependencies, s workflowState, selected bool) (HumanOwnerRecoveryObservation, *TaskWriterLiveness, error) {
 	limit := d.HerdrTimeout
 	if limit <= 0 {
 		limit = 15 * time.Second
@@ -215,6 +236,9 @@ func deliveryRetireAbsence(d Dependencies, s workflowState) (HumanOwnerRecoveryO
 			return observed.absence, observed.liveness, nil
 		}
 		if observed.state == taskWritersUnknown {
+			if selected && backupRetirementMustPreserve(observed.inspectionError) {
+				return observed.absence, observed.liveness, &backupRetirementEffectError{Action: "inspect known writers after retirement close", Err: observed.inspectionError}
+			}
 			return observed.absence, observed.liveness, observed.err
 		}
 		if !time.Now().Before(deadline) {

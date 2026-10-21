@@ -61,6 +61,7 @@ func TestHerdrDiagnosticsPreserveSafeCodesAndOperationKind(t *testing.T) {
 		readOnly bool
 	}{
 		{"agent_stdout", []string{"agent", "get", "synthetic-secret"}, agent, "", "agent get", "agent_not_found", true},
+		{"actual_denial", []string{"pane", "list"}, "", `{"error":{"code":"permission_denied","message":"synthetic-secret"}}`, "pane list", "permission_denied", true},
 		{"pane_stderr", []string{"pane", "get", "synthetic-secret"}, "", pane, "pane get", "pane_not_found", true},
 		{"pane_inventory", []string{"pane", "list"}, "", pane, "pane list", "pane_not_found", true},
 		{"matching_streams", []string{"pane", "process-info", "--pane", "synthetic-secret"}, pane, pane, "pane process-info", "pane_not_found", true},
