@@ -27,10 +27,15 @@ touch "$make_workspace/all" "$make_workspace/build" "$make_workspace/install"
 run_make() {
 	local target=${1-}
 	local environment=${2:-explicit}
+	local output=${3-}
 	local -a make_command=(make --no-print-directory -f "$makefile_under_test")
 
 	if [[ -n "$target" ]]; then
 		make_command+=("$target")
+	fi
+
+	if [[ -n "$output" ]]; then
+		make_command+=("PLY_BUILD_OUTPUT=$output")
 	fi
 
 	: >"$calls_file"
@@ -87,8 +92,25 @@ assert_single_call "" "" install ./cmd/ply
 run_make install gopath
 assert_single_call "" "$gopath" install ./cmd/ply
 
+# Identity must come from the source checkout even when make is invoked from
+# elsewhere. Output paths still belong to the caller's working directory.
+source_commit=
+source_dirty=
+if [[ "$(git -C "$repo_root" rev-parse --show-toplevel 2>/dev/null || true)" == "$repo_root" ]]; then
+	source_commit=$(git -C "$repo_root" rev-parse --verify HEAD)
+	source_dirty=false
+	[[ -z "$(git -C "$repo_root" status --porcelain)" ]] || source_dirty=true
+fi
+identity_flags="-X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceCommit=$source_commit -X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceDirty=$source_dirty"
+
 run_make
-assert_single_call "$gobin" "$gopath" build -o ply ./cmd/ply
+assert_single_call "$gobin" "$gopath" build -ldflags "$identity_flags" -o "$make_workspace/ply" ./cmd/ply
+
+run_make build explicit 'relative output/ply'
+assert_single_call "$gobin" "$gopath" build -ldflags "$identity_flags" -o "$make_workspace/relative output/ply" ./cmd/ply
+
+run_make build explicit "$tmp_dir/absolute output/ply"
+assert_single_call "$gobin" "$gopath" build -ldflags "$identity_flags" -o "$tmp_dir/absolute output/ply" ./cmd/ply
 
 repo_recording="$repo_root/test/fixtures/.recording-go-leak-probe"
 if FAKE_GO_CALLS="$repo_recording" "$fake_go" install ./cmd/ply 2>"$tmp_dir/leak-error"; then
@@ -101,4 +123,4 @@ if [[ -e "$repo_recording" ]]; then
 fi
 grep -F 'refusing to write recording inside repository' "$tmp_dir/leak-error" >/dev/null
 
-printf 'make install contract: PASS (4 invocations and leak guard checked)\n'
+printf 'make install contract: PASS (6 invocations, build identity, caller output paths and leak guard checked)\n'

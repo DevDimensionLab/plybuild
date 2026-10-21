@@ -30,7 +30,9 @@ build:
 	   status=$$(git -C "$(REPO_ROOT)" status --porcelain 2>/dev/null); then \
 		dirty=false; [ -z "$$status" ] || dirty=true; \
 	else commit=; fi; \
-	cd "$(REPO_ROOT)" && $(GO) build -ldflags "-X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceCommit=$$commit -X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceDirty=$$dirty" -o "$(PLY_BUILD_OUTPUT)" ./cmd/ply
+	output="$(PLY_BUILD_OUTPUT)"; \
+	case "$$output" in /*) ;; *) output="$$PWD/$$output" ;; esac; \
+	cd "$(REPO_ROOT)" && $(GO) build -ldflags "-X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceCommit=$$commit -X github.com/devdimensionlab/plybuild/internal/buildinfo.SourceDirty=$$dirty" -o "$$output" ./cmd/ply
 
 docker-build:
 	docker build --tag ply:latest .
