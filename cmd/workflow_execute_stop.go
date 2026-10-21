@@ -149,5 +149,7 @@ func newWorkflowExecuteRetireCommand(d taskrun.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&in.Reason, "reason", "", "actual reason for the selected replacement (maximum 1900 characters)")
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	setWorkFlagErrors(c)
+	// The workflow run alias must route first-retirement warnings to stderr too.
+	executeLogsToStderr(c)
 	return c
 }

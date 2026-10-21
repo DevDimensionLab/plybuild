@@ -31,6 +31,7 @@ cat "$log" "$PLY_AL14_EVIDENCE_DIR/tests.stderr"
 for name in TestAL14CLIPostStartRetainsWorkAndHistory TestAL14PostStartGuardsAndRecovery TestAL14CLIReconcilesClosedPreparation TestAL14BlockedNativeTerminalRetirementDiagnosisPreservesHistory TestAL01RetirementGuardsAndDurableRetry TestAL01ReportEffectReconciliationPreservesUncertaintyAndSource TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect; do
  grep -q "^--- PASS: $name " "$log"
 done
+go test -v -count=1 ./cmd -run '^TestAL14ReportRetirementWarningsStayOnStderr$'
 go vet ./internal/taskrun ./cmd
 git diff --check
 test -z "$(git status --porcelain)"
