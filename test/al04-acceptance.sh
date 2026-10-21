@@ -16,9 +16,14 @@ export GOCACHE=/Users/perottochristensen/Library/Caches/go-build
 cached_go=/Users/perottochristensen/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.darwin-arm64/bin
 export PATH="$cached_go:$PATH"
 test "$(go env GOVERSION)" = go1.26.7
-go test -count=1 -v ./internal/taskrun -run '^TestAL04'
-go test -count=1 ./internal/taskrun -run '^(TestAL01|TestWorkflowCodexTrust|TestWorkflowRuntimeDriftAndNegativeAuthority|TestWorkflowProviderRoundTrip|TestWorkflowProviderAcceptanceRequiresFreshIdentity|TestDeliveryProviderUpgrade|TestDeliveryIncompleteReport|TestDeliveryReceipt|TestDeliveryRetire|TestOwnerResumeBoundariesStopBeforeEffects)'
-go test -count=1 ./cmd -run '^Test(ExecuteBegin|ExecuteCheckIn|ExecuteRetire|DeliveryReceipt|WorkflowRun|WorkflowExecute)'
+# Explicit timeouts stay inside the 1800s acceptance budget: about 4x the
+# measured 72-80s, 182s and <1s on 3744fc4 (review r001-f01).
+go test -count=1 -timeout 6m -v ./internal/taskrun -run '^TestAL04'
+# Consumers of the changed report callback and freshness boundary, the pre-launch
+# trust contrast, and Delivery contrasts. Unchanged retirement and effect
+# reconciliation branches stay with their own Task acceptance.
+go test -count=1 -timeout 12m -v ./internal/taskrun -run '^(TestAL01(ReportReceiptUnknownFactsAndCompletedReview|ReportCLIJourney|PreAcceptanceStop|PreStartStopIsBoundImmutableAndNonQualifying|CoordinatorDenialBlocksReceiptWithoutImpersonation|ReportReceiptCannotChangeNativeTerminalContract)|TestWorkflow(ProviderRoundTrip|ProviderAcceptanceRequiresFreshIdentity|RuntimeDriftAndNegativeAuthority|CodexTrustDriftAfterReservationWithholdsGrant|CodexTrustCandidateCLIJourney)|TestDelivery(ProviderUpgradeDoesNotGrantNewLaunch|ProviderUpgradeRequiresCurrentRuntimeObservation|ProviderUpgradePreservesAcceptedContinuation|ReceiptCLIJourney))$'
+go test -count=1 -timeout 2m ./cmd -run '^Test(ExecuteBegin|ExecuteCheckIn|ExecuteRetire|DeliveryReceipt|WorkflowRun|WorkflowExecute)'
 go vet ./internal/taskrun ./cmd
 # The whole Task diff from its AL03 base.
 git diff --check f5535ef88b8bf2e2b75720285234c2fa71070a34 "$PLY_CANDIDATE_OID"
