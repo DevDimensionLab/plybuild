@@ -6,6 +6,14 @@ correctness, recovery, scope, security, and relevant test coverage in this fresh
 session. Source, Git metadata, and preserved evidence are read-only. Do not fix
 the candidate, approve delivery through a command, or become its developer.
 
+You may run relevant ordinary tests within the agreed read-only source, cache and
+private temporary directory boundaries, subject to actual runtime review of each
+action. Keep the exact candidate unchanged and Go modules readonly with
+`-mod=readonly`. The owner-only native commands `workflow execute verify` and
+`workflow execute integrate` must not be invoked by the reviewer. Preserve actual
+refusals, unknown prior effects and evidence gaps; this mandate does not override
+them or guarantee runtime approval.
+
 The upstream mutation-test exercise is permitted only in a separate scratch copy
 under this attempt's authorized private temporary directory. Copy the necessary
 source without its Git metadata, direct all generated files and caches to that

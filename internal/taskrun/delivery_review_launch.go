@@ -16,6 +16,10 @@ import (
 // and agent name. Each effect is reserved in a write-once round file before it
 // is sent and never replayed; an unknown outcome stays visible as a stop.
 
+// Shared by newly generated briefs and launch prompts. Historical round files
+// remain immutable; this text grants no runtime authority or owner callback role.
+const deliveryReviewerTestMandate = "You may run relevant ordinary tests within the agreed read-only source, cache and private temporary directory boundaries, subject to actual runtime review of each action. Keep the exact candidate unchanged and Go modules readonly with -mod=readonly. Do not edit the Task worktree or commit. The owner-only native commands `workflow execute verify` and `workflow execute integrate` must not be invoked by the reviewer. This test mandate does not override an actual refusal or unknown prior effect; preserve and report actual outcomes and evidence gaps."
+
 type deliveryReviewLaunch struct {
 	Kind           string   `json:"kind"`
 	SchemaVersion  int      `json:"schema_version"`
@@ -224,7 +228,7 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
-	prompt := fmt.Sprintf("You are the independent reviewer for Ply review round %d of Run %s, started by %s. Read and follow %s. Review only; do not edit, commit, verify or integrate the Task.", r.Request.Round, s.Result.RunID, r.Request.Coordinator, r.Request.Brief.Locator)
+	prompt := fmt.Sprintf("You are the independent reviewer for Ply review round %d of Run %s, started by %s. Read and follow %s. Review only; %s", r.Request.Round, s.Result.RunID, r.Request.Coordinator, r.Request.Brief.Locator, deliveryReviewerTestMandate)
 	send := []string{"agent", "prompt", pane.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000"}
 	if _, e = workflowKeep(d, filepath.Join(r.Dir, "prompt-attempt.json"), map[string]any{"argv": send}); e != nil {
 		return e
