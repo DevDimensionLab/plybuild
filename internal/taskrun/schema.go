@@ -205,6 +205,13 @@ func readFile(path string, max int, private bool) ([]byte, error) {
 // readFileAs names the role, path, failing requirement, observed metadata and
 // supported handling in every retained refusal, never the file's contents.
 func readFileAs(path, role string, max int, access fileAccess) ([]byte, error) {
+	return readFileAsWithRead(path, role, max, access, io.ReadAll)
+}
+
+// readFileAsWithRead keeps the bounded read local so tests can deterministically
+// interleave real writes. Identity checks do not establish an atomic snapshot:
+// same-inode writes may yield mixed bytes, which callers bind by their digest.
+func readFileAsWithRead(path, role string, max int, access fileAccess, read func(io.Reader) ([]byte, error)) ([]byte, error) {
 	if e := physical(path, false); e != nil {
 		if t, ok := e.(*Error); ok {
 			return nil, failure(t.Code, t.Exit, fmt.Sprintf("%s %s: %s; use the absolute physical path of a regular file, without symlinks", role, path, t.Detail))
@@ -238,7 +245,7 @@ func readFileAs(path, role string, max int, access fileAccess) ([]byte, error) {
 	if e != nil || !os.SameFile(before, actual) {
 		return nil, conflict(role + " " + path + ": file changed while opening; submit it again once its writer has finished")
 	}
-	b, e := io.ReadAll(io.LimitReader(f, int64(max)+1))
+	b, e := read(io.LimitReader(f, int64(max)+1))
 	if e != nil {
 		return nil, e
 	}
