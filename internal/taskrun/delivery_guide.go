@@ -191,6 +191,15 @@ findings and fixes with truthful summaries and supported evidence references;
 never delete them to make validation pass. Entries are sorted by id, with IDs
 unique across all three arrays. An empty array is appropriate only when the
 actual review found none.
+
+Native verification assembles and preserves task-requirements
+from the frozen Spec requirements and this exact candidate's acceptance and review
+evidence. Do not hand-author a second requirements/status artifact to satisfy
+that managed ID. Managed artifacts become available during successful candidate verification;
+their IDs refer to the native evidence set, not arbitrary files you create.
+Keep actual evidence and truthful requirement outcomes;
+a progress report or this guide does not qualify a candidate.
+
 The callback itself executes /bin/sh against the declared acceptance entrypoint,
 captures output, checks candidate stability and preserves a separate candidate.
 
