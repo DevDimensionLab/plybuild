@@ -170,6 +170,11 @@ func workflowContinuationRecordMode(s workflowState, policy bool) (*deliveryCont
 }
 
 func deliveryContinuationAuthority(s workflowState) error {
+	if retired, err := deliveryRetirement(s); err != nil {
+		return err
+	} else if retired != nil {
+		return workflowError(4, "owner_retired: continuation is closed; a fresh Task mandate is required")
+	}
 	if s.Result.Delivery != nil && (s.Result.Delivery.OwnershipRelease != nil || s.Result.Delivery.Phase == "completed") {
 		return deliveryContinuityError("continuation_authority", "continue requires the active owner; released or completed mandates cannot acquire new authority")
 	}
