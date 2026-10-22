@@ -24,6 +24,7 @@ type EpicBaseSummary struct {
 	Freshness string `json:"freshness"`
 }
 type EpicReadbackResult struct {
+	Creation  *EpicCreateOperation
 	Lifecycle LifecycleState
 	Base      []EpicBaseSummary
 	Workspace string
@@ -85,6 +86,9 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 	}
 	epic, _ := findEpic(registry, id)
 	if epic == nil {
+		if op, _ := findEpicCreate(registry, id); op != nil {
+			return EpicReadbackResult{Workspace: root, Creation: op, Reasons: []string{"epic_creation_pending"}}, nil
+		}
 		return EpicReadbackResult{}, workError(ErrorWorkNotFound, fmt.Sprintf("Epic %s is not registered", id), nil)
 	}
 	lifecycles, err := readWorkItemLifecycle(root)
@@ -92,6 +96,7 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 		return EpicReadbackResult{}, err
 	}
 	result := EpicReadbackResult{Workspace: root, Epic: *epic, Ready: true, Reasons: []string{}, Lifecycle: lifecycles.Epic(id)}
+	result.Creation, _ = findEpicCreate(registry, id)
 	var projects []ProjectRecord
 	var repos []RepoRecord
 	if dependencies.Projects != nil {
@@ -381,6 +386,21 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 			return nil, e
 		}
 		value = append(value, canonicaljson.Member{Name: "base", Value: bases})
+	}
+	if result.Creation != nil {
+		value[0].Value = "WorkspaceEpicReadback@3"
+		creation, e := contentValue(result.Creation)
+		if e != nil {
+			return nil, e
+		}
+		value = append(value, canonicaljson.Member{Name: "creation", Value: creation})
+		if result.Epic.ID == "" {
+			for i := range value {
+				if value[i].Name == "persisted" {
+					value[i].Value = nil
+				}
+			}
+		}
 	}
 	return canonicaljson.Marshal(readbackWithLifecycle(value, result.Lifecycle))
 }

@@ -21,6 +21,7 @@ func newWorkspaceEpicCommand(dependencies workspace.Dependencies) *cobra.Command
 	}, show: func(id workspace.EpicID) (workspace.EpicReadbackResult, error) {
 		return workspace.ShowEpic(dependencies, id)
 	}, list: func() (workspace.EpicListResult, error) { return workspace.ListEpics(dependencies) }})
+	command.AddCommand(newWorkspaceEpicCreateCommand(dependencies))
 	addWorkspaceEpicBaseCommands(command, dependencies)
 	addWorkspaceEpicReadCommands(command, dependencies)
 	command.AddCommand(newWorkspaceLifecycleCommand(dependencies, "epic"))
@@ -83,6 +84,10 @@ func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.
 			_, err = cmd.OutOrStdout().Write(append(bytes, '\n'))
 			return err
 		}
+		if result.Creation != nil && result.Epic.ID == "" {
+			_, err = fmt.Fprintf(cmd.OutOrStdout(), "Epic creation %s: %s (not a usable Epic)\nOperation: %s\nNext: inspect --format json and retry the identical request only for a pending no-effect or branch-only observation.\n", result.Creation.Request.EpicID, result.Creation.State, result.Creation.ID)
+			return err
+		}
 		return renderEpicShow(cmd, result)
 	}}
 	show.Flags().StringVar(&format, "format", "text", "output format (text or json)")
@@ -97,7 +102,14 @@ func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.
 		if err != nil {
 			return err
 		}
-		if len(result.Epics) == 0 {
+		for _, op := range result.Creations {
+			if op.State != "completed" {
+				if _, err = fmt.Fprintf(cmd.OutOrStdout(), "Pending Epic creation %s: %s (operation %s; no registered Epic)\n", op.Request.EpicID, op.State, op.ID); err != nil {
+					return err
+				}
+			}
+		}
+		if len(result.Epics) == 0 && len(result.Creations) == 0 {
 			_, err = fmt.Fprintf(cmd.OutOrStdout(), "No Epics are registered in Ply workspace %s.\n", result.Workspace)
 			return err
 		}
@@ -139,7 +151,7 @@ func renderEpicMutation(command *cobra.Command, result workspace.EpicMutationRes
 }
 func renderEpicBinding(command *cobra.Command, epic workspace.EpicRecord) error {
 	binding := epic.RepoBindings[0]
-	_, err := fmt.Fprintf(command.OutOrStdout(), "Project / repository: %s / %s\nGit common directory: %s\nWorktree: %s\nWorktree ID: %s\nBranch: %s\nRecorded commit: %s\nRecorded tree: %s\nOrigin: adopted\nGit changed by this command: no\n", epic.ProjectID, binding.RepoID, binding.GitCommonDir, binding.Worktree.Locator, binding.Worktree.ID, binding.Worktree.Ref, binding.Worktree.OID, binding.Worktree.Tree)
+	_, err := fmt.Fprintf(command.OutOrStdout(), "Project / repository: %s / %s\nGit common directory: %s\nWorktree: %s\nWorktree ID: %s\nBranch: %s\nRecorded commit: %s\nRecorded tree: %s\nOrigin: %s\nGit changed by this command: no\n", epic.ProjectID, binding.RepoID, binding.GitCommonDir, binding.Worktree.Locator, binding.Worktree.ID, binding.Worktree.Ref, binding.Worktree.OID, binding.Worktree.Tree, binding.Worktree.Origin)
 	return err
 }
 func renderEpicShow(command *cobra.Command, result workspace.EpicReadbackResult) error {
@@ -171,7 +183,7 @@ func renderEpicShow(command *cobra.Command, result workspace.EpicReadbackResult)
 }
 func renderEpicBindingWithoutEffect(command *cobra.Command, epic workspace.EpicRecord) error {
 	binding := epic.RepoBindings[0]
-	_, err := fmt.Fprintf(command.OutOrStdout(), "Project / repository: %s / %s\nGit common directory: %s\nWorktree: %s\nWorktree ID: %s\nBranch: %s\nRecorded commit: %s\nRecorded tree: %s\nOrigin: adopted\n", epic.ProjectID, binding.RepoID, binding.GitCommonDir, binding.Worktree.Locator, binding.Worktree.ID, binding.Worktree.Ref, binding.Worktree.OID, binding.Worktree.Tree)
+	_, err := fmt.Fprintf(command.OutOrStdout(), "Project / repository: %s / %s\nGit common directory: %s\nWorktree: %s\nWorktree ID: %s\nBranch: %s\nRecorded commit: %s\nRecorded tree: %s\nOrigin: %s\n", epic.ProjectID, binding.RepoID, binding.GitCommonDir, binding.Worktree.Locator, binding.Worktree.ID, binding.Worktree.Ref, binding.Worktree.OID, binding.Worktree.Tree, binding.Worktree.Origin)
 	return err
 }
 func validateWorkFormat(value string) error {

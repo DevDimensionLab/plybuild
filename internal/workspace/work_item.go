@@ -137,6 +137,8 @@ type WorktreeOperationRecord struct {
 }
 
 type WorkItemRegistry struct {
+	EpicCreateOperations    []EpicCreateOperation     `yaml:"epic_create_operations"`
+	EpicCreateBoundary      *RegistryFormatBoundary   `yaml:"epic_create_boundary,omitempty"`
 	FormatVersion           int                       `yaml:"format_version"`
 	Epics                   []EpicRecord              `yaml:"epics"`
 	Tasks                   []TaskRecord              `yaml:"tasks"`
@@ -213,6 +215,7 @@ type TaskWorktreeMutationResult struct {
 }
 
 type EpicListResult struct {
+	Creations []EpicCreateOperation
 	Workspace string
 	Epics     []EpicRecord
 }
@@ -629,6 +632,9 @@ func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationRes
 		return dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
 			registry, err := session.Snapshot()
 			if err != nil {
+				return err
+			}
+			if err := epicCreateReservation(registry, repository.GitCommonDir, input.Ref, locator, input.EpicID); err != nil {
 				return err
 			}
 			if existing, _ := findEpic(registry, input.EpicID); existing != nil {
@@ -1067,7 +1073,7 @@ func ListEpics(dependencies Dependencies) (EpicListResult, error) {
 	if err != nil {
 		return EpicListResult{}, err
 	}
-	return EpicListResult{Workspace: root, Epics: append([]EpicRecord(nil), registry.Epics...)}, nil
+	return EpicListResult{Workspace: root, Epics: append([]EpicRecord(nil), registry.Epics...), Creations: registry.EpicCreateOperations}, nil
 }
 func ListTasks(dependencies Dependencies, epicID *EpicID) (TaskListResult, error) {
 	return ListTasksWithFilters(dependencies, TaskListFilters{EpicID: epicID})
@@ -1192,6 +1198,9 @@ func createTaskWorktreeLocked(dependencies Dependencies, root string, projects P
 		return workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has inconsistent worktree state", task.ID), nil)
 	}
 	if operation == nil {
+		if err := epicCreateReservation(registry, repository.GitCommonDir, sourceRef, target, ""); err != nil {
+			return err
+		}
 		if targetExists {
 			return workError(ErrorWorkPathConflict, fmt.Sprintf("target path %s already exists", target), nil)
 		}

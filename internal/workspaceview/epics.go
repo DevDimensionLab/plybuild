@@ -50,14 +50,15 @@ type EpicRow struct {
 }
 
 type EpicList struct {
-	Kind          string       `json:"kind"`
-	SchemaVersion int          `json:"schema_version"`
-	Workspace     WorkspaceRef `json:"workspace"`
-	Scope         EpicFilters  `json:"scope"`
-	Epics         []EpicRow    `json:"epics"`
-	Freshness     string       `json:"freshness"`
-	SourceBasis   string       `json:"source_basis"`
-	Reasons       []string     `json:"reasons"`
+	Creations     []workspace.EpicCreateOperation `json:"creations,omitempty"`
+	Kind          string                          `json:"kind"`
+	SchemaVersion int                             `json:"schema_version"`
+	Workspace     WorkspaceRef                    `json:"workspace"`
+	Scope         EpicFilters                     `json:"scope"`
+	Epics         []EpicRow                       `json:"epics"`
+	Freshness     string                          `json:"freshness"`
+	SourceBasis   string                          `json:"source_basis"`
+	Reasons       []string                        `json:"reasons"`
 }
 
 func ReadEpics(d workspace.Dependencies, filters EpicFilters) (EpicList, error) {
@@ -85,7 +86,17 @@ func BuildEpics(s *Snapshot, filters EpicFilters, process map[workspace.TaskID]P
 }
 
 func epicsFromTasks(s *Snapshot, filters EpicFilters, tasks TaskList) EpicList {
-	out := EpicList{EpicListKind, 1, tasks.Workspace, filters, []EpicRow{}, tasks.Freshness, "registered", tasks.Reasons}
+	out := EpicList{nil, EpicListKind, 1, tasks.Workspace, filters, []EpicRow{}, tasks.Freshness, "registered", tasks.Reasons}
+	if s.Registry.FormatVersion >= 6 {
+		out.Kind = "WorkspaceEpicListReadback@2"
+		out.SchemaVersion = 2
+		out.Creations = []workspace.EpicCreateOperation{}
+		for _, op := range s.Registry.EpicCreateOperations {
+			if filters.ProjectID == nil || op.Request.ProjectID == *filters.ProjectID {
+				out.Creations = append(out.Creations, op)
+			}
+		}
+	}
 	tasksByEpic := map[workspace.EpicID][]TaskRow{}
 	activityByEpic := workspace.RegisteredEpicActivityTimes(s.Registry)
 	for _, task := range tasks.Tasks {

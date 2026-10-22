@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const CurrentRegistryFormat = 5
+const CurrentRegistryFormat = 6
 
 // RegistryFormatBoundary records the immutable, explicitly authorized transition
 // and the already available reader. It does not change any historical authority.
@@ -51,7 +51,7 @@ func registryDiagnostic(code, detail string, version int) *RegistryDiagnostic {
 	if code == "registry_upgrade_required" || code == "registry_upgrade_conflict" {
 		next = "Run ply workspace registry upgrade --package <release-directory> --sha256 <manifest-digest> --check --format json, inspect the fresh plan, then apply its exact confirmation."
 	}
-	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{1, 2, 3, 4, 5}, NextAction: next}
+	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{1, 2, 3, 4, 5, 6}, NextAction: next}
 }
 
 func RegistryError(err error) *RegistryDiagnostic {
@@ -202,6 +202,14 @@ func decodeRegistryNode(root *yaml.Node, registry *WorkItemRegistry) error {
 }
 
 func validateRegistryBoundary(r WorkItemRegistry) error {
+	if r.FormatVersion == 6 {
+		b := r.EpicCreateBoundary
+		if b == nil || b.FromVersion != 5 || !digestPattern.MatchString(b.FromSHA256) || !digestPattern.MatchString(b.ManifestSHA256) || !digestPattern.MatchString(b.ReaderSHA256) || !validOIDText(b.ReaderCommit) || !strings.HasPrefix(b.ReaderVersion, "v") {
+			return fmt.Errorf("format 6 requires an identified format-5 transition and delivered reader")
+		}
+	} else if r.EpicCreateBoundary != nil {
+		return fmt.Errorf("legacy format cannot contain Epic create boundary")
+	}
 	if r.FormatVersion < 5 {
 		if r.FormatBoundary != nil {
 			return fmt.Errorf("legacy format cannot contain a format boundary")
@@ -223,6 +231,9 @@ func boundaryFor(old WorkItemRegistry, m clirelease.Manifest, pin string) *Regis
 func validateRegistryFormatTransition(old, next WorkItemRegistry) error {
 	if next.FormatVersion < old.FormatVersion {
 		return registryDiagnostic("registry_upgrade_conflict", "registry downgrade is forbidden", old.FormatVersion)
+	}
+	if next.FormatVersion == 6 {
+		return validateEpicRegistryUpgradeTransition(old, next)
 	}
 	if old.FormatVersion == 5 {
 		if !reflect.DeepEqual(old.FormatBoundary, next.FormatBoundary) {

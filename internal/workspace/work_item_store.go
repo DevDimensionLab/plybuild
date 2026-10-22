@@ -87,6 +87,14 @@ type workItemRegistryV3Wire struct {
 }
 
 func (registry WorkItemRegistry) MarshalYAML() (any, error) {
+	if registry.FormatVersion == 6 {
+		return struct {
+			Content              workItemRegistryV4Wire  `yaml:",inline"`
+			FormatBoundary       *RegistryFormatBoundary `yaml:"format_boundary"`
+			EpicCreateBoundary   *RegistryFormatBoundary `yaml:"epic_create_boundary"`
+			EpicCreateOperations []EpicCreateOperation   `yaml:"epic_create_operations"`
+		}{workItemRegistryV4(registry), registry.FormatBoundary, registry.EpicCreateBoundary, registry.EpicCreateOperations}, nil
+	}
 	if registry.FormatVersion == 5 {
 		return struct {
 			Content        workItemRegistryV4Wire  `yaml:",inline"`
@@ -309,6 +317,9 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	}
 	old, err := session.Snapshot()
 	if err != nil {
+		return err
+	}
+	if err := validateEpicCreateTransition(old, registry); err != nil {
 		return err
 	}
 	if err := validateRegistryFormatTransition(old, registry); err != nil {
@@ -542,8 +553,11 @@ func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
 			}
 		}
 	}
-	if version == 5 {
+	if version >= 5 {
 		fields = append(fields, yamlShapeField{name: "format_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
+	}
+	if version >= 6 {
+		fields = append(fields, yamlShapeField{name: "epic_create_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})}, yamlShapeField{name: "epic_create_operations", typeOf: reflect.TypeOf([]EpicCreateOperation{})})
 	}
 	return validateYAMLMappingShape(root, fields, "work-item registry")
 }
@@ -688,6 +702,9 @@ var operationIDPattern = regexp.MustCompile(`^wop_[0-9a-f]{32}$`)
 var digestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
 func validateWorkItemRegistry(registry WorkItemRegistry) error {
+	if err := validateEpicCreates(registry); err != nil {
+		return err
+	}
 	if err := validateQueueRegistry(registry); err != nil {
 		return err
 	}
@@ -735,7 +752,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 				return fmt.Errorf("Epic %s has invalid common directory", epic.ID)
 			}
 			wt := binding.Worktree
-			if !worktreeIDPattern.MatchString(string(wt.ID)) || wt.OwnerKind != "epic" || wt.OwnerID != epic.ID || wt.Origin != "adopted" || wt.GitCommonDir != binding.GitCommonDir || !validStoredPath(wt.Locator) || !validFullBranchRef(wt.Ref) || !validOIDText(wt.OID) || !validOIDText(wt.Tree) {
+			if !worktreeIDPattern.MatchString(string(wt.ID)) || wt.OwnerKind != "epic" || wt.OwnerID != epic.ID || (wt.Origin != "adopted" && !(registry.FormatVersion >= 6 && wt.Origin == "ply_created")) || wt.GitCommonDir != binding.GitCommonDir || !validStoredPath(wt.Locator) || !validFullBranchRef(wt.Ref) || !validOIDText(wt.OID) || !validOIDText(wt.Tree) {
 				return fmt.Errorf("Epic %s has invalid worktree binding", epic.ID)
 			}
 			if owner, ok := worktreeIDs[wt.ID]; ok {

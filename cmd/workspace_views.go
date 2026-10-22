@@ -335,6 +335,11 @@ func addWorkspaceEpicReadCommands(epic *cobra.Command, d workspace.Dependencies)
 			for _, row := range r.Epics {
 				rows = append(rows, fmt.Sprintf("%s: %s (%s; %d Tasks)", row.EpicID, row.Title, row.Lifecycle, row.TaskCount))
 			}
+			for _, op := range r.Creations {
+				if op.State != "completed" {
+					rows = append(rows, fmt.Sprintf("Pending Epic creation %s: %s (operation %s; inspect epic show --format json)", op.Request.EpicID, op.State, op.ID))
+				}
+			}
 			return writeView(c, r, "Epics in Ply workspace "+r.Workspace.Root+":", rows)
 		}
 	}
