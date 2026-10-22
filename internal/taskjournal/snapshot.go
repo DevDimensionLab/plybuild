@@ -176,7 +176,7 @@ func (s *Snapshot) derive() {
 			continue
 		}
 		p.State = "closed"
-		p.DurationSeconds = ptr(z.Sub(a).Seconds())
+		p.DurationSeconds = ptr(elapsedSeconds(a, z))
 	}
 	for _, p := range steps {
 		s.Steps = append(s.Steps, *p)

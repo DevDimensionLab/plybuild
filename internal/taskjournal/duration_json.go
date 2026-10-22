@@ -30,7 +30,7 @@ func decodeJournalJSON(raw []byte) (canonicaljson.Value, error) {
 		if _, err := strconv.ParseUint(path[1], 10, 64); err != nil {
 			return 0, fmt.Errorf("invalid snapshot duration path")
 		}
-		// Measured time.Duration values need at most a short float64 spelling.
+		// Measured elapsed seconds need at most a short float64 spelling.
 		// Bound work before exact decimal comparison of untrusted offline input.
 		if len(number) > 64 {
 			return 0, fmt.Errorf("snapshot duration_seconds number is too long")

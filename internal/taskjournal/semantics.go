@@ -217,7 +217,7 @@ func validateSnapshotSemantics(s Snapshot) error {
 					state = "time_conflict"
 				} else if start.TimeBasis.Uncertainty == nil && end.TimeBasis.Uncertainty == nil && equal(start.TimeBasis.Clock, end.TimeBasis.Clock) {
 					state = "closed"
-					duration = ptr(z.Sub(a).Seconds())
+					duration = ptr(elapsedSeconds(a, z))
 				}
 			}
 		}

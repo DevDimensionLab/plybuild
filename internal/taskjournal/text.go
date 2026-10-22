@@ -83,7 +83,7 @@ func Text(s Snapshot, view string) string {
 		}
 	}
 	if view == "timeline" || view == "details" {
-		var earliest, latest time.Time
+		var earliest, latest *time.Time
 		for _, p := range s.Steps {
 			if !selected[p.StartEventID] && (p.EndEventID == nil || !selected[*p.EndEventID]) {
 				continue
@@ -91,17 +91,17 @@ func Text(s Snapshot, view string) string {
 			a := events[p.StartEventID]
 			if a.OccurredAt != nil {
 				t, _ := parseTime(*a.OccurredAt)
-				if earliest.IsZero() || t.Before(earliest) {
-					earliest = t
+				if earliest == nil || t.Before(*earliest) {
+					earliest = &t
 				}
-				if latest.IsZero() || t.After(latest) {
-					latest = t
+				if latest == nil || t.After(*latest) {
+					latest = &t
 				}
 			}
 			if p.EndEventID != nil && events[*p.EndEventID].OccurredAt != nil {
 				t, _ := parseTime(*events[*p.EndEventID].OccurredAt)
-				if latest.IsZero() || t.After(latest) {
-					latest = t
+				if latest == nil || t.After(*latest) {
+					latest = &t
 				}
 			}
 		}
@@ -118,11 +118,11 @@ func Text(s Snapshot, view string) string {
 			}
 			bar := strings.Repeat(" ", 48)
 			label := map[string]string{"closed": "Closed", "no_end_recorded": "No end recorded", "time_unknown": "Unknown time", "time_conflict": "Time conflict"}[p.State]
-			if p.DurationSeconds != nil && !earliest.IsZero() && latest.After(earliest) {
+			if p.DurationSeconds != nil && earliest != nil && latest != nil && latest.After(*earliest) {
 				start, _ := parseTime(*a.OccurredAt)
 				finish, _ := parseTime(*end)
-				left := int(start.Sub(earliest).Seconds() / latest.Sub(earliest).Seconds() * 47)
-				right := int(finish.Sub(earliest).Seconds() / latest.Sub(earliest).Seconds() * 47)
+				left := int(elapsedSeconds(*earliest, start) / elapsedSeconds(*earliest, *latest) * 47)
+				right := int(elapsedSeconds(*earliest, finish) / elapsedSeconds(*earliest, *latest) * 47)
 				if left >= 0 && right >= left && right < 48 {
 					cells := []byte(bar)
 					for i := left; i <= right; i++ {
@@ -174,8 +174,8 @@ func seqText(p *int) any {
 	}
 	return *p
 }
-func axisTime(t time.Time) string {
-	if t.IsZero() {
+func axisTime(t *time.Time) string {
+	if t == nil {
 		return "Unknown time"
 	}
 	return t.UTC().Format(time.RFC3339Nano)
