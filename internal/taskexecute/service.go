@@ -3,6 +3,7 @@ package taskexecute
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -445,6 +446,11 @@ func startRequest(d taskrun.Dependencies, out Result, check bool) (Result, error
 	out.State, out.Run, out.NextAction = "started", &run, run.NextAction.Message
 	if err != nil {
 		out.State = "start_unknown"
+		var startErr *taskrun.Error
+		if errors.As(err, &startErr) && startErr.Code == taskrun.WorkflowStartBindingConflict {
+			out.State, out.Run = "start_pending", nil
+			out.NextAction = "No Run reservation or provider start occurred: start bindings changed before reservation. The Task, preparation and immutable request are preserved. Inspect a fresh preview of the same request with ply workflow run start --file " + taskrun.ShellQuote(out.RequestPath) + " --check --format json; then run the same execute command to start with current bindings."
+		}
 	}
 	return out, err
 }

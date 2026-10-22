@@ -221,6 +221,11 @@ func workflowPaths(r WorkflowRequest, round int) WorkflowPaths {
 func workflowNativeRequest(r WorkflowRequest) Request {
 	return Request{Envelope: env("request"), RequestKey: r.RequestKey, WorkspaceRoot: r.WorkspaceRoot, PreparationID: r.PreparationID, PreparationSHA256: r.PreparationSHA256, HandoffDraft: r.HandoffDraft, Runtime: r.Runtime, Agreement: r.Agreement, HumanAuthority: HumanAuthority{r.HumanAuthority.ActorClaim, "human_ordinary_terminal", r.HumanAuthority.Authorized}, ReturnPolicy: ReturnPolicy{true, true, "separate", "separate"}}
 }
+
+// WorkflowStartBindingConflict identifies the locked confirmation mismatch
+// before any Run reservation or provider startup effect.
+const WorkflowStartBindingConflict = "workflow_start_binding_conflict"
+
 func workflowError(exit int, detail string) error {
 	return &Error{Code: "workflow_run", Detail: detail, Exit: exit}
 }

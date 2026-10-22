@@ -282,7 +282,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 				return e
 			}
 			if fresh.Confirmation == nil || *fresh.Confirmation != confirm {
-				return workflowError(4, "start bindings changed before reservation")
+				return &Error{Code: WorkflowStartBindingConflict, Exit: 4, Detail: "start bindings changed before reservation"}
 			}
 			s := workflowInitial(r, fresh.Observed)
 			s.CodexTrust = fresh.CodexTrust
