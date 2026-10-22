@@ -212,6 +212,15 @@ return to you: correct them, commit and ask the coordinator for a new round.
 When a round passed exactly the current candidate, omit --review and Ply builds
 the review record from it; earlier findings stay as fixes.
 
+For a clean review-ready candidate, return to the existing coordinator
+through the working report callback above (phase=working and question=null)
+or the agreed agent channel. Include candidate OID/tree, test evidence and private binary path
+when applicable, so the coordinator can start the separate native review.
+Keep the candidate unchanged until the separate review returns.
+Do not use an interactive human question for this routine coordinator transition.
+Real human QA, access dialogs and new product or scope decisions
+still follow their actual contract; ask the human when that contract requires it.
+
 %s workflow execute verify %s --context %s --review <copied-review.json>
 
 ## Actual human QA and local integration

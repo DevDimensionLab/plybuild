@@ -408,6 +408,7 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Independent review round %d\n\n", r.Round)
 	fmt.Fprintf(&b, "Coordinator: %s. You are a separate reviewer session, not the developer (owner session %s).\n\n", r.Coordinator, r.OwnerSession)
+	fmt.Fprintf(&b, "This is an internal review round. Return through native review-return to coordinator %s (pane %s). When the parent owns the job and its notifications, send no separate Slack notification; the parent owns the whole-job notification. Honor an explicit separate notification agreement. Do not create a notification route or add an approval gate.\n\n", r.Coordinator, r.CoordinatorPane)
 	fmt.Fprintf(&b, "- Run: %s\n- Goal and Spec: %s\n- Task worktree (read-only for you): %s\n- Task base: %s\n- Candidate: %s (tree %s)\n- Owner acceptance entrypoint: %s\n", r.RunID, s.Request.Delivery.Goal.Locator, s.Observed.Target.WorktreeLocator, s.Observed.Target.OID, r.CandidateOID, r.CandidateTree, s.Request.Delivery.AcceptancePath)
 	for _, e := range earlier {
 		if e.Return != nil {

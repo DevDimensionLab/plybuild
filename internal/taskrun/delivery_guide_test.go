@@ -58,6 +58,12 @@ func TestDeliveryGuideManagedRequirements(t *testing.T) {
 				"--review <copied-review.json>",
 				"an empty template is not a review",
 				"The callback itself executes /bin/sh",
+				"For a clean review-ready candidate, return to the existing coordinator",
+				"phase=working and question=null",
+				"candidate OID/tree, test evidence and private binary path",
+				"Keep the candidate unchanged until the separate review returns",
+				"Do not use an interactive human question for this routine coordinator transition",
+				"Real human QA, access dialogs and new product or scope decisions",
 			} {
 				if !strings.Contains(guide, want) {
 					t.Errorf("generated guide lacks %q", want)
