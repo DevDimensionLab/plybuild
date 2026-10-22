@@ -51,6 +51,56 @@ The current preparation is retained. Returning a second concurrent feature to a
 parent that has moved needs a later refresh workflow; this version reports the
 changed parent and preserves the work instead of silently merging it.
 
+## Register a supplied first Goal
+
+For a new Task, supply product content directly. No draft envelope, internal
+references, hashes, registry version or complete queue payload is required:
+
+```shell
+ply workspace task goal register explain-errors \
+  --spec explain-errors-v1 --document /absolute/spec.md \
+  --title "Explain errors" --objective "Make failures actionable" \
+  --criterion "Invalid input names the missing choice" \
+  --project ply --repo ply --epic workflow \
+  --delivery local_epic_integration --acceptance human --format json
+# Repeat exactly those flags with:
+#   --apply --confirmation <confirmation from preview>
+```
+
+Preview reads the supplied UTF-8 document and the explicitly registered return
+worktree, common directory and ref. It shows source hashes/byte counts, planned
+Task/Goal, delivery policy, effects and confirmation without publishing anything.
+Repeat `--criterion` and `--constraint` for supplied product choices; use
+`--extra-document design=/absolute/design.md` for additional preserved inputs.
+Ply does not infer criteria from Markdown. Optional `--provider`, `--model` and
+`--effort` retain native execution defaults when omitted.
+
+The explicit `--acceptance automatic` choice requires `--responsible-actor` and
+`--acceptance-timeout` (seconds); `--require-human-qa` keeps an additional human
+gate. `--acceptance human` retains actual human judgment. Local delivery resolves
+the target from the selected Project/repo/Epic. `pull_request` additionally needs
+`--github-repository owner/repo --remote origin --target-ref refs/heads/main`.
+These declarations do not record a human pass or grant runtime permissions.
+
+Apply returns the actual `task_id`, initial `problem`, exact `goal.spec_id`,
+revision and manifest hash, resolved `target`, `contract.required_inputs`, and
+current `queue`. It appends that exact Goal and preserves unrelated current and
+pending work. It creates no branch, worktree, Run, agent or prompt. The result
+has `run: null` and `readiness: "not_checked"`; from `check_cwd`, run `next_argv`
+for the existing separate read-only execution check. A busy queue, dirty return
+or missing runtime can block readiness while registration remains successful.
+
+After a lost response, inspect `workspace task publication show TASK_ID --key
+first-goal/TASK_ID/goal`, Task readback and `workspace task queue list`, then
+repeat the identical registration flags and confirmation. Partial results retain
+observed Problem/Goal/queue references. Native immutable publications and CAS
+resume the same registration without duplicate revisions or appends. Once its
+append was published, retry observes that history even after later preparation
+or queue removal; it never requeues the Task. Changed product bytes, document
+identity, target, policy or executor choices conflict with the first input.
+A foreign, inactive or already started Task cannot become a new first Goal.
+New Goal revisions and legacy solution registration use the existing commands.
+
 ## What the planner records
 
 Use the existing Task, Spec and queue commands:
