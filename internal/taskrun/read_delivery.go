@@ -82,6 +82,11 @@ func inventoryDeliveryUnknownAction(s workflowState, reason string) InventoryDel
 
 func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 	a := s.Result.NextAction
+	if s.Result.Delivery != nil && s.Result.Delivery.Phase == "awaiting_acceptance" && deliveryStartupPending(s) {
+		// Match show for old pre-prompt starts without changing saved advice or
+		// treating a cached transport failure as evidence of provider absence.
+		a = deliveryStartupAction(s)
+	}
 	out := InventoryDeliveryAction{Actor: inventoryDeliveryActor(a.Actor), RecordedActor: a.Actor, Kind: "continue_delivery", Reason: a.Message, EvidenceIDs: []string{s.Result.RunID}}
 	if deliveryEffectiveAgreement(s) != nil && deliveryEffectiveAgreement(s).AutomaticAcceptance() && !deliveryEffectiveAgreement(s).HumanOwnedIntegration() && (s.Result.Delivery.Phase == "closing" || s.Result.Delivery.Phase == "completed") {
 		out.Kind = "continue_closeout"

@@ -543,6 +543,18 @@ readiness exchange and send the first Task prompt only when no Task prompt has
 been attempted. It grants no trust or permissions, starts no additional process
 and refuses to replay an uncertain prompt. `show` and `follow` remain observers.
 
+After a stopped startup with no bound owner session and no attempted Task prompt,
+readback directs the coordinator to inspect the preserved phase and error:
+
+```shell
+ply workflow execute recover-start wfr_<digest> --check --format json
+```
+
+This inspection does not start recovery. A cached transport or `agent_not_found`
+does not establish provider or writer absence; recovery still requires its fresh
+guarded checks. If onboarding remains active in the existing tab, complete it
+there and use the same-start `execute resume` path above.
+
 Owner callbacks use the **absolute preserved control executable**, exact Task
 cwd and private context printed in the start guide. Installing another Ply
 candidate does not replace that control binary. Callback surfaces are `report`,

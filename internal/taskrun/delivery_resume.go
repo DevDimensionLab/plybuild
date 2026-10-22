@@ -26,6 +26,17 @@ func deliveryStartupPending(s workflowState) bool {
 
 func deliveryStartupAction(s workflowState) WorkflowAction {
 	if deliveryStartupPending(s) {
+		if s.Result.Transport.AgentSessionID == "" {
+			for _, reason := range s.Result.Reasons {
+				switch reason.Code {
+				case "herdr_start_stopped", "delivery_start_resume_stopped":
+					// A stopped unbound start needs inspection. Neither its cached
+					// transport nor a failed observation establishes provider exit.
+					// Keep live onboarding's same-start continuation conditional.
+					return WorkflowAction{"coordinator", "Inspect the preserved startup phase=" + s.Phase + " and errors in the same tab. Run read-only inspection: ply workflow execute recover-start " + s.Result.RunID + " --check --format json. Recovery requires fresh positive guarded checks; cached transport and failed observations do not establish provider or writer absence. If native onboarding is still active in that tab, complete it there, then run: ply workflow execute resume " + s.Result.RunID + " to follow the same start without replaying input."}
+				}
+			}
+		}
 		return WorkflowAction{"user", "Complete any native onboarding in the existing tab, then run: ply workflow execute resume " + s.Result.RunID + ". This follows the same start and sends its first Task prompt only when ready; it creates no new tab or agent."}
 	}
 	return WorkflowAction{"coordinator", "Inspect the preserved startup and last observation in the same tab. Task input may already have been attempted; do not restart or resend it."}
