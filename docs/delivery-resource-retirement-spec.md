@@ -1,0 +1,121 @@
+# Delivery resource retirement with effects retained
+
+Planning-ready Goal Spec, AL39. Product gap remains open: no product behavior has been implemented by this documentation Task. A later native Goal must authorize implementation. This Spec selects one bounded path; it does not authorize changes to AL25 or start its replacement.
+
+## Goal and first scope
+
+Let a coordinator retire the resource ownership of an already absent, started, stopped interactive local Epic delivery, retaining its actual source and every unresolved effect. Reuse AL14 report retirement's source/absence/retention model through an explicit mode on existing `workflow execute retire`. Resource closure must never mean effect resolution, successful delivery, permission confirmation, replay, automatic replacement start or source cleanup.
+
+The first slice supports structured `local_epic_integration` deliveries with a native start, bound provider/session, preserved active coordinator stop, verifiable Task preparation and present source worktree. Support both receipt and legacy starts without changing their original permission claims. The owner pane must already be absent. No live-owner close, same-owner continuation, generic effect audit, new approval system or automatic backup is included. Other retirement paths retain their existing behavior.
+
+A genuine unknown external effect remains unknown even after resources are retired. Any later action that depends on that effect remains blocked until separately observed through a legitimate supported path. Independent authorized development can proceed in a fresh Task; it must not assume a remote write failed, repeat the refused action or race an unresolved external operation. Queue release is no proof of external quiescence.
+
+## Observed basis and implementation seams
+
+All source paths below are relative to this repository, inspected at base `216f2e4fd44f4a5d2dbcf33b9075b7793f3ca71b`. Installed `ply version --format json` reported that commit, `dirty=false`, SHA-256 `36c66e17695f79fe3bcdab4518350272a51fc5a1090521fb1fa787bcb31f1193` on 2026-10-22. Installed help and read-only AL25 `execute show` were inspected; none of the historical mutations or denied tests were run.
+
+| Existing behavior | Source seam and consequence |
+| --- | --- |
+| AL14 post-start report resource retirement | [workflowRetireReport](../internal/taskrun/report_startup.go:154) checks native start/terminal, preparation, actual source twice and already absent writers, then retains dirty/unique source and partial/unknown effects with WARN. It observes absence without closing a pane. Reuse this structure, not report-only stop extraction. |
+| Delivery retirement today | [workflowRetireDelivery](../internal/taskrun/delivery_retire.go:69) rejects partial/unknown before pane-close except a source-bound provider audit. It protects completed/handed-off candidates and non-recorded native attempts, closes the exact pane, records an event, then releases the queue. Its default path is unchanged. |
+| All unresolved stops matter | [deliveryUnresolvedStops](../internal/taskrun/delivery_retire.go:173) replays stop/resolution history, preserving earlier stops beneath the latest one. The new mode must retain all of these bindings, not just `active_stop`. |
+| Same-owner resolve-stop | [WorkflowResolveDeliveryStop](../internal/taskrun/delivery_stop.go:138) requires the live same owner and exact active stop; partial/unknown cannot be cleared with text. Keep this unchanged and continue to block retired callbacks. |
+| Quota/capacity reconciliation | [deliveryQuotaStopBinding](../internal/taskrun/delivery_quota_reconcile.go:141), [deliveryQuotaAllowsRetirement](../internal/taskrun/delivery_quota_reconcile.go:204) and [deliveryValidateCapacityTranscript](../internal/taskrun/delivery_capacity_reconcile.go:29) audit exact provider/session/action/full transcript sources. They cover specific quota/capacity boundaries, not arbitrary fixture failures or external-effect absence. Preserve existing annotations and their source bindings; no fabricated quota event or reclassification is needed for resource-only closure. |
+| Actual source retention | [ReportRetainedSource and effects](../internal/taskrun/report_startup.go:249), [workflowReportSource](../internal/taskrun/report_startup.go:292) bind worktree/ref/common Git dir/inventory plus actual OID/tree/clean/source digest. [workflowTarget](../internal/taskrun/herdr_service.go:404) hashes tracked and untracked paths/content/modes and checks stability. This is a source observation, not an external-effect oracle or backup. |
+| Preparation and release | [workflowReportPreparation](../internal/taskrun/report_startup.go:311) validates the exact preparation and plan, including historical closed dispositions. [workflowReleaseReportQueue](../internal/taskrun/report_startup.go:325) leaves foreign current/pending entries alone and rechecks writers before an outstanding release. [deliveryRetireReleaseQueue](../internal/taskrun/delivery_retire.go:251) currently has weaker retry freshness; strengthen only the new mode. |
+| Writer evidence | [taskWriters.cleanup](../internal/taskrun/delivery_task_writers.go:82) composes Herdr and local observations for every owner, while `retirement()` only adds local inspection for a resumed owner. Use `cleanup()` for the new mode, including unresumed owners. [systemLocalProcesses and limitation](../internal/taskrun/delivery_writer_liveness.go:18) observe cwd/transcript/session arguments; they cannot see a process that left all those scopes. Failure or incomplete inventory means unknown. |
+| Existing modeled adapters and public CLI | [Dependencies.LocalProcesses](../internal/taskrun/types.go:384), [TestAR03ComposedWriterEvidence](../internal/taskrun/delivery_task_writers_test.go:13) permit modeled process observations. [AL14 CLI helpers](../internal/taskrun/report_retirement_poststart_test.go:19) preserve raw streams/exits and model Herdr, but subprocess CLI calls do not inherit the Go process adapter. [newWorkflowCommand](../cmd/workflow.go:16) supplies system dependencies. [newWorkflowExecuteRetireCommand](../cmd/workflow_execute_stop.go:131) is the public flag/readback seam. No public process-injection flag exists. |
+
+AL25 is the motivating case, not a fixture to mutate. Preserved Run `wfr_f2e497e04fd57fd4a2f295d10d93daf84ee8c4a0f5bd9bdffbd6a1507304fb1d`, session `01a16012-f060-70b1-8743-4d83278e4ec9`, original stop `sha256:06eef164576c568978c61bcc922653b607cb9a562daf4f24d670a780a80dea6b`: the local sandbox test was refused with `sandbox_apply: Operation not permitted`; fixture and synthetic failure receipt existed and the owner recorded `partial`. The denied sandboxed test did not run. The aggregate test run failed. Original resolution rejection remains history. Read-only show still reported active stop, no attempt/candidate, dirty source at OID `3341a2fa6035bb90c9addc803ae11f68febf5f9a`, tree `e3f404e89a45a114a3d20a747c0e3b787cf49934`, and `not_delivered`. Cached transport `working` is not fresh liveness. The frozen backlog records that the owner tab was closed and preparation released separately; actual present eligibility still needs native observations. AL25B's separate correction does not deliver or resolve AL25.
+
+## Proposed public contract
+
+Extend the existing command with opt-in selectors (these flags do not exist in the inspected CLI):
+
+```text
+ply workflow execute retire RUN_ID --retain-effects \
+  --native-session SESSION --stop sha256:STOP --source-sha256 sha256:SOURCE \
+  --observer 'actual coordinator' --reason 'resource ownership only' --format json
+```
+
+`--retain-effects` selects the new resource-only mode. Require all three exact selectors; reject selectors without that mode and mismatches without mutation. `--stop` selects the current active stop digest, `--native-session` the transport's bound session, and `--source-sha256` the current retained-source digest. Run from the containing workspace outside the Task source. The existing `workflow run retire` alias shares parsing; it must reject the new mode for report Runs rather than silently ignoring it. Default retire, report retirement, resolve-stop and provider audits keep their semantics. No `--force`, permission-confirmation or free-text effect downgrade is introduced.
+
+Expose an additive `delivery_status.resource_retirement` object on `execute show` and retire readback. Its fields are `mode` (`retain_effects` or null), `state` (`not_retired`, `recorded_pending_release`, `retired`), `native_session`, `active_stop`, `source`, `retained_effects`, `retirement` (event FileBinding or null), `queue_disposition`, `next_action`. Before recording, `source` supplies the exact current source digest for selection; an observation error supplies null plus a bounded diagnostic, never a guessed digest. This object is observation, not a permission or liveness grant. Plain show performs no process inspection. Old records remain readable with no invented new source/effect evidence.
+
+After successful resource retirement, delivery phase remains `stopped`; `active_stop` and all original stop events remain unchanged. The object shows the hash-bound retained source/effects, event binding and exact preparation disposition. Final delivery remains `not_delivered`; existing technical evidence and human judgments remain history and acquire no new pass/current qualification. Readback must prominently say: “Resources retired; original effects retained, including uncertainty. No delivery or replay. Fresh Task mandate required.” Any later verify, integrate, owner continuation or callback is rejected as `owner_retired`; read-only show remains available.
+
+On first recording with partial/unknown effects, emit WARN to stderr containing Run, original status, retained record and source digest, matching AL14. JSON stdout remains parseable. Subsequent show/retry exposes the same caution and immutable bindings without pretending a new observation refreshed the historical receipt.
+
+## Operation and recovery
+
+1. Validate selectors and supported Run mode under native workflow serialization. Check bound request, native start facts, provider/session, active stop and exact preparation/plan/source identity. Reject any native terminal (including blocked terminal), completed delivery, ownership release or human integration. No terminal history is rewritten.
+2. **Native attempts:** reject `Delivery.Attempt` unless absent or `recorded`; reject any incomplete/unknown owner-resume phase, including tab/prompt attempts. Use the stricter [deliveryQuotaAttemptGuard](../internal/taskrun/delivery_quota_reconcile.go:131) approach for resume completion. A partial/unknown stop alone does not block this resource mode; a native operation with an unobserved outcome does. Never convert an attempt into an effect-retention annotation.
+3. Validate every unresolved stop's bound bytes, provider and session against this Run. Retain each FileBinding, original effect/action and evidence binding, including prior quota/capacity annotations as history. Different-session/damaged stop history blocks. Do not clear an earlier partial stop because a later stop says `not_started`.
+4. Observe actual source using the AL14 helper extracted into shared code with neutral diagnostics, without imposing clean/original-OID requirements post-start. Compare with selected source digest. Reuse the retained-source shape; keep existing report fields compatible. Source includes dirty/untracked/unique work at its original path; no commit, reset, patch application or worktree deletion is performed.
+5. **Writer absence:** use `taskWriters.cleanup()` once. Require bound pane and managed agent positively absent, complete unambiguous inventories with no Task/session writer, and complete local observation with no remaining writer. Live pane refuses before local inspection; unknown/denied inspection refuses without automatic retry. Never call `deliveryRetireClosePane`, send input or invoke a provider in this mode. Record the existing process-method limitation and fresh inventory timestamp/hashes separately from cached historical transport.
+6. Re-observe source and require exact equality to step 4, including identity/digest. Source change blocks recording/release; inspect actual changed work before selecting it again. No claim is made about stability after this bounded observation or arbitrary external effects.
+7. Append one native `owner_retirement` event, extending `DeliveryRetirement` with an optional mode plus exact selectors and retained delivery effects/source. Preserve the existing event reader and callback closure mechanism. Existing report field names may remain for compatibility; new delivery evidence must have explicit delivery semantics. Durably recover an event written before state indexing using the native event recovery path; add a bounded fault test here. Mark stopped, then release only the bound preparation.
+8. Queue release validates exact preparation identity, target and disposition. Already `released` or `advanced` is observed completion of this resource boundary; foreign current/pending entries and queue revision remain unchanged. If it is current, freshly recheck attempts/stops, source equality to the retirement receipt and writer absence before release with exact preparation and current queue revision. Any drift/unknown blocks this dependent release. Queue CAS conflict returns a diagnosis; it must never advance a successor. A recorded event with incomplete release is `recorded_pending_release`, not completed retirement.
+
+**Lost reply:** identical Run/mode/session/stop/source/observer/reason recovers the same event and remaining queue step. Once the exact preparation is closed, retry/show requires no new writer inspection or source mutation to read historical completion. A recorded receipt is historical, not a fresh writer absence proof for an outstanding release. Conflicting selectors/mode/reason are rejected; do not create a second retirement or silently fall through to legacy retire. A late stop or changed source during pending release blocks and preserves the original receipt for diagnosis. Existing default-path receipts cannot be upgraded into this mode.
+
+**Fresh mandate:** retirement starts nothing. A coordinator may separately register/select a fresh Task with its own source, permissions and delivery agreement. Useful old work may be explicitly reviewed and copied under that mandate. It inherits no acceptance, quota clearance, review, QA, permission or effect assumptions. This mode does not extend the pre-work-only `backup-goal` path. AL25 inspection/retirement after implementation would be a separately selected root-owned action, conditional on supported observations; this Spec neither performs nor promises it.
+
+## Scenario table
+
+Each result below is required at the indicated existing seam. “Retire” always means resources only, with source/history retained.
+
+| Case | Selected facts | Required outcome | Seam and evidence |
+| --- | --- | --- | --- |
+| S01 Local fixture | Started/stopped owner absent; completed local fixture and synthetic failure receipt; dirty unique source; partial stop | Retire, WARN partial unchanged, no technical pass; retain every source byte and stop | Shared AL14 source snapshot, cleanup, delivery event; hash files/history before and after |
+| S02 Unknown external | Same resource facts, genuinely unknown external operation represented only by stop; no active native attempt | Retire resources, retain unknown; dependent external work stays blocked and no operation is retried | Retained effect/readback; assert no resolution or provider call |
+| S03 Native attempt | Pending/interrupted/unknown delivery attempt or unresolved resume tab/prompt | Refuse before writer inspection/event/release, even if stop labels fixture effects | Native attempt guard; assert queue/source/events unchanged |
+| S04 Writers | Live pane, surviving managed/local writer, incomplete/denied inventory or process observation | Refuse; no close/input, no absence inference or automatic inspection retry | cleanup composed adapters; count calls, include unresumed owner |
+| S05 Ownership mismatch | Different selected session/stop, earlier stop from foreign session, damaged evidence, wrong ref/preparation | Refuse before resource effect; no foreign owner is touched | Selector/history/source/preparation checks |
+| S06 Source drift | OID, content, mode, dirty/untracked path or source identity changes between source reads | Refuse recording and release; retain changed source for inspection | workflowTarget plus modeled observation hook |
+| S07 Already closed | Exact preparation already released/advanced; foreign current and pending queue entries | Record retirement after absence checks; no queue mutation; identical retry reads history | Preparation/release helpers; compare full queue/revision |
+| S08 Immutable terminal | Completed delivery, ownership released/human integration, or any native terminal including blocked | Refuse before process observation; preserve terminal and evidence | Terminal facts and delivery guards |
+| S09 Lost reply | Fault after event persistence, after state publication or after exact queue release | Identical retry returns one event and correct completion; only outstanding release needs fresh evidence | Native event recovery, queue receipt, injected fault |
+| S10 Conflict | Retry changes mode/session/stop/source/observer/reason | Refuse immutable-input conflict; no new event, inspection or release | Retirement reader/input comparison |
+| S11 Late drift | Event recorded, release pending; new stop, source change, native attempt or writer appears | Retain event, report pending release, block release; never touch new queue owner | Release freshness and queue CAS |
+| S12 Independent work | Resource/action refused, independent authorized Task has a fresh mandate | Keep refusal; permit independent work through ordinary fresh-Task path, without dependence on unknown effect | No automatic replacement or new permissions from retirement |
+
+## Acceptance criteria for the implementation Goal
+
+- A1: The explicit command and additive show object implement exactly the selected local Epic/post-start/absent-owner scope. Legacy/default/report behavior remains compatible. Unsupported modes and selector drift refuse before resource effects.
+- A2: S01/S02 preserve source identity/content, every stop/evidence/annotation and original effect status. Stopped/retired resources never become delivered, resolved, replayable or permission-confirmed. Warning and JSON readback distinguish these facts.
+- A3: S03–S06/S08 block before event/release; no new mode pane-close, input, provider start, source deletion or unauthorized process inspection occurs. Unknown observations remain unknown with an actionable diagnostic.
+- A4: S07/S09–S11 release exactly the owned preparation once, recover durable receipts after lost replies, preserve foreign queue order/revision, and show pending release truthfully. Historical retry does not refresh evidence or bypass current release guards.
+- A5: Every late owner callback, verify/integrate and resume refuses retired ownership. Reading history remains possible, retaining pre-existing tests/reviews/QA as historical facts. Fresh work requires an independent mandate.
+- A6: Focused modeled positives and actual public CLI checks are separately reported with raw outcomes and independent semantic review. No modeled absence is reported as OS permission, no denied historical action is replayed, and no full provider journey is claimed.
+
+## Red/green and separate review
+
+For the future implementation, first add failing focused `internal/taskrun` tests using the existing delivery fixture and `Dependencies.LocalProcesses`, modeled Herdr and disposable Git/native stores. Cover the table with table-driven cases, counters proving no forbidden calls, source/evidence hashes and exact queue snapshots. Explicitly supply the observing PID in modeled process tables; empty/incomplete tables must fail. Positive assertions must fail against today's blanket partial gate. Add recovery faults around durable event and queue publication, then implement the shared AL14 source/absence retention path and new mode. Add narrow `cmd` tests for flag validation/alias rejection, WARN stderr separation and parseable JSON; avoid mirroring implementation with token-only tests.
+
+Use `TestAR03ComposedWriterEvidence` and AL14 post-start tests as source examples, not an instruction to run their broad CLI journeys. The latter may invoke actual `lsof`/`ps`. Do not run the historical denied sandbox test, old writer-inspection helper, provider launch or a broad suite. Review each proposed test's transitive helpers before execution. Run only the newly bounded modeled tests and command tests. Separate native review must examine all scenarios, event recovery, foreign ownership and readback semantics on the exact committed candidate; correct findings and obtain a fresh round. Keep real findings and earlier evidence.
+
+## Public CLI verification and limits
+
+This planning Task runs document/reference/scope checks plus read-only candidate help/version. Those checks validate this Spec's packaging; the missing-file check before drafting is setup evidence, not a failing runtime product regression. Semantic readiness requires the parent's separate native review. No product capability is claimed from this task's automatic acceptance.
+
+For a later implementation, use its exact clean make-built candidate; capture stdout, stderr, argv and exit separately and wait for every child to exit. Use existing disposable fixture stores/Herdr model, never real AL25 state. The permitted public CLI recipe is:
+
+```text
+$CANDIDATE version --format json
+$CANDIDATE workflow execute retire --help
+$CANDIDATE workflow execute show $DISPOSABLE_RUN --format json
+# Only against a disposable fixture with a known mismatch, rejected BEFORE inspection:
+$CANDIDATE workflow execute retire $DISPOSABLE_RUN --retain-effects \
+  --native-session wrong-session --stop $STOP --source-sha256 $SOURCE \
+  --observer 'modeled coordinator' --reason 'selector negative' --format json
+$CANDIDATE workflow execute show $DISPOSABLE_RUN --format json
+```
+
+The future help must expose the new flags and narrow scope. Show must expose the source digest and retained statuses. The mismatch must return nonzero with unchanged source/events/queue. A matching-selector pending-native-attempt fixture supplies a second pre-inspection negative. Positive core retirement and writer/source/recovery negatives are exercised through Go's existing dependency adapters; public CLI parsing/readback is tested separately. No new fixture runner, production injection flag, fake OS executable or test infrastructure is required to manufacture a successful CLI journey.
+
+The stock subprocess CLI uses system process inspection. This mandate does not permit running those previously denied helpers, so this recipe deliberately does not invoke a successful resource retirement. A future installed coordinator positive journey requires its own legitimate runtime observation/access and disposable case; only then may it be reported as observed. Product acceptance for the bounded implementation is modeled semantic behavior plus the actual public CLI checks above, with this live-environment limitation retained explicitly. No OS-permission or successful historical AL25 closure claim follows from it.
+
+## Delivery boundary
+
+This is one documentation file, with a private bounded acceptance script checking scope, references, scenario completeness and `git diff --check`. Build unchanged product code with `make build PLY_BUILD_OUTPUT=...` on the clean documentation commit to preserve candidate identity. Root starts separate native semantic review; owner holds exact bytes until its sealed pass, then uses the frozen verify/integrate callbacks. Root owns follow/closeout, later install/read-only smoke and the whole-job notification. This Task publishes no future Goal and mutates no production Run, queue, refusal or protected PLAN/PROD registration. Delivery of this document establishes planning readiness only.
