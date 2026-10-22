@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -327,5 +328,63 @@ func TestEpicCreateUnusedFilterDoesNotRunDuringStatus(t *testing.T) {
 	}
 	if _, e = os.Stat(marker); !os.IsNotExist(e) {
 		t.Fatal("working attributes ran a clean driver")
+	}
+}
+
+func TestEpicCreateLegacyFiveOrdinaryGoalQueueWrite(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	queueSetFixture(t, f, "legacy-five-basis", []QueueEntry{})
+	root := filepath.Dir(f.wrapper)
+	r, e := f.dependencies.WorkItems.Snapshot(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	// Seed the historical format-5 wire directly in this disposable fixture.
+	// No format-6 registry or create operation has existed in this workspace.
+	r.FormatVersion = 5
+	r.FormatBoundary = &RegistryFormatBoundary{FromVersion: 4, FromSHA256: "sha256:" + strings.Repeat("a", 64), ManifestSHA256: "sha256:" + strings.Repeat("b", 64), ReaderVersion: "v1.0.0", ReaderCommit: strings.Repeat("c", 40), ReaderSHA256: "sha256:" + strings.Repeat("d", 64)}
+	b, e := encodeWorkItemRegistry(r)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = os.WriteFile(workItemsPath(root), b, 0600); e != nil {
+		t.Fatal(e)
+	}
+	before, e := f.dependencies.WorkItems.Snapshot(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	in := firstGoalFixture(t, f)
+	p, e := RegisterFirstGoal(f.dependencies, in, false, "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+	if e != nil {
+		t.Fatal(e)
+	}
+	after, e := f.dependencies.WorkItems.Snapshot(root)
+	if e != nil {
+		t.Fatal(e)
+	}
+	raw, e := os.ReadFile(workItemsPath(root))
+	if e != nil {
+		t.Fatal(e)
+	}
+	if after.FormatVersion != 5 || !reflect.DeepEqual(after.FormatBoundary, before.FormatBoundary) || strings.Contains(string(raw), "epic_create_") {
+		t.Fatalf("ordinary Goal write changed format or leaked new fields: %s", raw)
+	}
+	if len(after.Tasks) != len(before.Tasks)+1 || len(after.TaskSpecRevisions) != len(before.TaskSpecRevisions)+1 || len(after.TaskQueueEvents) != len(before.TaskQueueEvents)+1 || out.Goal.SpecID != in.SpecID {
+		t.Fatal("ordinary Task/Goal/queue write did not actually occur")
+	}
+	if !reflect.DeepEqual(after.Epics, before.Epics) || !reflect.DeepEqual(after.EpicBaseVersions, before.EpicBaseVersions) {
+		t.Fatal("ordinary write changed legacy Epic provenance/base")
+	}
+	// The legacy reader can consume the exact resulting wire and ordinary show works.
+	if _, e = decodeWorkItemRegistry(raw); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = ShowTask(f.dependencies, in.TaskID); e != nil {
+		t.Fatal(e)
 	}
 }
