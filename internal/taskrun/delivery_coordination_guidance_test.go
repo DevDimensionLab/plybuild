@@ -54,7 +54,7 @@ func TestAL41ReviewCoordinatorReturnGuidance(t *testing.T) {
 		"Return through native review-return to coordinator synthetic backlog coordinator (pane w-fixture:parent)",
 		"When the parent owns the job and its notifications, send no separate Slack notification",
 		"Honor an explicit separate notification agreement",
-		"Do not create a notification route or add an approval gate",
+		"For the routine parent-owned return, do not create a notification route or add an approval gate",
 		"workflow execute review-return synthetic-run",
 		"read-only for you",
 	} {
