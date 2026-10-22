@@ -37,6 +37,13 @@ supported automatic reconciliation or cleanup command in this version. Keep the
 record and Git state for producer inspection. No reset, prune or name substitution
 is performed. A changed request conflicts with the preserved intent.
 
+A pending request with a freshly confirmed absent branch and target stays pending
+when its fully observed ordinary parent temporarily fails clean/matching validation.
+No Git attempt is made. Restore the recorded parent and repeat the exact request;
+IDs, the initial failed Git attempt and validation observations remain in history.
+An unreadable inventory/ref/path or an actual partial effect still requires
+reconciliation. Historical no-effect evidence alone never authorizes another attempt.
+
 Completion atomically records the Epic, `ply_created` anchor, initial base and
 completed operation. An identical completed retry reports `already_created`
 without requiring the historical parent to remain unchanged. Current Epic

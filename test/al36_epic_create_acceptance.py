@@ -63,12 +63,39 @@ def main():
         run(args,root,ok=False)
         assert registry.read_bytes()==baseline and not target.exists()
         (repo/'dirty').unlink()
+        # r001-f01: a private ref lock produces a known no-effect attempt.
+        # A temporary dirty parent must preserve pending identity and history,
+        # without another Git attempt, until the ordinary parent is restored.
+        lock=repo/'.git'/'refs'/'heads'/'created.lock'
+        lock.write_text('AL36 disposable regression lock\n')
+        initial=json.loads(run(args,root,ok=False).stdout)
+        original=initial['operation']
+        assert original['state']=='pending' and len(original['attempts'])==1 and original['attempts'][0]['exit']!=0
+        assert not target.exists()
+        lock.unlink()
+        (repo/'temporary-dirty').write_text('temporary parent change\n')
+        changed_result=run(args,root,ok=False)
+        changed=json.loads(changed_result.stdout)['operation']
+        assert changed['state']=='pending' and 'workspace_work_parent_dirty' in changed_result.stderr
+        for key in ['id','worktree_id','intent_digest','request','attempts']:
+            assert changed[key]==original[key], key
+        assert len(changed['observations'])>len(original['observations'])
+        assert changed['observations'][-1]['parent_worktree_clean'] is False
+        assert not target.exists()
+        (repo/'temporary-dirty').unlink()
         made=run(args,root,structured=True)
+        for key in ['id','worktree_id','intent_digest','request']:
+            assert made['operation'][key]==original[key], key
+        assert made['operation']['attempts'][:1]==original['attempts']
+        assert made['operation']['observations'][:len(changed['observations'])]==changed['observations']
         assert made['outcome']=='created' and made['epic']['repo_bindings'][0]['worktree']['origin']=='ply_created'
         assert made['operation']['request']['parent_ref']=='refs/heads/ordinary'
-        assert len(made['operation']['attempts'])==1
+        assert len(made['operation']['attempts'])==2
         assert run(['git','show-ref','refs/heads/ordinary'],repo).stdout==before
         assert run(['git','status','--porcelain'],repo).stdout==''
+        if len(sys.argv)>4 and sys.argv[4]=='--pending-parent-retry':
+            print('AL36 r001-f01: native no-effect/temporary-dirty/clean retry preserves identity and failed Git evidence PASS',flush=True)
+            return
         read=run([ply,'workspace','epic','show','created','--format','json'],root,structured=True)
         assert read['kind']=='WorkspaceEpicReadback@3' and read['ready_for_task_worktree_create'] and read['base'][0]['revision']==1
         listed=run([ply,'workspace','epic','list','--format','json'],root,structured=True)

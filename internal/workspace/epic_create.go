@@ -1,7 +1,9 @@
 package workspace
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -221,6 +223,26 @@ func CreateEpic(d Dependencies, in EpicCreateInput) (EpicCreateResult, error) {
 				op, index = findEpicCreate(r, in.EpicID)
 			}
 			class, obs := observeEpicCreate(d, repo, *op)
+			// An ordinary parent validation failure is not an unknown Git effect.
+			// Before any attempt in this invocation, freshly prove the effect absent;
+			// retain the intent, failed attempts and bounded validation observation.
+			if class == "partial_or_unknown" && epicCreateKnownAbsentParentValidation(d, repo, *op, obs) {
+				reason := "parent_worktree_stale"
+				errorClass := ErrorWorkParentStale
+				if !*obs.ParentWorktreeClean {
+					reason = "parent_worktree_dirty"
+					errorClass = ErrorWorkParentDirty
+				}
+				obs.Reasons = []string{reason}
+				r.EpicCreateOperations[index].Observations = append(r.EpicCreateOperations[index].Observations, obs)
+				if e = s.Publish(r); e != nil {
+					return e
+				}
+				out.Operation = r.EpicCreateOperations[index]
+				out.Outcome = "pending"
+				out.NextAction = "The selected branch and target are still absent; no Git attempt was made. Restore the recorded ordinary parent to a clean matching checkout, then retry the identical create request."
+				return workError(errorClass, out.NextAction, nil)
+			}
 			if class == "no_effect" || class == "branch_only" {
 				input := GitCreateInput{Repository: repo, Branch: in.Branch, SourceRef: "refs/heads/" + in.Branch, TargetLocator: target, ParentOID: in.ExpectedParentOID}
 				var outcome GitCommandOutcome
@@ -366,4 +388,31 @@ func validateEpicCreateTransition(old, next WorkItemRegistry) error {
 		}
 	}
 	return nil
+}
+
+// Recognize only fully observed ordinary parent validation failures. Any read
+// error/unknown, active operation marker, occupied target or source ref stays on
+// the existing reconciliation path. Historical no-effect evidence alone is
+// insufficient: the selected effect is freshly observed under the native locks.
+func epicCreateKnownAbsentParentValidation(d Dependencies, repo RepoRecord, op EpicCreateOperation, obs WorktreeObservationRecord) bool {
+	if len(obs.Reasons) != 1 || obs.Reasons[0] != "task_worktree_reconciliation_required" || obs.ParentRefOID == nil || obs.ParentRefTree == nil || obs.ParentWorktreeLocator == nil || obs.ParentWorktreeRef == nil || obs.ParentWorktreeOID == nil || obs.ParentWorktreeTree == nil || obs.ParentWorktreeGitCommonDir == nil || obs.ParentWorktreeClean == nil || obs.TargetKind != "absent" || obs.SourceRefOID != nil || obs.SourceRefTree != nil || obs.SourceRefCheckedOutAt != nil {
+		return false
+	}
+	source, e := d.WorkGit.ObserveRef(repo, "refs/heads/"+op.Request.Branch)
+	if e != nil || source.Exists {
+		return false
+	}
+	if _, e = d.Files.Lstat(op.Request.Path); !errors.Is(e, fs.ErrNotExist) {
+		return false
+	}
+	inventory, e := d.WorkGit.ListWorktrees(repo)
+	if e != nil {
+		return false
+	}
+	for _, entry := range inventory.Entries {
+		if entry.Locator == op.Request.Path || entry.Ref == "refs/heads/"+op.Request.Branch {
+			return false
+		}
+	}
+	return true
 }

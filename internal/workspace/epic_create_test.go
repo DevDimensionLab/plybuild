@@ -388,3 +388,77 @@ func TestEpicCreateLegacyFiveOrdinaryGoalQueueWrite(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+func TestEpicCreateKnownNoEffectRetryAfterTemporaryDirtyParent(t *testing.T) {
+	f, in := epicCreateFixture(t)
+	repo := filepath.Join(f.wrapper, "main")
+	lock := filepath.Join(repo, ".git", "refs", "heads", in.Branch+".lock")
+	// A private fixture ref lock creates a real Git no-effect failure. It is
+	// neither an OS/provider refusal nor a production lock or store mutation.
+	if e := os.WriteFile(lock, []byte("AL36 disposable regression lock\n"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	initial, e := CreateEpic(f.dependencies, in)
+	if e == nil || initial.Operation.State != "pending" || len(initial.Operation.Attempts) != 1 || initial.Operation.Attempts[0].Exit == 0 {
+		t.Fatalf("initial no-effect: %+v %v", initial, e)
+	}
+	original := initial.Operation
+	if e = os.Remove(lock); e != nil {
+		t.Fatal(e)
+	}
+	dirty := filepath.Join(repo, "temporary-dirty")
+	if e = os.WriteFile(dirty, []byte("temporary\n"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	changed, e := CreateEpic(f.dependencies, in)
+	if e == nil || changed.Operation.State != "pending" {
+		t.Fatalf("known parent validation permanently terminalized no-effect intent: state=%s err=%v", changed.Operation.State, e)
+	}
+	if !hasWorkErrorClass(e, ErrorWorkParentDirty) || changed.Operation.ID != original.ID || changed.Operation.WorktreeID != original.WorktreeID || changed.Operation.IntentDigest != original.IntentDigest || !reflect.DeepEqual(changed.Operation.Attempts, original.Attempts) {
+		t.Fatalf("dirty retry changed identity/history or attempted Git: %+v %v", changed, e)
+	}
+	if len(changed.Operation.Observations) <= len(original.Observations) || changed.Operation.Observations[len(changed.Operation.Observations)-1].ParentWorktreeClean == nil || *changed.Operation.Observations[len(changed.Operation.Observations)-1].ParentWorktreeClean {
+		t.Fatal("known dirty observation not preserved")
+	}
+	if _, e = os.Stat(in.Path); !os.IsNotExist(e) {
+		t.Fatal("dirty retry materialized target")
+	}
+	if e = os.Remove(dirty); e != nil {
+		t.Fatal(e)
+	}
+	made, e := CreateEpic(f.dependencies, in)
+	if e != nil || made.Outcome != "created" || made.Operation.ID != original.ID || made.Operation.WorktreeID != original.WorktreeID || made.Operation.IntentDigest != original.IntentDigest {
+		t.Fatalf("same clean retry remains stuck: %+v %v", made, e)
+	}
+	if len(made.Operation.Attempts) != 2 || !reflect.DeepEqual(made.Operation.Attempts[:1], original.Attempts) || !reflect.DeepEqual(made.Operation.Observations[:len(changed.Operation.Observations)], changed.Operation.Observations) {
+		t.Fatal("clean retry lost failed attempt or observation history")
+	}
+}
+
+func TestEpicCreateDirtyParentDoesNotHidePartialEffect(t *testing.T) {
+	f, in := epicCreateFixture(t)
+	g := &epicCreateFaultGit{WorkItemGit: f.dependencies.WorkGit, mode: "none"}
+	f.dependencies.WorkGit = g
+	initial, e := CreateEpic(f.dependencies, in)
+	if e == nil || initial.Operation.State != "pending" {
+		t.Fatalf("initial: %+v %v", initial, e)
+	}
+	if e = os.WriteFile(filepath.Join(f.wrapper, "main", "temporary-dirty"), []byte("temporary\n"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	// The selected target has since become occupied. A historical no-effect
+	// attempt and ordinary dirty validation must not conceal that partial effect.
+	if e = os.Mkdir(in.Path, 0700); e != nil {
+		t.Fatal(e)
+	}
+	got, e := CreateEpic(f.dependencies, in)
+	if e == nil || got.Operation.State != "reconciliation_required" || g.calls != 1 || !reflect.DeepEqual(got.Operation.Attempts, initial.Operation.Attempts) {
+		t.Fatalf("partial effect became retryable: %+v %v calls=%d", got, e, g.calls)
+	}
+	if e = os.Remove(filepath.Join(f.wrapper, "main", "temporary-dirty")); e != nil {
+		t.Fatal(e)
+	}
+	if _, e = CreateEpic(f.dependencies, in); e == nil || g.calls != 1 {
+		t.Fatal("partial effect retried Git after parent restoration")
+	}
+}
