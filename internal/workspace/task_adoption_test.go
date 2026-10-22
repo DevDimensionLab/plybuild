@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"bytes"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"os"
 	"path/filepath"
@@ -525,20 +526,31 @@ func TestAdoptionRegistryDeliveredUpgradePreservesRecords(t *testing.T) {
 	directory, pin := deliveredRegistryReader(t)
 	f, _ := epicCreateFixture(t)
 	root := filepath.Dir(f.wrapper)
+	beforeRegistry, e := os.ReadFile(workItemsPath(root))
+	if e != nil {
+		t.Fatal(e)
+	}
+	beforeFixture := queueStateBytes(t, f)
 	p, e := UpgradeAdoptionRegistry(f.dependencies, directory, pin, "", false)
 	if e != nil {
 		t.Fatal(e)
 	}
-	before := queueStateBytes(t, f)
+	if queueStateBytes(t, f) != beforeFixture {
+		t.Fatal("upgrade preview changed the fixture")
+	}
 	if _, e = UpgradeAdoptionRegistry(f.dependencies, directory, pin, p.Confirmation, true); e != nil {
 		t.Fatal(e)
 	}
+	publishedFixture := queueStateBytes(t, f)
 	again, e := UpgradeAdoptionRegistry(f.dependencies, directory, pin, p.Confirmation, true)
 	if e != nil || again.State != "already_upgraded" {
 		t.Fatalf("upgrade lost-reply recovery %+v %v", again, e)
 	}
+	if queueStateBytes(t, f) != publishedFixture {
+		t.Fatal("upgrade retry changed the published fixture")
+	}
 	backup, e := os.ReadFile(p.Backup)
-	if e != nil || string(backup) != before {
+	if e != nil || !bytes.Equal(backup, beforeRegistry) {
 		t.Fatal("upgrade lost byte-exact backup")
 	}
 	r := mustQueueRegistry(t, f)
@@ -548,7 +560,7 @@ func TestAdoptionRegistryDeliveredUpgradePreservesRecords(t *testing.T) {
 	r.FormatVersion = 6
 	r.AdoptionBoundary = nil
 	restored, e := encodeWorkItemRegistry(r)
-	if e != nil || string(restored) != before {
+	if e != nil || !bytes.Equal(restored, beforeRegistry) {
 		t.Fatal("upgrade rewrote existing semantic records")
 	}
 	if e = validateRegistryFormatTransition(mustQueueRegistry(t, f), r); e == nil {
@@ -650,5 +662,84 @@ func TestAdoptionUnknownSourceObservationIsPreservedAndCanRelease(t *testing.T) 
 	current := mustQueueRegistry(t, f).WorktreeOperations[0]
 	if current.Release == nil || current.AdoptionObservations[0].Phase != "unknown" {
 		t.Fatal("release erased unknown source history")
+	}
+}
+
+// r001-f01: every legacy create/recovery caller shares the same source-mode
+// fence. A lost adoption publication reply cannot turn Git cleanliness into
+// fresh ownership-transfer evidence.
+func TestAdoptionLegacyCreateCannotFinalizeReservation(t *testing.T) {
+	for _, entrypoint := range []string{"public-create", "shared-preparation-create"} {
+		t.Run(entrypoint, func(t *testing.T) {
+			f, in := adoptionFixture(t)
+			preview, e := AdoptTaskWorktree(f.dependencies, in, false, "")
+			if e != nil {
+				t.Fatal(e)
+			}
+			publications := 0
+			f.dependencies.WorkItems = &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(stage string) error {
+				if stage == "directory-sync" {
+					publications++
+					if publications == 1 {
+						return errInjected
+					}
+				}
+				return nil
+			}}}
+			if _, e = AdoptTaskWorktree(f.dependencies, in, true, preview.Confirmation); e == nil {
+				t.Fatal("lost adoption reply was not injected")
+			}
+			f.dependencies.WorkItems = newSystemWorkItemStore()
+			r := mustQueueRegistry(t, f)
+			op, _ := findOperation(r, in.TaskID)
+			if op == nil || op.State != "creating" || op.Adoption == nil {
+				t.Fatal("fixture did not retain reserved adoption")
+			}
+			operationID := op.ID
+			writerCalls, reserveCalls := 0, 0
+			writerState := "present"
+			f.dependencies.SourceWriters = func(string) (SourceWriterObservation, error) {
+				writerCalls++
+				return SourceWriterObservation{State: writerState, Method: "modeled review regression", Limitation: "Injected observations; no actual OS/provider acceptance."}, nil
+			}
+			before := queueStateBytes(t, f)
+			input := TaskWorktreeCreateInput{TaskID: in.TaskID, Branch: "useful", Path: in.Path, ExpectedParentOID: f.oid}
+			var result TaskWorktreeMutationResult
+			if entrypoint == "public-create" {
+				result, e = CreateTaskWorktree(f.dependencies, input)
+			} else {
+				root := filepath.Dir(f.wrapper)
+				e = f.dependencies.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
+					return f.dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+						registry, e := session.Snapshot()
+						if e != nil {
+							return e
+						}
+						reserve := func(*WorkItemRegistry, WorktreeOperationRecord) error { reserveCalls++; return nil }
+						return createTaskWorktreeLocked(f.dependencies, root, projects, session, registry, input, in.Path, true, &result, reserve)
+					})
+				})
+			}
+			if e == nil {
+				t.Fatalf("legacy %s finalized reserved adoption despite known writer: outcome=%s state=%s", entrypoint, result.Outcome, result.Operation.State)
+			}
+			if !strings.Contains(e.Error(), "task_adoption_recovery_required") {
+				t.Fatalf("wrong source-mode fence: %v", e)
+			}
+			if writerCalls != 0 || reserveCalls != 0 || queueStateBytes(t, f) != before {
+				t.Fatal("rejected legacy recovery observed transfer or changed native/Git state")
+			}
+			if _, e = AdoptTaskWorktree(f.dependencies, in, true, preview.Confirmation); e == nil || !strings.Contains(e.Error(), "adoption_writer_present") {
+				t.Fatalf("native adoption recovery ignored fresh writer evidence: %v", e)
+			}
+			writerState = "absent"
+			recovered, e := AdoptTaskWorktree(f.dependencies, in, true, preview.Confirmation)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if recovered.Phase != "adopted" || recovered.Operation.ID != operationID || len(mustQueueRegistry(t, f).WorktreeOperations) != 1 {
+				t.Fatal("native adoption did not recover the exact reserved generation")
+			}
+		})
 	}
 }

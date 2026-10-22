@@ -58,6 +58,9 @@ func ObserveSourceWriters(d Dependencies, path string, inventory func(string) (j
 				return out, fmt.Errorf("ambiguous managed identity")
 			}
 			seen[a.PaneID] = true
+			if a.CWD == "" && a.ForegroundCWD == "" {
+				return out, fmt.Errorf("incomplete managed %s location for pane %s; source writer absence is unknown", kind, a.PaneID)
+			}
 			if sourceContains(path, a.CWD) || sourceContains(path, a.ForegroundCWD) {
 				out.State = "present"
 				return out, fmt.Errorf("managed source writer remains in pane %s", a.PaneID)

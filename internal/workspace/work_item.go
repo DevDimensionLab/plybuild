@@ -1171,6 +1171,9 @@ func createTaskWorktreeLocked(dependencies Dependencies, root string, projects P
 	}
 	sourceRef := "refs/heads/" + input.Branch
 	operation, operationIndex := findOperation(registry, task.ID)
+	if operation != nil && operation.Adoption != nil {
+		return queueError("task_adoption_recovery_required", "legacy worktree create cannot recover an adopted source; use native worktree adopt with the preserved confirmation or inspect ply workspace task show "+string(task.ID)+" --format json")
+	}
 	if operation == nil && adoptionReleased(registry, task.ID) {
 		return queueError("adoption_released", "freshly adopt the source; this Task cannot fall through to creation")
 	}
