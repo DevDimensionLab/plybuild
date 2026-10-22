@@ -28,6 +28,7 @@ type deliveryFixtureOptions struct {
 	ParentRef         string
 	Root              string
 	BeforePrepare     func(workspace.Dependencies, string, string, workspace.TaskGoalRef)
+	SelectFreshGoal   func(workspace.Dependencies, string, string, workspace.TaskGoalRef) workspace.TaskGoalRef
 	InformativeReport func(string) []byte
 }
 
@@ -173,8 +174,15 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	if option.BeforePrepare != nil {
 		option.BeforePrepare(w, root, epic, goal)
 	}
+	if option.SelectFreshGoal != nil {
+		goal = option.SelectFreshGoal(w, root, epic, goal)
+	}
 	acceptance := filepath.Join(root, "acceptance.sh")
-	preview, e := workspace.PreviewTaskGoalExecution(w, workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Next: true, AcceptancePath: acceptance})
+	execute := workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Next: true, AcceptancePath: acceptance}
+	if option.SelectFreshGoal != nil {
+		execute.Next, execute.SpecID = false, goal.SpecID
+	}
+	preview, e := workspace.PreviewTaskGoalExecution(w, execute)
 	if e != nil {
 		t.Fatal(e)
 	}
