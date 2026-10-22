@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,6 +16,15 @@ import (
 // Uses only the supplied make-built CLI and ordinary public registration
 // commands. No provider, process inventory, Herdr or sandbox is exercised.
 func TestFirstGoalCandidateCLIRegistrationAndReadOnlyReadiness(t *testing.T) {
+	firstGoalCLIJourney(t, false)
+}
+
+func TestExistingFirstGoalCandidateCLIRegistrationAndReadOnlyReadiness(t *testing.T) {
+	firstGoalCLIJourney(t, true)
+}
+
+func firstGoalCLIJourney(t *testing.T, existing bool) {
+	t.Helper()
 	binary := os.Getenv("PLY_CANDIDATE_BINARY")
 	if binary == "" {
 		t.Skip("opt-in CLI fixture: set PLY_CANDIDATE_BINARY to the actual make-built candidate; native acceptance requires it")
@@ -45,8 +56,48 @@ func TestFirstGoalCandidateCLIRegistrationAndReadOnlyReadiness(t *testing.T) {
 		}
 		return out
 	}
+	var preservedProblem *workspace.TaskRevisionRef
+	var preservedTask string
+	if existing {
+		f.success(t, f.root, "workspace", "task", "create", "supplied", "--title", "Imported backlog label", "--description", "Historical imported product context", "--project", "example", "--repo", "code", "--epic", "work")
+		preservedTask = f.success(t, f.root, "workspace", "task", "show", "supplied", "--format", "json")
+		// The Task readback supplies its native current Problem reference.
+		var taskReadback struct {
+			Problem struct {
+				Head *workspace.TaskRevisionRef `json:"head"`
+			} `json:"problem"`
+		}
+		if e := json.Unmarshal([]byte(preservedTask), &taskReadback); e != nil {
+			t.Fatal(e)
+		}
+		head := taskReadback.Problem.Head
+		if head == nil || head.Revision != 1 {
+			t.Fatalf("missing initial Problem head: %s", preservedTask)
+		}
+		problemDoc := filepath.Join(f.root, "imported-problem.md")
+		mustPlanWrite(t, problemDoc, "# Imported backlog problem\nPreserve the imported context.\n", 0600)
+		// Native publisher reads and hashes a source descriptor supplied by this isolated fixture.
+		b, e := os.ReadFile(problemDoc)
+		if e != nil {
+			t.Fatal(e)
+		}
+		draft := map[string]any{"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "fixture/imported-problem-2", "task_id": "supplied", "registry_upgrade": nil, "expected_previous": head, "origin": map[string]any{"kind": "authored"}, "title": "Imported backlog problem", "summary": "Preserve historical imported context", "problem_document_id": "problem", "documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": problemDoc, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(b)), "size_bytes": len(b), "media_type": "text/markdown", "git_provenance": nil}}}, "sources": []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Import the preserved product context", "recorder": map[string]any{"actor_claim": "isolated fixture", "control_surface": "CLI test", "recorded_at_utc": "2026-10-22T00:00:00Z"}}
+		draftBytes, e := json.Marshal(draft)
+		if e != nil {
+			t.Fatal(e)
+		}
+		draftPath := filepath.Join(f.root, "problem-draft.json")
+		mustPlanWrite(t, draftPath, string(draftBytes), 0600)
+		f.success(t, f.root, "workspace", "task", "problem", "record", "supplied", "--file", draftPath, "--format", "json")
+	}
 	before := mr05Snapshot(t, f.root)
 	preview := decode(f.success(t, f.root, args...))
+	if existing {
+		preservedProblem = preview.Problem
+		if preservedProblem == nil || preservedProblem.Revision != 2 || len(preview.Effects) != 2 {
+			t.Fatalf("existing Task preview lost basis/effects: %#v", preview)
+		}
+	}
 	if !reflect.DeepEqual(before, mr05Snapshot(t, f.root)) || preview.Applied || preview.Run != nil || preview.CheckCwd != repo || len(preview.Sources) != 2 {
 		t.Fatal("preview wrote files or lost bindings")
 	}
@@ -62,6 +113,18 @@ func TestFirstGoalCandidateCLIRegistrationAndReadOnlyReadiness(t *testing.T) {
 	out := decode(f.success(t, f.root, apply...))
 	if !out.Applied || out.Goal.Spec.Revision != 1 || out.Goal.Spec.ManifestSHA256 == "" || out.Contract == nil || len(out.Contract.RequiredInputs) != 5 || out.Run != nil || out.Readiness != "not_checked" {
 		t.Fatalf("missing exact registered refs: %#v", out)
+	}
+	if existing {
+		if !reflect.DeepEqual(out.Problem, preservedProblem) || out.Contract.Problem != *preservedProblem {
+			t.Fatal("Goal replaced current Problem")
+		}
+		// Task identity remains visible with the original imported title and description.
+		afterTask := f.success(t, f.root, "workspace", "task", "show", "supplied", "--format", "json")
+		for _, label := range []string{"Imported backlog label", "Historical imported product context"} {
+			if !strings.Contains(preservedTask, label) || !strings.Contains(afterTask, label) {
+				t.Fatal("imported identity was replaced")
+			}
+		}
 	}
 	if len(out.Queue.Pending) != 1 || out.Queue.Pending[0].Goal == nil || *out.Queue.Pending[0].Goal != out.Goal {
 		t.Fatal("published Goal was not queued exactly")

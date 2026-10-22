@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
@@ -67,7 +68,7 @@ type FirstGoalResult struct {
 }
 
 // RegisterFirstGoal publishes metadata under the existing registry CAS lock. The
-// immutable Task description fences the whole supplied intent; native content and
+// native Goal publication fences supplied intent for existing Tasks; content and
 // queue publications supply recovery receipts, including after a lost response.
 func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmation string) (out FirstGoalResult, err error) {
 	if err = validateFirstGoalInput(in); err != nil {
@@ -126,8 +127,50 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		if existing != nil {
 			identity.Worktree, identity.WorktreeState = existing.Worktree, existing.WorktreeState
 		}
-		if existing != nil && (!contentTypedEqual(*existing, identity) || taskPublication(r, "task-create/"+string(in.TaskID)) == nil) {
-			return queueError("first_goal_identity_conflict", "Task ID already belongs to different first-registration input")
+		// A Task created by this helper keeps its original input fence. Imported
+		// Tasks retain their own labels and Problem history instead.
+		createdHere := existing == nil
+		if existing != nil {
+			marker, hasMarker := strings.CutPrefix(existing.Description, "First Goal registration ")
+			if create := taskPublication(r, "task-create/"+string(in.TaskID)); hasMarker && digestPattern.MatchString(marker) && create != nil {
+				v, err := readRegisteredTaskManifest(d.TaskContent, root, r, create.OutcomeRef.ManifestSHA256)
+				if err != nil {
+					return err
+				}
+				initial := contentFields(v)
+				createdHere = contentString(contentFields(initial["origin"]), "kind") == "task_create_summary" && contentString(initial, "summary") == existing.Description
+			}
+		}
+		state := taskContentState(r, in.TaskID)
+		goalPub := taskPublication(r, key+"/goal")
+		var goalManifest map[string]canonicaljson.Value
+		basis := state.ProblemHead
+		if goalPub != nil {
+			v, err := readRegisteredTaskManifest(d.TaskContent, root, r, goalPub.OutcomeRef.ManifestSHA256)
+			if err != nil {
+				return err
+			}
+			goalManifest = contentFields(v)
+			basis = valueRevision(goalManifest["problem"])
+		}
+		if existing != nil {
+			if existing.ProjectID != target.ProjectID || existing.RepoID != target.RepoID || existing.ParentEpicID != target.EpicID || existing.GitCommonDir != target.GitCommonDir {
+				return queueError("first_goal_identity_conflict", "Task scope differs from the selected Project/Repo/Epic; inspect the existing Task")
+			}
+			if createdHere {
+				if !contentTypedEqual(*existing, identity) || taskPublication(r, "task-create/"+string(in.TaskID)) == nil {
+					return queueError("first_goal_identity_conflict", "Task ID already belongs to different first-registration input")
+				}
+			} else {
+				if basis == nil || !taskRequiresSpec(r, in.TaskID) {
+					return queueError("first_goal_identity_conflict", "existing Task needs a native current Problem; inspect Task content before registration")
+				}
+				token = queueDigest(struct {
+					Intent  string
+					Problem *TaskRevisionRef
+				}{token, basis})
+			}
+			task = *existing
 		}
 		for _, s := range r.TaskSpecRevisions {
 			if s.SpecID == in.SpecID && s.TaskID != in.TaskID {
@@ -135,13 +178,17 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 			}
 		}
 		out = FirstGoalResult{Title: in.Title, Objective: in.Objective, Criteria: in.Criteria, Constraints: in.Constraints, Executor: in.Executor, Kind: "ply.workspace.first-goal", TaskID: in.TaskID, Goal: TaskGoalRef{SpecID: in.SpecID, Spec: TaskRevisionRef{Revision: 1}}, Target: target, Delivery: delivery, Sources: []GoalSourceBinding{}, CheckCwd: target.ParentLocator, Readiness: "not_checked", Effects: []string{"publish Task and initial Problem", "preserve supplied documents and publish first Goal", "append exact Goal to queue"}, Confirmation: token, Phase: "preview", NextArgv: []string{"ply", "workflow", "execute", "--project", string(target.ProjectID), "--repo", string(target.RepoID), "--epic", string(target.EpicID), "--spec", in.SpecID, "--check"}}
+		if !createdHere {
+			out.Problem = basis
+			out.Effects = []string{"preserve supplied documents and publish first Goal", "append exact Goal to queue"}
+		}
 		for _, v := range docs {
 			m := contentFields(v)
 			src := contentFields(m["source"])
 			out.Sources = append(out.Sources, GoalSourceBinding{ID: contentString(m, "id"), Locator: contentString(src, "locator"), SHA256: contentString(src, "sha256"), SizeBytes: contentInt(src, "size_bytes")})
 		}
 		readback := func() error {
-			if pub := taskPublication(r, "task-create/"+string(in.TaskID)); pub != nil {
+			if pub := taskPublication(r, "task-create/"+string(in.TaskID)); createdHere && pub != nil {
 				out.Problem = &TaskRevisionRef{Revision: *pub.OutcomeRef.Revision, ManifestSHA256: pub.OutcomeRef.ManifestSHA256}
 			}
 			if pub := taskPublication(r, key+"/goal"); pub != nil {
@@ -151,6 +198,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 					return e
 				}
 				out.Contract = &c
+				out.Problem = &c.Problem
 			}
 			var e error
 			out.Queue, e = buildQueueReadback(d, root, r, projects, in.Target, false)
@@ -186,37 +234,44 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 			}
 		}
 		if apply && confirmation != token {
-			return queueError("first_goal_confirmation_conflict", "preview confirmation differs from supplied product/source/target/policy/executor input")
+			return queueError("first_goal_confirmation_conflict", "preview confirmation differs from supplied product, document bytes, current Problem or selected target/policy/executor; preview again and inspect the changed basis")
 		}
-		if completed {
-			out.Applied = true
-			out.Phase = "registered"
-			return nil
-		}
-		lifecycle, e := readWorkItemLifecycle(root)
-		if e != nil {
-			return e
-		}
-		if lifecycle.Task(in.TaskID) != LifecycleActive || lifecycle.Epic(target.EpicID) != LifecycleActive {
-			return queueError("first_goal_inactive", "Task and Epic must be active")
-		}
-		if existing != nil && (existing.Worktree != nil || existing.WorktreeState != WorkItemUnbound || preparationForTask(r, in.TaskID) != nil) {
-			return queueError("first_goal_task_bound", "Task already has started or bound work without a completed registration")
-		}
-		if op, _ := findOperation(r, in.TaskID); op != nil {
-			return queueError("first_goal_task_bound", "Task already has a worktree operation without a completed registration")
-		}
-		state := taskContentState(r, in.TaskID)
-		create := taskPublication(r, "task-create/"+string(in.TaskID))
-		if existing != nil && (state.ProblemHead == nil || !contentTypedEqual(state.ProblemHead, &TaskRevisionRef{Revision: *create.OutcomeRef.Revision, ManifestSHA256: create.OutcomeRef.ManifestSHA256}) || !firstGoalHeadMatches(r, state.SpecHead, key+"/goal")) {
-			return queueError("first_goal_identity_conflict", "Task history is not this first registration")
+		if !completed {
+			lifecycle, e := readWorkItemLifecycle(root)
+			if e != nil {
+				return e
+			}
+			if lifecycle.Task(in.TaskID) != LifecycleActive || lifecycle.Epic(target.EpicID) != LifecycleActive {
+				return queueError("first_goal_inactive", "Task and Epic must be active")
+			}
+			if existing != nil && (existing.Worktree != nil || existing.WorktreeState != WorkItemUnbound || preparationForTask(r, in.TaskID) != nil) {
+				return queueError("first_goal_task_bound", "Task already has started or bound work without a completed registration")
+			}
+			if op, _ := findOperation(r, in.TaskID); op != nil {
+				return queueError("first_goal_task_bound", "Task already has a worktree operation without a completed registration")
+			}
+			create := taskPublication(r, "task-create/"+string(in.TaskID))
+			initialProblemMatches := !createdHere || create != nil && contentTypedEqual(state.ProblemHead, &TaskRevisionRef{Revision: *create.OutcomeRef.Revision, ManifestSHA256: create.OutcomeRef.ManifestSHA256})
+			if existing != nil && (state.ProblemHead == nil || !initialProblemMatches || !contentTypedEqual(state.ProblemHead, basis) || !firstGoalHeadMatches(r, state.SpecHead, key+"/goal")) {
+				return queueError("first_goal_identity_conflict", "Task history is not this first registration")
+			}
+			for _, result := range r.TaskResults {
+				if result.TaskID == in.TaskID {
+					return queueError("first_goal_task_bound", "Task has native results; inspect its history")
+				}
+			}
+			for _, revision := range r.TaskSpecRevisions {
+				if revision.TaskID == in.TaskID && (goalPub == nil || revision.Revision != 1 || revision.ManifestSHA256 != goalPub.OutcomeRef.ManifestSHA256) {
+					return queueError("first_goal_identity_conflict", "Task already has Spec history; inspect its existing Goal")
+				}
+			}
 		}
 		q := foldQueue(r, queueID(root, target))
-		if len(q.Pending) >= 256 {
+		if !completed && len(q.Pending) >= 256 {
 			return queueError("first_goal_queue_full", "queue append exceeds 256 entries")
 		}
 		for _, entry := range q.Pending {
-			if entry.TaskID == in.TaskID {
+			if !completed && entry.TaskID == in.TaskID {
 				return queueError("first_goal_identity_conflict", "Task is already queued without this registration receipt")
 			}
 		}
@@ -234,9 +289,16 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		// head and original publication time replace these schema-valid placeholders.
 		when := queueNow(d)
 		problem := TaskRevisionRef{Revision: 1, ManifestSHA256: "sha256:" + fmt.Sprintf("%064d", 0)}
-		if create != nil {
+		create := taskPublication(r, "task-create/"+string(in.TaskID))
+		if createdHere && create != nil {
 			when = create.RecordedAtUTC
 			problem = TaskRevisionRef{Revision: *create.OutcomeRef.Revision, ManifestSHA256: create.OutcomeRef.ManifestSHA256}
+		}
+		if !createdHere {
+			problem = *basis
+		}
+		if goalManifest != nil {
+			when = contentString(contentFields(goalManifest["recorder"]), "recorded_at_utc")
 		}
 		draft := func() canonicaljson.Object {
 			m := contentFields(contentEnvelope("WorkspaceTaskSpecDraft@2", map[string]canonicaljson.Value{"publication_key": key + "/goal", "task_id": string(in.TaskID), "registry_upgrade": nil, "expected_previous": nil, "title": in.Title, "change_reason": "Register the supplied first Goal.", "contract_kind": "goal", "objective": in.Objective, "problem": contentRefValue(problem), "requirements": contentRefValue(requirements), "design": design, "constraints": contentRefValue(constraints), "executor": contentRefValue(in.Executor), "documents": docs, "delivery": contentRefValue(delivery), "recorder": contentRefValue(TaskGoalQueueRecorder{ActorClaim: "local_cli_user", ControlSurface: "ply workspace task goal register", RecordedAtUTC: when})}))
@@ -250,6 +312,14 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		}
 		if _, e = decodeTaskContent(raw, "spec_record", false, false); e != nil {
 			return e
+		}
+		if goalPub != nil && (goalPub.TaskID != in.TaskID || goalPub.RequestSHA256 != digestTaskBytes(raw)) {
+			return queueError("first_goal_publication_conflict", "supplied input differs from the immutable first Goal publication; repeat the original input")
+		}
+		if completed {
+			out.Applied = true
+			out.Phase = "registered"
+			return nil
 		}
 		if !apply {
 			return nil

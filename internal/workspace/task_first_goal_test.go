@@ -19,6 +19,47 @@ func firstGoalFixture(t *testing.T, f workItemJourneyFixture) FirstGoalInput {
 	return FirstGoalInput{TaskID: "fresh", SpecID: "fresh-v1", Title: "Supplied Goal", Objective: "Register the supplied behavior", Criteria: []string{"The specified behavior is observable."}, Documents: []GoalDocumentInput{{ID: "spec", Locator: doc}}, Target: queueTargetFixture(), Delivery: GoalDeliveryInput{Mode: DeliveryLocalEpic, Acceptance: "human"}}
 }
 
+func existingFirstGoalFixture(t *testing.T, f workItemJourneyFixture) FirstGoalInput {
+	t.Helper()
+	if _, err := RecordTaskProblem(f.dependencies, contentFixtureProblem(t, f, "import/problem-2")); err != nil {
+		t.Fatal(err)
+	}
+	in := firstGoalFixture(t, f)
+	in.TaskID, in.SpecID = "task", "imported-first-goal"
+	return in
+}
+
+func TestExistingFirstGoalPreservesProblemIdentityAndRetry(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	in := existingFirstGoalFixture(t, f)
+	r := mustQueueRegistry(t, f)
+	beforeTask, _ := findTask(r, in.TaskID)
+	problem := taskContentState(r, in.TaskID).ProblemHead
+	before := queueStateBytes(t, f)
+	p, err := RegisterFirstGoal(f.dependencies, in, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(p.Problem, problem) || problem.Revision != 2 || queueStateBytes(t, f) != before {
+		t.Fatal("preview lost preserved Problem or wrote state")
+	}
+	out, err := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r = mustQueueRegistry(t, f)
+	afterTask, _ := findTask(r, in.TaskID)
+	if !reflect.DeepEqual(beforeTask, afterTask) || !reflect.DeepEqual(problem, out.Problem) || len(r.TaskProblemRevisions) != 2 || out.Title != in.Title || out.Contract == nil || out.Readiness != "not_checked" || out.Run != nil {
+		t.Fatal("registration replaced Task/Problem or lost supplied Goal")
+	}
+	before = queueStateBytes(t, f)
+	f.dependencies.WorkClock = fixedWorkClock{value: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)}
+	again, err := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+	if err != nil || again.Goal != out.Goal || queueStateBytes(t, f) != before {
+		t.Fatalf("retry changed state: %v", err)
+	}
+}
+
 func TestFirstGoalRegistrationPreviewApplyAndRetry(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	in := firstGoalFixture(t, f)
@@ -243,6 +284,8 @@ func TestFirstGoalRegistrationRejectsRealInputDriftWithoutDependentWrites(t *tes
 			case "executor":
 				p := "claude"
 				in.Executor.Provider = &p
+			case "foreign-task":
+				expected = "first_goal_confirmation_conflict"
 			case "inactive-task":
 				expected = "first_goal_inactive"
 			case "invalid-source":
@@ -326,5 +369,150 @@ func TestFirstGoalRegistrationConcurrentAppendsAndDirtyReturn(t *testing.T) {
 	}
 	if queueStateBytes(t, f) != before {
 		t.Fatal("read-only readiness changed state")
+	}
+}
+
+func TestExistingFirstGoalRecoversNativeBoundariesAndPreservesQueue(t *testing.T) {
+	for _, n := range []int{1, 2} {
+		t.Run(fmt.Sprint(n), func(t *testing.T) {
+			f := newWorkItemJourneyFixture(t)
+			in := existingFirstGoalFixture(t, f)
+			if _, e := CreateTask(f.dependencies, TaskCreateInput{TaskID: "other", Title: "Other", Description: "Unrelated", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
+				t.Fatal(e)
+			}
+			old := goalFixture(t, f, "other", "other-goal")
+			before := goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "other", Goal: &old}})
+			p, e := RegisterFirstGoal(f.dependencies, in, false, "")
+			if e != nil {
+				t.Fatal(e)
+			}
+			store := &firstGoalLostAckStore{WorkItemStore: f.dependencies.WorkItems, failAt: n}
+			f.dependencies.WorkItems = store
+			partial, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+			if e == nil || partial.Phase != "partial" || partial.Contract == nil {
+				t.Fatalf("missing native partial Goal: %#v %v", partial, e)
+			}
+			f.dependencies.WorkItems = store.WorkItemStore
+			f.dependencies.WorkClock = fixedWorkClock{value: time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)}
+			out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if len(out.Queue.Pending) != 2 || !reflect.DeepEqual(out.Queue.Pending[0], before.Pending[0]) || !reflect.DeepEqual(out.Queue.Current, before.Current) || out.Problem.Revision != 2 {
+				t.Fatal("recovery changed preserved queue or Problem")
+			}
+			r := mustQueueRegistry(t, f)
+			count := 0
+			for _, rev := range r.TaskSpecRevisions {
+				if rev.TaskID == in.TaskID {
+					count++
+				}
+			}
+			if count != 1 || len(r.TaskProblemRevisions) != 3 {
+				t.Fatal("duplicate native history")
+			}
+			changed := in
+			changed.Objective = "Different supplied behavior"
+			p2, e := RegisterFirstGoal(f.dependencies, changed, false, "")
+			if e == nil {
+				_, e = RegisterFirstGoal(f.dependencies, changed, true, p2.Confirmation)
+			}
+			if e == nil {
+				t.Fatal("changed input obtained a new first registration")
+			}
+		})
+	}
+}
+
+func TestExistingFirstGoalRejectsDriftAndUsedTasks(t *testing.T) {
+	for _, name := range []string{"problem", "spec", "scope", "archived", "worktree", "documents"} {
+		t.Run(name, func(t *testing.T) {
+			f := newWorkItemJourneyFixture(t)
+			in := existingFirstGoalFixture(t, f)
+			p, e := RegisterFirstGoal(f.dependencies, in, false, "")
+			if e != nil {
+				t.Fatal(e)
+			}
+			switch name {
+			case "problem":
+				_, e = RecordTaskProblem(f.dependencies, contentFixtureProblem(t, f, "import/problem-3"))
+			case "spec":
+				goalFixture(t, f, "task", "foreign-goal")
+			case "scope":
+				in.Target.RepoID = "missing"
+			case "archived":
+				_, e = SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: "task", SubjectID: "task", State: LifecycleArchived, ActorClaim: "fixture"})
+			case "worktree":
+				input, _ := ParseTaskWorktreeCreateInput("task", "used-task", filepath.Join(f.wrapper, "used-task"), f.oid)
+				_, e = CreateTaskWorktree(f.dependencies, input)
+			case "documents":
+				e = os.WriteFile(in.Documents[0].Locator, []byte("changed source bytes\n"), 0600)
+			}
+			if e != nil {
+				t.Fatal(e)
+			}
+			before := queueStateBytes(t, f)
+			if _, e = RegisterFirstGoal(f.dependencies, in, true, p.Confirmation); e == nil {
+				t.Fatal("drift/used Task accepted")
+			}
+			if queueStateBytes(t, f) != before {
+				t.Fatal("rejected registration wrote native state")
+			}
+		})
+	}
+}
+
+func TestExistingFirstGoalAllowsOrdinaryDescriptionPrefix(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	if _, e := CreateTask(f.dependencies, TaskCreateInput{TaskID: "imported", Title: "Imported backlog label", Description: "First Goal registration for the historical backlog item", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
+		t.Fatal(e)
+	}
+	in := firstGoalFixture(t, f)
+	in.TaskID, in.SpecID = "imported", "imported-v1"
+	p, e := RegisterFirstGoal(f.dependencies, in, false, "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+	if e != nil || !out.Applied || !reflect.DeepEqual(out.Problem, p.Problem) {
+		t.Fatalf("ordinary descriptive prefix rejected: %v", e)
+	}
+}
+
+func TestExistingFirstGoalUsesCurrentEpicBaseAndHistoricalRetry(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	in := existingFirstGoalFixture(t, f)
+	provider := "codex"
+	in.Executor.Provider = &provider
+	p, e := RegisterFirstGoal(f.dependencies, in, false, "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+	if e != nil {
+		t.Fatal(e)
+	}
+	runLocalGit(t, filepath.Join(f.wrapper, "epic"), "commit", "--allow-empty", "-m", "advance existing imported parent")
+	update, e := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
+	if e != nil {
+		t.Fatal(e)
+	}
+	if _, e = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *update.Confirmation}); e != nil {
+		t.Fatal(e)
+	}
+	next, e := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: in.SpecID})
+	if e != nil {
+		t.Fatal(e)
+	}
+	if next.ParentOID == f.oid || next.Goal.Goal != out.Goal {
+		t.Fatal("execution reused imported historical parent")
+	}
+	if _, e = PrepareTaskGoalExecution(f.dependencies, next.Input, next.Confirmation, goalHumanFixture()); e != nil {
+		t.Fatal(e)
+	}
+	before := queueStateBytes(t, f)
+	again, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
+	if e != nil || !again.Applied || again.Goal != out.Goal || queueStateBytes(t, f) != before {
+		t.Fatalf("historical retry rewrote prepared execution: %v", e)
 	}
 }

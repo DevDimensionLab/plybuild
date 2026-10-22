@@ -53,7 +53,13 @@ changed parent and preserves the work instead of silently merging it.
 
 ## Register a supplied first Goal
 
-For a new Task, supply product content directly. No draft envelope, internal
+For a new Task or an existing unused Task, supply product content directly.
+An existing Task must be active, unbound, in the selected Project/repo/Epic,
+with a native current Problem and no earlier Spec, source, preparation or results.
+Its current Problem revision and hash appear in preview and become the Goal basis;
+its original title, documents and history remain intact. The supplied title and
+objective describe the new Goal. No reuse flag or manual Problem reference is needed.
+No draft envelope, internal
 references, hashes, registry version or complete queue payload is required:
 
 ```shell
@@ -82,7 +88,7 @@ the target from the selected Project/repo/Epic. `pull_request` additionally need
 `--github-repository owner/repo --remote origin --target-ref refs/heads/main`.
 These declarations do not record a human pass or grant runtime permissions.
 
-Apply returns the actual `task_id`, initial `problem`, exact `goal.spec_id`,
+Apply returns the actual `task_id`, preserved or initial `problem`, exact `goal.spec_id`,
 revision and manifest hash, resolved `target`, `contract.required_inputs`, and
 current `queue`. It appends that exact Goal and preserves unrelated current and
 pending work. It creates no branch, worktree, Run, agent or prompt. The result
@@ -98,7 +104,15 @@ resume the same registration without duplicate revisions or appends. Once its
 append was published, retry observes that history even after later preparation
 or queue removal; it never requeues the Task. Changed product bytes, document
 identity, target, policy or executor choices conflict with the first input.
-A foreign, inactive or already started Task cannot become a new first Goal.
+A Task in a different scope, inactive or already started cannot receive a new first Goal.
+Changed Problem heads conflict with an earlier confirmation; retries after partial
+publication bind the original native Goal and cannot silently adopt another Problem.
+Unrelated queue changes and observation timestamps do not change confirmation.
+AL31 retries retain their exact `First Goal registration sha256:<digest>` marker
+and matching native initial Problem publication. Ordinary descriptive prefixes
+are not markers. A manually created Task with that exact digest marker and
+matching native creation summary is indistinguishable from an AL31 partial
+registration and is conservatively fenced as one.
 New Goal revisions and legacy solution registration use the existing commands.
 
 ## What the planner records
