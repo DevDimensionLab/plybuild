@@ -575,6 +575,12 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 	} else if r != nil {
 		o.Round.State = "stopped"
 		o.NextAction = WorkflowAction{"coordinator", "This owner is retired as history; its callbacks are closed and its queue slot is released. Start a fresh Task copy from the current Epic base under its own new mandate; reuse code only as reviewed input."}
+		if r.Mode == deliveryRetainEffects {
+			o.NextAction = WorkflowAction{"coordinator", retainedResourcesCaution}
+			if o.DeliveryStatus != nil && o.DeliveryStatus.ResourceRetirement != nil {
+				o.NextAction.Message = o.DeliveryStatus.ResourceRetirement.NextAction
+			}
+		}
 	}
 	return o, nil
 }

@@ -247,6 +247,7 @@ func workflowRetireReport(d Dependencies, s *workflowState, in DeliveryRetireInp
 // ReportRetainedSource records actual source facts, without qualifying work or
 // requiring an absent owner to commit/reset unique changes.
 type ReportRetainedSource struct {
+	GitCommonDir string `json:"git_common_dir,omitempty"`
 	Worktree     string `json:"worktree"`
 	Ref          string `json:"ref"`
 	OID          string `json:"oid"`
@@ -290,13 +291,17 @@ func workflowReportRetainedEffects(s workflowState) ([]ReportRetainedEffect, err
 }
 
 func workflowReportSource(d Dependencies, s workflowState, started bool) (ReportRetainedSource, error) {
+	return workflowRetainedSource(d, s, started)
+}
+
+func workflowRetainedSource(d Dependencies, s workflowState, started bool) (ReportRetainedSource, error) {
 	t, err := d.Workspace.WorkGit.ObserveWorktree(s.Observed.Target.WorktreeLocator)
 	if err != nil {
 		return ReportRetainedSource{}, err
 	}
 	bound := s.Observed.Target
 	if t.Locator != bound.WorktreeLocator || t.Ref != bound.Ref || t.GitCommonDir != bound.GitCommonDir || !t.InventoryMatch {
-		return ReportRetainedSource{}, workflowError(4, "report source identity differs; no retirement or queue release")
+		return ReportRetainedSource{}, workflowError(4, "source identity differs; no retirement or queue release")
 	}
 	if !started && (!t.Clean || t.OID != bound.OID) {
 		return ReportRetainedSource{}, workflowError(4, "pre-work report source changed; reconcile actual effects before retirement")
@@ -305,7 +310,7 @@ func workflowReportSource(d Dependencies, s workflowState, started bool) (Report
 	if err != nil {
 		return ReportRetainedSource{}, err
 	}
-	return ReportRetainedSource{t.Locator, t.Ref, t.OID, t.Tree, t.Clean, sha}, nil
+	return ReportRetainedSource{Worktree: t.Locator, Ref: t.Ref, OID: t.OID, Tree: t.Tree, Clean: t.Clean, SourceSHA256: sha, GitCommonDir: t.GitCommonDir}, nil
 }
 
 func workflowReportPreparation(d Dependencies, s workflowState) (workspace.TaskPreparationReadback, error) {

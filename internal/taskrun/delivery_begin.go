@@ -39,6 +39,11 @@ func WorkflowDeliveryBegin(d Dependencies, root, id, contextPath string, in Deli
 	if !deliveryRun(s.Request) || headlessRun(s.Request) {
 		return WorkflowRun{}, workflowError(4, "begin requires an interactive delivery owner")
 	}
+	if retired, e := deliveryRetirement(s); e != nil {
+		return WorkflowRun{}, e
+	} else if retired != nil {
+		return deliveryReadback(d, root, id, workflowError(4, "owner_retired: startup callbacks are closed"))
+	}
 	if deliveryObservedStop(s) {
 		return deliveryReadback(d, root, id, workflowError(4, "resolve the preserved provider stop before begin; do not repeat denied input"))
 	}

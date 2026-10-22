@@ -70,7 +70,7 @@ func (r *traceReader) delivery(s workflowState) {
 			continue
 		}
 		switch event.Kind {
-		case "coordinator_stop", "stop_resolution", "owner_retirement":
+		case "coordinator_stop", "stop_resolution", "owner_retirement", "retained_resource_observation":
 			e.Data = append(json.RawMessage(nil), raw...)
 			r.run.Entries = append(r.run.Entries, e)
 		case "acceptance_selection":

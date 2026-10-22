@@ -231,7 +231,7 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 			// TaskResult, QA or integration facts through this adapter.
 			if err = history.identity(raw, s, event); err != nil {
 				inventoryDeliveryProblem(row, "delivery_event_invalid", fmt.Sprintf("Delivery event %q: %s", event.ID, err))
-			} else if i == len(events)-1 && event.Kind == "owner_retirement" {
+			} else if i == len(events)-1 && (event.Kind == "owner_retirement" || event.Kind == "retained_resource_observation") {
 				nativeStopped = true
 			}
 			continue
@@ -395,6 +395,9 @@ func (h *inventoryDeliveryHistory) identity(raw []byte, s workflowState, slot De
 		}
 		h.pending = h.pending[:len(h.pending)-1]
 		return nil
+	case "retained_resource_observation":
+		_, _, _, _, err := deliveryRetentionHistory(s)
+		return err
 	case "owner_retirement":
 		var retirement DeliveryRetirement
 		if err := decode(raw, 1<<20, &retirement); err != nil {

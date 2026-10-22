@@ -128,6 +128,11 @@ func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (Wo
 	if initialErr != nil {
 		return WorkflowRun{}, initialErr
 	}
+	if retired, err := deliveryRetirement(initial); err != nil {
+		return WorkflowRun{}, err
+	} else if retired != nil {
+		return WorkflowRun{}, workflowError(4, "owner_retired: delivery ownership is retired; a fresh Task mandate is required")
+	}
 	if initial.Result.Delivery != nil && len(initial.Result.Delivery.Candidates) > 0 {
 		c := initial.Result.Delivery.Candidates[len(initial.Result.Delivery.Candidates)-1]
 		if _, handled, err := ResumeAutomaticLocalDelivery(d, root, id, c.TaskResult.ID); handled || err != nil {

@@ -282,6 +282,9 @@ func deliveryLoadObservedStop(s *workflowState) error {
 			}
 		}
 	}
+	if _, _, _, _, err := deliveryRetentionHistory(*s); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -321,6 +324,29 @@ func deliveryRecoverStopEvents(s *workflowState) error {
 			binding := FileBinding{path, hash(raw)}
 			s.Result.Delivery.Events = append(s.Result.Delivery.Events, DeliveryEventRecord{r.Input.EventID, "quota_stop_reconciliation", binding})
 			s.Result.Delivery.LastEventSHA256 = &binding.SHA256
+			continue
+		}
+
+		if header.Kind == "ply.workflow.retained-resource-observation" {
+			var o RetainedDeliveryObservation
+			if err = decode(raw, 2<<20, &o); err != nil {
+				return err
+			}
+			if o.RunID != s.Result.RunID || o.RequestSHA256 != s.Result.RequestSHA256 {
+				return workflowError(4, "unindexed retained observation binding differs")
+			}
+			n := 1
+			for _, prior := range s.Result.Delivery.Events {
+				if prior.Kind == "retained_resource_observation" {
+					n++
+				}
+			}
+			binding := FileBinding{path, hash(raw)}
+			s.Result.Delivery.Events = append(s.Result.Delivery.Events, DeliveryEventRecord{fmt.Sprintf("retained-observation-%d", n), "retained_resource_observation", binding})
+			s.Result.Delivery.LastEventSHA256 = &binding.SHA256
+			if _, _, _, _, err = deliveryRetentionHistory(*s); err != nil {
+				return err
+			}
 			continue
 		}
 		if header.Kind == "ply.workflow.owner-retirement" {

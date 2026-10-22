@@ -10,27 +10,33 @@ import (
 )
 
 type DeliveryRetireInput struct {
-	Observer string `json:"observer"`
-	Reason   string `json:"reason"`
+	RetainEffects bool   `json:"retain_effects,omitempty"`
+	Observer      string `json:"observer"`
+	Reason        string `json:"reason"`
 }
 
 // DeliveryRetirement is the coordinator's selected end of one interactive
 // owner. It preserves the Run, its refusals and its source as history. It
 // grants nothing to a later Task copy, which receives its own new mandate.
 type DeliveryRetirement struct {
-	Kind           string                        `json:"kind"`
-	SchemaVersion  int                           `json:"schema_version"`
-	RunID          string                        `json:"run_id"`
-	RequestSHA256  string                        `json:"request_sha256"`
-	NativeSession  string                        `json:"native_session"`
-	Input          DeliveryRetireInput           `json:"input"`
-	PaneClosed     bool                          `json:"pane_closed"`
-	Absence        HumanOwnerRecoveryObservation `json:"absence"`
-	ActiveStop     *FileBinding                  `json:"active_stop"`
-	WriterLiveness *TaskWriterLiveness           `json:"writer_liveness,omitempty"`
-	ReportEffects  []ReportRetainedEffect        `json:"report_effects,omitempty"`
-	ReportSource   *ReportRetainedSource         `json:"report_source,omitempty"`
-	RecordedAtUTC  string                        `json:"recorded_at_utc"`
+	Mode            string                        `json:"mode,omitempty"`
+	Provider        string                        `json:"provider,omitempty"`
+	PreparationID   string                        `json:"preparation_id,omitempty"`
+	DeliverySource  *ReportRetainedSource         `json:"delivery_source,omitempty"`
+	DeliveryEffects []DeliveryRetainedEffect      `json:"delivery_effects,omitempty"`
+	Kind            string                        `json:"kind"`
+	SchemaVersion   int                           `json:"schema_version"`
+	RunID           string                        `json:"run_id"`
+	RequestSHA256   string                        `json:"request_sha256"`
+	NativeSession   string                        `json:"native_session"`
+	Input           DeliveryRetireInput           `json:"input"`
+	PaneClosed      bool                          `json:"pane_closed"`
+	Absence         HumanOwnerRecoveryObservation `json:"absence"`
+	ActiveStop      *FileBinding                  `json:"active_stop"`
+	WriterLiveness  *TaskWriterLiveness           `json:"writer_liveness,omitempty"`
+	ReportEffects   []ReportRetainedEffect        `json:"report_effects,omitempty"`
+	ReportSource    *ReportRetainedSource         `json:"report_source,omitempty"`
+	RecordedAtUTC   string                        `json:"recorded_at_utc"`
 }
 
 func deliveryRetirement(s workflowState) (*DeliveryRetirement, error) {
@@ -52,6 +58,19 @@ func deliveryRetirement(s workflowState) (*DeliveryRetirement, error) {
 		if r.Kind != "ply.workflow.owner-retirement" || r.SchemaVersion != 1 || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 {
 			return nil, workflowError(4, "owner retirement binding changed")
 		}
+
+		if r.Mode != "" && r.Mode != deliveryRetainEffects {
+			return nil, workflowError(4, "unsupported retirement mode")
+		}
+		if r.Mode == deliveryRetainEffects && (!r.Input.RetainEffects || r.NativeSession != s.Result.Transport.AgentSessionID || r.Provider != s.Request.Runtime.Provider || r.PreparationID != s.Request.PreparationID || r.DeliverySource == nil || r.ActiveStop == nil) {
+			return nil, workflowError(4, "retained retirement identity binding differs")
+		}
+		if r.Mode == deliveryRetainEffects {
+			source := r.DeliverySource
+			if source.Worktree != s.Observed.Target.WorktreeLocator || source.Ref != s.Observed.Target.Ref || source.GitCommonDir != s.Observed.Target.GitCommonDir {
+				return nil, workflowError(4, "retained source identity binding differs")
+			}
+		}
 		return &r, nil
 	}
 	return nil, nil
@@ -63,6 +82,9 @@ func deliveryRetirement(s workflowState) (*DeliveryRetirement, error) {
 // writer before it records retirement and releases only this queue slot.
 // Unresolved attempts and unknown or partial effects stop before any effect.
 func WorkflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireInput) (WorkflowRun, error) {
+	if in.RetainEffects {
+		return workflowRetireRetainingEffects(d, root, id, in)
+	}
 	return workflowRetireDelivery(d, root, id, in, nil)
 }
 

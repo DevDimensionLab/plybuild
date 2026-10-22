@@ -11,6 +11,7 @@ import (
 // DeliveryStatus is a read-only projection, never a receipt or an authority
 // input. Each outcome remains bound to its own candidate and evidence.
 type DeliveryStatus struct {
+	ResourceRetirement  *DeliveryResourceRetirementStatus  `json:"resource_retirement"`
 	Startup             *DeliveryStartupStatus             `json:"startup,omitempty"`
 	Source              DeliverySourceStatus               `json:"source"`
 	Verification        *DeliveryVerificationStatus        `json:"verification"`
@@ -98,6 +99,32 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 		return nil
 	}
 	out := &DeliveryStatus{Source: DeliverySourceStatus{State: "unknown"}, FinalDelivery: DeliveryFinalStatus{State: "not_delivered"}, Reasons: []Reason{}}
+
+	resource, resourceErr := deliveryResourceStatus(d, s)
+	out.ResourceRetirement = resource
+	if resourceErr != nil {
+		out.Reasons = append(out.Reasons, Reason{"resource_retirement_unknown", resourceErr.Error()})
+	}
+	defer func() {
+		if resource.Retirement != nil {
+			out.FinalDelivery = DeliveryFinalStatus{State: "not_delivered"}
+			if out.QualifiedCandidate != nil {
+				out.QualifiedCandidate.Current = false
+			}
+			if out.Verification != nil {
+				out.Verification.Current = false
+				out.Verification.InputsMatch = false
+			}
+			if out.HumanJudgment != nil {
+				out.HumanJudgment.Current = false
+			}
+			if out.Acceptance != nil {
+				out.Acceptance.Current = false
+				out.Acceptance.Outcome = "blocked"
+				out.Acceptance.Reason = retainedResourcesCaution
+			}
+		}
+	}()
 	if !headlessRun(s.Request) {
 		out.Startup = &DeliveryStartupStatus{Terminal: "not_observed", NativeSession: s.Result.Transport.AgentSessionID, TaskPrompt: "not_attempted", TaskReceived: "unknown", RuntimePermission: s.Result.Delivery.PermissionState, TargetWork: "unknown", Stop: s.Result.Delivery.ActiveStop}
 		if mandateReceipt(s.Request) {
