@@ -20,7 +20,7 @@ func automaticResultFixture() TaskResultRecord {
 	return TaskResultRecord{ID: "trs_11111111111111111111111111111111", TaskID: "task", ResultOID: oid, ResultTree: strings.Repeat("b", 40), TerminalResultSHA256: "sha256:" + strings.Repeat("c", 64), TechnicalGate: "passed", ReportedOutcome: "complete", VerifierResults: []TaskVerifierResultRecord{{VerifierID: "acceptance", Outcome: "passed", Argv: []string{"/bin/sh", "/workspace/acceptance.sh"}, CWD: "/workspace/task", BoundOIDOrSHA256: oid, Exit: 0}}}
 }
 
-func TestAutomaticAcceptanceIsExplicitAndLocalEpicOnly(t *testing.T) {
+func TestAutomaticAcceptanceIsExplicitAndLocalOnly(t *testing.T) {
 	a := automaticAgreementFixture()
 	if err := ValidateDeliveryAgreement(a); err != nil || !a.AutomaticAcceptance() {
 		t.Fatalf("valid automatic policy: %v", err)
@@ -29,7 +29,6 @@ func TestAutomaticAcceptanceIsExplicitAndLocalEpicOnly(t *testing.T) {
 		func(v *DeliveryAgreement) { v.SchemaVersion = 1 },
 		func(v *DeliveryAgreement) { v.SchemaVersion = 2; v.IntegrationOwner = IntegrationOwnerHuman },
 		func(v *DeliveryAgreement) { v.Acceptance = nil },
-		func(v *DeliveryAgreement) { v.Mode = DeliveryLocalBranch },
 		func(v *DeliveryAgreement) {
 			v.Mode = DeliveryPullRequest
 			v.TargetWorktree = ""
@@ -119,9 +118,13 @@ func TestAutomaticAcceptanceRequiresExactVerificationReviewAndHumanOverrides(t *
 	}
 }
 
-func newAutomaticIntegrationFixture(t *testing.T, keepHuman bool) (integrationJourneyFixture, TaskIntegrationInput) {
+func newAutomaticIntegrationFixture(t *testing.T, keepHuman bool, agreements ...DeliveryAgreement) (integrationJourneyFixture, TaskIntegrationInput) {
 	t.Helper()
-	f := newIntegrationJourneyFixtureHistory(t, false, false, automaticAgreementFixture())
+	agreement := automaticAgreementFixture()
+	if len(agreements) > 0 {
+		agreement = agreements[0]
+	}
+	f := newIntegrationJourneyFixtureHistory(t, false, false, agreement)
 	var verifier TaskVerifierResultRecord
 	if err := f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
 		r, err := session.Snapshot()
@@ -294,29 +297,39 @@ func TestAutomaticNativeRetryPreservesFailuresAndRequiresFreshConfirmation(t *te
 }
 
 func TestAutomaticNativeRetryNeverRepeatsUncertainEffect(t *testing.T) {
-	f, in := newAutomaticIntegrationFixture(t, false)
-	git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
-	f.dependencies.IntegrationGit = &repositoryFailureAfterCommandGit{TaskIntegrationGit: git}
-	check, err := CheckTaskIntegration(f.dependencies, in)
-	if err != nil {
-		t.Fatal(err)
-	}
-	in.Apply, in.Confirmation = true, integrationDigest(t, check.Readback)
-	out, err := ApplyTaskIntegration(f.dependencies, in)
-	if err != nil || out.Readback.Classification != "unknown" || git.count() != 1 {
-		t.Fatalf("did not preserve actual uncertainty: %s %v merges=%d", out.Readback.Classification, err, git.count())
-	}
-	f.dependencies.IntegrationGit = git
-	check, err = CheckTaskIntegration(f.dependencies, in)
-	if err != nil || check.Readback.Classification != "unknown" {
-		t.Fatalf("unknown effect became a new retry: %s %v", check.Readback.Classification, err)
-	}
-	if out, err = ApplyTaskIntegration(f.dependencies, in); err != nil || out.Readback.Classification != "unknown" || git.count() != 1 {
-		t.Fatalf("unknown effect was attempted again: %s %v merges=%d", out.Readback.Classification, err, git.count())
-	}
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
-	if err != nil || len(r.IntegrationResults) != 1 || len(r.IntegrationAttempts) != 1 || len(r.IntegrationAuthorities) != 1 {
-		t.Fatalf("unknown effect gained a competing attempt: %v", err)
+	for _, branch := range []string{"epic", "main", "master"} {
+		t.Run(branch, func(t *testing.T) {
+			agreement := automaticAgreementFixture()
+			if branch != "epic" {
+				agreement.Mode = DeliveryLocalBranch
+			}
+			agreement.TargetRef = "refs/heads/" + branch
+			f, in := newAutomaticIntegrationFixture(t, false, agreement)
+			git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
+			f.dependencies.IntegrationGit = &repositoryFailureAfterCommandGit{TaskIntegrationGit: git}
+			check, err := CheckTaskIntegration(f.dependencies, in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			in.Apply, in.Confirmation = true, integrationDigest(t, check.Readback)
+			out, err := ApplyTaskIntegration(f.dependencies, in)
+			if err != nil || out.Readback.Classification != "unknown" || git.count() != 1 {
+				t.Fatalf("did not preserve actual uncertainty: %s %v merges=%d", out.Readback.Classification, err, git.count())
+			}
+			f.dependencies.IntegrationGit = git
+			check, err = CheckTaskIntegration(f.dependencies, in)
+			if err != nil || check.Readback.Classification != "unknown" {
+				t.Fatalf("unknown effect became a new retry: %s %v", check.Readback.Classification, err)
+			}
+			if out, err = ApplyTaskIntegration(f.dependencies, in); err != nil || out.Readback.Classification != "unknown" || git.count() != 1 {
+				t.Fatalf("unknown effect was attempted again: %s %v merges=%d", out.Readback.Classification, err, git.count())
+			}
+			r, err := f.dependencies.WorkItems.Snapshot(f.root)
+			if err != nil || len(r.IntegrationResults) != 1 || len(r.IntegrationAttempts) != 1 || len(r.IntegrationAuthorities) != 1 {
+				t.Fatalf("unknown effect gained a competing attempt: %v", err)
+			}
+
+		})
 	}
 }
 
@@ -448,5 +461,60 @@ func TestAutomaticNativeCloseoutRetainsSourceAndRecoversLifecycleReceipt(t *test
 	r, err := f.dependencies.WorkItems.Snapshot(f.root)
 	if err != nil || len(r.HumanQARecords) != 0 || len(r.IntegrationAttempts) != 1 {
 		t.Fatalf("automatic closeout fabricated acceptance or repeated integration: %v", err)
+	}
+}
+
+// PWA-DEP-01: the mode and registered target are explicit; no main/master
+// authority is inferred from a branch name or from an automatic test result.
+func TestAutomaticLocalBranchAgreementAndAcceptance(t *testing.T) {
+	for _, branch := range []string{"main", "master"} {
+		t.Run(branch, func(t *testing.T) {
+			a := automaticAgreementFixture()
+			a.Mode, a.TargetRef, a.TargetWorktree = DeliveryLocalBranch, "refs/heads/"+branch, "/workspace/"+branch
+			if err := ValidateDeliveryAgreement(a); err != nil {
+				t.Fatalf("explicit automatic branch rejected: %v", err)
+			}
+			if !a.AutomaticAcceptance() || !contentTypedEqual(a.RequiredGates(), []string{"meaningful_tests", "review", "exact_automatic_pass"}) || !contentTypedEqual(a.AllowedEffects(), []string{DeliveryLocalBranch}) {
+				t.Fatalf("branch lost its automatic policy or exact effect: %+v", a)
+			}
+			decision, err := EvaluateDeliveryAcceptance(&a, automaticResultFixture(), nil)
+			if err != nil || decision.Mode != "automatic" || decision.Outcome != "pass" || decision.HumanQARecordID != "" {
+				t.Fatalf("automatic branch requires artificial QA: %+v %v", decision, err)
+			}
+			for _, mutate := range []func(*DeliveryAgreement){
+				func(v *DeliveryAgreement) { v.Acceptance = nil },
+				func(v *DeliveryAgreement) { v.TargetWorktree = "" },
+				func(v *DeliveryAgreement) { v.TargetRef = "" },
+				func(v *DeliveryAgreement) { v.Remote = "origin" },
+				func(v *DeliveryAgreement) { v.GitHubRepository = "owner/repo" },
+				func(v *DeliveryAgreement) { v.Mode = DeliveryLocalEpic },
+			} {
+				bad := a
+				mutate(&bad)
+				if ValidateDeliveryAgreement(bad) == nil {
+					t.Fatalf("branch acquired implicit/remote authority: %+v", bad)
+				}
+			}
+			target := QueueTarget{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID, ParentRef: a.TargetRef, ParentLocator: a.TargetWorktree}
+			bound, err := BindDeliveryAgreement(a, target, "refs/heads/task")
+			if err != nil || bound.Mode != a.Mode || bound.TargetRef != a.TargetRef || bound.TargetWorktree != a.TargetWorktree {
+				t.Fatalf("exact branch binding changed: %+v %v", bound, err)
+			}
+			target.ParentRef = "refs/heads/other"
+			if _, err := BindDeliveryAgreement(a, target, "refs/heads/task"); err == nil {
+				t.Fatal("target drift accepted")
+			}
+			for _, version := range []int{1, 2} {
+				old := a
+				old.SchemaVersion, old.Acceptance = version, nil
+				if version == 2 {
+					old.IntegrationOwner = IntegrationOwnerHuman
+				}
+				got, err := EvaluateDeliveryAcceptance(&old, automaticResultFixture(), nil)
+				if err != nil || got.Mode != "human" || got.Outcome != "blocked" {
+					t.Fatalf("historical branch gate changed: %+v %v", got, err)
+				}
+			}
+		})
 	}
 }

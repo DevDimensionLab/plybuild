@@ -18,11 +18,14 @@ agreements retain the behavior described below.
 | `local_branch_integration` | Explicitly selected local ref and worktree | Same local evidence and closure, including main/master without any remote |
 
 All three modes require meaningful tests, review, actual runtime authority and a
-human pass for the exact candidate in historical v1/v2 agreements. New v3 local Epic
-agreements may select automatic acceptance below. Registering a goal, queue entry or Delivery
-does not supply these gates.
+human pass for the exact candidate in historical v1/v2 agreements. New v3 local
+Epic or explicitly selected local branch agreements may select automatic
+acceptance below. Registering a goal, queue entry or Delivery does not supply
+these gates.
 
-## Explicit automatic acceptance for a new local Epic task
+<a id="explicit-automatic-acceptance-for-a-new-local-epic-task"></a>
+
+## Explicit automatic acceptance for a new local task
 
 Select agreement schema 3 when registering the Goal, before starting execution:
 
@@ -48,11 +51,16 @@ Select agreement schema 3 when registering the Goal, before starting execution:
 The bound source ref is added during Task preparation. This choice travels through
 Goal, execution Spec, native mandate and Delivery. An existing schema 1 local Epic
 run can record the explicit policy amendment described below while preserving
-its original frozen agreement. PRs and local main/master delivery cannot select
-this policy. V1/v2 and absent policies retain their historical human gates unless
-the supported explicit amendment is recorded. `require_human_qa: true`
+its original frozen agreement. New `local_branch_integration` agreements can
+select this policy, including an explicitly registered main/master target ref
+and checkout. `local_epic_integration` still cannot target main/master; PRs
+cannot select automatic acceptance. V1/v2 and absent policies retain their
+historical human gates unless the supported explicit amendment is recorded. `require_human_qa: true`
 adds a real human judgment after automatic verification. Optional
 `integration_owner: human` preserves the separate human-started integration path.
+
+This does not expand the separate local Epic restrictions on headless execution,
+backup Goals, worktree adoption, acceptance amendments, or CLI installation.
 
 From the accepted owner's Task checkout, use its preserved control executable:
 

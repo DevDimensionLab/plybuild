@@ -16,7 +16,7 @@ const (
 )
 
 // DeliveryAgreement describes one Task in one repository. Historical versions
-// require actual human pass; v3 explicitly selects automatic local Epic acceptance.
+// require actual human pass; v3 explicitly selects automatic local acceptance.
 // A PR stops before merge; local delivery includes the native base and queue close.
 // Registering an agreement does not grant runtime authority.
 type DeliveryAgreement struct {
@@ -82,8 +82,8 @@ func ValidateDeliveryAgreement(a DeliveryAgreement) error {
 		return fmt.Errorf("historical delivery agreements cannot acquire automatic acceptance")
 	}
 	if a.SchemaVersion == 3 {
-		if a.Mode != DeliveryLocalEpic || a.IntegrationOwner != "" && a.IntegrationOwner != IntegrationOwnerHuman || a.Acceptance == nil {
-			return fmt.Errorf("delivery agreement v3 requires explicit automatic local Epic acceptance and an optional human integration owner")
+		if (a.Mode != DeliveryLocalEpic && a.Mode != DeliveryLocalBranch) || a.IntegrationOwner != "" && a.IntegrationOwner != IntegrationOwnerHuman || a.Acceptance == nil {
+			return fmt.Errorf("delivery agreement v3 requires explicit automatic local acceptance and an optional human integration owner")
 		}
 		if err := validateDeliveryAcceptancePolicy(*a.Acceptance); err != nil {
 			return err

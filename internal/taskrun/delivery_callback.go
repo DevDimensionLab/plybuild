@@ -590,6 +590,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				if decision.Outcome == "pass" && !a.Acceptance.RequireHumanQA {
 					current.Result.Delivery.Phase = "automatic_acceptance_passed"
 					current.Result.NextAction = WorkflowAction{"recipient", "Automatic acceptance and review passed for this exact candidate. Complete its authorized native local Epic delivery; preserve machine evidence separately from human QA."}
+					if a.Mode == workspace.DeliveryLocalBranch {
+						current.Result.NextAction.Message = strings.ReplaceAll(current.Result.NextAction.Message, "local Epic delivery", "local branch delivery")
+					}
 				} else if qa != nil && qa.Outcome != "pass" {
 					current.Result.Delivery.Phase = "working"
 					current.Result.NextAction = WorkflowAction{"recipient", decision.Reason + " Preserve that human answer and correct the candidate before continuing delivery."}

@@ -314,6 +314,9 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		}
 		if agreement != nil && agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA && !agreement.HumanOwnedIntegration() {
 			goal = replaceObjectMember(goal, "done_when", "The exact candidate passed its automatic acceptance and review, and authorized native local Epic integration and closure are observed.")
+			if agreement.Mode == workspace.DeliveryLocalBranch {
+				goal = replaceObjectMember(goal, "done_when", "The exact candidate passed its automatic acceptance and review, and authorized native local branch integration and closure are observed.")
+			}
 		}
 		procedure := []canonicaljson.Value{deliveryObject(map[string]any{"id": "implement", "instruction": "Own design, tests, permitted delegation, review and local delivery. Preserve actual results and report task-requirements for each verified candidate. Human QA and integration are separate facts; never fabricate them.", "required_before": []string{}})}
 		if agreement != nil {

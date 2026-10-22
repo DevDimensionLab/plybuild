@@ -33,7 +33,7 @@ if cmd in (["pane", "list"], ["pane", "process-info"]):
         raise SystemExit(1)
     print(json.dumps({"id":"fixture", "result":{"process_info":{"pane_id":pane, "shell_pid":shells[pane]}}}))
     raise SystemExit(0)
-if cmd == ["tab", "create"] and args[args.index("--label") + 1].startswith("review "):
+if cmd == ["tab", "create"] and (args[args.index("--label") + 1].startswith("review ") or args[args.index("--label") + 1].split(" ")[1:2] == ["review"]):
     n = model.get("review_tabs", 0) + 1
     model["review_tabs"] = n
     pane = "w-fixture:r%d" % n

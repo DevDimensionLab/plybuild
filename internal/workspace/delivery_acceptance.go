@@ -3,7 +3,7 @@ package workspace
 import "fmt"
 
 // DeliveryAcceptancePolicy is an explicit choice in a frozen v3 agreement.
-// It grants no runtime permissions and is restricted to local Epic delivery.
+// It grants no runtime permissions and is restricted to explicitly selected local delivery.
 type DeliveryAcceptancePolicy struct {
 	SchemaVersion    int    `yaml:"schema_version" json:"schema_version"`
 	Mode             string `yaml:"mode" json:"mode"`
@@ -35,7 +35,7 @@ func validateDeliveryAcceptancePolicy(p DeliveryAcceptancePolicy) error {
 }
 
 func (a DeliveryAgreement) AutomaticAcceptance() bool {
-	return a.SchemaVersion == 3 && a.Mode == DeliveryLocalEpic && a.Acceptance != nil && a.Acceptance.Mode == "automatic"
+	return a.SchemaVersion == 3 && (a.Mode == DeliveryLocalEpic || a.Mode == DeliveryLocalBranch) && a.Acceptance != nil && a.Acceptance.Mode == "automatic"
 }
 
 // EvaluateDeliveryAcceptance is the shared decision for preview, status and

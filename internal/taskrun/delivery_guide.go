@@ -278,6 +278,9 @@ qualify and release the candidate again before a new human integration decision.
 			}
 		}
 	}
+	if a := s.Request.Delivery.Agreement; a != nil && a.Mode == workspace.DeliveryLocalBranch {
+		guide = strings.ReplaceAll(guide, "Automatic local Epic delivery", "Automatic local branch delivery")
+	}
 	if mandateReceipt(s.Request) {
 		start := strings.Index(guide, "## Begin with actual observations")
 		end := strings.Index(guide, "## Progress and necessary human questions")
