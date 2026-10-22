@@ -235,6 +235,14 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 		if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "run is not a delivery owner")
 		}
+		// Retirement closes every owner report route, including identical
+		// historical retries and the dependency-independent incomplete path.
+		// Check it before either shortcut or owner/source/liveness validation.
+		if retired, err := deliveryRetirement(*s); err != nil {
+			return err
+		} else if retired != nil {
+			return workflowError(4, "owner_retired: report callbacks are closed; a fresh Task mandate is required")
+		}
 		if e := workflowClaim(*s, report.RunID, report.RequestSHA256, report.SessionID); e != nil {
 			return e
 		}

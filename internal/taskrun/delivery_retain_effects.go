@@ -46,6 +46,13 @@ func deliveryRetentionGuard(d Dependencies, s workflowState) error {
 	if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil || s.Request.Delivery.Agreement == nil || s.Request.Delivery.Agreement.Mode != workspace.DeliveryLocalEpic {
 		return workflowError(4, "retain-effects requires a started stopped interactive local Epic delivery")
 	}
+	cwd, err := d.CWD()
+	if err != nil {
+		return err
+	}
+	if sourceContains(s.Observed.Target.WorktreeLocator, cwd) {
+		return workflowError(4, "retain-effects must run outside the Task source; use the containing workspace")
+	}
 	if err := deliveryAcceptedAuthority(s); err != nil {
 		return err
 	}

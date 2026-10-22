@@ -422,6 +422,7 @@ func TestAL40NativeStartSessionCannotBeRebound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	retireAsCoordinator(&f)
 	s.Result.Transport.AgentSessionID = "foreign-session"
 	if err = deliveryRetentionGuard(f.D, s); err == nil {
 		t.Fatal("native start session was rebound")
