@@ -313,9 +313,9 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 
 func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
 	r := s.Request
-	tabArgs := []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
+	tabArgs := []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", workflowTaskOwnerTabLabel(s), "--env", "PATH=" + os.Getenv("PATH"), "--no-focus"}
 	if env := r.GoalStartEnvironment; env != nil {
-		tabArgs = []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", "run " + r.Herdr.TabLabel, "--env", "PATH=" + env.Path, "--env", "HOME=" + env.Home, "--env", "CODEX_HOME=" + env.CodexHome, "--no-focus"}
+		tabArgs = []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", workflowTaskOwnerTabLabel(s), "--env", "PATH=" + env.Path, "--env", "HOME=" + env.Home, "--env", "CODEX_HOME=" + env.CodexHome, "--no-focus"}
 	}
 	if workflowCodexGrant(s) {
 		// Use the exact existing user/config locations observed by preview.
@@ -543,7 +543,7 @@ func WorkflowFollow(d Dependencies, root, id string, timeout time.Duration) (Wor
 				return WorkflowShow(d, root, id)
 			}
 			// Tab labels express transport status only. They never grant review.
-			_, e = workflowCall(d, s.Request, "tab", "rename", s.Result.Transport.TabID, "finished "+s.Request.Herdr.TabLabel)
+			_, e = workflowCall(d, s.Request, "tab", "rename", s.Result.Transport.TabID, workflowTaskTabLabel(s, "finished"))
 			o, se := WorkflowShow(d, root, id)
 			o.Transport.Observation = "fresh"
 			if e == nil {

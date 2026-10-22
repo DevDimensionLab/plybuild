@@ -431,6 +431,9 @@ const DeliveryReviewReturnGuidance = "Return field limits (after outer whitespac
 func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliveryReviewRecord, root, executable, template, context string, plan workspace.WorkspaceTaskPreparePlan) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Independent review round %d\n\n", r.Round)
+	if g, ok := deliveryTaskPresentation(s); ok {
+		b.WriteString(deliveryTaskCodeInstructions(g))
+	}
 	fmt.Fprintf(&b, "Coordinator: %s. You are a separate reviewer session, not the developer (owner session %s).\n\n", r.Coordinator, r.OwnerSession)
 	fmt.Fprintf(&b, "This is an internal review round. Return through native review-return to coordinator %s (pane %s). When the parent owns the job and its notifications, send no separate Slack notification; the parent owns the whole-job notification. Honor an explicit separate notification agreement. For the routine parent-owned return, do not create a notification route or add an approval gate.\n\n", r.Coordinator, r.CoordinatorPane)
 	fmt.Fprintf(&b, "- Run: %s\n- Goal and Spec: %s\n- Task worktree (read-only for you): %s\n- Review/diff base: %s\n- Candidate: %s (tree %s)\n- Owner acceptance entrypoint: %s\n", r.RunID, s.Request.Delivery.Goal.Locator, s.Observed.Target.WorktreeLocator, plan.ParentOID, r.CandidateOID, r.CandidateTree, s.Request.Delivery.AcceptancePath)

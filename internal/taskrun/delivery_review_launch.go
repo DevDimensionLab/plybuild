@@ -86,7 +86,7 @@ func deliveryReviewPlan(d Dependencies, s workflowState, round int, workspaceID 
 	argv := workflowTabCreateArgv(s, workspaceID)
 	for i := range argv {
 		if argv[i] == "--label" && i+1 < len(argv) {
-			argv[i+1] = fmt.Sprintf("review %d %s", round, s.Request.Herdr.TabLabel)
+			argv[i+1] = workflowTaskTabLabel(s, fmt.Sprintf("review %d", round))
 		}
 	}
 	argv = append(argv, "--env", "GOFLAGS="+deliveryReviewGoFlags())

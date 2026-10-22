@@ -351,7 +351,7 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 			if s.Result.Delivery.Phase == "completed" {
 				// A settled completed delivery can mark its preserved tab finished.
 				// Waiting for a human retains the same active owner and tab label.
-				if _, e = workflowCall(d, s.Request, "tab", "rename", s.Result.Transport.TabID, "finished "+s.Request.Herdr.TabLabel); e != nil {
+				if _, e = workflowCall(d, s.Request, "tab", "rename", s.Result.Transport.TabID, workflowTaskTabLabel(s, "finished")); e != nil {
 					return deliveryReadback(d, root, id, e)
 				}
 			}
@@ -375,10 +375,15 @@ func deliveryReceiptInstructions(s workflowState, runtime Runtime) string {
 	if a := s.Request.Delivery.Agreement; a != nil {
 		scope = fmt.Sprintf(" Authorized delivery: %s from %s to %s at %s. No other delivery target is authorized.", a.Mode, a.SourceRef, a.TargetRef, a.TargetWorktree)
 	}
-	return fmt.Sprintf("Your authorized assignment is %s: %s Work in %s. Receive this frozen mandate with %s workflow execute check-in %s --context %s --provider %s --native-session %s. This idempotent receipt records identity and mandate receipt; runtime reviews each action when it happens. A known refusal or unknown previous effect stops dependent work. Preserve provider controls and the same session. Edit and test this Task, make controlled commits on its source branch, and own separate review and the exact delivery.%s Local installation allowed: %t. Delegation allowed: %t. %s Read %s for complete scope and %s for callbacks, verification and gates. Implement acceptance at %s. The frozen goal is %s. Parent-owned notifications stay with the parent; otherwise use the existing authorized route. Receipt, actual work, technical acceptance, human judgment and delivery are separate facts.", goal.Title, goal.Objective, s.Observed.Target.WorktreeLocator, ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context), s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID), scope, s.Request.Delivery.AllowLocalInstall, s.Request.Delivery.AllowSubagents, deliveryDelegationGuidance, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), s.Request.Delivery.AcceptancePath, s.Request.Delivery.Goal.Locator)
+	prefix := ""
+	if _, ok := deliveryTaskPresentation(s); ok {
+		prefix = deliveryTaskCodeInstructions(goal)
+	}
+	return prefix + fmt.Sprintf("Your authorized assignment is %s: %s Work in %s. Receive this frozen mandate with %s workflow execute check-in %s --context %s --provider %s --native-session %s. This idempotent receipt records identity and mandate receipt; runtime reviews each action when it happens. A known refusal or unknown previous effect stops dependent work. Preserve provider controls and the same session. Edit and test this Task, make controlled commits on its source branch, and own separate review and the exact delivery.%s Local installation allowed: %t. Delegation allowed: %t. %s Read %s for complete scope and %s for callbacks, verification and gates. Implement acceptance at %s. The frozen goal is %s. Parent-owned notifications stay with the parent; otherwise use the existing authorized route. Receipt, actual work, technical acceptance, human judgment and delivery are separate facts.", goal.Title, goal.Objective, s.Observed.Target.WorktreeLocator, ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context), s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID), scope, s.Request.Delivery.AllowLocalInstall, s.Request.Delivery.AllowSubagents, deliveryDelegationGuidance, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), s.Request.Delivery.AcceptancePath, s.Request.Delivery.Goal.Locator)
 }
 
 type deliveryReceiptGoal struct {
+	TaskID    string `json:"task_id"`
 	Title     string `json:"title"`
 	Objective string `json:"objective"`
 }
