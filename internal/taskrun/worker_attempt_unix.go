@@ -11,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
 type workerAttemptIntent struct {
+	PretestScratch  string       `json:"pretest_scratch,omitempty"`
 	BoundAnswer     *FileBinding `json:"bound_answer,omitempty"`
 	RunID           string       `json:"run_id"`
 	JobID           string       `json:"job_id"`
@@ -32,6 +34,7 @@ type workerAttemptIntent struct {
 }
 
 type workerAttemptResult struct {
+	PretestComplete bool                   `json:"pretest_complete,omitempty"`
 	RunID           string                 `json:"run_id"`
 	JobID           string                 `json:"job_id"`
 	IntentSHA256    string                 `json:"intent_sha256"`
@@ -88,6 +91,13 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 	if err != nil {
 		return err
 	}
+	// A return without durable positive completion must preserve child evidence.
+	scratchHandled := false
+	defer func() {
+		if !scratchHandled {
+			workerFinishPretestScratch(in, workerAttemptResult{}, false)
+		}
+	}()
 	if in.Generation != s.Result.Worker.Generation && !(in.Kind == "developer_answer" && s.ProductContinuationGeneration == s.Result.Worker.Generation && s.ProductContinuation != nil && *s.ProductContinuation == *job) {
 		return fmt.Errorf("stale worker attempt generation")
 	}
@@ -211,6 +221,7 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 		if in.Kind == "developer_answer" && process.State == "not_started" {
 			return runErr
 		}
+		r.PretestComplete = in.Kind == "pretest" && quiescent(process) && process.State == "exited" && completion.StreamComplete && !completion.StdoutTruncated && !completion.StderrTruncated && !completion.TimedOut
 		r.Process = &process
 		r.Exit = process.ExitCode
 		r.Error = workerAttemptError(in.Kind, runErr)
@@ -253,15 +264,25 @@ func RunWorkerAttempt(d Dependencies, root, id, jobID string) error {
 		}
 	}
 	r.FinishedAt = d.Now().UTC().Format(time.RFC3339Nano)
-	r.Stdout = FileBinding{Locator: filepath.Join(job.Directory, "stdout.txt"), SHA256: hash(stdout.data)}
-	r.Stderr = FileBinding{Locator: filepath.Join(job.Directory, "stderr.txt"), SHA256: hash(stderr.data)}
-	if err = d.writeOnce(r.Stdout.Locator, stdout.data); err != nil {
+	scratchHandled = true
+	return workerPublishAttemptResult(d, in, r, job.Directory, stdout.data, stderr.data)
+}
+
+// Publish native logs and result before making any scratch cleanup decision.
+func workerPublishAttemptResult(d Dependencies, in workerAttemptIntent, r workerAttemptResult, directory string, stdout, stderr []byte) (err error) {
+	durable := false
+	defer func() { workerFinishPretestScratch(in, r, durable) }()
+	r.Stdout = FileBinding{Locator: filepath.Join(directory, "stdout.txt"), SHA256: hash(stdout)}
+	r.Stderr = FileBinding{Locator: filepath.Join(directory, "stderr.txt"), SHA256: hash(stderr)}
+	if err = d.writeOnce(r.Stdout.Locator, stdout); err != nil {
 		return err
 	}
-	if err = d.writeOnce(r.Stderr.Locator, stderr.data); err != nil {
+	if err = d.writeOnce(r.Stderr.Locator, stderr); err != nil {
 		return err
 	}
-	return d.writeValue(resultPath, r)
+	err = d.writeValue(filepath.Join(directory, "result.json"), r)
+	durable = err == nil
+	return err
 }
 
 func workerConfirmInheritedLock(lock *os.File, path string) error {
@@ -326,11 +347,14 @@ func workerRunReserved(d Dependencies, s workflowState) (workerAttemptResult, er
 	if job == nil {
 		return r, fmt.Errorf("worker attempt missing")
 	}
-	if _, err := workerIntent(s, *job); err != nil {
+	in, err := workerIntent(s, *job)
+	if err != nil {
 		return r, err
 	}
+	durable := false
+	defer func() { workerFinishPretestScratch(in, r, durable) }()
 	path := filepath.Join(job.Directory, "result.json")
-	err := readValue(path, 1<<20, &r)
+	err = readValue(path, 1<<20, &r)
 	if os.IsNotExist(err) {
 		return r, fmt.Errorf("attempt %s has no durable result; it will not be replayed or replaced by a second writer", job.ID)
 	}
@@ -355,6 +379,7 @@ func workerRunReserved(d Dependencies, s workflowState) (workerAttemptResult, er
 			return r, err
 		}
 	}
+	durable = true
 	return r, nil
 }
 
@@ -409,4 +434,24 @@ func workerGit(d Dependencies, s workflowState, args ...string) (string, error) 
 		return "", fmt.Errorf("git %s: %s: %w", strings.Join(args, " "), b, e)
 	}
 	return strings.TrimSpace(string(b)), nil
+}
+
+// Only new native pretest intents carry an allocated scratch locator. Legacy
+// TMPDIR values are never interpreted as cleanup authority.
+func workerFinishPretestScratch(in workerAttemptIntent, r workerAttemptResult, durable bool) {
+	if in.Kind != "pretest" || in.PretestScratch == "" {
+		return
+	}
+	path := in.PretestScratch
+	if durable && r.PretestComplete && r.Error == "" && r.Exit != nil && *r.Exit == 0 && r.Process != nil && r.Process.State == "exited" && quiescent(*r.Process) && r.Process.ExitCode != nil && *r.Process.ExitCode == 0 {
+		workerRemovePretestScratch(path)
+		return
+	}
+	logrus.WithFields(logrus.Fields{"run_id": in.RunID, "job_id": in.JobID, "scratch": path}).Warn("Retained headless pretest scratch locator; completion or durable success is unconfirmed")
+}
+
+func workerRemovePretestScratch(path string) {
+	if err := os.RemoveAll(path); err != nil {
+		logrus.WithFields(logrus.Fields{"scratch": path, "error": err}).Warn("Headless pretest scratch cleanup failed; retained locator")
+	}
 }

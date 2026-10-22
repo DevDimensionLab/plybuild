@@ -225,7 +225,7 @@ type workerReviewAnswer struct {
 	Findings []string `json:"findings"`
 }
 
-func workerPrepareAttempt(d Dependencies, s workflowState) error {
+func workerPrepareAttempt(d Dependencies, s workflowState) (prepareErr error) {
 	w := s.Result.Worker
 	name := fmt.Sprintf("%s-%04d", w.Stage, w.Iteration)
 	if w.ProviderRetries > 0 {
@@ -236,6 +236,19 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 		return err
 	}
 	in := workerAttemptIntent{Kind: w.Stage, CandidateOID: w.CandidateOID, CandidateTree: w.CandidateTree, TimeoutSeconds: s.Request.Worker.AgentTimeoutSeconds, Argv: []string{}, Environment: workerEnvironment()}
+	// Only an unpublished intent is certainly never started. Once publication
+	// begins, retain scratch even if reservation or the runner returns an error.
+	defer func() {
+		if in.PretestScratch != "" {
+			if _, err := os.Lstat(filepath.Join(dir, "intent.json")); os.IsNotExist(err) {
+				workerRemovePretestScratch(in.PretestScratch)
+			} else if prepareErr != nil {
+				in.RunID, in.JobID = s.Result.RunID, name
+				workerFinishPretestScratch(in, workerAttemptResult{}, false)
+			}
+		}
+	}()
+
 	if w.Stage == "verify" || w.Stage == "integrate" {
 		in.Review = w.Review
 		binding, _, err := deliveryReadBinding(w.CandidateBinary, 64<<20)
@@ -287,7 +300,12 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 		in.Argv = append(in.Argv, extra...)
 		in.Argv = append(in.Argv, "-c", "model_reasoning_effort="+strconv.Quote(s.Request.Delivery.ReasoningEffort), "exec", "--ignore-user-config", "--ignore-rules", "--model", s.Request.Runtime.Model, "--json", "--output-schema", schema.Locator, "-o", filepath.Join(dir, "answer.json"), "-")
 	} else if w.Stage == "pretest" {
-		policy, err := workerVerifierPolicy(d, s, dir, filepath.Join(dir, "tmp"))
+		scratch, err := automaticScratch("pretest-" + s.Result.RunID + "-" + name)
+		if err != nil {
+			return fmt.Errorf("headless pretest scratch preparation: %w", err)
+		}
+		in.PretestScratch = scratch
+		policy, err := workerVerifierPolicy(d, s, dir, scratch)
 		if err != nil {
 			return err
 		}
@@ -300,7 +318,7 @@ func workerPrepareAttempt(d Dependencies, s workflowState) error {
 			return err
 		}
 		in.Argv = []string{"/usr/bin/sandbox-exec", "-f", policy, "/bin/sh", script}
-		in.Environment = []string{"HOME=" + filepath.Join(dir, "home"), "TMPDIR=" + filepath.Join(dir, "tmp"), "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + w.CandidateBinary, "PLY_CANDIDATE_OID=" + w.CandidateOID, "PLY_CANDIDATE_TREE=" + w.CandidateTree}
+		in.Environment = []string{"HOME=" + filepath.Join(dir, "home"), "TMPDIR=" + scratch, "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + w.CandidateBinary, "PLY_CANDIDATE_OID=" + w.CandidateOID, "PLY_CANDIDATE_TREE=" + w.CandidateTree}
 		in.TimeoutSeconds = s.Request.Delivery.Agreement.Acceptance.TimeoutSeconds
 	} else if !workerNativeKind(w.Stage) {
 		return fmt.Errorf("unknown worker stage %q", w.Stage)
