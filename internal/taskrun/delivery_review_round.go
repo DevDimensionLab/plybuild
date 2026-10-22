@@ -103,28 +103,29 @@ type DeliveryReviewStatus struct {
 }
 
 type DeliveryReviewRoundStatus struct {
-	Round           int                     `json:"round"`
-	CandidateOID    string                  `json:"candidate_oid"`
-	CandidateTree   string                  `json:"candidate_tree"`
-	Coordinator     string                  `json:"coordinator"`
-	State           string                  `json:"state"`
-	Decision        string                  `json:"decision,omitempty"`
-	Summary         string                  `json:"summary,omitempty"`
-	ReviewerClaim   string                  `json:"reviewer_claim,omitempty"`
-	ReviewerSession string                  `json:"reviewer_session_id,omitempty"`
-	Findings        []DeliveryReviewFinding `json:"findings"`
-	EvidenceGaps    []string                `json:"evidence_gaps"`
-	Current         bool                    `json:"current"`
-	ReviewerStart   string                  `json:"reviewer_start"`
-	ReviewerPane    string                  `json:"reviewer_pane,omitempty"`
-	StartDetail     string                  `json:"start_detail,omitempty"`
-	Previous        *FileBinding            `json:"previous"`
-	Supersedes      *FileBinding            `json:"supersedes"`
-	Request         FileBinding             `json:"request"`
-	Brief           FileBinding             `json:"brief"`
-	Context         FileBinding             `json:"context"`
-	Template        FileBinding             `json:"template"`
-	Result          *FileBinding            `json:"result"`
+	Round              int                               `json:"round"`
+	CandidateOID       string                            `json:"candidate_oid"`
+	CandidateTree      string                            `json:"candidate_tree"`
+	Coordinator        string                            `json:"coordinator"`
+	State              string                            `json:"state"`
+	Decision           string                            `json:"decision,omitempty"`
+	Summary            string                            `json:"summary,omitempty"`
+	ReviewerClaim      string                            `json:"reviewer_claim,omitempty"`
+	ReviewerSession    string                            `json:"reviewer_session_id,omitempty"`
+	Findings           []DeliveryReviewFinding           `json:"findings"`
+	EvidenceGaps       []string                          `json:"evidence_gaps"`
+	Current            bool                              `json:"current"`
+	ReviewerStart      string                            `json:"reviewer_start"`
+	ReviewerPane       string                            `json:"reviewer_pane,omitempty"`
+	StartupDiagnostics *DeliveryReviewStartupDiagnostics `json:"startup_diagnostics,omitempty"`
+	StartDetail        string                            `json:"start_detail,omitempty"`
+	Previous           *FileBinding                      `json:"previous"`
+	Supersedes         *FileBinding                      `json:"supersedes"`
+	Request            FileBinding                       `json:"request"`
+	Brief              FileBinding                       `json:"brief"`
+	Context            FileBinding                       `json:"context"`
+	Template           FileBinding                       `json:"template"`
+	Result             *FileBinding                      `json:"result"`
 }
 
 var deliveryReviewRoundName = regexp.MustCompile(`^[0-9]{3}$`)
@@ -718,6 +719,7 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 		x.Current = source.State == "observed" && source.Clean && source.OID == x.CandidateOID && source.Tree == x.CandidateTree
 		start := deliveryReviewStartState(r.Dir)
 		x.ReviewerStart, x.StartDetail = start.State, start.Detail
+		x.StartupDiagnostics = deliveryReviewDiagnostics(s, r.Dir, start)
 		if start.Pane != nil {
 			x.ReviewerPane = start.Pane.PaneID
 		}
@@ -757,7 +759,7 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 		out.Next = WorkflowAction{"coordinator", fmt.Sprintf("Review round %d has no reviewer yet; start it with `ply workflow execute review %s --coordinator <claim>`.", current.Round, id)}
 	case current.State == "requested" && current.ReviewerStart != "started":
 		out.CurrentCandidate = "review_requested"
-		out.Next = WorkflowAction{"coordinator", fmt.Sprintf("Review round %d stopped: %s. After inspection, `ply workflow execute review %s --coordinator <claim> --new-round` starts a fresh reviewer for this candidate.", current.Round, current.StartDetail, id)}
+		out.Next = WorkflowAction{"coordinator", fmt.Sprintf("Review round %d stopped: %s. First inspect startup_diagnostics.inspection_argv (read-only). Provider liveness remains unknown; missing session or shell-only observations do not prove exit. Preserve live/unknown agents and refusals. Only after resolving the previous effect, `ply workflow execute review %s --coordinator <claim> --new-round` starts a fresh reviewer for this candidate.", current.Round, current.StartDetail, id)}
 	case current.State == "requested":
 		out.CurrentCandidate = "review_requested"
 		out.Next = WorkflowAction{"reviewer", fmt.Sprintf("Review round %d is open in pane %s; the reviewer follows %s and returns with review-return.", current.Round, current.ReviewerPane, current.Brief.Locator)}

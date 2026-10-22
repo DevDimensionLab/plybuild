@@ -116,7 +116,7 @@ func deliveryReviewStartState(dir string) deliveryReviewStart {
 	if ok, e := deliveryReviewRead(filepath.Join(dir, "tab.json"), &pane); e != nil || !ok {
 		return deliveryReviewStart{State: "start_unknown", Detail: "the reviewer tab outcome is unknown; inspect Herdr, it is not replayed"}
 	}
-	out := deliveryReviewStart{State: "start_unknown", Pane: &pane, Detail: "the reviewer started in pane " + pane.PaneID + " but its session is not bound; inspect that tab, it is not replayed"}
+	out := deliveryReviewStart{State: "start_unknown", Pane: &pane, Detail: "the reviewer tab was created in pane " + pane.PaneID + " but its session is not bound; inspect that tab, it is not replayed"}
 	var agent deliveryReviewAgent
 	if ok, e := deliveryReviewRead(filepath.Join(dir, "agent.json"), &agent); e != nil || !ok {
 		return out
@@ -190,17 +190,52 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 	}
 	// A lost start reply is followed only by observation of this one pane.
 	_, startErr := deliveryReviewCall(d, s, deadline, argv...)
+	if facts := deliveryReviewFailureFacts(startErr); facts != nil {
+		if _, e = workflowKeep(d, filepath.Join(r.Dir, "start-failure.json"), facts); e != nil {
+			return e
+		}
+	}
 	owner := deliveryOwnerSession(s)
 	bootstrapped := false
 	var last error
+	var firstObservationFailure *deliveryReviewFailure
+	var lastSession, lastStatus string
 	for {
 		a, e := deliveryReviewAgentGet(d, s, pane, l.AgentName, l.Provider, deadline)
 		last = e
+		observation := deliveryReviewObservation{Outcome: "unavailable", TaskPromptStage: "not_attempted", BootstrapPromptStage: "not_attempted", Failure: deliveryReviewFailureFacts(e)}
+		if observation.Failure != nil && firstObservationFailure == nil {
+			firstObservationFailure = observation.Failure
+		}
+		observation.FirstFailure = firstObservationFailure
+		if bootstrapped {
+			observation.BootstrapPromptStage = "attempted"
+		}
+		if e == nil {
+			observation.Outcome = "observed"
+			if a.Session != nil {
+				observation.SessionID = a.Session.Value
+			}
+			switch a.Status {
+			case "idle", "working", "starting", "stopped":
+				observation.AgentStatus = a.Status
+			}
+		}
+		if observation.SessionID != "" {
+			lastSession, lastStatus = observation.SessionID, observation.AgentStatus
+		}
+		observation.SessionID, observation.AgentStatus = lastSession, lastStatus
 		if e == nil && a.Session != nil {
 			if a.Session.Value == owner {
+				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
+					return e
+				}
 				return workflowError(4, "the started reviewer reports the owner's own session; an independent review needs a distinct session")
 			}
 			if workflowSettled(a) {
+				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
+					return e
+				}
 				bound := deliveryReviewAgent{"ply.workflow.review-agent", 1, s.Result.RunID, r.Request.Round, pane, l.AgentName, l.Provider, a.Session.Value, owner, d.Now().UTC().Format(time.RFC3339Nano)}
 				if _, e = workflowKeep(d, filepath.Join(r.Dir, "agent.json"), bound); e != nil {
 					return e
@@ -217,6 +252,9 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 			_, _ = deliveryReviewCall(d, s, deadline, bootstrap...)
 		}
 		if !time.Now().Before(deadline) {
+			if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
+				return e
+			}
 			detail := "reviewer session was not observed before the startup deadline; inspect pane " + pane.PaneID + ", the start is not replayed"
 			if startErr != nil {
 				detail += " (start reply: " + startErr.Error() + ")"

@@ -20,6 +20,10 @@ type HerdrCallError struct {
 	Class        string
 	ProviderCode string
 	ReadOnly     bool
+	Exit         string
+	StdoutBytes  int64
+	StderrBytes  int64
+	Truncated    bool
 	// ObserverDeadline distinguishes the caller's shorter observation window
 	// from the independent per-request budget. It never describes provider life.
 	ObserverDeadline bool
@@ -82,7 +86,7 @@ func workflowCallFailure(args []string, contextErr, processErr error, stdout, st
 		consequence = "observation unavailable; no retry was sent"
 	}
 	cause := &Error{Code: "workflow_run", Exit: 5, Detail: fmt.Sprintf("Herdr %s failed: class=%s exit=%s provider_code=%s stdout_bytes=%d stderr_bytes=%d truncated=%t; %s", phase, class, exit, code, stdout.bytes, stderr.bytes, stdout.overflow || stderr.overflow, consequence)}
-	return &HerdrCallError{Phase: phase, Class: class, ProviderCode: code, ReadOnly: readOnly, cause: cause}
+	return &HerdrCallError{Phase: phase, Class: class, ProviderCode: code, ReadOnly: readOnly, Exit: exit, StdoutBytes: stdout.bytes, StderrBytes: stderr.bytes, Truncated: stdout.overflow || stderr.overflow, cause: cause}
 }
 
 func workflowFailureProviderCode(stdout, stderr workflowLimitedOutput) string {

@@ -67,3 +67,11 @@ func TestDeliveryStatusShowsReviewFindingsAndNextActor(t *testing.T) {
 		}
 	}
 }
+
+func TestAL33TextShowsReviewerInspection(t *testing.T) {
+	var out bytes.Buffer
+	writeDeliveryStatus(&out, &taskrun.DeliveryStatus{Review: &taskrun.DeliveryReviewStatus{Rounds: []taskrun.DeliveryReviewRoundStatus{{Round: 1, ReviewerStart: "start_unknown", StartupDiagnostics: &taskrun.DeliveryReviewStartupDiagnostics{StartAttempt: "attempted", SessionBinding: "not_bound", TaskPrompt: "not_attempted", ProviderLiveness: "unknown", InspectionArgv: [][]string{{"/path with space/herdr", "pane", "process-info", "--pane", "w-fixture:r1"}}}}}}})
+	if !strings.Contains(out.String(), "'process-info' '--pane' 'w-fixture:r1'") || !strings.Contains(out.String(), "provider_liveness=unknown") {
+		t.Fatalf("no actionable inspection: %s", out.String())
+	}
+}
