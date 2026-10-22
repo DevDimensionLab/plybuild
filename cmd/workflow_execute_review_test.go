@@ -28,6 +28,16 @@ func TestExecuteReviewIsOneCoordinatorOperation(t *testing.T) {
 			t.Errorf("missing review-return selector %s", flag)
 		}
 	}
+	var help bytes.Buffer
+	ret.SetOut(&help)
+	if err := ret.Help(); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"summary: 1-2000 Unicode codepoints", "findings[].summary: 1-600 Unicode codepoints", "256 KiB (262144 bytes)"} {
+		if !strings.Contains(help.String(), want) {
+			t.Errorf("review-return help lacks %q", want)
+		}
+	}
 	verify, _, err := root.Find([]string{"verify"})
 	if err != nil {
 		t.Fatal(err)

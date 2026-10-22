@@ -13,6 +13,12 @@ test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 test -z "$(git status --porcelain)"
 "$PLY_CANDIDATE_BINARY" version --format json
+help="$TMPDIR/al32-review-return-help.txt"
+"$PLY_CANDIDATE_BINARY" workflow execute review-return --help >"$help"
+cat "$help"
+for phrase in 'summary: 1-2000 Unicode codepoints' 'findings[].summary: 1-600 Unicode codepoints' '256 KiB (262144 bytes)'; do
+ grep -F -q "$phrase" "$help"
+done
 # Generated brief/template and native parser, with modeled fixture state only.
 # Reuse AL13 long-prose/control coverage without a real reviewer or process probe.
 log="$TMPDIR/al32-tests.log"
@@ -26,5 +32,6 @@ fi
 for name in TestAL32GeneratedReviewReturnLimits TestAL13ReviewReturnProseParser; do
  grep -q "^--- PASS: $name " "$log"
 done
+go test -v -count=1 ./cmd -run '^TestExecuteReviewIsOneCoordinatorOperation$'
 git diff --check
 test -z "$(git status --porcelain)"

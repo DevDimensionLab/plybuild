@@ -396,6 +396,13 @@ func deliveryReviewTemplate() map[string]any {
 	return map[string]any{"kind": "ply.workflow.review-return", "schema_version": 1, "reviewer_claim": "", "reviewer_session_id": "", "decision": "passed | changes_requested | blocked", "summary": "", "findings": []any{map[string]any{"severity": "low | medium | high | critical", "summary": "", "evidence": ""}}, "evidence_gaps": []any{}}
 }
 
+// DeliveryReviewReturnGuidance describes existing input limits in both the brief and CLI help.
+const DeliveryReviewReturnGuidance = "Return field limits (after outer whitespace is trimmed):\n" +
+	"- summary: 1-2000 Unicode codepoints on one line, with no control characters.\n" +
+	"- findings[].summary: 1-600 Unicode codepoints on one line, with no control characters.\n" +
+	"- Optional reviewer_claim and reviewer_session_id: at most 256 Unicode codepoints each on one line, with no control characters. At most 100 findings and 100 evidence gaps.\n" +
+	"These short-field limits count Unicode codepoints, not UTF-8 bytes. The separate total JSON file limit is 256 KiB (262144 bytes). Put full explanations and evidence links in findings[].evidence or evidence_gaps: these prose fields may contain ordinary long text, paragraphs and tabs within that total file budget; no manual splitting is needed. Evidence gaps must be nonempty; finding evidence is optional. Other control characters are refused.\n\n"
+
 func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliveryReviewRecord, root, executable, template, context string) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Independent review round %d\n\n", r.Round)
@@ -409,11 +416,7 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 	b.WriteString("\nReview exactly this candidate against the Goal and Spec: the diff from the base, tests and actual evidence. " + deliveryReviewerTestMandate + "\n")
 	fmt.Fprintf(&b, "Keep the candidate exact while testing. This pane runs with GOFLAGS=%s: Go modules stay readonly, so never pass -mod=mod, run go mod tidy, go get or change global Go or provider configuration. After the tests, `git -C %s status --porcelain` must print nothing and `git -C %s rev-parse HEAD` must print %s. If not, Ply cannot confirm an exact-candidate pass from the current source: Never reset, clean or stash it; return blocked or changes_requested with the observed status and diff. Ply refuses passed while the Task worktree is dirty or at another HEAD.\n", deliveryReviewGoFlags(), ShellQuote(s.Observed.Target.WorktreeLocator), ShellQuote(s.Observed.Target.WorktreeLocator), r.CandidateOID)
 	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return.\n\n")
-	b.WriteString("Return field limits (after outer whitespace is trimmed):\n" +
-		"- summary: 1-2000 Unicode codepoints on one line, with no control characters.\n" +
-		"- findings[].summary: 1-600 Unicode codepoints on one line, with no control characters.\n" +
-		"- Optional reviewer_claim and reviewer_session_id: at most 256 Unicode codepoints each on one line, with no control characters. At most 100 findings and 100 evidence gaps.\n" +
-		"These short-field limits count Unicode codepoints, not UTF-8 bytes. The separate total JSON file limit is 256 KiB (262144 bytes). Put full explanations and evidence links in findings[].evidence or evidence_gaps: these prose fields may contain ordinary long text, paragraphs and tabs within that total file budget; no manual splitting is needed. Evidence gaps must be nonempty; finding evidence is optional. Other control characters are refused.\n\n")
+	b.WriteString(DeliveryReviewReturnGuidance)
 	fmt.Fprintf(&b, "Copy %s to your own file and fill in the decision, summary, findings and evidence gaps (reviewer_claim and reviewer_session_id are optional: Ply binds the session it started for you). Return from this reviewer pane, inside the workspace %s:\n\n", template, root)
 	fmt.Fprintf(&b, "    %s workflow execute review-return %s --context %s --file <your-review.json>\n\n", ShellQuote(executable), r.RunID, ShellQuote(context))
 	b.WriteString("Ply assigns finding IDs and ordering. Repeating the same file is safe; a changed judgment for this candidate needs a new round from the coordinator.\n")
