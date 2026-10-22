@@ -26,7 +26,13 @@ func al33FailedReview(t *testing.T, model ...map[string]any) (deliveryFixture, W
 if cmd == ["agent", "start"] and "--pane" in args and args[args.index("--pane")+1].startswith("w-fixture:r"):
     sys.stderr.write(model.get("al33_start_stderr", "SECRET-child-message"))
     raise SystemExit(1)
+if cmd == ["agent", "prompt"] and args[2].startswith("w-fixture:r") and model.get("al33_bootstrap"):
+    time.sleep(1) # only the synthetic bootstrap consumes the 400ms fixture budget
+    raise SystemExit(0)
 if cmd == ["agent", "get"] and args[2].startswith("w-fixture:r"):
+    if model.get("al33_bootstrap"):
+        print(json.dumps({"result":{"agent":{"workspace_id":"w-fixture","tab_id":"tab-review-1","pane_id":"w-fixture:r1","terminal_id":"terminal-review-1","name":model["al33_name"],"agent":"codex","agent_status":"idle","interactive_ready":True,"agent_session":None}}}))
+        raise SystemExit(0)
     if model.get("al33_live"):
         print(json.dumps({"result":{"agent":{"workspace_id":"w-fixture","tab_id":"tab-review-1","pane_id":"w-fixture:r1","terminal_id":"terminal-review-1","name":model["al33_name"],"agent":"codex","agent_status":"working","agent_session":{"agent":"codex","kind":"id","value":"synthetic-live-session"}}}}))
         raise SystemExit(0)
@@ -175,5 +181,25 @@ func TestAL33HistoricalReviewerEvidenceRemainsUnknown(t *testing.T) {
 	writeAny(t, dir, "session-observation.json", deliveryReviewObservation{Outcome: "unavailable"})
 	if d := reviewRoundLatest(t, mustShow(t, f, o.RunID)).StartupDiagnostics; d.TaskPrompt != "not_recorded" {
 		t.Fatalf("failed read inferred no attempt: %+v", d)
+	}
+}
+
+func TestAL33BootstrapDeadlineRetainsReservedPromptStage(t *testing.T) {
+	f, o, d := al33FailedReview(t, map[string]any{"al33_bootstrap": true})
+	round := reviewRoundLatest(t, mustShow(t, f, o.RunID))
+	diag := round.StartupDiagnostics
+	if diag.LastObservation == nil || diag.LastObservation.BootstrapPromptStage != "attempted" || diag.BootstrapPrompt != "attempted" || diag.LastObservation.TaskPromptStage != "not_attempted" || diag.TaskPrompt != "not_attempted" {
+		t.Fatalf("bootstrap reservation contradicts retained observation: %+v / %+v", diag, diag.LastObservation)
+	}
+	prompts := reviewRoundArgv(t, f, "agent prompt")
+	if len(prompts) != 2 || prompts[1][3] != workflowBootstrapPrompt {
+		t.Fatalf("expected owner prompt and one tool-free bootstrap only: %q", prompts)
+	}
+	if _, err := WorkflowDeliveryRequestReview(d, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "synthetic coordinator"}); err != nil {
+		t.Fatal(err)
+	}
+	mustShow(t, f, o.RunID)
+	if len(reviewRoundArgv(t, f, "agent prompt")) != len(prompts) {
+		t.Fatal("bootstrap or task prompt replayed")
 	}
 }

@@ -249,6 +249,7 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 				return e
 			}
 			bootstrapped = true
+			observation.BootstrapPromptStage = "attempted"
 			_, _ = deliveryReviewCall(d, s, deadline, bootstrap...)
 		}
 		if !time.Now().Before(deadline) {
