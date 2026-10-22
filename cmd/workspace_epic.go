@@ -25,6 +25,7 @@ func newWorkspaceEpicCommand(dependencies workspace.Dependencies) *cobra.Command
 	addWorkspaceEpicBaseCommands(command, dependencies)
 	addWorkspaceEpicReadCommands(command, dependencies)
 	command.AddCommand(newWorkspaceLifecycleCommand(dependencies, "epic"))
+	command.AddCommand(newWorkspaceExternalIssuesCommand(dependencies, "epic"))
 	return command
 }
 
@@ -155,6 +156,11 @@ func renderEpicBinding(command *cobra.Command, epic workspace.EpicRecord) error 
 	return err
 }
 func renderEpicShow(command *cobra.Command, result workspace.EpicReadbackResult) error {
+	if result.ExternalIssues != nil {
+		if err := renderExternalIssues(command.OutOrStdout(), *result.ExternalIssues); err != nil {
+			return err
+		}
+	}
 	if _, err := fmt.Fprintf(command.OutOrStdout(), "Epic %s: %s\n", result.Epic.ID, result.Epic.Title); err != nil {
 		return err
 	}

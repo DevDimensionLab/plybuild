@@ -1128,3 +1128,5 @@ can use the skill: confirm that the Claude and Codex entry points actually
 discover it, or that a readable mandate pointer such as the existing
 `~/.agents/AGENTS.md` names it. That check is part of installation and needs no
 broad provider configuration change.
+
+Offline Jira and GitHub issue metadata for native Epics and Tasks: [external issue references](docs/external-issues.md).

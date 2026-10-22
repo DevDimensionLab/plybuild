@@ -44,6 +44,7 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 	addWorkspaceTaskJournalCommands(command, dependencies)
 	addWorkspaceTaskProgressCommands(command, dependencies)
 	command.AddCommand(newWorkspaceLifecycleCommand(dependencies, "task"))
+	command.AddCommand(newWorkspaceExternalIssuesCommand(dependencies, "task"))
 	return command
 }
 
@@ -405,6 +406,11 @@ func renderTaskMutation(command *cobra.Command, result workspace.TaskMutationRes
 	return err
 }
 func renderTaskShow(command *cobra.Command, result workspace.TaskReadbackResult) error {
+	if result.ExternalIssues != nil {
+		if err := renderExternalIssues(command.OutOrStdout(), *result.ExternalIssues); err != nil {
+			return err
+		}
+	}
 	if _, err := fmt.Fprintf(command.OutOrStdout(), "Task %s: %s\nDescription: %s\nParent Epic: %s (%s)\nProject / repository: %s / %s\nGit common directory: %s\n", result.Task.ID, result.Task.Title, result.Task.Description, result.Epic.ID, result.Epic.Title, result.Task.ProjectID, result.Task.RepoID, result.Task.GitCommonDir); err != nil {
 		return err
 	}

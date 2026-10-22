@@ -24,15 +24,16 @@ type EpicBaseSummary struct {
 	Freshness string `json:"freshness"`
 }
 type EpicReadbackResult struct {
-	Creation  *EpicCreateOperation
-	Lifecycle LifecycleState
-	Base      []EpicBaseSummary
-	Workspace string
-	Epic      EpicRecord
-	Observed  []EpicObservedRepo
-	Freshness []EpicFreshnessRepo
-	Ready     bool
-	Reasons   []string
+	ExternalIssues *ExternalIssuesReadback
+	Creation       *EpicCreateOperation
+	Lifecycle      LifecycleState
+	Base           []EpicBaseSummary
+	Workspace      string
+	Epic           EpicRecord
+	Observed       []EpicObservedRepo
+	Freshness      []EpicFreshnessRepo
+	Ready          bool
+	Reasons        []string
 }
 
 type TaskObservedWorktree struct {
@@ -49,6 +50,7 @@ type TaskFreshnessWorktree struct{ Locator, Ref, OID, Tree, GitCommonDir, Clean,
 type TaskFreshnessSource struct{ Ref, OID, Tree, CheckedOutAt string }
 type TaskFreshnessTarget struct{ Kind, Locator, Ref, OID, Tree, GitCommonDir, Clean, InventoryMatch string }
 type TaskReadbackResult struct {
+	ExternalIssues                 *ExternalIssuesReadback
 	Lifecycle                      LifecycleState
 	Content                        canonicaljson.Object
 	Workspace                      string
@@ -96,6 +98,10 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 		return EpicReadbackResult{}, err
 	}
 	result := EpicReadbackResult{Workspace: root, Epic: *epic, Ready: true, Reasons: []string{}, Lifecycle: lifecycles.Epic(id)}
+	result.ExternalIssues, err = externalIssuesProjection(root, "epic", string(id), registry)
+	if err != nil {
+		return EpicReadbackResult{}, err
+	}
 	result.Creation, _ = findEpicCreate(registry, id)
 	var projects []ProjectRecord
 	var repos []RepoRecord
@@ -211,6 +217,10 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 		return TaskReadbackResult{}, err
 	}
 	result.Lifecycle = lifecycles.Task(id)
+	result.ExternalIssues, err = externalIssuesProjection(root, "task", string(id), registry)
+	if err != nil {
+		return TaskReadbackResult{}, err
+	}
 	if operation, _ := findOperation(registry, id); operation != nil {
 		copyOperation := *operation
 		result.Operation = &copyOperation
@@ -402,12 +412,12 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 			}
 		}
 	}
-	return canonicaljson.Marshal(readbackWithLifecycle(value, result.Lifecycle))
+	return canonicaljson.Marshal(readbackWithExternalIssues(readbackWithLifecycle(value, result.Lifecycle), result.ExternalIssues))
 }
 
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {
 	withCloseout := func(value canonicaljson.Object) canonicaljson.Object {
-		value = readbackWithLifecycle(value, result.Lifecycle)
+		value = readbackWithExternalIssues(readbackWithLifecycle(value, result.Lifecycle), result.ExternalIssues)
 		if result.Closeout != nil {
 			for i := range value {
 				if value[i].Name == "closeout" {
@@ -562,4 +572,23 @@ func freshSourceCanonical(value TaskFreshnessSource) canonicaljson.Value {
 }
 func freshTargetCanonical(value TaskFreshnessTarget) canonicaljson.Value {
 	return canonicaljson.Object{{Name: "kind", Value: value.Kind}, {Name: "locator", Value: value.Locator}, {Name: "ref", Value: value.Ref}, {Name: "oid", Value: value.OID}, {Name: "tree", Value: value.Tree}, {Name: "git_common_dir", Value: value.GitCommonDir}, {Name: "clean", Value: value.Clean}, {Name: "inventory_match", Value: value.InventoryMatch}}
+}
+
+// Absent external metadata leaves existing views byte-compatible.
+func externalIssuesProjection(root, kind, id string, r WorkItemRegistry) (*ExternalIssuesReadback, error) {
+	s, err := readExternalIssues(root)
+	if err != nil {
+		return nil, err
+	}
+	out := s.readback(root, kind, id, r)
+	if len(out.Refs) == 0 && out.Effective == nil && len(out.Events) == 0 {
+		return nil, nil
+	}
+	return &out, nil
+}
+func readbackWithExternalIssues(value canonicaljson.Object, issues *ExternalIssuesReadback) canonicaljson.Object {
+	if issues == nil {
+		return value
+	}
+	return append(value, canonicaljson.Member{Name: "external_issues", Value: structCanonical(*issues)})
 }
