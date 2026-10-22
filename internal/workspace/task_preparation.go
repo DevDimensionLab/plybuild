@@ -36,7 +36,7 @@ func preparationReadback(d Dependencies, root string, r WorkItemRegistry, p Task
 	if o, e := d.WorkGit.ObserveWorktree(p.Plan.WorktreePath); e == nil {
 		out.Observed = &o
 		out.Freshness = freshness(o.Locator == p.Plan.WorktreePath && o.Ref == "refs/heads/"+p.Plan.Branch && o.GitCommonDir == p.Plan.Target.GitCommonDir && o.InventoryMatch)
-		if !o.Clean || o.OID != p.Plan.ParentOID {
+		if !o.Clean || o.OID != prepareStartOID(p.Plan) {
 			out.Reasons = append(out.Reasons, QueueReason{"task_worktree_changed", "worktree has changed since preparation; the prepared outcome is historical"})
 		}
 	}
@@ -205,7 +205,37 @@ func PrepareTask(d Dependencies, in TaskPrepareInput) (TaskPreparationReadback, 
 				reg.TaskQueueEvents = append(reg.TaskQueueEvents, TaskQueueEvent{plan.QueueID, q.Revision + 1, "reserve", queueDigest(request), request, queueNow(d)})
 				return nil
 			}
-			effectErr := createTaskWorktreeLocked(d, root, projects, session, r, input, target, exists, &result, reserve)
+			var effectErr error
+			if plan.SourceMode == "adopted" {
+				op, _ := findOperation(r, plan.TaskID)
+				if op == nil || op.ID != plan.AdoptionID || op.Adoption == nil || op.Release != nil || op.State != "ready" || operationStartOID(*op) != plan.StartOID || operationStartTree(*op) != plan.StartTree {
+					return queueError("adoption_generation_stale", "preparation lost active adoption")
+				}
+				t, _ := findTask(r, plan.TaskID)
+				spec, e2 := registeredTaskSpec(d, root, r, plan.TaskID, plan.SpecID, &plan.Spec)
+				if e2 != nil {
+					return e2
+				}
+				if e2 = validateSpecImplementationBasis(d, projects, r, *t, contentFields(spec)["implementation_basis"], true); e2 != nil {
+					return e2
+				}
+				if _, e2 = adoptionWriters(d, plan.WorktreePath); e2 != nil {
+					return e2
+				}
+				if findPreparation(r, id) == nil {
+					if e = reserve(&r, *op); e != nil {
+						return e
+					}
+				}
+				for i := range r.TaskPreparations {
+					if r.TaskPreparations[i].ID == id {
+						r.TaskPreparations[i].Outcome = &TaskPreparationOutcome{Kind: "prepared", WorktreeID: op.WorktreeID, ObservedOID: plan.StartOID, ObservedTree: plan.StartTree, RecordedAtUTC: p.CreatedAtUTC}
+					}
+				}
+				effectErr = session.Publish(r)
+			} else {
+				effectErr = createTaskWorktreeLocked(d, root, projects, session, r, input, target, exists, &result, reserve)
+			}
 			after, readErr := session.Snapshot()
 			if readErr != nil {
 				out.State = "unknown"

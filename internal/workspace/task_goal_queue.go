@@ -104,11 +104,20 @@ func queueGoalEvaluation(d Dependencies, root string, r WorkItemRegistry, entry 
 		row.Reasons = queueReasons("task_goal_problem_changed", "queued goal no longer refers to the current problem")
 		return row
 	}
-	if task.Worktree != nil || task.WorktreeState != WorkItemUnbound || preparationForTask(r, task.ID) != nil {
+	adopted := false
+	if op, _ := findOperation(r, task.ID); op != nil && op.Adoption != nil && op.State == "ready" && op.Release == nil && op.Adoption.Plan.Goal == *entry.Goal {
+		adopted = true
+	}
+	if !adopted && adoptionReleased(r, task.ID) {
+		row.State = "adoption_released"
+		row.Reasons = queueReasons("adoption_released", "freshly adopt a source before executing this released Goal")
+		return row
+	}
+	if !adopted && (task.Worktree != nil || task.WorktreeState != WorkItemUnbound || preparationForTask(r, task.ID) != nil) {
 		row.Reasons = queueReasons("task_queue_task_bound", "Task already has a worktree or preparation")
 		return row
 	}
-	if op, _ := findOperation(r, task.ID); op != nil {
+	if op, _ := findOperation(r, task.ID); op != nil && !adopted {
 		row.Reasons = queueReasons("task_queue_task_bound", "Task already has an intent")
 		return row
 	}

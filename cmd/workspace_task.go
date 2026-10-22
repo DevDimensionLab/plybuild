@@ -9,17 +9,23 @@ import (
 )
 
 type workspaceTaskServices struct {
-	create         func(workspace.TaskCreateInput) (workspace.TaskMutationResult, error)
-	show           func(workspace.TaskID) (workspace.TaskReadbackResult, error)
-	list           func(workspace.TaskListFilters) (workspace.TaskListResult, error)
-	createWorktree func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
-	recordResult   func(workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error)
-	recordQA       func(workspace.TaskHumanQARecordInput) (workspace.TaskHumanQAMutationResult, error)
-	integrate      func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
+	adopt           func(workspace.TaskAdoptionInput, bool, string) (workspace.TaskAdoptionReadback, error)
+	releaseAdoption func(workspace.WorktreeOperationID, string, bool, string) (workspace.TaskAdoptionReadback, error)
+	create          func(workspace.TaskCreateInput) (workspace.TaskMutationResult, error)
+	show            func(workspace.TaskID) (workspace.TaskReadbackResult, error)
+	list            func(workspace.TaskListFilters) (workspace.TaskListResult, error)
+	createWorktree  func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
+	recordResult    func(workspace.TaskResultRecordInput) (workspace.TaskResultMutationResult, error)
+	recordQA        func(workspace.TaskHumanQARecordInput) (workspace.TaskHumanQAMutationResult, error)
+	integrate       func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
 }
 
 func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command {
-	command := newWorkspaceTaskCommandWithServices(workspaceTaskServices{create: func(input workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
+	command := newWorkspaceTaskCommandWithServices(workspaceTaskServices{adopt: func(in workspace.TaskAdoptionInput, apply bool, confirmation string) (workspace.TaskAdoptionReadback, error) {
+		return workspace.AdoptTaskWorktree(dependencies, in, apply, confirmation)
+	}, releaseAdoption: func(id workspace.WorktreeOperationID, reason string, apply bool, confirmation string) (workspace.TaskAdoptionReadback, error) {
+		return workspace.ReleaseTaskWorktreeAdoption(dependencies, id, reason, apply, confirmation)
+	}, create: func(input workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
 		return workspace.CreateTask(dependencies, input)
 	}, show: func(id workspace.TaskID) (workspace.TaskReadbackResult, error) {
 		return workspace.ShowTask(dependencies, id)
@@ -388,7 +394,7 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		_ = create.MarkFlagRequired(name)
 	}
 	setWorkFlagErrors(create)
-	command.AddCommand(create)
+	command.AddCommand(create, newTaskAdoptionCommand(services, false), newTaskAdoptionCommand(services, true))
 	return command
 }
 
@@ -420,6 +426,19 @@ func renderTaskShow(command *cobra.Command, result workspace.TaskReadbackResult)
 		}
 	} else if err := renderTaskWorktreeBlock(command, result.Task, result.Operation, result.ReadyForHandoff, result.Reasons); err != nil {
 		return err
+	}
+	for _, o := range result.Adoptions {
+		phase := "reserved"
+		if o.State == "ready" {
+			phase = "adopted"
+		}
+		if o.Release != nil {
+			phase = "released"
+		}
+		fmt.Fprintf(command.OutOrStdout(), "Adoption receipt: %s (%s; origin adopted)\nSource/start: %s %s@%s\nChosen parent: %s@%s\nPinned Goal: %s revision %d\n", o.ID, phase, o.TargetLocator, o.SourceRef, o.Adoption.Plan.Source.OID, o.ParentRef, o.ParentOID, o.Adoption.Plan.Goal.SpecID, o.Adoption.Plan.Goal.Spec.Revision)
+		if o.Release != nil {
+			fmt.Fprintf(command.OutOrStdout(), "Release: %s\nExecution fence: %s\nMetadata only: yes; Git effects: none; writer absence: not_required\nNext: preview a fresh adoption with the current source OID and valid current basis.\n", o.Release.Reason, o.Release.ExecutionFence)
+		}
 	}
 	if result.Closeout != nil {
 		if _, err := fmt.Fprintf(command.OutOrStdout(), "Closeout: %s; phase %s; worktree %s\nIntegration operation: %s\n", result.Closeout.State, result.Closeout.Phase, result.Closeout.ResourceState, result.Closeout.OperationID); err != nil {

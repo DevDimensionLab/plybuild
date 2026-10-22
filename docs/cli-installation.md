@@ -157,3 +157,11 @@ rather than executing a generated shell/Python profile. The existing generic
 it cannot itself supply the retained self-hosted byte source or destination
 backup transaction. The native delivery reader supplies those bindings and a
 bounded installed CLI probe. No new service or approval platform is involved.
+
+Task worktree adoption requires a format-7 reader and the explicit native
+`ply workspace registry upgrade --to-format 7 --package /absolute/release --sha256 sha256:MANIFEST --check`
+transition from format 6. Apply only its exact confirmation after every consumer
+has a compatible delivered reader. The transition preserves a byte-exact backup
+and all existing records. Adoption itself never upgrades the shared registry.
+See [Task source adoption](task-worktree-adoption.md) for Goal-first adoption,
+metadata-only pre-start release and ordinary delivery.

@@ -203,6 +203,9 @@ func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, 
 
 func validateExecutionGoalOrigin(d Dependencies, root string, r WorkItemRegistry, task TaskID, spec canonicaljson.Value) error {
 	m := contentFields(spec)
+	if op, _ := findOperation(r, task); op != nil && op.Adoption != nil && m["implementation_basis"] != nil && !isTaskGoalSpec(spec) && (contentInt(m, "schema_version") != 2 || contentString(m, "contract_kind") != "execution") {
+		return queueError("adoption_requires_goal_execute", "adopted sources require native Goal execute; legacy execution publication is outside this first cut")
+	}
 	if contentInt(m, "schema_version") != 2 || contentString(m, "contract_kind") != "execution" {
 		return nil
 	}
@@ -247,8 +250,14 @@ func validateExecutionGoalOrigin(d Dependencies, root string, r WorkItemRegistry
 	if !contentTypedEqual(valueRevision(previous), p.PreviousSpec) {
 		return queueError("task_goal_binding_conflict", "execution request differs from its preserved predecessor Spec")
 	}
+	if p.SourceMode == "adopted" {
+		o, _ := adoptionOperation(r, p.AdoptionID)
+		if o == nil || o.Adoption == nil || o.Execution == nil || goalExecutionDigest(*o.Execution) != goalExecutionDigest(p) || o.Release != nil || o.TaskID != task || o.Adoption.Plan.Goal != origin || operationStartOID(*o) != p.StartOID || operationStartTree(*o) != p.StartTree || o.ParentOID != p.ParentOID || o.ParentTree != p.ParentTree || o.TargetLocator != p.WorktreePath || o.SourceRef != "refs/heads/"+p.Branch {
+			return queueError("task_goal_binding_conflict", "execution differs from adoption receipt")
+		}
+	}
 	basis := contentFields(m["implementation_basis"])
-	if contentString(basis, "parent_oid") != p.ParentOID || contentString(basis, "parent_tree") != p.ParentTree || contentString(basis, "start_oid") != p.ParentOID || contentString(basis, "start_tree") != p.ParentTree || contentString(basis, "project_id") != string(p.Target.ProjectID) || contentString(basis, "repo_id") != string(p.Target.RepoID) || contentString(basis, "epic_id") != string(p.Target.EpicID) || contentString(basis, "git_common_dir") != p.Target.GitCommonDir || contentString(basis, "parent_worktree_id") != string(p.Target.ParentWorktreeID) || contentString(basis, "parent_ref") != p.Target.ParentRef {
+	if contentString(basis, "parent_oid") != p.ParentOID || contentString(basis, "parent_tree") != p.ParentTree || contentString(basis, "start_oid") != goalStartOID(p) || contentString(basis, "start_tree") != goalStartTree(p) || contentString(basis, "project_id") != string(p.Target.ProjectID) || contentString(basis, "repo_id") != string(p.Target.RepoID) || contentString(basis, "epic_id") != string(p.Target.EpicID) || contentString(basis, "git_common_dir") != p.Target.GitCommonDir || contentString(basis, "parent_worktree_id") != string(p.Target.ParentWorktreeID) || contentString(basis, "parent_ref") != p.Target.ParentRef {
 		return queueError("task_goal_binding_conflict", "execution base differs from its frozen request")
 	}
 	if !contentTypedEqual(valueRevision(m["problem"]), &goal.Problem) || contentString(m, "spec_id") != goal.Goal.SpecID {

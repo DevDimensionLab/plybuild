@@ -406,12 +406,19 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 			return e
 		}
 		op, _ := findOperation(r, p.TaskID)
+		if p.SourceMode == "" {
+			if p.AdoptionID != "" || p.StartOID != "" || p.StartTree != "" {
+				return fmt.Errorf("create preparation carries adoption")
+			}
+		} else if p.SourceMode != "adopted" || op == nil || op.Adoption == nil || op.ID != p.AdoptionID || op.Release != nil || p.StartOID != operationStartOID(*op) || p.StartTree != operationStartTree(*op) {
+			return fmt.Errorf("preparation differs from adoption")
+		}
 		if op == nil || op.ID != prep.OperationID || op.ParentOID != p.ParentOID || op.ParentTree != p.ParentTree || op.SourceRef != "refs/heads/"+p.Branch || op.TargetLocator != p.WorktreePath {
 			return fmt.Errorf("preparation operation differs")
 		}
 		if prep.Outcome != nil {
 			v := prep.Outcome
-			if v.Kind != "prepared" || v.WorktreeID != op.WorktreeID || v.ObservedOID != p.ParentOID || v.ObservedTree != p.ParentTree || op.State != "ready" || contentUTC(v.RecordedAtUTC) != nil {
+			if v.Kind != "prepared" || v.WorktreeID != op.WorktreeID || v.ObservedOID != prepareStartOID(p) || v.ObservedTree != prepareStartTree(p) || op.State != "ready" || contentUTC(v.RecordedAtUTC) != nil {
 				return fmt.Errorf("invalid prepared outcome")
 			}
 		}

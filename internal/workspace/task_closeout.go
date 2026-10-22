@@ -560,7 +560,7 @@ func pathWithin(parent, path string) bool {
 
 func closeoutProtectResources(d Dependencies, r WorkItemRegistry, repos []RepoRecord, p TaskCloseoutPlan) error {
 	s := p.Source
-	if s.OwnerKind != "task" || s.OwnerID != p.TaskID || s.Origin != "ply_created" || s.GitCommonDir == "" || s.Locator == p.ReturnLocator || s.Ref == p.TargetRef || pathWithin(s.Locator, p.WorkspaceRoot) || pathWithin(s.Locator, s.GitCommonDir) || pathWithin(s.Locator, p.Ownership.EvidenceLocator) {
+	if s.OwnerKind != "task" || s.OwnerID != p.TaskID || (s.Origin != "ply_created" && s.Origin != "adopted") || s.GitCommonDir == "" || s.Locator == p.ReturnLocator || s.Ref == p.TargetRef || pathWithin(s.Locator, p.WorkspaceRoot) || pathWithin(s.Locator, s.GitCommonDir) || pathWithin(s.Locator, p.Ownership.EvidenceLocator) {
 		return fmt.Errorf("source is not a distinct owned linked worktree")
 	}
 	for _, repo := range repos {

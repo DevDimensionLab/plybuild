@@ -104,7 +104,7 @@ func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, deli
 	}
 	plan := p.Preparation.Plan
 	b := projection.Basis
-	if p.Preparation.Outcome == nil || b.TaskID != plan.TaskID || b.TaskWorktreeID != p.Preparation.Outcome.WorktreeID || b.SpecID != plan.SpecID || b.Spec != plan.Spec || b.Problem != plan.Problem || b.Assessment != plan.Assessment || b.Selection != plan.Selection || projection.Worktree != plan.WorktreePath || projection.Ref != "refs/heads/"+plan.Branch || projection.OID != plan.ParentOID || draft.Binding.ProjectID != plan.Target.ProjectID || draft.Binding.RepoID != plan.Target.RepoID {
+	if p.Preparation.Outcome == nil || b.TaskID != plan.TaskID || b.TaskWorktreeID != p.Preparation.Outcome.WorktreeID || b.SpecID != plan.SpecID || b.Spec != plan.Spec || b.Problem != plan.Problem || b.Assessment != plan.Assessment || b.Selection != plan.Selection || projection.Worktree != plan.WorktreePath || projection.Ref != "refs/heads/"+plan.Branch || projection.OID != plan.SourceStartOID() || draft.Binding.ProjectID != plan.Target.ProjectID || draft.Binding.RepoID != plan.Target.RepoID {
 		return out, fmt.Errorf("handoff differs from the exact preparation")
 	}
 	obs, e := observeCreateBindings(d, draft)
@@ -139,10 +139,17 @@ func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, deli
 	if e != nil {
 		return out, e
 	}
-	for _, x := range []workspace.PlanWorktreeObservation{target, epic} {
-		if !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || x.OID != plan.ParentOID || x.Tree != plan.ParentTree || x.GitCommonDir != plan.Target.GitCommonDir {
+	for i, x := range []workspace.PlanWorktreeObservation{target, epic} {
+		oid, tree := plan.ParentOID, plan.ParentTree
+		if i == 0 {
+			oid, tree = plan.SourceStartOID(), plan.SourceStartTree()
+		}
+		if !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || x.OID != oid || x.Tree != tree || x.GitCommonDir != plan.Target.GitCommonDir {
 			return out, fmt.Errorf("target or Epic changed since preparation")
 		}
+	}
+	if e = s.ValidateTaskStartWriters(plan.TaskID); e != nil {
+		return out, e
 	}
 	return TaskRunObservation{Preparation: *p.Preparation, MarkerSHA256: obs.workspace.Observation.MarkerSHA256, RegistrySHA256: s.Registry.RawSHA256, DependencySHA256: out.DependencySHA256, Target: target, Epic: epic}, nil
 }

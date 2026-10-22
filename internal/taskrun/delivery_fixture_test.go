@@ -11,6 +11,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"gopkg.in/yaml.v3"
 )
 
 type deliveryFixture struct {
@@ -21,6 +22,7 @@ type deliveryFixture struct {
 }
 
 type deliveryFixtureOptions struct {
+	AdoptExisting     bool
 	Agreement         *workspace.DeliveryAgreement
 	AllowLocalInstall bool
 	ParentRef         string
@@ -110,6 +112,63 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	queue := workspace.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/goals", ProjectID: "ply", RepoID: "ply", EpicID: "epic", Entries: []workspace.TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}}, Recorder: workspace.TaskGoalQueueRecorder{ActorClaim: "fixture planner", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}, RegistryUpgrade: &workspace.TaskRegistryUpgrade{RegistrySHA256: r.RawSHA256, FromVersion: r.FormatVersion}}
 	if _, e = workspace.SetTaskQueue(w, writeAny(t, root, "goal-queue.json", queue)); e != nil {
 		t.Fatal(e)
+	}
+	if option.AdoptExisting {
+		for _, id := range []workspace.TaskID{"foreign-u", "foreign-v"} {
+			if _, e = workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: id, Title: string(id), Description: "Preserve foreign native history", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
+				t.Fatal(e)
+			}
+		}
+		q, e := workspace.ListTaskQueue(w, workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, false)
+		if e != nil {
+			t.Fatal(e)
+		}
+		queue.PublicationKey = "fixture/foreign-order"
+		queue.ExpectedRevision = q.Revision
+		queue.RegistryUpgrade = nil
+		queue.Entries = []workspace.TaskGoalQueueEntry{{TaskID: "foreign-u"}, {TaskID: "task", Goal: &goal}, {TaskID: "foreign-v"}}
+		if _, e = workspace.SetTaskQueue(w, writeAny(t, root, "foreign-queue.json", queue)); e != nil {
+			t.Fatal(e)
+		}
+		// Fresh isolated format-7 fixture, analogous to workspace epicCreateFixture.
+		r, e := w.WorkItems.Snapshot(root)
+		if e != nil {
+			t.Fatal(e)
+		}
+		boundary := func(from int) *workspace.RegistryFormatBoundary {
+			return &workspace.RegistryFormatBoundary{FromVersion: from, FromSHA256: "sha256:" + strings.Repeat("a", 64), ManifestSHA256: "sha256:" + strings.Repeat("b", 64), ReaderVersion: "v1.0.0", ReaderCommit: strings.Repeat("c", 40), ReaderSHA256: "sha256:" + strings.Repeat("d", 64)}
+		}
+		r.FormatVersion = 7
+		r.FormatBoundary = boundary(4)
+		r.EpicCreateBoundary = boundary(5)
+		r.AdoptionBoundary = boundary(6)
+		r.EpicCreateOperations = []workspace.EpicCreateOperation{}
+		raw, e := yaml.Marshal(r)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if e = os.WriteFile(filepath.Join(root, ".ply", "work-items.yaml"), raw, 0600); e != nil {
+			t.Fatal(e)
+		}
+		t.Chdir(epic)
+		w.SourceWriters = func(string) (workspace.SourceWriterObservation, error) {
+			return workspace.SourceWriterObservation{State: "absent", Method: "modeled_idle", Limitation: "Injected writer/provider fixture only; no actual OS or live acceptance."}, nil
+		}
+		source := filepath.Join(filepath.Dir(epic), "useful-existing")
+		runGit(t, epic, "worktree", "add", "-b", "useful-existing", source, oid)
+		if e = os.WriteFile(filepath.Join(source, "inherited.txt"), []byte("useful inherited delta\n"), 0600); e != nil {
+			t.Fatal(e)
+		}
+		runGit(t, source, "add", "inherited.txt")
+		runGit(t, source, "commit", "-m", "inherited useful work")
+		in := workspace.TaskAdoptionInput{TaskID: "task", Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Path: source, Ref: "refs/heads/useful-existing", ExpectedOID: gitOutput(t, source, "rev-parse", "HEAD")}
+		preview, e := workspace.AdoptTaskWorktree(w, in, false, "")
+		if e != nil {
+			t.Fatal(e)
+		}
+		if _, e = workspace.AdoptTaskWorktree(w, in, true, preview.Confirmation); e != nil {
+			t.Fatal(e)
+		}
 	}
 	if option.BeforePrepare != nil {
 		option.BeforePrepare(w, root, epic, goal)

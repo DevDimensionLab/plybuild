@@ -100,10 +100,29 @@ func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, 
 			row.BaseRevision = &n
 		}
 	}
-	if t.Worktree != nil || t.WorktreeState != WorkItemUnbound {
+	adopted := false
+	var source TaskGoalExecutePreview
+	if op, _ := findOperation(r, t.ID); op != nil && op.Adoption != nil && op.State == "ready" {
+		if contentString(contentFields(spec), "contract_kind") != "execution" {
+			return block(queueError("task_goal_requires_execute", "adopted sources require native Goal execution"))
+		}
+		if e = contentDecode(contentFields(spec)["execution_request"], &source); e != nil {
+			return block(e)
+		}
+		if e = validateAdoptedExecution(d, root, r, projects, source); e != nil {
+			return block(e)
+		}
+		adopted = true
+	}
+	if !adopted && adoptionReleased(r, t.ID) {
+		row.State = "adoption_released"
+		row.Reasons = queueReasons("adoption_released", "freshly adopt a source before execution")
+		return row, nil
+	}
+	if !adopted && (t.Worktree != nil || t.WorktreeState != WorkItemUnbound) {
 		return block(queueError("task_queue_task_bound", "Task already owns a worktree or intent; adoption is not supported"))
 	}
-	if op, _ := findOperation(r, t.ID); op != nil {
+	if op, _ := findOperation(r, t.ID); op != nil && !adopted {
 		return block(queueError("task_queue_task_bound", "Task has a preserved intent"))
 	}
 	state := taskContentState(r, t.ID)
@@ -134,18 +153,23 @@ func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, 
 	if e = d.WorkGit.ValidateBranch(branch); e != nil {
 		return block(e)
 	}
-	if _, exists, e := canonicalTaskTarget(d.Files, root, path); e != nil {
-		return block(e)
-	} else if exists {
-		return block(queueError("task_queue_path_conflict", "proposed Task path already exists"))
+	if adopted {
+		branch, path = source.Branch, source.WorktreePath
 	}
-	current := currentEpicBinding(r, ep, b)
-	if e = precheckParentAndResources(d, repo, current, "refs/heads/"+branch, path); e != nil {
-		return block(e)
-	}
-	for _, o := range r.WorktreeOperations {
-		if o.GitCommonDir == tgt.GitCommonDir && (o.SourceRef == "refs/heads/"+branch || o.TargetLocator == path) {
-			return block(queueError("task_queue_resource_conflict", "proposed resource belongs to an existing intent"))
+	if !adopted {
+		if _, exists, e := canonicalTaskTarget(d.Files, root, path); e != nil {
+			return block(e)
+		} else if exists {
+			return block(queueError("task_queue_path_conflict", "proposed Task path already exists"))
+		}
+		current := currentEpicBinding(r, ep, b)
+		if e = precheckParentAndResources(d, repo, current, "refs/heads/"+branch, path); e != nil {
+			return block(e)
+		}
+		for _, o := range r.WorktreeOperations {
+			if o.Release == nil && o.GitCommonDir == tgt.GitCommonDir && (o.SourceRef == "refs/heads/"+branch || o.TargetLocator == path) {
+				return block(queueError("task_queue_resource_conflict", "proposed resource belongs to an existing intent"))
+			}
 		}
 	}
 	obs, e := queueParentObservation(d, tgt)
@@ -158,6 +182,12 @@ func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, 
 	}
 	base := currentEpicBase(r, ep, b)
 	p := WorkspaceTaskPreparePlan{Kind: "WorkspaceTaskPreparePlan@1", SchemaVersion: 1, Workspace: workspace, Target: tgt, RegistryUpgrade: queueUpgrade(r), RegistryFormatVersion: r.FormatVersion, QueueID: qid, TaskID: t.ID, Selection: *entry.Selection, Problem: *valueRevision(sol["problem"]), SpecID: sid, Spec: *sr, Assessment: *valueDecision(sol["assessment"]), RequiredInputs: eval.RequiredInputs, BaseRevision: base.Revision, ParentOID: base.OID, ParentTree: base.Tree, Branch: branch, WorktreePath: path, ObservedParent: obs}
+	if adopted {
+		p.SourceMode = "adopted"
+		p.AdoptionID = source.AdoptionID
+		p.StartOID = source.StartOID
+		p.StartTree = source.StartTree
+	}
 	row.State = "ready"
 	row.Reasons = []QueueReason{}
 	return row, &p
@@ -403,7 +433,7 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 			return e
 		}
 		basis := contentFields(contentFields(eval.Spec)["implementation_basis"])
-		if contentString(basis, "parent_oid") != p.Plan.ParentOID || contentString(basis, "parent_tree") != p.Plan.ParentTree || contentString(basis, "start_oid") != p.Plan.ParentOID || contentString(basis, "start_tree") != p.Plan.ParentTree {
+		if contentString(basis, "parent_oid") != p.Plan.ParentOID || contentString(basis, "parent_tree") != p.Plan.ParentTree || contentString(basis, "start_oid") != prepareStartOID(p.Plan) || contentString(basis, "start_tree") != prepareStartTree(p.Plan) {
 			return queueError("task_queue_integrity_conflict", "prepare plan differs from selected implementation basis")
 		}
 		if !contentTypedEqual(eval.RequiredInputs, p.Plan.RequiredInputs) {
@@ -603,3 +633,19 @@ func sortQueueReasons(in []QueueReason) []QueueReason {
 	}
 	return out
 }
+
+func prepareStartOID(p WorkspaceTaskPreparePlan) string {
+	if p.SourceMode == "adopted" {
+		return p.StartOID
+	}
+	return p.ParentOID
+}
+func prepareStartTree(p WorkspaceTaskPreparePlan) string {
+	if p.SourceMode == "adopted" {
+		return p.StartTree
+	}
+	return p.ParentTree
+}
+
+func (p WorkspaceTaskPreparePlan) SourceStartOID() string  { return prepareStartOID(p) }
+func (p WorkspaceTaskPreparePlan) SourceStartTree() string { return prepareStartTree(p) }

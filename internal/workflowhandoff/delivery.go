@@ -327,7 +327,7 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		}
 		add("task-write", "filesystem_write", deliveryObject(map[string]any{"kind": "task_worktree"}), nil)
 		for _, v := range []struct{ kind, op string }{{"git_index_write", "update_index"}, {"git_commit", "create_commit"}, {"git_ref_write", "update_ref"}} {
-			add(v.kind, v.kind, deliveryObject(map[string]any{"kind": "git", "ref": "refs/heads/" + plan.Branch, "expected_before_oid": plan.ParentOID, "operation": v.op}), nil)
+			add(v.kind, v.kind, deliveryObject(map[string]any{"kind": "git", "ref": "refs/heads/" + plan.Branch, "expected_before_oid": plan.SourceStartOID(), "operation": v.op}), nil)
 		}
 		add("local-commands", "command_execute", deliveryObject(map[string]any{"kind": "command", "procedure_ids": []string{"implement"}, "verifier_ids": []string{"goal-acceptance"}}), nil)
 		for _, kind := range []string{"process_start"} {
@@ -367,7 +367,7 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		}
 		value := bridgeEnvelope("ply.workflow.handoff-draft")
 		value = replaceObjectMember(value, "schema_version", int64(3))
-		fields := map[string]any{"publication_key": publicationKey, "activity_key": publicationKey, "goal": goal, "recipient": map[string]any{"principal_id": "delivery-owner", "principal_kind": "human_started_agent", "runtime_constraints": []string{"actual-runtime-authority-required"}}, "binding_request": map[string]any{"project_id": plan.Target.ProjectID, "repo_id": plan.Target.RepoID, "target_worktree": plan.WorktreePath, "target_ref": "refs/heads/" + plan.Branch, "expected_oid": plan.ParentOID, "status_policy": map[string]any{"mode": "clean"}}, "inputs": inputs, "authority": map[string]any{"allowed_effects": effects, "forbidden_effects": forbidden, "human_gates": []string{"human_task_qa"}}, "budget": deliveryBudget(nil), "procedure": procedure, "verifiers": []canonicaljson.Value{verifier}, "stop_conditions": deliveryStops(), "reporting": deliveryReporting(), "task_spec_binding": basis, "delivery_binding": map[string]any{"mode": "owner", "human_actor": humanActor, "owner_claim": ownerClaim, "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}}
+		fields := map[string]any{"publication_key": publicationKey, "activity_key": publicationKey, "goal": goal, "recipient": map[string]any{"principal_id": "delivery-owner", "principal_kind": "human_started_agent", "runtime_constraints": []string{"actual-runtime-authority-required"}}, "binding_request": map[string]any{"project_id": plan.Target.ProjectID, "repo_id": plan.Target.RepoID, "target_worktree": plan.WorktreePath, "target_ref": "refs/heads/" + plan.Branch, "expected_oid": plan.SourceStartOID(), "status_policy": map[string]any{"mode": "clean"}}, "inputs": inputs, "authority": map[string]any{"allowed_effects": effects, "forbidden_effects": forbidden, "human_gates": []string{"human_task_qa"}}, "budget": deliveryBudget(nil), "procedure": procedure, "verifiers": []canonicaljson.Value{verifier}, "stop_conditions": deliveryStops(), "reporting": deliveryReporting(), "task_spec_binding": basis, "delivery_binding": map[string]any{"mode": "owner", "human_actor": humanActor, "owner_claim": ownerClaim, "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}}
 		if protocol != "" {
 			fields["delivery_binding"].(map[string]any)["startup_protocol"] = protocol
 		}

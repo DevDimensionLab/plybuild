@@ -18,6 +18,10 @@ type TaskGoalExecuteInput struct {
 }
 
 type TaskGoalExecutePreview struct {
+	SourceMode        string                  `yaml:"source_mode,omitempty" json:"source_mode,omitempty"`
+	AdoptionID        WorktreeOperationID     `yaml:"adoption_id,omitempty" json:"adoption_id,omitempty"`
+	StartOID          string                  `yaml:"start_oid,omitempty" json:"start_oid,omitempty"`
+	StartTree         string                  `yaml:"start_tree,omitempty" json:"start_tree,omitempty"`
 	Delivery          *DeliveryAgreement      `json:"delivery,omitempty"`
 	DeliveryGates     []string                `json:"delivery_gates,omitempty"`
 	DeliveryEffects   []string                `json:"delivery_effects,omitempty"`
@@ -109,6 +113,19 @@ func storedGoalExecution(d Dependencies, root string, r WorkItemRegistry, in Tas
 }
 
 func storedGoalExecutionInTarget(d Dependencies, root string, r WorkItemRegistry, in TaskGoalExecuteInput, digest string, target QueueTarget) (*TaskGoalExecutePreview, *TaskRevisionRef, error) {
+	// An adopted execution intent precedes the first content publication.
+	for _, o := range r.WorktreeOperations {
+		if o.Execution != nil && o.Release == nil {
+			p := *o.Execution
+			comparison := in
+			if comparison.AcceptancePath == "" {
+				comparison.AcceptancePath = p.AcceptancePath
+			}
+			if p.Target == target && contentTypedEqual(p.Input, comparison) && (digest == "" || digest == p.Confirmation) {
+				return &p, nil, nil
+			}
+		}
+	}
 	candidates := goalExecutionCandidates(root, r, in, target)
 	// A known confirmation can name a completed execution outside today's
 	// queue. Its native publication key is authoritative recovery metadata.
@@ -277,6 +294,20 @@ func buildGoalExecutionPreviewInTarget(d Dependencies, root string, r WorkItemRe
 		return out, e
 	}
 	out.Branch, out.WorktreePath = queueTaskNames(out.QueueID, chosen.TaskID, title, target.ParentLocator)
+	if op, _ := findOperation(r, task.ID); op != nil && op.Adoption != nil && op.State == "ready" {
+		if !contentTypedEqual(op.Adoption.Plan.Goal, chosen.Goal) && op.Adoption.Plan.Goal != *chosen.Goal {
+			return out, queueError("adoption_goal_stale", "adoption pins another Goal")
+		}
+		if _, e = observeAdoption(d, root, r, projects, op.Adoption.Plan.Input, op.ID); e != nil {
+			return out, e
+		}
+		out.SourceMode = "adopted"
+		out.AdoptionID = op.ID
+		out.StartOID = operationStartOID(*op)
+		out.StartTree = operationStartTree(*op)
+		out.Branch = strings.TrimPrefix(op.SourceRef, "refs/heads/")
+		out.WorktreePath = op.TargetLocator
+	}
 	if out.Goal.Delivery != nil {
 		bound, err := BindDeliveryAgreement(*out.Goal.Delivery, target, "refs/heads/"+out.Branch)
 		if err != nil {
@@ -285,8 +316,10 @@ func buildGoalExecutionPreviewInTarget(d Dependencies, root string, r WorkItemRe
 		out.Delivery = &bound
 		out.DeliveryGates, out.DeliveryEffects, out.DeliveryStopAfter = bound.RequiredGates(), bound.AllowedEffects(), bound.StopAfter()
 	}
-	if e = precheckParentAndResources(d, repo, currentEpicBinding(r, epic, binding), "refs/heads/"+out.Branch, out.WorktreePath); e != nil {
-		return out, e
+	if out.SourceMode != "adopted" {
+		if e = precheckParentAndResources(d, repo, currentEpicBinding(r, epic, binding), "refs/heads/"+out.Branch, out.WorktreePath); e != nil {
+			return out, e
+		}
 	}
 	out.ObservedParent, e = queueParentObservation(d, target)
 	if e != nil {
@@ -439,6 +472,13 @@ func goalExecutionRequestRule(v canonicaljson.Value) error {
 	if !contentEqual(v, contentRefValue(p)) || p.Kind != "WorkspaceTaskGoalExecutePlan@1" || p.SchemaVersion != 1 || p.Confirmation != "" || p.Input.Next == (p.Input.SpecID != "") || contentPath(p.Workspace) != nil || contentPath(p.AcceptancePath) != nil || p.Input.AcceptancePath != p.AcceptancePath || p.QueueID != queueID(p.Workspace, p.Target) || p.QueueRevision < 0 || p.BaseRevision < 1 || !validOIDText(p.ParentOID) || !validOIDText(p.ParentTree) || !validShortBranchText(p.Branch) || contentPath(p.WorktreePath) != nil || p.PreviousSpec == nil || p.Goal.TaskID == "" {
 		return fmt.Errorf("invalid preserved goal execution request")
 	}
+	if p.SourceMode == "" {
+		if p.AdoptionID != "" || p.StartOID != "" || p.StartTree != "" {
+			return fmt.Errorf("create source cannot carry adoption start")
+		}
+	} else if p.SourceMode != "adopted" || !operationIDPattern.MatchString(string(p.AdoptionID)) || !validOIDText(p.StartOID) || !validOIDText(p.StartTree) || p.StartOID == p.ParentOID || p.StartTree == p.ParentTree {
+		return fmt.Errorf("invalid adopted source request")
+	}
 	if p.Input.SpecID != "" && p.Input.SpecID != p.Goal.Goal.SpecID {
 		return fmt.Errorf("goal selector differs from request")
 	}
@@ -492,6 +532,9 @@ func buildGoalExecutionSpec(d Dependencies, root string, r WorkItemRegistry, p T
 	text := "# " + p.Goal.Title + "\n\n## Goal\n\n" + p.Goal.Objective + "\n\n## Outcomes\n\n"
 	for _, req := range p.Goal.Requirements {
 		text += "- " + req.ID + ": " + req.Acceptance + "\n"
+	}
+	if p.SourceMode == "adopted" {
+		text += "\n## Adopted source\n\nObserved existing source " + p.WorktreePath + " on refs/heads/" + p.Branch + " starts at " + p.StartOID + " (tree " + p.StartTree + "). Chosen Epic parent: " + p.ParentOID + ". Review, assess, adapt and test the entire inherited delta from parent to source, plus subsequent work. No prior session, mandate, tests or qualification is inherited. Ordinary native delivery includes cleanup of this now-owned pre-existing branch and worktree after owner exit.\n"
 	}
 	text += "\n## Implementation ownership\n\nThe implementing owner investigates the code, chooses and revises the detailed design, implements meaningful acceptance tests, and owns verification and correction within this goal and actual runtime permissions. The planner has not chosen these technical details.\n\nThe declared acceptance entrypoint is /bin/sh " + p.AcceptancePath + " with the Task worktree as cwd. The owner must implement this script and meaningful tests, execute it, and preserve the actual script and output as artifacts. A declaration is not an executed test or a passing result.\n\nPreserve work and evidence on interruption. Do not reset, remove worktrees, expand scope, or claim human judgment. Human product judgment and local integration are later distinct facts.\n"
 	if p.Delivery != nil {
@@ -550,7 +593,7 @@ func buildGoalExecutionSpec(d Dependencies, root string, r WorkItemRegistry, p T
 		"schema_version": int64(2), "contract_kind": "execution", "spec_id": p.Goal.Goal.SpecID, "problem": contentRefValue(p.Goal.Problem), "title": p.Goal.Title, "change_reason": "Materialize the human's exact goal at the execution base; implementation choices remain delegated.", "expected_previous": contentRefValue(p.PreviousSpec),
 		"documents": docs, "parts": contentObject(map[string]canonicaljson.Value{"abstract": part("Goal"), "functional": part("Outcomes"), "technical": part("Implementation ownership")}), "supporting": supporting, "requirements": reqs, "removed_requirement_ids": sortedContentStrings(removed),
 		"phases":               []canonicaljson.Value{contentObject(map[string]canonicaljson.Value{"id": "implement-and-verify", "purpose": "Investigate, implement and verify the chosen goal.", "requirement_ids": reqIDs, "entry_criteria": []canonicaljson.Value{"Exact authorized goal and clean execution base are bound."}, "exit_criteria": []canonicaljson.Value{"Meaningful acceptance tests have run and the candidate is ready for actual product judgment."}, "verification_ids": []canonicaljson.Value{"goal-acceptance"}})},
-		"implementation_basis": contentObject(map[string]canonicaljson.Value{"project_id": string(p.Target.ProjectID), "repo_id": string(p.Target.RepoID), "git_common_dir": p.Target.GitCommonDir, "epic_id": string(p.Target.EpicID), "parent_worktree_id": string(p.Target.ParentWorktreeID), "parent_ref": p.Target.ParentRef, "parent_oid": p.ParentOID, "parent_tree": p.ParentTree, "start_oid": p.ParentOID, "start_tree": p.ParentTree}), "dependencies": []canonicaljson.Value{},
+		"implementation_basis": contentObject(map[string]canonicaljson.Value{"project_id": string(p.Target.ProjectID), "repo_id": string(p.Target.RepoID), "git_common_dir": p.Target.GitCommonDir, "epic_id": string(p.Target.EpicID), "parent_worktree_id": string(p.Target.ParentWorktreeID), "parent_ref": p.Target.ParentRef, "parent_oid": p.ParentOID, "parent_tree": p.ParentTree, "start_oid": goalStartOID(p), "start_tree": goalStartTree(p)}), "dependencies": []canonicaljson.Value{},
 		"goal_origin": contentRefValue(p.Goal.Goal), "execution_request_sha256": p.Confirmation, "execution_request": contentRefValue(frozen), "acceptance_path": p.AcceptancePath,
 	} {
 		m[k] = v
@@ -673,6 +716,30 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 			if !contentTypedEqual(taskContentState(r, p.Goal.TaskID).ProblemHead, &p.Goal.Problem) {
 				return queueError("task_goal_problem_changed", "chosen problem changed before execution")
 			}
+			if p.SourceMode == "adopted" {
+				if e = validateAdoptedExecution(d, root, r, projects, p); e != nil {
+					return e
+				}
+			}
+			if p.SourceMode == "adopted" {
+				op, oi := adoptionOperation(r, p.AdoptionID)
+				if op == nil || op.Release != nil {
+					return queueError("adoption_generation_stale", "adoption was released before materialization")
+				}
+				if op.Execution == nil {
+					frozen := p
+					r.WorktreeOperations[oi].Execution = &frozen
+					if e = session.Publish(r); e != nil {
+						return e
+					}
+					r, e = session.Snapshot()
+					if e != nil {
+						return e
+					}
+				} else if !contentTypedEqual(*op.Execution, p) {
+					return queueError("adoption_execution_conflict", "another execution request owns this adoption")
+				}
+			}
 			selected, e = materializeGoalExecution(d, root, session, r, projects, p, human)
 			if e != nil {
 				return e
@@ -727,4 +794,39 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 		return nil
 	})
 	return out, e
+}
+
+func goalStartOID(p TaskGoalExecutePreview) string {
+	if p.SourceMode == "adopted" {
+		return p.StartOID
+	}
+	return p.ParentOID
+}
+func goalStartTree(p TaskGoalExecutePreview) string {
+	if p.SourceMode == "adopted" {
+		return p.StartTree
+	}
+	return p.ParentTree
+}
+func validateAdoptedExecution(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, p TaskGoalExecutePreview) error {
+	o, _ := findOperation(r, p.Goal.TaskID)
+	if o == nil || o.Adoption == nil || o.ID != p.AdoptionID || o.State != "ready" || o.Release != nil || o.TargetLocator != p.WorktreePath || o.SourceRef != "refs/heads/"+p.Branch || operationStartOID(*o) != p.StartOID || operationStartTree(*o) != p.StartTree || o.ParentOID != p.ParentOID || o.ParentTree != p.ParentTree || o.Adoption.Plan.Goal != p.Goal.Goal {
+		return queueError("adoption_generation_stale", "execution preview no longer owns active adoption; inspect or preview again")
+	}
+	source, e := observeAdoptionSource(d, p.WorktreePath, o.SourceRef)
+	if e != nil {
+		return e
+	}
+	if !source.Clean || !source.InventoryMatch || source.OID != p.StartOID || source.Tree != p.StartTree || source.Ref != o.SourceRef || source.GitCommonDir != o.GitCommonDir || source.Locator != o.TargetLocator {
+		return queueError("adoption_source_changed", "source differs from adopted start")
+	}
+	parent, e := queueParentObservation(d, p.Target)
+	if e != nil {
+		return e
+	}
+	if parent.OID != p.ParentOID || parent.Tree != p.ParentTree {
+		return queueError("adoption_base_changed", "parent differs from adoption")
+	}
+	_, e = adoptionWriters(d, p.WorktreePath)
+	return e
 }

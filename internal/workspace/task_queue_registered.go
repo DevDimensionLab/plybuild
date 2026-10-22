@@ -235,6 +235,9 @@ func indexRegisteredQueues(root string, r WorkItemRegistry) registeredQueueIndex
 		x.folds[event.QueueID] = fold
 	}
 	for _, op := range r.WorktreeOperations {
+		if op.Release != nil {
+			continue
+		}
 		x.operations[op.TaskID] = op
 		if op.State == "ready" {
 			continue

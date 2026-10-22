@@ -67,6 +67,10 @@ func validateSpecImplementationBasis(d Dependencies, projects ProjectSnapshot, r
 	} else if t.Worktree.ParentOID != parent.Worktree.OID || t.Worktree.ParentTree != parent.Worktree.Tree || t.Worktree.ParentRef != parent.Worktree.Ref || t.Worktree.ParentWorktreeID != parent.Worktree.ID {
 		return contentError("task_spec_binding_conflict", "Task worktree parent binding differs", nil)
 	}
+	if t.Worktree != nil && t.Worktree.Origin == "adopted" && (startOID != t.Worktree.OID || startTree != t.Worktree.Tree) {
+		return contentError("task_spec_binding_conflict", "start differs from immutable adopted source", nil)
+	}
+
 	g, ok := d.WorkGit.(TaskContentGit)
 	if !ok {
 		return contentError("task_content_observation_unknown", "commit observer is unavailable", nil)
@@ -100,6 +104,9 @@ func validateSpecImplementationBasis(d Dependencies, projects ProjectSnapshot, r
 	}
 	if t.Worktree != nil {
 		w, e := d.WorkGit.ObserveWorktree(t.Worktree.Locator)
+		if t.Worktree.Origin == "adopted" {
+			w, e = observeAdoptionSource(d, t.Worktree.Locator, t.Worktree.Ref)
+		}
 		if e != nil {
 			return contentError("task_content_observation_unknown", "cannot observe Task basis", e)
 		}

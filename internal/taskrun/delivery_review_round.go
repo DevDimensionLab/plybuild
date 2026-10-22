@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"io"
 	"os"
 	"path/filepath"
@@ -283,7 +285,29 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		if r.Template, e = workflowKeep(d, filepath.Join(dir, "return-template.json"), deliveryReviewTemplate()); e != nil {
 			return e
 		}
-		brief := deliveryReviewBrief(s, r, rounds, root, executable, filepath.Join(dir, "return-template.json"), filepath.Join(dir, "context.json"))
+		var preparation workspace.TaskPreparation
+		draft, e := workflowhandoff.ValidateDeliveryTaskRunDraft(s.Request.HandoffDraft)
+		if e != nil {
+			return e
+		}
+		if draft.Basis == nil {
+			return workflowError(4, "review needs native Task basis")
+		}
+		wd := workspace.WithTaskContentScope(d.Workspace, draft.Basis.TaskID)
+		if e = workspace.WithTaskSpecSnapshot(wd, root, func(session *workspace.TaskSpecSession) error {
+			p, e := session.TaskRunPreparation(s.Request.PreparationID)
+			if e != nil {
+				return e
+			}
+			if p.Preparation == nil || digest(*p.Preparation) != s.Request.PreparationSHA256 {
+				return workflowError(4, "review preparation differs from frozen request")
+			}
+			preparation = *p.Preparation
+			return nil
+		}); e != nil {
+			return e
+		}
+		brief := deliveryReviewBrief(s, r, rounds, root, executable, filepath.Join(dir, "return-template.json"), filepath.Join(dir, "context.json"), preparation.Plan)
 		r.Brief = FileBinding{filepath.Join(dir, "brief.md"), hash([]byte(brief))}
 		if e = d.writeOnce(r.Brief.Locator, []byte(brief)); e != nil {
 			return e
@@ -404,12 +428,15 @@ const DeliveryReviewReturnGuidance = "Return field limits (after outer whitespac
 	"- Optional reviewer_claim and reviewer_session_id: at most 256 Unicode codepoints each on one line, with no control characters. At most 100 findings and 100 evidence gaps.\n" +
 	"These short-field limits count Unicode codepoints, not UTF-8 bytes. The separate total JSON file limit is 256 KiB (262144 bytes). Put full explanations and evidence links in findings[].evidence or evidence_gaps: these prose fields may contain ordinary long text, paragraphs and tabs within that total file budget; no manual splitting is needed. Evidence gaps must be nonempty; finding evidence is optional. Other control characters are refused.\n\n"
 
-func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliveryReviewRecord, root, executable, template, context string) string {
+func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliveryReviewRecord, root, executable, template, context string, plan workspace.WorkspaceTaskPreparePlan) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Independent review round %d\n\n", r.Round)
 	fmt.Fprintf(&b, "Coordinator: %s. You are a separate reviewer session, not the developer (owner session %s).\n\n", r.Coordinator, r.OwnerSession)
 	fmt.Fprintf(&b, "This is an internal review round. Return through native review-return to coordinator %s (pane %s). When the parent owns the job and its notifications, send no separate Slack notification; the parent owns the whole-job notification. Honor an explicit separate notification agreement. For the routine parent-owned return, do not create a notification route or add an approval gate.\n\n", r.Coordinator, r.CoordinatorPane)
-	fmt.Fprintf(&b, "- Run: %s\n- Goal and Spec: %s\n- Task worktree (read-only for you): %s\n- Task base: %s\n- Candidate: %s (tree %s)\n- Owner acceptance entrypoint: %s\n", r.RunID, s.Request.Delivery.Goal.Locator, s.Observed.Target.WorktreeLocator, s.Observed.Target.OID, r.CandidateOID, r.CandidateTree, s.Request.Delivery.AcceptancePath)
+	fmt.Fprintf(&b, "- Run: %s\n- Goal and Spec: %s\n- Task worktree (read-only for you): %s\n- Review/diff base: %s\n- Candidate: %s (tree %s)\n- Owner acceptance entrypoint: %s\n", r.RunID, s.Request.Delivery.Goal.Locator, s.Observed.Target.WorktreeLocator, plan.ParentOID, r.CandidateOID, r.CandidateTree, s.Request.Delivery.AcceptancePath)
+	if plan.SourceMode == "adopted" {
+		fmt.Fprintf(&b, "- Adopted start: %s (tree %s)\n- Inherited delta: %s..%s; review and test this entire delta together with subsequent work through candidate %s. No previous evidence is inherited.\n", plan.SourceStartOID(), plan.SourceStartTree(), plan.ParentOID, plan.SourceStartOID(), r.CandidateOID)
+	}
 	for _, e := range earlier {
 		if e.Return != nil {
 			fmt.Fprintf(&b, "- Earlier round %d (%s, candidate %s): %s\n", e.Request.Round, e.Result.Decision, e.Request.CandidateOID, e.Return.Locator)

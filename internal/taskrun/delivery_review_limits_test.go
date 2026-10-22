@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"encoding/json"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"strings"
 	"testing"
 )
@@ -14,7 +15,7 @@ func TestAL32GeneratedReviewReturnLimits(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Generate the actual reviewer inputs without launching a review or inspecting processes.
-	brief := deliveryReviewBrief(s, deliveryReviewRound{Round: 1}, nil, f.R.WorkspaceRoot, "/fixture/ply", "/fixture/template.json", "/fixture/context.json")
+	brief := deliveryReviewBrief(s, deliveryReviewRound{Round: 1}, nil, f.R.WorkspaceRoot, "/fixture/ply", "/fixture/template.json", "/fixture/context.json", workspace.WorkspaceTaskPreparePlan{})
 	for _, want := range []string{"summary: 1-2000", "findings[].summary: 1-600", "Unicode codepoints", "one line", "256 KiB", "bytes"} {
 		if !strings.Contains(brief, want) {
 			t.Errorf("generated brief lacks %q", want)

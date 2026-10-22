@@ -50,6 +50,7 @@ type TaskFreshnessWorktree struct{ Locator, Ref, OID, Tree, GitCommonDir, Clean,
 type TaskFreshnessSource struct{ Ref, OID, Tree, CheckedOutAt string }
 type TaskFreshnessTarget struct{ Kind, Locator, Ref, OID, Tree, GitCommonDir, Clean, InventoryMatch string }
 type TaskReadbackResult struct {
+	Adoptions                      []WorktreeOperationRecord
 	ExternalIssues                 *ExternalIssuesReadback
 	Lifecycle                      LifecycleState
 	Content                        canonicaljson.Object
@@ -225,6 +226,11 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 		copyOperation := *operation
 		result.Operation = &copyOperation
 	}
+	for _, o := range registry.WorktreeOperations {
+		if o.TaskID == id && o.Adoption != nil {
+			result.Adoptions = append(result.Adoptions, o)
+		}
+	}
 	var projects []ProjectRecord
 	var repositories []RepoRecord
 	if dependencies.Projects != nil {
@@ -319,8 +325,8 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 			if source.CheckedOutAt != "" {
 				result.Source.CheckedOutAt = stringPointer(source.CheckedOutAt)
 			}
-			result.SourceFreshness = TaskFreshnessSource{Ref: "fresh", OID: freshness(source.OID == operation.ParentOID), Tree: freshness(source.Tree == operation.ParentTree), CheckedOutAt: freshness(source.CheckedOutAt == operation.TargetLocator)}
-			if source.OID != operation.ParentOID || source.Tree != operation.ParentTree {
+			result.SourceFreshness = TaskFreshnessSource{Ref: "fresh", OID: freshness(source.OID == operationStartOID(operation)), Tree: freshness(source.Tree == operationStartTree(operation)), CheckedOutAt: freshness(source.CheckedOutAt == operation.TargetLocator)}
+			if source.OID != operationStartOID(operation) || source.Tree != operationStartTree(operation) {
 				result.Reasons = append(result.Reasons, "source_ref_stale")
 			}
 			if source.CheckedOutAt != "" && source.CheckedOutAt != operation.TargetLocator {
@@ -336,7 +342,7 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 			} else {
 				result.Target = TaskObservedTarget{Kind: "worktree", Locator: stringPointer(target.Locator), Ref: stringPointer(target.Ref), OID: stringPointer(target.OID), Tree: stringPointer(target.Tree), GitCommonDir: stringPointer(target.GitCommonDir), Clean: boolPointer(target.Clean), InventoryMatch: boolPointer(target.InventoryMatch)}
 				result.TargetFreshness = freshTarget(target, operation)
-				if target.Locator != operation.TargetLocator || target.Ref != operation.SourceRef || target.OID != operation.ParentOID || target.Tree != operation.ParentTree || target.GitCommonDir != operation.GitCommonDir {
+				if target.Locator != operation.TargetLocator || target.Ref != operation.SourceRef || target.OID != operationStartOID(operation) || target.Tree != operationStartTree(operation) || target.GitCommonDir != operation.GitCommonDir {
 					result.Reasons = append(result.Reasons, "target_worktree_stale")
 				}
 				if !target.Clean {
@@ -418,6 +424,9 @@ func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 func MarshalTaskReadback(result TaskReadbackResult) ([]byte, error) {
 	withCloseout := func(value canonicaljson.Object) canonicaljson.Object {
 		value = readbackWithExternalIssues(readbackWithLifecycle(value, result.Lifecycle), result.ExternalIssues)
+		if len(result.Adoptions) > 0 {
+			value = append(value, canonicaljson.Member{Name: "adoptions", Value: contentRefValue(result.Adoptions)})
+		}
 		if result.Closeout != nil {
 			for i := range value {
 				if value[i].Name == "closeout" {
@@ -498,7 +507,7 @@ func freshWorktree(value GitWorktreeObservation, locator, ref, oid, tree, common
 	return TaskFreshnessWorktree{Locator: freshness(value.Locator == locator), Ref: freshness(value.Ref == ref), OID: freshness(value.OID == oid), Tree: freshness(value.Tree == tree), GitCommonDir: freshness(value.GitCommonDir == common), Clean: freshness(value.Clean), InventoryMatch: freshness(value.InventoryMatch)}
 }
 func freshTarget(value GitWorktreeObservation, operation WorktreeOperationRecord) TaskFreshnessTarget {
-	return TaskFreshnessTarget{Kind: "fresh", Locator: freshness(value.Locator == operation.TargetLocator), Ref: freshness(value.Ref == operation.SourceRef), OID: freshness(value.OID == operation.ParentOID), Tree: freshness(value.Tree == operation.ParentTree), GitCommonDir: freshness(value.GitCommonDir == operation.GitCommonDir), Clean: freshness(value.Clean), InventoryMatch: freshness(value.InventoryMatch)}
+	return TaskFreshnessTarget{Kind: "fresh", Locator: freshness(value.Locator == operation.TargetLocator), Ref: freshness(value.Ref == operation.SourceRef), OID: freshness(value.OID == operationStartOID(operation)), Tree: freshness(value.Tree == operationStartTree(operation)), GitCommonDir: freshness(value.GitCommonDir == operation.GitCommonDir), Clean: freshness(value.Clean), InventoryMatch: freshness(value.InventoryMatch)}
 }
 func unknownWorktreeFreshness() TaskFreshnessWorktree {
 	return TaskFreshnessWorktree{Locator: "unknown", Ref: "unknown", OID: "unknown", Tree: "unknown", GitCommonDir: "unknown", Clean: "unknown", InventoryMatch: "unknown"}
@@ -517,10 +526,10 @@ func freshnessForObservedTarget(observation WorktreeObservationRecord, operation
 		result.Ref = freshness(*observation.TargetRef == operation.SourceRef)
 	}
 	if observation.TargetOID != nil {
-		result.OID = freshness(*observation.TargetOID == operation.ParentOID)
+		result.OID = freshness(*observation.TargetOID == operationStartOID(operation))
 	}
 	if observation.TargetTree != nil {
-		result.Tree = freshness(*observation.TargetTree == operation.ParentTree)
+		result.Tree = freshness(*observation.TargetTree == operationStartTree(operation))
 	}
 	if observation.TargetGitCommonDir != nil {
 		result.GitCommonDir = freshness(*observation.TargetGitCommonDir == operation.GitCommonDir)
@@ -548,6 +557,9 @@ func taskWorktreeCanonical(worktree *TaskWorktreeBinding) canonicaljson.Value {
 	return canonicaljson.Object{{Name: "id", Value: string(worktree.ID)}, {Name: "owner_kind", Value: worktree.OwnerKind}, {Name: "owner_id", Value: string(worktree.OwnerID)}, {Name: "origin", Value: worktree.Origin}, {Name: "locator", Value: worktree.Locator}, {Name: "ref", Value: worktree.Ref}, {Name: "oid", Value: worktree.OID}, {Name: "tree", Value: worktree.Tree}, {Name: "git_common_dir", Value: worktree.GitCommonDir}, {Name: "parent_epic_id", Value: string(worktree.ParentEpicID)}, {Name: "parent_worktree_id", Value: string(worktree.ParentWorktreeID)}, {Name: "parent_ref", Value: worktree.ParentRef}, {Name: "parent_oid", Value: worktree.ParentOID}, {Name: "parent_tree", Value: worktree.ParentTree}, {Name: "operation_id", Value: string(worktree.OperationID)}, {Name: "intent_digest", Value: worktree.IntentDigest}}
 }
 func operationCanonical(operation *WorktreeOperationRecord) canonicaljson.Value {
+	if operation != nil && operation.Adoption != nil {
+		return contentRefValue(*operation)
+	}
 	if operation == nil {
 		return nil
 	}

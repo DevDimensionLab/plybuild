@@ -118,25 +118,30 @@ type WorktreeObservationRecord struct {
 }
 
 type WorktreeOperationRecord struct {
-	ID               WorktreeOperationID       `yaml:"id" json:"id"`
-	TaskID           TaskID                    `yaml:"task_id" json:"task_id"`
-	WorktreeID       WorktreeID                `yaml:"worktree_id" json:"worktree_id"`
-	IntentDigest     string                    `yaml:"intent_digest" json:"intent_digest"`
-	State            string                    `yaml:"state" json:"state"`
-	ProjectID        ProjectID                 `yaml:"project_id" json:"project_id"`
-	RepoID           RepoID                    `yaml:"repo_id" json:"repo_id"`
-	GitCommonDir     string                    `yaml:"git_common_dir" json:"git_common_dir"`
-	ParentEpicID     EpicID                    `yaml:"parent_epic_id" json:"parent_epic_id"`
-	ParentWorktreeID WorktreeID                `yaml:"parent_worktree_id" json:"parent_worktree_id"`
-	ParentRef        string                    `yaml:"parent_ref" json:"parent_ref"`
-	ParentOID        string                    `yaml:"parent_oid" json:"parent_oid"`
-	ParentTree       string                    `yaml:"parent_tree" json:"parent_tree"`
-	SourceRef        string                    `yaml:"source_ref" json:"source_ref"`
-	TargetLocator    string                    `yaml:"target_locator" json:"target_locator"`
-	LastObservation  WorktreeObservationRecord `yaml:"last_observation" json:"last_observation"`
+	AdoptionObservations []TaskAdoptionObservation `yaml:"adoption_observations,omitempty" json:"adoption_observations,omitempty"`
+	Execution            *TaskGoalExecutePreview   `yaml:"execution,omitempty" json:"execution,omitempty"`
+	Adoption             *TaskAdoptionIntent       `yaml:"adoption,omitempty" json:"adoption,omitempty"`
+	Release              *TaskAdoptionRelease      `yaml:"release,omitempty" json:"release,omitempty"`
+	ID                   WorktreeOperationID       `yaml:"id" json:"id"`
+	TaskID               TaskID                    `yaml:"task_id" json:"task_id"`
+	WorktreeID           WorktreeID                `yaml:"worktree_id" json:"worktree_id"`
+	IntentDigest         string                    `yaml:"intent_digest" json:"intent_digest"`
+	State                string                    `yaml:"state" json:"state"`
+	ProjectID            ProjectID                 `yaml:"project_id" json:"project_id"`
+	RepoID               RepoID                    `yaml:"repo_id" json:"repo_id"`
+	GitCommonDir         string                    `yaml:"git_common_dir" json:"git_common_dir"`
+	ParentEpicID         EpicID                    `yaml:"parent_epic_id" json:"parent_epic_id"`
+	ParentWorktreeID     WorktreeID                `yaml:"parent_worktree_id" json:"parent_worktree_id"`
+	ParentRef            string                    `yaml:"parent_ref" json:"parent_ref"`
+	ParentOID            string                    `yaml:"parent_oid" json:"parent_oid"`
+	ParentTree           string                    `yaml:"parent_tree" json:"parent_tree"`
+	SourceRef            string                    `yaml:"source_ref" json:"source_ref"`
+	TargetLocator        string                    `yaml:"target_locator" json:"target_locator"`
+	LastObservation      WorktreeObservationRecord `yaml:"last_observation" json:"last_observation"`
 }
 
 type WorkItemRegistry struct {
+	AdoptionBoundary        *RegistryFormatBoundary   `yaml:"adoption_boundary,omitempty" json:"adoption_boundary,omitempty"`
 	EpicCreateOperations    []EpicCreateOperation     `yaml:"epic_create_operations"`
 	EpicCreateBoundary      *RegistryFormatBoundary   `yaml:"epic_create_boundary,omitempty"`
 	FormatVersion           int                       `yaml:"format_version"`
@@ -534,6 +539,12 @@ func canonicalAbsentTarget(files FileSystem, cwd, value string) (string, error) 
 }
 
 func intentDigest(operation WorktreeOperationRecord) (string, error) {
+	if operation.Adoption != nil {
+		return queueDigest(struct {
+			Kind string
+			Plan TaskAdoptionPlan
+		}{"WorkspaceTaskAdoptionIntent@1", operation.Adoption.Plan}), nil
+	}
 	value := canonicaljson.Object{
 		{Name: "git_common_dir", Value: operation.GitCommonDir}, {Name: "kind", Value: "WorkspaceTaskWorktreeIntent@1"},
 		{Name: "parent_epic_id", Value: string(operation.ParentEpicID)}, {Name: "parent_oid", Value: operation.ParentOID},
@@ -568,7 +579,7 @@ func findTask(registry WorkItemRegistry, id TaskID) (*TaskRecord, int) {
 }
 func findOperation(registry WorkItemRegistry, taskID TaskID) (*WorktreeOperationRecord, int) {
 	for i := range registry.WorktreeOperations {
-		if registry.WorktreeOperations[i].TaskID == taskID {
+		if registry.WorktreeOperations[i].TaskID == taskID && registry.WorktreeOperations[i].Release == nil {
 			return &registry.WorktreeOperations[i], i
 		}
 	}
@@ -659,7 +670,7 @@ func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationRes
 			// Several logical Epics may share one clean integration base. Only
 			// an exclusive Task copy (its operation path or branch) is reserved.
 			for _, operation := range registry.WorktreeOperations {
-				if operation.GitCommonDir == repository.GitCommonDir && (operation.TargetLocator == locator || operation.SourceRef == input.Ref) {
+				if operation.Release == nil && operation.GitCommonDir == repository.GitCommonDir && (operation.TargetLocator == locator || operation.SourceRef == input.Ref) {
 					return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree or ref is reserved by Task %s", operation.TaskID), nil)
 				}
 			}
@@ -962,7 +973,7 @@ func observeTaskCreate(dependencies Dependencies, repository RepoRecord, binding
 		if source.CheckedOutAt != "" {
 			observation.SourceRefCheckedOutAt = stringPointer(source.CheckedOutAt)
 		}
-		branchOnly = source.OID == operation.ParentOID && source.Tree == operation.ParentTree && source.CheckedOutAt == ""
+		branchOnly = source.OID == operationStartOID(operation) && source.Tree == operationStartTree(operation) && source.CheckedOutAt == ""
 	} else if sourceErr != nil {
 		reasons = append(reasons, "source_ref_stale")
 	}
@@ -991,7 +1002,7 @@ func observeTaskCreate(dependencies Dependencies, repository RepoRecord, binding
 			observation.TargetGitCommonDir = stringPointer(target.GitCommonDir)
 			observation.TargetClean = boolPointer(target.Clean)
 			observation.InventoryMatch = boolPointer(target.InventoryMatch)
-			targetExact = target.Locator == operation.TargetLocator && target.Ref == operation.SourceRef && target.OID == operation.ParentOID && target.Tree == operation.ParentTree && target.GitCommonDir == operation.GitCommonDir && target.Clean && target.InventoryMatch
+			targetExact = target.Locator == operation.TargetLocator && target.Ref == operation.SourceRef && target.OID == operationStartOID(operation) && target.Tree == operationStartTree(operation) && target.GitCommonDir == operation.GitCommonDir && target.Clean && target.InventoryMatch
 		}
 	}
 	if inventoryErr != nil {
@@ -1000,7 +1011,7 @@ func observeTaskCreate(dependencies Dependencies, repository RepoRecord, binding
 	sort.Strings(reasons)
 	observation.Reasons = uniqueReasonStrings(reasons)
 	switch {
-	case parentExact && refExact && sourceErr == nil && source.Exists && source.OID == operation.ParentOID && source.Tree == operation.ParentTree && source.CheckedOutAt == operation.TargetLocator && targetExact:
+	case parentExact && refExact && sourceErr == nil && source.Exists && source.OID == operationStartOID(operation) && source.Tree == operationStartTree(operation) && source.CheckedOutAt == operation.TargetLocator && targetExact:
 		observation.Classification = "exact_effect"
 		observation.Reasons = []string{}
 		return "exact_effect", observation
@@ -1037,7 +1048,7 @@ func finalizeReady(session WorkItemStoreSession, registry *WorkItemRegistry, tas
 	registry.WorktreeOperations[operationIndex].State = "ready"
 	registry.WorktreeOperations[operationIndex].LastObservation = observation
 	registry.Tasks[taskIndex].WorktreeState = WorkItemReady
-	registry.Tasks[taskIndex].Worktree = &TaskWorktreeBinding{ID: operation.WorktreeID, OwnerKind: "task", OwnerID: operation.TaskID, Origin: "ply_created", Locator: operation.TargetLocator, Ref: operation.SourceRef, OID: operation.ParentOID, Tree: operation.ParentTree, GitCommonDir: operation.GitCommonDir, ParentEpicID: operation.ParentEpicID, ParentWorktreeID: operation.ParentWorktreeID, ParentRef: operation.ParentRef, ParentOID: operation.ParentOID, ParentTree: operation.ParentTree, OperationID: operation.ID, IntentDigest: operation.IntentDigest}
+	registry.Tasks[taskIndex].Worktree = &TaskWorktreeBinding{ID: operation.WorktreeID, OwnerKind: "task", OwnerID: operation.TaskID, Origin: operationOrigin(operation), Locator: operation.TargetLocator, Ref: operation.SourceRef, OID: operationStartOID(operation), Tree: operationStartTree(operation), GitCommonDir: operation.GitCommonDir, ParentEpicID: operation.ParentEpicID, ParentWorktreeID: operation.ParentWorktreeID, ParentRef: operation.ParentRef, ParentOID: operation.ParentOID, ParentTree: operation.ParentTree, OperationID: operation.ID, IntentDigest: operation.IntentDigest}
 	for i := range registry.TaskPreparations {
 		p := &registry.TaskPreparations[i]
 		if p.OperationID == operation.ID && p.Outcome == nil {
@@ -1160,6 +1171,9 @@ func createTaskWorktreeLocked(dependencies Dependencies, root string, projects P
 	}
 	sourceRef := "refs/heads/" + input.Branch
 	operation, operationIndex := findOperation(registry, task.ID)
+	if operation == nil && adoptionReleased(registry, task.ID) {
+		return queueError("adoption_released", "freshly adopt the source; this Task cannot fall through to creation")
+	}
 	intentCreated := false
 	if prep := preparationForTask(registry, task.ID); prep != nil {
 		disposition := preparationDisposition(registry, prep.ID)
@@ -1211,7 +1225,7 @@ func createTaskWorktreeLocked(dependencies Dependencies, root string, projects P
 			return err
 		}
 		for _, candidate := range registry.WorktreeOperations {
-			if candidate.GitCommonDir == task.GitCommonDir && (candidate.SourceRef == sourceRef || candidate.TargetLocator == target) {
+			if candidate.Release == nil && candidate.GitCommonDir == task.GitCommonDir && (candidate.SourceRef == sourceRef || candidate.TargetLocator == target) {
 				return workError(ErrorWorkIdentityConflict, fmt.Sprintf("branch or path is reserved by Task %s", candidate.TaskID), nil)
 			}
 		}

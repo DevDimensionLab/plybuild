@@ -184,7 +184,7 @@ func CreateEpic(d Dependencies, in EpicCreateInput) (EpicCreateResult, error) {
 					}
 				}
 				for _, t := range r.WorktreeOperations {
-					if t.GitCommonDir == repo.GitCommonDir && (t.SourceRef == in.ParentRef || t.SourceRef == "refs/heads/"+in.Branch || pathOverlap(t.TargetLocator, target) || t.TargetLocator == parent.CheckedOutAt) {
+					if t.Release == nil && t.GitCommonDir == repo.GitCommonDir && (t.SourceRef == in.ParentRef || t.SourceRef == "refs/heads/"+in.Branch || pathOverlap(t.TargetLocator, target) || t.TargetLocator == parent.CheckedOutAt) {
 						return workError(ErrorWorkIdentityConflict, "parent or target reserved by a Task; inspect task show", nil)
 					}
 				}
@@ -350,7 +350,7 @@ func validateEpicCreates(r WorkItemRegistry) error {
 			return fmt.Errorf("invalid Epic create state")
 		}
 		for _, t := range r.WorktreeOperations {
-			if t.ID == op.ID || t.WorktreeID == op.WorktreeID || t.GitCommonDir == op.GitCommonDir && (t.SourceRef == "refs/heads/"+op.Request.Branch || pathOverlap(t.TargetLocator, op.Request.Path)) {
+			if t.ID == op.ID || t.WorktreeID == op.WorktreeID || t.Release == nil && t.GitCommonDir == op.GitCommonDir && (t.SourceRef == "refs/heads/"+op.Request.Branch || pathOverlap(t.TargetLocator, op.Request.Path)) {
 				return fmt.Errorf("Epic create conflicts with Task intent")
 			}
 		}

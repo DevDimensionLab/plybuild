@@ -36,9 +36,11 @@ type workItemStoreFaults struct {
 }
 
 type systemWorkItemStore struct {
-	faults       *workItemStoreFaults
-	scope        *taskContentScope
-	contentScope *taskContentScope
+	adoptionMetadataOnly bool
+	adoptionReleaseTask  TaskID
+	faults               *workItemStoreFaults
+	scope                *taskContentScope
+	contentScope         *taskContentScope
 }
 type systemWorkItemStoreSession struct {
 	store     *systemWorkItemStore
@@ -87,6 +89,15 @@ type workItemRegistryV3Wire struct {
 }
 
 func (registry WorkItemRegistry) MarshalYAML() (any, error) {
+	if registry.FormatVersion == 7 {
+		return struct {
+			Content              workItemRegistryV4Wire  `yaml:",inline"`
+			FormatBoundary       *RegistryFormatBoundary `yaml:"format_boundary"`
+			EpicCreateBoundary   *RegistryFormatBoundary `yaml:"epic_create_boundary"`
+			EpicCreateOperations []EpicCreateOperation   `yaml:"epic_create_operations"`
+			AdoptionBoundary     *RegistryFormatBoundary `yaml:"adoption_boundary"`
+		}{workItemRegistryV4(registry), registry.FormatBoundary, registry.EpicCreateBoundary, registry.EpicCreateOperations, registry.AdoptionBoundary}, nil
+	}
 	if registry.FormatVersion == 6 {
 		return struct {
 			Content              workItemRegistryV4Wire  `yaml:",inline"`
@@ -298,7 +309,7 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 }
 
 func (store *systemWorkItemStore) validateClosure(root string, registry WorkItemRegistry) error {
-	if registry.FormatVersion >= 4 && !(store.scope == nil && store.contentScope != nil && store.contentScope.task == "") {
+	if !store.adoptionMetadataOnly && registry.FormatVersion >= 4 && !(store.scope == nil && store.contentScope != nil && store.contentScope.task == "") {
 		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
 		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
 			return err
@@ -312,12 +323,17 @@ func (store *systemWorkItemStore) validateClosure(root string, registry WorkItem
 
 func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) error {
 	store, root := session.store, session.root
-	if store.contentScope != nil && store.contentScope.task == "" {
+	if !store.adoptionMetadataOnly && store.contentScope != nil && store.contentScope.task == "" {
 		return queueError("task_goal_execution_conflict", "operation content dependencies are not bound")
 	}
 	old, err := session.Snapshot()
 	if err != nil {
 		return err
+	}
+	if store.adoptionMetadataOnly {
+		if e := validateAdoptionMetadataRelease(old, registry, store.adoptionReleaseTask); e != nil {
+			return e
+		}
 	}
 	if err := validateEpicCreateTransition(old, registry); err != nil {
 		return err
@@ -331,13 +347,15 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
 		return err
 	}
-	storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
-	if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
-		return err
-	}
+	if !store.adoptionMetadataOnly {
+		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
+		if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
+			return err
+		}
 
-	if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
-		return err
+		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
+			return err
+		}
 	}
 	contents, err := encodeWorkItemRegistry(registry)
 	if err != nil {
@@ -559,6 +577,9 @@ func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
 	if version >= 6 {
 		fields = append(fields, yamlShapeField{name: "epic_create_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})}, yamlShapeField{name: "epic_create_operations", typeOf: reflect.TypeOf([]EpicCreateOperation{})})
 	}
+	if version >= 7 {
+		fields = append(fields, yamlShapeField{name: "adoption_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
+	}
 	return validateYAMLMappingShape(root, fields, "work-item registry")
 }
 
@@ -577,6 +598,37 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
+		if expected == reflect.TypeOf(WorktreeOperationRecord{}) || expected == reflect.TypeOf(WorkspaceTaskPreparePlan{}) || expected == reflect.TypeOf(TaskGoalExecutePreview{}) {
+			present := map[string]bool{}
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				present[node.Content[i].Value] = true
+			}
+			filtered := []yamlShapeField{}
+			for _, f := range fields {
+				optional := f.name == "adoption_observations" || f.name == "execution" || f.name == "adoption" || f.name == "release" || f.name == "source_mode" || f.name == "adoption_id" || f.name == "start_oid" || f.name == "start_tree"
+				if !optional || present[f.name] {
+					filtered = append(filtered, f)
+				}
+			}
+			fields = filtered
+		}
+		if expected == reflect.TypeOf(TaskExecutorAssignment{}) {
+			present := false
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				if node.Content[i].Value == "allow_local_install" {
+					present = true
+				}
+			}
+			if !present {
+				filtered := []yamlShapeField{}
+				for _, f := range fields {
+					if f.name != "allow_local_install" {
+						filtered = append(filtered, f)
+					}
+				}
+				fields = filtered
+			}
+		}
 		if expected == reflect.TypeOf(DeliveryAgreement{}) || expected == reflect.TypeOf(DeliveryAuthorization{}) || expected == reflect.TypeOf(DeliveryAcceptanceDecision{}) {
 			present := map[string]bool{}
 			for i := 0; i+1 < len(node.Content); i += 2 {
@@ -717,6 +769,9 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 	if err := validateRegistryBoundary(registry); err != nil {
 		return err
 	}
+	if e := validateAdoptionChains(registry); e != nil {
+		return e
+	}
 	if !sortedUniqueEpics(registry.Epics) || !sortedUniqueTasks(registry.Tasks) || !sortedUniqueOperations(registry.WorktreeOperations) {
 		return errors.New("work-item arrays must be sorted by unique IDs")
 	}
@@ -776,7 +831,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			return fmt.Errorf("invalid or duplicate operation ID %s", operation.ID)
 		}
 		operationIDs[operation.ID] = true
-		if _, ok := operations[operation.TaskID]; ok {
+		if _, ok := operations[operation.TaskID]; ok && operation.Release == nil {
 			return fmt.Errorf("Task %s has multiple operations", operation.TaskID)
 		}
 		if !worktreeIDPattern.MatchString(string(operation.WorktreeID)) || !digestPattern.MatchString(operation.IntentDigest) || !validStoredPath(operation.GitCommonDir) || !validStoredPath(operation.TargetLocator) || !validFullBranchRef(operation.ParentRef) || !validFullBranchRef(operation.SourceRef) || !validOIDText(operation.ParentOID) || !validOIDText(operation.ParentTree) {
@@ -789,6 +844,20 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 		computed, err := intentDigest(operation)
 		if err != nil || computed != operation.IntentDigest {
 			return fmt.Errorf("operation %s intent digest does not match", operation.ID)
+		}
+		if operation.Adoption == nil && (operation.Release != nil || operation.Execution != nil || len(operation.AdoptionObservations) > 0) {
+			return fmt.Errorf("create operation cannot contain adoption extensions")
+		}
+		if operation.Adoption != nil {
+			if registry.FormatVersion < 7 {
+				return fmt.Errorf("adoption requires registry format 7")
+			}
+			if err := validateStoredAdoption(registry, operation); err != nil {
+				return err
+			}
+			if operation.Release != nil {
+				continue
+			}
 		}
 		if operation.State != "creating" && operation.State != "ready" && operation.State != "reconciliation_required" {
 			return fmt.Errorf("operation %s has invalid state", operation.ID)
@@ -844,14 +913,14 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 				return fmt.Errorf("ready Task %s has invalid binding", task.ID)
 			}
 			wt := task.Worktree
-			if wt.ID != operation.WorktreeID || wt.OperationID != operation.ID || wt.IntentDigest != operation.IntentDigest || wt.OwnerKind != "task" || wt.OwnerID != task.ID || wt.Origin != "ply_created" || wt.Locator != operation.TargetLocator || wt.Ref != operation.SourceRef || wt.OID != operation.ParentOID || wt.Tree != operation.ParentTree || wt.GitCommonDir != operation.GitCommonDir || wt.ParentEpicID != task.ParentEpicID || wt.ParentWorktreeID != operation.ParentWorktreeID || wt.ParentRef != operation.ParentRef || wt.ParentOID != operation.ParentOID || wt.ParentTree != operation.ParentTree {
+			if wt.ID != operation.WorktreeID || wt.OperationID != operation.ID || wt.IntentDigest != operation.IntentDigest || wt.OwnerKind != "task" || wt.OwnerID != task.ID || wt.Origin != operationOrigin(operation) || wt.Locator != operation.TargetLocator || wt.Ref != operation.SourceRef || wt.OID != operationStartOID(operation) || wt.Tree != operationStartTree(operation) || wt.GitCommonDir != operation.GitCommonDir || wt.ParentEpicID != task.ParentEpicID || wt.ParentWorktreeID != operation.ParentWorktreeID || wt.ParentRef != operation.ParentRef || wt.ParentOID != operation.ParentOID || wt.ParentTree != operation.ParentTree {
 				return fmt.Errorf("ready Task %s binding differs from operation", task.ID)
 			}
 			if owner, ok := worktreeIDs[wt.ID]; ok && owner != "operation "+string(operation.ID) {
 				return fmt.Errorf("worktree ID %s reused", wt.ID)
 			}
 			observed := operation.LastObservation
-			if *observed.ParentRefOID != operation.ParentOID || *observed.ParentRefTree != operation.ParentTree || *observed.ParentWorktreeLocator != binding.Worktree.Locator || *observed.ParentWorktreeRef != operation.ParentRef || *observed.ParentWorktreeOID != operation.ParentOID || *observed.ParentWorktreeTree != operation.ParentTree || *observed.ParentWorktreeGitCommonDir != operation.GitCommonDir || !*observed.ParentWorktreeClean || *observed.SourceRefOID != operation.ParentOID || *observed.SourceRefTree != operation.ParentTree || *observed.SourceRefCheckedOutAt != operation.TargetLocator || *observed.TargetLocator != operation.TargetLocator || *observed.TargetRef != operation.SourceRef || *observed.TargetOID != operation.ParentOID || *observed.TargetTree != operation.ParentTree || *observed.TargetGitCommonDir != operation.GitCommonDir || !*observed.TargetClean || !*observed.InventoryMatch {
+			if *observed.ParentRefOID != operation.ParentOID || *observed.ParentRefTree != operation.ParentTree || *observed.ParentWorktreeLocator != binding.Worktree.Locator || *observed.ParentWorktreeRef != operation.ParentRef || *observed.ParentWorktreeOID != operation.ParentOID || *observed.ParentWorktreeTree != operation.ParentTree || *observed.ParentWorktreeGitCommonDir != operation.GitCommonDir || !*observed.ParentWorktreeClean || *observed.SourceRefOID != operationStartOID(operation) || *observed.SourceRefTree != operationStartTree(operation) || *observed.SourceRefCheckedOutAt != operation.TargetLocator || *observed.TargetLocator != operation.TargetLocator || *observed.TargetRef != operation.SourceRef || *observed.TargetOID != operationStartOID(operation) || *observed.TargetTree != operationStartTree(operation) || *observed.TargetGitCommonDir != operation.GitCommonDir || !*observed.TargetClean || !*observed.InventoryMatch {
 				return fmt.Errorf("ready Task %s exact observation differs from operation", task.ID)
 			}
 		default:

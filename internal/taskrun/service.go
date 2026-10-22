@@ -18,6 +18,11 @@ func SystemDependencies(w workspace.Dependencies) Dependencies {
 		return deliveryEvidenceAuthorization(d, request)
 	}
 	d.Workspace.HandoffEvidence = workflowhandoff.NewTaskHandoffEvidenceReader(d.Workflow)
+	if w.SourceWriters == nil {
+		d.Workspace.SourceWriters = func(path string) (workspace.SourceWriterObservation, error) {
+			return ObserveSourceWriters(d, path, nil)
+		}
+	}
 	d.Workflow.TaskWorkspace = &d.Workspace
 	return d
 }

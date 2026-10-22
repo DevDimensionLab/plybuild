@@ -30,7 +30,7 @@ type Identity struct {
 }
 
 func Current() (Identity, error) {
-	i := Identity{Kind: "PlyExecutable@1", SchemaVersion: 1, Version: Version, SourceCommit: SourceCommit, OS: runtime.GOOS, Arch: runtime.GOARCH, RegistryFormats: []int{1, 2, 3, 4, 5, 6}}
+	i := Identity{Kind: "PlyExecutable@1", SchemaVersion: 1, Version: Version, SourceCommit: SourceCommit, OS: runtime.GOOS, Arch: runtime.GOARCH, RegistryFormats: []int{1, 2, 3, 4, 5, 6, 7}}
 	if b, ok := debug.ReadBuildInfo(); ok {
 		for _, s := range b.Settings {
 			if s.Key == "vcs.revision" && i.SourceCommit == "" {

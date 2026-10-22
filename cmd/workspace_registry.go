@@ -24,8 +24,10 @@ func newWorkspaceRegistryCommand(d workspace.Dependencies) *cobra.Command {
 			upgrade := workspace.UpgradeRegistry
 			if to == 6 {
 				upgrade = workspace.UpgradeEpicCreateRegistry
+			} else if to == 7 {
+				upgrade = workspace.UpgradeAdoptionRegistry
 			} else if to != 5 {
-				return fmt.Errorf("to-format must be 5 or 6")
+				return fmt.Errorf("to-format must be 5, 6 or 7")
 			}
 			p, err := upgrade(d, directory, pin, confirmation, apply)
 			if err != nil {
@@ -37,7 +39,7 @@ func newWorkspaceRegistryCommand(d workspace.Dependencies) *cobra.Command {
 			_, err = fmt.Fprintf(c.OutOrStdout(), "Registry %s: format %d -> %d\nBackup: %s\nConfirmation: %s\n", p.State, p.FromVersion, p.ToVersion, p.Backup, p.Confirmation)
 			return err
 		}}
-	u.Flags().IntVar(&to, "to-format", 5, "explicit target format (5, or 6 for Epic creation)")
+	u.Flags().IntVar(&to, "to-format", 5, "explicit target format (5, 6 for Epic creation, or 7 for Task adoption)")
 	u.Flags().StringVar(&directory, "package", "", "absolute delivered release directory")
 	u.Flags().StringVar(&pin, "sha256", "", "expected sha256: manifest digest")
 	u.Flags().StringVar(&confirmation, "confirm", "", "exact fresh preview confirmation")

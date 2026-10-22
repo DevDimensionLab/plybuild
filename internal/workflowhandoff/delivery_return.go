@@ -167,7 +167,25 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 	if e != nil {
 		return out, e
 	}
-	if parent.Handoff.SHA256 != objectString(b, "parent_handoff_sha256") || objectString(b, "owner_claim") != owner.ActorClaim || parent.Handoff.Target.OID != expectedParentOID {
+	parentMatches := parent.Handoff.Target.OID == expectedParentOID
+	// Adopted executions freeze source S independently of chosen parent B.
+	// Recover both from this exact native preparation, never from a caller claim.
+	e = workspace.WithTaskSpecSnapshot(wd, parent.Handoff.Workspace.Root, func(session *workspace.TaskSpecSession) error {
+		p, e := session.TaskRunPreparation(owner.PreparationID)
+		if e != nil {
+			return e
+		}
+		if p.Preparation == nil {
+			return fmt.Errorf("preparation missing")
+		}
+		plan := p.Preparation.Plan
+		parentMatches = plan.TaskID == workspace.TaskID(taskID) && plan.ParentOID == expectedParentOID && plan.SourceStartOID() == parent.Handoff.Target.OID && plan.WorktreePath == parent.Handoff.Target.Worktree && "refs/heads/"+plan.Branch == parent.Handoff.Target.Ref
+		return nil
+	})
+	if e != nil {
+		return out, e
+	}
+	if parent.Handoff.SHA256 != objectString(b, "parent_handoff_sha256") || objectString(b, "owner_claim") != owner.ActorClaim || !parentMatches {
 		return out, fmt.Errorf("delivery owner or original parent binding differs")
 	}
 	if preview.Readback.RecoveryStatus != "complete" && preview.Readback.Classification != "ready" {

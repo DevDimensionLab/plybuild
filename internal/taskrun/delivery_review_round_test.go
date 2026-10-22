@@ -87,7 +87,7 @@ func reviewRoundFixture(t *testing.T, provider ...string) (deliveryFixture, Work
 			t.Fatal(err)
 		}
 	} else {
-		f = newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: &agreement, AllowLocalInstall: true})
+		f = newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: &agreement, AllowLocalInstall: true, AdoptExisting: len(provider) > 0 && provider[0] == "adopted"})
 		reviewRoundPatchHerdr(t, &f)
 		o = deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
 	}
@@ -217,6 +217,13 @@ func TestFS01ReviewRoundsFromExistingTaskToDelivery(t *testing.T) {
 		t.Fatalf("one native operation did not start review of the existing Task: %v", err)
 	}
 	round := reviewRoundLatest(t, requested)
+	actualBrief, e := os.ReadFile(round.Brief.Locator)
+	if e != nil {
+		t.Fatal(e)
+	}
+	if !strings.Contains(string(actualBrief), "Review/diff base: "+f.Prepared.Preparation.Preparation.Plan.ParentOID) || strings.Contains(string(actualBrief), "Adopted start:") {
+		t.Fatal("ordinary create reviewer scope changed")
+	}
 	if round.Round != 1 || round.CandidateOID != first || round.CandidateTree != firstTree || round.Coordinator != "fixture root coordinator" || round.State != "requested" || !round.Current || round.ReviewerStart != "started" || round.ReviewerPane != "w-fixture:r1" {
 		t.Fatalf("review round does not bind the exact candidate, coordinator and started reviewer: %+v", round)
 	}

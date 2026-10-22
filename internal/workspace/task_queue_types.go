@@ -56,6 +56,10 @@ type TaskQueueEvent struct {
 }
 
 type WorkspaceTaskPreparePlan struct {
+	SourceMode            string                   `yaml:"source_mode,omitempty" json:"source_mode,omitempty"`
+	AdoptionID            WorktreeOperationID      `yaml:"adoption_id,omitempty" json:"adoption_id,omitempty"`
+	StartOID              string                   `yaml:"start_oid,omitempty" json:"start_oid,omitempty"`
+	StartTree             string                   `yaml:"start_tree,omitempty" json:"start_tree,omitempty"`
 	Kind                  string                   `yaml:"kind" json:"kind"`
 	SchemaVersion         int                      `yaml:"schema_version" json:"schema_version"`
 	Workspace             IntegrationPlanWorkspace `yaml:"workspace" json:"workspace"`

@@ -293,6 +293,9 @@ func queueParentObservation(d Dependencies, t QueueTarget) (PlanWorktreeObservat
 func queueUnresolved(r WorkItemRegistry, t QueueTarget) []string {
 	out := []string{}
 	for _, o := range r.WorktreeOperations {
+		if o.Release != nil {
+			continue
+		}
 		if o.ParentEpicID == t.EpicID && o.RepoID == t.RepoID && o.State != "ready" {
 			p := preparationForTask(r, o.TaskID)
 			if p != nil && preparationDisposition(r, p.ID) == "released" {

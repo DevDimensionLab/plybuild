@@ -130,12 +130,16 @@ func invokerShellPID(d Dependencies, s workflowState, pane string) int {
 // started. It excludes only this command, its own children and, when it is
 // this command's direct parent, the Herdr-identified invoker shell.
 func observeWriterLiveness(d Dependencies, s workflowState, transcript string, invokerShell int) (TaskWriterLiveness, error) {
-	out := TaskWriterLiveness{Method: writerLivenessMethod, Scope: s.Observed.Target.WorktreeLocator, RemainingPIDs: []int{}, ExcludedPIDs: []int{}, Limitation: writerLivenessLimitation}
+	return observePathWriterLiveness(d, s.Observed.Target.WorktreeLocator, deliveryOwnerSession(s), transcript, invokerShell)
+}
+
+func observePathWriterLiveness(d Dependencies, path, session, transcript string, invokerShell int) (TaskWriterLiveness, error) {
+	out := TaskWriterLiveness{Method: writerLivenessMethod, Scope: path, RemainingPIDs: []int{}, ExcludedPIDs: []int{}, Limitation: writerLivenessLimitation}
 	observe := d.LocalProcesses
 	if observe == nil {
 		observe = systemLocalProcesses
 	}
-	table, err := observe(deliveryOwnerSession(s), transcript)
+	table, err := observe(session, transcript)
 	if err != nil {
 		return out, err
 	}
@@ -181,7 +185,7 @@ func observeWriterLiveness(d Dependencies, s workflowState, transcript string, i
 			out.ExcludedPIDs = append(out.ExcludedPIDs, p.PID)
 			continue
 		}
-		if p.Session != "" || p.CWD != "" && sourceContains(s.Observed.Target.WorktreeLocator, p.CWD) {
+		if p.Session != "" || p.CWD != "" && sourceContains(path, p.CWD) {
 			out.RemainingPIDs = append(out.RemainingPIDs, p.PID)
 		}
 	}

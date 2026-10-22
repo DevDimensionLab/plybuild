@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"path/filepath"
 	"strings"
@@ -48,7 +49,7 @@ func TestAL41LaunchDelegationGuidance(t *testing.T) {
 func TestAL41ReviewCoordinatorReturnGuidance(t *testing.T) {
 	s := workflowState{Request: WorkflowRequest{Delivery: &DeliveryContract{}}}
 	r := deliveryReviewRound{Coordinator: "synthetic backlog coordinator", CoordinatorPane: "w-fixture:parent", RunID: "synthetic-run"}
-	brief := deliveryReviewBrief(s, r, nil, "/fixture", "/fixture/control", "/fixture/template.json", "/fixture/context.json")
+	brief := deliveryReviewBrief(s, r, nil, "/fixture", "/fixture/control", "/fixture/template.json", "/fixture/context.json", workspace.WorkspaceTaskPreparePlan{})
 	for _, want := range []string{
 		"This is an internal review round",
 		"Return through native review-return to coordinator synthetic backlog coordinator (pane w-fixture:parent)",
