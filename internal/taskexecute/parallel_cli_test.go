@@ -85,7 +85,7 @@ jsonschema.Draft202012Validator(s,format_checker=jsonschema.FormatChecker()).val
 	for _, entry := range []struct {
 		args     []string
 		fragment string
-	}{{[]string{"workflow", "execute", "--help"}, "--parallel"}, {[]string{"workflow", "execute", "reconcile-source", "--help"}, "--continue"}, {[]string{"workspace", "registry", "activate-parallel", "--help"}, "--qualified-run"}} {
+	}{{[]string{"workflow", "execute", "--help"}, "--parallel"}, {[]string{"workflow", "execute", "reconcile-source", "--help"}, "--continue"}, {[]string{"workflow", "execute", "reconcile-source", "--help"}, "--cancel-unstarted"}, {[]string{"workspace", "registry", "activate-parallel", "--help"}, "--qualified-run"}} {
 		if !strings.Contains(string(call(0, entry.args...)), entry.fragment) {
 			t.Fatalf("help omits %s", entry.fragment)
 		}
@@ -108,6 +108,8 @@ jsonschema.Draft202012Validator(s,format_checker=jsonschema.FormatChecker()).val
 		t.Fatal(e)
 	}
 	call(1, "workflow", "execute", "--next", "--parallel", "--check", "--format", "json")
+	call(1, "workflow", "execute", "reconcile-source", "fixture-run", "--context", "fixture-context", "--cancel-unstarted", "--format", "json")
+	call(1, "workflow", "execute", "reconcile-source", "fixture-run", "--context", "fixture-context", "--cancel-unstarted", "--abort", "--operation", "fixture-operation", "--format", "json")
 	after, e := os.ReadFile(filepath.Join(root, ".ply", "work-items.yaml"))
 	if e != nil || !bytes.Equal(before, after) {
 		t.Fatal("invalid CLI admission wrote registry")

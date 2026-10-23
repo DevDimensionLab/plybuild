@@ -233,3 +233,97 @@ func TestParallelNamedGoalPreparationsAndCAS(t *testing.T) {
 		t.Fatal("retry duplicated preparation")
 	}
 }
+
+// PAR-T01/T16: maximum parallel capability must preserve serial --next retries.
+func TestParallelSerialPrepareNextKeepsCurrent(t *testing.T) {
+	for _, version := range []int{0, 1, 2} {
+		name := "format4"
+		if version > 0 {
+			name = "legacy-" + string(rune('0'+version))
+		}
+		t.Run(name, func(t *testing.T) {
+			f := newWorkItemJourneyFixtureVersion(t, version > 0)
+			if version > 0 {
+				root := filepath.Dir(f.wrapper)
+				if version == 2 {
+					if e := f.dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+						r, e := session.Snapshot()
+						if e != nil {
+							return e
+						}
+						upgradeRegistryToV2(&r)
+						return session.Publish(r)
+					}); e != nil {
+						t.Fatal(e)
+					}
+				}
+				before, e := os.ReadFile(workItemsPath(root))
+				if e != nil {
+					t.Fatal(e)
+				}
+				in := contentFixtureProblem(t, f, "serial-next-legacy")
+				if _, e = RecordTaskProblem(f.dependencies, in); e == nil {
+					t.Fatal("legacy import lost explicit upgrade acknowledgement")
+				}
+				raw, e := os.ReadFile(in.File)
+				if e != nil {
+					t.Fatal(e)
+				}
+				v, e := canonicaljson.DecodeStrict(raw)
+				if e != nil {
+					t.Fatal(e)
+				}
+				m := contentFields(v)
+				m["registry_upgrade"] = contentRefValue(TaskRegistryUpgrade{FromVersion: version, RegistrySHA256: digestTaskBytes(before)})
+				raw, e = canonicaljson.Marshal(contentObject(m))
+				if e != nil {
+					t.Fatal(e)
+				}
+				if e = os.WriteFile(in.File, raw, 0600); e != nil {
+					t.Fatal(e)
+				}
+				if _, e = RecordTaskProblem(f.dependencies, in); e != nil {
+					t.Fatal(e)
+				}
+				backup, e := f.dependencies.TaskContent.Read(root, "backups", digestTaskBytes(before))
+				if e != nil || string(backup) != string(before) {
+					t.Fatal("legacy raw backup changed")
+				}
+			}
+			selection := queueSelect(t, f, "task", "serial-next", nil)
+			for _, id := range []TaskID{"ply-consumer-agent-status", "ply-registered-cross-repo-plan"} {
+				if _, e := CreateTask(f.dependencies, TaskCreateInput{TaskID: id, Title: string(id), Description: "Protected pending reference", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
+					t.Fatal(e)
+				}
+			}
+			queueSetFixture(t, f, "serial-next", []QueueEntry{{TaskID: "task", Selection: &selection}, {TaskID: "ply-consumer-agent-status"}, {TaskID: "ply-registered-cross-repo-plan"}})
+			first := queuePrepareFixture(t, f, true)
+			before := queueStateBytes(t, f)
+			for _, apply := range []bool{false, true} {
+				out, e := PrepareTask(f.dependencies, TaskPrepareInput{Target: queueTargetFixture(), Selector: QueueSelector{Kind: "next"}, Apply: apply, Confirmation: first.Preparation.PlanSHA256})
+				if e != nil || out.Preparation == nil || out.Preparation.ID != first.Preparation.ID || queueStateBytes(t, f) != before {
+					t.Fatalf("serial --next retry apply=%t changed current/pending: %+v %v", apply, out, e)
+				}
+			}
+			q, e := ListTaskQueue(f.dependencies, queueTargetFixture(), false)
+			if e != nil || q.Registry.FormatVersion != 4 || len(q.Pending) != 2 || q.Pending[0].TaskID != "ply-consumer-agent-status" || q.Pending[1].TaskID != "ply-registered-cross-repo-plan" {
+				t.Fatalf("serial pending/format changed: %+v %v", q, e)
+			}
+		})
+	}
+}
+
+func TestParallelLegacyPrepareRefusesKnownParallelConfirmation(t *testing.T) {
+	f, p, _ := sourceReconcileFixture(t, false)
+	task := p.Preparation.Plan.TaskID
+	before := queueStateBytes(t, f)
+	for _, apply := range []bool{false, true} {
+		_, e := PrepareTask(f.dependencies, TaskPrepareInput{Target: queueTargetFixture(), Selector: QueueSelector{Kind: "task", TaskID: &task}, Apply: apply, Confirmation: p.Preparation.Preparation.PlanSHA256})
+		if e == nil {
+			t.Errorf("legacy prepare adopted known parallel confirmation apply=%t", apply)
+		}
+		if queueStateBytes(t, f) != before {
+			t.Fatal("exclusive read/recovery changed parallel preparation")
+		}
+	}
+}

@@ -110,9 +110,11 @@ func (git *systemTaskIntegrationGit) sourceIgnoredCollision(path string, op Task
 }
 
 func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePlan, op TaskSourceReconciliation, action string) (TaskSourceReconciliation, error) {
-	if action != "" && action != "continue" && action != "abort" {
-		return op, WorkInvalidArguments("reconciliation action must be continue or abort")
+	if action != "" && action != "continue" && action != "abort" && action != "cancel-unstarted" {
+		return op, WorkInvalidArguments("reconciliation action must be continue, abort or cancel-unstarted")
 	}
+	unstarted := op.Unstarted
+	op.Unstarted = false
 	path, ref := plan.WorktreePath, "refs/heads/"+plan.Branch
 	x, err := git.ObserveIntegrationWorktree(path, ref)
 	if err != nil {
@@ -134,6 +136,13 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		return op, queueError("reconciliation_effect_unknown", "source operation marker differs")
 	}
 	mergeHead := git.sourceMergeHead(path, op)
+	if action == "cancel-unstarted" {
+		if !unstarted || op.State != "intent" || !os.IsNotExist(e) || mergeHead != "" || !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || x.OID != op.Plan.BeforeOID || x.Tree != op.Plan.BeforeTree {
+			return op, queueError("source_cancel_unproven", "cancellation requires positive native unstarted evidence, the exact clean source and no Git marker or pending effect")
+		}
+		op.State, op.AfterOID, op.AfterTree = "aborted", x.OID, x.Tree
+		return op, nil
+	}
 	// A changed ref is adopted only with this exact marker, merge parents and
 	// native commit message. An unrelated/ambiguous commit remains unknown.
 	if x.OID != op.Plan.BeforeOID {
@@ -160,6 +169,9 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 			return op, e2
 		}
 		if action == "abort" {
+			if !digestPattern.MatchString(op.ConflictSHA256) {
+				return op, queueError("source_abort_evidence_unknown", "the original conflict baseline was not published; preserve the source and resolve/stage for native continue")
+			}
 			fingerprint, e2 := git.sourceConflictFingerprint(path, op)
 			if e2 != nil {
 				return op, e2
@@ -192,10 +204,16 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 			}
 			return git.ReconcileSource(plan, op, "")
 		}
+		// Observation must not replace the original abort baseline with owner
+		// edits or staged resolutions made after this conflict was first recorded.
+		if op.State == "source_conflict" {
+			return op, nil
+		}
 		op.State = "source_conflict"
 		op.ConflictPaths = conflicts
-		op.ConflictSHA256, err = git.sourceConflictFingerprint(path, op)
-		return op, err
+		// Recovery can observe the pending merge but cannot reconstruct its
+		// original working-file baseline after the owner may have edited it.
+		return op, nil
 	}
 	if action != "" {
 		return op, queueError("source_reconciliation_not_pending", "continue/abort requires this known native pending merge")
@@ -205,6 +223,21 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		return op, nil
 	}
 	if op.State == "source_conflict" {
+		op.State = "effect_unknown"
+		return op, nil
+	}
+	if !unstarted || !os.IsNotExist(e) {
+		// A reserved start may have lost its reply without moving HEAD. Only
+		// the original already-inclusive, marker-bound no-merge outcome can
+		// be recovered here; never issue another merge for an ambiguous attempt.
+		contained, checkErr := git.CheckAncestor(RepoRecord{Locator: path}, op.Plan.Parent.OID, op.Plan.BeforeOID)
+		if checkErr != nil {
+			return op, checkErr
+		}
+		if e == nil && contained {
+			op.State, op.AfterOID, op.AfterTree = "committed", x.OID, x.Tree
+			return op, nil
+		}
 		op.State = "effect_unknown"
 		return op, nil
 	}
@@ -220,6 +253,7 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		return op, collisionErr
 	}
 	if collision {
+		op.Unstarted = unstarted && os.IsNotExist(e)
 		return op, queueError("source_ignored_collision", "preserve or move ignored local content outside the source before rechecking this same operation")
 	}
 	if os.IsNotExist(e) {
@@ -228,6 +262,7 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 			return op, parentErr
 		}
 		if !parent.Clean || !parent.Symbolic || len(parent.InProgress) != 0 || parent.Ref != plan.Target.ParentRef || parent.GitCommonDir != plan.Target.GitCommonDir || parent.OID != op.Plan.Parent.OID || parent.Tree != op.Plan.Parent.Tree {
+			op.Unstarted = unstarted
 			return op, queueError("source_reconciliation_parent_changed", "the original clean parent must still match before this operation starts a merge")
 		}
 	}
@@ -268,6 +303,16 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 	if after.OID == op.Plan.BeforeOID && git.sourceMergeHead(path, op) == "" {
 		op.State = "effect_unknown"
 		return op, nil
+	}
+	if after.OID == op.Plan.BeforeOID && git.sourceMergeHead(path, op) == op.Plan.Parent.OID {
+		// Capture abort evidence only in the invocation that started the merge.
+		op.State = "source_conflict"
+		op.ConflictPaths, e2 = git.sourceConflicts(path, op)
+		if e2 != nil {
+			return op, e2
+		}
+		op.ConflictSHA256, e2 = git.sourceConflictFingerprint(path, op)
+		return op, e2
 	}
 	return git.ReconcileSource(plan, op, "")
 }

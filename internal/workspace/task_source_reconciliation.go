@@ -10,6 +10,9 @@ import (
 // original identity and an exact parent; the terminal receipt adds an effective
 // generation without modifying the preparation or the frozen Spec.
 type TaskSourceReconciliation struct {
+	// Positive native pre-effect fact, revoked durably before invoking Git.
+	// Absence on historical records never establishes that an effect is unstarted.
+	Unstarted      bool                         `yaml:"unstarted,omitempty" json:"unstarted,omitempty"`
 	ConflictSHA256 string                       `yaml:"conflict_sha256" json:"conflict_sha256"`
 	ID             string                       `yaml:"id" json:"id"`
 	PlanSHA256     string                       `yaml:"plan_sha256" json:"plan_sha256"`
@@ -175,6 +178,9 @@ func sourceReconciliationPlan(d Dependencies, root string, r WorkItemRegistry, p
 // after interruption. The taskrun callback validates owner/session/stops first.
 func ReconcileTaskSource(d Dependencies, in TaskSourceReconciliationInput) (TaskSourceReconciliationReadback, error) {
 	var out TaskSourceReconciliationReadback
+	if in.Action == "cancel-unstarted" && (!in.Apply || in.OperationID == "") {
+		return out, WorkInvalidArguments("cancel-unstarted requires the exact --operation ID")
+	}
 	root, err := containingWorkItemWorkspace(d)
 	if err != nil {
 		return out, err
@@ -212,7 +218,7 @@ func ReconcileTaskSource(d Dependencies, in TaskSourceReconciliationInput) (Task
 			}
 		}
 		if in.OperationID != "" || in.Action != "" {
-			return queueError("source_reconciliation_not_found", "continue/abort requires the same recorded operation")
+			return queueError("source_reconciliation_not_found", "continue/abort/cancel-unstarted requires the same recorded operation")
 		}
 		plan, e := sourceReconciliationPlan(d, root, r, projects, in)
 		if e != nil {
@@ -226,7 +232,7 @@ func ReconcileTaskSource(d Dependencies, in TaskSourceReconciliationInput) (Task
 		if in.Confirmation != digest {
 			return queueError("source_reconciliation_stale", "source, parent, review or effective basis changed before apply")
 		}
-		op = TaskSourceReconciliation{ID: "src_" + strings.TrimPrefix(digest, "sha256:"), PlanSHA256: digest, Plan: plan, State: "intent", ConflictPaths: []string{}, RecordedAtUTC: queueNow(d)}
+		op = TaskSourceReconciliation{Unstarted: true, ID: "src_" + strings.TrimPrefix(digest, "sha256:"), PlanSHA256: digest, Plan: plan, State: "intent", ConflictPaths: []string{}, RecordedAtUTC: queueNow(d)}
 		r.SourceReconciliations = append(r.SourceReconciliations, op)
 		return s.Publish(r)
 	})
@@ -267,8 +273,28 @@ func ReconcileTaskSource(d Dependencies, in TaskSourceReconciliationInput) (Task
 			if !contentTypedEqual(old, op) {
 				return queueError("source_reconciliation_conflict", "refresh this same operation before applying changed state")
 			}
+			// A crash or lost reply after this publication cannot leave a
+			// cancellation proof attached to an attempted or ambiguous effect.
+			// Abort/continue require an already pending merge and cannot start
+			// an intent. Their pre-effect refusal retains its positive fact.
+			if old.Unstarted && in.Action == "" {
+				r.SourceReconciliations[i].Unstarted = false
+				if e := s.Publish(r); e != nil {
+					return e
+				}
+				op = r.SourceReconciliations[i]
+			}
 			observed, e := adapter.ReconcileSource(prep.Plan, old, in.Action)
 			if e != nil {
+				// Only the adapter's positively observed pre-effect refusal can
+				// restore this fact; a missing marker alone cannot restore it.
+				if observed.Unstarted {
+					r.SourceReconciliations[i] = observed
+					if publishErr := s.Publish(r); publishErr != nil {
+						return publishErr
+					}
+					op = observed
+				}
 				return e
 			}
 			if d.SourceReconciliationFault != nil {
@@ -292,9 +318,18 @@ func sourceReconciliationReadback(op TaskSourceReconciliation) TaskSourceReconci
 	action := "Request fresh separate native review, then verify this exact effective generation before return."
 	if op.State == "source_conflict" {
 		action = "Resolve and stage the recorded conflict paths in this source, then reconcile-source --continue; --abort refuses unexpected edits."
+		if !digestPattern.MatchString(op.ConflictSHA256) {
+			action = "The original conflict baseline was not published; abort is refused. Preserve source edits, resolve and stage the conflict, then use native --continue."
+		}
+	}
+	if op.State == "aborted" {
+		action = "Request a fresh reconcile-source preview for the current parent; this aborted operation adds no effective generation."
 	}
 	if op.State == "intent" || op.State == "effect_unknown" {
 		action = "Observe/resume only this exact native operation; unknown effects cannot be replayed."
+	}
+	if op.State == "intent" && op.Unstarted {
+		action = "Recheck the same known unstarted intent, or explicitly --cancel-unstarted --operation ID before a fresh parent preview. --abort is only for a known pending merge."
 	}
 	return TaskSourceReconciliationReadback{State: op.State, Plan: &op.Plan, Confirmation: op.PlanSHA256, Operation: &op, NextAction: action}
 }
@@ -330,6 +365,9 @@ func validateSourceReconciliations(r WorkItemRegistry) error {
 			return fmt.Errorf("invalid source reconciliation binding")
 		}
 		seen[op.ID] = true
+		if op.Unstarted && op.State != "intent" {
+			return fmt.Errorf("unstarted proof on a started or terminal source operation")
+		}
 		ordinals[p.ID]++
 		if plan.AttemptOrdinal != ordinals[p.ID] {
 			return fmt.Errorf("broken reconciliation attempt ordinal")
@@ -378,6 +416,9 @@ func validateSourceReconciliationTransition(old, next WorkItemRegistry) error {
 			found = true
 			if !contentTypedEqual(n.Plan, op.Plan) || n.PlanSHA256 != op.PlanSHA256 || n.RecordedAtUTC != op.RecordedAtUTC {
 				return fmt.Errorf("immutable reconciliation intent changed")
+			}
+			if op.State == "source_conflict" && n.ConflictSHA256 != op.ConflictSHA256 {
+				return fmt.Errorf("original source conflict evidence changed")
 			}
 			if op.State == "committed" || op.State == "aborted" || op.State == "effect_unknown" {
 				if !contentTypedEqual(n, op) {

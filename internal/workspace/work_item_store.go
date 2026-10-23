@@ -663,6 +663,17 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
+		if expected == reflect.TypeOf(TaskSourceReconciliation{}) {
+			present := false
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				if node.Content[i].Value == "unstarted" {
+					present = true
+				}
+			}
+			if !present {
+				fields = fields[1:]
+			}
+		}
 		if expected == reflect.TypeOf(WorkspaceEpicBaseUpdatePlan{}) {
 			present := false
 			for i := 0; i+1 < len(node.Content); i += 2 {

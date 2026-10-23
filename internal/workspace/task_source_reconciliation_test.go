@@ -7,6 +7,86 @@ import (
 	"testing"
 )
 
+func TestParallelConflictRetryPreservesOriginalAbortEvidence(t *testing.T) {
+	for _, staged := range []bool{false, true} {
+		name := "edited"
+		if staged {
+			name = "staged"
+		}
+		t.Run(name, func(t *testing.T) {
+			f, prepared, in := sourceReconcileFixture(t, true)
+			preview, e := ReconcileTaskSource(f.dependencies, in)
+			if e != nil {
+				t.Fatal(e)
+			}
+			in.Apply, in.Confirmation = true, preview.Confirmation
+			conflict, e := ReconcileTaskSource(f.dependencies, in)
+			if e != nil || conflict.State != "source_conflict" {
+				t.Fatalf("conflict: %+v %v", conflict, e)
+			}
+			source := prepared.Preparation.Plan.WorktreePath
+			resolution := []byte("owner resolution must survive retry and abort\n")
+			if e = os.WriteFile(filepath.Join(source, "README.md"), resolution, 0600); e != nil {
+				t.Fatal(e)
+			}
+			if staged {
+				runLocalGit(t, source, "add", "README.md")
+			}
+			indexBefore := runLocalGit(t, source, "diff", "--cached", "--binary")
+			in.OperationID = conflict.Operation.ID
+			observed, e := ReconcileTaskSource(f.dependencies, in)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if observed.Operation.ConflictSHA256 != conflict.Operation.ConflictSHA256 || !contentTypedEqual(observed.Operation.ConflictPaths, conflict.Operation.ConflictPaths) {
+				t.Error("retry replaced original conflict/abort evidence")
+			}
+			in.Action = "abort"
+			result, abortErr := ReconcileTaskSource(f.dependencies, in)
+			raw, readErr := os.ReadFile(filepath.Join(source, "README.md"))
+			t.Logf("staged=%t initialSHA=%s observedSHA=%s abortState=%s err=%v retainedBytes=%q", staged, conflict.Operation.ConflictSHA256, observed.Operation.ConflictSHA256, result.State, abortErr, raw)
+			if abortErr == nil || !strings.Contains(abortErr.Error(), "source_abort_edits_present") || readErr != nil || string(raw) != string(resolution) || runLocalGit(t, source, "diff", "--cached", "--binary") != indexBefore {
+				t.Fatal("retry then abort discarded owner resolution or staged content")
+			}
+		})
+	}
+}
+
+func TestParallelConflictRecoveryCannotInventAbortBaseline(t *testing.T) {
+	f, prepared, in := sourceReconcileFixture(t, true)
+	p, e := ReconcileTaskSource(f.dependencies, in)
+	if e != nil {
+		t.Fatal(e)
+	}
+	in.Apply, in.Confirmation = true, p.Confirmation
+	f.dependencies.SourceReconciliationFault = func(stage, id string) error {
+		if stage == "after_git" {
+			return errInjected
+		}
+		return nil
+	}
+	if _, e = ReconcileTaskSource(f.dependencies, in); e == nil {
+		t.Fatal("lost conflict publication not observed")
+	}
+	f.dependencies.SourceReconciliationFault = nil
+	source := prepared.Preparation.Plan.WorktreePath
+	resolution := []byte("owner resolution after lost conflict publication\n")
+	if e = os.WriteFile(filepath.Join(source, "README.md"), resolution, 0600); e != nil {
+		t.Fatal(e)
+	}
+	recovered, e := ReconcileTaskSource(f.dependencies, in)
+	if e != nil || recovered.State != "source_conflict" {
+		t.Fatalf("conflict observation: %+v %v", recovered, e)
+	}
+	in.Action, in.OperationID = "abort", recovered.Operation.ID
+	result, e := ReconcileTaskSource(f.dependencies, in)
+	raw, readErr := os.ReadFile(filepath.Join(source, "README.md"))
+	t.Logf("recovered baseline=%s abortState=%s err=%v retainedBytes=%q", recovered.Operation.ConflictSHA256, result.State, e, raw)
+	if e == nil || readErr != nil || string(raw) != string(resolution) {
+		t.Fatal("recovery invented an abort baseline from owner edits and discarded them")
+	}
+}
+
 func TestParallelSourceReconciliationPreservesIgnoredLocalContent(t *testing.T) {
 	for _, movedParent := range []bool{false, true} {
 		label := "same-intent-progresses"
@@ -101,13 +181,37 @@ func TestParallelSourceReconciliationPreservesIgnoredLocalContent(t *testing.T) 
 				if abortErr == nil || !strings.Contains(abortErr.Error(), "source_reconciliation_not_pending") || aborted.State != "intent" {
 					t.Fatalf("unexpected unstarted-intent abort contract: %+v %v", aborted, abortErr)
 				}
+				in.Action = "cancel-unstarted"
+				cancelled, cancelErr := ReconcileTaskSource(f.dependencies, in)
+				if cancelErr != nil || cancelled.State != "aborted" || cancelled.Operation.ID != in.OperationID || merges != 0 || runLocalGit(t, source, "rev-parse", "HEAD") != before {
+					t.Fatalf("exact unstarted intent cannot be cancelled without Git: %+v %v", cancelled, cancelErr)
+				}
+				base, e := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
+				if e != nil {
+					t.Fatal(e)
+				}
+				if _, e = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *base.Confirmation}); e != nil {
+					t.Fatal(e)
+				}
 				fresh := in
 				fresh.Apply, fresh.Action, fresh.OperationID, fresh.Confirmation = false, "", "", ""
-				_, freshErr := ReconcileTaskSource(f.dependencies, fresh)
-				if freshErr == nil || !strings.Contains(freshErr.Error(), "source_reconciliation_pending") || merges != 0 || queueStateBytes(t, f) != state {
-					t.Fatalf("unexpected fresh operation behind retained intent: %v", freshErr)
+				preview, e := ReconcileTaskSource(f.dependencies, fresh)
+				if e != nil {
+					t.Fatal(e)
 				}
-				t.Logf("KNOWN RECOVERY GAP T09/T10/T12: no native cancellation for unstarted stale intent; abort=%v fresh-reconcile=%v; no merge or marker", abortErr, freshErr)
+				fresh.Apply, fresh.Confirmation = true, preview.Confirmation
+				progressed, e := ReconcileTaskSource(f.dependencies, fresh)
+				if e != nil || progressed.State != "committed" || progressed.Operation.ID == in.OperationID || progressed.Operation.Plan.AttemptOrdinal != 2 || merges != 1 {
+					t.Fatalf("fresh exact current-parent operation did not progress: %+v %v", progressed, e)
+				}
+				basis, e := EffectiveTaskDeliveryBasis(mustQueueRegistry(t, f), in.PreparationID)
+				if e != nil || basis.Generation != 1 || basis.Parent.OID != runLocalGit(t, parent, "rev-parse", "HEAD") {
+					t.Fatalf("fresh effective basis: %+v %v", basis, e)
+				}
+				if !contentTypedEqual(mustQueueRegistry(t, f).SourceReconciliations[0], *cancelled.Operation) {
+					t.Fatal("fresh reconciliation replaced cancelled intent history")
+				}
+				t.Logf("cancelled=%s fresh=%s generation=%d parent=%s", cancelled.Operation.ID, progressed.Operation.ID, basis.Generation, basis.Parent.OID)
 			} else if e != nil || retry.State != "committed" || retry.Operation.ID != in.OperationID || merges != 1 || len(mustQueueRegistry(t, f).SourceReconciliations) != 1 {
 				t.Fatalf("same operation did not progress after owner preserved content: %+v %v merges=%d", retry, e, merges)
 			}

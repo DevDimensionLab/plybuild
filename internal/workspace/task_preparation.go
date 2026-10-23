@@ -77,7 +77,8 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 	fold := foldQueue(r, q.QueueID)
 	for _, id := range fold.Active {
 		p := findPreparation(r, id)
-		if in.Selector.Kind == "task" && *in.Selector.TaskID == p.Plan.TaskID {
+		serialCurrent := in.Selector.Kind == "next" && !in.parallel && len(fold.Active) == 1 && p.Plan.AdmissionMode == ""
+		if serialCurrent || in.Selector.Kind == "task" && *in.Selector.TaskID == p.Plan.TaskID {
 			if in.parallel != (p.Plan.AdmissionMode == AdmissionParallel) {
 				return out, queueError("parallel_exclusive_route", "use the preserved native interactive Run for this preparation")
 			}
@@ -178,6 +179,9 @@ func PrepareTask(d Dependencies, in TaskPrepareInput) (TaskPreparationReadback, 
 			}
 			p := findPreparation(r, id)
 			if p != nil {
+				if in.parallel != (p.Plan.AdmissionMode == AdmissionParallel) {
+					return queueError("parallel_exclusive_route", "use the preserved native interactive Run for this preparation")
+				}
 				if p.Plan.Target != t || !contentTypedEqual(p.Plan.Selector, in.Selector) {
 					return queueError("task_prepare_conflict", "confirmation belongs to another selector or target")
 				}

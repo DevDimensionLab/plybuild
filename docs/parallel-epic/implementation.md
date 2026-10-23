@@ -47,10 +47,18 @@ Controlled merge preflight refuses collisions with ignored local files before
 creating a marker or attempting Git merge. The same owner may preserve or move
 the local content and recheck the existing intent against its original source
 and parent. Actual unknown merge effects remain nonreplayable.
-A known remaining gap is cancellation of an unstarted intent after its parent
-changes: current abort requires a pending merge, while fresh reconciliation
-refuses the retained intent. Preserve that operation for coordinator review;
-this negative does not prove complete stale-intent recovery.
+An explicit `--cancel-unstarted --operation ID` closes only the same owned
+intent with positive native pre-effect evidence, an exact clean before OID/tree,
+and no Git marker or pending operation. It publishes the existing aborted
+record without Git effects, then permits a fresh current-parent preview.
+`--abort` remains limited to a known pending merge. Native unstarted evidence
+is revoked durably before the Git adapter can start; absent historical evidence
+or a missing marker after an attempted merge cannot authorize cancellation or
+replay. A conflict's original abort fingerprint is preserved across retries,
+including observation after staged resolutions. If conflict publication was
+lost, later edits cannot become a new abort baseline; abort refuses missing
+original evidence, while resolved/staged native continue remains available. Ordinary serial `prepare
+--next` retains idempotent singleton readback and its explicit apply digest.
 
 Reconciliation appends an effective basis. Original Task parent, Spec, mandate,
 controls and prior receipts remain unchanged. Even identical source OIDs need
