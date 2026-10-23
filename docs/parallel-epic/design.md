@@ -155,6 +155,31 @@ execute/register/report/read operations must preserve the current format and
 all existing boundaries. No automatic 4→7 or 4→8 conversion, including on
 `--check`. Existing `registry_upgrade` behavior is retained for older commands.
 
+**Native installation prerequisite is separate.** At this source,
+[delivery_cli_install.go](../../internal/taskrun/delivery_cli_install.go),
+`qualifiedCLIInstallation` (lines 62–77), requires the feature Run's
+`phase=completed` and `ObserveAutomaticLocalDelivery` with
+`Closeout.State=complete` and `LifecycleCompleted=true`, plus the registered
+return checkout, exact native qualification/authority and retained binary
+checks. A source-delivered/released feature Run still in closing cannot native-install
+its binary while cleanup prevents those facts. Embedded commit metadata,
+private qualified bytes and PAR-A03 activation eligibility are not installation
+receipts and do not relax this installer gate.
+
+The coordinator's current supported path is to complete that Run's native
+closeout under its unchanged cleanup/keep policy, then invoke the guarded
+native installer for the exact qualified bytes. If unknown writer absence
+prevents cleanup completion, retain source/evidence and report native install
+as blocked on these exact completion prerequisites. A compatible coordinator
+already available from another qualified completed release can cover PAR-A03
+cleanup for activation; this does not install the closing Run's feature binary.
+If the feature's required installation cannot qualify through existing closeout,
+record a possible bounded producer dependency to provide a separately selected
+and reviewed supported install/closeout route. Do not implement AL49, alter the
+installer to accept closing, forge a complete/keep receipt, copy the binary over
+the installed CLI or infer a retained-source terminal state here. The selected
+feature/install goal remains; an unresolved prerequisite stays outstanding.
+
 **Minimal producer boundary.** Extend the native explicit registry upgrade seam
 in [registry_compatibility.go](../../internal/workspace/registry_compatibility.go)
 and manifest checks in [clirelease/manifest.go](../../internal/clirelease/manifest.go).
@@ -267,7 +292,9 @@ There is no general foreign-control migration in this slice. Do not retire
 another Task, replace its binary, rewrite its mandate, replay denied actions or
 modify a stopped PWA owner. Incompatible PAR-A01/PAR-A04 effects, or a missing
 PAR-A03 coordinator path, prevent live activation while isolated qualification,
-source delivery and installation preserving format 4 can still complete.
+source delivery can still complete. Installation preserving format 4 remains
+conditional on the feature Run satisfying the native installer completion
+prerequisites above; a closing feature Run is not already installable.
 Historical terminal evidence and every old control remain byte-identical.
 Source cleanup proves none of these reader-compatibility facts.
 
