@@ -504,7 +504,8 @@
       "text_conflict": "Separate store/fold and delivery_qa_recovery files; taskrun types/fixtures need one owner.",
       "semantic_conflict": "Different run families, but shared TaskResult/evidence meanings must stay fixed.",
       "integration_order": "MOD-01 then MOD-02; recheck recovery evidence and historical Result contracts.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -516,7 +517,8 @@
       "text_conflict": "Disjoint packages if read_trace and journal types remain unchanged.",
       "semantic_conflict": "Trace must not infer completion or change identity when fold historical projection changes.",
       "integration_order": "MOD-01 then MOD-03; compare historical negative state, dedup and candidate axes.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -528,7 +530,8 @@
       "text_conflict": "Fold files disjoint; workspace types/store become shared if extraction expands.",
       "semantic_conflict": "Evidence freshness and publication-phase assumptions may drift.",
       "integration_order": "MOD-01 first; MOD-04 only if selected later, then validate fresh scoped closure.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -540,7 +543,8 @@
       "text_conflict": "Disjoint taskrun and notification implementation files.",
       "semantic_conflict": "Preserve shared meaning of unknown; neither may invent completion from a notice.",
       "integration_order": "MOD-01 then selected MOD-05 maintenance; rerun both affected guards.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -552,7 +556,8 @@
       "text_conflict": "Recovery and trace files disjoint; trace input record types frozen.",
       "semantic_conflict": "Recovery report is not human QA or an integration; trace must preserve that distinction.",
       "integration_order": "MOD-02 then MOD-03; recheck trace candidate axes after recovery fixture changes.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -564,7 +569,8 @@
       "text_conflict": "Potential overlap in workspace store/scope/evidence dependencies.",
       "semantic_conflict": "Moving absence checks or reusing bytes across locks can retire an unknown effect.",
       "integration_order": "Selected MOD-04 contract change first, then rebase MOD-02 and revalidate locked absence/replay; otherwise defer MOD-04.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -576,7 +582,8 @@
       "text_conflict": "Recovery and notification files disjoint.",
       "semantic_conflict": "Unknown recovery and unknown Slack delivery have separate receipts; sharing classification must not grant recovery authority.",
       "integration_order": "MOD-02 then selected MOD-05 maintenance; verify neither side changes the other effect ledger.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -588,7 +595,8 @@
       "text_conflict": "Trace Read and workspace store disjoint unless ReadViewBasis/types change.",
       "semantic_conflict": "Observation lifetime and source validity affect trace freshness.",
       "integration_order": "Selected MOD-04 first, then rebase MOD-03 and recheck changed-source/partial-history behavior; otherwise MOD-03 alone.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -600,7 +608,8 @@
       "text_conflict": "Disjoint trace and notification files.",
       "semantic_conflict": "A transport acknowledgement must not become a human-judgment trace record.",
       "integration_order": "MOD-03 then selected MOD-05 maintenance; retain distinct evidence classes.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     },
     {
       "candidates": [
@@ -612,9 +621,51 @@
       "text_conflict": "Workspace content and notification transport files disjoint.",
       "semantic_conflict": "Keep separate observation lifetimes and receipt stores; no shared cache or new generic store.",
       "integration_order": "Selected MOD-04 then selected MOD-05; recheck closure and notification replay independently.",
-      "integration_parallel": false
+      "integration_parallel": false,
+      "same_target_native_start": "serial_after_legitimate_current_closure"
     }
   ],
-  "integration_policy": "Every integration to the same Epic is serial. Rebase later work on the observed new Epic base, preserve old evidence, obtain fresh exact-candidate review/acceptance. Proposed future slices require separately selected scope; this Task publishes no Specs/Tasks.",
-  "notification_owner": "backlog-coordinator w9:pE"
+  "integration_policy": "Present native Task starts on the same queue target are serial until legitimate current closure. Pair classifications concern conditional code-level suitability only. Every integration to the same Epic is also serial. Start later Tasks from the observed new Epic base, preserve old evidence, obtain fresh exact-candidate review/acceptance. Future concurrent execution needs a separately selected supported lifecycle capability. This Task selects no such capability and publishes no Specs/Tasks.",
+  "notification_owner": "backlog-coordinator w9:pE",
+  "pair_matrix_scope": "Pair implementation classifications and two-agent ownership describe code/file/contract suitability only. They do not establish that concurrent native starts of distinct same-target Tasks are supported today. Conditional future parallel execution would require a separately selected supported lifecycle capability; it is neither selected nor implemented by this analysis.",
+  "native_launch_constraints": {
+    "same_target_concurrent_distinct_task_starts_supported": false,
+    "present_rule": "The current native queue permits one current preparation per QueueTarget. Distinct native Tasks on the same target must start serially, only after current is legitimately closed or released through the supported owner/coordinator workflow. Resuming the existing goal or reading its preparation is not starting a second Task.",
+    "conditional_future_capability": "Pair implementation classifications and two-agent ownership describe code/file/contract suitability only. They do not establish that concurrent native starts of distinct same-target Tasks are supported today. Conditional future parallel execution would require a separately selected supported lifecycle capability; it is neither selected nor implemented by this analysis.",
+    "prohibited_workarounds": "No new Epic/branch, current takeover, private registry patch or direct Herdr launch may bypass the current queue restriction.",
+    "sources": [
+      {
+        "path": "internal/workspace/task_goal_execution.go",
+        "symbols": [
+          "buildGoalExecutionPreviewInTarget"
+        ]
+      },
+      {
+        "path": "internal/workspace/task_preparation.go",
+        "symbols": [
+          "buildPreparePlan"
+        ]
+      },
+      {
+        "path": "internal/workspace/task_queue_types.go",
+        "symbols": [
+          "QueueTarget"
+        ]
+      }
+    ],
+    "tests": [
+      {
+        "path": "internal/workspace/task_queue_removed_source_test.go",
+        "symbols": [
+          "TestTaskQueueRemovedSourceConcurrentReleaseAndStart"
+        ]
+      }
+    ],
+    "test_execution": "Static inspection only; no product tests or launch probes executed.",
+    "historical_evidence": "Preserved coordination-result.txt records both public execute --check and legacy prepare --check blocked by task_queue_current_conflict while B held current. post-B-start-check.stdout records readiness only after B release at queue revision 505/base revision 113. These are historical observations, not replayed commands or a new scheduler test.",
+    "historical_paths": [
+      "/Users/perottochristensen/github/ply/planning/reports/modularity-analysis-20261023/coordination-result.txt",
+      "/Users/perottochristensen/github/ply/planning/reports/modularity-analysis-20261023/post-B-start-check.stdout"
+    ]
+  }
 }
