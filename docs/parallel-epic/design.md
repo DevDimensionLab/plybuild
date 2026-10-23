@@ -186,29 +186,90 @@ which reads native and Herdr attempts with explicit incomplete/damaged evidence
 and performs no process probe. Its current fields do not certify executable
 format compatibility; add that specific observation from exact retained
 control/release artifacts, plus native week/bound-start bindings.
-Registry format is workspace-wide. A target-local
-feature cannot promise format transparency to foreign frozen readers. The
-activation preview must read native persisted Run/control/worker/week bindings
-that can still mutate or resume against this registry and compare their exact
-frozen executable capability to format 8. Use a native read-only compatibility
-projection with IDs, digests, authority state and reasons, not OS process scans.
-An unretired paused/stopped Run with a frozen older reader is a blocker even
-when no process is running. Unknown/missing executable capability or incomplete
-native inventory is a blocker, not absence. Repeat this check under the
-activation's native locks and bind the inventory digest to its confirmation.
-Concurrent new starts/registrations must share that lock or conflict by digest.
+Registry format is workspace-wide. A target-local feature cannot promise
+format transparency to foreign frozen readers. Classify each native binding by
+**remaining legitimate effects**, not by the words delivered, released,
+completed or closing alone. The following finite classes are derived read-only
+facts, not new persisted cleanup states, owner claims or permissions.
 
-The minimum migration rule is to finish such a consumer through its existing
-authorized route, or wait; unchanged compatible controls can continue. There
-is no supported in-place rebinding of an incompatible frozen control in this
-slice. Do not retire another Task, replace its binary, rewrite its mandate,
-replay denied actions, or modify a stopped PWA owner. Human authorization for
-this feature does not grant those actions. An actual incompatible foreign
-consumer therefore prevents **live activation**, while isolated qualification,
+| Class | Durable facts needed to classify | Remaining legitimate effect | Activation outcome |
+| --- | --- | --- | --- |
+| PAR-A01 | Active, paused or stopped owner with an unclosed accepted mandate and supported resume/correction path; no validated release/terminal fact removes that authority. Preserve exact Run/control/session, acceptance, stop and effect bindings. | Source work, review/verify, correction and eventual integration may still use the frozen owner control. A stopped owner can remain resumable without a running process; its refusal still gates dependent effects. | Require format-8 compatibility of the exact effective owner control and all other remaining effect readers. An incompatible stopped/resumable owner blocks activation; missing capability is unknown. Finish via its existing authorized route or wait; do not retire, rebind or revive it to pass this guard. |
+| PAR-A02 | Fully terminal history with validated final/retirement facts, resolved attempts, and no remaining authorized integration, correction, closeout or cleanup operation. Validate the actual effect closure; phase completed alone is insufficient, including PR publication that still allows human integration. | Historical readback only through a compatible current reader. Retained source may be deliberate under the frozen keep policy and does not itself confer write authority. | Old executable capability does not block activation when no remaining effect uses it. Preserve all history/control bytes and read them with the compatible reader; invoking an old reader may explicitly diagnose unsupported format. Source deletion or OS absence is not an activation prerequisite. |
+| PAR-A03 | Automatic local delivery has exact observed integration/queue/base completion, a validated ownership release with origin `automatic_delivery_completed` for that candidate, no unresolved delivery attempt, and only native closeout outstanding, with the actual native closing/completion predicates validated. Validate release provenance and frozen cleanup/keep policy; do not infer this class from labels. | Developer callbacks and owner continuation are closed. A compatible coordinator may finish only the same evidence retention/archive, Task lifecycle/closeout and authorized source cleanup; no second merge, fresh candidate or correction owner. | Permit activation if the exact compatible coordinator executable/qualified release supports reading this old Run/release/receipt and format-8 native closeout writes, and its supported follow/resume path is preserved. Retained source or unknown writer absence does not make the old owner resumable or indefinitely block activation. If that coordinator path is missing/incompatible, block specifically on the remaining closeout/cleanup reader/writer effect, not on general owner liveness. |
+| PAR-A04 | Other validated release origins (`bound_owner_release`, `observed_provider_exit`, `human_absent_owner_recovery`), or a published/completed result whose contract still permits human integration or correction. Read exact candidate/plan/QA and release facts; lack of automatic-delivery completion prevents PAR-A03 classification. | Authorized human integration/decision may remain. Before local integration, an actual negative human decision can restore correction to the original immutable controller; release alone is not permanent termination of all authority. | Require compatible paths for every remaining effect: human/coordinator integration and any legitimately restorable correction controller. A compatible coordinator integration path alone cannot cover an incompatible correction path. Otherwise block on that named effect; finish via the existing authorized flow or wait. Do not synthesize a human answer, clear release, or replace the old control. |
+
+The source distinguishes these classes already:
+[delivery_callback.go](../../internal/taskrun/delivery_callback.go),
+`deliveryCallback` (lines 93–100), closes developer callbacks after release and
+completion; [delivery_continuation.go](../../internal/taskrun/delivery_continuation.go),
+`deliveryContinuationAuthority` (lines 172–179), refuses continuation for a
+released/completed owner. [delivery_automatic_closeout.go](../../internal/taskrun/delivery_automatic_closeout.go),
+`automaticCleanupPending` / `automaticCloseoutPendingAction` (lines 95–110),
+select the released cleanup-pending case and assign coordinator follow.
+`ResumeAutomaticLocalDelivery` revalidates `automaticIntegratedResult`,
+`deliveryAuthorityState` and the existing release before completing only native
+closeout. [human_integration.go](../../internal/taskrun/human_integration.go),
+`deliveryRelease`, validates candidate/Run/release origin and native event;
+`AcceptHumanIntegration` can clear effective release on an actual negative
+answer before integration, while refusing correction restoration after observed
+local integration. These are authority facts; none prove writer absence.
+
+**Supported compatible-coordinator path for PAR-A03.** Use the existing
+`ply workflow execute follow RUN_ID` from outside the retained source with the
+qualified format-8-capable coordinator CLI.
+[delivery_service.go](../../internal/taskrun/delivery_service.go),
+`deliveryFollowCleanup`, routes the source-removal case selected by
+`automaticCleanupPending` to `ResumeAutomaticLocalDelivery`. Where an existing
+registered Delivery already owns the effect, its same-ID
+`ply workflow delivery execute DELIVERY_ID` path in
+[delivery/execute.go](../../internal/delivery/execute.go), `resumeAutomaticCloseout`,
+observes the completed integration and resumes only closeout, including the
+frozen keep policy. Preserve that Delivery identity; do not register another
+one to bypass ownership. Qualify the exact applicable entrypoint for the
+Run/policy; do not assume follow selects every released state.
+The feature's compatibility qualification must prove that this coordinator can
+read the old schema-2 Run, original mandate/acceptance/policy, exact TaskResult,
+integration/queue/base receipts, release and any existing closeout reservation;
+then preserve/resume the same closeout using the new registry reader/writer.
+Bind that available coordinator package/executable digest and proven old-contract
+support into activation's compatibility evidence. This is a supported
+coordinator invocation under the existing frozen closeout authority, not a
+rewrite of the owner's old executable/control/context, a continuation transition,
+a new cleanup mandate or permission for different effects. Preserve original
+owner/release/event identities and an existing closeout operation ID; where no
+closeout reservation exists yet, use only the existing native idempotent
+reservation rule. A bare binary declaration of registry support is insufficient
+without the bounded legacy-closeout compatibility fixture.
+
+When writer absence is unknown, keep the source and existing closeout state,
+report its real pending reason/next actor, and preserve the same future
+coordinator follow path after activation. Native deletion still requires its
+actual positive writer/source checks; unknown cannot authorize removal. The
+activation classification itself does not run follow, scan processes, probe
+`ps`, clear a refusal or force cleanup. Do not create another cleanup status or
+implement AL49 as a dependency. An unknown cleanup observation alone is neither
+an unknown integration effect nor an incompatible reader. Conversely, damaged
+release/completion evidence or an unresolved delivery attempt cannot be hidden
+inside PAR-A03: return the concrete effect/authority gap and block dependent
+activation until classification and its compatible path are established.
+
+Use a native read-only compatibility projection with class, IDs, digests,
+remaining effects, actual reader/coordinator capability and reasons. Unknown
+capability blocks only where a remaining legitimate effect needs it; unknown
+classification or incomplete native inventory remains a blocker. Repeat these
+facts under activation's native locks and bind their digest to confirmation.
+Concurrent starts, human decisions, release and closeout publications must
+participate in the same serialization or invalidate that digest; reclassification
+never silently opens new authority. Existing compatible controls can continue.
+
+There is no general foreign-control migration in this slice. Do not retire
+another Task, replace its binary, rewrite its mandate, replay denied actions or
+modify a stopped PWA owner. Incompatible PAR-A01/PAR-A04 effects, or a missing
+PAR-A03 coordinator path, prevent live activation while isolated qualification,
 source delivery and installation preserving format 4 can still complete.
-Historical terminal evidence stays byte-identical and readable with the new
-reader; old executable readback may explicitly report unsupported format after
-activation. Source cleanup proves none of these reader-compatibility facts.
+Historical terminal evidence and every old control remain byte-identical.
+Source cleanup proves none of these reader-compatibility facts.
 
 This is a finite extension to native format publication and control inventory,
 not a global liveness registry, process watcher, migration service or general
