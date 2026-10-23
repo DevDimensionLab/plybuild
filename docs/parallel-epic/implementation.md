@@ -43,6 +43,14 @@ that source and active membership. Stage a real resolution, then use
 `--continue --operation ID`. `--abort --operation ID` refuses unexpected edits
 against the recorded conflict fingerprint. Unknown effects require observation
 of the same operation and cannot be replayed by a new attempt.
+Controlled merge preflight refuses collisions with ignored local files before
+creating a marker or attempting Git merge. The same owner may preserve or move
+the local content and recheck the existing intent against its original source
+and parent. Actual unknown merge effects remain nonreplayable.
+A known remaining gap is cancellation of an unstarted intent after its parent
+changes: current abort requires a pending merge, while fresh reconciliation
+refuses the retained intent. Preserve that operation for coordinator review;
+this negative does not prove complete stale-intent recovery.
 
 Reconciliation appends an effective basis. Original Task parent, Spec, mandate,
 controls and prior receipts remain unchanged. Even identical source OIDs need

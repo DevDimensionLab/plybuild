@@ -72,6 +72,43 @@ func (git *systemTaskIntegrationGit) sourceConflicts(path string, op TaskSourceR
 	return names, nil
 }
 
+func (git *systemTaskIntegrationGit) sourceIgnoredCollision(path string, op TaskSourceReconciliation) (bool, error) {
+	ignored := git.sourceRun(path, op, "ls-files", "--others", "--ignored", "--exclude-standard", "-z")
+	if ignored.Err != nil || ignored.Exit != 0 {
+		return false, fmt.Errorf("cannot observe ignored source paths: %s", ignored.Stderr)
+	}
+	if len(ignored.Stdout) == 0 {
+		return false, nil
+	}
+	incoming := git.sourceRun(path, op, "ls-tree", "-r", "--name-only", "-z", op.Plan.Parent.OID)
+	if incoming.Err != nil || incoming.Exit != 0 {
+		return false, fmt.Errorf("cannot observe incoming source paths: %s", incoming.Stderr)
+	}
+	localNames := strings.Split(strings.TrimSuffix(string(ignored.Stdout), "\x00"), "\x00")
+	trackedNames := strings.Split(strings.TrimSuffix(string(incoming.Stdout), "\x00"), "\x00")
+	sort.Strings(trackedNames)
+	for _, local := range localNames {
+		// An ignored file can obstruct an incoming directory, or an ignored
+		// descendant can obstruct an incoming file. Search both path boundaries.
+		i := sort.SearchStrings(trackedNames, local+"/")
+		if i < len(trackedNames) && strings.HasPrefix(trackedNames[i], local+"/") {
+			return true, nil
+		}
+		for name := local; ; {
+			i = sort.SearchStrings(trackedNames, name)
+			if i < len(trackedNames) && trackedNames[i] == name {
+				return true, nil
+			}
+			slash := strings.LastIndex(name, "/")
+			if slash < 0 {
+				break
+			}
+			name = name[:slash]
+		}
+	}
+	return false, nil
+}
+
 func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePlan, op TaskSourceReconciliation, action string) (TaskSourceReconciliation, error) {
 	if action != "" && action != "continue" && action != "abort" {
 		return op, WorkInvalidArguments("reconciliation action must be continue or abort")
@@ -175,6 +212,25 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 	if drivers.Exit != 1 {
 		return op, queueError("source_merge_driver_unsupported", "custom or unreadable merge drivers require a separately supported adapter")
 	}
+	// Ordinary clean status omits ignored files, and merge's ignore-overwrite
+	// option is insufficient on some Git merge paths. Refuse before publishing
+	// a marker or invoking merge; the same intent can be rechecked by its owner.
+	collision, collisionErr := git.sourceIgnoredCollision(path, op)
+	if collisionErr != nil {
+		return op, collisionErr
+	}
+	if collision {
+		return op, queueError("source_ignored_collision", "preserve or move ignored local content outside the source before rechecking this same operation")
+	}
+	if os.IsNotExist(e) {
+		parent, parentErr := git.ObserveIntegrationWorktree(plan.Target.ParentLocator, plan.Target.ParentRef)
+		if parentErr != nil {
+			return op, parentErr
+		}
+		if !parent.Clean || !parent.Symbolic || len(parent.InProgress) != 0 || parent.Ref != plan.Target.ParentRef || parent.GitCommonDir != plan.Target.GitCommonDir || parent.OID != op.Plan.Parent.OID || parent.Tree != op.Plan.Parent.Tree {
+			return op, queueError("source_reconciliation_parent_changed", "the original clean parent must still match before this operation starts a merge")
+		}
+	}
 	if e != nil {
 		file, e2 := os.OpenFile(marker, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 		if e2 != nil {
@@ -202,7 +258,8 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		op.AfterTree = x.Tree
 		return op, nil
 	}
-	git.sourceRun(path, op, "merge", "--no-ff", "--no-edit", "--no-stat", "--no-autostash", "--no-gpg-sign", "-m", "Ply source reconciliation "+op.ID, op.Plan.Parent.OID)
+
+	git.sourceRun(path, op, "merge", "--no-ff", "--no-edit", "--no-stat", "--no-autostash", "--no-overwrite-ignore", "--no-gpg-sign", "-m", "Ply source reconciliation "+op.ID, op.Plan.Parent.OID)
 	// Observe exact effects even when the command lost its reply or returned nonzero.
 	after, e2 := git.ObserveIntegrationWorktree(path, ref)
 	if e2 != nil {

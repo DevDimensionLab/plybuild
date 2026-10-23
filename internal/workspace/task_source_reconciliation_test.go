@@ -7,6 +7,119 @@ import (
 	"testing"
 )
 
+func TestParallelSourceReconciliationPreservesIgnoredLocalContent(t *testing.T) {
+	for _, movedParent := range []bool{false, true} {
+		label := "same-intent-progresses"
+		if movedParent {
+			label = "changed-parent-refuses"
+		}
+		t.Run(label, func(t *testing.T) {
+			f, prepared, in := sourceReconcileFixture(t, false)
+			source := prepared.Preparation.Plan.WorktreePath
+			parent := prepared.Preparation.Plan.Target.ParentLocator
+			const name = "ignored-local.txt"
+			if e := os.WriteFile(filepath.Join(source, ".gitignore"), []byte(name+"\n"), 0600); e != nil {
+				t.Fatal(e)
+			}
+			runLocalGit(t, source, "add", ".gitignore")
+			runLocalGit(t, source, "commit", "-m", "Ignore owned local content")
+			local := []byte("exact local bytes\x00not parent content\n")
+			if e := os.WriteFile(filepath.Join(source, name), local, 0600); e != nil {
+				t.Fatal(e)
+			}
+			if e := os.WriteFile(filepath.Join(parent, name), []byte("new tracked parent content\n"), 0600); e != nil {
+				t.Fatal(e)
+			}
+			runLocalGit(t, parent, "add", name)
+			runLocalGit(t, parent, "commit", "-m", "Parent tracks source ignored path")
+			base, e := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
+			if e != nil {
+				t.Fatal(e)
+			}
+			if _, e = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *base.Confirmation}); e != nil {
+				t.Fatal(e)
+			}
+			before := runLocalGit(t, source, "rev-parse", "HEAD")
+			observed, e := f.dependencies.IntegrationGit.ObserveIntegrationWorktree(source, "refs/heads/"+prepared.Preparation.Plan.Branch)
+			if e != nil || !observed.Clean {
+				t.Fatalf("ignored-content fixture must pass ordinary clean status: %+v %v", observed, e)
+			}
+			git := f.dependencies.IntegrationGit.(*systemTaskIntegrationGit)
+			runner, merges := git.run, 0
+			git.run = func(args, env []string) GitCommandOutcome {
+				for _, arg := range args {
+					if arg == "merge" {
+						merges++
+					}
+				}
+				return runner(args, env)
+			}
+			preview, e := ReconcileTaskSource(f.dependencies, in)
+			if e != nil {
+				t.Fatal(e)
+			}
+			in.Apply, in.Confirmation = true, preview.Confirmation
+			result, e := ReconcileTaskSource(f.dependencies, in)
+			raw, readErr := os.ReadFile(filepath.Join(source, name))
+			after := runLocalGit(t, source, "rev-parse", "HEAD")
+			t.Logf("isolated ignored-content merge state=%s err=%v merges=%d before=%s after=%s localSHA=%s observedSHA=%s", result.State, e, merges, before, after, digestTaskBytes(local), digestTaskBytes(raw))
+			if e == nil || !strings.Contains(e.Error(), "source_ignored_collision") || result.State != "intent" || result.Operation == nil || merges != 0 || readErr != nil || string(raw) != string(local) || after != before {
+				t.Fatalf("pre-effect collision lost content or claimed success: %+v %v", result, e)
+			}
+			marker := runLocalGit(t, source, "rev-parse", "--path-format=absolute", "--git-path", "ply-source-"+result.Operation.ID)
+			if _, e = os.Stat(marker); !os.IsNotExist(e) {
+				t.Fatal("known collision published a Git operation marker")
+			}
+			if _, e = EffectiveTaskDeliveryBasis(mustQueueRegistry(t, f), in.PreparationID); e == nil {
+				t.Fatal("blocked merge qualified an effective basis")
+			}
+			state := queueStateBytes(t, f)
+			in.OperationID = result.Operation.ID
+			retry, e := ReconcileTaskSource(f.dependencies, in)
+			raw, readErr = os.ReadFile(filepath.Join(source, name))
+			if e == nil || !strings.Contains(e.Error(), "source_ignored_collision") || retry.State != "intent" || merges != 0 || queueStateBytes(t, f) != state || readErr != nil || string(raw) != string(local) || runLocalGit(t, source, "rev-parse", "HEAD") != before {
+				t.Fatalf("unchanged collision retry had an effect: %+v %v", retry, e)
+			}
+			preserved := filepath.Join(filepath.Dir(f.wrapper), "owner-preserved-local.txt")
+			if e = os.Rename(filepath.Join(source, name), preserved); e != nil {
+				t.Fatal(e)
+			}
+			if movedParent {
+				runLocalGit(t, parent, "commit", "--allow-empty", "-m", "Parent moved after known refusal")
+			}
+			state = queueStateBytes(t, f)
+			retry, e = ReconcileTaskSource(f.dependencies, in)
+			if movedParent {
+				if e == nil || !strings.Contains(e.Error(), "source_reconciliation_parent_changed") || retry.State != "intent" || merges != 0 || queueStateBytes(t, f) != state || runLocalGit(t, source, "rev-parse", "HEAD") != before {
+					t.Fatalf("changed parent reached merge: %+v %v", retry, e)
+				}
+				if _, e = os.Stat(marker); !os.IsNotExist(e) {
+					t.Fatal("changed parent published a merge marker")
+				}
+				in.Action = "abort"
+				aborted, abortErr := ReconcileTaskSource(f.dependencies, in)
+				if abortErr == nil || !strings.Contains(abortErr.Error(), "source_reconciliation_not_pending") || aborted.State != "intent" {
+					t.Fatalf("unexpected unstarted-intent abort contract: %+v %v", aborted, abortErr)
+				}
+				fresh := in
+				fresh.Apply, fresh.Action, fresh.OperationID, fresh.Confirmation = false, "", "", ""
+				_, freshErr := ReconcileTaskSource(f.dependencies, fresh)
+				if freshErr == nil || !strings.Contains(freshErr.Error(), "source_reconciliation_pending") || merges != 0 || queueStateBytes(t, f) != state {
+					t.Fatalf("unexpected fresh operation behind retained intent: %v", freshErr)
+				}
+				t.Logf("KNOWN RECOVERY GAP T09/T10/T12: no native cancellation for unstarted stale intent; abort=%v fresh-reconcile=%v; no merge or marker", abortErr, freshErr)
+			} else if e != nil || retry.State != "committed" || retry.Operation.ID != in.OperationID || merges != 1 || len(mustQueueRegistry(t, f).SourceReconciliations) != 1 {
+				t.Fatalf("same operation did not progress after owner preserved content: %+v %v merges=%d", retry, e, merges)
+			}
+			raw, e = os.ReadFile(preserved)
+			if e != nil || string(raw) != string(local) {
+				t.Fatal("owner-preserved content changed")
+			}
+			t.Logf("same-operation recheck movedParent=%t state=%s merges=%d preservedSHA=%s", movedParent, retry.State, merges, digestTaskBytes(raw))
+		})
+	}
+}
+
 func TestParallelParentMovementInvalidatesUnusedReconciliation(t *testing.T) {
 	f, prepared, in := sourceReconcileFixture(t, false)
 	p, e := ReconcileTaskSource(f.dependencies, in)
