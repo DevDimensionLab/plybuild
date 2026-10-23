@@ -57,8 +57,8 @@ other callers. Do not silently convert every existing CLI test to simulation.
    observing PID; `StartupProcessTree` returns the controlled launch tree.
    Use `ownerPaneStandin` before launch, retaining its updated executable hash
    and request. Use receipt-local setup, without changing blanket fixture defaults.
-   Audit all startup/verification paths before running; an unmodeled dependency
-   is a failing preflight, never a reason to try the real OS.
+   Audit all startup/verification paths before running; stop at any unmodeled
+   boundary, never try the real OS to discover whether isolation works.
 2. Explicitly replace `Workspace.SourceWriters` with a counted simulated observer
    appropriate to this disposable fixture. Rebind `Workflow.TaskWorkspace` to
    the updated workspace dependencies. Merely copying `f.D` is insufficient:
@@ -99,20 +99,45 @@ precise boundary to root; do not claim complete isolation or broaden product sco
 
 ## Controlled regression
 
-Add a receipt-local preflight that runs before any fixture start. It must check
-the explicit local/process-tree/source-writer adapters and the chosen execution
-route, rejecting subprocess cleanup because in-process adapters cannot cross
-`exec.Command`. Route receipt closeout through this checked helper. Include a
-deterministic regression case selecting the old subprocess route or omitting an
-adapter: it must fail with a specific isolation diagnostic before provider launch,
-inspection or integration. Assert zero stand-in launch/inspection counts and
-unchanged native state. This is a controlled RED characterization of test setup;
-do not obtain RED by executing the old journey against real `ps` or sandbox limits.
+Tie the regression oracle to the actual receipt journey's startup and closure
+callables/dispatch. Add a small receipt-local spy/tripwire at those boundaries,
+shared by `TestDeliveryReceiptCLIJourney` and its regression case. It must observe
+what that orchestration actually calls, rather than validate a separately supplied
+route or a list of non-nil adapters. Keep all instrumentation test-only and local;
+no generic route platform or new production seam is needed.
 
-GREEN uses counted, injected adapters before startup and the allowed in-process
-route. Assert the local observer was actually reached after modeled owner exit;
-a non-nil unused adapter alone is not isolation evidence. Preserve genuine native
-Git/journal effects in the disposable fixture, without altering their oracle files.
+Controlled RED must exercise that same orchestration with deliberately wrong
+wiring: a stale workspace binding carrying a failing `SourceWriters` spy, or a
+closure dispatch that attempts the subprocess boundary. Install fail-fast test
+tripwires before startup and before invoking any action that could reach the OS.
+The boundary tripwire must fail before `exec.Command`/real inspection is attempted;
+the stale-binding spy must fail at its actual production-function call boundary.
+For an early boundary failure assert zero downstream launch/inspection/integration
+effects and unchanged native state; for a later wiring failure compare the state
+at entry to that phase. Never execute the old OS journey to obtain RED. A negative
+test of the tripwire alone does not qualify: changing the real journey's dispatch
+back to `cleanupCLIAt`, or rebinding `TaskWorkspace` to the stale workspace, must
+make this regression fail safely. If that protection cannot be demonstrated with
+the local instrumentation, return the exact boundary to root before execution.
+
+GREEN must show phase-specific behavioral evidence through that same call path:
+
+- At the startup/recovery boundary consuming `StartupProcessTree`, record the
+  spy's actual shell PID and call count. If ordinary startup does not enter that
+  branch, assert zero calls there and exercise the consuming branch using the
+  same receipt startup callable with a controlled preserved-shell fixture. Do
+  not call the adapter directly and report that as startup coverage.
+- At the source-writer boundary, prove that production code reaches the rebound
+  `Workspace.SourceWriters` through `Workflow.TaskWorkspace`: record the source
+  path and phase, while the earlier captured/stale observer is a failing spy.
+  Require the intended spy to run and the stale spy to remain unused.
+- After modeled owner exit, require `WorkflowFollow` to reach the injected
+  `LocalProcesses` spy with the bound session/transcript and observing PID table.
+  Assert its call count and the resulting native closeout, not adapter presence.
+
+Keep all observers initialized before startup. Preserve genuine native Git/journal
+effects in the disposable fixture, without altering their oracle files. Report
+only branches actually exercised; a declaration of wiring is not coverage.
 
 Add receipt-local negative closeout subcases with fresh fixtures: modeled Herdr
 inventory denied (`retire_inventory_denied` via the existing helper), local
@@ -135,7 +160,7 @@ Also preserve a positive external Task/session writer case that blocks removal.
 | Public Delivery execute/follow after the split | Not exercised by the new receipt closure; no subprocess closeout claim. |
 | Installed CLI, live provider, actual OS inventory or sandbox enforcement | Not established by this test or this docs-only Task. |
 
-For the later developer, run only the new preflight regression first; preserve
+For the later developer, run only the receipt-call-path regression first; preserve
 its controlled RED, then GREEN. Run the corrected
 `TestDeliveryReceiptCLIJourney` and its new guard subcases with an absolute clean
 make-built `PLY_DELIVERY_TEST_BINARY`, `-count=1` and a bounded Go timeout. Include
