@@ -271,7 +271,11 @@ func runDeliveryVerification(d Dependencies, r *deliveryVerificationReceipt) (wo
 		configureAutomaticProcess(command)
 		command.WaitDelay = time.Second
 	}
-	err := command.Run()
+	run := d.RunVerificationCommand
+	if run == nil {
+		run = func(c *exec.Cmd) error { return c.Run() }
+	}
+	err := run(command)
 	if command.ProcessState != nil && command.ProcessState.Exited() && command.ProcessState.ExitCode() >= 0 {
 		r.Exit = ptr(command.ProcessState.ExitCode())
 	}

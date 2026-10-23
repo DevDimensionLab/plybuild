@@ -93,3 +93,24 @@ ship its reader **before** enabling writes. Update the reader/writer matrix,
 package capability declaration, store publication guard and transition acceptance
 together. Do not relax `KnownFields`, reuse format 4/5 for an incompatible shape,
 or publish data from a private development binary as a substitute for delivery.
+
+The finite parallel-consumer check reads terminal evidence before considering a
+legacy transport or executable's remaining authority. A retired report needs its
+exact preparation and native queue release. Completed local delivery needs its
+exact ownership release, integration and complete lifecycle closeout. Human
+integration additionally binds the preserved decision/pass to native registry
+authority, target and result. These are PAR-A02 history with no remaining effects;
+they do not imply successful delivery for retired reports or provider termination.
+Captured active headless Runs still block compatibility, but their validated
+preparation binding avoids a duplicate missing-Run diagnostic. Week consumers and
+damaged or incomplete evidence remain unknown. Registry format 4 is unchanged.
+
+The focused `TestNF01*` fixtures exercise those boundaries, including public
+`activate-parallel --check` with `PLY_DELIVERY_TEST_BINARY` set to an absolute,
+clean make-built candidate. They create disposable native records and model
+provider, process and writer observations. Headless verification models OS
+sandbox execution through a trusted in-process Dependencies seam while running
+the acceptance snapshot; it does not demonstrate actual sandbox enforcement.
+The production nil default executes the original sandbox command. Public checks
+compare native files/directories, refs, control/history bytes and registry format
+before and after; no installation or shared-workspace activation is exercised.

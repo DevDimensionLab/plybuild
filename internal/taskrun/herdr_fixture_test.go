@@ -134,8 +134,11 @@ type workflowFixture struct {
 }
 
 func newWorkflowFixture(t *testing.T, root, ply string) workflowFixture {
+	return newWorkflowFixtureSeed(t, root, ply, "", "")
+}
+func newWorkflowFixtureSeed(t *testing.T, root, ply, seedSource, seedOID string) workflowFixture {
 	t.Helper()
-	d, native, _ := fixture(t, root)
+	d, native, _ := fixtureSeed(t, seedSource, seedOID, root)
 	// This fixture also supports a real local candidate commit and a dirty round.
 	var draftFields map[string]any
 	if e := json.Unmarshal(native.HandoffDraft, &draftFields); e != nil {

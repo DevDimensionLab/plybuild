@@ -13,6 +13,9 @@ import (
 )
 
 func prepareServiceWorkspace(t *testing.T, roots ...string) (string, string, string, string) {
+	return prepareServiceWorkspaceSeed(t, "", "", roots...)
+}
+func prepareServiceWorkspaceSeed(t *testing.T, seedSource, seedOID string, roots ...string) (string, string, string, string) {
 	t.Helper()
 	var requested string
 	if len(roots) == 0 {
@@ -39,6 +42,10 @@ func prepareServiceWorkspace(t *testing.T, roots ...string) (string, string, str
 	}
 	runGit(t, target, "add", "README.md")
 	runGit(t, target, "commit", "-m", "base")
+	if seedSource != "" {
+		runGit(t, target, "fetch", "--no-tags", seedSource, seedOID)
+		runGit(t, target, "reset", "--hard", seedOID+"^")
+	}
 	ref := gitOutput(t, target, "symbolic-ref", "HEAD")
 	oid := gitOutput(t, target, "rev-parse", "HEAD")
 
@@ -156,8 +163,11 @@ func gitOutput(t *testing.T, directory string, arguments ...string) string {
 	return string(output[:len(output)-1])
 }
 func fixture(t *testing.T, roots ...string) (Dependencies, Request, string) {
+	return fixtureSeed(t, "", "", roots...)
+}
+func fixtureSeed(t *testing.T, seedSource, seedOID string, roots ...string) (Dependencies, Request, string) {
 	t.Helper()
-	root, epic, ref, oid := prepareServiceWorkspace(t, roots...)
+	root, epic, ref, oid := prepareServiceWorkspaceSeed(t, seedSource, seedOID, roots...)
 	w := workspace.SystemDependencies()
 	if _, err := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "ply", RepoID: "ply", Worktree: epic, Ref: ref, ExpectedOID: oid}); err != nil {
 		t.Fatal(err)

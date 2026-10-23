@@ -74,9 +74,13 @@ func TestWorkerActualFailedPretestStartsBoundedCorrection(t *testing.T) {
 // Native registry, test subprocess, candidate, Git return and closeout are real.
 // The separately invoked public-CLI journey exercises actual Codex sessions.
 func newWorkerDeliveryFixture(t *testing.T, customize ...func(*deliveryFixture)) (deliveryFixture, WorkflowRun) {
+	return newWorkerDeliveryFixtureOptions(t, deliveryFixtureOptions{}, customize...)
+}
+func newWorkerDeliveryFixtureOptions(t *testing.T, option deliveryFixtureOptions, customize ...func(*deliveryFixture)) (deliveryFixture, WorkflowRun) {
 	t.Helper()
 	a := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "synthetic worker fixture", TimeoutSeconds: 30}}
-	f := newDeliveryFixture(t, "codex", deliveryFixtureOptions{Agreement: &a})
+	option.Agreement = &a
+	f := newDeliveryFixture(t, "codex", option)
 	f.R.Envelope = deliveryEnv("headless-run-request")
 	f.R.Worker = &WorkerContract{SchemaVersion: 1, MaxAttempts: 3, AgentTimeoutSeconds: 60}
 	f.R.Herdr = (WorkflowRequest{}).Herdr
@@ -114,7 +118,14 @@ func newWorkerDeliveryFixture(t *testing.T, customize ...func(*deliveryFixture))
 	if err != nil {
 		t.Fatal(err)
 	}
-	deliveryTestCandidate(t, f, "worker native candidate")
+	if option.SeedSource == "" {
+		deliveryTestCandidate(t, f, "worker native candidate")
+	} else {
+		runGit(t, f.Prepared.Preparation.Plan.WorktreePath, "merge", "--ff-only", option.SeedOID)
+		if err = os.WriteFile(f.AcceptancePath, []byte("#!/bin/sh\nset -eu\ntest -f go.mod\n\"$PLY_CANDIDATE_BINARY\" version --format json\n"), 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
 	if err = workflowUpdate(f.D, f.R.WorkspaceRoot, o.RunID, func(s *workflowState) error {
 		w := s.Result.Worker
 		w.Stage = "reviewer"

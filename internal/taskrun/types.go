@@ -8,6 +8,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -380,6 +381,10 @@ type Dependencies struct {
 	ContextPath                func() string
 	CWD                        func() (string, error)
 	Fault                      func(string) error
+	// RunVerificationCommand is a trusted in-process OS execution seam for
+	// disposable fixtures. Nil executes the original command, including the
+	// headless sandbox. It is never populated from wire, CLI or environment.
+	RunVerificationCommand func(*exec.Cmd) error
 	// StartupProcessTree observes the shell and all of its descendants. A nil
 	// observer uses a bounded local process-table read, without command lines.
 	StartupProcessTree func(shellPID int) ([]StartupProcess, error)

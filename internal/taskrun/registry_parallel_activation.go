@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/buildinfo"
+	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"os/exec"
@@ -124,18 +125,22 @@ func parallelActivationConsumers(d Dependencies, root string, r workspace.WorkIt
 			addUnknown("run/"+row.RunID, "activation_consumer_compatibility_unknown: damaged or incomplete native binding", row)
 			continue
 		}
-		if row.Transport == nil || *row.Transport != "herdr" {
+		if row.Transport == nil || (*row.Transport != "herdr" && *row.Transport != "headless") {
 			addUnknown("run/"+row.RunID, "activation_consumer_compatibility_unknown: legacy native remaining effects require an identified compatible reader", row)
 			continue
 		}
 		s, e := workflowRead(root, row.RunID)
+		if e == nil {
+			e = parallelConsumerPreparation(s, r)
+		}
 		if e != nil {
-			return nil, "", e
+			addUnknown("run/"+row.RunID, "activation_consumer_compatibility_unknown: "+e.Error(), row)
+			continue
 		}
 		owned[s.Request.PreparationID] = true
 		fact, e := parallelConsumerClass(d, s, readerSHA)
 		if e != nil {
-			addUnknown("run/"+row.RunID, e.Error(), row)
+			addUnknown("run/"+row.RunID, e.Error()+"; bound preparation "+s.Request.PreparationID, []any{row, s.Request.PreparationID})
 			continue
 		}
 		out = append(out, fact)
@@ -209,9 +214,41 @@ func parallelConsumerClass(d Dependencies, s workflowState, readerSHA string) (w
 		return fact, err
 	}
 	fact.ControlSHA256 = runtime.PlyExecutable.SHA256
-	ownerCompatible := false
-	if bytes, e := workflowBound(FileBinding{runtime.PlyExecutable.Path, runtime.PlyExecutable.SHA256}, 128<<20); e == nil {
-		ownerCompatible = hash(bytes) == readerSHA
+	terminal := func(evidence any) (workspace.ParallelConsumerCompatibility, error) {
+		fact.Class = "PAR-A02"
+		fact.RemainingEffects = []string{}
+		fact.Compatible = true
+		fact.EvidenceSHA256 = digest([]any{s, evidence})
+		return fact, nil
+	}
+	if !deliveryRun(s.Request) {
+		retired, e := workflowReportRetirement(s)
+		if e != nil {
+			return fact, e
+		}
+		if retired != nil {
+			registry, e := d.Workspace.WorkItems.Snapshot(s.Request.WorkspaceRoot)
+			if e != nil {
+				return fact, e
+			}
+			if e = parallelConsumerPreparation(s, registry); e != nil {
+				return fact, e
+			}
+			released, e := workflowReportQueueReleased(d, s.Request.WorkspaceRoot, s.Request.PreparationID)
+			if e != nil {
+				return fact, e
+			}
+			if released {
+				r, e := d.Workspace.WorkItems.Snapshot(s.Request.WorkspaceRoot)
+				if e != nil {
+					return fact, e
+				}
+				if registry.RawSHA256 != r.RawSHA256 {
+					return fact, workflowError(4, "activation_consumer_compatibility_unknown: retirement queue changed during read")
+				}
+				return terminal([]any{retired, registry.RawSHA256})
+			}
+		}
 	}
 	if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 		return fact, workflowError(4, "activation_consumer_compatibility_unknown: report-only contract still has unclassified legitimate return effects")
@@ -242,11 +279,17 @@ func parallelConsumerClass(d Dependencies, s workflowState, readerSHA string) (w
 		if e != nil {
 			return fact, e
 		}
-		if ds.Phase == "completed" && observed && integrated.Completed && closeout != nil && closeout.State == "complete" && closeout.LifecycleCompleted {
-			fact.Class = "PAR-A02"
-			fact.RemainingEffects = []string{}
-			fact.Compatible = true
-			return fact, nil
+		if ds.Phase == "completed" && release != nil && closeout != nil && closeout.State == "complete" && closeout.LifecycleCompleted {
+			if observed && integrated.Completed {
+				return terminal([]any{release, integrated, closeout})
+			}
+			proof, e := parallelHumanTerminal(d, s, c, *closeout)
+			if e != nil {
+				return fact, e
+			}
+			if proof != "" {
+				return terminal([]any{release, closeout, proof})
+			}
 		}
 		var releaseRecord deliveryOwnershipRelease
 		if release != nil {
@@ -258,7 +301,7 @@ func parallelConsumerClass(d Dependencies, s workflowState, readerSHA string) (w
 				return fact, err
 			}
 		}
-		if release != nil && releaseRecord.Origin == "automatic_delivery_completed" && observed && integrated.Completed && ds.Phase == "closing" {
+		if !headlessRun(s.Request) && release != nil && releaseRecord.Origin == "automatic_delivery_completed" && observed && integrated.Completed && ds.Phase == "closing" {
 			fact.Class = "PAR-A03"
 			fact.RemainingEffects = []string{"coordinator_original_closeout"}
 			fact.Compatible = readerSHA != ""
@@ -273,9 +316,41 @@ func parallelConsumerClass(d Dependencies, s workflowState, readerSHA string) (w
 			fact.RemainingEffects = []string{"human_integration", "restorable_owner_correction", "coordinator_closeout"}
 		}
 	}
+	if headlessRun(s.Request) {
+		return fact, workflowError(4, "activation_consumer_compatibility_unknown: legacy native remaining effects require an identified compatible reader")
+	}
+	ownerCompatible := false
+	if bytes, e := workflowBound(FileBinding{runtime.PlyExecutable.Path, runtime.PlyExecutable.SHA256}, 128<<20); e == nil {
+		ownerCompatible = hash(bytes) == readerSHA
+	}
 	fact.Compatible = ownerCompatible && readerSHA != ""
 	if !fact.Compatible {
 		fact.Reasons = []string{"exact frozen owner/correction control lacks proven format8 compatibility; finish through its existing route or wait"}
 	}
 	return fact, nil
+}
+
+// Bind a captured workflow to the validated registry before suppressing its
+// unresolved preparation diagnostic. This observes history, never owner liveness.
+func parallelConsumerPreparation(s workflowState, r workspace.WorkItemRegistry) error {
+	var draft workflowhandoff.TaskRunDraft
+	var err error
+	if deliveryRun(s.Request) {
+		draft, err = workflowhandoff.ValidateDeliveryTaskRunDraft(s.Request.HandoffDraft)
+	} else {
+		draft, err = workflowhandoff.ValidateTaskRunDraft(s.Request.HandoffDraft)
+	}
+	if err != nil {
+		return err
+	}
+	for _, p := range r.TaskPreparations {
+		if p.ID != s.Request.PreparationID {
+			continue
+		}
+		target := s.Observed.Target
+		if draft.Basis != nil && draft.Basis.TaskID == p.Plan.TaskID && digest(p) == s.Request.PreparationSHA256 && p.Plan.WorktreePath == target.WorktreeLocator && "refs/heads/"+p.Plan.Branch == target.Ref && p.Plan.Target.GitCommonDir == target.GitCommonDir && p.Plan.Target.ParentLocator == s.Observed.Epic.WorktreeLocator && p.Plan.Target.ParentRef == s.Observed.Epic.Ref {
+			return nil
+		}
+	}
+	return workflowError(4, "native preparation/Task/source binding differs")
 }
