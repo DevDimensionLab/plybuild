@@ -57,7 +57,11 @@ func TestAL16UnknownIdentityQualifiedInstall(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	binary := filepath.Join(t.TempDir(), "ply-unknown")
+	directory, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	binary := filepath.Join(directory, "ply-unknown")
 	c := exec.Command("go", "build", "-buildvcs=false", "-o", binary, "./cmd/ply")
 	c.Dir = repo
 	if b, err := c.CombinedOutput(); err != nil {

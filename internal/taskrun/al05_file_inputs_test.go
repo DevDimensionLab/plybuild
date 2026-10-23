@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // AL05: owner-submitted reports, evidence, acceptance entrypoints and reviews
@@ -381,7 +383,40 @@ func TestAL05CandidateCLIJourneyWithOrdinaryModes(t *testing.T) {
 			t.Fatalf("stderr warn lacks %q: %s", fact, stderr)
 		}
 	}
-	assertAutomaticCLIClosure(t, binary, f, verified)
+	candidate := verified.Delivery.Candidates[0]
+	pending, output, err := automaticCLI(binary, f, "execute", "integrate", o.RunID, "--context", o.Paths.Context)
+	if pending.Delivery == nil || pending.Delivery.Phase != "closing" || pending.DeliveryStatus.FinalDelivery.State != "delivered" {
+		t.Fatalf("ordinary-input delivery did not retain pending source cleanup: %v\n%s", err, output)
+	}
+	if _, err := os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); err != nil {
+		t.Fatalf("ordinary-input delivery removed its active owner source: %v", err)
+	}
+	if closeout, err := workspace.ReadTaskCloseoutAt(root, candidate.TaskResult.TaskID); err != nil || closeout != nil && closeout.State == "complete" {
+		t.Fatalf("ordinary-input delivery claimed completed source cleanup: %+v %v", closeout, err)
+	}
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) || exit.ExitCode() != 5 || !bytes.Contains(output, []byte("owner_handoff:")) || pending.Delivery.OwnershipRelease == nil || pending.DeliveryStatus.FinalDelivery.CandidateOID != candidate.OID {
+		t.Fatalf("ordinary inputs did not deliver the exact candidate with owner handoff: %v\n%s", err, output)
+	}
+	if gitOutput(t, f.Parent, "rev-parse", "HEAD") != candidate.OID || gitOutput(t, f.Parent, "rev-parse", "HEAD^{tree}") != candidate.Tree {
+		t.Fatal("ordinary-input delivery changed candidate identity")
+	}
+	queue, err := workspace.ListTaskQueue(f.D.Workspace, workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, false)
+	if err != nil || queue.Current != nil || len(queue.Pending) != 0 {
+		t.Fatalf("native queue not closed: %+v %v", queue, err)
+	}
+	base, err := workspace.ShowEpicBase(f.D.Workspace, workspace.EpicBaseInput{EpicID: "epic", RepoID: "ply"})
+	if err != nil || deliveryCLILatestBase(base).OID != candidate.OID || deliveryCLILatestBase(base).Tree != candidate.Tree || base.Freshness != "fresh" {
+		t.Fatalf("Epic base did not advance to the exact candidate: %+v %v", base, err)
+	}
+	registry, err := f.D.Workspace.WorkItems.Snapshot(root)
+	if err != nil || len(registry.IntegrationResults) != 1 || len(registry.HumanQARecords) != 0 {
+		t.Fatalf("ordinary-input delivery repeated integration or fabricated human QA: %v", err)
+	}
+	calls := workflowTestCalls(t, f.workflowFixture, "pane close")
+	if calls != 0 {
+		t.Fatal("ordinary-input test closed the modeled live owner pane")
+	}
 }
 
 // r001-f01: the submitted round report is an ordinary input like the delivery

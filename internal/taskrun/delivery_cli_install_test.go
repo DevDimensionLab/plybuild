@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/buildinfo"
 )
@@ -67,11 +68,19 @@ func qualifiedCLIInstallationConsumer(t *testing.T, binary string) {
 	if _, raw, err := invoke(binary, destination); err == nil {
 		t.Fatalf("unclosed owner installed CLI: %s", raw)
 	}
-	_, _ = cleanupOwnerIntegrates(t, binary, f, o)
-	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_status": "idle"})
-	if _, out, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30"); err != nil {
-		t.Fatalf("closeout %v %s", err, out)
+	_, reflog := cleanupOwnerIntegrates(t, binary, f, o)
+	cleanupOwnerLeaves(t, f)
+	reviewRoundIn(t, "w-fixture:root")
+	coordinator := f.D
+	coordinator.CWD = func() (string, error) { return f.Parent, nil }
+	coordinator.LocalProcesses = func(string, string) ([]LocalProcess, error) {
+		return []LocalProcess{{PID: os.Getpid(), CWD: f.Parent}}, nil
 	}
+	closed, err := WorkflowFollow(coordinator, f.R.WorkspaceRoot, o.RunID, 30*time.Second)
+	if err != nil {
+		t.Fatalf("modeled fixture closeout: %v", err)
+	}
+	assertCleanupRemoved(t, f, closed, reflog)
 	ready, raw, err := invoke(binary, destination, "--check")
 	if err != nil || ready.Controller.Locator == "" {
 		t.Fatalf("check: %v %s", err, raw)
