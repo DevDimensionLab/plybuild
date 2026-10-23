@@ -1,11 +1,16 @@
 package taskrun
 
 import (
+	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -85,15 +90,160 @@ func TestDeliveryReceiptDoesNotRequireBlanketPermission(t *testing.T) {
 	}
 }
 
-func TestDeliveryReceiptCLIJourney(t *testing.T) {
-	binary := automaticCLIBinary(t)
+// The receipt journey alone forbids a subprocess closeout: Go observers cannot
+// cross that boundary. The tripwire runs before the supplied CLI callable.
+type receiptClosureObserver struct {
+	simulate           func(func())
+	simulatedCalls     int
+	subprocessAttempts int
+}
+
+var errReceiptSubprocessCloseout = errors.New("receipt closeout cannot inherit observers across a subprocess")
+
+func (b *receiptClosureObserver) subprocess(_ func()) error {
+	b.subprocessAttempts++
+	return errReceiptSubprocessCloseout
+}
+
+func (b *receiptClosureObserver) inProcess(closeout func()) error {
+	b.simulatedCalls++
+	b.simulate(closeout)
+	return nil
+}
+
+// Both the real journey and its regression call this dispatch. A test of a
+// separately supplied route would miss accidentally restoring the old helper.
+func receiptJourneyClosure(t *testing.T, f deliveryFixture, o WorkflowRun, observers *receiptObservers, failure string, b *receiptClosureObserver) error {
+	return b.inProcess(func() { assertReceiptSimulatedObserverClosure(t, f, o, observers, failure) })
+}
+
+func TestDeliveryReceiptClosureDispatch(t *testing.T) {
+	f := receiptFixture(t, "codex")
+	observers := receiptControlledRuntime(t, &f)
+	before := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
+	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	downstream := 0
+	b := &receiptClosureObserver{simulate: func(func()) { downstream++ }}
+	err = receiptJourneyClosure(t, f, WorkflowRun{}, observers, "unused-before-boundary", b)
+	after, readErr := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	if readErr != nil || !equal(registry, after) || gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != before || workflowTestCalls(t, f.workflowFixture, "agent start") != 0 {
+		t.Fatal("dispatch inspection changed native state or launched an owner")
+	}
+	if observers.startup != 0 || observers.source != 0 || observers.local != 0 {
+		t.Fatalf("dispatch inspection consumed downstream observers: %+v", observers)
+	}
+	for _, command := range []string{"pane get", "pane list", "agent get", "agent list", "agent prompt"} {
+		if workflowTestCalls(t, f.workflowFixture, command) != 0 {
+			t.Fatalf("dispatch inspection reached downstream %s", command)
+		}
+	}
+	if err != nil || b.subprocessAttempts != 0 || b.simulatedCalls != 1 || downstream != 1 {
+		t.Fatalf("actual receipt dispatch attempted subprocess closeout before launch/inspection/integration: %v; subprocess=%d simulated=%d downstream=%d", err, b.subprocessAttempts, b.simulatedCalls, downstream)
+	}
+	t.Run("wrong_dispatch_stops_before_callable", func(t *testing.T) {
+		b := &receiptClosureObserver{}
+		if err := b.subprocess(func() { t.Fatal("subprocess callable reached") }); !errors.Is(err, errReceiptSubprocessCloseout) || b.subprocessAttempts != 1 || b.simulatedCalls != 0 {
+			t.Fatalf("wrong boundary escaped tripwire: %+v %v", b, err)
+		}
+	})
+}
+
+// All adapters are installed before startup. Ordinary non-adopted startup does
+// not consume SourceWriters or StartupProcessTree; their zero counts are not
+// behavioral coverage of adoption or recovery. LocalProcesses is exercised only
+// after modeled owner exit, through production WorkflowFollow/closeout.
+type receiptObservers struct {
+	startup, source, local int
+	session, transcript    string
+	table                  []LocalProcess
+	err                    error
+}
+
+func receiptControlledRuntime(t *testing.T, f *deliveryFixture) *receiptObservers {
+	t.Helper()
+	home := filepath.Join(f.R.WorkspaceRoot, "receipt-home")
+	transcript := filepath.Join(home, ".codex", "sessions", "2026", "10", "24", "rollout-fixture-session.jsonl")
+	if err := os.MkdirAll(filepath.Dir(transcript), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(transcript, []byte("{}\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", home)
+	t.Setenv("CODEX_HOME", filepath.Join(home, ".codex"))
+	s := &receiptObservers{session: "fixture-session", transcript: transcript, table: []LocalProcess{{PID: os.Getpid(), CWD: f.Parent}}}
+	f.D.LocalProcesses = func(session, transcript string) ([]LocalProcess, error) {
+		s.local++
+		if session != s.session || transcript != s.transcript {
+			t.Fatalf("wrong local inspection identity: session=%q transcript=%q", session, transcript)
+		}
+		return s.table, s.err
+	}
+	f.D.StartupProcessTree = func(pid int) ([]StartupProcess, error) {
+		s.startup++
+		return []StartupProcess{{PID: pid, ParentPID: 1, ProcessGroupID: pid}}, nil
+	}
+	f.D.Workspace.SourceWriters = func(string) (workspace.SourceWriterObservation, error) {
+		s.source++
+		return workspace.SourceWriterObservation{State: "absent", Method: "receipt_fixture", Limitation: "Controlled disposable fixture; no OS observation"}, nil
+	}
+	// SystemDependencies callbacks captured older values. Rebind explicitly.
+	f.D.Workflow.TaskWorkspace = &f.D.Workspace
+	ownerPaneStandin(t, f)
+	return s
+}
+
+func (s *receiptObservers) assertUnused(t *testing.T) {
+	t.Helper()
+	if s.startup != 0 || s.source != 0 {
+		t.Fatalf("ordinary journey consumed recovery/adoption observers: startup=%d source=%d", s.startup, s.source)
+	}
+	t.Logf("defensive observers unexercised: StartupProcessTree=%d SourceWriters=%d", s.startup, s.source)
+}
+
+func receiptCLICall(t *testing.T, binary string, f deliveryFixture, args ...string) (WorkflowRun, error) {
+	t.Helper()
+	if len(args) < 2 || args[0] != "execute" || args[1] != "check-in" && args[1] != "begin" && args[1] != "verify" {
+		t.Fatalf("unmodeled receipt subprocess boundary: %q", args)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+	c := exec.CommandContext(ctx, binary, append([]string{"workflow"}, append(args, "--format", "json")...)...)
+	c.Dir, c.WaitDelay = f.Prepared.Preparation.Preparation.Plan.WorktreePath, time.Second
+	var stdout, stderr bytes.Buffer
+	c.Stdout, c.Stderr = &stdout, &stderr
+	err := c.Run() // Exact owned child, synchronously waited; never a detached supervisor.
+	t.Logf("receipt CLI argv=%q cwd=%q stdout=%s stderr=%s exit=%v", c.Args, c.Dir, stdout.Bytes(), stderr.Bytes(), err)
+	var o WorkflowRun
+	if decodeErr := json.Unmarshal(stdout.Bytes(), &o); decodeErr != nil && err == nil {
+		err = decodeErr
+	}
+	return o, err
+}
+
+func receiptCLIQualified(t *testing.T, binary string) (deliveryFixture, WorkflowRun, *receiptObservers) {
+	t.Helper()
 	a := &workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "synthetic receipt journey", TimeoutSeconds: 30}}
 	f := receiptFixture(t, "codex", deliveryFixtureOptions{Agreement: a})
 	f.R.Delivery.Goal = FileBinding{filepath.Join(f.R.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
 	f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
 	f.D.Executable = func() (string, error) { return binary, nil }
-	ownerPaneStandin(t, &f)
+	observers := receiptControlledRuntime(t, &f)
 	o := workflowTestStart(t, f.workflowFixture)
+	if o.Transport.AgentSessionID != observers.session || f.R.Runtime.Mode != "interactive" {
+		t.Fatal("receipt fixture changed its controlled session or interactive verification boundary")
+	}
+	ok := func(args ...string) WorkflowRun {
+		t.Helper()
+		o, err := receiptCLICall(t, binary, f, args...)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return o
+	}
 	args := []string{"execute", "check-in", o.RunID, "--context", o.Paths.Context, "--provider", "codex", "--native-session", o.Transport.AgentSessionID}
 	for _, bad := range []struct {
 		index int
@@ -101,16 +251,33 @@ func TestDeliveryReceiptCLIJourney(t *testing.T) {
 	}{{4, o.Paths.Context + "wrong"}, {6, "claude"}, {8, "wrong-session"}} {
 		invalid := append([]string{}, args...)
 		invalid[bad.index] = bad.value
-		if _, _, err := automaticCLI(binary, f, invalid...); err == nil {
+		if _, err := receiptCLICall(t, binary, f, invalid...); err == nil {
 			t.Fatal("invalid receipt accepted")
 		}
 	}
-	o = automaticCLIOK(t, binary, f, args...)
-	o = automaticCLIOK(t, binary, f, args...)
+	o = ok(args...)
+	state, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil || state.Acceptance == nil {
+		t.Fatalf("receipt binding missing: %v", err)
+	}
+	firstBinding := *state.Acceptance
+	first, err := os.ReadFile(firstBinding.Locator)
+	if err != nil {
+		t.Fatal(err)
+	}
+	o = ok(args...)
+	state, err = workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil || state.Acceptance == nil || *state.Acceptance != firstBinding {
+		t.Fatalf("repeated CLI receipt changed binding: %v", err)
+	}
+	repeated, err := os.ReadFile(state.Acceptance.Locator)
+	if err != nil || string(first) != string(repeated) {
+		t.Fatal("repeated CLI receipt changed immutable identity")
+	}
 	if o.DeliveryStatus.Startup.SandboxCoverage != "unknown" || o.DeliveryStatus.Startup.RuntimeDecision != "per_action_not_observed" {
 		t.Fatalf("receipt fabricated runtime facts: %+v", o.DeliveryStatus.Startup)
 	}
-	if _, _, err := automaticCLI(binary, f, "execute", "begin", o.RunID, "--context", o.Paths.Context, "--provider", "codex", "--native-session", o.Transport.AgentSessionID, "--policy", "unknown", "--read-root", f.R.WorkspaceRoot, "--write-root", f.R.WorkspaceRoot, "--permission-confirmed"); err == nil {
+	if _, err := receiptCLICall(t, binary, f, "execute", "begin", o.RunID, "--context", o.Paths.Context, "--provider", "codex", "--native-session", o.Transport.AgentSessionID, "--policy", "unknown", "--read-root", f.R.WorkspaceRoot, "--write-root", f.R.WorkspaceRoot, "--permission-confirmed"); err == nil {
 		t.Fatal("legacy entrypoint accepted new protocol")
 	}
 	deliveryTestCandidate(t, f, "receipt candidate")
@@ -118,11 +285,163 @@ func TestDeliveryReceiptCLIJourney(t *testing.T) {
 		t.Fatal(err)
 	}
 	review := deliveryTestReview(t, f, "receipt-journey")
-	o = automaticCLIOK(t, binary, f, automaticCLIVerifyArgs(o, review, binary)...)
+	o = ok(automaticCLIVerifyArgs(o, review, binary)...)
 	if o.Delivery.Phase != "automatic_acceptance_passed" {
 		t.Fatalf("receipt did not reach candidate qualification: %+v", o.Delivery)
 	}
-	assertAutomaticCLIClosure(t, binary, f, o)
+	observers.assertUnused(t)
+	if observers.local != 0 {
+		t.Fatal("startup/receipt/verify unexpectedly inspected local writers")
+	}
+	return f, o, observers
+}
+
+func TestDeliveryReceiptCLIJourney(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	b := &receiptClosureObserver{simulate: func(closeout func()) { closeout() }}
+	f, o, observers := receiptCLIQualified(t, binary)
+	if err := receiptJourneyClosure(t, f, o, observers, "herdr_denied", b); err != nil {
+		t.Fatal(err)
+	}
+	if b.simulatedCalls != 1 || b.subprocessAttempts != 0 {
+		t.Fatalf("wrong actual receipt closeout calls: %+v", b)
+	}
+}
+
+// Public Delivery register/check/execute and subprocess follow remain covered by
+// their own tests. This receipt-local closure uses production functions with
+// simulated inventories and real native Git, integration, queue/base records.
+func assertReceiptSimulatedObserverClosure(t *testing.T, f deliveryFixture, o WorkflowRun, observers *receiptObservers, failure string) {
+	t.Helper()
+	var err error
+	o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
+	cleanupOwnerHandoff(t, f, o, err)
+	c := o.Delivery.Candidates[0]
+	if observers.local != 0 {
+		t.Fatal("owner-present handoff reached local inspection")
+	}
+	reflog := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
+	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	if err != nil || len(registry.IntegrationResults) != 1 || len(registry.HumanQARecords) != 0 {
+		t.Fatalf("wrong native integration or fabricated QA: %v", err)
+	}
+	q, err := workspace.ListTaskQueue(f.D.Workspace, workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, false)
+	if err != nil || q.Current != nil || len(q.Active) != 0 || len(q.Pending) != 0 {
+		t.Fatalf("integration did not close the queue: %+v %v", q, err)
+	}
+	base, err := workspace.ShowEpicBase(f.D.Workspace, workspace.EpicBaseInput{EpicID: "epic", RepoID: "ply"})
+	if err != nil || deliveryCLILatestBase(base).OID != c.OID {
+		t.Fatalf("Epic base did not advance: %+v %v", base, err)
+	}
+	assertStable := func(current WorkflowRun, pending bool) {
+		t.Helper()
+		r, e := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+		b, baseErr := workspace.ShowEpicBase(f.D.Workspace, workspace.EpicBaseInput{EpicID: "epic", RepoID: "ply"})
+		queue, queueErr := workspace.ListTaskQueue(f.D.Workspace, workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, false)
+		if e != nil || baseErr != nil || queueErr != nil || !equal(r.IntegrationResults, registry.IntegrationResults) || !equal(r.TaskQueueEvents, registry.TaskQueueEvents) || !equal(b, base) || queue.Current != nil || len(queue.Active) != 0 || len(queue.Pending) != 0 || len(r.HumanQARecords) != 0 || current.DeliveryStatus.HumanJudgment != nil {
+			t.Fatal("closeout changed integration/closed queue/advanced base or fabricated human QA")
+		}
+		cc := current.Delivery.Candidates[0]
+		if cc.TaskResult.ID != c.TaskResult.ID || !equal(cc.Integration, c.Integration) || current.DeliveryStatus.FinalDelivery.State != "delivered" || gitOutput(t, f.Parent, "rev-parse", "HEAD") != c.OID || gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != reflog {
+			t.Fatal("closeout changed exact delivery or repeated integration")
+		}
+		if pending {
+			if current.Delivery.Phase != "closing" || !equal(current.Delivery.Events, o.Delivery.Events) || gitOutput(t, f.Parent, "rev-parse", c.TaskResult.SourceRef) != c.OID {
+				t.Fatal("negative observation changed closing phase, events or source ref")
+			}
+			if _, e := os.Stat(c.TaskResult.SourceLocator); e != nil {
+				t.Fatal("negative observation removed source")
+			}
+			closeout, e := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
+			if e != nil || closeout != nil {
+				t.Fatalf("negative observation manufactured a cleanup/absence receipt: %+v %v", closeout, e)
+			}
+		}
+	}
+	assertStable(o, true)
+	cleanupOwnerLeaves(t, f)
+	coordinator := f.D
+	coordinator.CWD = func() (string, error) { return f.Parent, nil }
+	reviewRoundIn(t, "w-fixture:root")
+	follow := func() (WorkflowRun, error) {
+		return WorkflowFollow(coordinator, f.R.WorkspaceRoot, o.RunID, 5*time.Second)
+	}
+	if failure == "herdr_denied" {
+		assertCleanupUnknownInspectionPreservesDeliveredIntegration(t, f, o, reflog, func() (WorkflowRun, error) {
+			blocked, err := follow()
+			if err == nil || !strings.Contains(err.Error(), "owner_unknown") || observers.local != 0 {
+				t.Fatalf("denied managed inventory reached local observer: %v calls=%d", err, observers.local)
+			}
+			assertStable(blocked, true)
+			return blocked, err
+		})
+	} else {
+		want := "owner_unknown"
+		switch failure {
+		case "local_denied":
+			observers.table, observers.err = nil, os.ErrPermission
+		case "empty":
+			observers.table = nil
+		case "incomplete":
+			observers.table = []LocalProcess{{PID: os.Getpid() + 10000, CWD: f.Parent}}
+		case "external_task", "external_session":
+			want = "owner_active"
+			writer := LocalProcess{PID: os.Getpid() + 10000, CWD: c.TaskResult.SourceLocator}
+			if failure == "external_session" {
+				writer.CWD, writer.Session = f.Parent, "transcript_open"
+			}
+			observers.table = append(observers.table, writer)
+		default:
+			t.Fatalf("unknown modeled failure %q", failure)
+		}
+		before := observers.local
+		blocked, err := follow()
+		if err == nil || !strings.Contains(err.Error(), want) || observers.local-before != 1 {
+			t.Fatalf("modeled %s was retried or did not preserve uncertainty/writer: %v calls=%d", failure, err, observers.local-before)
+		}
+		assertStable(blocked, true)
+	}
+	// Explicitly replace only the modeled failure, then resume the same closeout.
+	observers.table, observers.err = []LocalProcess{{PID: os.Getpid(), CWD: f.Parent}}, nil
+	before := observers.local
+	done, err := follow()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if observers.local-before != 2 {
+		t.Fatalf("WorkflowFollow must inspect locally before closeout and under its ownership guard: calls=%d", observers.local-before)
+	}
+	t.Logf("%s: LocalProcesses successful follow calls=%d; session=%q transcript=%q observing_pid=%d", failure, observers.local-before, observers.session, observers.transcript, os.Getpid())
+	assertCleanupRemoved(t, f, done, reflog)
+	assertStable(done, false)
+	again, err := follow()
+	if err != nil || !equal(again.Delivery.Events, done.Delivery.Events) {
+		t.Fatalf("repeat completion changed delivery events: %v", err)
+	}
+	assertCleanupRemoved(t, f, again, reflog)
+	assertStable(again, false)
+	shown, err := WorkflowShow(coordinator, f.R.WorkspaceRoot, o.RunID)
+	if err != nil || !equal(shown.Delivery.Events, done.Delivery.Events) {
+		t.Fatalf("readback changed completed history: %v", err)
+	}
+	assertStable(shown, false)
+	if observers.local-before != 2 {
+		t.Fatal("completed follow/readback repeated local inspection")
+	}
+	observers.assertUnused(t)
+}
+
+func TestDeliveryReceiptSimulatedObserverCloseout(t *testing.T) {
+	binary := automaticCLIBinary(t)
+	for _, failure := range []string{"local_denied", "empty", "incomplete", "external_task", "external_session"} {
+		t.Run(failure, func(t *testing.T) {
+			b := &receiptClosureObserver{simulate: func(closeout func()) { closeout() }}
+			f, o, observers := receiptCLIQualified(t, binary)
+			if err := receiptJourneyClosure(t, f, o, observers, failure, b); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
 }
 
 func TestDeliveryReceiptReportedRootsNeverAttestSandbox(t *testing.T) {
