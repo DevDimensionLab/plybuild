@@ -225,15 +225,18 @@ and explicit serial/parallel readiness. Internal consumers use that projection.
 Schema 1 remains available for zero/one active member with its exact singleton
 shape and legacy `current` disposition; this is a read-only projection, not
 an exclusive-write permission. Parallel native callers use schema 2 even
-when only one member exists; when more than one exists it returns a structured incompatibility
-error and next action to request schema 2. It must not return `current:null`
+when only one member exists. A schema-1 request with more than one active
+member returns a structured incompatibility error and next action to request
+schema 2. It must not return `current:null`
 with success. Text output prints each active member. Registered-queue and
 workflow-status envelopes need their own schema bumps for arrays; candidate
 freshness booleans named `current` retain their independent meaning. The new
 registered-queue and workflow-status versions both use schema 2; schema-1
 callers receive the same explicit incompatibility rule when multiple members
 cannot be represented. Per-preparation readback schema 2 reports `active`
-for new membership; its schema-1 compatibility projection reports `current`.
+for new plans. Old preparation plans retain their schema-1 readback and
+`current` disposition; requesting schema 1 for a new schema-2 preparation
+explicitly refuses instead of relabeling its nested plan.
 
 **New execution contracts.** Proposed execute/preparation plans schema 2 freeze
 `admission_mode=parallel_explicit` and `source_reconciliation=merge_parent_v1`.
@@ -264,7 +267,10 @@ hand-edited preparations cannot establish its receipt. A clean Git merge still
 needs semantic review and new tests.
 
 Format 8 adds append-only reconciliation records and a validated effective-basis
-projection. Each record binds Task/preparation/Run/request/mandate, preceding
+projection. Generation zero is the original frozen parent/start basis with a
+null reconciliation reference, so the first participant can qualify without
+performing a redundant merge. Every later generation requires its exact
+committed native receipt and predecessor chain. Each record binds Task/preparation/Run/request/mandate, preceding
 reconciliation, exact source before/after OID/tree, source ref/worktree/common
 dir, original start, target ref/worktree, old/new registered base revision and
 OID/tree, merge intent/result and evidence. Original worktree binding and
