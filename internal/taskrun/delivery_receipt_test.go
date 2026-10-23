@@ -90,65 +90,49 @@ func TestDeliveryReceiptDoesNotRequireBlanketPermission(t *testing.T) {
 	}
 }
 
-// The receipt journey alone forbids a subprocess closeout: Go observers cannot
-// cross that boundary. The tripwire runs before the supplied CLI callable.
-type receiptClosureObserver struct {
-	simulate           func(func())
-	simulatedCalls     int
-	subprocessAttempts int
-}
-
 var errReceiptSubprocessCloseout = errors.New("receipt closeout cannot inherit observers across a subprocess")
 
-func (b *receiptClosureObserver) subprocess(_ func()) error {
-	b.subprocessAttempts++
-	return errReceiptSubprocessCloseout
-}
-
-func (b *receiptClosureObserver) inProcess(closeout func()) error {
-	b.simulatedCalls++
-	b.simulate(closeout)
-	return nil
-}
-
-// Both the real journey and its regression call this dispatch. A test of a
-// separately supplied route would miss accidentally restoring the old helper.
-func receiptJourneyClosure(t *testing.T, f deliveryFixture, o WorkflowRun, observers *receiptObservers, failure string, b *receiptClosureObserver) error {
-	return b.inProcess(func() { assertReceiptSimulatedObserverClosure(t, f, o, observers, failure) })
+// Execute the same real closeout body in the journey and regression. The
+// fixture's cleanupCLIAt guard observes any subprocess restoration inside it.
+func receiptJourneyClosure(t *testing.T, f deliveryFixture, o WorkflowRun, observers *receiptObservers, failure string) {
+	assertReceiptSimulatedObserverClosure(t, f, o, observers, failure)
 }
 
 func TestDeliveryReceiptClosureDispatch(t *testing.T) {
-	f := receiptFixture(t, "codex")
-	observers := receiptControlledRuntime(t, &f)
+	binary := automaticCLIBinary(t)
+	f, o, observers := receiptCLIQualified(t, binary)
 	before := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
 	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
 	if err != nil {
 		t.Fatal(err)
 	}
-	downstream := 0
-	b := &receiptClosureObserver{simulate: func(func()) { downstream++ }}
-	err = receiptJourneyClosure(t, f, WorkflowRun{}, observers, "unused-before-boundary", b)
-	after, readErr := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
-	if readErr != nil || !equal(registry, after) || gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != before || workflowTestCalls(t, f.workflowFixture, "agent start") != 0 {
-		t.Fatal("dispatch inspection changed native state or launched an owner")
+	calls := map[string]int{}
+	for _, command := range []string{"pane get", "pane list", "agent get", "agent list", "agent prompt", "agent start", "tab create", "pane close"} {
+		calls[command] = workflowTestCalls(t, f.workflowFixture, command)
 	}
-	if observers.startup != 0 || observers.source != 0 || observers.local != 0 {
-		t.Fatalf("dispatch inspection consumed downstream observers: %+v", observers)
-	}
-	for _, command := range []string{"pane get", "pane list", "agent get", "agent list", "agent prompt"} {
-		if workflowTestCalls(t, f.workflowFixture, command) != 0 {
-			t.Fatalf("dispatch inspection reached downstream %s", command)
+	receiptJourneyClosure(t, f, o, observers, "herdr_denied")
+	if observers.subprocess != 0 {
+		// The actual callable ran up to cleanupCLIAt's pre-exec tripwire.
+		// Compare with phase entry: startup/CLI verify already happened, but
+		// no closeout launch, inspection or integration may have happened.
+		after, readErr := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+		shown := mustShow(t, f, o.RunID)
+		if readErr != nil || !equal(registry, after) || !equal(shown.Delivery.Events, o.Delivery.Events) || gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != before || observers.local != 0 {
+			t.Fatal("blocked closeout callable changed native state or inspected local processes")
 		}
-	}
-	if err != nil || b.subprocessAttempts != 0 || b.simulatedCalls != 1 || downstream != 1 {
-		t.Fatalf("actual receipt dispatch attempted subprocess closeout before launch/inspection/integration: %v; subprocess=%d simulated=%d downstream=%d", err, b.subprocessAttempts, b.simulatedCalls, downstream)
-	}
-	t.Run("wrong_dispatch_stops_before_callable", func(t *testing.T) {
-		b := &receiptClosureObserver{}
-		if err := b.subprocess(func() { t.Fatal("subprocess callable reached") }); !errors.Is(err, errReceiptSubprocessCloseout) || b.subprocessAttempts != 1 || b.simulatedCalls != 0 {
-			t.Fatalf("wrong boundary escaped tripwire: %+v %v", b, err)
+		c := o.Delivery.Candidates[0]
+		if _, e := os.Stat(c.TaskResult.SourceLocator); e != nil || gitOutput(t, f.Parent, "rev-parse", c.TaskResult.SourceRef) != c.OID {
+			t.Fatal("blocked closeout callable changed source directory/ref")
 		}
-	})
+		for command, count := range calls {
+			if workflowTestCalls(t, f.workflowFixture, command) != count {
+				t.Fatalf("blocked closeout callable reached downstream %s", command)
+			}
+		}
+		observers.assertUnused(t)
+		t.Fatalf("actual receipt closeout callable attempted subprocess before exec.Command: attempts=%d; closeout launch/inspection/integration effects=0; native state unchanged", observers.subprocess)
+	}
+	assertCleanupRemoved(t, f, mustShow(t, f, o.RunID), gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic"))
 }
 
 // All adapters are installed before startup. Ordinary non-adopted startup does
@@ -157,6 +141,7 @@ func TestDeliveryReceiptClosureDispatch(t *testing.T) {
 // after modeled owner exit, through production WorkflowFollow/closeout.
 type receiptObservers struct {
 	startup, source, local int
+	subprocess             int
 	session, transcript    string
 	table                  []LocalProcess
 	err                    error
@@ -175,6 +160,12 @@ func receiptControlledRuntime(t *testing.T, f *deliveryFixture) *receiptObserver
 	t.Setenv("HOME", home)
 	t.Setenv("CODEX_HOME", filepath.Join(home, ".codex"))
 	s := &receiptObservers{session: "fixture-session", transcript: transcript, table: []LocalProcess{{PID: os.Getpid(), CWD: f.Parent}}}
+	for _, cwd := range []string{f.Parent, f.Prepared.Preparation.Preparation.Plan.WorktreePath} {
+		guardCleanupCLIAt(t, cwd, func() error {
+			s.subprocess++
+			return errReceiptSubprocessCloseout
+		})
+	}
 	f.D.LocalProcesses = func(session, transcript string) ([]LocalProcess, error) {
 		s.local++
 		if session != s.session || transcript != s.transcript {
@@ -298,13 +289,10 @@ func receiptCLIQualified(t *testing.T, binary string) (deliveryFixture, Workflow
 
 func TestDeliveryReceiptCLIJourney(t *testing.T) {
 	binary := automaticCLIBinary(t)
-	b := &receiptClosureObserver{simulate: func(closeout func()) { closeout() }}
 	f, o, observers := receiptCLIQualified(t, binary)
-	if err := receiptJourneyClosure(t, f, o, observers, "herdr_denied", b); err != nil {
-		t.Fatal(err)
-	}
-	if b.simulatedCalls != 1 || b.subprocessAttempts != 0 {
-		t.Fatalf("wrong actual receipt closeout calls: %+v", b)
+	receiptJourneyClosure(t, f, o, observers, "herdr_denied")
+	if observers.subprocess != 0 {
+		t.Fatalf("actual receipt closeout reached subprocess boundary: %d", observers.subprocess)
 	}
 }
 
@@ -435,10 +423,10 @@ func TestDeliveryReceiptSimulatedObserverCloseout(t *testing.T) {
 	binary := automaticCLIBinary(t)
 	for _, failure := range []string{"local_denied", "empty", "incomplete", "external_task", "external_session"} {
 		t.Run(failure, func(t *testing.T) {
-			b := &receiptClosureObserver{simulate: func(closeout func()) { closeout() }}
 			f, o, observers := receiptCLIQualified(t, binary)
-			if err := receiptJourneyClosure(t, f, o, observers, failure, b); err != nil {
-				t.Fatal(err)
+			receiptJourneyClosure(t, f, o, observers, failure)
+			if observers.subprocess != 0 {
+				t.Fatalf("actual receipt closeout reached subprocess boundary: %d", observers.subprocess)
 			}
 		})
 	}

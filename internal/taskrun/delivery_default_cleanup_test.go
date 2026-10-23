@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -77,9 +78,24 @@ func cleanupOwnerHandoff(t *testing.T, f deliveryFixture, o WorkflowRun, err err
 	}
 }
 
+// Receipt fixtures register a cwd-scoped tripwire before startup. Other callers
+// retain the ordinary subprocess behavior. No command is constructed on a hit.
+var cleanupCLICommandGuards sync.Map // exact fixture cwd -> func() error
+
+func guardCleanupCLIAt(t *testing.T, cwd string, guard func() error) {
+	t.Helper()
+	if _, loaded := cleanupCLICommandGuards.LoadOrStore(cwd, guard); loaded {
+		t.Fatal("cleanup CLI guard already registered for fixture cwd")
+	}
+	t.Cleanup(func() { cleanupCLICommandGuards.Delete(cwd) })
+}
+
 // cleanupCLIAt runs the public CLI from an explicit cwd, such as the
 // coordinator's registered return checkout outside the Task source.
 func cleanupCLIAt(binary, cwd string, args ...string) (WorkflowRun, []byte, error) {
+	if guard, ok := cleanupCLICommandGuards.Load(cwd); ok {
+		return WorkflowRun{}, nil, guard.(func() error)()
+	}
 	c := exec.Command(binary, append([]string{"workflow"}, append(args, "--format", "json")...)...)
 	c.Dir = cwd
 	var stdout, stderr bytes.Buffer
