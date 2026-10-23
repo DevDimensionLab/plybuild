@@ -111,6 +111,9 @@ clean make-built candidate. They create disposable native records and model
 provider, process and writer observations. Headless verification models OS
 sandbox execution through a trusted in-process Dependencies seam while running
 the acceptance snapshot; it does not demonstrate actual sandbox enforcement.
-The production nil default executes the original sandbox command. Public checks
+The production nil default executes the original sandbox command. Headless
+fixture startup captures the unchanged native reservation through the existing
+filesystem seam and stops before supervisor launch; no real worker is started.
+Public checks
 compare native files/directories, refs, control/history bytes and registry format
 before and after; no installation or shared-workspace activation is exercised.

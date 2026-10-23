@@ -45,6 +45,7 @@ func prepareServiceWorkspaceSeed(t *testing.T, seedSource, seedOID string, roots
 	if seedSource != "" {
 		runGit(t, target, "fetch", "--no-tags", seedSource, seedOID)
 		runGit(t, target, "reset", "--hard", seedOID+"^")
+		runGit(t, target, "branch", "-m", "epic")
 	}
 	ref := gitOutput(t, target, "symbolic-ref", "HEAD")
 	oid := gitOutput(t, target, "rev-parse", "HEAD")

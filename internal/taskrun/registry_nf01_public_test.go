@@ -47,7 +47,13 @@ func nf01GoalTemplate(t *testing.T, f workflowFixture) {
 	if e := os.WriteFile(doc, b, 0600); e != nil {
 		t.Fatal(e)
 	}
+	state, e := workflowRead(root, workflowID(f.R))
+	if e != nil {
+		t.Fatal(e)
+	}
 	a := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, ProjectID: "ply", RepoID: "ply", EpicID: "epic", Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "modeled NF01 coordinator", TimeoutSeconds: 30}}
+	a.TargetRef = state.Observed.Epic.Ref
+	a.TargetWorktree = state.Observed.Epic.WorktreeLocator
 	writeAny(t, root, "goal-draft.json", map[string]any{"kind": "WorkspaceTaskSpecDraft@2", "schema_version": 2, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "nf01/template", "task_id": "task", "spec_id": "solution", "registry_upgrade": nil, "expected_previous": nil, "problem": nil, "recorder": map[string]any{"actor_claim": "fixture planner", "control_surface": "synthetic test", "recorded_at_utc": "2026-10-05T00:00:00Z"}, "contract_kind": "goal", "title": "Exact fixture reader", "objective": "Qualify an exact private candidate within a disposable native fixture.", "change_reason": "NF01 public read-only compatibility demo", "documents": []any{map[string]any{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": hash(b), "size_bytes": len(b), "media_type": "text/markdown", "git_provenance": nil}}}, "design": []any{map[string]any{"document_id": "design", "section": nil}}, "constraints": []string{"Only disposable native fixture."}, "requirements": []any{map[string]any{"id": "behavior", "acceptance": "Exact private reader remains read-only."}}, "executor": map[string]any{"provider": "codex", "model": "fixture-model", "effort": "medium"}, "delivery": a})
 }
 func nf01PublicReader(t *testing.T, f workflowFixture, binary, oid string) (deliveryFixture, WorkflowRun) {
@@ -98,7 +104,7 @@ func nf01PublicCheck(t *testing.T, f deliveryFixture, qualified WorkflowRun, bin
 	d.Workflow.TaskWorkspace = &d.Workspace
 	d.Workspace.ProjectLocks = activationNoProjectLock{&forbidden}
 	d.Workspace.WorkItems = activationNoStoreWrites{d.Workspace.WorkItems, &forbidden}
-	before := activationNativeState(t, f.R.WorkspaceRoot)
+	before := nf01NativeState(t, f.R.WorkspaceRoot)
 	direct, e := ActivateParallelWorkspaceWithOptions(d, f.R.WorkspaceRoot, qualified.RunID, "synthetic NF01 coordinator", "", false, ParallelActivationOptions{AllowRetainedSource: true})
 	if e != nil || direct.State != want {
 		t.Fatalf("isolated native preview: %+v %v", direct, e)
@@ -130,7 +136,7 @@ func nf01PublicCheck(t *testing.T, f deliveryFixture, qualified WorkflowRun, bin
 			}
 		}
 		for _, c := range out.Plan.Evidence.Consumers {
-			if strings.HasPrefix(c.ID, "preparation/") {
+			if strings.HasPrefix(c.ID, "preparation/") && classes[c.ID] != "unknown" {
 				t.Fatalf("false duplicate preparation blocker: %+v", c)
 			}
 		}
@@ -139,7 +145,7 @@ func nf01PublicCheck(t *testing.T, f deliveryFixture, qualified WorkflowRun, bin
 		}
 		previous = raw
 	}
-	if forbidden != 0 || !equal(before, activationNativeState(t, f.R.WorkspaceRoot)) {
+	if forbidden != 0 || !equal(before, nf01NativeState(t, f.R.WorkspaceRoot)) {
 		t.Fatal("check wrote native state or invoked a forbidden observation/lock")
 	}
 	r, e := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
@@ -161,9 +167,9 @@ func TestNF01PublicCompatibilityCheck(t *testing.T) {
 		nf01PublicCheck(t, reader, q, binary, "preview", map[string]string{"run/" + o.RunID: "PAR-A02", "run/" + q.RunID: "PAR-A03"})
 	})
 	t.Run("headless-and-unknown", func(t *testing.T) {
-		f, o := newWorkerDeliveryFixtureOptions(t, deliveryFixtureOptions{SeedSource: source, SeedOID: oid}, func(f *deliveryFixture) {
+		f, o := newWorkerDeliveryFixtureOptions(t, deliveryFixtureOptions{SeedSource: source, SeedOID: oid, StartFixture: nf01ReserveOnly}, func(f *deliveryFixture) {
 			nf01Runtime(t, f)
-			f.R.Runtime.PlyExecutable = Executable{binary, hashFileTest(t, binary)}
+
 		})
 		workerTestReserveNative(t, f, o.RunID, "verify")
 		var e error
@@ -179,6 +185,9 @@ func TestNF01PublicCompatibilityCheck(t *testing.T) {
 		nf01PublicCheck(t, f, o, binary, "preview", map[string]string{"run/" + o.RunID: "PAR-A02"})
 		// A separate captured headless preparation remains active and incompatible.
 		base := f
+		base.R.Runtime.Mode = "interactive"
+		base.R.Runtime.PermissionBinding.ProfileID = "synthetic-policy"
+		base.R.HumanAuthority.StartSurface = "human_authorized_herdr"
 		base.R.Herdr.Executable = Executable{filepath.Join(f.R.WorkspaceRoot, "herdr-standin"), hashFileTest(t, filepath.Join(f.R.WorkspaceRoot, "herdr-standin"))}
 		b := parallelAdditionalOwner(t, base, false)
 		nf01Runtime(t, &b)
@@ -189,15 +198,82 @@ func TestNF01PublicCompatibilityCheck(t *testing.T) {
 		b.R.Runtime.PermissionBinding.ProfileID = "ply-worker"
 		b.R.HumanAuthority.StartSurface = "human_authorized_worker"
 		b.R.Delivery.StartupProtocol = ""
+		b.R.Delivery.ReasoningEffort = "medium"
+		b.R.Delivery.AllowLocalInstall = false
+		b.R.Delivery.NotificationContext = nil
+		b.R.Delivery.LocalIntegration = DeliveryLocalIntegrationBoundary(b.R.Delivery.Agreement)
+		t.Logf("modeled active headless draft: install=%v notification=%v local=%s expected=%s effort=%q", b.R.Delivery.AllowLocalInstall, b.R.Delivery.NotificationContext, b.R.Delivery.LocalIntegration, DeliveryLocalIntegrationBoundary(b.R.Delivery.Agreement), b.R.Delivery.ReasoningEffort)
 		b.R.HandoffDraft, e = workflowhandoff.BuildDeliveryHandoffDraft(b.D.Workflow, b.R.PreparationID, "synthetic human", b.R.Delivery.OwnerClaim, "nf01/active-headless", b.AcceptancePath, workflowhandoff.DeliveryDraftAuthority{Agreement: b.Prepared.Delivery})
 		if e != nil {
 			t.Fatal(e)
 		}
+		if e = validateWorkerRequest(b.R); e != nil {
+			t.Fatalf("active headless draft before reservation: %v", e)
+		}
 		b.File = writeAny(t, b.R.WorkspaceRoot, "nf01-active-headless.json", b.R)
-		active := workflowTestStart(t, b.workflowFixture)
+		active := nf01ReserveOnly(t, b.workflowFixture)
 		if e = os.MkdirAll(filepath.Join(f.R.WorkspaceRoot, ".ply", "week-runs", "modeled-week"), 0700); e != nil {
 			t.Fatal(e)
 		}
 		nf01PublicCheck(t, f, o, binary, "blocked", map[string]string{"run/" + o.RunID: "PAR-A02", "run/" + active.RunID: "unknown", "week-runs/modeled-week": "unknown"})
+		// Corrupt only this disposable binding. It must restore the separate
+		// preparation blocker rather than hiding the reservation.
+		statePath := filepath.Join(active.Paths.RunRoot, "state.json")
+		raw, e := os.ReadFile(statePath)
+		if e != nil {
+			t.Fatal(e)
+		}
+		var damaged map[string]any
+		if e = json.Unmarshal(raw, &damaged); e != nil {
+			t.Fatal(e)
+		}
+		damaged["result"].(map[string]any)["request_sha256"] = hash([]byte("damaged"))
+		writeAny(t, filepath.Dir(statePath), filepath.Base(statePath), damaged)
+		nf01PublicCheck(t, f, o, binary, "blocked", map[string]string{"run/" + o.RunID: "PAR-A02", "run/" + active.RunID: "unknown", "preparation/" + b.R.PreparationID: "unknown", "week-runs/modeled-week": "unknown"})
+
 	})
+	t.Run("remaining-A01-A04", func(t *testing.T) {
+		a := workspace.DeliveryAgreement{SchemaVersion: 3, Mode: workspace.DeliveryLocalEpic, Acceptance: &workspace.DeliveryAcceptancePolicy{SchemaVersion: 1, Mode: "automatic", ResponsibleActor: "modeled coordinator", TimeoutSeconds: 30}}
+		f := receiptFixture(t, "codex", deliveryFixtureOptions{Agreement: &a, SeedSource: source, SeedOID: oid})
+		nf01Runtime(t, &f)
+		reviewRoundPatchHerdr(t, &f)
+		o := workflowTestStart(t, f.workflowFixture)
+		var e error
+		o, e = WorkflowDeliveryReceipt(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, DeliveryBeginInput{Provider: "codex", NativeSession: o.Transport.AgentSessionID}, true)
+		if e != nil {
+			t.Fatal(e)
+		}
+		runGit(t, f.Prepared.Preparation.Plan.WorktreePath, "merge", "--ff-only", oid)
+		if e = os.WriteFile(f.AcceptancePath, []byte("#!/bin/sh\nset -eu\n\"$PLY_CANDIDATE_BINARY\" version --format json\n"), 0600); e != nil {
+			t.Fatal(e)
+		}
+		o = parallelQualify(t, f, o, binary)
+		o, e = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
+		if !parallelOwnerHandoff(e) {
+			t.Fatal(e)
+		}
+		state := nf01State(t, f.workflowFixture, o)
+		missingReader, e := parallelConsumerClass(f.D, state, "")
+		if e != nil || missingReader.Class != "PAR-A03" || missingReader.Compatible {
+			t.Fatalf("missing qualified coordinator cleared remaining closeout: %+v %v", missingReader, e)
+		}
+		b := parallelAdditionalOwner(t, f, false)
+		nf01Runtime(t, &b)
+		reviewRoundPatchHerdr(t, &b)
+		next := workflowTestStart(t, b.workflowFixture)
+		next, e = WorkflowDeliveryReceipt(b.D, b.R.WorkspaceRoot, next.RunID, next.Paths.Context, DeliveryBeginInput{Provider: "codex", NativeSession: next.Transport.AgentSessionID}, true)
+		if e != nil {
+			t.Fatal(e)
+		}
+		nf01PublicCheck(t, f, o, binary, "blocked", map[string]string{"run/" + o.RunID: "PAR-A03", "run/" + next.RunID: "PAR-A01"})
+		if e = os.WriteFile(b.AcceptancePath, []byte("#!/bin/sh\nset -eu\n\"$PLY_CANDIDATE_BINARY\" version --format json\n"), 0600); e != nil {
+			t.Fatal(e)
+		}
+		next = parallelQualify(t, b, next, binary)
+		if _, e = ReleaseDeliveryOwnership(b.D, b.R.WorkspaceRoot, next.RunID, next.Paths.Context, "Modeled incomplete human integration"); e != nil {
+			t.Fatal(e)
+		}
+		nf01PublicCheck(t, f, o, binary, "blocked", map[string]string{"run/" + o.RunID: "PAR-A03", "run/" + next.RunID: "PAR-A04"})
+	})
+
 }

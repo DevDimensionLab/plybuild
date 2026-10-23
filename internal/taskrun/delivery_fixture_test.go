@@ -22,6 +22,7 @@ type deliveryFixture struct {
 }
 
 type deliveryFixtureOptions struct {
+	StartFixture      func(*testing.T, workflowFixture) WorkflowRun
 	SeedSource        string
 	SeedOID           string
 	Parallel          bool

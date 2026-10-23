@@ -97,7 +97,11 @@ func newWorkerDeliveryFixtureOptions(t *testing.T, option deliveryFixtureOptions
 		t.Fatal(err)
 	}
 	f.File = writeAny(t, f.R.WorkspaceRoot, "headless-request.json", f.R)
-	o := workflowTestStart(t, f.workflowFixture)
+	start := option.StartFixture
+	if start == nil {
+		start = workflowTestStart
+	}
+	o := start(t, f.workflowFixture)
 	lock, err := workerLock(filepath.Join(o.Paths.RunRoot, "worker", "owner.lock"), true)
 	if err != nil {
 		t.Fatal(err)

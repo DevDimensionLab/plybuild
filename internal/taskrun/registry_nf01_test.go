@@ -68,7 +68,7 @@ func nf01Terminal(t *testing.T, f workflowFixture, o WorkflowRun) {
 		forbidden++
 		return workspace.SourceWriterObservation{}, fmt.Errorf("forbidden source writers")
 	}
-	before := activationNativeState(t, f.R.WorkspaceRoot)
+	before := nf01NativeState(t, f.R.WorkspaceRoot)
 	first, sha, e := parallelActivationConsumers(d, f.R.WorkspaceRoot, r, "")
 	if e != nil {
 		t.Fatal(e)
@@ -86,11 +86,11 @@ func nf01Terminal(t *testing.T, f workflowFixture, o WorkflowRun) {
 			}
 		}
 	}
-	if forbidden != 0 || !found || !equal(before, activationNativeState(t, f.R.WorkspaceRoot)) {
+	if forbidden != 0 || !found || !equal(before, nf01NativeState(t, f.R.WorkspaceRoot)) {
 		t.Fatal("missing terminal or collection wrote native state")
 	}
 }
-func nf01Report(t *testing.T, postStart bool, seeds ...string) (workflowFixture, WorkflowRun) {
+func nf01StartedReport(t *testing.T, postStart bool, seeds ...string) (workflowFixture, WorkflowRun) {
 	t.Helper()
 	var f workflowFixture
 	if len(seeds) == 0 {
@@ -101,6 +101,14 @@ func nf01Report(t *testing.T, postStart bool, seeds ...string) (workflowFixture,
 			t.Fatal(e)
 		}
 		f = newWorkflowFixtureSeed(t, root, "", seeds[0], seeds[1])
+		bin := filepath.Join(root, "bin")
+		if e = os.Mkdir(bin, 0700); e != nil {
+			t.Fatal(e)
+		}
+		if e = os.Symlink(f.R.Runtime.Executable.Path, filepath.Join(bin, "codex")); e != nil {
+			t.Fatal(e)
+		}
+		t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 		t.Setenv("HERDR_ENV", "1")
 	}
 	b := mustReadAL01(t, f.R.Herdr.Executable.Path)
@@ -124,7 +132,14 @@ func nf01Report(t *testing.T, postStart bool, seeds ...string) (workflowFixture,
 	if postStart {
 		f.Acceptance.RunID, f.Acceptance.RequestSHA256, f.Acceptance.SessionID = o.RunID, o.RequestSHA256, o.SessionID
 		o = workflowTestAccept(t, f, o)
+		f.Report.RunID, f.Report.RequestSHA256, f.Report.SessionID = o.RunID, o.RequestSHA256, o.SessionID
+		o = workflowTestReport(t, f, o)
 	}
+	return f, o
+}
+func nf01Report(t *testing.T, postStart bool, seeds ...string) (workflowFixture, WorkflowRun) {
+	t.Helper()
+	f, o := nf01StartedReport(t, postStart, seeds...)
 	workflowTestModel(t, f, map[string]any{"closed_transport": true})
 	f.D.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
 	if postStart {
@@ -149,7 +164,7 @@ func TestNF01RetiredReportCompatibility(t *testing.T) {
 }
 func nf01Headless(t *testing.T, complete bool) (deliveryFixture, WorkflowRun) {
 	t.Helper()
-	f, o := newWorkerDeliveryFixture(t, func(f *deliveryFixture) { nf01Runtime(t, f) })
+	f, o := newWorkerDeliveryFixtureOptions(t, deliveryFixtureOptions{StartFixture: nf01ReserveOnly}, func(f *deliveryFixture) { nf01Runtime(t, f) })
 	if !complete {
 		return f, o
 	}
@@ -193,6 +208,7 @@ func nf01Human(t *testing.T, human bool, seeds ...string) (deliveryFixture, Work
 	option := deliveryFixtureOptions{Agreement: &a, ParentRef: "main"}
 	if len(seeds) > 0 {
 		option.SeedSource, option.SeedOID = seeds[0], seeds[1]
+		option.ParentRef = "epic"
 	}
 	f := newDeliveryFixture(t, "codex", option)
 	nf01Runtime(t, &f)
@@ -534,4 +550,157 @@ func TestNF01RemainingAuthority(t *testing.T) {
 			}
 		}
 	}
+}
+
+// Capture complete disposable native stores, directories, source/control bytes,
+// Git refs and history. Symlinks are compared as links, never traversed.
+func nf01NativeState(t *testing.T, root string) map[string]string {
+	t.Helper()
+	out := map[string]string{}
+	err := filepath.WalkDir(root, func(path string, de os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		info, err := de.Info()
+		if err != nil {
+			return err
+		}
+		value := info.Mode().String()
+		if de.Type()&os.ModeSymlink != 0 {
+			target, e := os.Readlink(path)
+			if e != nil {
+				return e
+			}
+			value += " " + target
+		} else if !de.IsDir() {
+			b, e := os.ReadFile(path)
+			if e != nil {
+				return e
+			}
+			value += " " + hash(b)
+		}
+		out[path] = value
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+func TestNF01DamagedPreparationBinding(t *testing.T) {
+	f, o := nf01Headless(t, false)
+	r, e := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	if e != nil {
+		t.Fatal(e)
+	}
+	r.TaskPreparations[0].Plan.WorktreePath += "-different"
+	before := nf01NativeState(t, f.R.WorkspaceRoot)
+	facts, _, e := parallelActivationConsumers(f.D, f.R.WorkspaceRoot, r, "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	run, prep := false, false
+	for _, c := range facts {
+		if c.ID == "run/"+o.RunID {
+			run = c.Class == "unknown"
+		}
+		if c.ID == "preparation/"+f.R.PreparationID {
+			prep = c.Class == "unknown"
+		}
+	}
+	if !run || !prep || !equal(before, nf01NativeState(t, f.R.WorkspaceRoot)) {
+		t.Fatalf("damaged binding suppressed unresolved preparation: %+v", facts)
+	}
+}
+
+// Interrupt at the existing filesystem seam after native reservation bytes are
+// durably saved, before WorkflowStart can call StartWorker. Bytes pass through
+// unchanged; the injected failure is observed, never reported as successful
+// supervisor startup. No detached process/provider exists in this fixture.
+type nf01ReservationFiles struct {
+	FileSystem
+	captured bool
+}
+
+const nf01ReservationInterrupted = "modeled NF01 stop after native worker reservation, before launch"
+
+func (f *nf01ReservationFiles) Replace(path string, raw []byte) error {
+	if err := f.FileSystem.Replace(path, raw); err != nil {
+		return err
+	}
+	var s workflowState
+	if filepath.Base(path) == "state.json" && json.Unmarshal(raw, &s) == nil && headlessRun(s.Request) && s.Phase == "worker_reserved" && s.Result.Handoff.SHA256 != "" {
+		f.captured = true
+		return fmt.Errorf("%s", nf01ReservationInterrupted)
+	}
+	return nil
+}
+func nf01ReserveOnly(t *testing.T, f workflowFixture) WorkflowRun {
+	t.Helper()
+	files := &nf01ReservationFiles{FileSystem: f.D.files()}
+	d := f.D
+	d.Files = files
+	p, e := WorkflowPreviewStart(d, f.File)
+	if e != nil {
+		t.Fatal(e)
+	}
+	preview := p.(WorkflowPreview)
+	o, e := WorkflowStart(d, f.File, *preview.Confirmation)
+	if e == nil || !strings.Contains(e.Error(), nf01ReservationInterrupted) || !files.captured || o.RunID == "" {
+		t.Fatalf("native reserve-only boundary not reached: %+v %v", o, e)
+	}
+	s := nf01State(t, f, o)
+	if s.Phase != "worker_reserved" || s.Result.Worker == nil || s.Result.Worker.OwnerPID != 0 {
+		t.Fatal("fixture started a worker instead of capturing native reservation")
+	}
+	if e = privateDir(workerDirectory(s)); e != nil {
+		t.Fatal(e)
+	}
+	return o
+}
+
+func TestNF01HumanHistoricalParent(t *testing.T) {
+	f, o := nf01Human(t, true)
+	runGit(t, f.Parent, "commit", "--allow-empty", "-m", "later disposable parent history")
+	nf01Terminal(t, f.workflowFixture, o)
+}
+func TestNF01DamagedReportSlot(t *testing.T) {
+	f, o := nf01Report(t, true)
+	s := nf01State(t, f, o)
+	if len(s.Records) == 0 {
+		t.Fatal("post-start fixture lacks native report slot")
+	}
+	if e := os.WriteFile(s.Records[0].Report.Locator, []byte("damaged bound report"), 0600); e != nil {
+		t.Fatal(e)
+	}
+	r, e := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+	if e != nil {
+		t.Fatal(e)
+	}
+	facts, _, e := parallelActivationConsumers(f.D, f.R.WorkspaceRoot, r, "")
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, c := range facts {
+		if c.ID == "run/"+o.RunID {
+			if c.Class != "unknown" || c.Compatible {
+				t.Fatalf("damaged report slot became terminal: %+v", c)
+			}
+			return
+		}
+	}
+	t.Fatal("damaged Run disappeared")
+}
+
+func TestNF01LiveAndSealedReportsRemainBlocked(t *testing.T) {
+	f, o := nf01StartedReport(t, true)
+	nf01Blocked(t, f.D, nf01State(t, f, o))
+	o = workflowTestSettle(t, f, o)
+	nf01Blocked(t, f.D, nf01State(t, f, o))
+	var e error
+	o, e = WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, workflowTestReview(t, f, o, "accepted"))
+	if e != nil {
+		t.Fatal(e)
+	}
+	nf01Blocked(t, f.D, nf01State(t, f, o))
 }
