@@ -375,6 +375,14 @@ func TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault(t *testing.T) {
 	}
 	in.Check = false
 	in.Runtime.PermissionProfile = "auto"
+	for _, check := range []bool{true, false} {
+		in.Check = check
+		if rejected, err := Execute(d, in); err == nil || !strings.Contains(err.Error(), "execute_runtime_conflict") || calls != 0 || rejected.Run != nil {
+			t.Fatalf("explicit profile drift reached reservation: calls=%d error=%v result=%+v", calls, err, rejected)
+		}
+	}
+	in.Check = false
+	in.Runtime.PermissionProfile = ""
 	first, err := Execute(d, in)
 	if err == nil || !strings.Contains(err.Error(), "fixture interrupted before native effects") || calls != 1 || first.Run == nil || first.Run.Transport.TabID != "" {
 		t.Fatalf("historical launch did not reach its one reservation: calls=%d error=%v", calls, err)
@@ -390,6 +398,11 @@ func TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault(t *testing.T) {
 	if request.ClaudeProjectTrust != nil || first.ClaudeProjectTrust != nil || strings.Contains(string(before[first.RequestPath]), `"claude_project_trust"`) {
 		t.Fatal("earlier launch acquired new Claude configuration authority")
 	}
+	in.Runtime.PermissionProfile = "auto"
+	if _, err := Execute(d, in); err == nil || !strings.Contains(err.Error(), "execute_runtime_conflict") || calls != 1 {
+		t.Fatalf("reserved manual launch accepted explicit profile drift: calls=%d error=%v", calls, err)
+	}
+	in.Runtime.PermissionProfile = ""
 	second, err := Execute(d, in)
 	if err != nil || second.State != "existing" || second.Run.RunID != first.Run.RunID || calls != 1 {
 		t.Fatalf("historical reservation was not reused: calls=%d error=%v result=%+v", calls, err, second)

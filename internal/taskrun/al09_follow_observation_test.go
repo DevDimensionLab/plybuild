@@ -114,6 +114,10 @@ func TestAL09FollowCandidateCLI(t *testing.T) {
 	if !json.Valid(stdout.Bytes()) {
 		t.Fatalf("stdout is not JSON: %s", stdout.String())
 	}
+	var observed WorkflowRun
+	if err := json.Unmarshal(stdout.Bytes(), &observed); err != nil || observed.DeliveryStatus == nil || observed.DeliveryStatus.FinalDelivery.State == "delivered" || strings.Contains(stderr.String(), "owner_handoff:") {
+		t.Fatalf("follow timeout exit 5 claimed delivered owner handoff: %v %s", err, stdout.String())
+	}
 	if !strings.Contains(stdout.String(), o.Transport.AgentSessionID) || !strings.Contains(stdout.String(), "workflow execute follow "+o.RunID) {
 		t.Fatal("CLI lost identity or continuation")
 	}

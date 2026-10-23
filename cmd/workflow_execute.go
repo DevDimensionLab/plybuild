@@ -77,6 +77,9 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 				return err
 			}
 			result, err := taskexecute.Execute(d, in)
+			if workspace.RegistryError(err) != nil {
+				return err
+			}
 			if outErr := writeExecuteResult(c, format, result); outErr != nil {
 				return outErr
 			}

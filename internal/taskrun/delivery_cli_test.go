@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -27,10 +28,11 @@ func deliveryCLIBinary(t *testing.T) string {
 		}
 		return binary
 	}
-	repo, err := filepath.Abs("../..")
-	if err != nil {
-		t.Fatal(err)
+	_, source, _, ok := runtime.Caller(0)
+	if !ok || !filepath.IsAbs(source) {
+		t.Fatal("CLI helper requires an absolute source filename or PLY_DELIVERY_TEST_BINARY")
 	}
+	repo := filepath.Clean(filepath.Join(filepath.Dir(source), "../.."))
 	binary := filepath.Join(t.TempDir(), "ply")
 	c := exec.Command("go", "build", "-o", binary, "./cmd/ply")
 	c.Dir = repo

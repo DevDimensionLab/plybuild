@@ -52,7 +52,7 @@ func TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry(t *testing.T) {
 			if err := os.WriteFile(in.Runtime.HerdrExecutable, []byte(recoveryLauncherHerdr), 0700); err != nil {
 				t.Fatal(err)
 			}
-			run := func(executable, cwd string, wantSuccess bool, args ...string) []byte {
+			runExit := func(executable, cwd string, wantExit int, args ...string) ([]byte, string) {
 				t.Helper()
 				ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 				defer cancel()
@@ -61,11 +61,28 @@ func TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry(t *testing.T) {
 				var stderr strings.Builder
 				command.Stderr = &stderr
 				output, err := command.Output()
-				if (err == nil) != wantSuccess {
+				exit := 0
+				if err != nil {
+					var commandExit *exec.ExitError
+					if !errors.As(err, &commandExit) {
+						t.Fatalf("CLI did not exit: %v", err)
+					}
+					exit = commandExit.ExitCode()
+				}
+				if wantExit >= 0 && exit != wantExit || wantExit < 0 && exit == 0 {
 					t.Fatalf("CLI %v: %v\nstdout=%s\nstderr=%s", args, err, output, stderr.String())
 				}
+				return output, stderr.String()
+			}
+			run := func(executable, cwd string, wantSuccess bool, args ...string) []byte {
+				t.Helper()
+				wantExit := 0
 				if !wantSuccess {
-					return []byte(stderr.String())
+					wantExit = -1
+				}
+				output, stderr := runExit(executable, cwd, wantExit, args...)
+				if !wantSuccess {
+					return []byte(stderr)
 				}
 				return output
 			}
@@ -156,12 +173,21 @@ func TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry(t *testing.T) {
 			owner := func(args ...string) []byte { return run(request.Runtime.PlyExecutable.Path, taskPath, true, args...) }
 			o := started.Run
 			owner("workflow", "execute", "check-in", o.RunID, "--context", o.Paths.Context, "--provider", "codex", "--native-session", o.Transport.AgentSessionID, "--format", "json")
+			blockedBytes, blockedStderr := runExit(request.Runtime.PlyExecutable.Path, taskPath, 4, "workflow", "execute", "integrate", o.RunID, "--context", o.Paths.Context, "--format", "json")
+			var blocked taskrun.WorkflowRun
+			if err := json.Unmarshal(owner("workflow", "execute", "show", o.RunID, "--format", "json"), &blocked); err != nil || blocked.DeliveryStatus == nil || blocked.DeliveryStatus.FinalDelivery.State == "delivered" || !strings.Contains(blockedStderr, "requires a qualified candidate") || strings.Contains(blockedStderr, "owner_handoff:") {
+				t.Fatalf("unqualified integration claimed delivery: %s %s, %v", blockedBytes, blockedStderr, err)
+			}
+			if fixtureGit(t, epic, "rev-parse", "HEAD") != base {
+				t.Fatal("unqualified integration changed the target")
+			}
 			if err := os.WriteFile(filepath.Join(taskPath, "README.md"), []byte("shared Epic candidate\n"), 0644); err != nil {
 				t.Fatal(err)
 			}
 			fixtureGit(t, taskPath, "add", "README.md")
 			fixtureGit(t, taskPath, "commit", "-m", "synthetic shared-target implementation")
 			candidate := fixtureGit(t, taskPath, "rev-parse", "HEAD")
+			candidateTree := fixtureGit(t, taskPath, "rev-parse", "HEAD^{tree}")
 			review := filepath.Join(root, "synthetic-review.json")
 			fixtureJSON(t, review, map[string]any{"kind": "DeliveryCandidateReview@1", "schema_version": 1, "candidate_oid": candidate, "candidate_tree": fixtureGit(t, taskPath, "rev-parse", "HEAD^{tree}"), "reviewer_claim": "synthetic fixture reviewer; no actual provider review", "reviewer_session_id": nil, "decision": "passed", "findings": []any{}, "fixes": []any{}, "open_actionable_findings": []any{}})
 			if err := os.WriteFile(preview.Goal.AcceptancePath, []byte("#!/bin/sh\nset -eu\ntest \"$(cat README.md)\" = 'shared Epic candidate'\n"), 0600); err != nil {
@@ -172,15 +198,30 @@ func TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry(t *testing.T) {
 				t.Fatal("shared target changed before authorized integration")
 			}
 			var delivered taskrun.WorkflowRun
-			if err := json.Unmarshal(owner("workflow", "execute", "integrate", o.RunID, "--context", o.Paths.Context, "--format", "json"), &delivered); err != nil || delivered.DeliveryStatus == nil || delivered.DeliveryStatus.FinalDelivery.State != "delivered" {
+			deliveredBytes, deliveredStderr := runExit(request.Runtime.PlyExecutable.Path, taskPath, 5, "workflow", "execute", "integrate", o.RunID, "--context", o.Paths.Context, "--format", "json")
+			if err := json.Unmarshal(deliveredBytes, &delivered); err != nil || !strings.Contains(deliveredStderr, "owner_handoff:") || delivered.Delivery == nil || delivered.Delivery.Phase != "closing" || delivered.Delivery.OwnershipRelease == nil || delivered.DeliveryStatus == nil || delivered.DeliveryStatus.FinalDelivery.State != "delivered" || delivered.DeliveryStatus.FinalDelivery.CandidateOID != candidate {
 				t.Fatalf("native return did not close: %+v, %v", delivered, err)
 			}
-			if fixtureGit(t, epic, "rev-parse", "HEAD") != candidate || fixtureGit(t, sibling, "rev-parse", "HEAD") != base {
+			if fixtureGit(t, epic, "rev-parse", "HEAD") != candidate || fixtureGit(t, epic, "rev-parse", "HEAD^{tree}") != candidateTree || fixtureGit(t, sibling, "rev-parse", "HEAD") != base {
 				t.Fatal("integration returned another candidate or changed sibling Task")
 			}
 			closed, err := workspace.ListTaskQueue(d.Workspace, workspace.QueueTargetInput{ProjectID: "fixture", RepoID: "fixture", EpicID: "epic"}, false)
 			if err != nil || closed.Current != nil || len(closed.Pending) != 0 {
 				t.Fatalf("native queue not closed: %+v, %v", closed, err)
+			}
+			baseReadback, err := workspace.ShowEpicBase(d.Workspace, workspace.EpicBaseInput{EpicID: "epic", RepoID: "fixture"})
+			if err != nil || len(baseReadback.Versions) != 2 || baseReadback.Versions[1].OID != candidate || baseReadback.Versions[1].Tree != candidateTree || baseReadback.Freshness != "fresh" {
+				t.Fatalf("native Epic base did not record exact candidate: %+v, %v", baseReadback, err)
+			}
+			reflog := fixtureGit(t, epic, "reflog", "show", "--format=%H", "refs/heads/epic")
+			registry, err := d.Workspace.WorkItems.Snapshot(root)
+			if err != nil || len(registry.IntegrationResults) != 1 {
+				t.Fatalf("integration was not recorded exactly once: %+v, %v", registry.IntegrationResults, err)
+			}
+			owner("workflow", "execute", "show", o.RunID, "--format", "json")
+			observed, err := d.Workspace.WorkItems.Snapshot(root)
+			if err != nil || observed.RawSHA256 != registry.RawSHA256 || fixtureGit(t, epic, "reflog", "show", "--format=%H", "refs/heads/epic") != reflog {
+				t.Fatalf("delivered readback repeated integration or changed history: %v", err)
 			}
 		})
 	}
