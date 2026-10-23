@@ -169,8 +169,15 @@ func TestQualifiedCLIInstallationInterruptionAndKnownSmokeFailure(t *testing.T) 
 	f, o := cleanupCLIFixture(t, binary)
 	_, _ = cleanupOwnerIntegrates(t, binary, f, o)
 	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_status": "idle"})
-	if _, raw, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30"); err != nil {
-		t.Fatalf("closeout %v %s", err, raw)
+	coordinator := f.D
+	coordinator.CWD = func() (string, error) { return f.Parent, nil }
+	// Runtime absence is simulated; never use real process inspection for the
+	// disposable fixture's completed-route installation regression.
+	coordinator.LocalProcesses = func(string, string) ([]LocalProcess, error) {
+		return []LocalProcess{{PID: os.Getpid(), CWD: f.Parent}}, nil
+	}
+	if _, err := WorkflowFollow(coordinator, f.R.WorkspaceRoot, o.RunID, 30*time.Second); err != nil {
+		t.Fatalf("modeled fixture closeout: %v", err)
 	}
 	dest := filepath.Join(f.R.WorkspaceRoot, "installed-ply")
 	if err := os.WriteFile(dest, []byte("old binary"), 0755); err != nil {

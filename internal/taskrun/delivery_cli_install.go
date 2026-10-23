@@ -21,17 +21,19 @@ import (
 // CLIInstallation is coordinator evidence, separate from the closed owner Run.
 // The retained native snapshot is also the supported first-install controller.
 type CLIInstallation struct {
-	Kind           string                  `json:"kind"`
-	RunID          string                  `json:"run_id"`
-	Coordinator    string                  `json:"coordinator"`
-	Destination    string                  `json:"destination"`
-	Controller     FileBinding             `json:"controller"`
-	Source         clirelease.QualifiedCLI `json:"source"`
-	Receipt        *clirelease.Receipt     `json:"receipt,omitempty"`
-	ObservedSHA256 string                  `json:"observed_sha256,omitempty"`
-	Smoke          *CLIInstallSmoke        `json:"smoke,omitempty"`
-	State          string                  `json:"state"`
-	NextAction     string                  `json:"next_action"`
+	Kind                 string                  `json:"kind"`
+	RunID                string                  `json:"run_id"`
+	Coordinator          string                  `json:"coordinator"`
+	Destination          string                  `json:"destination"`
+	Controller           FileBinding             `json:"controller"`
+	Source               clirelease.QualifiedCLI `json:"source"`
+	Receipt              *clirelease.Receipt     `json:"receipt,omitempty"`
+	ObservedSHA256       string                  `json:"observed_sha256,omitempty"`
+	Smoke                *CLIInstallSmoke        `json:"smoke,omitempty"`
+	State                string                  `json:"state"`
+	NextAction           string                  `json:"next_action"`
+	AllowRetainedSource  bool                    `json:"allow_retained_source,omitempty"`
+	SourceCleanupPending bool                    `json:"source_cleanup_pending,omitempty"`
 }
 type CLIInstallSmoke struct {
 	Started bool   `json:"started"`
@@ -42,7 +44,16 @@ type CLIInstallSmoke struct {
 }
 
 func qualifiedCLIInstallation(d Dependencies, root, id, destination, coordinator string) (CLIInstallation, []byte, error) {
+	return qualifiedCLIInstallationWithOptions(d, root, id, destination, coordinator, CLIInstallOptions{})
+}
+
+// CLIInstallOptions selects installation only; it grants no lifecycle or
+// registry activation capability. The default qualification stays strict.
+type CLIInstallOptions struct{ AllowRetainedSource bool }
+
+func qualifiedCLIInstallationWithOptions(d Dependencies, root, id, destination, coordinator string, options CLIInstallOptions) (CLIInstallation, []byte, error) {
 	out := CLIInstallation{Kind: "PlyQualifiedCLIInstallation@1", RunID: id, Destination: destination, Coordinator: coordinator, State: "ready", NextAction: "Run install-cli with the same destination and coordinator; retain this controller outside the Task."}
+	out.AllowRetainedSource = options.AllowRetainedSource
 	if strings.TrimSpace(coordinator) != coordinator || coordinator == "" {
 		return out, nil, workflowError(2, "--coordinator must name the actual authorized caller")
 	}
@@ -58,12 +69,15 @@ func qualifiedCLIInstallation(d Dependencies, root, id, destination, coordinator
 		return out, nil, err
 	}
 	a := deliveryEffectiveAgreement(s)
-	if a == nil || a.ProjectID != "ply" || a.RepoID != "ply" || a.EpicID == "" || a.Mode != workspace.DeliveryLocalEpic || !a.AutomaticAcceptance() || s.Result.Delivery == nil || s.Result.Delivery.Phase != "completed" || len(s.Result.Delivery.Candidates) == 0 {
+	if a == nil || a.ProjectID != "ply" || a.RepoID != "ply" || a.EpicID == "" || a.Mode != workspace.DeliveryLocalEpic || !a.AutomaticAcceptance() || s.Result.Delivery == nil || (s.Result.Delivery.Phase != "completed" && !(options.AllowRetainedSource && automaticCleanupPending(s))) || len(s.Result.Delivery.Candidates) == 0 {
 		return out, nil, workflowError(4, "install-cli requires completed native self-hosted Ply local Epic delivery")
 	}
 	cwd, err := d.CWD()
 	if err != nil || cwd != a.TargetWorktree {
 		return out, nil, workflowError(4, "coordinator must run from the registered delivery target, outside the owner Task")
+	}
+	if options.AllowRetainedSource && (sourceContains(s.Observed.Target.WorktreeLocator, destination) || sourceContains(filepath.Join(root, ".ply"), destination)) {
+		return out, nil, workflowError(4, "retained-source installation destination must be outside source and native control stores")
 	}
 	if _, err = deliveryAuthorityState(d, s); err != nil {
 		return out, nil, err
@@ -73,7 +87,7 @@ func qualifiedCLIInstallation(d Dependencies, root, id, destination, coordinator
 	if err != nil {
 		return out, nil, err
 	}
-	if !handled || !integrated.Completed || integrated.Closeout == nil || integrated.Closeout.State != "complete" || !integrated.Closeout.LifecycleCompleted {
+	if !handled || !integrated.Completed || (!options.AllowRetainedSource || s.Result.Delivery.Phase == "completed") && (integrated.Closeout == nil || integrated.Closeout.State != "complete" || !integrated.Closeout.LifecycleCompleted) {
 		return out, nil, workflowError(4, "native delivery and closeout must be observed before coordinator installation")
 	}
 	registry, err := d.Workspace.WorkItems.Snapshot(root)
@@ -109,6 +123,11 @@ func qualifiedCLIInstallation(d Dependencies, root, id, destination, coordinator
 	}
 	if err = validateAutomaticReceipt(s, v, false); err != nil {
 		return out, nil, err
+	}
+	if options.AllowRetainedSource {
+		if err = qualifiedRetainedCLIState(d, s, c, integrated, registry); err != nil {
+			return out, nil, err
+		}
 	}
 	// Qualification's passed review is native evidence. Re-read it after source
 	// removal without requiring any live owner, old executable or working inputs.
@@ -146,7 +165,21 @@ func qualifiedCLIInstallation(d Dependencies, root, id, destination, coordinator
 // its acceptance, mandate, or closed state. The explicit caller owns this
 // separate operation. check is read-only; observe only probes known bytes.
 func InstallQualifiedCLI(d Dependencies, root, id, destination, coordinator, action string) (CLIInstallation, error) {
-	out, binary, err := qualifiedCLIInstallation(d, root, id, destination, coordinator)
+	return InstallQualifiedCLIWithOptions(d, root, id, destination, coordinator, action, CLIInstallOptions{})
+}
+
+func InstallQualifiedCLIWithOptions(d Dependencies, root, id, destination, coordinator, action string, options CLIInstallOptions) (out CLIInstallation, resultErr error) {
+	// Cleanup is readback only, excluded from the immutable installation request
+	// so completing native closeout never changes an existing install identity.
+	defer func() {
+		if options.AllowRetainedSource {
+			if s, err := workflowRead(root, id); err == nil && s.Result.Delivery != nil && s.Result.Delivery.Phase == "closing" {
+				out.SourceCleanupPending = true
+				out.NextAction += " Source is retained; native cleanup remains pending. Installation does not inspect writers or complete cleanup."
+			}
+		}
+	}()
+	out, binary, err := qualifiedCLIInstallationWithOptions(d, root, id, destination, coordinator, options)
 	if err != nil {
 		out.State = "blocked"
 		out.NextAction = "Inspect the actual validation error; no installation was started."
@@ -182,7 +215,7 @@ func InstallQualifiedCLI(d Dependencies, root, id, destination, coordinator, act
 	// cannot reuse an interrupted operation or overwrite its previous backup.
 	path := filepath.Join(workflowRoot(root), "cli-installations", id)
 	err = withStore(root, func() error {
-		fresh, _, err := qualifiedCLIInstallation(d, root, id, destination, coordinator)
+		fresh, _, err := qualifiedCLIInstallationWithOptions(d, root, id, destination, coordinator, options)
 		if err != nil {
 			return err
 		}

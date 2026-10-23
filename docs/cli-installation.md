@@ -127,6 +127,28 @@ CONTROLLER=/absolute/workspace/.ply/workflow-runs/runs/wfr_RUN/delivery/attempts
   --coordinator 'Actual authorized coordinator' --observe --format json
 ```
 
+For an explicitly authorized coordinator, `--allow-retained-source` also permits
+installation while an automatic local Epic Run is `closing` solely for source
+cleanup. Add the flag to `--check` and each install/observe/rollback invocation.
+The default route, including registry activation qualification, still requires
+completed native closeout. The explicit route requires validated automatic
+ownership release for this exact candidate, preserved passed review and executed
+acceptance, matching native integration records, Task queue closure, and the
+current clean registered target and Epic base at the candidate OID/tree. It
+rejects manual release, unresolved effects, active stops, later QA vetoes and
+stale targets. The caller attribution records the separately authorized
+coordinator; it does not grant installation permission.
+
+JSON readback records `allow_retained_source: true` for that operation and
+`source_cleanup_pending: true` while native cleanup remains pending. A
+`verified` installation means exact bytes and installed CLI smoke were observed;
+source cleanup is still pending. Installation never inspects processes, claims
+writer absence, deletes source, changes Run/Task/closeout ownership, or activates
+a registry. Existing refusals and unknown resource state remain preserved.
+Native closeout remains a separate operation under its existing authority and
+runtime controls. Completing closeout does not change this installation's
+identity, guarded backup or history.
+
 `--check` writes nothing and returns the bound controller and provenance.
 The operation binds Run/project/repo/Epic, source OID/tree, verification and
 binary SHA-256, destination and caller. One destination/caller is retained per
