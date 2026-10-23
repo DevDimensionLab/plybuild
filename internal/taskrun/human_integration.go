@@ -159,7 +159,7 @@ func ReleaseDeliveryOwnership(d Dependencies, root, id, contextPath, reason stri
 	if !plain(reason, 1, 2000) {
 		return WorkflowRun{}, workflowError(2, "ownership release requires an explicit reason")
 	}
-	err := deliveryReleaseUpdate(d, root, id, func(s *workflowState) error {
+	err := deliveryReleaseUpdate(d, root, id, func(s *workflowState, d Dependencies) error {
 		if !deliveryRun(s.Request) || s.Result.Delivery == nil || len(s.Result.Delivery.Candidates) == 0 {
 			return workflowError(4, "ownership release requires an exact qualified delivery candidate")
 		}
@@ -231,7 +231,7 @@ func preserveDeliveryRelease(d Dependencies, s *workflowState, c DeliveryCandida
 // Revocation uses the TaskRun -> workspace lock order. Native integration
 // callers outside the delivery adapter also finish (or preserve uncertainty)
 // before the release is published. New effects then see the released authority.
-func deliveryReleaseUpdate(d Dependencies, root, id string, fn func(*workflowState) error) error {
+func deliveryReleaseUpdate(d Dependencies, root, id string, fn func(*workflowState, Dependencies) error) error {
 	return withStore(root, func() error {
 		s, e := workflowRead(root, id)
 		if e != nil {
@@ -252,29 +252,33 @@ func deliveryReleaseUpdate(d Dependencies, root, id string, fn func(*workflowSta
 		if d.Workspace.WorkItems == nil {
 			return workflowError(4, "native integration ownership cannot be observed")
 		}
-		return d.Workspace.WorkItems.WithLock(root, func(session workspace.WorkItemStoreSession) error {
-			r, e := session.Snapshot()
-			if e != nil {
-				return e
-			}
-			for _, authority := range r.IntegrationAuthorities {
-				if authority.TaskID != c.TaskResult.TaskID || authority.TaskResultID != c.TaskResult.ID {
-					continue
+		return d.Workspace.ProjectLocks.WithSnapshotLock(root, func(projects workspace.ProjectSnapshot) error {
+			return d.Workspace.WorkItems.WithLock(root, func(session workspace.WorkItemStoreSession) error {
+				r, e := session.Snapshot()
+				if e != nil {
+					return e
 				}
-				settled := false
-				for _, result := range r.IntegrationResults {
-					if result.AuthorityID == authority.ID {
-						settled = result.Outcome != "partial" && result.Outcome != "unknown"
+				for _, authority := range r.IntegrationAuthorities {
+					if authority.TaskID != c.TaskResult.TaskID || authority.TaskResultID != c.TaskResult.ID {
+						continue
+					}
+					settled := false
+					for _, result := range r.IntegrationResults {
+						if result.AuthorityID == authority.ID {
+							settled = result.Outcome != "partial" && result.Outcome != "unknown"
+						}
+					}
+					if !settled {
+						return workflowError(4, "owner_active: the native integration effect is unresolved")
 					}
 				}
-				if !settled {
-					return workflowError(4, "owner_active: the native integration effect is unresolved")
+				scoped := d
+				scoped.deliverySnapshot = &workspace.TaskSpecSession{Dependencies: d.Workspace, Root: root, Registry: r, Projects: projects}
+				if e = fn(&s, scoped); e != nil {
+					return e
 				}
-			}
-			if e = fn(&s); e != nil {
-				return e
-			}
-			return workflowSave(d, s)
+				return workflowSave(d, s)
+			})
 		})
 	})
 }
@@ -283,7 +287,7 @@ func deliveryReleaseUpdate(d Dependencies, root, id string, fn func(*workflowSta
 // positively observes the exact terminal's sole shell and complete process
 // tree; missing UI state or an idle agent does not establish process exit.
 func ReleaseExitedDeliveryOwnership(d Dependencies, root, id string, resultID workspace.TaskResultID) (WorkflowRun, error) {
-	err := deliveryReleaseUpdate(d, root, id, func(s *workflowState) error {
+	err := deliveryReleaseUpdate(d, root, id, func(s *workflowState, d Dependencies) error {
 		a, e := nativeDeliveryCandidate(d, root, id, resultID)
 		if e != nil {
 			return e

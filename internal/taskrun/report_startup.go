@@ -321,7 +321,7 @@ func workflowReportPreparation(d Dependencies, s workflowState) (workspace.TaskP
 	if p.Preparation == nil || digest(*p.Preparation) != s.Request.PreparationSHA256 || p.Plan == nil || p.Plan.WorktreePath != s.Observed.Target.WorktreeLocator || p.Plan.ParentOID != s.Observed.Target.OID || "refs/heads/"+p.Plan.Branch != s.Observed.Target.Ref || p.Plan.Target.GitCommonDir != s.Observed.Target.GitCommonDir {
 		return p, workflowError(4, "retired report preparation binding differs")
 	}
-	if p.Disposition != "current" && p.Disposition != "released" && p.Disposition != "advanced" {
+	if p.Disposition != "current" && p.Disposition != "released" && p.Disposition != "advanced" && !(s.Request.SchemaVersion == 3 && p.Disposition == "active") {
 		return p, workflowError(4, "report preparation is not current or supported-closed; inspect its actual queue resource")
 	}
 	return p, nil
@@ -350,11 +350,11 @@ func workflowReleaseReportQueue(d Dependencies, s workflowState) error {
 	}
 	t := p.Plan.Target
 	target := workspace.QueueTargetInput{ProjectID: t.ProjectID, RepoID: t.RepoID, EpicID: t.EpicID}
-	q, err := workspace.ListTaskQueue(d.Workspace, target, false)
+	q, err := workspace.ListTaskQueueVersion(d.Workspace, target, false, 2)
 	if err != nil {
 		return err
 	}
-	if q.Current == nil || q.Current.PreparationID != s.Request.PreparationID {
+	if !q.HasPreparation(s.Request.PreparationID) {
 		return workflowError(4, "retired report does not own current queue slot; no release performed")
 	}
 	_, err = workspace.CloseTaskQueue(d.Workspace, target, s.Request.PreparationID, q.Revision, "Retired report owner; source retained", "release")

@@ -65,11 +65,12 @@ type TaskSelectionReference struct {
 	ManifestSHA256 string `yaml:"manifest_sha256" json:"manifest_sha256"`
 }
 type TaskResultSpecBinding struct {
-	TaskResultID       TaskResultID  `yaml:"task_result_id" json:"task_result_id"`
-	TaskID             TaskID        `yaml:"task_id" json:"task_id"`
-	Basis              TaskSpecBasis `yaml:"basis" json:"basis"`
-	HandoffSHA256      string        `yaml:"handoff_sha256" json:"handoff_sha256"`
-	StartReceiptSHA256 string        `yaml:"start_receipt_sha256" json:"start_receipt_sha256"`
+	EffectiveBasis     *EffectiveDeliveryBasis `yaml:"effective_basis,omitempty" json:"effective_basis,omitempty"`
+	TaskResultID       TaskResultID            `yaml:"task_result_id" json:"task_result_id"`
+	TaskID             TaskID                  `yaml:"task_id" json:"task_id"`
+	Basis              TaskSpecBasis           `yaml:"basis" json:"basis"`
+	HandoffSHA256      string                  `yaml:"handoff_sha256" json:"handoff_sha256"`
+	StartReceiptSHA256 string                  `yaml:"start_receipt_sha256" json:"start_receipt_sha256"`
 }
 type TaskContentOutcomeRef struct {
 	Kind           string  `yaml:"kind" json:"kind"`

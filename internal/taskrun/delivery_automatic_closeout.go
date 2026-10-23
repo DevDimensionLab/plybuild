@@ -54,7 +54,7 @@ func automaticIntegratedResult(s workflowState, resultID workspace.TaskResultID)
 		return out, true, err
 	}
 	result := observation.Result.Integration.Readback.TaskResult
-	if observation.Kind != "PlyDeliveryIntegration@1" || observation.RunID != s.Result.RunID || observation.RequestSHA256 != s.Result.RequestSHA256 || observation.Candidate != c.Key || observation.Error != "" || !observation.Result.Completed || observation.Result.Integration.Readback.RecoveryStatus != "complete" || observation.Result.Integration.Readback.ParentOID != c.OID || result == nil || !equal(*result, c.TaskResult) {
+	if observation.Kind != "PlyDeliveryIntegration@1" || observation.RunID != s.Result.RunID || observation.RequestSHA256 != s.Result.RequestSHA256 || observation.Candidate != c.Key || observation.Error != "" || !observation.Result.Completed || observation.Result.Integration.Readback.RecoveryStatus != "complete" || observation.Result.Integration.Readback.ParentOID != c.OID && !observation.Result.Integration.Readback.HistoricalCompletion || result == nil || !equal(*result, c.TaskResult) {
 		return out, true, workflowError(4, "automatic closeout integration receipt differs from its exact candidate")
 	}
 	found := false
@@ -135,7 +135,7 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 	if keep {
 		reason = automaticReleaseRetainReason
 	}
-	err = deliveryReleaseUpdate(d, root, id, func(current *workflowState) error {
+	err = deliveryReleaseUpdate(d, root, id, func(current *workflowState, d Dependencies) error {
 		if _, found, e := automaticIntegratedResult(*current, resultID); e != nil || !found {
 			if e == nil {
 				e = workflowError(4, "automatic closeout integration changed before owner release")

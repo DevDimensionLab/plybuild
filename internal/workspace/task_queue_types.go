@@ -1,5 +1,7 @@
 package workspace
 
+import "encoding/json"
+
 // Format 4 keeps adopted bindings immutable and records append-only decisions.
 type QueueTarget struct {
 	ProjectID        ProjectID  `yaml:"project_id" json:"project_id"`
@@ -56,6 +58,8 @@ type TaskQueueEvent struct {
 }
 
 type WorkspaceTaskPreparePlan struct {
+	AdmissionMode         string                   `yaml:"admission_mode,omitempty" json:"admission_mode,omitempty"`
+	SourceReconciliation  string                   `yaml:"source_reconciliation,omitempty" json:"source_reconciliation,omitempty"`
 	SourceMode            string                   `yaml:"source_mode,omitempty" json:"source_mode,omitempty"`
 	AdoptionID            WorktreeOperationID      `yaml:"adoption_id,omitempty" json:"adoption_id,omitempty"`
 	StartOID              string                   `yaml:"start_oid,omitempty" json:"start_oid,omitempty"`
@@ -137,6 +141,7 @@ type WorkspaceEpicBaseUpdatePlan struct {
 	AffectedSelections    []EpicAffectedSelection  `yaml:"affected_selections" json:"affected_selections"`
 	CurrentPreparationID  *string                  `yaml:"current_preparation_id" json:"current_preparation_id"`
 	UnresolvedOperations  []string                 `yaml:"unresolved_operations" json:"unresolved_operations"`
+	ActivePreparationIDs  *[]string                `yaml:"active_preparation_ids,omitempty" json:"active_preparation_ids,omitempty"`
 }
 
 type EpicBaseUpdateOutcome struct {
@@ -160,6 +165,10 @@ type QueueRegistryReadback struct {
 }
 
 type QueueCurrent struct {
+	AdmissionMode  string                  `yaml:"admission_mode,omitempty" json:"admission_mode,omitempty"`
+	SourceRef      string                  `yaml:"source_ref,omitempty" json:"source_ref,omitempty"`
+	EffectiveBasis *EffectiveDeliveryBasis `yaml:"effective_basis,omitempty" json:"effective_basis,omitempty"`
+
 	Delivery      *DeliveryAgreement `yaml:"delivery,omitempty" json:"delivery,omitempty"`
 	PreparationID string             `yaml:"preparation_id" json:"preparation_id"`
 	TaskID        TaskID             `yaml:"task_id" json:"task_id"`
@@ -170,22 +179,25 @@ type QueueCurrent struct {
 }
 
 type QueuePending struct {
-	Delivery     *DeliveryAgreement      `yaml:"delivery,omitempty" json:"delivery,omitempty"`
-	Goal         *TaskGoalRef            `yaml:"goal,omitempty" json:"goal,omitempty"`
-	Executor     *TaskExecutorAssignment `yaml:"executor,omitempty" json:"executor,omitempty"`
-	Rank         int                     `yaml:"rank" json:"rank"`
-	TaskID       TaskID                  `yaml:"task_id" json:"task_id"`
-	Title        string                  `yaml:"title" json:"title"`
-	Selection    *TaskDecisionRef        `yaml:"selection" json:"selection"`
-	SpecID       *string                 `yaml:"spec_id" json:"spec_id"`
-	SpecRevision *int                    `yaml:"spec_revision" json:"spec_revision"`
-	BaseRevision *int                    `yaml:"base_revision" json:"base_revision"`
-	ParentOID    *string                 `yaml:"parent_oid" json:"parent_oid"`
-	State        string                  `yaml:"state" json:"state"`
-	Reasons      []QueueReason           `yaml:"reasons" json:"reasons"`
+	SerialReadiness   string                  `yaml:"serial_readiness,omitempty" json:"serial_readiness,omitempty"`
+	ParallelReadiness string                  `yaml:"parallel_readiness,omitempty" json:"parallel_readiness,omitempty"`
+	Delivery          *DeliveryAgreement      `yaml:"delivery,omitempty" json:"delivery,omitempty"`
+	Goal              *TaskGoalRef            `yaml:"goal,omitempty" json:"goal,omitempty"`
+	Executor          *TaskExecutorAssignment `yaml:"executor,omitempty" json:"executor,omitempty"`
+	Rank              int                     `yaml:"rank" json:"rank"`
+	TaskID            TaskID                  `yaml:"task_id" json:"task_id"`
+	Title             string                  `yaml:"title" json:"title"`
+	Selection         *TaskDecisionRef        `yaml:"selection" json:"selection"`
+	SpecID            *string                 `yaml:"spec_id" json:"spec_id"`
+	SpecRevision      *int                    `yaml:"spec_revision" json:"spec_revision"`
+	BaseRevision      *int                    `yaml:"base_revision" json:"base_revision"`
+	ParentOID         *string                 `yaml:"parent_oid" json:"parent_oid"`
+	State             string                  `yaml:"state" json:"state"`
+	Reasons           []QueueReason           `yaml:"reasons" json:"reasons"`
 }
 
 type WorkspaceTaskQueueReadback struct {
+	Active        []QueueCurrent           `yaml:"active,omitempty" json:"active,omitempty"`
 	Kind          string                   `yaml:"kind" json:"kind"`
 	SchemaVersion int                      `yaml:"schema_version" json:"schema_version"`
 	Workspace     IntegrationPlanWorkspace `yaml:"workspace" json:"workspace"`
@@ -196,4 +208,17 @@ type WorkspaceTaskQueueReadback struct {
 	Current       *QueueCurrent            `yaml:"current" json:"current"`
 	Pending       []QueuePending           `yaml:"pending" json:"pending"`
 	Reasons       []QueueReason            `yaml:"reasons" json:"reasons"`
+}
+
+func (q WorkspaceTaskQueueReadback) MarshalJSON() ([]byte, error) {
+	type wire WorkspaceTaskQueueReadback
+	var active *[]QueueCurrent
+	if q.SchemaVersion == 2 {
+		members := append([]QueueCurrent{}, q.Active...)
+		active = &members
+	}
+	return json.Marshal(struct {
+		wire
+		Active *[]QueueCurrent `json:"active,omitempty"`
+	}{wire(q), active})
 }

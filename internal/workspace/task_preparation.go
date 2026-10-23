@@ -6,6 +6,7 @@ import (
 )
 
 type TaskPrepareInput struct {
+	parallel     bool
 	Target       QueueTargetInput
 	Selector     QueueSelector
 	Apply        bool
@@ -33,6 +34,10 @@ type TaskPreparationReadback struct {
 func preparationReadback(d Dependencies, root string, r WorkItemRegistry, p TaskPreparation) TaskPreparationReadback {
 	cur := currentPreparation(d, r, p)
 	out := TaskPreparationReadback{Kind: "WorkspaceTaskPreparationReadback@1", SchemaVersion: 1, Workspace: root, Target: p.Plan.Target, State: cur.State, Disposition: preparationDisposition(r, p.ID), Plan: &p.Plan, Confirmation: &p.PlanSHA256, Preparation: &p, Freshness: "unknown", Reasons: cur.Reasons}
+	if p.Plan.SchemaVersion == 2 {
+		out.Kind = "WorkspaceTaskPreparationReadback@2"
+		out.SchemaVersion = 2
+	}
 	if o, e := d.WorkGit.ObserveWorktree(p.Plan.WorktreePath); e == nil {
 		out.Observed = &o
 		out.Freshness = freshness(o.Locator == p.Plan.WorktreePath && o.Ref == "refs/heads/"+p.Plan.Branch && o.GitCommonDir == p.Plan.Target.GitCommonDir && o.InventoryMatch)
@@ -69,14 +74,24 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 		return out, e
 	}
 	out.Target = q.Target
-	if q.Current != nil {
-		p := findPreparation(r, q.Current.PreparationID)
-		if in.Selector.Kind == "task" && *in.Selector.TaskID != p.Plan.TaskID {
-			return out, queueError("task_queue_current_conflict", "handle current preparation "+p.ID+" before selecting another Task")
-		}
-		return preparationReadback(d, root, r, *p), nil
-	}
 	fold := foldQueue(r, q.QueueID)
+	for _, id := range fold.Active {
+		p := findPreparation(r, id)
+		if in.Selector.Kind == "task" && *in.Selector.TaskID == p.Plan.TaskID {
+			if in.parallel != (p.Plan.AdmissionMode == AdmissionParallel) {
+				return out, queueError("parallel_exclusive_route", "use the preserved native interactive Run for this preparation")
+			}
+			return preparationReadback(d, root, r, *p), nil
+		}
+	}
+	mode := ""
+	if in.parallel {
+		mode = AdmissionParallel
+	}
+	if !admissionAllowed(r, fold, mode) {
+		return out, queueError("task_queue_current_conflict", "handle active preparations before exclusive preparation")
+	}
+
 	found := false
 	readyGoal := false
 	for i, entry := range fold.Pending {
@@ -97,6 +112,12 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 				return out, nil
 			}
 			continue
+		}
+		if in.parallel {
+			p.Kind = "WorkspaceTaskPreparePlan@2"
+			p.SchemaVersion = 2
+			p.AdmissionMode = AdmissionParallel
+			p.SourceReconciliation = SourceReconciliationMergeParent
 		}
 		p.QueueRevision = q.Revision
 		p.Selector = in.Selector
@@ -161,7 +182,7 @@ func PrepareTask(d Dependencies, in TaskPrepareInput) (TaskPreparationReadback, 
 					return queueError("task_prepare_conflict", "confirmation belongs to another selector or target")
 				}
 				out = preparationReadback(d, root, r, *p)
-				if p.Outcome != nil || out.Disposition != "current" {
+				if p.Outcome != nil || !preparationActive(out.Disposition) {
 					return nil
 				}
 			} else {
@@ -196,13 +217,17 @@ func PrepareTask(d Dependencies, in TaskPrepareInput) (TaskPreparationReadback, 
 					return nil
 				}
 				q := foldQueue(*reg, plan.QueueID)
-				if q.Current != nil || q.Revision != plan.QueueRevision || q.Revision >= 2147483647 {
+				if !admissionAllowed(*reg, q, plan.AdmissionMode) || q.Revision != plan.QueueRevision || q.Revision >= 2147483647 {
 					return queueError("task_queue_revision_conflict", "queue changed before reservation")
 				}
 				p.OperationID = op.ID
 				reg.TaskPreparations = append(reg.TaskPreparations, *p)
 				request := map[string]any{"preparation_id": id, "expected_revision": q.Revision}
-				reg.TaskQueueEvents = append(reg.TaskQueueEvents, TaskQueueEvent{plan.QueueID, q.Revision + 1, "reserve", queueDigest(request), request, queueNow(d)})
+				kind := "reserve"
+				if plan.AdmissionMode == AdmissionParallel {
+					kind = "reserve_parallel"
+				}
+				reg.TaskQueueEvents = append(reg.TaskQueueEvents, TaskQueueEvent{plan.QueueID, q.Revision + 1, kind, queueDigest(request), request, queueNow(d)})
 				return nil
 			}
 			var effectErr error

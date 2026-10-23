@@ -309,7 +309,13 @@ func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects P
 		if parent, _ := findEpicRepo(*ep, t.RepoID); parent != nil {
 			base := currentEpicBase(r, *ep, *parent)
 			basis := contentFields(contentFields(out.Spec)["implementation_basis"])
-			if contentString(basis, "parent_oid") != base.OID || contentString(basis, "parent_tree") != base.Tree {
+			parentOID, parentTree := contentString(basis, "parent_oid"), contentString(basis, "parent_tree")
+			if p := preparationForTask(r, t.ID); p != nil && p.Plan.SchemaVersion == 2 {
+				if effective, err := EffectiveTaskDeliveryBasis(r, p.ID); err == nil {
+					parentOID, parentTree = effective.Parent.OID, effective.Parent.Tree
+				}
+			}
+			if parentOID != base.OID || parentTree != base.Tree {
 				out.TargetFreshness = "stale"
 				out.Reasons = append(out.Reasons, "epic_base_changed")
 			}
@@ -589,6 +595,9 @@ func taskResultSpecLink(r WorkItemRegistry, id TaskResultID) *TaskResultSpecBind
 	return nil
 }
 func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapshot, r WorkItemRegistry, t TaskRecord, result TaskResultID) *TaskSpecRelevance {
+	if original, _ := findTask(r, t.ID); original != nil {
+		t = *original
+	}
 	if !taskRequiresSpec(r, t.ID) {
 		return nil
 	}
@@ -602,6 +611,14 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 		return out
 	}
 	out.Basis = &link.Basis
+	if p := preparationForTask(r, t.ID); p != nil && p.Plan.SchemaVersion == 2 {
+		current, err := EffectiveTaskDeliveryBasis(r, p.ID)
+		if err != nil || link.EffectiveBasis == nil || !contentTypedEqual(current, *link.EffectiveBasis) {
+			out.Reasons = append(out.Reasons, "reconciliation_generation_changed")
+			return out
+		}
+	}
+
 	bytes, e := contentCanonical(link.Basis)
 	if e != nil {
 		out.Relevance = "unknown"

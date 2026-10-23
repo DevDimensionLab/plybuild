@@ -20,6 +20,39 @@ func LatestTaskCandidateHumanQA(records []TaskHumanQARecord, result TaskResultRe
 	})
 }
 
+// LatestParallelTaskHumanQA keeps a Task's unresolved human veto through source
+// reconciliation. Only a later actual pass on this exact result resolves it;
+// automatic qualification and an answer on different bytes cannot do so.
+func LatestParallelTaskHumanQA(records []TaskHumanQARecord, result TaskResultRecord) (*TaskHumanQARecord, error) {
+	exact, err := LatestTaskHumanQA(records, result.ID, result.ResultOID, result.ResultTree)
+	if err != nil {
+		return nil, err
+	}
+	veto, err := latestHumanQA(records, func(q TaskHumanQARecord) bool {
+		return q.TaskID == result.TaskID && (q.Outcome == "fail" || q.Outcome == "blocked")
+	})
+	if err != nil || veto == nil {
+		return exact, err
+	}
+	if exact != nil && exact.Outcome == "pass" {
+		a, _ := time.Parse(time.RFC3339Nano, exact.Actor.CompletedAtUTC)
+		b, _ := time.Parse(time.RFC3339Nano, veto.Actor.CompletedAtUTC)
+		if a.After(b) {
+			return exact, nil
+		}
+	}
+	return veto, nil
+}
+
+func latestRegistryAcceptanceHumanQA(r WorkItemRegistry, result TaskResultRecord) (*TaskHumanQARecord, error) {
+	for _, binding := range r.TaskResultSpecBindings {
+		if binding.TaskResultID == result.ID && binding.EffectiveBasis != nil {
+			return LatestParallelTaskHumanQA(r.HumanQARecords, result)
+		}
+	}
+	return LatestTaskCandidateHumanQA(r.HumanQARecords, result)
+}
+
 func latestHumanQA(records []TaskHumanQARecord, matches func(TaskHumanQARecord) bool) (*TaskHumanQARecord, error) {
 	var latest *TaskHumanQARecord
 	var completed time.Time

@@ -41,6 +41,18 @@ func ReadWorkflowStatus(d workspace.Dependencies, o WorkflowStatusOptions) (Work
 // BuildWorkflowStatus is a pure projection. The native Progress remains intact;
 // presentation actions supplement it without manufacturing result/QA facts.
 func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[workspace.TaskID]ProcessFacts, runs taskrun.Inventory, queues workspace.RegisteredTaskQueues) (WorkflowStatus, error) {
+	version := o.SchemaVersion
+	if version == 0 {
+		version = 1
+	}
+	if version != 1 && version != 2 {
+		return WorkflowStatus{}, workspace.WorkInvalidArguments("workflow status schema-version must be 1 or 2")
+	}
+	for _, q := range queues.Queues {
+		if version == 1 && len(q.Active) > 1 {
+			return WorkflowStatus{}, workspace.WorkInvalidArguments("workflow status with multiple active preparations requires --schema-version 2")
+		}
+	}
 	tasks, err := BuildTaskList(s, o.Filters, process)
 	if err != nil {
 		return WorkflowStatus{}, err
@@ -52,6 +64,10 @@ func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[works
 	known := map[string]workspace.TaskRecord{}
 	for _, task := range s.Registry.Tasks {
 		known[string(task.ID)] = task
+	}
+	if version == 2 {
+		out.Kind = "WorkflowStatusReadback@2"
+		out.SchemaVersion = 2
 	}
 	rows := make(map[workspace.TaskID]*WorkflowStatusItem, len(tasks.Tasks))
 	for _, task := range tasks.Tasks {
@@ -197,6 +213,12 @@ func (out *WorkflowStatus) addQueues(rows map[workspace.TaskID]*WorkflowStatusIt
 			}
 			entry := WorkflowStatusQueue{QueueID: q.QueueID, Revision: q.Revision, Target: q.Target, State: "pending", Rank: &pending.Rank, SpecID: pending.SpecID, Spec: pending.Spec, Readiness: pending.State, Freshness: combineFreshness(q.Freshness, pending.Freshness), SinceUTC: pending.SinceUTC, Reasons: append([]workspace.QueueReason{}, pending.Reasons...), EvidenceIDs: sortedUnique(append(append([]string{}, q.EvidenceIDs...), pending.EvidenceIDs...))}
 			entry.Goal, entry.Selection = pending.Goal, pending.Selection
+			if out.SchemaVersion == 2 {
+				entry.Active = []workspace.QueueCurrent{}
+				for _, active := range q.Active {
+					entry.Active = append(entry.Active, active.QueueCurrent)
+				}
+			}
 			if q.Current != nil {
 				current := q.Current.QueueCurrent
 				entry.Current = &current
@@ -217,11 +239,20 @@ func (out *WorkflowStatus) addQueues(rows map[workspace.TaskID]*WorkflowStatusIt
 				row.addAction("queue", "inspect_queue", "agent", reason, "next_step", entry.SinceUTC, entry.EvidenceIDs, "", q.QueueID)
 			}
 		}
-		if current := q.Current; current != nil {
+		active := q.Active
+		if len(active) == 0 && q.Current != nil {
+			active = []workspace.RegisteredQueueCurrent{*q.Current}
+		}
+		for _, member := range active {
+			current := member
 			if row := rows[current.TaskID]; row != nil {
 				c := current.QueueCurrent
 				entry := WorkflowStatusQueue{QueueID: q.QueueID, Revision: q.Revision, Target: q.Target, State: "current", SpecID: current.SpecID, Spec: current.Spec, Readiness: "blocked", Current: &c, Freshness: current.Freshness, SinceUTC: current.SinceUTC, Reasons: append([]workspace.QueueReason{}, current.Reasons...), EvidenceIDs: sortedUnique(append(append([]string{}, q.EvidenceIDs...), current.EvidenceIDs...))}
 				entry.Goal, entry.Selection = current.Goal, current.Selection
+				if out.SchemaVersion == 2 {
+					entry.State = "active"
+					entry.Active = []workspace.QueueCurrent{c}
+				}
 				row.Queues = append(row.Queues, entry)
 				row.Progress.HasProgress = true
 				row.Freshness = combineFreshness(row.Freshness, current.Freshness)

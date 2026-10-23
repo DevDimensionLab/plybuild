@@ -77,6 +77,7 @@ func outsideTaskContentScope(r WorkItemRegistry, scope *taskContentScope) WorkIt
 	out.TaskSolutionSelections = outsideScope(r.TaskSolutionSelections, func(v TaskSelectionReference) bool { return v.TaskID == id })
 	out.TaskResultSpecBindings = outsideScope(r.TaskResultSpecBindings, func(v TaskResultSpecBinding) bool { return v.TaskID == id })
 	out.TaskContentPublications = outsideScope(r.TaskContentPublications, func(v TaskContentPublication) bool { return v.TaskID == id })
+	out.SourceReconciliations = outsideScope(r.SourceReconciliations, func(v TaskSourceReconciliation) bool { return v.Plan.TaskID == id })
 	out.TaskPreparations = outsideScope(r.TaskPreparations, func(v TaskPreparation) bool { return v.Plan.TaskID == id })
 	out.EpicBaseVersions = outsideScope(r.EpicBaseVersions, func(v EpicBaseVersion) bool { return scope.includesTarget(r, v.EpicID, v.RepoID) })
 	out.EpicBaseUpdates = outsideScope(r.EpicBaseUpdates, func(v EpicBaseUpdate) bool {

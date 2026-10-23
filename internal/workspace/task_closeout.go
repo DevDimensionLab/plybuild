@@ -242,6 +242,15 @@ func previewTaskCloseout(d Dependencies, root string, r WorkItemRegistry, in Tas
 		in.ObservedPR = out.Receipt.ObservedPR
 	}
 	add := func(code string) { out.Reasons = append(out.Reasons, code) }
+	if !in.Keep {
+		for _, other := range r.TaskPreparations {
+			if other.Plan.TaskID != task.ID && other.Plan.Target.GitCommonDir == task.GitCommonDir && foldQueue(r, other.Plan.QueueID).contains(other.ID) {
+				add("parallel_participant_active")
+				out.Details = append(out.Details, "Defer source removal until active participant "+string(other.Plan.TaskID)+" closes; branch deletion can replace shared Git config identity.")
+			}
+		}
+	}
+
 	owner := in.Ownership
 	if !owner.Released || owner.TaskID != task.ID || owner.TaskResultID != tr.ID || owner.ResultOID != tr.ResultOID || owner.ResultTree != tr.ResultTree {
 		add("owner_active")

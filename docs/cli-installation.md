@@ -1,5 +1,10 @@
 # Install a prebuilt Ply CLI
 
+Reader capability includes format 8 while installation preserves the actual
+workspace format. Concurrent admission requires a separate qualified
+[parallel activation](parallel-epic/implementation.md#activation-and-old-consumers).
+Existing explicit upgrade targets 5/6/7 retain their original boundaries.
+
 A release contains `ply`, `ply-install`, `manifest.json` and this guide in a
 `ply-<version>-darwin-arm64.tar.gz` archive. The publisher supplies the archive
 SHA-256 and the **manifest SHA-256** alongside the package through the agreed

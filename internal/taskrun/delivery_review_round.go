@@ -43,6 +43,7 @@ type deliveryReviewContext struct {
 }
 
 type deliveryReviewRound struct {
+	BasisSHA256     string       `json:"basis_sha256,omitempty"`
 	Kind            string       `json:"kind"`
 	SchemaVersion   int          `json:"schema_version"`
 	RunID           string       `json:"run_id"`
@@ -173,6 +174,22 @@ func deliveryReviewRounds(s workflowState) ([]deliveryReviewRecord, error) {
 		if r.Request.Kind != "ply.workflow.review-round" || r.Request.SchemaVersion != 1 || r.Request.RunID != s.Result.RunID || r.Request.RequestSHA256 != s.Result.RequestSHA256 || r.Request.Round != len(out)+1 {
 			return nil, workflowError(4, "review round binding changed: "+entry.Name())
 		}
+		if s.Request.SchemaVersion == 3 {
+			if r.Request.Context.Locator != filepath.Join(dir, "context.json") {
+				return nil, workflowError(4, "parallel reviewer control must belong to this exact Run/round")
+			}
+			contextRaw, err := workflowBound(r.Request.Context, 1<<20)
+			if err != nil {
+				return nil, err
+			}
+			var context deliveryReviewContext
+			if err = decode(contextRaw, 1<<20, &context); err != nil {
+				return nil, err
+			}
+			if context != (deliveryReviewContext{"ply.workflow.review-context", 1, s.Result.RunID, s.Result.RequestSHA256, r.Request.Round, r.Request.CandidateOID, r.Request.CandidateTree}) {
+				return nil, workflowError(4, "parallel reviewer control binding differs from exact Run/round/candidate")
+			}
+		}
 		raw, e = readFile(filepath.Join(dir, "return.json"), 1<<20, true)
 		if e == nil {
 			var result deliveryReviewResult
@@ -252,8 +269,12 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		if e != nil {
 			return e
 		}
+		basisDigest, e := deliveryBasisDigest(d, s)
+		if e != nil {
+			return e
+		}
 		n := len(rounds)
-		same := n > 0 && rounds[n-1].Request.CandidateOID == x.OID && rounds[n-1].Request.CandidateTree == x.Tree
+		same := n > 0 && rounds[n-1].Request.BasisSHA256 == basisDigest && rounds[n-1].Request.CandidateOID == x.OID && rounds[n-1].Request.CandidateTree == x.Tree
 		if in.NewRound {
 			if !same || !deliveryReviewEvidenceBlocked(rounds[n-1].Result) && (rounds[n-1].Result != nil || deliveryReviewStartState(rounds[n-1].Dir).State == "started") {
 				return workflowError(4, "--new-round requires the same candidate and either an unknown reviewer start before any return or a sealed blocked review with evidence gaps and no findings")
@@ -270,7 +291,7 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		}
 		number := len(rounds) + 1
 		dir := filepath.Join(deliveryReviewDir(s), workflowRoundName(number))
-		r := deliveryReviewRound{Kind: "ply.workflow.review-round", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, Round: number, CandidateOID: x.OID, CandidateTree: x.Tree, Coordinator: in.Coordinator, CoordinatorPane: coordinatorPane, OwnerSession: deliveryOwnerSession(s), RequestedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+		r := deliveryReviewRound{BasisSHA256: basisDigest, Kind: "ply.workflow.review-round", SchemaVersion: 1, RunID: id, RequestSHA256: s.Result.RequestSHA256, Round: number, CandidateOID: x.OID, CandidateTree: x.Tree, Coordinator: in.Coordinator, CoordinatorPane: coordinatorPane, OwnerSession: deliveryOwnerSession(s), RequestedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		if number > 1 {
 			r.Previous = &rounds[number-2].Binding
 		}
@@ -622,6 +643,13 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 				}
 				return workflowError(4, fmt.Sprintf("passed is refused: the Task worktree is not the clean exact candidate %s (changed: %s); Ply does not reset it. Return blocked or changes_requested with the observed status and diff", r.Request.CandidateOID, strings.Join(paths, ", ")))
 			}
+			basisDigest, err := deliveryBasisDigest(d, s)
+			if err != nil {
+				return err
+			}
+			if basisDigest != r.Request.BasisSHA256 {
+				return workflowError(4, "review effective generation changed")
+			}
 			if x.OID != r.Request.CandidateOID || x.Tree != r.Request.CandidateTree {
 				return workflowError(4, fmt.Sprintf("passed is refused: the Task worktree is now at %s, not round %d's candidate %s, so Ply cannot confirm an exact-candidate pass from the current source; Ply does not reset it. Return blocked or changes_requested for this round; the coordinator requests a new round for %s", x.OID, r.Request.Round, r.Request.CandidateOID, x.OID))
 			}
@@ -635,6 +663,9 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 		}
 		if result.ReviewerSession == r.Request.OwnerSession || result.ReviewerSession == deliveryOwnerSession(s) {
 			return workflowError(4, "independent review requires a reviewer session distinct from the owner session")
+		}
+		if e := parallelSessionAvailable(d, s, s.Request.Runtime.Provider, result.ReviewerSession, false, r.Dir); e != nil {
+			return e
 		}
 		if e = d.writeOnce(source.Locator, raw); e != nil {
 			return e
@@ -708,7 +739,17 @@ func deliveryNativeCandidateReview(d Dependencies, s workflowState, oid, tree st
 	if e != nil {
 		return "", e
 	}
-	verdict, match := deliveryReviewJudge(rounds, oid, tree)
+	basisDigest, e := deliveryBasisDigest(d, s)
+	if e != nil {
+		return "", e
+	}
+	eligible := []deliveryReviewRecord{}
+	for _, r := range rounds {
+		if r.Request.BasisSHA256 == basisDigest {
+			eligible = append(eligible, r)
+		}
+	}
+	verdict, match := deliveryReviewJudge(eligible, oid, tree)
 	switch verdict {
 	case "none":
 		return "", workflowError(4, fmt.Sprintf("candidate %s has no independent review; the coordinator requests one with `ply workflow execute review %s`", oid, s.Result.RunID))
@@ -739,15 +780,20 @@ func deliveryNativeCandidateReview(d Dependencies, s workflowState, oid, tree st
 	return b.Locator, e
 }
 
-func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*DeliveryReviewStatus, error) {
+func deliveryReviewStatus(d Dependencies, s workflowState, source DeliverySourceStatus) (*DeliveryReviewStatus, error) {
 	rounds, e := deliveryReviewRounds(s)
 	if e != nil || len(rounds) == 0 {
 		return nil, e
 	}
 	out := &DeliveryReviewStatus{CurrentCandidate: "not_reviewed", Rounds: []DeliveryReviewRoundStatus{}}
+	basis, basisErr := deliveryBasisDigest(d, s)
+	eligible := []deliveryReviewRecord{}
 	for _, r := range rounds {
 		x := DeliveryReviewRoundStatus{Round: r.Request.Round, CandidateOID: r.Request.CandidateOID, CandidateTree: r.Request.CandidateTree, Coordinator: r.Request.Coordinator, State: "requested", Findings: []DeliveryReviewFinding{}, EvidenceGaps: []string{}, Previous: r.Request.Previous, Supersedes: r.Request.Supersedes, Request: r.Binding, Brief: r.Request.Brief, Context: r.Request.Context, Template: r.Request.Template, Result: r.Return}
-		x.Current = source.State == "observed" && source.Clean && source.OID == x.CandidateOID && source.Tree == x.CandidateTree
+		x.Current = basisErr == nil && r.Request.BasisSHA256 == basis && source.State == "observed" && source.Clean && source.OID == x.CandidateOID && source.Tree == x.CandidateTree
+		if basisErr == nil && r.Request.BasisSHA256 == basis {
+			eligible = append(eligible, r)
+		}
 		start := deliveryReviewStartState(r.Dir)
 		x.ReviewerStart, x.StartDetail = start.State, start.Detail
 		x.StartupDiagnostics = deliveryReviewDiagnostics(s, r.Dir, start)
@@ -764,7 +810,7 @@ func deliveryReviewStatus(s workflowState, source DeliverySourceStatus) (*Delive
 	}
 	var current *DeliveryReviewRoundStatus
 	if source.State == "observed" && source.Clean {
-		if _, r := deliveryReviewJudge(rounds, source.OID, source.Tree); r != nil {
+		if _, r := deliveryReviewJudge(eligible, source.OID, source.Tree); r != nil {
 			current = &out.Rounds[r.Request.Round-1]
 		}
 	}

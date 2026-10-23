@@ -54,7 +54,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if e = workflowValidateTrust(r); e != nil {
 		return r, e
 	}
-	if r.SchemaVersion == 2 {
+	if r.SchemaVersion == 2 || r.SchemaVersion == 3 {
 		if r.StartupProtocol != "" {
 			return r, workflowError(2, "report startup protocol cannot grant delivery authority")
 		}
@@ -125,6 +125,9 @@ func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
 	o.Provider = r.Runtime.Provider
 	if deliveryRun(r) {
 		o.Envelope = deliveryEnv("run")
+		if r.SchemaVersion == 3 {
+			o.SchemaVersion = 3
+		}
 		o.Delivery = &DeliveryState{Phase: "awaiting_acceptance", OwnerClaim: r.Delivery.OwnerClaim, PermissionState: "pending_runtime_acceptance", ActualPolicyEvidence: []Evidence{}, Events: []DeliveryEventRecord{}, Candidates: []DeliveryCandidate{}}
 		if mandateReceipt(r) {
 			o.Delivery.PermissionState = "awaiting_mandate_receipt"
@@ -163,6 +166,9 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 	var e error
 	if deliveryRun(r) {
 		p.Envelope = deliveryEnv("run-preview")
+		if r.SchemaVersion == 3 {
+			p.SchemaVersion = 3
+		}
 		p.Effects = []string{"Reserve the selected goal, prepared Task and one delivery owner", "Create one interactive Herdr tab and bind the actual selected provider session", "Keep a stable control executable while the owner designs, delegates, verifies and installs within the bound authority", "Preserve incomplete reports, qualified candidates, actual human QA and authorized local integration as separate facts", "Retain ownership until local delivery actually completes; never infer human approval or provider inactivity"}
 		if r.Delivery.Agreement != nil {
 			p.DeliveryAgreement = r.Delivery.Agreement

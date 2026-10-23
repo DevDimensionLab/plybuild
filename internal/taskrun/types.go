@@ -364,6 +364,8 @@ type StartupProcess struct {
 }
 
 type Dependencies struct {
+	// Borrowed only during synchronous release under Project+WorkItem locks.
+	deliverySnapshot *workspace.TaskSpecSession
 	// Trusted in-process qualification seam for owned adapter stand-ins; never serialized.
 	ProductAnswerQualification func(Runtime, string) (string, error)
 	Executable                 func() (string, error)

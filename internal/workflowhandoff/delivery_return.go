@@ -47,7 +47,7 @@ func RecordDeliveryHumanQA(d Dependencies, taskID string, result workspace.TaskR
 	if e != nil {
 		return empty, e
 	}
-	if taskSpecVersion(s.Handoff.Value) != 3 || deliveryMode(s.Handoff.Value) != "candidate" || s.Handoff.SHA256 != result.HandoffSHA256 {
+	if !deliveryHandoff(s.Handoff.Value) || deliveryMode(s.Handoff.Value) != "candidate" || s.Handoff.SHA256 != result.HandoffSHA256 {
 		return empty, fmt.Errorf("human QA requires the qualified delivery candidate")
 	}
 	area := filepath.Join(s.Handoff.ReplyRoot, "staging", "human-qa-"+digestBytes(raw)[7:])
@@ -158,7 +158,7 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 	if e != nil {
 		return out, e
 	}
-	if taskSpecVersion(s.Handoff.Value) != 3 || deliveryMode(s.Handoff.Value) != "candidate" {
+	if !deliveryHandoff(s.Handoff.Value) || deliveryMode(s.Handoff.Value) != "candidate" {
 		return out, fmt.Errorf("delivery integration requires candidate control evidence")
 	}
 	binding, _ := objectMember(s.Handoff.Value, "delivery_binding")
@@ -179,7 +179,21 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 			return fmt.Errorf("preparation missing")
 		}
 		plan := p.Preparation.Plan
-		parentMatches = plan.TaskID == workspace.TaskID(taskID) && plan.ParentOID == expectedParentOID && plan.SourceStartOID() == parent.Handoff.Target.OID && plan.WorktreePath == parent.Handoff.Target.Worktree && "refs/heads/"+plan.Branch == parent.Handoff.Target.Ref
+		parentOID := plan.ParentOID
+		if plan.SchemaVersion == 2 {
+			effective, err := parallelEffectiveBasis(s.Handoff.Value)
+			if err != nil || effective == nil {
+				return fmt.Errorf("parallel return requires effective basis")
+			}
+			if err = workspace.ValidateEffectiveDeliveryBasis(session.Registry, *effective); err != nil {
+				return err
+			}
+			if effective.PreparationID != p.Preparation.ID {
+				return fmt.Errorf("return has another member's effective basis")
+			}
+			parentOID = effective.Parent.OID
+		}
+		parentMatches = plan.TaskID == workspace.TaskID(taskID) && parentOID == expectedParentOID && plan.SourceStartOID() == parent.Handoff.Target.OID && plan.WorktreePath == parent.Handoff.Target.Worktree && "refs/heads/"+plan.Branch == parent.Handoff.Target.Ref
 		return nil
 	})
 	if e != nil {
@@ -187,6 +201,16 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 	}
 	if parent.Handoff.SHA256 != objectString(b, "parent_handoff_sha256") || objectString(b, "owner_claim") != owner.ActorClaim || !parentMatches {
 		return out, fmt.Errorf("delivery owner or original parent binding differs")
+	}
+	if preview.Readback.HistoricalCompletion && preview.Readback.RecoveryStatus == "complete" {
+		qt := workspace.QueueTargetInput{ProjectID: result.ProjectID, RepoID: result.RepoID, EpicID: preview.Readback.EpicID}
+		out.Queue, e = workspace.ListTaskQueueVersion(wd, qt, false, 2)
+		if e != nil {
+			return out, e
+		}
+		out.Base, e = workspace.ShowEpicBase(wd, workspace.EpicBaseInput{EpicID: qt.EpicID, RepoID: qt.RepoID})
+		out.Completed = e == nil
+		return out, e
 	}
 	if preview.Readback.RecoveryStatus != "complete" && preview.Readback.Classification != "ready" {
 		return out, fmt.Errorf("delivery integration stopped: %s; changed parent requires refresh", preview.Readback.Classification)
@@ -245,11 +269,11 @@ func IntegrateDeliveryCandidate(d Dependencies, taskID string, resultID workspac
 // An empty queue alone is never evidence that this Task was delivered.
 func CloseDeliveryTaskQueue(d workspace.Dependencies, target workspace.QueueTargetInput, taskID workspace.TaskID, preparationID, reason string) (workspace.WorkspaceTaskQueueReadback, error) {
 	d = workspace.WithTaskContentScope(d, taskID)
-	out, err := workspace.ListTaskQueue(d, target, false)
+	out, err := workspace.ListTaskQueueVersion(d, target, false, 2)
 	if err != nil {
 		return out, err
 	}
-	if out.Current != nil && out.Current.PreparationID == preparationID && out.Current.TaskID == taskID {
+	if out.HasPreparation(preparationID) {
 		return workspace.CloseTaskQueue(d, target, preparationID, out.Revision, reason, "advance")
 	}
 	registry, err := d.WorkItems.Snapshot(out.Workspace.Root)

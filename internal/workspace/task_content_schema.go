@@ -829,6 +829,9 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	links := map[TaskResultID]bool{}
 	last = ""
 	for _, link := range r.TaskResultSpecBindings {
+		if link.EffectiveBasis != nil && (r.FormatVersion != ParallelRegistryFormat || ValidateEffectiveDeliveryBasis(r, *link.EffectiveBasis) != nil || findPreparation(r, link.EffectiveBasis.PreparationID).Plan.TaskID != link.TaskID) {
+			return fmt.Errorf("invalid result effective basis")
+		}
 		if string(link.TaskResultID) <= last || links[link.TaskResultID] || !digestPattern.MatchString(link.HandoffSHA256) || !digestPattern.MatchString(link.StartReceiptSHA256) {
 			return fmt.Errorf("invalid result Spec link")
 		}

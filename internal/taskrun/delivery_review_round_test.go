@@ -50,7 +50,7 @@ if review_pane.startswith("w-fixture:r"):
         if model.get("review_prompt_lost"):
             path.write_text(json.dumps(model))
             raise SystemExit(7)
-    session = model["agent_session_id"] if model.get("review_session_is_owner") else "reviewer-session-" + review_pane.split(":r")[1]
+    session = model["agent_session_id"] if model.get("review_session_is_owner") else "reviewer-session-" + model.get("review_session_prefix", "") + review_pane.split(":r")[1]
     agent = {"workspace_id":"w-fixture", "tab_id":"tab-review-" + review_pane.split(":r")[1], "pane_id":review_pane, "terminal_id":"terminal-review-" + review_pane.split(":r")[1],
              "name":agents.get(review_pane, "unstarted"), "agent":model.get("provider", "codex"), "agent_status":"idle",
              "agent_session":{"agent":model.get("provider", "codex"), "kind":"id", "value":session}}

@@ -71,8 +71,8 @@ func goalExecutionCandidates(root string, r WorkItemRegistry, in TaskGoalExecute
 	for _, entry := range q.Pending {
 		tasks[entry.TaskID] = true
 	}
-	if q.Current != nil {
-		if p := findPreparation(r, *q.Current); p != nil {
+	for _, id := range q.Active {
+		if p := findPreparation(r, id); p != nil {
 			tasks[p.Plan.TaskID] = true
 		}
 	}

@@ -28,7 +28,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 		Args:    cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if resume {
-				if in.Restart || headless || boundControl || c.Flags().Changed("next") || in.NotificationContext != "" || in.Runtime.PermissionProfile != "" {
+				if in.Parallel || in.Restart || headless || boundControl || c.Flags().Changed("next") || in.NotificationContext != "" || in.Runtime.PermissionProfile != "" {
 					return workspace.WorkInvalidArguments("--resume keeps the Run's frozen choices; combine it only with --spec, --check, --herdr-workspace, --timeout and --format")
 				}
 				if resumeTimeout < 1 || resumeTimeout > 3600 {
@@ -86,6 +86,7 @@ func newWorkflowExecuteCommand(d taskrun.Dependencies) *cobra.Command {
 			return workflowRunError(err)
 		},
 	}
+	c.Flags().BoolVar(&in.Parallel, "parallel", false, "explicit named interactive Goal on an activated parallel Epic; moved parents require native reconcile-source and fresh review/verification")
 	c.Flags().BoolVar(&in.Next, "next", false, "select the first eligible goal in this Epic's queue (default)")
 	c.Flags().StringVar(&in.SpecID, "spec", "", "exact pending goal Spec ID in this Epic; ambiguous IDs are rejected")
 	c.Flags().BoolVar(&in.Check, "check", false, "preview goal, base, worktree, runtime and Claude folder trust effect without writes or startup")
@@ -303,6 +304,7 @@ func writeWorkflowClaudeTrust(out io.Writer, trust *taskrun.ClaudeTrustEffect) {
 }
 
 func addExecuteOwnerCommands(parent *cobra.Command, d taskrun.Dependencies) {
+	addExecuteSourceReconciliation(parent, d)
 	for _, verb := range []string{"show", "follow", "resume", "report", "verify", "qa", "integrate"} {
 		verb := verb
 		ownerCallback := verb != "show" && verb != "follow" && verb != "resume"

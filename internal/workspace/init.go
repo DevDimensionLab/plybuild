@@ -77,20 +77,21 @@ func (err *Error) Error() string {
 func (err *Error) Unwrap() error { return err.Err }
 
 type Dependencies struct {
-	SourceWriters    func(string) (SourceWriterObservation, error)
-	TaskContent      *TaskContentStorage
-	TaskContentIDs   TaskContentIDSource
-	Files            FileSystem
-	Repos            RepoObserver
-	Projects         ProjectStore
-	ProjectLocks     ProjectSnapshotLocker
-	WorkItems        WorkItemStore
-	WorkGit          WorkItemGit
-	WorkIDs          WorkItemIDSource
-	TaskLifecycleIDs TaskLifecycleIDSource
-	WorkClock        WorkClock
-	HandoffEvidence  TaskHandoffEvidenceReader
-	IntegrationGit   TaskIntegrationGit
+	SourceReconciliationFault func(string, string) error
+	SourceWriters             func(string) (SourceWriterObservation, error)
+	TaskContent               *TaskContentStorage
+	TaskContentIDs            TaskContentIDSource
+	Files                     FileSystem
+	Repos                     RepoObserver
+	Projects                  ProjectStore
+	ProjectLocks              ProjectSnapshotLocker
+	WorkItems                 WorkItemStore
+	WorkGit                   WorkItemGit
+	WorkIDs                   WorkItemIDSource
+	TaskLifecycleIDs          TaskLifecycleIDSource
+	WorkClock                 WorkClock
+	HandoffEvidence           TaskHandoffEvidenceReader
+	IntegrationGit            TaskIntegrationGit
 }
 
 func InvalidArguments(detail string) error {

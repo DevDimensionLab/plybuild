@@ -204,7 +204,7 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 			}
 		}
 	}
-	if review, err := deliveryReviewStatus(s, out.Source); err != nil {
+	if review, err := deliveryReviewStatus(d, s, out.Source); err != nil {
 		problem("delivery_review_unknown", "Review rounds cannot be read: "+err.Error())
 	} else {
 		out.Review = review
@@ -216,6 +216,17 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 	if len(delivery.Candidates) > 0 {
 		candidate := delivery.Candidates[len(delivery.Candidates)-1]
 		current := matches(candidate.OID, candidate.Tree)
+		if s.Request.SchemaVersion == 3 {
+			raw, err := workflowBound(candidate.Verification, 4<<20)
+			var receipt deliveryVerificationReceipt
+			if err == nil {
+				err = decode(raw, 4<<20, &receipt)
+			}
+			if err == nil {
+				err = deliveryRequireBasis(d, s, receipt.EffectiveBasis)
+			}
+			current = current && err == nil
+		}
 		if a := delivery.Attempt; a != nil && a.Kind == "verification" && (a.State != "recorded" || a.ID != candidate.Key) {
 			current = false
 		}
@@ -235,7 +246,7 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 			var registry workspace.WorkItemRegistry
 			registry, qaErr = d.Workspace.WorkItems.Snapshot(s.Request.WorkspaceRoot)
 			if qaErr == nil {
-				qa, qaErr = LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, candidate.TaskResult, deliveryEffectiveAgreement(s))
+				qa, qaErr = LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, candidate.TaskResult, deliveryEffectiveAgreement(s), s.Request.SchemaVersion == 3)
 			}
 		}
 		if qaErr == nil {
@@ -361,6 +372,9 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 	}
 	v.AttemptID, v.CandidateOID, v.CandidateTree, v.Receipt = receipt.AttemptID, receipt.CandidateOID, receipt.CandidateTree, binding
 	v.Current = matches(receipt.CandidateOID, receipt.CandidateTree)
+	if s.Request.SchemaVersion == 3 {
+		v.Current = v.Current && deliveryRequireBasis(d, s, receipt.EffectiveBasis) == nil
+	}
 	v.InputsMatch = v.Current && dependenciesMatch
 	// Live inputs determine whether evidence can still qualify this source.
 	// They cannot erase a completed command's separately preserved outcome.

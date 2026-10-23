@@ -158,8 +158,8 @@ func queueHasGoalSpec(d Dependencies, r WorkItemRegistry, root string, t QueueTa
 			}
 		}
 	}
-	if q.Current != nil {
-		if p := findPreparation(r, *q.Current); p != nil && p.Plan.SpecID == specID {
+	for _, id := range q.Active {
+		if p := findPreparation(r, id); p != nil && p.Plan.SpecID == specID {
 			return true, nil
 		}
 	}
@@ -415,6 +415,11 @@ func buildBasePlan(d Dependencies, root string, r WorkItemRegistry, projects Pro
 		}
 	}
 	p := WorkspaceEpicBaseUpdatePlan{Kind: "WorkspaceEpicBaseUpdatePlan@1", SchemaVersion: 1, Workspace: w, Target: t, RegistryUpgrade: queueUpgrade(r), RegistryFormatVersion: r.FormatVersion, ExpectedRevision: b.Revision, PreviousOID: b.OID, PreviousTree: b.Tree, NextOID: obs.OID, NextTree: obs.Tree, ObservedParent: obs, AffectedSelections: affected, CurrentPreparationID: q.Current, UnresolvedOperations: unresolved}
+	if r.FormatVersion == ParallelRegistryFormat {
+		active := append([]string{}, q.Active...)
+		sort.Strings(active)
+		p.Kind, p.SchemaVersion, p.CurrentPreparationID, p.ActivePreparationIDs = "WorkspaceEpicBaseUpdatePlan@2", 2, nil, &active
+	}
 	h := queueDigest(p)
 	out.Plan = &p
 	out.Confirmation = &h

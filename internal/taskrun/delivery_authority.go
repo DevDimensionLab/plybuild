@@ -250,11 +250,36 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	}
 	// Native QA can be recorded outside the original owner conversation. Reuse
 	// its exact candidate identity; never turn a technical pass into human pass.
-	c.HumanQA, err = LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, result, &agreement)
+	c.HumanQA, err = LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, result, &agreement, s.Request.SchemaVersion == 3)
 	if err != nil {
 		return out, err
 	}
-	out = DeliveryAuthority{RunID: id, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, PreparationID: s.Request.PreparationID, OwnerClaim: s.Request.Delivery.OwnerClaim, SourceRef: agreement.SourceRef, ExpectedParentOID: s.Observed.Epic.OID, Agreement: agreement, Authorization: a, Candidate: c}
+	expectedParent := s.Observed.Epic.OID
+	if s.Request.SchemaVersion == 3 {
+		var receipt deliveryVerificationReceipt
+		if raw, err := workflowBound(c.Verification, 4<<20); err != nil {
+			return out, err
+		} else if err = decode(raw, 4<<20, &receipt); err != nil {
+			return out, err
+		}
+		if receipt.EffectiveBasis == nil {
+			return out, workflowError(4, "parallel verification lacks its exact effective basis")
+		}
+		if err = deliveryRequireBasis(d, s, receipt.EffectiveBasis); err != nil {
+			attempt := s.Result.Delivery.Attempt
+			if attempt == nil || attempt.Kind != "integration" || attempt.CandidateOID != c.OID || attempt.CandidateTree != c.Tree {
+				return out, err
+			}
+			wd := workspace.WithTaskContentScope(d.Workspace, result.TaskID)
+			wd.HandoffEvidence = workflowhandoff.NewTaskHandoffEvidenceReader(d.Workflow)
+			prior, e := workspace.CheckTaskIntegration(wd, workspace.TaskIntegrationInput{TaskID: result.TaskID, TaskResultID: result.ID, HumanQARecordID: deliveryCandidateQAID(c), ExpectedResultOID: c.OID, ExpectedParentOID: receipt.EffectiveBasis.Parent.OID, DeliveryOwner: &workspace.DeliveryIntegrationOwner{RunID: id, RequestSHA256: s.Result.RequestSHA256, ActorClaim: s.Request.Delivery.OwnerClaim, PreparationID: s.Request.PreparationID}, DeliveryAuthorization: a})
+			if e != nil || prior.Readback.RecoveryStatus != "complete" {
+				return out, err
+			}
+		}
+		expectedParent = receipt.EffectiveBasis.Parent.OID
+	}
+	out = DeliveryAuthority{RunID: id, RequestSHA256: s.Result.RequestSHA256, MandateSHA256: s.Result.Handoff.SHA256, PreparationID: s.Request.PreparationID, OwnerClaim: s.Request.Delivery.OwnerClaim, SourceRef: agreement.SourceRef, ExpectedParentOID: expectedParent, Agreement: agreement, Authorization: a, Candidate: c}
 	return out, nil
 }
 
@@ -349,7 +374,10 @@ func LatestDeliveryHumanQA(records []workspace.TaskHumanQARecord, resultID works
 
 // Automatic requalification cannot erase a human rejection of unchanged
 // candidate bytes. The returned QA keeps its original TaskResult identity.
-func LatestDeliveryAcceptanceHumanQA(records []workspace.TaskHumanQARecord, result workspace.TaskResultRecord, agreement *workspace.DeliveryAgreement) (*workspace.TaskHumanQARecord, error) {
+func LatestDeliveryAcceptanceHumanQA(records []workspace.TaskHumanQARecord, result workspace.TaskResultRecord, agreement *workspace.DeliveryAgreement, parallel ...bool) (*workspace.TaskHumanQARecord, error) {
+	if len(parallel) > 0 && parallel[0] {
+		return workspace.LatestParallelTaskHumanQA(records, result)
+	}
 	if agreement != nil && agreement.AutomaticAcceptance() {
 		return workspace.LatestTaskCandidateHumanQA(records, result)
 	}
@@ -586,6 +614,11 @@ func completeLocalDelivery(d Dependencies, root, id string, resultID workspace.T
 	}
 	var integrationErr error
 	out, integrationErr = workflowhandoff.IntegrateDeliveryCandidate(d.Workflow, string(a.Candidate.TaskResult.TaskID), resultID, qaID, a.ExpectedParentOID, a.Candidate.OID, workflowhandoff.DeliveryOwnerAuthority{RunID: id, RequestSHA256: a.RequestSHA256, ActorClaim: a.OwnerClaim, PreparationID: a.PreparationID, Authorization: a.Authorization})
+	if integrationErr == nil && out.Completed {
+		if e := d.fault("local_delivery_after_native_return"); e != nil {
+			return out, e
+		}
+	}
 	err = workflowUpdate(d, root, id, func(s *workflowState) error {
 		c := &s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
 		if c.TaskResult.ID != resultID {

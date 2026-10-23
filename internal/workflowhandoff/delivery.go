@@ -18,7 +18,10 @@ func validateDeliveryBinding(o canonicaljson.Object) error {
 	}
 
 	v, found := objectMember(o, "delivery_binding")
-	if taskSpecVersion(o) != 3 {
+	if err := validateParallelHandoff(o); err != nil {
+		return err
+	}
+	if !deliveryHandoff(o) {
 		if found {
 			return fmt.Errorf("delivery_binding requires Handoff@3")
 		}
@@ -94,7 +97,7 @@ func unlimitedDeliveryBudget(o canonicaljson.Object) bool {
 	b, _ := objectMember(o, "budget")
 	m, _ := b.(canonicaljson.Object)
 	v, found := objectMember(m, "max_rounds")
-	return taskSpecVersion(o) == 3 && found && v == nil
+	return deliveryHandoff(o) && found && v == nil
 }
 
 func deliveryMode(o canonicaljson.Object) string {
@@ -104,9 +107,9 @@ func deliveryMode(o canonicaljson.Object) string {
 }
 
 func validateDeliveryOrTaskTarget(d Dependencies, contract canonicaljson.Object, target TargetObservation, basis *workspace.TaskSpecBasis) (workspace.TaskSpecEvaluation, error) {
-	if taskSpecVersion(contract) != 3 || deliveryMode(contract) != "candidate" {
+	if !deliveryHandoff(contract) || deliveryMode(contract) != "candidate" {
 		eval, err := d.taskSpecSession.ValidateTarget(target.Worktree, target.Ref, target.GitCommonDir, basis)
-		if err == nil && taskSpecVersion(contract) == 3 {
+		if err == nil && deliveryHandoff(contract) {
 			err = validateDeliverySpecAgreement(contract, eval.Spec)
 		}
 		return eval, err
@@ -117,7 +120,7 @@ func validateDeliveryOrTaskTarget(d Dependencies, contract canonicaljson.Object,
 	if e != nil {
 		return workspace.TaskSpecEvaluation{}, e
 	}
-	if taskSpecVersion(parent.Handoff.Value) != 3 || deliveryMode(parent.Handoff.Value) != "owner" || parent.HeadState != "ready" || parent.Start == nil || parent.Start.Outcome != "started" || parent.Terminal != nil || parent.Handoff.SHA256 != objectString(b, "parent_handoff_sha256") {
+	if !deliveryHandoff(parent.Handoff.Value) || deliveryMode(parent.Handoff.Value) != "owner" || parent.HeadState != "ready" || parent.Start == nil || parent.Start.Outcome != "started" || parent.Terminal != nil || parent.Handoff.SHA256 != objectString(b, "parent_handoff_sha256") {
 		return workspace.TaskSpecEvaluation{}, fmt.Errorf("candidate requires its active accepted delivery owner")
 	}
 	pb, _ := objectMember(parent.Handoff.Value, "task_spec_binding")
@@ -145,7 +148,11 @@ func validateDeliveryOrTaskTarget(d Dependencies, contract canonicaljson.Object,
 	if e = validateDeliveryAmendmentEvidence(d, amendment); e != nil {
 		return workspace.TaskSpecEvaluation{}, e
 	}
-	return d.taskSpecSession.ValidateDeliveryCandidateTarget(target.Worktree, target.Ref, target.GitCommonDir, basis)
+	effective, err := parallelEffectiveBasis(contract)
+	if err != nil {
+		return workspace.TaskSpecEvaluation{}, err
+	}
+	return d.taskSpecSession.ValidateDeliveryCandidateTargetBasis(target.Worktree, target.Ref, target.GitCommonDir, basis, effective)
 }
 
 func ValidateDeliveryTaskRunDraft(raw []byte) (TaskRunDraft, error) {
@@ -154,7 +161,7 @@ func ValidateDeliveryTaskRunDraft(raw []byte) (TaskRunDraft, error) {
 		return TaskRunDraft{}, e
 	}
 	b, e := taskSpecBasis(d.Value)
-	if e != nil || taskSpecVersion(d.Value) != 3 || deliveryMode(d.Value) != "owner" || b == nil || d.Binding.Status.Mode != "clean" {
+	if e != nil || !deliveryHandoff(d.Value) || deliveryMode(d.Value) != "owner" || b == nil || d.Binding.Status.Mode != "clean" {
 		return TaskRunDraft{}, fmt.Errorf("delivery start requires an owner Handoff@3, execution Spec and clean target")
 	}
 	a, e := deliveryAgreement(d.Value)
@@ -176,7 +183,7 @@ func BuildDeliveryTaskRunStart(d Dependencies, locator, actor, surface, session,
 	if e != nil {
 		return nil, e
 	}
-	if taskSpecVersion(s.Handoff.Value) != 3 {
+	if !deliveryHandoff(s.Handoff.Value) {
 		return nil, fmt.Errorf("delivery start requires Handoff@3")
 	}
 	return BuildTaskRunStart(d, locator, actor, surface, session, runtime, model, sandbox, issues, acceptance)
@@ -187,7 +194,7 @@ func BuildDeliveryTaskRunResult(d Dependencies, locator, publicationKey string, 
 	if e != nil {
 		return nil, "", e
 	}
-	if taskSpecVersion(s.Handoff.Value) != 3 || deliveryMode(s.Handoff.Value) != "candidate" {
+	if !deliveryHandoff(s.Handoff.Value) || deliveryMode(s.Handoff.Value) != "candidate" {
 		return nil, "", fmt.Errorf("delivery result requires candidate-control evidence")
 	}
 	return buildTaskRunResult(d, locator, publicationKey, technical, recorder)
@@ -261,7 +268,7 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		if e != nil {
 			return e
 		}
-		if p.Preparation == nil || p.State != "prepared" || p.Disposition != "current" || p.Freshness != "fresh" || len(p.Reasons) != 0 {
+		if p.Preparation == nil || p.State != "prepared" || (p.Disposition != "current" && p.Disposition != "active") || p.Freshness != "fresh" || len(p.Reasons) != 0 {
 			return fmt.Errorf("delivery preparation is not current and fresh")
 		}
 		plan := p.Preparation.Plan
@@ -370,7 +377,14 @@ func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerC
 		}
 		value := bridgeEnvelope("ply.workflow.handoff-draft")
 		value = replaceObjectMember(value, "schema_version", int64(3))
+		if plan.SchemaVersion == 2 {
+			value = replaceObjectMember(value, "schema_version", int64(4))
+		}
+
 		fields := map[string]any{"publication_key": publicationKey, "activity_key": publicationKey, "goal": goal, "recipient": map[string]any{"principal_id": "delivery-owner", "principal_kind": "human_started_agent", "runtime_constraints": []string{"actual-runtime-authority-required"}}, "binding_request": map[string]any{"project_id": plan.Target.ProjectID, "repo_id": plan.Target.RepoID, "target_worktree": plan.WorktreePath, "target_ref": "refs/heads/" + plan.Branch, "expected_oid": plan.SourceStartOID(), "status_policy": map[string]any{"mode": "clean"}}, "inputs": inputs, "authority": map[string]any{"allowed_effects": effects, "forbidden_effects": forbidden, "human_gates": []string{"human_task_qa"}}, "budget": deliveryBudget(nil), "procedure": procedure, "verifiers": []canonicaljson.Value{verifier}, "stop_conditions": deliveryStops(), "reporting": deliveryReporting(), "task_spec_binding": basis, "delivery_binding": map[string]any{"mode": "owner", "human_actor": humanActor, "owner_claim": ownerClaim, "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}}
+		if plan.SchemaVersion == 2 {
+			fields["parallel_binding"] = map[string]any{"preparation_id": p.Preparation.ID, "admission_mode": plan.AdmissionMode, "source_reconciliation": plan.SourceReconciliation}
+		}
 		if protocol != "" {
 			fields["delivery_binding"].(map[string]any)["startup_protocol"] = protocol
 		}

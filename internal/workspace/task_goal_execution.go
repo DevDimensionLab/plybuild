@@ -11,6 +11,7 @@ import (
 )
 
 type TaskGoalExecuteInput struct {
+	Parallel       bool             `json:"parallel,omitempty"`
 	Target         QueueTargetInput `json:"target"`
 	Next           bool             `json:"next"`
 	SpecID         string           `json:"spec_id"`
@@ -18,33 +19,35 @@ type TaskGoalExecuteInput struct {
 }
 
 type TaskGoalExecutePreview struct {
-	SourceMode        string                  `yaml:"source_mode,omitempty" json:"source_mode,omitempty"`
-	AdoptionID        WorktreeOperationID     `yaml:"adoption_id,omitempty" json:"adoption_id,omitempty"`
-	StartOID          string                  `yaml:"start_oid,omitempty" json:"start_oid,omitempty"`
-	StartTree         string                  `yaml:"start_tree,omitempty" json:"start_tree,omitempty"`
-	Delivery          *DeliveryAgreement      `json:"delivery,omitempty"`
-	DeliveryGates     []string                `json:"delivery_gates,omitempty"`
-	DeliveryEffects   []string                `json:"delivery_effects,omitempty"`
-	DeliveryStopAfter string                  `json:"delivery_stop_after,omitempty"`
-	Kind              string                  `json:"kind"`
-	SchemaVersion     int                     `json:"schema_version"`
-	Workspace         string                  `json:"workspace"`
-	Input             TaskGoalExecuteInput    `json:"input"`
-	Goal              TaskGoalContract        `json:"goal"`
-	QueueID           string                  `json:"queue_id"`
-	QueueRevision     int                     `json:"queue_revision"`
-	Target            QueueTarget             `json:"target"`
-	BaseRevision      int                     `json:"base_revision"`
-	ParentOID         string                  `json:"parent_oid"`
-	ParentTree        string                  `json:"parent_tree"`
-	Branch            string                  `json:"branch"`
-	WorktreePath      string                  `json:"worktree_path"`
-	AcceptancePath    string                  `json:"acceptance_path"`
-	ObservedParent    PlanWorktreeObservation `json:"observed_parent"`
-	PreviousSpec      *TaskRevisionRef        `json:"previous_spec"`
-	PreviousSelection *TaskDecisionRef        `json:"previous_selection"`
-	RegistryUpgrade   *TaskRegistryUpgrade    `json:"registry_upgrade"`
-	Confirmation      string                  `json:"confirmation,omitempty"`
+	AdmissionMode        string                  `yaml:"admission_mode,omitempty" json:"admission_mode,omitempty"`
+	SourceReconciliation string                  `yaml:"source_reconciliation,omitempty" json:"source_reconciliation,omitempty"`
+	SourceMode           string                  `yaml:"source_mode,omitempty" json:"source_mode,omitempty"`
+	AdoptionID           WorktreeOperationID     `yaml:"adoption_id,omitempty" json:"adoption_id,omitempty"`
+	StartOID             string                  `yaml:"start_oid,omitempty" json:"start_oid,omitempty"`
+	StartTree            string                  `yaml:"start_tree,omitempty" json:"start_tree,omitempty"`
+	Delivery             *DeliveryAgreement      `json:"delivery,omitempty"`
+	DeliveryGates        []string                `json:"delivery_gates,omitempty"`
+	DeliveryEffects      []string                `json:"delivery_effects,omitempty"`
+	DeliveryStopAfter    string                  `json:"delivery_stop_after,omitempty"`
+	Kind                 string                  `json:"kind"`
+	SchemaVersion        int                     `json:"schema_version"`
+	Workspace            string                  `json:"workspace"`
+	Input                TaskGoalExecuteInput    `json:"input"`
+	Goal                 TaskGoalContract        `json:"goal"`
+	QueueID              string                  `json:"queue_id"`
+	QueueRevision        int                     `json:"queue_revision"`
+	Target               QueueTarget             `json:"target"`
+	BaseRevision         int                     `json:"base_revision"`
+	ParentOID            string                  `json:"parent_oid"`
+	ParentTree           string                  `json:"parent_tree"`
+	Branch               string                  `json:"branch"`
+	WorktreePath         string                  `json:"worktree_path"`
+	AcceptancePath       string                  `json:"acceptance_path"`
+	ObservedParent       PlanWorktreeObservation `json:"observed_parent"`
+	PreviousSpec         *TaskRevisionRef        `json:"previous_spec"`
+	PreviousSelection    *TaskDecisionRef        `json:"previous_selection"`
+	RegistryUpgrade      *TaskRegistryUpgrade    `json:"registry_upgrade"`
+	Confirmation         string                  `json:"confirmation,omitempty"`
 }
 
 type TaskGoalPreparedExecution struct {
@@ -62,6 +65,9 @@ func goalExecutionDigest(p TaskGoalExecutePreview) string {
 }
 
 func validateGoalExecuteInput(in TaskGoalExecuteInput) error {
+	if in.Parallel && (in.Next || in.SpecID == "") {
+		return WorkInvalidArguments("parallel requires an explicit named Goal")
+	}
 	if in.Next == (in.SpecID != "") {
 		return WorkInvalidArguments("choose exactly one of next or a goal Spec ID")
 	}
@@ -199,16 +205,30 @@ func buildGoalExecutionPreviewInTarget(d Dependencies, root string, r WorkItemRe
 	}
 	out := TaskGoalExecutePreview{Kind: "WorkspaceTaskGoalExecutePlan@1", SchemaVersion: 1, Workspace: root, Input: in, AcceptancePath: in.AcceptancePath}
 	out.Target, out.QueueID = target, queueID(root, target)
+	if in.Parallel && r.FormatVersion != ParallelRegistryFormat {
+		return out, queueError("parallel_activation_required", "explicit format-8 activation is required")
+	}
 	q := foldQueue(r, out.QueueID)
-	if q.Current != nil {
-		prep := findPreparation(r, *q.Current)
+	for _, member := range q.Active {
+		prep := findPreparation(r, member)
 		if old, e := resumeGoalPreview(d, root, r, in, prep.Plan.TaskID, target); e != nil {
 			return out, e
 		} else if old != nil {
 			return *old, nil
 		}
-		return out, queueError("task_queue_current_conflict", "complete the current preparation before choosing another goal")
 	}
+	mode := ""
+	if in.Parallel {
+		mode = AdmissionParallel
+		out.Kind = "WorkspaceTaskGoalExecutePlan@2"
+		out.SchemaVersion = 2
+		out.AdmissionMode = AdmissionParallel
+		out.SourceReconciliation = SourceReconciliationMergeParent
+	}
+	if !admissionAllowed(r, q, mode) {
+		return out, queueError("task_queue_current_conflict", "active participation is incompatible with this admission mode; continue or close its named preparation")
+	}
+
 	out.QueueRevision = q.Revision
 	// Recover a partially published execution before evaluating the planner's
 	// current order. No worktree reservation exists yet at this boundary, and a
@@ -268,6 +288,9 @@ func buildGoalExecutionPreviewInTarget(d Dependencies, root string, r WorkItemRe
 	out.Goal, e = loadTaskGoal(d, root, r, chosen.TaskID, *chosen.Goal)
 	if e != nil {
 		return out, e
+	}
+	if in.Parallel && (out.Goal.Delivery == nil || out.Goal.Delivery.Mode != DeliveryLocalEpic) {
+		return out, WorkInvalidArguments("parallel requires an explicitly selected local Epic delivery")
 	}
 	if in.AcceptancePath == "" {
 		key := strings.TrimPrefix(queueDigest(map[string]any{"queue_id": out.QueueID, "task_id": chosen.TaskID, "goal": chosen.Goal}), "sha256:")
@@ -469,7 +492,7 @@ func goalExecutionRequestRule(v canonicaljson.Value) error {
 	if e := contentDecode(v, &p); e != nil {
 		return e
 	}
-	if !contentEqual(v, contentRefValue(p)) || p.Kind != "WorkspaceTaskGoalExecutePlan@1" || p.SchemaVersion != 1 || p.Confirmation != "" || p.Input.Next == (p.Input.SpecID != "") || contentPath(p.Workspace) != nil || contentPath(p.AcceptancePath) != nil || p.Input.AcceptancePath != p.AcceptancePath || p.QueueID != queueID(p.Workspace, p.Target) || p.QueueRevision < 0 || p.BaseRevision < 1 || !validOIDText(p.ParentOID) || !validOIDText(p.ParentTree) || !validShortBranchText(p.Branch) || contentPath(p.WorktreePath) != nil || p.PreviousSpec == nil || p.Goal.TaskID == "" {
+	if !contentEqual(v, contentRefValue(p)) || !validGoalAdmission(p) || p.Confirmation != "" || p.Input.Next == (p.Input.SpecID != "") || contentPath(p.Workspace) != nil || contentPath(p.AcceptancePath) != nil || p.Input.AcceptancePath != p.AcceptancePath || p.QueueID != queueID(p.Workspace, p.Target) || p.QueueRevision < 0 || p.BaseRevision < 1 || !validOIDText(p.ParentOID) || !validOIDText(p.ParentTree) || !validShortBranchText(p.Branch) || contentPath(p.WorktreePath) != nil || p.PreviousSpec == nil || p.Goal.TaskID == "" {
 		return fmt.Errorf("invalid preserved goal execution request")
 	}
 	if p.SourceMode == "" {
@@ -612,7 +635,7 @@ func bindGoalExecutionQueue(d Dependencies, root string, session WorkItemStoreSe
 		}
 	}
 	q := foldQueue(r, p.QueueID)
-	if q.Current != nil || q.Revision < p.QueueRevision {
+	if !admissionAllowed(r, q, p.AdmissionMode) || q.Revision < p.QueueRevision {
 		return queueError("task_queue_revision_conflict", "another preparation owns this queue or its preserved history changed")
 	}
 	// The execution Spec has already frozen the human's chosen goal. A planner
@@ -755,7 +778,7 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 		return out, e
 	}
 	id := p.Goal.TaskID
-	prepareInput := TaskPrepareInput{Target: QueueTargetInput{p.Target.ProjectID, p.Target.RepoID, p.Target.EpicID}, Selector: QueueSelector{Kind: "task", TaskID: &id}}
+	prepareInput := TaskPrepareInput{parallel: p.Input.Parallel, Target: QueueTargetInput{p.Target.ProjectID, p.Target.RepoID, p.Target.EpicID}, Selector: QueueSelector{Kind: "task", TaskID: &id}}
 	prepared, e := PrepareTask(d, prepareInput)
 	if e != nil {
 		return out, e
@@ -763,7 +786,7 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 	if prepared.Plan == nil || prepared.Plan.Target != p.Target || prepared.Plan.TaskID != id || prepared.Plan.ParentOID != p.ParentOID || prepared.Plan.ParentTree != p.ParentTree || prepared.Plan.WorktreePath != p.WorktreePath || prepared.Plan.Selection != selected {
 		return out, queueError("task_goal_execution_conflict", "prepared binding differs from the chosen execution")
 	}
-	if prepared.Preparation == nil || prepared.Preparation.Outcome == nil {
+	if prepared.Preparation == nil || prepared.Preparation.Outcome == nil || prepared.State != "prepared" && preparationActive(prepared.Disposition) {
 		if prepared.Confirmation == nil {
 			return out, queueError("task_goal_execution_conflict", "execution has no recoverable preparation")
 		}

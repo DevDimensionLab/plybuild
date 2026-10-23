@@ -11,21 +11,22 @@ import (
 )
 
 type WorkspaceTaskIntegrationReadback struct {
-	Value          canonicaljson.Object
-	TaskResult     *TaskResultRecord
-	HumanQA        *TaskHumanQARecord
-	Acceptance     *DeliveryAcceptanceDecision
-	Classification string
-	GitChanged     *bool
-	RecoveryStatus string
-	NextAction     IntegrationNextAction
-	TaskID         TaskID
-	ResultOID      string
-	TechnicalGate  string
-	HumanQAOutcome string
-	EpicID         EpicID
-	ParentRef      string
-	ParentOID      string
+	HistoricalCompletion bool `json:"historical_completion,omitempty"`
+	Value                canonicaljson.Object
+	TaskResult           *TaskResultRecord
+	HumanQA              *TaskHumanQARecord
+	Acceptance           *DeliveryAcceptanceDecision
+	Classification       string
+	GitChanged           *bool
+	RecoveryStatus       string
+	NextAction           IntegrationNextAction
+	TaskID               TaskID
+	ResultOID            string
+	TechnicalGate        string
+	HumanQAOutcome       string
+	EpicID               EpicID
+	ParentRef            string
+	ParentOID            string
 }
 
 func MarshalTaskIntegrationReadback(result WorkspaceTaskIntegrationReadback) ([]byte, error) {
@@ -195,7 +196,7 @@ func buildTaskShowIntegrationReadback(d Dependencies, root string, projects Proj
 		replaceReadbackMember(&r.Value, "human_qa", taskHumanQACanonical(*qa))
 	}
 	if automaticAuth != nil {
-		latest, err := LatestTaskCandidateHumanQA(registry.HumanQARecords, *tr)
+		latest, err := latestRegistryAcceptanceHumanQA(registry, *tr)
 		if err == nil {
 			decision, gateErr := EvaluateDeliveryAcceptance(&automaticAuth.Agreement, *tr, latest)
 			if gateErr == nil {

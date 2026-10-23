@@ -182,7 +182,7 @@ func deliveryContinuationAuthority(s workflowState) error {
 }
 
 func deliveryAcceptedAuthority(s workflowState) error {
-	if !deliveryRun(s.Request) || s.Result.Delivery == nil || s.Request.Envelope != deliveryEnv("herdr-run-request") {
+	if !deliveryRun(s.Request) || s.Result.Delivery == nil || s.Request.Kind != deliveryEnv("herdr-run-request").Kind {
 		return deliveryContinuityError("continuation_unsupported", "continue supports accepted delivery-owner request schema 2; this contract needs a separately supported transition")
 	}
 	if _, err := workflowhandoff.ValidateDeliveryTaskRunDraft(s.Request.HandoffDraft); err != nil {

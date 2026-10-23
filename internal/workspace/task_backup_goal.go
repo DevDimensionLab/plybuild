@@ -70,6 +70,11 @@ func RegisterBackupGoal(d Dependencies, in BackupGoalRegistration, apply bool, c
 			return err
 		}
 		qSource := foldQueue(r, queueID(root, target))
+		for _, id := range qSource.Active {
+			if p := findPreparation(r, id); p != nil && p.Plan.AdmissionMode == AdmissionParallel {
+				return queueError("parallel_exclusive_route", "backup remains exclusive; continue the exact parallel Run")
+			}
+		}
 		previewCurrent := !apply && in.SelectedRetirement != "" && qSource.Current != nil && *qSource.Current == in.SourcePreparation
 		if qSource.Terminal[in.SourcePreparation] != "released" && !previewCurrent {
 			return queueError("backup_goal_source_unresolved", "retired source preparation has not been natively released")

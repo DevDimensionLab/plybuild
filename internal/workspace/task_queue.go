@@ -207,7 +207,18 @@ func currentPreparation(d Dependencies, r WorkItemRegistry, p TaskPreparation) Q
 			reasons = queueReasons("task_preparation_unknown", "preserved effect requires explicit inspection and recovery")
 		}
 	}
-	return QueueCurrent{PreparationID: p.ID, TaskID: p.Plan.TaskID, State: state, Disposition: "current", WorktreePath: p.Plan.WorktreePath, Reasons: reasons}
+	out := QueueCurrent{PreparationID: p.ID, TaskID: p.Plan.TaskID, State: state, Disposition: "current", WorktreePath: p.Plan.WorktreePath, Reasons: reasons}
+	if p.Plan.SchemaVersion == 2 {
+		out.Disposition = preparationDisposition(r, p.ID)
+		out.AdmissionMode = p.Plan.AdmissionMode
+		out.SourceRef = "refs/heads/" + p.Plan.Branch
+		if b, err := EffectiveTaskDeliveryBasis(r, p.ID); err == nil {
+			out.EffectiveBasis = &b
+		} else {
+			out.Reasons = append(out.Reasons, QueueReason{"source_reconciliation_pending", err.Error()})
+		}
+	}
+	return out
 }
 func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, ready bool) (WorkspaceTaskQueueReadback, error) {
 	var out WorkspaceTaskQueueReadback
@@ -228,8 +239,13 @@ func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, project
 	id := queueID(root, t)
 	q := foldQueue(r, id)
 	out = WorkspaceTaskQueueReadback{Kind: "WorkspaceTaskQueueReadback@1", SchemaVersion: 1, Workspace: w, Target: t, Registry: QueueRegistryReadback{r.FormatVersion, r.RawSHA256, queueUpgrade(r)}, QueueID: id, Revision: q.Revision, Pending: []QueuePending{}, Reasons: []QueueReason{}}
-	if q.Current != nil {
-		p := findPreparation(r, *q.Current)
+	if r.FormatVersion == ParallelRegistryFormat {
+		out.Kind = "WorkspaceTaskQueueReadback@2"
+		out.SchemaVersion = 2
+		out.Active = []QueueCurrent{}
+	}
+	for _, id := range q.Active {
+		p := findPreparation(r, id)
 		c := currentPreparation(d, r, *p)
 		spec, err := readRegisteredTaskManifest(d.TaskContent, root, r, p.Plan.Spec.ManifestSHA256)
 		if err != nil {
@@ -239,10 +255,28 @@ func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, project
 		if err != nil {
 			return out, err
 		}
-		out.Current = &c
+		if out.SchemaVersion == 2 {
+			out.Active = append(out.Active, c)
+		}
+		if len(q.Active) == 1 {
+			out.Current = &c
+		}
 	}
+
 	for i, v := range q.Pending {
 		row, _ := queueMixedEntryEvaluation(d, root, r, projects, t, id, v, i+1)
+		if r.FormatVersion == ParallelRegistryFormat {
+			row.SerialReadiness = row.State
+			row.ParallelReadiness = row.State
+			if row.State == "ready" {
+				if !admissionAllowed(r, q, "") {
+					row.SerialReadiness = "blocked"
+				}
+				if !admissionAllowed(r, q, AdmissionParallel) {
+					row.ParallelReadiness = "blocked"
+				}
+			}
+		}
 		if !ready || row.State == "ready" {
 			out.Pending = append(out.Pending, row)
 		}
@@ -253,6 +287,14 @@ func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, project
 	return out, nil
 }
 func ListTaskQueue(d Dependencies, in QueueTargetInput, ready bool) (WorkspaceTaskQueueReadback, error) {
+	return ListTaskQueueVersion(d, in, ready, 1)
+}
+
+func ListTaskQueueVersion(d Dependencies, in QueueTargetInput, ready bool, version int) (WorkspaceTaskQueueReadback, error) {
+	if version != 1 && version != 2 {
+		return WorkspaceTaskQueueReadback{}, WorkInvalidArguments("queue schema-version must be 1 or 2")
+	}
+
 	root, e := containingWorkItemWorkspace(d)
 	if e != nil {
 		return WorkspaceTaskQueueReadback{}, e
@@ -263,6 +305,27 @@ func ListTaskQueue(d Dependencies, in QueueTargetInput, ready bool) (WorkspaceTa
 		out, e = buildQueueReadback(d, root, s.Registry, s.Projects, in, ready)
 		return e
 	})
+	if e == nil && version == 1 {
+		if len(out.Active) > 1 {
+			return WorkspaceTaskQueueReadback{}, queueError("task_queue_schema_incompatible", "multiple active preparations require --schema-version 2")
+		}
+		out.Kind = "WorkspaceTaskQueueReadback@1"
+		out.SchemaVersion = 1
+		out.Active = nil
+		if out.Current != nil {
+			out.Current.Disposition = "current"
+		}
+	}
+	if e == nil && version == 2 {
+		out.Kind = "WorkspaceTaskQueueReadback@2"
+		out.SchemaVersion = 2
+		if out.Active == nil {
+			out.Active = []QueueCurrent{}
+			if out.Current != nil {
+				out.Active = append(out.Active, *out.Current)
+			}
+		}
+	}
 	return out, e
 }
 func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, error) {
@@ -562,7 +625,7 @@ func closeTaskQueue(d Dependencies, in QueueTargetInput, id string, expected int
 				}
 			}
 			q := foldQueue(r, qid)
-			if q.Revision != expected || q.Current == nil || *q.Current != id {
+			if q.Revision != expected || !q.contains(id) {
 				return queueError("task_queue_revision_conflict", "current preparation or queue revision differs")
 			}
 			p := findPreparation(r, id)
@@ -602,7 +665,10 @@ func closeTaskQueue(d Dependencies, in QueueTargetInput, id string, expected int
 func MarshalTaskQueue(value any) ([]byte, error) { return contentCanonical(value) }
 func TaskQueueText(r WorkspaceTaskQueueReadback) string {
 	s := fmt.Sprintf("Task queue %s, revision %d.\nTarget: %s / %s / %s\nWorkplace: %s\n", r.QueueID, r.Revision, r.Target.ProjectID, r.Target.RepoID, r.Target.EpicID, r.Target.ParentLocator)
-	if r.Current != nil {
+	for _, member := range r.Active {
+		s += fmt.Sprintf("Active: %s (%s), %s, %s\n", member.TaskID, member.State, member.PreparationID, member.WorktreePath)
+	}
+	if r.SchemaVersion == 1 && r.Current != nil {
 		s += fmt.Sprintf("Current: %s (%s), %s, %s\n", r.Current.TaskID, r.Current.State, r.Current.PreparationID, r.Current.WorktreePath)
 		if r.Current.Delivery != nil {
 			s += fmt.Sprintf("Delivery: %s to %s\n", r.Current.Delivery.Mode, r.Current.Delivery.TargetRef)

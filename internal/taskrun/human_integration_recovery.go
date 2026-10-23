@@ -130,7 +130,7 @@ func RecoverHumanDeliveryOwnership(d Dependencies, root, id string, resultID wor
 	if !validOwnerRecoveryAnswer(in) {
 		return WorkflowRun{}, workflowError(2, "owner_recovery_requires_human_release: an actual released answer must bind the preview and caller")
 	}
-	err := deliveryReleaseUpdate(d, root, id, func(s *workflowState) error {
+	err := deliveryReleaseUpdate(d, root, id, func(s *workflowState, d Dependencies) error {
 		a, err := nativeDeliveryCandidate(d, root, id, resultID)
 		if err != nil {
 			return err

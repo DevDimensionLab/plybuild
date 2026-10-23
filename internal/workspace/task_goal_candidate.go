@@ -23,6 +23,9 @@ func (s *TaskSpecSession) CurrentDeliveryTaskSpec(id TaskID) (TaskSpecEvaluation
 // execution. It never changes the frozen start basis or grants an initial start
 // for changed code. The caller must separately bind an already accepted owner.
 func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common string, basis *TaskSpecBasis) (TaskSpecEvaluation, error) {
+	return s.ValidateDeliveryCandidateTargetBasis(locator, ref, common, basis, nil)
+}
+func (s *TaskSpecSession) ValidateDeliveryCandidateTargetBasis(locator, ref, common string, basis *TaskSpecBasis, effective *EffectiveDeliveryBasis) (TaskSpecEvaluation, error) {
 	var out TaskSpecEvaluation
 	if basis == nil {
 		return out, contentError("task_spec_required", "exact delivery Spec basis is required", nil)
@@ -44,6 +47,26 @@ func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common s
 		return out, e
 	}
 	pr := agreement != nil && agreement.Mode == DeliveryPullRequest
+	if effective != nil {
+		if err := ValidateEffectiveDeliveryBasis(s.Registry, *effective); err != nil {
+			return out, err
+		}
+		p := findPreparation(s.Registry, effective.PreparationID)
+		current, err := EffectiveTaskDeliveryBasis(s.Registry, p.ID)
+		if err != nil {
+			return out, err
+		}
+		if p.Plan.TaskID != task.ID || !foldQueue(s.Registry, p.Plan.QueueID).contains(p.ID) || !contentTypedEqual(current, *effective) {
+			return out, contentError("reconciliation_required", "candidate effective generation changed; use native reconcile-source", nil)
+		}
+		ep, b := queueTargetBinding(s.Registry, p.Plan.Target)
+		base := currentEpicBase(s.Registry, ep, b)
+		if base.OID != effective.Parent.OID || base.Tree != effective.Parent.Tree {
+			return out, contentError("reconciliation_required", "parent moved; use native reconcile-source before fresh review and verification", nil)
+		}
+		out.TargetFreshness = "fresh"
+	}
+
 	if contentString(contentFields(out.Spec), "contract_kind") != "execution" || !contentTypedEqual(out.Basis, basis) || out.SelectionFreshness != "current" || out.ContentIntegrity != "valid" || (!pr && out.TargetFreshness != "fresh") {
 		return out, contentError("task_spec_selection_stale", "candidate requires the current unchanged delivery contract", nil)
 	}
@@ -53,7 +76,11 @@ func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common s
 	}
 	epic, binding := queueTargetBinding(s.Registry, QueueTarget{EpicID: task.ParentEpicID, RepoID: task.RepoID})
 	base := currentEpicBase(s.Registry, epic, binding)
-	if !pr && (base.OID != contentString(bm, "parent_oid") || base.Tree != contentString(bm, "parent_tree") || pendingBaseUpdate(s.Registry, task.ParentEpicID, task.RepoID)) {
+	expectedOID, expectedTree := contentString(bm, "parent_oid"), contentString(bm, "parent_tree")
+	if effective != nil {
+		expectedOID, expectedTree = effective.Parent.OID, effective.Parent.Tree
+	}
+	if !pr && (base.OID != expectedOID || base.Tree != expectedTree || pendingBaseUpdate(s.Registry, task.ParentEpicID, task.RepoID)) {
 		return out, contentError("epic_base_changed", "delivery parent changed before candidate control", nil)
 	}
 	target := QueueTarget{ProjectID: task.ProjectID, RepoID: task.RepoID, EpicID: task.ParentEpicID, GitCommonDir: common, ParentWorktreeID: binding.Worktree.ID, ParentLocator: binding.Worktree.Locator, ParentRef: binding.Worktree.Ref}
@@ -85,6 +112,18 @@ func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common s
 	ancestor, e := s.Dependencies.IntegrationGit.CheckAncestor(repo, contentString(bm, "start_oid"), candidate.OID)
 	if e != nil {
 		return out, e
+	}
+	if effective != nil {
+		if err := validateReconciledSourceAncestry(s.Dependencies, s.Registry, repo, *effective, candidate.OID); err != nil {
+			return out, err
+		}
+		parentAncestor, err := s.Dependencies.IntegrationGit.CheckAncestor(repo, effective.Parent.OID, candidate.OID)
+		if err != nil {
+			return out, err
+		}
+		if !parentAncestor {
+			return out, contentError("reconciliation_required", "source does not contain effective parent", nil)
+		}
 	}
 	if !ancestor {
 		return out, contentError("task_spec_binding_conflict", "candidate is not descended from the frozen execution start", nil)

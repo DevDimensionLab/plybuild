@@ -18,6 +18,9 @@ func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, err
 		return WorkflowRequest{}, err
 	}
 	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
+	if in.Delivery.AdmissionMode == workspace.AdmissionParallel {
+		r.SchemaVersion = 3
+	}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
 	r.ClaudeProjectTrust = in.ClaudeProjectTrust
 	r.GoalStartEnvironment = in.GoalStartEnvironment
@@ -104,7 +107,14 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 	if r.Worker != nil {
 		return workflowError(2, "worker authority requires an explicit headless request")
 	}
-	if r.Envelope != deliveryEnv("herdr-run-request") || r.Delivery == nil || r.ReturnMode != "delivery_owner" || r.Agreement != (Agreement{}) || r.Coordinator.ActorClaim != "" || r.Coordinator.MayRequestChanges {
+	expected := deliveryEnv("herdr-run-request")
+	if r.SchemaVersion == 3 {
+		expected.SchemaVersion = 3
+	}
+	if err := validateParallelRequest(r); err != nil {
+		return err
+	}
+	if r.Envelope != expected || r.Delivery == nil || r.ReturnMode != "delivery_owner" || r.Agreement != (Agreement{}) || r.Coordinator.ActorClaim != "" || r.Coordinator.MayRequestChanges {
 		return workflowError(2, "delivery-owner v2 requires its own contract and cannot inherit Agreement A or coordinator control")
 	}
 	if !key(r.RequestKey) || !strings.HasPrefix(r.PreparationID, "pre_") || len(r.PreparationID) != 68 || !digestPattern.MatchString("sha256:"+strings.TrimPrefix(r.PreparationID, "pre_")) || !digestPattern.MatchString(r.PreparationSHA256) || !r.HumanAuthority.Authorized || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !plain(r.HumanAuthority.ActorClaim, 1, 256) || !plain(r.Herdr.WorkspaceID, 1, 128) || !plain(r.Herdr.TabLabel, 1, 80) {

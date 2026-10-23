@@ -71,7 +71,7 @@ func ValidateRejectedDeliveryHumanQA(d Dependencies, taskID string, result works
 	if err != nil {
 		return empty, err
 	}
-	if taskSpecVersion(control.Handoff.Value) != 3 || deliveryMode(control.Handoff.Value) != "candidate" || control.Handoff.SHA256 != result.HandoffSHA256 {
+	if !deliveryHandoff(control.Handoff.Value) || deliveryMode(control.Handoff.Value) != "candidate" || control.Handoff.SHA256 != result.HandoffSHA256 {
 		return empty, fmt.Errorf("human QA rejection requires the exact qualified delivery candidate")
 	}
 	area := filepath.Join(control.Handoff.ReplyRoot, "staging", "human-qa-"+digestBytes(raw)[7:])

@@ -20,6 +20,7 @@ func newWorkflowStatusCommand(d workspace.Dependencies) *cobra.Command {
 func newWorkflowStatusCommandWithReader(read func(workspaceview.WorkflowStatusOptions) (workspaceview.WorkflowStatus, error)) *cobra.Command {
 	var format string
 	var includeAll bool
+	var schemaVersion int
 	invalid := func(reason string) error { return fmt.Errorf("workflow_status_invalid_arguments: %s", reason) }
 	command := &cobra.Command{
 		Use:     "status",
@@ -45,7 +46,7 @@ func newWorkflowStatusCommandWithReader(read func(workspaceview.WorkflowStatusOp
 			previousOutput := logrus.StandardLogger().Out
 			logrus.SetOutput(cmd.ErrOrStderr())
 			defer logrus.SetOutput(previousOutput)
-			result, err := read(workspaceview.WorkflowStatusOptions{Filters: viewTaskFilters(cmd), IncludeAll: includeAll})
+			result, err := read(workspaceview.WorkflowStatusOptions{SchemaVersion: schemaVersion, Filters: viewTaskFilters(cmd), IncludeAll: includeAll})
 			if err != nil {
 				return err
 			}
@@ -57,6 +58,7 @@ func newWorkflowStatusCommandWithReader(read func(workspaceview.WorkflowStatusOp
 		},
 	}
 	command.Flags().StringVar(&format, "format", "text", "output format (text or json); --json is a local result shortcut")
+	command.Flags().IntVar(&schemaVersion, "schema-version", 1, "read schema (2 includes every active preparation)")
 	command.Flags().BoolVar(&includeAll, "all", false, "include untouched backlog, inactive work and registered completed work")
 	command.Flags().String("project", "", "exact registered project ID")
 	command.Flags().String("repo", "", "exact registered repository ID")

@@ -22,6 +22,9 @@ type deliveryFixture struct {
 }
 
 type deliveryFixtureOptions struct {
+	SeedSource        string
+	SeedOID           string
+	Parallel          bool
 	AdoptExisting     bool
 	Agreement         *workspace.DeliveryAgreement
 	AllowLocalInstall bool
@@ -43,6 +46,13 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 		roots = []string{option.Root}
 	}
 	root, epic, _, oid := prepareServiceWorkspace(t, roots...)
+	if option.SeedSource != "" {
+		// Read one exact candidate from the Task source into an isolated repo.
+		// No ref, file or metadata in the source repository is changed.
+		runGit(t, epic, "fetch", "--no-tags", option.SeedSource, option.SeedOID)
+		oid = gitOutput(t, epic, "rev-parse", option.SeedOID+"^")
+		runGit(t, epic, "reset", "--hard", oid)
+	}
 	parent := option.ParentRef
 	if parent == "" {
 		parent = "epic"
@@ -171,6 +181,22 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 			t.Fatal(e)
 		}
 	}
+	if option.Parallel {
+		r, e := w.WorkItems.Snapshot(root)
+		if e != nil {
+			t.Fatal(e)
+		}
+		r.ParallelBoundary = &workspace.RegistryFormatBoundary{FromVersion: 4, FromSHA256: r.RawSHA256, ManifestSHA256: "sha256:" + strings.Repeat("a", 64), ReaderVersion: "v0.0.0-fixture", ReaderCommit: oid, ReaderSHA256: "sha256:" + strings.Repeat("b", 64)}
+		r.FormatVersion = workspace.ParallelRegistryFormat
+		r.SourceReconciliations = []workspace.TaskSourceReconciliation{}
+		raw, e := yaml.Marshal(r)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if e = os.WriteFile(filepath.Join(root, ".ply", "work-items.yaml"), raw, 0600); e != nil {
+			t.Fatal(e)
+		}
+	}
 	if option.BeforePrepare != nil {
 		option.BeforePrepare(w, root, epic, goal)
 	}
@@ -179,6 +205,11 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	}
 	acceptance := filepath.Join(root, "acceptance.sh")
 	execute := workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Next: true, AcceptancePath: acceptance}
+	if option.Parallel {
+		execute.Next = false
+		execute.SpecID = goal.SpecID
+		execute.Parallel = true
+	}
 	if option.SelectFreshGoal != nil {
 		execute.Next, execute.SpecID = false, goal.SpecID
 	}
@@ -228,7 +259,7 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	if p.Delivery != nil && p.Delivery.AutomaticAcceptance() {
 		goalBinding = FileBinding{filepath.Join(root, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(goal.Spec.ManifestSHA256, "sha256:")+".json"), goal.Spec.ManifestSHA256}
 	}
-	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{OwnerClaim: "fixture owner", Goal: goalBinding, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: option.AllowLocalInstall, LocalIntegration: boundary, ReasoningEffort: "medium", Agreement: p.Delivery}})
+	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery", WorkspaceRoot: root, PreparationID: preparation.ID, PreparationSHA256: digest(preparation), HandoffDraft: draft, Runtime: runtime, HumanAuthority: HumanAuthority{"synthetic human", "human_authorized_herdr", true}, HerdrExecutable: Executable{herdr, hashFileTest(t, herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "Delivery fixture", Delivery: DeliveryContract{AdmissionMode: preparation.Plan.AdmissionMode, SourceReconciliation: preparation.Plan.SourceReconciliation, OwnerClaim: "fixture owner", Goal: goalBinding, AcceptancePath: acceptance, AllowSubagents: true, AllowLocalInstall: option.AllowLocalInstall, LocalIntegration: boundary, ReasoningEffort: "medium", Agreement: p.Delivery}})
 	if e != nil {
 		t.Fatal(e)
 	}

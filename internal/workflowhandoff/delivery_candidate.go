@@ -18,6 +18,7 @@ import (
 // DeliveryCandidateInput contains observations from the delivery runtime's actual
 // verifier invocation. This bridge does not execute the command or infer review.
 type DeliveryCandidateInput struct {
+	EffectiveBasis                                       *workspace.EffectiveDeliveryBasis
 	ParentHandoffLocator, CandidateKey, Summary          string
 	RunID, RequestSHA256                                 string
 	CandidateOID, CandidateTree, VerifierID, CWD         string
@@ -47,7 +48,7 @@ func ValidateDeliveryOwnerContinuity(d Dependencies, locator string) error {
 	if err != nil {
 		return err
 	}
-	if taskSpecVersion(snapshot.Handoff.Value) != 3 || deliveryMode(snapshot.Handoff.Value) != "owner" || snapshot.Start == nil || snapshot.Start.Outcome != "started" || snapshot.Terminal != nil || snapshot.HeadState != "ready" {
+	if !deliveryHandoff(snapshot.Handoff.Value) || deliveryMode(snapshot.Handoff.Value) != "owner" || snapshot.Start == nil || snapshot.Start.Outcome != "started" || snapshot.Terminal != nil || snapshot.HeadState != "ready" {
 		return fmt.Errorf("continuation requires a supported active accepted delivery-owner handoff")
 	}
 	basis, _, err := historicalHandoffTaskSpec(d, snapshot)
@@ -85,7 +86,7 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 	if e != nil {
 		return out, e
 	}
-	if taskSpecVersion(parent.Handoff.Value) != 3 || deliveryMode(parent.Handoff.Value) != "owner" || parent.Start == nil || parent.Start.Outcome != "started" || parent.Terminal != nil || parent.HeadState != "ready" {
+	if !deliveryHandoff(parent.Handoff.Value) || deliveryMode(parent.Handoff.Value) != "owner" || parent.Start == nil || parent.Start.Outcome != "started" || parent.Terminal != nil || parent.HeadState != "ready" {
 		return out, fmt.Errorf("active accepted delivery owner is required")
 	}
 	principal, _ := objectMember(parent.Start.Value, "principal")
@@ -167,7 +168,18 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 		return out, e
 	}
 	draft := bridgeEnvelope("ply.workflow.handoff-draft")
-	draft = replaceObjectMember(draft, "schema_version", int64(3))
+	draft = replaceObjectMember(draft, "schema_version", taskSpecVersion(parent.Handoff.Value))
+	if taskSpecVersion(parent.Handoff.Value) == 4 {
+		if in.EffectiveBasis == nil {
+			return out, fmt.Errorf("parallel candidate requires its exact effective basis")
+		}
+		draft = append(draft, canonicaljson.Member{Name: "effective_basis", Value: bridgeValue(in.EffectiveBasis)})
+	} else if in.EffectiveBasis != nil {
+		return out, fmt.Errorf("legacy candidate cannot acquire effective basis")
+	}
+	if binding, found := objectMember(parent.Handoff.Value, "parallel_binding"); found {
+		draft = append(draft, canonicaljson.Member{Name: "parallel_binding", Value: binding})
+	}
 	for _, key := range []string{"recipient", "inputs", "verifiers", "stop_conditions", "reporting", "task_spec_binding"} {
 		v, _ := objectMember(parent.Handoff.Value, key)
 		draft = append(draft, canonicaljson.Member{Name: key, Value: v})
@@ -347,6 +359,15 @@ func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandi
 		return nil, fmt.Errorf("verification receipt must be an object")
 	}
 	keys := []string{"kind", "schema_version", "run_id", "request_sha256", "attempt_id", "candidate_oid", "candidate_tree", "argv", "cwd", "acceptance", "acceptance_snapshot", "review", "exit", "stdout", "stderr", "started_at", "finished_at"}
+	if in.EffectiveBasis != nil {
+		keys = append(keys, "effective_basis")
+		basis, found := objectMember(o, "effective_basis")
+		if !found || !canonicalEqual(basis, bridgeValue(in.EffectiveBasis)) {
+			return nil, fmt.Errorf("verification effective basis differs")
+		}
+	} else if _, found := objectMember(o, "effective_basis"); found {
+		return nil, fmt.Errorf("legacy verifier cannot acquire reconciliation authority")
+	}
 	automatic := len(agreements) > 0 && agreements[0] != nil && agreements[0].AutomaticAcceptance()
 	wantKind, wantVersion := "PlyDeliveryVerification@1", int64(1)
 	if automatic {

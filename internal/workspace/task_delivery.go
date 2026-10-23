@@ -146,6 +146,7 @@ type TaskHumanQARecord struct {
 // TaskHandoffEvidence is the redacted, rehashed projection supplied by the workflow-handoff
 // package. It deliberately contains no reply capability or secret material.
 type TaskHandoffEvidence struct {
+	EffectiveBasis                                                             *EffectiveDeliveryBasis
 	DeliveryAuthorization                                                      *DeliveryAuthorization
 	TaskRequirementsValid                                                      bool
 	TaskSpecBasis                                                              *TaskSpecBasis
@@ -388,7 +389,7 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 			record := TaskResultRecord{ID: id, PublicationKey: draft.PublicationKey, DraftSHA256: draft.Digest, StoreTransition: transition, TaskID: draft.TaskID, TaskWorktreeID: draft.TaskWorktreeID, ProjectID: draft.ProjectID, RepoID: draft.RepoID, GitCommonDir: draft.GitCommonDir, SourceLocator: draft.WorktreeLocator, SourceRef: draft.SourceRef, ResultOID: draft.ResultOID, ResultTree: draft.ResultTree, ActivityID: evidence.ActivityID, RunID: evidence.RunID, HandoffID: evidence.HandoffID, HandoffLocator: evidence.HandoffLocator, HandoffSHA256: evidence.HandoffSHA256, StartReceiptID: evidence.StartReceiptID, StartReceiptLocator: evidence.StartReceiptLocator, StartReceiptSHA256: evidence.StartReceiptSHA256, TerminalResultID: evidence.TerminalResultID, TerminalResultLocator: evidence.TerminalResultLocator, TerminalResultSHA256: evidence.TerminalResultSHA256, InspectionSHA256: evidence.InspectionSHA256, ReportedOutcome: evidence.ReportedOutcome, TechnicalGate: draft.TechnicalGate, VerifierResults: evidence.VerifierResults, Review: evidence.Review, AcceptedDebt: draft.AcceptedDebt, Artifacts: draft.EvidenceArtifacts, Recorder: draft.Recorder}
 			registry.TaskResults = append(registry.TaskResults, record)
 			if evidence.TaskSpecBasis != nil {
-				link := TaskResultSpecBinding{TaskResultID: id, TaskID: task.ID, Basis: *evidence.TaskSpecBasis, HandoffSHA256: evidence.HandoffSHA256, StartReceiptSHA256: evidence.StartReceiptSHA256}
+				link := TaskResultSpecBinding{EffectiveBasis: evidence.EffectiveBasis, TaskResultID: id, TaskID: task.ID, Basis: *evidence.TaskSpecBasis, HandoffSHA256: evidence.HandoffSHA256, StartReceiptSHA256: evidence.StartReceiptSHA256}
 				registry.TaskResultSpecBindings = append(registry.TaskResultSpecBindings, link)
 				result.SpecBinding = &link
 			}

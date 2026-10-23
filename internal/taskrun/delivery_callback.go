@@ -305,6 +305,7 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 }
 
 type deliveryVerificationReceipt struct {
+	EffectiveBasis     *workspace.EffectiveDeliveryBasis                  `json:"effective_basis,omitempty"`
 	Kind               string                                             `json:"kind"`
 	SchemaVersion      int                                                `json:"schema_version"`
 	RunID              string                                             `json:"run_id"`
@@ -415,6 +416,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		if e != nil {
 			return e
 		}
+		if current.Request.SchemaVersion == 3 && reviewPath != "" {
+			return workflowError(4, "parallel qualification requires the sealed independent native review round; omit --review")
+		}
 		if reviewPath == "" {
 			if reviewPath, e = deliveryNativeCandidateReview(d, *current, x.OID, x.Tree); e != nil {
 				return e
@@ -432,6 +436,10 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		}
 		snapshot := FileBinding{filepath.Join(path, "acceptance.sh"), acceptance.SHA256}
 		receipt = deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: id, RequestSHA256: current.Result.RequestSHA256, AttemptID: attemptID, CandidateOID: x.OID, CandidateTree: x.Tree, Argv: []string{"/bin/sh", acceptance.Locator}, CWD: x.Locator, Acceptance: acceptance, Review: review, StartedAt: d.Now().UTC().Format(time.RFC3339Nano)}
+		receipt.EffectiveBasis, e = deliveryEffectiveBasis(d, *current)
+		if e != nil {
+			return e
+		}
 		receipt.AcceptanceSnapshot = snapshot
 		binary := ""
 		if len(binaryPaths) > 0 {
@@ -517,6 +525,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		}
 		if e == nil {
 			e = workerValidateReview(s, receipt.Review, receipt.CandidateOID, receipt.CandidateTree)
+			if e == nil {
+				e = deliveryRequireBasis(d, s, receipt.EffectiveBasis)
+			}
 		}
 		if e == nil {
 			// Candidate publication follows the existing TaskRun -> workspace
@@ -533,7 +544,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				if err = deliveryCallback(d, current, contextPath, true); err != nil {
 					return err
 				}
-				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{RequireIndependentReview: headlessRun(s.Request), AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
+				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{EffectiveBasis: receipt.EffectiveBasis, RequireIndependentReview: headlessRun(s.Request) || s.Request.SchemaVersion == 3, AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
 				if err == nil {
 					candidate = &value
 				}
@@ -579,7 +590,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				if err != nil {
 					return err
 				}
-				qa, err := LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, c.TaskResult, a)
+				qa, err := LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, c.TaskResult, a, current.Request.SchemaVersion == 3)
 				if err != nil {
 					return err
 				}

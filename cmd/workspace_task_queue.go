@@ -54,6 +54,7 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 	task.AddCommand(queue)
 	var listFormat string
 	var ready bool
+	var schemaVersion int
 	var target queueTargetFlags
 	list := &cobra.Command{Use: "list", Short: "Show the prioritized queue and current preparation", Long: "Read the queue without creating locks or upgrading the registry. --ready filters pending entries and preserves ranks; the current preparation remains visible. Omit target flags only from the registered Epic worktree.", Example: "  ply workspace task queue list --ready --project ply --repo ply --epic agentic-workflow", Args: cobra.NoArgs, RunE: func(c *cobra.Command, args []string) error {
 		if e := validateWorkFormat(listFormat); e != nil {
@@ -63,9 +64,10 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 		if e != nil {
 			return e
 		}
-		r, e := workspace.ListTaskQueue(d, in, ready)
+		r, e := workspace.ListTaskQueueVersion(d, in, ready, schemaVersion)
 		return outputQueue(c, listFormat, r, e)
 	}}
+	list.Flags().IntVar(&schemaVersion, "schema-version", 1, "queue read schema (2 includes every active preparation)")
 	target.bind(list)
 	list.Flags().BoolVar(&ready, "ready", false, "show only ready pending Tasks while retaining the current preparation")
 	list.Flags().StringVar(&listFormat, "format", "text", "output format (text or json)")
@@ -131,6 +133,8 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 			continue
 		}
 		var ready bool
+		var queueSchema int
+		c.Flags().IntVar(&queueSchema, "schema-version", 1, "queue read schema for --ready (2 includes every active preparation)")
 		old := c.RunE
 		c.Flags().BoolVar(&ready, "ready", false, "show the ready queue instead of the registered-Task list")
 		c.RunE = func(c *cobra.Command, args []string) error {
@@ -148,7 +152,7 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 			if e != nil {
 				return e
 			}
-			r, e := workspace.ListTaskQueue(d, in, true)
+			r, e := workspace.ListTaskQueueVersion(d, in, true, queueSchema)
 			return outputQueue(c, format, r, e)
 		}
 		c.Long += " Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic."

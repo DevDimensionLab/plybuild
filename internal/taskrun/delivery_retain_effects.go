@@ -328,11 +328,11 @@ func deliveryRetainedRelease(d Dependencies, root, id string, in DeliveryRetireI
 		}
 		target := p.Plan.Target
 		qtarget := workspace.QueueTargetInput{ProjectID: target.ProjectID, RepoID: target.RepoID, EpicID: target.EpicID}
-		q, err := workspace.ListTaskQueue(d.Workspace, qtarget, false)
+		q, err := workspace.ListTaskQueueVersion(d.Workspace, qtarget, false, 2)
 		if err != nil {
 			return err
 		}
-		if q.Current == nil || q.Current.PreparationID != s.Request.PreparationID {
+		if !q.HasPreparation(s.Request.PreparationID) {
 			return workflowError(4, "retired owner no longer owns exact current preparation; inspect queue without advancing a successor")
 		}
 		_, err = workspace.CloseTaskQueue(d.Workspace, qtarget, s.Request.PreparationID, q.Revision, "Resources retired; source/effects retained", "release")

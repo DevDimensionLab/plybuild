@@ -385,7 +385,7 @@ func observeAdoption(d Dependencies, root string, r WorkItemRegistry, projects P
 	}
 	qid := queueID(root, target)
 	q := foldQueue(r, qid)
-	if q.Current != nil {
+	if len(q.Active) != 0 {
 		return p, queueError("adoption_effect_pending", "inspect current queue preparation")
 	}
 	for _, id := range queueUnresolved(r, target) {

@@ -1,6 +1,7 @@
 package workspaceview
 
 import (
+	"encoding/json"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -8,8 +9,9 @@ import (
 const WorkflowStatusKind = "WorkflowStatusReadback@1"
 
 type WorkflowStatusOptions struct {
-	Filters    workspace.TaskListFilters
-	IncludeAll bool
+	SchemaVersion int
+	Filters       workspace.TaskListFilters
+	IncludeAll    bool
 }
 
 type WorkflowStatus struct {
@@ -75,6 +77,7 @@ type WorkflowStatusAction struct {
 }
 
 type WorkflowStatusQueue struct {
+	Active      []workspace.QueueCurrent   `json:"active,omitempty"`
 	QueueID     string                     `json:"queue_id"`
 	Revision    int                        `json:"revision"`
 	Target      workspace.QueueTarget      `json:"target"`
@@ -90,6 +93,18 @@ type WorkflowStatusQueue struct {
 	SinceUTC    *string                    `json:"since_utc"`
 	Reasons     []workspace.QueueReason    `json:"reasons"`
 	EvidenceIDs []string                   `json:"evidence_ids"`
+}
+
+func (q WorkflowStatusQueue) MarshalJSON() ([]byte, error) {
+	type wire WorkflowStatusQueue
+	var active *[]workspace.QueueCurrent
+	if q.Active != nil {
+		active = &q.Active
+	}
+	return json.Marshal(struct {
+		wire
+		Active *[]workspace.QueueCurrent `json:"active,omitempty"`
+	}{wire(q), active})
 }
 
 type WorkflowDiagnostic struct {

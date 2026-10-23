@@ -268,7 +268,7 @@ func validateIntegrationDelivery(d Dependencies, root string, r WorkItemRegistry
 	}
 	latestQA, e := LatestTaskHumanQA(r.HumanQARecords, result.ID, result.ResultOID, result.ResultTree)
 	if agreement.AutomaticAcceptance() {
-		latestQA, e = LatestTaskCandidateHumanQA(r.HumanQARecords, result)
+		latestQA, e = latestRegistryAcceptanceHumanQA(r, result)
 	}
 	if e != nil {
 		return e

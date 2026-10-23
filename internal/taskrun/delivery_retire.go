@@ -292,11 +292,11 @@ func deliveryRetireReleaseQueue(d Dependencies, root, id, reason string) error {
 	}
 	wd := workspace.WithTaskContentScope(d.Workspace, draft.Binding.TaskID)
 	target := workspace.QueueTargetInput{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID}
-	q, err := workspace.ListTaskQueue(wd, target, false)
+	q, err := workspace.ListTaskQueueVersion(wd, target, false, 2)
 	if err != nil {
 		return err
 	}
-	if q.Current != nil && q.Current.PreparationID == s.Request.PreparationID {
+	if q.HasPreparation(s.Request.PreparationID) {
 		_, err = workspace.CloseTaskQueue(wd, target, s.Request.PreparationID, q.Revision, "Selected owner replacement: "+reason, "release")
 		return err
 	}

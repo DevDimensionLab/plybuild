@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const CurrentRegistryFormat = 7
+const CurrentRegistryFormat = ParallelRegistryFormat
 
 // RegistryFormatBoundary records the immutable, explicitly authorized transition
 // and the already available reader. It does not change any historical authority.
@@ -51,7 +51,7 @@ func registryDiagnostic(code, detail string, version int) *RegistryDiagnostic {
 	if code == "registry_upgrade_required" || code == "registry_upgrade_conflict" {
 		next = "Run ply workspace registry upgrade --package <release-directory> --sha256 <manifest-digest> --check --format json, inspect the fresh plan, then apply its exact confirmation."
 	}
-	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{1, 2, 3, 4, 5, 6, 7}, NextAction: next}
+	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{1, 2, 3, 4, 5, 6, 7, 8}, NextAction: next}
 }
 
 func RegistryError(err error) *RegistryDiagnostic {
@@ -202,6 +202,29 @@ func decodeRegistryNode(root *yaml.Node, registry *WorkItemRegistry) error {
 }
 
 func validateRegistryBoundary(r WorkItemRegistry) error {
+	if r.FormatVersion == ParallelRegistryFormat {
+		b := r.ParallelBoundary
+		if b == nil || b.FromVersion < 4 || b.FromVersion > 7 || !digestPattern.MatchString(b.FromSHA256) || !digestPattern.MatchString(b.ManifestSHA256) || !digestPattern.MatchString(b.ReaderSHA256) || !validOIDText(b.ReaderCommit) || b.ReaderVersion == "" || r.SourceReconciliations == nil {
+			return fmt.Errorf("format 8 requires exact predecessor, reader and explicit source reconciliation array")
+		}
+		if p := r.ParallelActivation; p != nil {
+			e := p.Evidence
+			if p.Kind != "WorkspaceParallelActivationPlan@1" || p.SchemaVersion != 1 || !validAbsoluteCleanPath(p.Workspace) || p.FromVersion != b.FromVersion || p.RegistrySHA256 != b.FromSHA256 || e.QualifiedManifestSHA256 != b.ManifestSHA256 || e.ReaderVersion != b.ReaderVersion || e.ReaderCommit != b.ReaderCommit || e.ReaderSHA256 != b.ReaderSHA256 || !digestPattern.MatchString(e.InventorySHA256) || e.Consumers == nil || validateQueueTarget(r, e.Target) != nil {
+				return fmt.Errorf("parallel activation receipt differs from its immutable boundary")
+			}
+			previous := ""
+			for _, consumer := range e.Consumers {
+				if consumer.ID <= previous || !consumer.Compatible || consumer.RemainingEffects == nil || consumer.Reasons == nil || !digestPattern.MatchString(consumer.EvidenceSHA256) {
+					return fmt.Errorf("parallel activation receipt contains incomplete consumer evidence")
+				}
+				previous = consumer.ID
+			}
+		}
+		r.FormatVersion = b.FromVersion
+	} else if r.ParallelActivation != nil || r.ParallelBoundary != nil || r.SourceReconciliations != nil {
+		return fmt.Errorf("legacy registry contains parallel records")
+	}
+
 	if r.FormatVersion >= 7 {
 		b := r.AdoptionBoundary
 		if b == nil || b.FromVersion != 6 || !digestPattern.MatchString(b.FromSHA256) || !digestPattern.MatchString(b.ManifestSHA256) || !digestPattern.MatchString(b.ReaderSHA256) || !validOIDText(b.ReaderCommit) || !strings.HasPrefix(b.ReaderVersion, "v") {
@@ -239,6 +262,9 @@ func boundaryFor(old WorkItemRegistry, m clirelease.Manifest, pin string) *Regis
 func validateRegistryFormatTransition(old, next WorkItemRegistry) error {
 	if next.FormatVersion < old.FormatVersion {
 		return registryDiagnostic("registry_upgrade_conflict", "registry downgrade is forbidden", old.FormatVersion)
+	}
+	if next.FormatVersion == ParallelRegistryFormat {
+		return validateParallelRegistryTransition(old, next)
 	}
 	if next.FormatVersion == 7 {
 		return validateAdoptionRegistryUpgradeTransition(old, next)

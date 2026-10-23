@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -49,5 +50,39 @@ func newWorkspaceRegistryCommand(d workspace.Dependencies) *cobra.Command {
 	_ = u.MarkFlagRequired("package")
 	_ = u.MarkFlagRequired("sha256")
 	c.AddCommand(u)
+	var qualified, coordinator, token, output string
+	var activate, preview bool
+	a := &cobra.Command{Use: "activate-parallel", Short: "Explicitly activate format8 using an exact completed qualified native CLI", Long: "Read-only --check is the default. --apply requires the exact confirmation over the actual format4-7 predecessor, registered target, qualified candidate bytes and finite native remaining-effect compatibility. Requires a completed self-hosted Ply Run with complete native closeout; this never installs a CLI, changes foreign controls, clears stops or probes processes. Incompatible or unknown remaining readers block activation. Legacy upgrades keep their explicit formats5/6/7.", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+		if activate && preview {
+			return fmt.Errorf("choose --check or --apply")
+		}
+		if output != "json" && output != "text" {
+			return fmt.Errorf("format must be text or json")
+		}
+		observed, err := workspace.ObserveContaining(d)
+		if err != nil {
+			return err
+		}
+		result, err := taskrun.ActivateParallelWorkspace(taskrun.SystemDependencies(d), observed.Root, qualified, coordinator, token, activate)
+		if output == "json" {
+			if e := json.NewEncoder(cmd.OutOrStdout()).Encode(result); e != nil {
+				return e
+			}
+		} else {
+			if _, e := fmt.Fprintf(cmd.OutOrStdout(), "Parallel activation: %s\nConfirmation: %s\nBlockers: %v\n", result.State, result.Confirmation, result.Blockers); e != nil {
+				return e
+			}
+		}
+		return err
+	}}
+	a.Flags().StringVar(&qualified, "qualified-run", "", "completed native feature Run supplying the exact tested reader")
+	a.Flags().StringVar(&coordinator, "coordinator", "", "actual coordinator invoking the separately authorized activation")
+	a.Flags().StringVar(&token, "confirm", "", "fresh exact activation confirmation")
+	a.Flags().StringVar(&output, "format", "text", "output format (text or json)")
+	a.Flags().BoolVar(&activate, "apply", false, "publish exactly one confirmed format8 boundary")
+	a.Flags().BoolVar(&preview, "check", false, "observe compatibility without writes (default)")
+	_ = a.MarkFlagRequired("qualified-run")
+	_ = a.MarkFlagRequired("coordinator")
+	c.AddCommand(a)
 	return c
 }

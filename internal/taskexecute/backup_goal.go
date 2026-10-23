@@ -49,6 +49,9 @@ func BackupGoal(d taskrun.Dependencies, root, source string, in taskrun.BackupGo
 	if err = checkOrigin(d, registration.Target); err != nil {
 		return out, err
 	}
+	if len(registration.Queue.Active) > 1 || registration.Queue.Current != nil && registration.Queue.Current.AdmissionMode == workspace.AdmissionParallel {
+		return out, workspace.WorkInvalidArguments("backup remains exclusive; continue the exact parallel Run")
+	}
 	if registration.Queue.Current != nil && registration.Queue.Current.TaskID != in.TaskID && (registration.Retirement == nil || registration.Queue.Current.PreparationID != registration.Retirement.PreparationID) {
 		return out, fmt.Errorf("backup_start_current_conflict: complete the current preparation before starting this backup")
 	}

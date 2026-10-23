@@ -99,7 +99,7 @@ func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, deli
 		out.Target = observe(plan.WorktreePath, "refs/heads/"+plan.Branch)
 		out.Epic = observe(plan.Target.ParentLocator, plan.Target.ParentRef)
 	}
-	if p.Preparation == nil || p.State != "prepared" || p.Disposition != "current" || p.Freshness != "fresh" || len(p.Reasons) != 0 {
+	if p.Preparation == nil || p.State != "prepared" || !(p.Disposition == "current" || delivery && p.Disposition == "active") || p.Freshness != "fresh" || len(p.Reasons) != 0 {
 		return out, fmt.Errorf("preparation is not current, prepared and fresh")
 	}
 	plan := p.Preparation.Plan
@@ -231,8 +231,8 @@ func BuildTaskRunStart(d Dependencies, locator, actor, surface, session, runtime
 	p := bridgeObject(map[string]any{"expected_principal_id": handoffNestedString(h.Value, "recipient", "principal_id"), "human_start_principal": actor, "start_surface": surface, "session_id": session, "runtime_id": runtime, "model_id": model, "started_at_utc": d.Clock.Now().UTC().Format("2006-01-02T15:04:05.999999999Z07:00")})
 	o := bridgeEnvelope("ply.workflow.start-receipt-draft")
 	version := int64(2)
-	if taskSpecVersion(h.Value) == 3 {
-		version = 3
+	if deliveryHandoff(h.Value) {
+		version = taskSpecVersion(h.Value)
 	}
 	o = replaceObjectMember(o, "schema_version", version)
 	basis, _ := objectMember(h.Value, "task_spec_binding")

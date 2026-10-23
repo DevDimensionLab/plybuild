@@ -237,7 +237,13 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 					return e
 				}
 				bound := deliveryReviewAgent{"ply.workflow.review-agent", 1, s.Result.RunID, r.Request.Round, pane, l.AgentName, l.Provider, a.Session.Value, owner, d.Now().UTC().Format(time.RFC3339Nano)}
-				if _, e = workflowKeep(d, filepath.Join(r.Dir, "agent.json"), bound); e != nil {
+				if e = withStore(s.Request.WorkspaceRoot, func() error {
+					if e := parallelSessionAvailable(d, s, l.Provider, a.Session.Value, false, r.Dir); e != nil {
+						return e
+					}
+					_, e := workflowKeep(d, filepath.Join(r.Dir, "agent.json"), bound)
+					return e
+				}); e != nil {
 					return e
 				}
 				break

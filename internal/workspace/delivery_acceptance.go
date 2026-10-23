@@ -56,7 +56,8 @@ func EvaluateDeliveryAcceptance(agreement *DeliveryAgreement, result TaskResultR
 	}
 	if latestQA != nil {
 		sameResult := latestQA.TaskResultID == result.ID
-		if latestQA.ResultOID != result.ResultOID || latestQA.ResultTree != result.ResultTree || !sameResult && (out.Mode != "automatic" || latestQA.TaskID != result.TaskID) {
+		veto := latestQA.TaskID == result.TaskID && (latestQA.Outcome == "fail" || latestQA.Outcome == "blocked")
+		if !veto && (latestQA.ResultOID != result.ResultOID || latestQA.ResultTree != result.ResultTree || !sameResult && (out.Mode != "automatic" || latestQA.TaskID != result.TaskID)) {
 			return out, fmt.Errorf("human QA differs from the exact acceptance candidate")
 		}
 		if !sameResult && latestQA.Outcome == "pass" {
@@ -72,7 +73,7 @@ func EvaluateDeliveryAcceptance(agreement *DeliveryAgreement, result TaskResultR
 				return out, fmt.Errorf("candidate human QA has an unsupported outcome")
 			}
 			out.Outcome = latestQA.Outcome
-			out.Reason = "The latest exact candidate human answer is " + latestQA.Outcome + "."
+			out.Reason = "The Task has an unresolved human answer: " + latestQA.Outcome + "."
 			return out, nil
 		}
 	}

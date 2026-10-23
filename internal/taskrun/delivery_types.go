@@ -25,16 +25,18 @@ func deliveryStarted(s workflowState) bool {
 }
 
 type DeliveryContract struct {
-	StartupProtocol     string                       `json:"startup_protocol,omitempty"`
-	OwnerClaim          string                       `json:"owner_claim"`
-	Goal                FileBinding                  `json:"goal"`
-	AcceptancePath      string                       `json:"acceptance_path"`
-	AllowSubagents      bool                         `json:"allow_subagents"`
-	AllowLocalInstall   bool                         `json:"allow_local_install"`
-	LocalIntegration    string                       `json:"local_integration"`
-	NotificationContext *FileBinding                 `json:"notification_context"`
-	ReasoningEffort     string                       `json:"reasoning_effort,omitempty"`
-	Agreement           *workspace.DeliveryAgreement `json:"agreement,omitempty"`
+	AdmissionMode        string                       `json:"admission_mode,omitempty"`
+	SourceReconciliation string                       `json:"source_reconciliation,omitempty"`
+	StartupProtocol      string                       `json:"startup_protocol,omitempty"`
+	OwnerClaim           string                       `json:"owner_claim"`
+	Goal                 FileBinding                  `json:"goal"`
+	AcceptancePath       string                       `json:"acceptance_path"`
+	AllowSubagents       bool                         `json:"allow_subagents"`
+	AllowLocalInstall    bool                         `json:"allow_local_install"`
+	LocalIntegration     string                       `json:"local_integration"`
+	NotificationContext  *FileBinding                 `json:"notification_context"`
+	ReasoningEffort      string                       `json:"reasoning_effort,omitempty"`
+	Agreement            *workspace.DeliveryAgreement `json:"agreement,omitempty"`
 }
 
 type DeliveryRequestInput struct {
@@ -141,8 +143,10 @@ type DeliveryState struct {
 	ActiveStop           *FileBinding                `json:"active_stop,omitempty"`
 }
 
-func deliveryEnv(kind string) Envelope   { return Envelope{"ply.workflow." + kind, 2} }
-func deliveryRun(r WorkflowRequest) bool { return r.SchemaVersion == 2 && r.Delivery != nil }
+func deliveryEnv(kind string) Envelope { return Envelope{"ply.workflow." + kind, 2} }
+func deliveryRun(r WorkflowRequest) bool {
+	return (r.SchemaVersion == 2 || r.SchemaVersion == 3) && r.Delivery != nil
+}
 
 func DeliveryLocalIntegrationBoundary(a *workspace.DeliveryAgreement) string {
 	if a != nil && (a.Mode == workspace.DeliveryPullRequest || a.HumanOwnedIntegration()) {

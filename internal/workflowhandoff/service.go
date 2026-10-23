@@ -115,10 +115,16 @@ func createWithActivity(dependencies Dependencies, input CreateInput, existingAc
 	if taskSpecVersion(draft.Value) >= 2 {
 		basis, _ := objectMember(draft.Value, "task_spec_binding")
 		handoffValue = append(replaceObjectMember(handoffValue, "schema_version", taskSpecVersion(draft.Value)), canonicaljson.Member{Name: "task_spec_binding", Value: basis})
-		if taskSpecVersion(draft.Value) == 3 {
+		if deliveryHandoff(draft.Value) {
 			delivery, _ := objectMember(draft.Value, "delivery_binding")
 			handoffValue = append(handoffValue, canonicaljson.Member{Name: "delivery_binding", Value: delivery})
 		}
+	}
+	if basis, found := objectMember(draft.Value, "effective_basis"); found {
+		handoffValue = append(handoffValue, canonicaljson.Member{Name: "effective_basis", Value: basis})
+	}
+	if binding, found := objectMember(draft.Value, "parallel_binding"); found {
+		handoffValue = append(handoffValue, canonicaljson.Member{Name: "parallel_binding", Value: binding})
 	}
 	if protocol, found := objectMember(draft.Value, "report_startup_protocol"); found {
 		handoffValue = append(handoffValue, canonicaljson.Member{Name: "report_startup_protocol", Value: protocol})
@@ -923,7 +929,7 @@ func validateSandboxContract(files FileSystem, snapshot Snapshot, sandbox canoni
 	}
 	sort.Strings(writes)
 	writes = uniqueStrings(writes)
-	if taskSpecVersion(snapshot.Handoff.Value) == 3 {
+	if deliveryHandoff(snapshot.Handoff.Value) {
 		for _, required := range writes {
 			covered := false
 			for _, root := range writeRoots {

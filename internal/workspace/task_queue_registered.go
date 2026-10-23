@@ -9,12 +9,14 @@ import (
 // ready pending goal still requires execute preflight; this view observes no
 // live checkout, process, provider, or repository state.
 type RegisteredTaskQueues struct {
-	Queues      []RegisteredTaskQueue
-	Freshness   string
-	Diagnostics []RegisteredQueueDiagnostic
+	SchemaVersion int
+	Queues        []RegisteredTaskQueue
+	Freshness     string
+	Diagnostics   []RegisteredQueueDiagnostic
 }
 
 type RegisteredTaskQueue struct {
+	Active                 []RegisteredQueueCurrent
 	Target                 QueueTarget
 	QueueID                string
 	Revision               int
@@ -75,7 +77,10 @@ type registeredQueueIndex struct {
 // final integrity check. The caller remains responsible for checking drift in
 // the supplied registration snapshot (CheckReadViewBasis).
 func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects ProjectSnapshot, r WorkItemRegistry) RegisteredTaskQueues {
-	out := RegisteredTaskQueues{Queues: []RegisteredTaskQueue{}, Freshness: "fresh", Diagnostics: []RegisteredQueueDiagnostic{}}
+	out := RegisteredTaskQueues{SchemaVersion: 1, Queues: []RegisteredTaskQueue{}, Freshness: "fresh", Diagnostics: []RegisteredQueueDiagnostic{}}
+	if r.FormatVersion == ParallelRegistryFormat {
+		out.SchemaVersion = 2
+	}
 	index := indexRegisteredQueues(ws.Root, r)
 	content := captureTaskContent(d.TaskContent)
 	d.TaskContent = content.store
@@ -90,7 +95,7 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 				continue
 			}
 			fold := index.folds[id]
-			q := RegisteredTaskQueue{Target: target, QueueID: id, Revision: fold.Revision, Pending: []RegisteredQueuePending{}, UnresolvedOperationIDs: append([]string{}, index.effects[id]...), Reasons: []QueueReason{}, Freshness: "fresh", EvidenceIDs: []string{id}}
+			q := RegisteredTaskQueue{Active: []RegisteredQueueCurrent{}, Target: target, QueueID: id, Revision: fold.Revision, Pending: []RegisteredQueuePending{}, UnresolvedOperationIDs: append([]string{}, index.effects[id]...), Reasons: []QueueReason{}, Freshness: "fresh", EvidenceIDs: []string{id}}
 			var pendingSince *string
 			pendingEvidence := []string{id}
 			validTarget := true
@@ -116,14 +121,14 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 				out.Queues = append(out.Queues, q)
 				continue
 			}
-			if fold.Current != nil {
+			for _, memberID := range fold.Active {
 				q.Reasons = append(q.Reasons, QueueReason{"task_queue_current", "the target has a current preparation; resolve it before starting another goal"})
-				prep, exists := index.preparations[*fold.Current]
+				prep, exists := index.preparations[memberID]
 				if !exists || prep.Plan.Target != target || prep.Plan.Workspace.Root != ws.Root {
 					q.Freshness = "unknown"
 					reason := QueueReason{"task_queue_preparation_unknown", "current preparation is missing or belongs to another registered target"}
 					q.Reasons = append(q.Reasons, reason)
-					out.addDiagnostic(q, nil, reason, "unknown", []string{id, *fold.Current})
+					out.addDiagnostic(q, nil, reason, "unknown", []string{id, memberID})
 				} else if task, exists := index.tasks[prep.Plan.TaskID]; !exists || !registeredQueueOwns(target, task) {
 					q.Freshness = "unknown"
 					reason := QueueReason{"task_queue_task_missing", "current preparation has no safe registered Task binding"}
@@ -132,7 +137,10 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 				} else {
 					content.owner = registeredQueueOwner(id, task.ID)
 					current, err := registeredCurrentPreparation(d, ws.Root, r, prep)
-					q.Current = &current
+					q.Active = append(q.Active, current)
+					if len(fold.Active) == 1 {
+						q.Current = &current
+					}
 					if err != nil {
 						q.Freshness = "unknown"
 						for _, reason := range queueErrorReasons(err) {
@@ -172,6 +180,13 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 				}
 				if q.Freshness != "fresh" && pending.State == "ready" {
 					pending.State, pending.Freshness = "unknown", "unknown"
+				}
+				if r.FormatVersion == ParallelRegistryFormat {
+					pending.SerialReadiness = pending.State
+					pending.ParallelReadiness = pending.State
+					if len(fold.Active) > 0 && admissionAllowed(r, fold, AdmissionParallel) && entry.Goal != nil && pending.Freshness == "fresh" {
+						pending.ParallelReadiness = "preflight_required"
+					}
 				}
 				pending.Reasons = sortQueueReasons(pending.Reasons)
 				q.Pending = append(q.Pending, pending)
@@ -221,8 +236,8 @@ func indexRegisteredQueues(root string, r WorkItemRegistry) registeredQueueIndex
 			fold = emptyQueueFold()
 		}
 		applyQueueEvent(&fold, event)
-		if event.Kind == "reserve" && fold.Current != nil {
-			if prep, exists := x.preparations[*fold.Current]; exists {
+		if event.Kind == "reserve" || event.Kind == "reserve_parallel" {
+			if prep, exists := x.preparations[contentString(contentFields(queueRequestValue(event.Request)), "preparation_id")]; exists {
 				pending := []TaskGoalQueueEntry{}
 				for _, entry := range fold.Pending {
 					if entry.TaskID != prep.Plan.TaskID {
@@ -454,13 +469,17 @@ func (out *RegisteredTaskQueues) applyContentChanges(changed map[string][]string
 	reason := QueueReason{"task_queue_source_changed", "referenced queue content changed or became unavailable during this read"}
 	for i := range out.Queues {
 		q := &out.Queues[i]
-		if q.Current != nil {
-			row := q.Current
+		for j := range q.Active {
+			row := &q.Active[j]
 			if evidence := changed[registeredQueueOwner(q.QueueID, row.TaskID)]; len(evidence) != 0 {
 				row.State, row.Freshness, q.Freshness = "unknown", "stale", "stale"
 				row.Reasons = append(row.Reasons, reason)
 				out.addDiagnostic(*q, &row.TaskID, reason, "stale", evidence)
 			}
+		}
+		if len(q.Active) == 1 {
+			c := q.Active[0]
+			q.Current = &c
 		}
 		for j := range q.Pending {
 			row := &q.Pending[j]

@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://plybuild.io/schemas/read-contract/workspace-task-queue-v2.schema.json",
+  "title": "WorkspaceTaskQueueReadback@2",
+  "description": "Authoritative participation from append-only native queue history. active is explicit even when empty. current is a singleton projection; multiple active members require null current. Persisted format is independent of reader capability.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema_version",
+    "workspace",
+    "target",
+    "registry",
+    "queue_id",
+    "revision",
+    "active",
+    "current",
+    "pending",
+    "reasons"
+  ],
+  "properties": {
+    "kind": {
+      "const": "WorkspaceTaskQueueReadback@2"
+    },
+    "schema_version": {
+      "const": 2
+    },
+    "workspace": {
+      "type": "object",
+      "required": [
+        "root",
+        "marker_sha256"
+      ]
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "registry": {
+      "type": "object",
+      "required": [
+        "format_version",
+        "sha256",
+        "required_upgrade"
+      ],
+      "properties": {
+        "format_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "required_upgrade": {
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      }
+    },
+    "queue_id": {
+      "type": "string",
+      "pattern": "^que_[0-9a-f]{64}$"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "active": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/queue_current"
+      }
+    },
+    "current": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/queue_current"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pending": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "rank",
+          "task_id",
+          "state",
+          "reasons"
+        ],
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "ready",
+              "blocked",
+              "unknown"
+            ]
+          },
+          "serial_readiness": {
+            "enum": [
+              "ready",
+              "blocked",
+              "unknown"
+            ]
+          },
+          "parallel_readiness": {
+            "enum": [
+              "ready",
+              "blocked",
+              "unknown"
+            ]
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/queue_reason"
+            }
+          }
+        }
+      }
+    },
+    "reasons": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/queue_reason"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "target": {
+      "type": "object",
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id",
+        "git_common_dir",
+        "parent_worktree_id",
+        "parent_locator",
+        "parent_ref"
+      ],
+      "properties": {
+        "project_id": {
+          "type": "string"
+        },
+        "repo_id": {
+          "type": "string"
+        },
+        "epic_id": {
+          "type": "string"
+        },
+        "git_common_dir": {
+          "type": "string"
+        },
+        "parent_worktree_id": {
+          "type": "string"
+        },
+        "parent_locator": {
+          "type": "string"
+        },
+        "parent_ref": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "queue_current": {
+      "type": "object",
+      "required": [
+        "preparation_id",
+        "task_id",
+        "state",
+        "disposition",
+        "worktree_path",
+        "reasons"
+      ],
+      "properties": {
+        "preparation_id": {
+          "type": "string"
+        },
+        "task_id": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "type": "string",
+          "minLength": 1
+        },
+        "worktree_path": {
+          "type": "string"
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/queue_reason"
+          }
+        },
+        "admission_mode": {
+          "enum": [
+            "parallel_explicit"
+          ]
+        },
+        "source_ref": {
+          "type": "string",
+          "pattern": "^refs/heads/"
+        },
+        "effective_basis": {
+          "type": "object"
+        }
+      },
+      "additionalProperties": true,
+      "description": "Preserved queue owner preparation state and disposition; an open vocabulary, not a new claim of live readiness."
+    },
+    "queue_reason": {
+      "type": "object",
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

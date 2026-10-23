@@ -51,7 +51,7 @@ func (s *TaskSpecSession) PreviewInitialTaskGoalExecution(in TaskGoalExecuteInpu
 		return p, err
 	}
 	q := foldQueue(s.Registry, p.QueueID)
-	if q.Current != nil || preparationForTask(s.Registry, p.Goal.TaskID) != nil {
+	if !admissionAllowed(s.Registry, q, p.AdmissionMode) || preparationForTask(s.Registry, p.Goal.TaskID) != nil {
 		return p, queueError("task_goal_initial_start_required", "an existing preparation requires its preserved Run, not a fresh bound start")
 	}
 	for _, entry := range q.Pending {

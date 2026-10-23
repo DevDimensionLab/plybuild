@@ -105,6 +105,9 @@ func workflowAwaitReadinessGeneration(d Dependencies, root, id string, deadline 
 				if !time.Now().Before(deadline) {
 					return workflowError(5, "Herdr startup deadline expired before session binding; no Task prompt sent")
 				}
+				if e := parallelSessionAvailable(d, *s, s.Request.Runtime.Provider, a.Session.Value, true); e != nil {
+					return e
+				}
 				s.Result.Transport.AgentSessionID = a.Session.Value
 				s.Phase = "session_bound"
 			}

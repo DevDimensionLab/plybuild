@@ -588,6 +588,11 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	if err != nil {
 		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, err
 	}
+	effective, err := effectiveTaskParent(registry, *task, tr.ID)
+	if err != nil {
+		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, err
+	}
+	task = &effective
 	ctx := integrationContext{Task: *task, Epic: *epic, Parent: *parent, Result: *tr, QA: *qa, Repo: repo}
 	if err := revalidateIntegrationEvidence(d, *tr, *qa); err != nil {
 		return WorkspaceTaskIntegrationPlan{}, "", ctx, err
@@ -1294,8 +1299,40 @@ func checkPersistedDeliveryIntegration(d Dependencies, root string, projects Pro
 		return TaskIntegrationResult{}, true, err
 	}
 	ctx.ParentObserved = true
+	historical := false
 	if result != nil && result.RecoveryStatus == "complete" {
-		for _, observed := range []IntegrationWorktreeObservation{ctx.Source, ctx.ParentObservation} {
+		observations := []IntegrationWorktreeObservation{ctx.Source, ctx.ParentObservation}
+		if registry.FormatVersion == ParallelRegistryFormat && ctx.ParentObservation.OID != input.ExpectedResultOID && input.DeliveryOwner != nil {
+			// A later member may have advanced the parent after this exact
+			// return's integration, named closure and base publication. Those
+			// three native facts prove historical completion, never new authority.
+			p := findPreparation(registry, input.DeliveryOwner.PreparationID)
+			closed, based := false, false
+			if p != nil && p.Plan.TaskID == input.TaskID && p.Plan.AdmissionMode == AdmissionParallel {
+				for _, ev := range registry.TaskQueueEvents {
+					if ev.QueueID == p.Plan.QueueID && ev.Kind == "advance" && ev.Request["preparation_id"] == p.ID {
+						closed = true
+					}
+				}
+				for _, base := range epicBases(registry, ctx.Epic, ctx.Parent) {
+					if base.OID == input.ExpectedResultOID && base.Tree == ctx.Result.ResultTree {
+						based = true
+					}
+				}
+			}
+			latest := currentEpicBase(registry, ctx.Epic, ctx.Parent)
+			if closed && based && latest.OID == ctx.ParentObservation.OID && latest.Tree == ctx.ParentObservation.Tree && ctx.ParentObservation.Clean && ctx.ParentObservation.Symbolic && len(ctx.ParentObservation.InProgress) == 0 && ctx.ParentObservation.GitCommonDir == authority.Plan.Repository.GitCommonDir {
+				ancestor, e := d.IntegrationGit.CheckAncestor(ctx.Repo, input.ExpectedResultOID, latest.OID)
+				if e != nil {
+					return TaskIntegrationResult{}, true, e
+				}
+				if ancestor {
+					historical = true
+					observations = observations[:1]
+				}
+			}
+		}
+		for _, observed := range observations {
 			if observed.OID != input.ExpectedResultOID || observed.Tree != ctx.Result.ResultTree || observed.GitCommonDir != authority.Plan.Repository.GitCommonDir || !observed.Clean || !observed.Symbolic || len(observed.InProgress) != 0 {
 				return TaskIntegrationResult{}, true, workError(ErrorTaskIntegrationConflict, "completed delivery return has subsequent source or parent drift", nil)
 			}
@@ -1303,7 +1340,12 @@ func checkPersistedDeliveryIntegration(d Dependencies, root string, projects Pro
 	}
 	ctx.TaskSpecRelevance = taskResultSpecRelevance(d, root, projects, registry, ctx.Task, ctx.Result.ID)
 	ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, result)
-	return TaskIntegrationResult{Readback: newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, result)}, true, nil
+	out := newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, result)
+	out.HistoricalCompletion = historical
+	if historical {
+		out.Value = append(out.Value, canonicaljson.Member{Name: "historical_completion", Value: true})
+	}
+	return TaskIntegrationResult{Readback: out}, true, nil
 }
 func findIntentForAuthority(r WorkItemRegistry, id IntegrationAuthorityID) *IntegrationIntent {
 	for i := range r.IntegrationIntents {
@@ -1389,6 +1431,11 @@ func contextFromPlan(r WorkItemRegistry, p WorkspaceTaskIntegrationPlan) (integr
 	if parent == nil {
 		return integrationContext{}, workError(ErrorTaskIntegrationConflict, "durable plan parent binding is missing", nil)
 	}
+	effective, err := effectiveTaskParent(r, *task, tr.ID)
+	if err != nil {
+		return integrationContext{}, err
+	}
+	task = &effective
 	return integrationContext{Task: *task, Epic: *epic, Parent: *parent, Result: *tr, QA: *qa, Repo: RepoRecord{ID: p.Repository.RepoID, Locator: p.Repository.RegisteredLocator, GitCommonDir: p.Repository.GitCommonDir}, Repository: IntegrationRepositoryObservation{GitVersion: p.Repository.GitVersion, ObjectFormat: p.Repository.ObjectFormat, RefFormat: p.Repository.RefFormat, Shallow: p.Repository.Shallow, PartialClone: p.Repository.PartialClone, SparseCheckout: p.Repository.SparseCheckout, Inventory: p.ObservedInventory}, Source: worktreeFromPlan(p.ObservedSource), ParentObservation: worktreeFromPlan(p.ObservedParent), Reflog: p.ObservedReflog}, nil
 }
 func worktreeFromPlan(p PlanWorktreeObservation) IntegrationWorktreeObservation {

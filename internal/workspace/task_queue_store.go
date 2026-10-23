@@ -119,13 +119,14 @@ func sortQueueRegistry(r *WorkItemRegistry) {
 
 type queueFold struct {
 	Revision int
+	Active   []string
 	Pending  []TaskGoalQueueEntry
 	Current  *string
 	Terminal map[string]string
 }
 
 func emptyQueueFold() queueFold {
-	return queueFold{Pending: []TaskGoalQueueEntry{}, Terminal: map[string]string{}}
+	return queueFold{Active: []string{}, Pending: []TaskGoalQueueEntry{}, Terminal: map[string]string{}}
 }
 func applyQueueEvent(q *queueFold, e TaskQueueEvent) {
 	m := contentFields(queueRequestValue(e.Request))
@@ -134,12 +135,19 @@ func applyQueueEvent(q *queueFold, e TaskQueueEvent) {
 	case "set":
 		d := decodeQueueDraft(queueRequestValue(e.Request))
 		q.Pending = d.Entries
-	case "reserve":
+	case "reserve", "reserve_parallel":
 		id := contentString(m, "preparation_id")
-		q.Current = &id
+		q.Active = append(q.Active, id)
+		q.projectCurrent()
 	case "advance", "release":
 		id := contentString(m, "preparation_id")
-		q.Current = nil
+		for i, member := range q.Active {
+			if member == id {
+				q.Active = append(q.Active[:i], q.Active[i+1:]...)
+				break
+			}
+		}
+		q.projectCurrent()
 		q.Terminal[id] = map[string]string{"advance": "advanced", "release": "released"}[e.Kind]
 	}
 }
@@ -148,8 +156,8 @@ func foldQueue(r WorkItemRegistry, id string) queueFold {
 	for _, e := range r.TaskQueueEvents {
 		if e.QueueID == id {
 			applyQueueEvent(&q, e)
-			if e.Kind == "reserve" {
-				p := findPreparation(r, *q.Current)
+			if e.Kind == "reserve" || e.Kind == "reserve_parallel" {
+				p := findPreparation(r, contentString(contentFields(queueRequestValue(e.Request)), "preparation_id"))
 				if p != nil {
 					pending := []TaskGoalQueueEntry{}
 					for _, v := range q.Pending {
@@ -189,7 +197,10 @@ func preparationDisposition(r WorkItemRegistry, id string) string {
 	if v := q.Terminal[id]; v != "" {
 		return v
 	}
-	if q.Current != nil && *q.Current == id {
+	if q.contains(id) {
+		if p.Plan.SchemaVersion == 2 {
+			return "active"
+		}
 		return "current"
 	}
 	return "unknown"
@@ -263,7 +274,22 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 		if e := validateQueuePlanEnvelope(r, p.Workspace, p.Target, p.RegistryFormatVersion, p.RegistryUpgrade); e != nil {
 			return e
 		}
-		if p.Kind != "WorkspaceEpicBaseUpdatePlan@1" || p.SchemaVersion != 1 || p.ExpectedRevision < 1 || p.ExpectedRevision >= 2147483647 || !validOIDText(p.NextOID) || !validOIDText(p.NextTree) || p.NextOID == p.PreviousOID || p.AffectedSelections == nil || p.UnresolvedOperations == nil || len(p.UnresolvedOperations) != 0 || !p.ObservedParent.Clean || p.ObservedParent.OID != p.NextOID || p.ObservedParent.Tree != p.NextTree {
+		versionOK := p.Kind == "WorkspaceEpicBaseUpdatePlan@1" && p.SchemaVersion == 1 && p.ActivePreparationIDs == nil
+		if p.SchemaVersion == 2 {
+			versionOK = r.FormatVersion == ParallelRegistryFormat && p.RegistryFormatVersion == ParallelRegistryFormat && p.Kind == "WorkspaceEpicBaseUpdatePlan@2" && p.CurrentPreparationID == nil && p.ActivePreparationIDs != nil && *p.ActivePreparationIDs != nil
+			if versionOK {
+				previous := ""
+				for _, id := range *p.ActivePreparationIDs {
+					prep := findPreparation(r, id)
+					if id <= previous || prep == nil || prep.Plan.Target != p.Target {
+						versionOK = false
+						break
+					}
+					previous = id
+				}
+			}
+		}
+		if !versionOK || p.ExpectedRevision < 1 || p.ExpectedRevision >= 2147483647 || !validOIDText(p.NextOID) || !validOIDText(p.NextTree) || p.NextOID == p.PreviousOID || p.AffectedSelections == nil || p.UnresolvedOperations == nil || len(p.UnresolvedOperations) != 0 || !p.ObservedParent.Clean || p.ObservedParent.OID != p.NextOID || p.ObservedParent.Tree != p.NextTree {
 			return fmt.Errorf("invalid base update plan")
 		}
 		if err := validateQueuePlanObservation(p.ObservedParent, p.Target, p.NextOID, p.NextTree); err != nil {
@@ -384,7 +410,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 		if t == nil || t.ProjectID != p.Target.ProjectID || t.RepoID != p.Target.RepoID || t.ParentEpicID != p.Target.EpicID {
 			return fmt.Errorf("foreign preparation Task")
 		}
-		if p.Kind != "WorkspaceTaskPreparePlan@1" || p.SchemaVersion != 1 || p.QueueID != queueID(p.Workspace.Root, p.Target) || p.QueueRevision < 0 || p.QueueRevision >= 2147483647 || p.RequiredInputs == nil || !validShortBranchText(p.Branch) || !validStoredPath(p.WorktreePath) || !historicalEpicBaseMatches(r, p.Target.EpicID, p.Target.RepoID, p.Target.ParentWorktreeID, p.Target.ParentRef, p.ParentOID, p.ParentTree) {
+		if !validPreparationAdmission(p, r.FormatVersion) || p.QueueID != queueID(p.Workspace.Root, p.Target) || p.QueueRevision < 0 || p.QueueRevision >= 2147483647 || p.RequiredInputs == nil || !validShortBranchText(p.Branch) || !validStoredPath(p.WorktreePath) || !historicalEpicBaseMatches(r, p.Target.EpicID, p.Target.RepoID, p.Target.ParentWorktreeID, p.Target.ParentRef, p.ParentOID, p.ParentTree) {
 			return fmt.Errorf("invalid prepare plan")
 		}
 		if err := validateQueuePlanObservation(p.ObservedParent, p.Target, p.ParentOID, p.ParentTree); err != nil {
@@ -469,8 +495,10 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 				if err := validateRegisteredGoalRef(r, t.ID, entry.Goal); err != nil {
 					return err
 				}
-				if q.Current != nil && findPreparation(r, *q.Current).Plan.TaskID == t.ID {
-					return fmt.Errorf("set includes current Task")
+				for _, id := range q.Active {
+					if findPreparation(r, id).Plan.TaskID == t.ID {
+						return fmt.Errorf("set includes active Task")
+					}
 				}
 				for id := range q.Terminal {
 					if findPreparation(r, id).Plan.TaskID == t.ID {
@@ -478,13 +506,16 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 					}
 				}
 			}
-		case "reserve":
+		case "reserve", "reserve_parallel":
+			if e.Kind == "reserve_parallel" && r.FormatVersion != ParallelRegistryFormat {
+				return fmt.Errorf("parallel reservation requires format 8")
+			}
 			if err := queueCloseRule(false)(v); err != nil {
 				return err
 			}
 			id := contentString(m, "preparation_id")
 			p := findPreparation(r, id)
-			if p == nil || reserved[id] || q.Current != nil || p.Plan.QueueID != e.QueueID || p.Plan.QueueRevision != q.Revision {
+			if p == nil || reserved[id] || !admissionAllowed(r, q, p.Plan.AdmissionMode) || (e.Kind == "reserve_parallel") != (p.Plan.AdmissionMode == AdmissionParallel) || p.Plan.QueueID != e.QueueID || p.Plan.QueueRevision != q.Revision {
 				return fmt.Errorf("invalid reservation")
 			}
 			found := false
@@ -510,7 +541,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 				return err
 			}
 			id := contentString(m, "preparation_id")
-			if q.Current == nil || *q.Current != id {
+			if !q.contains(id) {
 				return fmt.Errorf("closing a noncurrent reservation")
 			}
 			if (e.Kind == "advance" || contentString(m, "source_state") == queueSourceRemoved) && findPreparation(r, id).Outcome == nil {
@@ -532,6 +563,9 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 
 // Registry publication enforces append-only history, independently of public commands.
 func validateQueueTransition(old, next WorkItemRegistry) error {
+	if err := validateSourceReconciliationTransition(old, next); err != nil {
+		return err
+	}
 	if old.FormatVersion < 4 {
 		return nil
 	}

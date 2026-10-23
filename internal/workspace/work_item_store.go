@@ -89,6 +89,46 @@ type workItemRegistryV3Wire struct {
 }
 
 func (registry WorkItemRegistry) MarshalYAML() (any, error) {
+	if registry.FormatVersion == ParallelRegistryFormat {
+		if registry.ParallelBoundary == nil {
+			return nil, fmt.Errorf("missing parallel boundary")
+		}
+		predecessor := registry
+		predecessor.FormatVersion = registry.ParallelBoundary.FromVersion
+		value, err := predecessor.MarshalYAML()
+		if err != nil {
+			return nil, err
+		}
+		raw, err := yaml.Marshal(value)
+		if err != nil {
+			return nil, err
+		}
+		var document yaml.Node
+		if err = yaml.Unmarshal(raw, &document); err != nil {
+			return nil, err
+		}
+		fields := document.Content[0]
+		fields.Content[1].Value = "8"
+		for _, field := range []struct {
+			name  string
+			value any
+		}{{"parallel_boundary", registry.ParallelBoundary}, {"source_reconciliations", registry.SourceReconciliations}} {
+			var value yaml.Node
+			if err = value.Encode(field.value); err != nil {
+				return nil, err
+			}
+			fields.Content = append(fields.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: field.name}, &value)
+		}
+		if registry.ParallelActivation != nil {
+			var value yaml.Node
+			if err = value.Encode(registry.ParallelActivation); err != nil {
+				return nil, err
+			}
+			fields.Content = append(fields.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "parallel_activation"}, &value)
+		}
+		return fields, nil
+	}
+
 	if registry.FormatVersion == 7 {
 		return struct {
 			Content              workItemRegistryV4Wire  `yaml:",inline"`
@@ -455,6 +495,7 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	}
 	registry.RawSHA256 = digestTaskBytes(contents)
 	registry.upgradePermit = nil
+	registry.parallelPermit = nil
 	session.confirm(registry, publishedInfo)
 	return nil
 }
@@ -571,14 +612,38 @@ func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
 			}
 		}
 	}
-	if version >= 5 {
+	capabilities := version
+	if version == ParallelRegistryFormat {
+		for i := 0; i < len(root.Content); i += 2 {
+			if root.Content[i].Value == "parallel_boundary" {
+				var boundary RegistryFormatBoundary
+				if err := root.Content[i+1].Decode(&boundary); err != nil {
+					return err
+				}
+				capabilities = boundary.FromVersion
+			}
+		}
+		if capabilities < 4 || capabilities > 7 {
+			return fmt.Errorf("invalid parallel predecessor")
+		}
+
+	}
+	if capabilities >= 5 {
 		fields = append(fields, yamlShapeField{name: "format_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
 	}
-	if version >= 6 {
+	if capabilities >= 6 {
 		fields = append(fields, yamlShapeField{name: "epic_create_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})}, yamlShapeField{name: "epic_create_operations", typeOf: reflect.TypeOf([]EpicCreateOperation{})})
 	}
-	if version >= 7 {
+	if capabilities >= 7 {
 		fields = append(fields, yamlShapeField{name: "adoption_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
+	}
+	if version == ParallelRegistryFormat {
+		fields = append(fields, yamlShapeField{name: "parallel_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})}, yamlShapeField{name: "source_reconciliations", typeOf: reflect.TypeOf([]TaskSourceReconciliation{})})
+		for i := 0; i < len(root.Content); i += 2 {
+			if root.Content[i].Value == "parallel_activation" {
+				fields = append(fields, yamlShapeField{name: "parallel_activation", typeOf: reflect.TypeOf(ParallelActivationPlan{})})
+			}
+		}
 	}
 	return validateYAMLMappingShape(root, fields, "work-item registry")
 }
@@ -598,6 +663,17 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 		return validateQueueYAMLMap(node)
 	case reflect.Struct:
 		fields := yamlStructShapeFields(expected)
+		if expected == reflect.TypeOf(WorkspaceEpicBaseUpdatePlan{}) {
+			present := false
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				if node.Content[i].Value == "active_preparation_ids" {
+					present = true
+				}
+			}
+			if !present {
+				fields = fields[:len(fields)-1]
+			}
+		}
 		if expected == reflect.TypeOf(WorktreeOperationRecord{}) || expected == reflect.TypeOf(WorkspaceTaskPreparePlan{}) || expected == reflect.TypeOf(TaskGoalExecutePreview{}) {
 			present := map[string]bool{}
 			for i := 0; i+1 < len(node.Content); i += 2 {
@@ -605,12 +681,29 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 			}
 			filtered := []yamlShapeField{}
 			for _, f := range fields {
-				optional := f.name == "adoption_observations" || f.name == "execution" || f.name == "adoption" || f.name == "release" || f.name == "source_mode" || f.name == "adoption_id" || f.name == "start_oid" || f.name == "start_tree"
+				optional := f.name == "admission_mode" || f.name == "source_reconciliation" || f.name == "adoption_observations" || f.name == "execution" || f.name == "adoption" || f.name == "release" || f.name == "source_mode" || f.name == "adoption_id" || f.name == "start_oid" || f.name == "start_tree"
 				if !optional || present[f.name] {
 					filtered = append(filtered, f)
 				}
 			}
 			fields = filtered
+		}
+		if expected == reflect.TypeOf(TaskResultSpecBinding{}) {
+			present := false
+			for i := 0; i+1 < len(node.Content); i += 2 {
+				if node.Content[i].Value == "effective_basis" {
+					present = true
+				}
+			}
+			if !present {
+				filtered := []yamlShapeField{}
+				for _, f := range fields {
+					if f.name != "effective_basis" {
+						filtered = append(filtered, f)
+					}
+				}
+				fields = filtered
+			}
 		}
 		if expected == reflect.TypeOf(TaskExecutorAssignment{}) {
 			present := false
@@ -754,6 +847,9 @@ var operationIDPattern = regexp.MustCompile(`^wop_[0-9a-f]{32}$`)
 var digestPattern = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
 func validateWorkItemRegistry(registry WorkItemRegistry) error {
+	if err := validateSourceReconciliations(registry); err != nil {
+		return err
+	}
 	if err := validateEpicCreates(registry); err != nil {
 		return err
 	}
@@ -1211,6 +1307,11 @@ func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry Work
 	if task == nil || task.Worktree == nil {
 		return errors.New("integration plan Task binding is missing")
 	}
+	effective, err := effectiveTaskParent(registry, *task, result.ID)
+	if err != nil {
+		return err
+	}
+	task = &effective
 	epic, _ := findEpic(registry, task.ParentEpicID)
 	if epic == nil {
 		return errors.New("integration plan Epic binding is missing")

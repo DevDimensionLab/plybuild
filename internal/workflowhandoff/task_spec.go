@@ -19,13 +19,13 @@ func taskSpecBasis(value canonicaljson.Object) (*workspace.TaskSpecBasis, error)
 		}
 		return nil, nil
 	}
-	if (taskSpecVersion(value) != 2 && taskSpecVersion(value) != 3) || !found {
+	if (taskSpecVersion(value) != 2 && !deliveryHandoff(value)) || !found {
 		return nil, fmt.Errorf("version 2 or 3 requires explicit task_spec_binding")
 	}
 	return workspace.ValidateTaskSpecBasisValue(v)
 }
 func taskSpecLegacyProjection(value canonicaljson.Object) canonicaljson.Object {
-	return replaceObjectMember(removeObjectMember(removeObjectMember(removeObjectMember(value, "report_startup_protocol"), "task_spec_binding"), "delivery_binding"), "schema_version", int64(1))
+	return replaceObjectMember(removeObjectMember(removeObjectMember(removeObjectMember(removeObjectMember(removeObjectMember(value, "effective_basis"), "parallel_binding"), "report_startup_protocol"), "task_spec_binding"), "delivery_binding"), "schema_version", int64(1))
 }
 func decodeHandoffDraft(input []byte) (handoffDraft, error) {
 	v, e := canonicaljson.DecodeStrict(input)
@@ -53,7 +53,7 @@ func decodeHandoffDraft(input []byte) (handoffDraft, error) {
 	if e != nil {
 		return handoffDraft{}, e
 	}
-	d, e := decodeHandoffDraftWithBudget(legacy, taskSpecVersion(o) == 3)
+	d, e := decodeHandoffDraftWithBudget(legacy, deliveryHandoff(o))
 	if e != nil {
 		return d, e
 	}
@@ -81,7 +81,7 @@ func validateStoredHandoff(o canonicaljson.Object) error {
 	if e := validateDeliveryBinding(o); e != nil {
 		return e
 	}
-	if err := validateStoredHandoffWithBudget(taskSpecLegacyProjection(o), taskSpecVersion(o) == 3); err != nil {
+	if err := validateStoredHandoffWithBudget(taskSpecLegacyProjection(o), deliveryHandoff(o)); err != nil {
 		return err
 	}
 	a, err := deliveryAgreement(o)
@@ -420,7 +420,7 @@ func historicalHandoffTaskSpec(d Dependencies, snapshot Snapshot) (*workspace.Ta
 	if e = validateTaskSpecInputs(snapshot.Handoff.Value, eval.RequiredInputs, eval.Spec); e != nil {
 		return b, &eval, e
 	}
-	if taskSpecVersion(snapshot.Handoff.Value) == 3 {
+	if deliveryHandoff(snapshot.Handoff.Value) {
 		amendment, err := deliveryAcceptanceAmendment(snapshot.Handoff.Value)
 		if err != nil {
 			return b, &eval, err

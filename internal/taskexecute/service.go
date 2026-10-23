@@ -17,6 +17,7 @@ import (
 )
 
 type Input struct {
+	Parallel            bool
 	ExpectedGoal        *workspace.TaskGoalRef
 	ExpectedTaskID      workspace.TaskID
 	Target              workspace.QueueTargetInput
@@ -102,10 +103,13 @@ func boundFile(path string) (*taskrun.FileBinding, error) {
 // creation and reuses an existing request before selecting or starting again.
 func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	out := Result{Kind: "ply.workflow.execute", SchemaVersion: 1, State: "unknown"}
+	if input.Parallel && (input.Next || input.SpecID == "" || input.Restart || input.Worker != nil || input.ControlContract != nil) {
+		return out, workspace.WorkInvalidArguments("--parallel requires an explicit named interactive Goal without restart or worker control")
+	}
 	if input.Restart && (input.SpecID == "" || input.Next) {
 		return out, workspace.WorkInvalidArguments("--restart requires an explicit --spec and cannot select --next")
 	}
-	goalInput := workspace.TaskGoalExecuteInput{Target: input.Target, Next: input.Next, SpecID: input.SpecID}
+	goalInput := workspace.TaskGoalExecuteInput{Parallel: input.Parallel, Target: input.Target, Next: input.Next, SpecID: input.SpecID}
 	input.Runtime.Headless = input.Worker != nil
 	if input.ControlContract != nil {
 		if input.Worker == nil {
@@ -395,7 +399,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		HumanAuthority:  taskrun.HumanAuthority{ActorClaim: intent.Human.ActorClaim, StartSurface: startSurface, Authorized: true},
 		HerdrExecutable: r.Herdr, HerdrWorkspaceID: r.HerdrWorkspace, TabLabel: workerTabLabel(input.Worker, plan.Goal.Title),
 		ClaudeProjectTrust:   intent.ClaudeProjectTrust,
-		Delivery:             taskrun.DeliveryContract{StartupProtocol: startupProtocol, OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
+		Delivery:             taskrun.DeliveryContract{AdmissionMode: plan.AdmissionMode, SourceReconciliation: plan.SourceReconciliation, StartupProtocol: startupProtocol, OwnerClaim: ownerClaim, Goal: goal, AcceptancePath: plan.AcceptancePath, AllowSubagents: input.Worker == nil, AllowLocalInstall: localInstall, LocalIntegration: boundary, NotificationContext: intent.Notification, ReasoningEffort: r.ReasoningEffort, Agreement: prepared.Delivery},
 		Worker:               input.Worker,
 		ControlContract:      intent.ControlContract,
 		GoalStartEnvironment: input.boundEnvironment,

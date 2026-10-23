@@ -54,6 +54,10 @@ func (reader *workspaceTaskEvidenceReader) ReadTaskEvidence(request workspace.Ta
 	result.AcceptedStartOutcome = snapshot.Start.Outcome
 	basis, eval, specErr := historicalHandoffTaskSpec(reader.dependencies, snapshot)
 	result.TaskSpecBasis = basis
+	result.EffectiveBasis, err = parallelEffectiveBasis(snapshot.Handoff.Value)
+	if err != nil {
+		return result, err
+	}
 	result.TaskSpecValid = specErr == nil
 	if specErr != nil {
 		result.TaskSpecValid = false

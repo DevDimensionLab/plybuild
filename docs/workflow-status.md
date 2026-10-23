@@ -1,5 +1,10 @@
 # Workspace workflow status
 
+For an explicitly activated concurrent Epic, select `--schema-version 2` to
+show every active preparation. Schema 1 refuses multiple active members. See
+[concurrent native Tasks](parallel-epic/implementation.md) and the
+[version-2 contract](../schemas/read-contract/workflow-status-v2.schema.json).
+
 `ply workflow status` shows registered work across all projects and Epics in the
 discovered Ply workspace, with an explicit next actor and evidence sources. Run
 it from any directory inside the workspace; an Epic worktree is not required.

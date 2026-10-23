@@ -141,33 +141,37 @@ type WorktreeOperationRecord struct {
 }
 
 type WorkItemRegistry struct {
-	AdoptionBoundary        *RegistryFormatBoundary   `yaml:"adoption_boundary,omitempty" json:"adoption_boundary,omitempty"`
-	EpicCreateOperations    []EpicCreateOperation     `yaml:"epic_create_operations"`
-	EpicCreateBoundary      *RegistryFormatBoundary   `yaml:"epic_create_boundary,omitempty"`
-	FormatVersion           int                       `yaml:"format_version"`
-	Epics                   []EpicRecord              `yaml:"epics"`
-	Tasks                   []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
-	TaskResults             []TaskResultRecord        `yaml:"task_results,omitempty"`
-	HumanQARecords          []TaskHumanQARecord       `yaml:"human_qa_records,omitempty"`
-	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities,omitempty"`
-	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents,omitempty"`
-	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts,omitempty"`
-	IntegrationResults      []IntegrationResult       `yaml:"integration_results,omitempty"`
-	TaskSpecPolicies        []TaskSpecPolicy          `yaml:"task_spec_policies"`
-	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
-	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
-	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
-	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
-	TaskResultSpecBindings  []TaskResultSpecBinding   `yaml:"task_result_spec_bindings"`
-	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
-	EpicBaseVersions        []EpicBaseVersion         `yaml:"epic_base_versions"`
-	EpicBaseUpdates         []EpicBaseUpdate          `yaml:"epic_base_updates"`
-	TaskQueueEvents         []TaskQueueEvent          `yaml:"task_queue_events"`
-	TaskPreparations        []TaskPreparation         `yaml:"task_preparations"`
-	FormatBoundary          *RegistryFormatBoundary   `yaml:"format_boundary,omitempty"`
-	RawSHA256               string                    `yaml:"-"`
-	upgradePermit           *registryUpgradePermit    `yaml:"-"`
+	ParallelActivation      *ParallelActivationPlan    `yaml:"parallel_activation,omitempty" json:"parallel_activation,omitempty"`
+	parallelPermit          *parallelActivationPermit  `yaml:"-"`
+	ParallelBoundary        *RegistryFormatBoundary    `yaml:"parallel_boundary,omitempty" json:"parallel_boundary,omitempty"`
+	SourceReconciliations   []TaskSourceReconciliation `yaml:"source_reconciliations,omitempty" json:"source_reconciliations,omitempty"`
+	AdoptionBoundary        *RegistryFormatBoundary    `yaml:"adoption_boundary,omitempty" json:"adoption_boundary,omitempty"`
+	EpicCreateOperations    []EpicCreateOperation      `yaml:"epic_create_operations"`
+	EpicCreateBoundary      *RegistryFormatBoundary    `yaml:"epic_create_boundary,omitempty"`
+	FormatVersion           int                        `yaml:"format_version"`
+	Epics                   []EpicRecord               `yaml:"epics"`
+	Tasks                   []TaskRecord               `yaml:"tasks"`
+	WorktreeOperations      []WorktreeOperationRecord  `yaml:"worktree_operations"`
+	TaskResults             []TaskResultRecord         `yaml:"task_results,omitempty"`
+	HumanQARecords          []TaskHumanQARecord        `yaml:"human_qa_records,omitempty"`
+	IntegrationAuthorities  []IntegrationAuthority     `yaml:"integration_authorities,omitempty"`
+	IntegrationIntents      []IntegrationIntent        `yaml:"integration_intents,omitempty"`
+	IntegrationAttempts     []IntegrationAttempt       `yaml:"integration_attempts,omitempty"`
+	IntegrationResults      []IntegrationResult        `yaml:"integration_results,omitempty"`
+	TaskSpecPolicies        []TaskSpecPolicy           `yaml:"task_spec_policies"`
+	TaskProblemRevisions    []TaskProblemReference     `yaml:"task_problem_revisions"`
+	TaskSpecRevisions       []TaskSpecReference        `yaml:"task_spec_revisions"`
+	TaskSpecAssessments     []TaskAssessmentReference  `yaml:"task_spec_assessments"`
+	TaskSolutionSelections  []TaskSelectionReference   `yaml:"task_solution_selections"`
+	TaskResultSpecBindings  []TaskResultSpecBinding    `yaml:"task_result_spec_bindings"`
+	TaskContentPublications []TaskContentPublication   `yaml:"task_content_publications"`
+	EpicBaseVersions        []EpicBaseVersion          `yaml:"epic_base_versions"`
+	EpicBaseUpdates         []EpicBaseUpdate           `yaml:"epic_base_updates"`
+	TaskQueueEvents         []TaskQueueEvent           `yaml:"task_queue_events"`
+	TaskPreparations        []TaskPreparation          `yaml:"task_preparations"`
+	FormatBoundary          *RegistryFormatBoundary    `yaml:"format_boundary,omitempty"`
+	RawSHA256               string                     `yaml:"-"`
+	upgradePermit           *registryUpgradePermit     `yaml:"-"`
 }
 
 type EpicAdoptInput struct {
@@ -1180,7 +1184,7 @@ func createTaskWorktreeLocked(dependencies Dependencies, root string, projects P
 	intentCreated := false
 	if prep := preparationForTask(registry, task.ID); prep != nil {
 		disposition := preparationDisposition(registry, prep.ID)
-		if disposition != "current" || prep.Outcome != nil {
+		if !preparationActive(disposition) || prep.Outcome != nil {
 			result.Task = *task
 			result.Epic = *epic
 			if operation != nil {

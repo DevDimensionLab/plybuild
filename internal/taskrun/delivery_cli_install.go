@@ -89,7 +89,7 @@ func qualifiedCLIInstallation(d Dependencies, root, id, destination, coordinator
 	if !found {
 		return out, nil, workflowError(4, "qualified result is absent from native registry")
 	}
-	qa, err := LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, c.TaskResult, a)
+	qa, err := LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, c.TaskResult, a, s.Request.SchemaVersion == 3)
 	if err != nil {
 		return out, nil, err
 	}
