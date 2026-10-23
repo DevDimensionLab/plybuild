@@ -30,6 +30,7 @@ assert version['dirty'] is False, version
 print('TB2546BF5 packaged candidate:', version)
 PY
 "$PLY_REGRESSION_GO" version -m "$PLY_CANDIDATE_BINARY"
+"$PLY_MR05_SCHEMA_PYTHON" -I -B test/read_contract_schema_test.py
 "$PLY_REGRESSION_GO" test ./cmd -run '^(TestRegistryFailureProducesExactlyOneJSONDiagnostic|TestMR05.*|TestSL01AnswerCLI.*|TestHI07.*)$' -count=1 -timeout=180s
 "$PLY_REGRESSION_GO" test ./internal/workspace -run '^TestRegistry(DiagnosticsUseDeclaredFormatAndValidation|RoundtripPreservesAutomaticAuthorizationAndHistory|FormatChangeRequiresNativePermit)$' -count=1 -timeout=180s
 "$PLY_REGRESSION_GO" test ./internal/taskexecute -run '^(TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault|TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry|TestBackupStartRejectsChangedRuntimeBeforeRunPublication|TestBackupStartPreRunReadbackShowsPreservedEffectiveProfile|TestExecuteRejectsChangedPreservedIntent|TestMR05ProjectionCandidateCLI)$' -count=1 -timeout=180s

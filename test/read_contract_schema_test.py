@@ -202,6 +202,27 @@ class ReadContractSchemas(unittest.TestCase):
             with self.subTest(count=count):
                 self.assertFalse(validator.is_valid(replace(example, ("project", "repo_count"), count)))
 
+    def test_catalog_backup_goal_effect_keeps_unknown_effects_invalid(self):
+        example = copy.deepcopy(self.valid_examples["ply-capabilities-v1.build-known.valid.json"])
+        example["workflow_extensions"] = [{
+            "id": "workflow.execute.backup-goal",
+            "command": ["workflow", "execute", "backup-goal"],
+            "mode": "retired_goal_registration",
+            "selectors": ["--task", "--spec", "--provider", "--apply", "--confirmation"],
+            "formats": ["text", "json"],
+            "filters": [],
+            "filter_policy": "none",
+            "result_schemas": [{"kind": "ply.workflow.backup-goal", "schema_version": 1}],
+            "effect": "preview_or_fresh_goal_registration",
+        }]
+        self.valid(example)
+        validator = self.validators[example["kind"]]
+        for effect in ("unrecognized_goal_authority", "", None, 1):
+            with self.subTest(effect=effect):
+                self.assertFalse(validator.is_valid(replace(example, ("workflow_extensions", 0, "effect"), effect)))
+        del example["workflow_extensions"][0]["effect"]
+        self.assertFalse(validator.is_valid(example))
+
     def test_catalog_preserves_modes_selectors_and_legacy_schema_marker(self):
         example = self.valid_examples["ply-capabilities-v1.build-known.valid.json"]
         validator = self.validators[example["kind"]]

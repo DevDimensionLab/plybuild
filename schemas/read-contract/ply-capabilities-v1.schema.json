@@ -591,6 +591,7 @@
             "approved_runtime_control",
             "explicit_goal_start",
             "explicit_workset_start",
+            "preview_or_fresh_goal_registration",
             "acceptance_policy_selection",
             "candidate_test_and_evidence",
             "authorized_local_integration",

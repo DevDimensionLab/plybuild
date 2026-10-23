@@ -55,6 +55,17 @@ It exited 1 with all four original failures. Raw evidence is
 
 ## Exact candidate acceptance
 
+Supplying the real candidate/Python exposed SL01's capabilities-schema failure
+in `acceptance-9892a1d.log`: the catalog's existing backup-goal effect,
+`preview_or_fresh_goal_registration`, was absent from the schema enum.
+`workflow execute backup-goal` help and `docs/task-writer-evidence.md`
+independently establish preview/fresh-registration semantics with no inherited
+acceptance or authority. The schema now recognizes that one existing effect.
+`red-schema-effect.log` preserves a failing schema regression before the fix;
+its positive fixture and negative unknown/missing/wrong-type effect cases keep
+the enum restrictive. No command effect, permission or locked answer/input
+bundle changed. SL01 still validates the actual full catalog against the schema.
+
 The versioned entrypoint is `test/coverage-regressions-acceptance.sh`; the native
 private `acceptance.sh` supplies these existing, validated inputs:
 
