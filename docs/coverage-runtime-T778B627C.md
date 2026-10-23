@@ -137,6 +137,22 @@ A's product fixes remain part of the input: exactly one registry error JSON
 without polluted stdout, plus the schema's existing backup-goal effect
 `preview_or_fresh_goal_registration`. See `coverage-regressions-TB2546BF5.md`.
 
+## Independent review correction
+
+Round 1 found that absent candidate GOEXPERIMENT metadata and empty/unset test
+cgo flags could bypass the initial mismatch comparison, even though unchanged
+endpoints later passed. `red-r001-f01-isolated.log` preserves nine reproduced
+mismatches before the fix. The correction compares both sides after normalizing
+missing/empty settings to their default representation. Go 1.26.7's
+`cmd/go/internal/load/pkg.go` stamps raw cgo environment values and omits empty
+GOEXPERIMENT; GOENV is off here, so absent/empty raw cgo inputs normalize to the
+same empty stamped value, rather than the synthesized `go env` compiler defaults.
+Architecture/experiment fields compare effective values even when metadata is
+absent. Eleven Python tests cover the added experiment mismatch, all four
+stamped cgo flags against both empty and unset inputs, and valid default/default
+and matching explicit flag cases. Fresh review and final exact-candidate
+qualification remain native evidence, with the runtime capability gap separate.
+
 ## Exact consumer command
 
 After B's native integration and root's handoff, run the following once from

@@ -39,7 +39,8 @@ else echo 'go version go1.26.7 darwin/arm64'; fi
                         PLY_CANDIDATE_TREE=self.tree, PLY_REGRESSION_GO=str(self.go),
                         PLY_MR05_SCHEMA_PYTHON=sys.executable, GOOS='darwin', GOARCH='arm64', CGO_ENABLED='1',
                         GOENV='off', GOWORK='off', GOFLAGS='-mod=readonly', GOPROXY='off', GOSUMDB='off', GOTOOLCHAIN='local')
-        for name in ('PLY_DELIVERY_TEST_BINARY', 'PLY_TASK_RUN_TEST_BINARY', 'PLY_SL01_SCHEMA_PYTHON'):
+        for name in ('PLY_DELIVERY_TEST_BINARY', 'PLY_TASK_RUN_TEST_BINARY', 'PLY_SL01_SCHEMA_PYTHON',
+                     'CGO_CFLAGS', 'CGO_CPPFLAGS', 'CGO_CXXFLAGS', 'CGO_LDFLAGS', 'GOEXPERIMENT'):
             self.env.pop(name, None)
 
     def git(self, *args):
@@ -145,6 +146,41 @@ else echo 'go version go1.26.7 darwin/arm64'; fi
         after = json.loads((Path(self.tmp.name) / 'after.json').read_text())
         self.assertFalse(after['endpoint_checks_passed'])
         self.assertIn('effective Go build context', ' '.join(after['gaps']))
+
+    def test_default_candidate_rejects_nondefault_effective_experiment(self):
+        self.env['GOEXPERIMENT'] = 'newinliner'
+        result = self.invoke('--output', str(self.out), success=False)
+        self.assertIn('GOEXPERIMENT', result.stderr)
+        self.assertFalse(self.out.exists())
+
+    def test_candidate_cgo_flags_reject_empty_and_unset_test_inputs(self):
+        original = self.go.read_text()
+        for key in ('CGO_CFLAGS', 'CGO_CPPFLAGS', 'CGO_CXXFLAGS', 'CGO_LDFLAGS'):
+            metadata = original.replace('CGO_ENABLED=1\\n', 'CGO_ENABLED=1\\n\\tbuild\\t' + key + '=-O1\\n')
+            self.assertNotEqual(metadata, original)
+            self.go.write_text(metadata)
+            for value in (None, ''):
+                with self.subTest(key=key, value=value):
+                    self.out.unlink(missing_ok=True)
+                    self.env.pop(key, None)
+                    if value is not None:
+                        self.env[key] = value
+                    result = self.invoke('--output', str(self.out), success=False)
+                    self.assertIn(key, result.stderr)
+                    self.assertFalse(self.out.exists())
+            self.env.pop(key, None)
+        self.go.write_text(original)
+
+    def test_default_cgo_inputs_and_matching_explicit_flags_remain_valid(self):
+        original = self.go.read_text()
+        for value in (None, '', '-O1'):
+            with self.subTest(value=value):
+                self.env.pop('CGO_CFLAGS', None)
+                if value is not None:
+                    self.env['CGO_CFLAGS'] = value
+                self.go.write_text(original.replace('CGO_ENABLED=1\\n', 'CGO_ENABLED=1\\n\\tbuild\\tCGO_CFLAGS=' + (value or '') + '\\n'))
+                self.begin()
+                self.out.unlink()
 
     def test_finish_success_is_only_endpoint_and_exit_evidence(self):
         self.begin()

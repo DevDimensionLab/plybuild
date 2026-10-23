@@ -113,7 +113,7 @@ def snapshot():
         if settings.get(key) != required(key):
             raise ValueError(f'candidate build setting {key} does not match explicit environment')
     for key in ('CGO_CFLAGS', 'CGO_CPPFLAGS', 'CGO_CXXFLAGS', 'CGO_LDFLAGS'):
-        if os.environ.get(key) and settings.get(key) != os.environ[key]:
+        if settings.get(key, '') != (os.environ.get(key) or ''):
             raise ValueError(f'candidate build setting {key} does not match environment')
     if settings.get('-tags', '') != (tags[0] if tags else ''):
         raise ValueError('candidate build tags do not match GOFLAGS tags')
@@ -122,8 +122,8 @@ def snapshot():
     if go['version'].split()[2] not in candidate['build_metadata'].splitlines()[0].split():
         raise ValueError('candidate Go toolchain version does not match test toolchain')
     for key in ('GOEXPERIMENT', 'GOARM64', 'GOAMD64', 'GOARM', 'GO386', 'GOMIPS', 'GOMIPS64', 'GOPPC64', 'GORISCV64', 'GOWASM'):
-        if key in settings and settings[key] != go['environment'].get(key, ''):
-            raise ValueError(f'candidate build setting {key} does not match effective Go context')
+        if settings.get(key, '') != go['environment'].get(key, ''):
+            raise ValueError(f'candidate build setting {key} does not match effective Go build context')
     try:
         schema = json.loads(run([python['path'], '-I', '-B', '-c', '''import hashlib, importlib.metadata, json, jsonschema, pathlib, sys
 version = importlib.metadata.version('jsonschema')
