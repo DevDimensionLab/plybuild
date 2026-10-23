@@ -274,7 +274,7 @@ attempt := classify(observation, deps.Now())
 
 - Only bounded exact 200/ok acknowledges transport; it never proves human reading or product approval.
 - Truncated/oversize or ambiguous dispatch remains unknown; unknown and acknowledged attempts cannot be retried.
-- Only recognized rejection or valid single Retry-After establishes a retryable result; retain explicit confirmation rules.
+- Recognized rejection, a valid single Retry-After, or preserved proven-before-dispatch non-delivery (not_sent) may permit retry only under the existing explicit confirmation and binding rules; unknown-dispatch delivery remains non-retryable.
 - No hidden HTTP redirect, proxy lookup or replay; preserve separate route/event/credential bindings and durable reservation order.
 
 These are responsibility refactors only. Broader retry eligibility, new terminal states, new authority, a new store/schema or different human-QA interpretation would require a separately selected product change.

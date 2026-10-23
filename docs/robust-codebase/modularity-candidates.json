@@ -460,7 +460,7 @@
       "invariants": [
         "Only bounded exact 200/ok acknowledges transport; it never proves human reading or product approval.",
         "Truncated/oversize or ambiguous dispatch remains unknown; unknown and acknowledged attempts cannot be retried.",
-        "Only recognized rejection or valid single Retry-After establishes a retryable result; retain explicit confirmation rules.",
+        "Recognized rejection, a valid single Retry-After, or preserved proven-before-dispatch non-delivery (not_sent) may permit retry only under the existing explicit confirmation and binding rules; unknown-dispatch delivery remains non-retryable.",
         "No hidden HTTP redirect, proxy lookup or replay; preserve separate route/event/credential bindings and durable reservation order."
       ],
       "regression": "At postHTTP/classify, use an injected RoundTripper for redirects, oversized/truncated body, timeout before versus after possible dispatch, and duplicate/invalid Retry-After. Keep owner-specific reservation/receipt-failure tests to prove shared classification does not create resend authority.",
