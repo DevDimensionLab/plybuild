@@ -263,7 +263,13 @@ func workflowDeliveryReport(d Dependencies, root, id, contextPath, file string, 
 		// An owner must be able to report unresolved runtime authority without
 		// first claiming that authority. Incomplete reports grant no Task effects.
 		if !incomplete {
-			if e := deliveryCallback(d, *s, contextPath, report.Phase == "working"); e != nil {
+			var callbackErr error
+			if report.Phase == "working" {
+				callbackErr = deliveryScopedCallback(d, *s, contextPath, "report")
+			} else {
+				callbackErr = deliveryCallback(d, *s, contextPath, false)
+			}
+			if e := callbackErr; e != nil {
 				return e
 			}
 		}
@@ -350,8 +356,13 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 	// committed verification reservation.
 	var allocated *workflowhandoff.AutomaticVerificationInstructions
 	e := workflowUpdate(d, root, id, func(current *workflowState) error {
-		if e := deliveryCallback(d, *current, contextPath, true); e != nil {
+		if e := deliveryScopedCallback(d, *current, contextPath, "verify"); e != nil {
 			return e
+		}
+		if deliveryObservedStop(*current) && len(binaryPaths) > 0 && binaryPaths[0] != "" {
+			if err := dispositionVerifierInput(*current, binaryPaths[0]); err != nil {
+				return err
+			}
 		}
 		if reuseAttempt != "" && (current.Result.Delivery.Attempt == nil || current.Result.Delivery.Attempt.ID != reuseAttempt || current.Result.Delivery.Attempt.Kind != "verification") {
 			return deliveryContinuityError("receipt_mismatch", "--reuse must name the latest verification attempt; inspect its exact receipt and use ordinary verify only when a new command execution is intended")
@@ -416,7 +427,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		if e != nil {
 			return e
 		}
-		if current.Request.SchemaVersion == 3 && reviewPath != "" {
+		if (current.Request.SchemaVersion == 3 || deliveryObservedStop(*current)) && reviewPath != "" {
 			return workflowError(4, "parallel qualification requires the sealed independent native review round; omit --review")
 		}
 		if reviewPath == "" {
@@ -541,7 +552,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 				if current.Result.Delivery.Attempt == nil || current.Result.Delivery.Attempt.ID != receipt.AttemptID || current.Result.Delivery.Attempt.InputSHA256 != s.Result.Delivery.Attempt.InputSHA256 {
 					return workflowError(4, "verification reservation changed before qualification")
 				}
-				if err = deliveryCallback(d, current, contextPath, true); err != nil {
+				if err = deliveryScopedCallback(d, current, contextPath, "verify"); err != nil {
 					return err
 				}
 				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{EffectiveBasis: receipt.EffectiveBasis, RequireIndependentReview: headlessRun(s.Request) || s.Request.SchemaVersion == 3, AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})

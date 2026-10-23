@@ -254,6 +254,9 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 		} else if r != nil {
 			return workflowError(4, "owner_retired: review the fresh Task copy's Run instead")
 		}
+		if e := deliveryDispositionAllows(d, s, "review"); e != nil {
+			return e
+		}
 		coordinatorPane, e := deliveryCallerPane(d, s, in.CoordinatorPane)
 		if e != nil {
 			return e
@@ -466,6 +469,9 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 			fmt.Fprintf(&b, "- Earlier round %d (%s, candidate %s): %s\n", e.Request.Round, e.Result.Decision, e.Request.CandidateOID, e.Return.Locator)
 		}
 	}
+	if _, bindings, _ := dispositionHistory(s); len(bindings) > 0 {
+		fmt.Fprintf(&b, "\nRetained scoped disposition: %s. All original stops and unknown runtime inputs, filesystem/pending writes, temp/socket and child/wait effects remain unknown. Owner/static assessments are judgments, not runtime absence evidence. Review only this candidate and declared independent effects.\n", bindings[len(bindings)-1].Locator)
+	}
 	b.WriteString("\nReview exactly this candidate against the Goal and Spec: the diff from the base, tests and actual evidence. " + deliveryReviewerTestMandate + "\n")
 	fmt.Fprintf(&b, "Keep the candidate exact while testing. This pane runs with GOFLAGS=%s: Go modules stay readonly, so never pass -mod=mod, run go mod tidy, go get or change global Go or provider configuration. After the tests, `git -C %s status --porcelain` must print nothing and `git -C %s rev-parse HEAD` must print %s. If not, Ply cannot confirm an exact-candidate pass from the current source: Never reset, clean or stash it; return blocked or changes_requested with the observed status and diff. Ply refuses passed while the Task worktree is dirty or at another HEAD.\n", deliveryReviewGoFlags(), ShellQuote(s.Observed.Target.WorktreeLocator), ShellQuote(s.Observed.Target.WorktreeLocator), r.CandidateOID)
 	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return.\n\n")
@@ -630,6 +636,9 @@ func WorkflowDeliveryReviewReturn(d Dependencies, root, id, contextPath, file st
 			return e
 		}
 		if result.Decision == "passed" {
+			if e := deliveryDispositionAllows(d, s, "review"); e != nil {
+				return e
+			}
 			// Ply confirms a pass only while the observed current source is
 			// this round's exact candidate; a dirty worktree or another HEAD
 			// cannot confirm it. Sealed returns stay as they are and a

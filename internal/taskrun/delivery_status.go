@@ -11,6 +11,7 @@ import (
 // DeliveryStatus is a read-only projection, never a receipt or an authority
 // input. Each outcome remains bound to its own candidate and evidence.
 type DeliveryStatus struct {
+	ScopedContinuation  *DeliveryDispositionStatus         `json:"scoped_continuation,omitempty"`
 	ResourceRetirement  *DeliveryResourceRetirementStatus  `json:"resource_retirement"`
 	Startup             *DeliveryStartupStatus             `json:"startup,omitempty"`
 	Source              DeliverySourceStatus               `json:"source"`
@@ -100,6 +101,11 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 	}
 	out := &DeliveryStatus{Source: DeliverySourceStatus{State: "unknown"}, FinalDelivery: DeliveryFinalStatus{State: "not_delivered"}, Reasons: []Reason{}}
 
+	var dispositionErr error
+	out.ScopedContinuation, dispositionErr = deliveryDispositionStatus(d, s)
+	if dispositionErr != nil {
+		out.Reasons = append(out.Reasons, Reason{"scoped_disposition_unknown", dispositionErr.Error()})
+	}
 	resource, resourceErr := deliveryResourceStatus(d, s)
 	out.ResourceRetirement = resource
 	if resourceErr != nil {

@@ -150,7 +150,7 @@ func WorkflowDeliveryIntegrate(d Dependencies, root, id, contextPath string) (Wo
 			return WorkflowRun{}, workflowError(4, "local integration requires a qualified candidate")
 		}
 		if initial.Result.Delivery.Phase != "completed" {
-			if e := deliveryCallback(d, initial, contextPath, true); e != nil {
+			if e := deliveryScopedCallback(d, initial, contextPath, "integrate"); e != nil {
 				return WorkflowRun{}, e
 			}
 		}

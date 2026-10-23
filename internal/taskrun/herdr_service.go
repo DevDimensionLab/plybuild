@@ -408,6 +408,9 @@ func workflowJSON(v any) string { b, _ := Canonical(v); return string(b) }
 // Bind dirty candidates by identity, HEAD, index/status and all tracked/untracked
 // file contents. Symlinks are recorded as links and never traversed.
 func workflowTarget(d Dependencies, s workflowState) (string, error) {
+	return workflowTargetFiles(d, s, false)
+}
+func workflowTargetFiles(d Dependencies, s workflowState, candidateOnly bool) (string, error) {
 	t := s.Observed.Target
 	observe := func() (any, error) {
 		return d.Workspace.IntegrationGit.ObserveIntegrationWorktree(t.WorktreeLocator, t.Ref)
@@ -416,7 +419,11 @@ func workflowTarget(d Dependencies, s workflowState) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	cmd := exec.Command("git", "--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-C", t.WorktreeLocator, "ls-files", "--cached", "--others", "-z")
+	argv := []string{"--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-C", t.WorktreeLocator, "ls-files", "--cached", "--others", "-z"}
+	if candidateOnly {
+		argv = append(argv, "--exclude-standard")
+	}
+	cmd := exec.Command("git", argv...)
 	b, e := cmd.Output()
 	if e != nil {
 		return "", e

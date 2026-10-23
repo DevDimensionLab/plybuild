@@ -18,6 +18,16 @@ func writeDeliveryStatus(out io.Writer, status *taskrun.DeliveryStatus) {
 			fmt.Fprintf(out, "Observed stop: %s\n", s.Stop.Locator)
 		}
 	}
+	if scope := status.ScopedContinuation; scope != nil {
+		fmt.Fprintf(out, "Scoped continuation: %s (original stops and unknown effects retained)\n", scope.Record.Locator)
+		for _, effect := range scope.RetainedEffects {
+			fmt.Fprintf(out, "Retained effect: %s — %s\n", effect.Stop.SHA256, effect.OriginalEffect)
+		}
+		for _, op := range scope.Operations {
+			fmt.Fprintf(out, "Scoped %s: %s — %s\n", op.Operation, op.State, op.Reason)
+		}
+		fmt.Fprintf(out, "Cleanup: %s\n", scope.Cleanup)
+	}
 	short := func(oid string) string {
 		if len(oid) > 12 {
 			return oid[:12]

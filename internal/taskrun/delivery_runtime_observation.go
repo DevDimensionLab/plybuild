@@ -60,7 +60,22 @@ func deliveryRuntimeObservationBinding(s workflowState, binding FileBinding, pol
 		return deliveryContinuityError("continuation_authority", "observed current session or effective policy differs from accepted authority; resolve the actual change with the original owner")
 	}
 	if policy {
-		if err = positiveDeliveryClaim(Acceptance{RuntimeClaim: c}, observation.DeliveryPermission, s.Request); err != nil {
+		claim := Acceptance{RuntimeClaim: c}
+		if mandateReceipt(s.Request) {
+			// This observation schema has no sandbox field. Validate against
+			// the preserved native receipt's unattested sandbox instead of
+			// inventing a new sandbox or permission assertion.
+			acceptedRaw, e := workflowBound(observation.Acceptance, 1<<20)
+			if e != nil {
+				return e
+			}
+			var accepted DeliveryAcceptance
+			if e = decode(acceptedRaw, 1<<20, &accepted); e != nil {
+				return e
+			}
+			claim.Sandbox = accepted.Sandbox
+		}
+		if err = positiveDeliveryClaim(claim, observation.DeliveryPermission, s.Request); err != nil {
 			return deliveryContinuityError("continuation_authority", "current owner cannot confirm unchanged runtime authority: "+err.Error())
 		}
 	}

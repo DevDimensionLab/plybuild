@@ -391,6 +391,14 @@ func deliveryProjectStop(s workflowState, o *WorkflowRun) {
 	if !deliveryObservedStop(s) {
 		return
 	}
+	if o.DeliveryStatus != nil && o.DeliveryStatus.ScopedContinuation != nil {
+		if o.DeliveryStatus.FinalDelivery.State == "delivered" {
+			o.NextAction = WorkflowAction{"coordinator", "Exact local delivery is observed. Retained unknown effects still block cleanup and writer transfer; retain source and original stop. Do not replay denied actions or probe processes."}
+		} else {
+			o.NextAction = WorkflowAction{"recipient", "Original stops and unknown effects remain active. Inspect delivery_status.scoped_continuation for each operation; candidate, separate review, verification and target gates still apply. No cleanup or writer transfer."}
+		}
+		return
+	}
 	projected := *o.Delivery
 	projected.Phase = "stopped"
 	o.Delivery = &projected

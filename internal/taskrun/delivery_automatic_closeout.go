@@ -121,6 +121,9 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 	if err != nil || !handled {
 		return out, handled, err
 	}
+	if deliveryObservedStop(s) {
+		return out, true, workflowError(5, "retained_effects_cleanup_pending: local integration and queue/base closure observed; original effects remain unknown. Retain source and owner; no writer transfer, cleanup or process probe is authorized by scoped disposition")
+	}
 	c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
 	authority, err := deliveryAuthorityState(d, s)
 	if err != nil {

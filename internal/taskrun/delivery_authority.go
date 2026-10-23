@@ -28,6 +28,9 @@ type DeliveryAuthority struct {
 // provider process, executable or conversation to still exist. The accepted
 // policy and exact frozen input bytes remain required.
 func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.DeliveryAuthorization, error) {
+	return deliveryAuthorityForOperation(d, s, "")
+}
+func deliveryAuthorityForOperation(d Dependencies, s workflowState, operation string) (*workspace.DeliveryAuthorization, error) {
 	if !deliveryRun(s.Request) || s.Request.Delivery.Agreement == nil || s.Result.Delivery == nil || s.Acceptance == nil || !deliveryStarted(s) {
 		return nil, workflowError(4, "delivery requires an explicit frozen agreement and actual accepted authority; historical runs cannot acquire new effects")
 	}
@@ -55,7 +58,12 @@ func deliveryAuthorityState(d Dependencies, s workflowState) (*workspace.Deliver
 		return nil, workflowError(4, "receipt mandate digest differs")
 	}
 	if deliveryObservedStop(s) {
-		return nil, workflowError(4, "active provider stop blocks delivery authority")
+		if operation != "verify" && operation != "integrate" {
+			return nil, workflowError(4, "active provider stop blocks delivery authority outside its scoped native operation")
+		}
+		if err := deliveryDispositionAllows(d, s, operation); err != nil {
+			return nil, err
+		}
 	}
 	if err = positiveDeliveryClaim(acceptance.Acceptance, acceptance.DeliveryPermission, s.Request); err != nil {
 		return nil, err
@@ -174,7 +182,11 @@ func deliveryEvidenceAuthorization(d Dependencies, request workspace.TaskHandoff
 	if err = validateAutomaticVerification(d, s, candidate); err != nil {
 		return nil, err
 	}
-	a, err := deliveryAuthorityState(d, s)
+	operation := "integrate"
+	if s.Result.Delivery.Phase == "verifying" {
+		operation = "verify"
+	}
+	a, err := deliveryAuthorityForOperation(d, s, operation)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +202,7 @@ func ValidateDeliveryAuthority(d Dependencies, root, id string, result workspace
 	if err != nil {
 		return out, err
 	}
-	a, err := deliveryAuthorityState(d, s)
+	a, err := deliveryAuthorityForOperation(d, s, "integrate")
 	if err != nil {
 		return out, err
 	}

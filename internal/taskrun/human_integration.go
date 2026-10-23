@@ -237,6 +237,10 @@ func deliveryReleaseUpdate(d Dependencies, root, id string, fn func(*workflowSta
 		if e != nil {
 			return e
 		}
+		if deliveryObservedStop(s) {
+			return workflowError(4, "active provider stop blocks ownership release; scoped continuation grants no writer transfer")
+		}
+
 		if s.Result.Delivery == nil || len(s.Result.Delivery.Candidates) == 0 {
 			return workflowError(4, "ownership release requires an exact qualified delivery candidate")
 		}
