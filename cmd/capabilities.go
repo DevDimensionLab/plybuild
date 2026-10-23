@@ -96,6 +96,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("task.show", "progress", "WorkspaceTaskProgressReadback@1", []string{"--progress"}, []string{}, "none"),
 		operation("worktree.list", "default", "WorkspaceWorktreeListReadback@1", []string{}, []string{"project", "repo"}, "independent_and"),
 	}
+	extensions = append(extensions, capabilityOperation{ID: "workflow.agents", Command: []string{"workflow", "agents"}, Mode: "default", Selectors: []string{"--workspace"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"AgentWorkReadback@1", &one}}, Effect: "read"})
 	extensions = append(extensions, capabilityOperation{
 		ID: "workflow.status", Command: []string{"workflow", "status"}, Mode: "default",
 		Selectors: []string{"--all"}, Formats: []string{"text", "json"},
@@ -132,6 +133,29 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		{ID: "workflow.execute.acceptance", Command: []string{"workflow", "execute", "acceptance"}, Mode: "explicit_policy_selection", Selectors: []string{"--context", "--file"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "acceptance_policy_selection"},
 		{ID: "workflow.execute.verify", Command: []string{"workflow", "execute", "verify"}, Mode: "candidate_acceptance", Selectors: []string{"--context", "--review", "--candidate-binary", "--reuse"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}, {"PlyDeliveryVerification@2", &two}}, Effect: "candidate_test_and_evidence"},
 		{ID: "workflow.execute.integrate", Command: []string{"workflow", "execute", "integrate"}, Mode: "frozen_acceptance", Selectors: []string{"--context"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "authorized_local_integration"},
+	}
+	for _, verb := range []string{"register", "show", "list", "request", "dispatch", "recheck", "cancel", "retarget", "request-status"} {
+		effect := "followup_record"
+		kind := "AgentFollowup@1"
+		if verb == "list" || verb == "show" || verb == "request-status" {
+			effect = "read"
+		}
+		if verb == "list" {
+			kind = "AgentFollowupList@1"
+		}
+		if verb == "dispatch" {
+			effect = "fixed_status_prompt_best_effort"
+		}
+		selectors := []string{"--workspace"}
+		switch verb {
+		case "register", "request", "recheck", "cancel", "retarget":
+			selectors = append(selectors, "--file")
+		case "list":
+			selectors = append(selectors, "--due")
+		case "request-status":
+			selectors = append(selectors, "--request-id")
+		}
+		workflow = append(workflow, capabilityOperation{ID: "workflow.followup." + verb, Command: []string{"workflow", "followup", verb}, Mode: "status_only_v1", Selectors: selectors, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{kind, &one}}, Effect: effect})
 	}
 	answerVersion := taskrun.BoundAnswerSchemaVersion
 	for _, answer := range []struct {

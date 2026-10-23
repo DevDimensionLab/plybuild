@@ -1,0 +1,12 @@
+{
+  "request_id": "recheck-waiting",
+  "owner_ref": "owner-fixture",
+  "expected_revision": 5,
+  "generation": 1,
+  "target_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
+  "outcome": "waiting",
+  "next_check_at_utc": "2026-10-23T14:00:00Z",
+  "done": "Checked the review source",
+  "next": "Recheck when due",
+  "blocker": "Review return is pending"
+}

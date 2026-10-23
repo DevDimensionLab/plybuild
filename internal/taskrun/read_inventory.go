@@ -34,25 +34,28 @@ type InventoryReturn struct {
 }
 
 type InventoryRun struct {
-	RunID            string                         `json:"run_id"`
-	TaskID           *string                        `json:"task_id"`
-	Provider         *string                        `json:"provider"`
-	Transport        *string                        `json:"transport"`
-	LogicalSessionID *string                        `json:"logical_session_id"`
-	Herdr            *InventoryHerdr                `json:"herdr"`
-	State            string                         `json:"state"`
-	StateFreshness   string                         `json:"state_freshness"`
-	HistoricalState  *string                        `json:"historical_state"`
-	Unresolved       bool                           `json:"unresolved"`
-	StartedAtUTC     *string                        `json:"started_at_utc"`
-	LastSeenUTC      *string                        `json:"last_seen_utc"`
-	Return           *InventoryReturn               `json:"return"`
-	Freshness        string                         `json:"freshness"`
-	Sources          []FileBinding                  `json:"sources"`
-	Reasons          []Reason                       `json:"reasons"`
-	Delivery         *InventoryDelivery             `json:"delivery,omitempty"`
-	StartupRecovery  *InventoryStartupRecovery      `json:"startup_recovery,omitempty"`
-	Closeout         *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
+	// StatusFollowupVeto is an internal sourced veto; it creates no send authority.
+	StatusIdentityKnown bool                           `json:"-"`
+	StatusFollowupVeto  string                         `json:"-"`
+	RunID               string                         `json:"run_id"`
+	TaskID              *string                        `json:"task_id"`
+	Provider            *string                        `json:"provider"`
+	Transport           *string                        `json:"transport"`
+	LogicalSessionID    *string                        `json:"logical_session_id"`
+	Herdr               *InventoryHerdr                `json:"herdr"`
+	State               string                         `json:"state"`
+	StateFreshness      string                         `json:"state_freshness"`
+	HistoricalState     *string                        `json:"historical_state"`
+	Unresolved          bool                           `json:"unresolved"`
+	StartedAtUTC        *string                        `json:"started_at_utc"`
+	LastSeenUTC         *string                        `json:"last_seen_utc"`
+	Return              *InventoryReturn               `json:"return"`
+	Freshness           string                         `json:"freshness"`
+	Sources             []FileBinding                  `json:"sources"`
+	Reasons             []Reason                       `json:"reasons"`
+	Delivery            *InventoryDelivery             `json:"delivery,omitempty"`
+	StartupRecovery     *InventoryStartupRecovery      `json:"startup_recovery,omitempty"`
+	Closeout            *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
 }
 
 type Inventory struct {
@@ -442,6 +445,18 @@ func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
 			}
 		}
 	}
+	if row.StatusFollowupVeto == "" {
+		row.StatusFollowupVeto = "unknown"
+	}
+	if row.StatusFollowupVeto == "unknown" && row.Freshness == "fresh" && s.Result.Delivery != nil && row.Delivery != nil && row.Delivery.Freshness == "fresh" && s.Result.Delivery.Phase == "working" && s.Result.Delivery.ActiveStop == nil && s.ReportRetirement == nil {
+		row.StatusFollowupVeto = "clear"
+		for _, candidate := range s.Result.Delivery.Candidates {
+			if candidate.HumanQA != nil && candidate.HumanQA.Outcome != "pass" {
+				row.StatusFollowupVeto = "human_qa_veto"
+			}
+		}
+	}
+	row.StatusIdentityKnown = stateErr == nil && row.Herdr != nil && row.Herdr.AgentSessionID != nil && *row.Herdr.AgentSessionID != ""
 	return row
 }
 

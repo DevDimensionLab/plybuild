@@ -1,5 +1,9 @@
 # Workspace workflow status
 
+For fresh safe Herdr metadata, nullable verified work and durable status-only
+reminders, see [agent work and follow-up v1](agent-work/v1.md). Registered
+workflow status below keeps its existing contract.
+
 For an explicitly activated concurrent Epic, select `--schema-version 2` to
 show every active preparation. Schema 1 refuses multiple active members. See
 [concurrent native Tasks](parallel-epic/implementation.md) and the

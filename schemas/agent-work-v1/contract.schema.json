@@ -1,0 +1,779 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ply.local/schemas/agent-work-v1/contract.schema.json",
+  "title": "Agent work and status-only follow-up v1 (T7CF442AE)",
+  "$comment": "Request schema is closed; output objects allow additive fields. Every public metadata/report string is additionally bounded to 256 UTF-16 code units by producer validation. maxLength uses JSON Schema codepoints. Owner/registrar are caller declarations, not authenticated identity or human QA. The local CLI user/server must possess authority.",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/RegisterRequest"
+    },
+    {
+      "$ref": "#/$defs/Mutation"
+    },
+    {
+      "$ref": "#/$defs/Followup"
+    },
+    {
+      "$ref": "#/$defs/Overview"
+    },
+    {
+      "$ref": "#/$defs/List"
+    }
+  ],
+  "$defs": {
+    "Registrar": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "human_requested",
+            "agent_self_registered"
+          ]
+        },
+        "actor_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        }
+      },
+      "required": [
+        "kind",
+        "actor_ref"
+      ],
+      "additionalProperties": false
+    },
+    "RegisterRequest": {
+      "type": "object",
+      "properties": {
+        "publication_key": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_./:-]{0,127}$"
+        },
+        "owner_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "mandate_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "registrar": {
+          "$ref": "#/$defs/Registrar"
+        },
+        "target_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^agr_[a-f0-9]{64}$"
+        },
+        "wait_kind": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "wait_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "next_check_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        }
+      },
+      "required": [
+        "publication_key",
+        "owner_ref",
+        "mandate_ref",
+        "registrar",
+        "target_ref",
+        "wait_kind",
+        "wait_ref",
+        "next_check_at_utc"
+      ],
+      "additionalProperties": false
+    },
+    "Mutation": {
+      "type": "object",
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "owner_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "target_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^agr_[a-f0-9]{64}$"
+        },
+        "outcome": {
+          "enum": [
+            "waiting",
+            "fulfilled",
+            "cancelled"
+          ]
+        },
+        "next_check_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "done": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "next": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "blocker": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "request_id",
+        "owner_ref",
+        "expected_revision",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "Subject": {
+      "type": "object",
+      "properties": {
+        "agent_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^agr_[a-f0-9]{64}$"
+        },
+        "followup_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "pattern": "^fup_[a-f0-9]{64}$"
+            },
+            {
+              "const": ""
+            }
+          ]
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cycle": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "agent_ref",
+        "followup_id",
+        "revision",
+        "generation",
+        "cycle"
+      ],
+      "additionalProperties": true
+    },
+    "Capability": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "enum": [
+            "enabled",
+            "disabled",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "subject": {
+          "$ref": "#/$defs/Subject"
+        }
+      },
+      "required": [
+        "state",
+        "reason",
+        "subject"
+      ],
+      "additionalProperties": true
+    },
+    "Capabilities": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/Capability"
+      }
+    },
+    "Work": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "repo_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "epic_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "task_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "run_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "attempt_ref": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "phase": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "next_actor": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "next_action": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "detail_ref": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "source": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "freshness": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "source_observed_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "project_id",
+        "repo_id",
+        "epic_id",
+        "task_id",
+        "run_id",
+        "attempt_ref",
+        "phase",
+        "next_actor",
+        "next_action",
+        "reason",
+        "detail_ref",
+        "source",
+        "freshness",
+        "source_observed_at_utc"
+      ],
+      "additionalProperties": true
+    },
+    "Transport": {
+      "type": "object",
+      "properties": {
+        "dispatch_subject": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Subject"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "enum": [
+            "not_sent",
+            "sent",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "cycle_ref": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "attempted_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "acknowledged_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "dispatch_subject",
+        "state",
+        "reason",
+        "cycle_ref",
+        "attempted_at_utc",
+        "acknowledged_at_utc"
+      ],
+      "additionalProperties": true
+    },
+    "Recheck": {
+      "type": "object",
+      "properties": {
+        "outcome": {
+          "enum": [
+            "waiting",
+            "fulfilled",
+            "cancelled"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "done": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "next": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "blocker": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "provenance": {
+          "const": "agent_self_report"
+        },
+        "reporter_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^agr_[a-f0-9]{64}$"
+        },
+        "recorded_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "cycle": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "outcome",
+        "summary",
+        "done",
+        "next",
+        "blocker",
+        "provenance",
+        "reporter_ref",
+        "recorded_at_utc",
+        "cycle"
+      ],
+      "additionalProperties": true
+    },
+    "Followup": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "AgentFollowup@1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^fup_[a-f0-9]{64}$"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "owner_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "mandate_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "registrar": {
+          "$ref": "#/$defs/Registrar"
+        },
+        "target_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^agr_[a-f0-9]{64}$"
+        },
+        "wait_kind": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "wait_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "work": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Work"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_check_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "state": {
+          "enum": [
+            "waiting",
+            "fulfilled",
+            "cancelled"
+          ]
+        },
+        "cycle": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transport": {
+          "$ref": "#/$defs/Transport"
+        },
+        "recheck": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Recheck"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "registered_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        }
+      },
+      "required": [
+        "kind",
+        "schema_version",
+        "id",
+        "revision",
+        "generation",
+        "owner_ref",
+        "mandate_ref",
+        "registrar",
+        "target_ref",
+        "wait_kind",
+        "wait_ref",
+        "work",
+        "next_check_at_utc",
+        "state",
+        "cycle",
+        "transport",
+        "recheck",
+        "registered_at_utc",
+        "capabilities"
+      ],
+      "additionalProperties": true
+    },
+    "Source": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "status": {
+          "enum": [
+            "available",
+            "empty",
+            "partial",
+            "unavailable",
+            "unknown"
+          ]
+        },
+        "freshness": {
+          "enum": [
+            "fresh",
+            "stale",
+            "unknown"
+          ]
+        },
+        "source_observed_at_utc": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 256,
+              "format": "date-time",
+              "pattern": "Z$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "coverage": {
+          "type": "string",
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "source",
+        "status",
+        "freshness",
+        "source_observed_at_utc",
+        "coverage"
+      ],
+      "additionalProperties": true
+    },
+    "Agent": {
+      "type": "object",
+      "properties": {
+        "agent_ref": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^agr_[a-f0-9]{64}$"
+        },
+        "provider": {
+          "enum": [
+            "codex",
+            "claude"
+          ]
+        },
+        "status": {
+          "enum": [
+            "working",
+            "idle",
+            "done",
+            "blocked",
+            "unknown"
+          ]
+        },
+        "pane": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "workspace": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "tab": {
+          "type": "string",
+          "maxLength": 256,
+          "pattern": "^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,127}$"
+        },
+        "followup_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Subject"
+          },
+          "maxItems": 512
+        },
+        "binding_status": {
+          "enum": [
+            "verified",
+            "unbound",
+            "unknown"
+          ]
+        },
+        "work": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Work"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capabilities": {
+          "$ref": "#/$defs/Capabilities"
+        }
+      },
+      "required": [
+        "agent_ref",
+        "provider",
+        "status",
+        "pane",
+        "workspace",
+        "tab",
+        "followup_refs",
+        "binding_status",
+        "work",
+        "capabilities"
+      ],
+      "additionalProperties": true
+    },
+    "Overview": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "AgentWorkReadback@1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "observed_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Source"
+          },
+          "maxItems": 3
+        },
+        "agents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Agent"
+          },
+          "maxItems": 4096
+        },
+        "followups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Followup"
+          },
+          "maxItems": 512
+        }
+      },
+      "required": [
+        "kind",
+        "schema_version",
+        "observed_at_utc",
+        "sources",
+        "agents",
+        "followups"
+      ],
+      "additionalProperties": true
+    },
+    "List": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "AgentFollowupList@1"
+        },
+        "schema_version": {
+          "const": 1
+        },
+        "observed_at_utc": {
+          "type": "string",
+          "maxLength": 256,
+          "format": "date-time",
+          "pattern": "Z$"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Followup"
+          },
+          "maxItems": 512
+        }
+      },
+      "required": [
+        "kind",
+        "schema_version",
+        "observed_at_utc",
+        "items"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

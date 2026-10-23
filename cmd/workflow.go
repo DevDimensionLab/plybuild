@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/devdimensionlab/plybuild/internal/agentwork"
 	"github.com/devdimensionlab/plybuild/internal/delivery"
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/planningrepo"
@@ -30,6 +31,8 @@ func newWorkflowCommand(dependencies workflowhandoff.Dependencies) *cobra.Comman
 	}))
 	command.AddCommand(newWorkflowEpicCommand(planningrepo.SystemDependencies()))
 	setHandoffFlagErrors(command)
+	command.AddCommand(newAgentWorkCommand(agentwork.System))
+	command.AddCommand(newFollowupCommand(agentwork.System))
 	command.AddCommand(newWorkflowStatusCommand(workspace.SystemDependencies()))
 	command.AddCommand(newWorkflowTraceCommand(workspace.SystemDependencies()))
 	command.AddCommand(NewWorkflowNotificationCommand(workflownotification.SystemDependencies()))

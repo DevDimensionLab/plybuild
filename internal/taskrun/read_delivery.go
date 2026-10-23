@@ -268,6 +268,9 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 			}
 		}
 	}
+	if len(history.pending) > 0 {
+		row.StatusFollowupVeto = "native_refusal"
+	}
 	if !equal(previous, s.Result.Delivery.LastEventSHA256) {
 		inventoryDeliveryProblem(row, "delivery_event_chain_invalid", "The last delivery event digest differs from the preserved event list")
 		currentReport = false

@@ -1,0 +1,10 @@
+{
+  "kind": "AgentWorkReadback@1", "schema_version": 1,
+  "observed_at_utc": "2026-10-23T13:00:00Z",
+  "sources": [{"source":"herdr.agent.list","status":"partial","freshness":"unknown","source_observed_at_utc":null,"coverage":"recognized own codex/claude agents, maximum 4096"}],
+  "agents": [
+    {"agent_ref":"agr_fixture_bound","provider":"codex","status":"done","workspace":"Workspace 1","tab":"Tab 1","binding_status":"verified","work":{"task_id":"fixture-task","run_id":"fixture-run","phase":"working","next_actor":"agent","source":"registered"},"capabilities":{"request":{"state":"enabled","reason":"Explicit request can make an unconsumed cycle due."},"dispatch":{"state":"disabled","reason":"Native question is pending."}}},
+    {"agent_ref":"agr_fixture_unbound","provider":"claude","status":"idle","workspace":"Workspace 1","tab":"Tab 2","binding_status":"unbound","work":null,"capabilities":{"dispatch":{"state":"unknown","reason":"Native veto coverage is unavailable."}}}
+  ],
+  "followups": []
+}
