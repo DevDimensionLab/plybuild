@@ -143,6 +143,9 @@ func (s *Service) Register(d Draft) (Followup, error) {
 }
 func (s *Service) public(f Followup) Followup { return s.publicWithNative(f, s.native()) }
 func (s *Service) publicWithNative(f Followup, n NativeSnapshot) Followup {
+	if f.History == nil {
+		f.History = []CycleHistory{}
+	}
 	f.Work = nil
 	for _, b := range n.Bindings {
 		if b.Identity.Ref() == f.TargetRef {
@@ -161,6 +164,9 @@ func (s *Service) publicWithNative(f Followup, n NativeSnapshot) Followup {
 		}
 	}()
 	if f.State != "waiting" {
+		if canRequestAfterFulfilled(f) {
+			f.Capabilities["request"] = Capability{State: "enabled", Reason: "Explicit owner request with current revision opens a new status cycle after the fulfilled receipt; prior cycle stays consumed."}
+		}
 		return f
 	}
 	f.Capabilities["cancel"] = Capability{State: "enabled", Reason: "Owner declaration and expected revision are required."}
@@ -206,11 +212,16 @@ func (s *Service) Mutate(id, op string, m Mutation) (Followup, error) {
 		if m.OwnerRef != f.OwnerRef || m.ExpectedRevision != f.Revision || m.Generation != f.Generation {
 			return fmt.Errorf("followup_revision_or_owner_conflict")
 		}
-		if f.State != "waiting" {
+		newStatusCycle := op == "request" && canRequestAfterFulfilled(f)
+		if f.State != "waiting" && !newStatusCycle {
 			return fmt.Errorf("followup_closed")
 		}
 		switch op {
 		case "request":
+			if newStatusCycle {
+				advanceCycle(&f, s.now(), "Explicit owner request opened a new status cycle after a fulfilled recipient report.")
+				break
+			}
 			if f.Transport.State != "not_sent" {
 				return fmt.Errorf("followup_cycle_consumed")
 			}
@@ -241,9 +252,7 @@ func (s *Service) Mutate(id, op string, m Mutation) (Followup, error) {
 			}
 			f.Recheck = &Recheck{Outcome: m.Outcome, Summary: m.Summary, Done: m.Done, Next: m.Next, Blocker: m.Blocker, Provenance: "agent_self_report", ReporterRef: m.TargetRef, RecordedAtUTC: s.now(), Cycle: f.Cycle}
 			if m.Outcome == "waiting" {
-				f.Cycle++
-				f.NextCheckAtUTC = m.NextCheckAtUTC
-				f.Transport = Transport{State: "not_sent", Reason: "Explicit recipient waiting recheck opened a new cycle.", CycleRef: cycleRef(id, f.Cycle)}
+				advanceCycle(&f, m.NextCheckAtUTC, "Explicit recipient waiting recheck opened a new cycle.")
 			} else {
 				f.State = m.Outcome
 			}
@@ -370,4 +379,18 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 
 func reportText(s string) bool {
 	return len(utf16.Encode([]rune(s))) <= 256 && !strings.ContainsFunc(s, unicode.IsControl)
+}
+
+// A fulfilled status receipt closes that control, not the user's ability to ask
+// a later explicit question. Unknown/unanswered consumed cycles cannot enter
+// this path. Revision/owner/generation and request-ID checks still run first.
+func canRequestAfterFulfilled(f Followup) bool {
+	return f.State == "fulfilled" && f.WaitKind == "status" && f.Recheck != nil && f.Recheck.Outcome == "fulfilled" && f.Recheck.Cycle == f.Cycle && f.Recheck.ReporterRef == f.TargetRef
+}
+func advanceCycle(f *Followup, next, reason string) {
+	f.History = append(f.History, CycleHistory{Cycle: f.Cycle, Transport: f.Transport, Recheck: f.Recheck})
+	f.Cycle++
+	f.State = "waiting"
+	f.NextCheckAtUTC = next
+	f.Transport = Transport{State: "not_sent", Reason: reason, CycleRef: cycleRef(f.ID, f.Cycle)}
 }

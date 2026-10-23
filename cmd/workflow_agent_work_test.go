@@ -84,3 +84,22 @@ func TestAgentWorkMutationCapabilitiesAdvertiseRequiredInputs(t *testing.T) {
 		}
 	}
 }
+
+// r001-f02: summary-only is a supported recipient report shape and must be
+// visible wherever the shared public text readback includes that follow-up.
+func TestAgentWorkSummaryOnlyTextReadback(t *testing.T) {
+	f := agentwork.Followup{ID: "fixture", State: "fulfilled", Recheck: &agentwork.Recheck{Outcome: "fulfilled", Summary: "Checked actual fixture sources", RecordedAtUTC: "2026-10-23T13:00:00Z"}}
+	for name, value := range map[string]any{"show-and-mutation": f, "list": agentwork.List{Items: []agentwork.Followup{f}}, "agents": agentwork.Overview{Followups: []agentwork.Followup{f}}} {
+		t.Run(name, func(t *testing.T) {
+			c := &cobra.Command{}
+			var out bytes.Buffer
+			c.SetOut(&out)
+			if e := agentWorkOutput(c, "text", value); e != nil {
+				t.Fatal(e)
+			}
+			if !strings.Contains(out.String(), f.Recheck.Summary) {
+				t.Fatal("accepted summary missing from text", out.String())
+			}
+		})
+	}
+}

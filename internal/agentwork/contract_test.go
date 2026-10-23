@@ -79,6 +79,36 @@ func TestAgentWorkContractFixtures(t *testing.T) {
 		t.Fatal(e)
 	}
 	artifact(t, "recheck-fulfilled", f)
+	// r001-f01: same canonical status obligation, new explicit control only after
+	// a real recipient fulfilled report. The old dispatch subject stays archived.
+	status, sd, _ := fixture(t)
+	sd.WaitKind = "status"
+	sd.WaitRef = sd.TargetRef
+	sd.NextCheckAtUTC = status.now()
+	sf, err := status.Register(sd)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sf, err = status.Dispatch(sf.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sm := mutation(sf, "summary-fulfilled")
+	sm.Outcome = "fulfilled"
+	sm.Summary = "Checked actual fixture sources"
+	sf, err = status.Mutate(sf.ID, "recheck", sm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifact(t, "status-summary-fulfilled", sf)
+	sm = mutation(sf, "later-explicit-status")
+	artifact(t, "status-new-cycle-request", sm)
+	sf, err = status.Mutate(sf.ID, "request", sm)
+	if err != nil {
+		t.Fatal(err)
+	}
+	artifact(t, "status-explicit-new-cycle", sf)
+
 	u, ud, _ := fixture(t)
 	ud.NextCheckAtUTC = u.now()
 	uf, e := u.Register(ud)

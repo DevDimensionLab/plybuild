@@ -458,3 +458,103 @@ func TestFollowupStatusAliasAfterRetargetCannotOpenAnotherSend(t *testing.T) {
 		t.Fatal(c.Load())
 	}
 }
+
+// r001-f01: a fulfilled status answer closes only that cycle; a later explicit
+// owner request can open a new control, with all prior send identity preserved.
+func TestFollowupExplicitStatusRequestAfterFulfilled(t *testing.T) {
+	s, d, c := fixture(t)
+	d.WaitKind = "status"
+	d.WaitRef = d.TargetRef
+	d.NextCheckAtUTC = s.now()
+	f, e := s.Register(d)
+	if e != nil {
+		t.Fatal(e)
+	}
+	f, e = s.Dispatch(f.ID)
+	if e != nil {
+		t.Fatal(e)
+	}
+	firstTransport := f.Transport
+	done := mutation(f, "recipient-fulfilled")
+	done.Outcome = "fulfilled"
+	done.Summary = "Checked the actual sources"
+	f, e = s.Mutate(f.ID, "recheck", done)
+	if e != nil {
+		t.Fatal(e)
+	}
+	// Register/read/dispatch are not an automatic rearm after fulfillment.
+	again, e := s.Register(d)
+	if e != nil || again.State != "fulfilled" || again.Cycle != 1 {
+		t.Fatal(again, e)
+	}
+	if _, e = s.Dispatch(f.ID); e != nil || c.Load() != 1 {
+		t.Fatal("closed cycle auto-rearmed", e)
+	}
+	req := mutation(f, "explicit-second-status")
+	f, e = s.Mutate(f.ID, "request", req)
+	if e != nil {
+		t.Fatal("legitimate new status control rejected", e)
+	}
+	if f.State != "waiting" || f.Cycle != 2 || f.Transport.State != "not_sent" || f.Transport.DispatchSubject != nil || f.Transport.CycleRef == firstTransport.CycleRef {
+		t.Fatal(f)
+	}
+	raw, _ := json.Marshal(f)
+	var wire map[string]any
+	_ = json.Unmarshal(raw, &wire)
+	history, ok := wire["history"].([]any)
+	if !ok || len(history) != 1 {
+		t.Fatal("previous cycle receipt missing", string(raw))
+	}
+	prior := history[0].(map[string]any)
+	if prior["cycle"] != float64(1) || prior["transport"].(map[string]any)["cycle_ref"] != firstTransport.CycleRef || prior["recheck"].(map[string]any)["outcome"] != "fulfilled" {
+		t.Fatal(prior)
+	}
+	replay, e := s.Mutate(f.ID, "request", req)
+	if e != nil || replay.Cycle != 2 || replay.Revision != f.Revision {
+		t.Fatal("lost new-cycle reply opened another cycle", replay, e)
+	}
+	if f.Work == nil || f.Work.Phase != "working" {
+		t.Fatal("native work changed", f.Work)
+	}
+	f, e = s.Dispatch(f.ID)
+	if e != nil || f.Transport.State != "sent" || c.Load() != 2 {
+		t.Fatal(f, e, c.Load())
+	}
+	if _, e = s.Mutate(f.ID, "request", mutation(f, "new-ui-alias")); e == nil {
+		t.Fatal("consumed second cycle rearmed without receipt")
+	}
+}
+func TestFollowupExplicitNewStatusCycleStillRejectsUnknownAndCancellation(t *testing.T) {
+	for _, state := range []string{"unknown", "cancelled"} {
+		t.Run(state, func(t *testing.T) {
+			s, d, _ := fixture(t)
+			d.WaitKind = "status"
+			d.WaitRef = d.TargetRef
+			d.NextCheckAtUTC = s.now()
+			if state == "unknown" {
+				s.Send = func(Identity, string) error { return errors.New("lost ACK") }
+			}
+			f, e := s.Register(d)
+			if e != nil {
+				t.Fatal(e)
+			}
+			f, e = s.Dispatch(f.ID)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if state == "cancelled" {
+				f, e = s.Mutate(f.ID, "cancel", mutation(f, "cancel"))
+				if e != nil {
+					t.Fatal(e)
+				}
+			}
+			if _, e = s.Mutate(f.ID, "request", mutation(f, "new-explicit-id")); e == nil {
+				t.Fatal("unfulfilled cycle rearmed")
+			}
+			got, e := s.Show(f.ID)
+			if e != nil || got.Cycle != 1 || len(got.History) != 0 {
+				t.Fatal(got, e)
+			}
+		})
+	}
+}

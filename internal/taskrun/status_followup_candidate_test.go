@@ -111,11 +111,17 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	if e != nil || string(b) != "one\n" {
 		t.Fatal("cycle replay", string(b), e)
 	}
-	mutation := map[string]any{"request_id": "fixture-fulfilled", "owner_ref": "fixture-owner", "expected_revision": sent["revision"], "generation": sent["generation"], "target_ref": target, "outcome": "fulfilled", "done": "Checked actual fixture sources", "next": "No further status check", "blocker": ""}
+	mutation := map[string]any{"request_id": "fixture-fulfilled", "owner_ref": "fixture-owner", "expected_revision": sent["revision"], "generation": sent["generation"], "target_ref": target, "outcome": "fulfilled", "summary": "Checked actual fixture sources"}
 	p = write("recheck.json", mutation)
 	done := run("workflow", "followup", "recheck", id, "--file", p)
 	if done["state"] != "fulfilled" {
 		t.Fatal(done)
+	}
+	textCommand := exec.Command(binary, "workflow", "followup", "show", id, "--workspace", f.R.WorkspaceRoot, "--format", "text")
+	textCommand.Env = append(os.Environ(), "PATH="+binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	text, textErr := textCommand.CombinedOutput()
+	if textErr != nil || !strings.Contains(string(text), "Checked actual fixture sources") {
+		t.Fatalf("r001-f02 summary-only text readback: %s %v", text, textErr)
 	}
 	readback := run("workflow", "followup", "request-status", id, "--request-id", "fixture-fulfilled")
 	if readback["revision"] != done["revision"] {
@@ -149,6 +155,32 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	}
 	if work["phase"] != "working" {
 		t.Fatal("self report changed native work")
+	}
+	// r001-f01: a later explicit request reuses the stable canonical obligation,
+	// archives the first fulfilled cycle and creates exactly one new send cycle.
+	recovered := run("workflow", "followup", "register", "--file", filepath.Join(binDir, "register.json"))
+	secondRequest := map[string]any{"request_id": "second-explicit-status", "owner_ref": "fixture-owner", "expected_revision": recovered["revision"], "generation": recovered["generation"]}
+	nextCycle := run("workflow", "followup", "request", id, "--file", write("second-status.json", secondRequest))
+	if nextCycle["cycle"] != float64(2) || nextCycle["state"] != "waiting" {
+		t.Fatal("r001-f01 fresh explicit control rejected", nextCycle)
+	}
+	history := nextCycle["history"].([]any)
+	if len(history) != 1 || history[0].(map[string]any)["transport"].(map[string]any)["cycle_ref"] != sent["transport"].(map[string]any)["cycle_ref"] {
+		t.Fatal("consumed history lost", history)
+	}
+	repeated := run("workflow", "followup", "request", id, "--file", filepath.Join(binDir, "second-status.json"))
+	if repeated["revision"] != nextCycle["revision"] {
+		t.Fatal("new cycle request replayed")
+	}
+	run("workflow", "followup", "dispatch", id)
+	run("workflow", "followup", "dispatch", id)
+	count, _ := os.ReadFile(countPath)
+	if string(count) != "one\none\none\n" {
+		t.Fatal("later explicit control send count", string(count))
+	}
+	original := run("workflow", "followup", "request-status", id, "--request-id", "fixture-fulfilled")
+	if original["revision"] != done["revision"] {
+		t.Fatal("old fulfilled receipt overwritten")
 	}
 }
 func mustJSON(v any) []byte {

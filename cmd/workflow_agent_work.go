@@ -45,7 +45,7 @@ func printFollowup(cmd *cobra.Command, f agentwork.Followup) {
 	fmt.Fprintf(cmd.OutOrStdout(), "%s · revision %d · generation %d · cycle %d · %s\n  %s: %s · check %s · transport %s (%s)\n", f.ID, f.Revision, f.Generation, f.Cycle, f.State, f.WaitKind, f.WaitRef, f.NextCheckAtUTC, f.Transport.State, f.Transport.Reason)
 	if f.Recheck != nil {
 		r := f.Recheck
-		fmt.Fprintf(cmd.OutOrStdout(), "  Self-report %s at %s: done=%s; next=%s; blocker=%s\n", r.Outcome, r.RecordedAtUTC, r.Done, r.Next, r.Blocker)
+		fmt.Fprintf(cmd.OutOrStdout(), "  Self-report cycle %d %s at %s: summary=%s; done=%s; next=%s; blocker=%s\n", r.Cycle, r.Outcome, r.RecordedAtUTC, r.Summary, r.Done, r.Next, r.Blocker)
 	}
 }
 func agentWorkFormat(cmd *cobra.Command, format string) error {

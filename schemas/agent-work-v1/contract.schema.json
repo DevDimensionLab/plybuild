@@ -444,9 +444,44 @@
       ],
       "additionalProperties": true
     },
+    "CycleHistory": {
+      "type": "object",
+      "properties": {
+        "cycle": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transport": {
+          "$ref": "#/$defs/Transport"
+        },
+        "recheck": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Recheck"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "cycle",
+        "transport",
+        "recheck"
+      ],
+      "additionalProperties": true
+    },
     "Followup": {
       "type": "object",
       "properties": {
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CycleHistory"
+          },
+          "maxItems": 128
+        },
         "kind": {
           "const": "AgentFollowup@1"
         },
@@ -545,6 +580,7 @@
         }
       },
       "required": [
+        "history",
         "kind",
         "schema_version",
         "id",

@@ -25,7 +25,7 @@ func TestAgentWorkSchemaFieldParity(t *testing.T) {
 	if e = json.Unmarshal(b, &schema); e != nil {
 		t.Fatal(e)
 	}
-	for name, v := range map[string]any{"RegisterRequest": Draft{}, "Mutation": Mutation{}, "Registrar": Registrar{}, "Followup": Followup{}, "Work": Work{}, "Subject": Subject{}, "Capability": Capability{}, "Transport": Transport{}, "Recheck": Recheck{}, "Source": Source{}, "Agent": Agent{}, "Overview": Overview{}, "List": List{}} {
+	for name, v := range map[string]any{"RegisterRequest": Draft{}, "Mutation": Mutation{}, "Registrar": Registrar{}, "CycleHistory": CycleHistory{}, "Followup": Followup{}, "Work": Work{}, "Subject": Subject{}, "Capability": Capability{}, "Transport": Transport{}, "Recheck": Recheck{}, "Source": Source{}, "Agent": Agent{}, "Overview": Overview{}, "List": List{}} {
 		typ := reflect.TypeOf(v)
 		def, ok := schema.Defs[name]
 		if !ok {

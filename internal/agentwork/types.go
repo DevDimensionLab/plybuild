@@ -139,7 +139,13 @@ type Recheck struct {
 	RecordedAtUTC string `json:"recorded_at_utc"`
 	Cycle         int    `json:"cycle"`
 }
+type CycleHistory struct {
+	Cycle     int       `json:"cycle"`
+	Transport Transport `json:"transport"`
+	Recheck   *Recheck  `json:"recheck"`
+}
 type Followup struct {
+	History         []CycleHistory        `json:"history"`
 	Kind            string                `json:"kind"`
 	SchemaVersion   int                   `json:"schema_version"`
 	ID              string                `json:"id"`
