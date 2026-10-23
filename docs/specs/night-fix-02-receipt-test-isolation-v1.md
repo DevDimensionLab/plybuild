@@ -32,6 +32,18 @@ for a session, `/bin/ps`. Setting `f.D.LocalProcesses` cannot isolate the child 
 This is test isolation debt, not a demonstrated production guard bug. No fresh
 journey, process inspection or historical denial was replayed for this Spec.
 
+The receipt fixture uses `deliveryFixtureOptions{Agreement: a}` with
+`AdoptExisting=false`. In
+[ValidateTaskStartWriters](../../internal/workspace/task_adoption.go), an operation
+without Adoption returns before `adoptionWriters` consumes `SourceWriters`.
+Ordinary generated-worktree startup/integration/closeout therefore does not
+exercise that observer. Likewise `StartupProcessTree` is consumed by
+[deliveryRecoveryProcessTree](../../internal/taskrun/startup_process.go) in
+[startup recovery](../../internal/taskrun/delivery_start_recovery.go), not the
+ordinary successful startup used here. Keep this journey non-adopted and without
+a recovery scenario; defensive wiring of these adapters establishes no behavioral
+coverage of their consuming branches.
+
 AL18 already fixed the FS01 pane-get stand-in and modeled the handoff, explicit
 owner exit and in-process follow. Its
 [TestFS01ReviewRoundsFromExistingTaskToDelivery](../../internal/taskrun/delivery_review_round_test.go)
@@ -54,19 +66,22 @@ other callers. Do not silently convert every existing CLI test to simulation.
    `workflowTestStart`. Reuse the shapes in
    [parallelRuntime](../../internal/taskrun/parallel_epic_return_test.go):
    `Dependencies.LocalProcesses` returns a valid nonempty table containing the
-   observing PID; `StartupProcessTree` returns the controlled launch tree.
+   observing PID; initialize `StartupProcessTree` defensively with a counted
+   controlled adapter, and expect zero calls on this ordinary startup path.
    Use `ownerPaneStandin` before launch, retaining its updated executable hash
    and request. Use receipt-local setup, without changing blanket fixture defaults.
    Audit all startup/verification paths before running; stop at any unmodeled
    boundary, never try the real OS to discover whether isolation works.
-2. Explicitly replace `Workspace.SourceWriters` with a counted simulated observer
+2. Explicitly replace `Workspace.SourceWriters` with a counted defensive adapter
    appropriate to this disposable fixture. Rebind `Workflow.TaskWorkspace` to
    the updated workspace dependencies. Merely copying `f.D` is insufficient:
    [SystemDependencies](../../internal/taskrun/service.go) creates callbacks that
    capture earlier dependency values. Do not assume changing `LocalProcesses`
    changes a captured `SourceWriters` observer. Reuse the initialization pattern
    in [nf01Runtime](../../internal/taskrun/registry_nf01_test.go), without importing
-   its unrelated registry behavior or relaxing production defaults.
+   its unrelated registry behavior or relaxing production defaults. Assert zero
+   `SourceWriters` calls for this non-adopted journey; do not add adoption merely
+   to exercise the adapter or use stale source-writer wiring as its RED oracle.
 3. Keep the existing receipt subprocess checks and exact candidate verify.
    Preserve wrong context/provider/session rejection, repeated receipt identity,
    unknown sandbox/per-action facts and legacy protocol rejection. Keep the
@@ -99,38 +114,31 @@ precise boundary to root; do not claim complete isolation or broaden product sco
 
 ## Controlled regression
 
-Tie the regression oracle to the actual receipt journey's startup and closure
-callables/dispatch. Add a small receipt-local spy/tripwire at those boundaries,
+Tie the regression oracle to the actual receipt journey's closure
+callable/dispatch. Add a small receipt-local spy/tripwire at that boundary,
 shared by `TestDeliveryReceiptCLIJourney` and its regression case. It must observe
 what that orchestration actually calls, rather than validate a separately supplied
 route or a list of non-nil adapters. Keep all instrumentation test-only and local;
 no generic route platform or new production seam is needed.
 
 Controlled RED must exercise that same orchestration with deliberately wrong
-wiring: a stale workspace binding carrying a failing `SourceWriters` spy, or a
 closure dispatch that attempts the subprocess boundary. Install fail-fast test
 tripwires before startup and before invoking any action that could reach the OS.
-The boundary tripwire must fail before `exec.Command`/real inspection is attempted;
-the stale-binding spy must fail at its actual production-function call boundary.
+The boundary tripwire must fail before `exec.Command`/real inspection is attempted.
 For an early boundary failure assert zero downstream launch/inspection/integration
 effects and unchanged native state; for a later wiring failure compare the state
 at entry to that phase. Never execute the old OS journey to obtain RED. A negative
-test of the tripwire alone does not qualify: changing the real journey's dispatch
-back to `cleanupCLIAt`, or rebinding `TaskWorkspace` to the stale workspace, must
-make this regression fail safely. If that protection cannot be demonstrated with
+test of the tripwire alone does not qualify: changing the real journey's closure
+dispatch back to `cleanupCLIAt` must make this regression fail safely.
+If that protection cannot be demonstrated with
 the local instrumentation, return the exact boundary to root before execution.
 
 GREEN must show phase-specific behavioral evidence through that same call path:
 
-- At the startup/recovery boundary consuming `StartupProcessTree`, record the
-  spy's actual shell PID and call count. If ordinary startup does not enter that
-  branch, assert zero calls there and exercise the consuming branch using the
-  same receipt startup callable with a controlled preserved-shell fixture. Do
-  not call the adapter directly and report that as startup coverage.
-- At the source-writer boundary, prove that production code reaches the rebound
-  `Workspace.SourceWriters` through `Workflow.TaskWorkspace`: record the source
-  path and phase, while the earlier captured/stale observer is a failing spy.
-  Require the intended spy to run and the stale spy to remain unused.
+- Assert and report zero `StartupProcessTree` calls on ordinary startup and zero
+  `SourceWriters` calls throughout this non-adopted journey. Keep defensive setup
+  and `Workflow.TaskWorkspace` rebinding, without claiming the unused adapters
+  were behaviorally exercised. Add no adoption or recovery scenario to force calls.
 - After modeled owner exit, require `WorkflowFollow` to reach the injected
   `LocalProcesses` spy with the bound session/transcript and observing PID table.
   Assert its call count and the resulting native closeout, not adapter presence.
@@ -156,7 +164,8 @@ Also preserve a positive external Task/session writer case that blocks removal.
 | Boundary | Evidence the later implementation may claim |
 | --- | --- |
 | Receipt check-in, invalid bindings, legacy rejection, candidate verify | Exact supplied subprocess CLI with modeled provider/Herdr; retain argv, cwd, stdout/stderr and exits. |
-| Startup and writer absence/denial; integration and closeout | In-process production functions with simulated observer coverage and real disposable native Git/queue/base records. |
+| Writer absence/denial; integration and closeout | In-process production functions with simulated Herdr/LocalProcesses coverage and real disposable native Git/queue/base records. |
+| StartupProcessTree and SourceWriters consuming branches | Unexercised; defensively initialized/rebound with asserted zero calls on the ordinary non-adopted path. |
 | Public Delivery execute/follow after the split | Not exercised by the new receipt closure; no subprocess closeout claim. |
 | Installed CLI, live provider, actual OS inventory or sandbox enforcement | Not established by this test or this docs-only Task. |
 
