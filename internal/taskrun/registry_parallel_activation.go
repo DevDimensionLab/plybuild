@@ -15,15 +15,30 @@ import (
 	"time"
 )
 
-// Parallel activation reuses the completed native qualified-CLI gate. It neither
-// installs a CLI nor weakens closing/cleanup qualification. The retained exact
-// candidate supplies the compatible coordinator, independently of old owners.
-func ActivateParallelWorkspace(d Dependencies, root, qualifiedRun, coordinator, confirmation string, apply bool) (workspace.ParallelActivationReadback, error) {
-	var out workspace.ParallelActivationReadback
+type ParallelActivationOptions struct{ AllowRetainedSource bool }
+
+type ParallelActivationReadback struct {
+	workspace.ParallelActivationReadback
+	QualifiedReaderEligible bool `json:"qualified_reader_eligible"`
+	AllowRetainedSource     bool `json:"allow_retained_source,omitempty"`
+	SourceCleanupPending    bool `json:"source_cleanup_pending,omitempty"`
+}
+
+// The default retains the completed native qualified-CLI gate.
+func ActivateParallelWorkspace(d Dependencies, root, qualifiedRun, coordinator, confirmation string, apply bool) (ParallelActivationReadback, error) {
+	return ActivateParallelWorkspaceWithOptions(d, root, qualifiedRun, coordinator, confirmation, apply, ParallelActivationOptions{})
+}
+
+// Explicit retained-source qualification reuses the installation evidence gate,
+// without installing, resuming cleanup or changing finite reader compatibility.
+func ActivateParallelWorkspaceWithOptions(d Dependencies, root, qualifiedRun, coordinator, confirmation string, apply bool, options ParallelActivationOptions) (ParallelActivationReadback, error) {
+	var out ParallelActivationReadback
+	out.State = "blocked"
+	out.AllowRetainedSource = options.AllowRetainedSource
 	if err := containing(d, root); err != nil {
 		return out, err
 	}
-	installation, binary, err := qualifiedCLIInstallation(d, root, qualifiedRun, filepath.Join(root, "ply-parallel-reader"), coordinator)
+	installation, binary, err := qualifiedCLIInstallationWithOptions(d, root, qualifiedRun, filepath.Join(root, "ply-parallel-reader"), coordinator, CLIInstallOptions{AllowRetainedSource: options.AllowRetainedSource})
 	if err != nil {
 		return out, err
 	}
@@ -46,6 +61,12 @@ func ActivateParallelWorkspace(d Dependencies, root, qualifiedRun, coordinator, 
 	if identity.SHA256 != installation.Source.BinarySHA256 || identity.Dirty || identity.SourceCommit != installation.Source.OID || !slices.Contains(identity.RegistryFormats, workspace.ParallelRegistryFormat) {
 		return out, workflowError(4, "exact qualified clean reader must identify its delivered commit and format8 capability")
 	}
+	source, err := workflowRead(root, qualifiedRun)
+	if err != nil {
+		return out, err
+	}
+	out.SourceCleanupPending = source.Result.Delivery.Phase == "closing"
+	out.QualifiedReaderEligible = true
 	observe := func(r workspace.WorkItemRegistry) (workspace.ParallelActivationEvidence, error) {
 		s, e := workflowRead(root, qualifiedRun)
 		if e != nil {
@@ -71,7 +92,7 @@ func ActivateParallelWorkspace(d Dependencies, root, qualifiedRun, coordinator, 
 	}
 	run := func() error {
 		var e error
-		out, e = workspace.ActivateParallelRegistry(d.Workspace, confirmation, apply, observe)
+		out.ParallelActivationReadback, e = workspace.ActivateParallelRegistry(d.Workspace, confirmation, apply, observe)
 		return e
 	}
 	// A preview observes existing stores without creating a lock or any directory.

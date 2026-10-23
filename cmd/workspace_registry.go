@@ -51,8 +51,8 @@ func newWorkspaceRegistryCommand(d workspace.Dependencies) *cobra.Command {
 	_ = u.MarkFlagRequired("sha256")
 	c.AddCommand(u)
 	var qualified, coordinator, token, output string
-	var activate, preview bool
-	a := &cobra.Command{Use: "activate-parallel", Short: "Explicitly activate format8 using an exact completed qualified native CLI", Long: "Read-only --check is the default. --apply requires the exact confirmation over the actual format4-7 predecessor, registered target, qualified candidate bytes and finite native remaining-effect compatibility. Requires a completed self-hosted Ply Run with complete native closeout; this never installs a CLI, changes foreign controls, clears stops or probes processes. Incompatible or unknown remaining readers block activation. Legacy upgrades keep their explicit formats5/6/7.", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+	var activate, preview, allowRetainedSource bool
+	a := &cobra.Command{Use: "activate-parallel", Short: "Explicitly activate format8 using an exact qualified native CLI", Long: "Read-only --check is the default. --apply requires the exact confirmation over the actual format4-7 predecessor, registered target, qualified candidate bytes and finite native remaining-effect compatibility. The default requires completed native closeout. --allow-retained-source also permits proven automatic local Epic delivery and automatic ownership release with only source cleanup pending. An installed CLI alone does not establish eligibility or activation: qualified_reader_eligible reports the exact reader gate, source_cleanup_pending preserves cleanup, and only state=activated records activation. This never installs a CLI, removes source, changes foreign controls, clears stops or probes processes. Incompatible or unknown remaining readers block activation. Legacy upgrades keep their explicit formats5/6/7.", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		if activate && preview {
 			return fmt.Errorf("choose --check or --apply")
 		}
@@ -63,24 +63,25 @@ func newWorkspaceRegistryCommand(d workspace.Dependencies) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		result, err := taskrun.ActivateParallelWorkspace(taskrun.SystemDependencies(d), observed.Root, qualified, coordinator, token, activate)
+		result, err := taskrun.ActivateParallelWorkspaceWithOptions(taskrun.SystemDependencies(d), observed.Root, qualified, coordinator, token, activate, taskrun.ParallelActivationOptions{AllowRetainedSource: allowRetainedSource})
 		if output == "json" {
 			if e := json.NewEncoder(cmd.OutOrStdout()).Encode(result); e != nil {
 				return e
 			}
 		} else {
-			if _, e := fmt.Fprintf(cmd.OutOrStdout(), "Parallel activation: %s\nConfirmation: %s\nBlockers: %v\n", result.State, result.Confirmation, result.Blockers); e != nil {
+			if _, e := fmt.Fprintf(cmd.OutOrStdout(), "Parallel activation: %s\nQualified reader eligible: %t\nSource cleanup pending: %t\nConfirmation: %s\nBlockers: %v\n", result.State, result.QualifiedReaderEligible, result.SourceCleanupPending, result.Confirmation, result.Blockers); e != nil {
 				return e
 			}
 		}
 		return err
 	}}
-	a.Flags().StringVar(&qualified, "qualified-run", "", "completed native feature Run supplying the exact tested reader")
+	a.Flags().StringVar(&qualified, "qualified-run", "", "native delivered feature Run supplying the exact tested reader (completed by default)")
 	a.Flags().StringVar(&coordinator, "coordinator", "", "actual coordinator invoking the separately authorized activation")
 	a.Flags().StringVar(&token, "confirm", "", "fresh exact activation confirmation")
 	a.Flags().StringVar(&output, "format", "text", "output format (text or json)")
 	a.Flags().BoolVar(&activate, "apply", false, "publish exactly one confirmed format8 boundary")
 	a.Flags().BoolVar(&preview, "check", false, "observe compatibility without writes (default)")
+	a.Flags().BoolVar(&allowRetainedSource, "allow-retained-source", false, "explicitly allow proven automatic delivery/release with source cleanup pending; retain all reader compatibility checks")
 	_ = a.MarkFlagRequired("qualified-run")
 	_ = a.MarkFlagRequired("coordinator")
 	c.AddCommand(a)

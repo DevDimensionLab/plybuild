@@ -132,6 +132,13 @@ func TestQualifiedCLIRetainedSourceIsolationAndGuards(t *testing.T) {
 		if _, err := call(dep, destination, caller, "install"); err == nil {
 			t.Fatal("invalid candidate installed")
 		}
+		// TD7671441: the activation opt-in must preserve the same evidence gate.
+		// Installation-only destination errors have no activation counterpart.
+		if destination == dest {
+			if _, err := ActivateParallelWorkspaceWithOptions(dep, root, o.RunID, caller, "", false, ParallelActivationOptions{AllowRetainedSource: true}); err == nil {
+				t.Fatal("invalid retained candidate became activation eligible")
+			}
+		}
 		if !equal(before, branchFixtureState(t, root)) {
 			t.Fatal("rejected installation wrote native state")
 		}
@@ -178,7 +185,12 @@ func TestQualifiedCLIRetainedSourceIsolationAndGuards(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	stopEvidence := writeAny(t, root, "simulated-stop-evidence.json", map[string]string{"observation": "simulated provider refusal; no actual process or permission probe"})
+	stopPath := writeAny(t, root, "simulated-stop.json", DeliveryStopRecord{Kind: "ply.workflow.coordinator-stop", SchemaVersion: 1, RunID: o.RunID, Input: DeliveryStopInput{EventID: "simulated-stop"}, Evidence: FileBinding{stopEvidence, hashFileTest(t, stopEvidence)}})
 	for name, change := range map[string]func(*workflowState){
+		"active-stop": func(s *workflowState) {
+			s.Result.Delivery.Events = append(s.Result.Delivery.Events, DeliveryEventRecord{ID: "simulated-stop", Kind: "coordinator_stop", Binding: FileBinding{stopPath, hashFileTest(t, stopPath)}})
+		},
 		"unintegrated":      func(s *workflowState) { s.Result.Delivery.Candidates[0].Integration = nil },
 		"unreleased":        func(s *workflowState) { s.Result.Delivery.OwnershipRelease = nil },
 		"unresolved-effect": func(s *workflowState) { s.Result.Delivery.Attempt.State = "attempted" },

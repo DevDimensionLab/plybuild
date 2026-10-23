@@ -34,6 +34,10 @@ func parallelRuntime(t *testing.T, f *deliveryFixture) {
 	writeAny(t, filepath.Dir(f.Model), filepath.Base(f.Model), model)
 }
 func parallelSecondOwner(t *testing.T, a deliveryFixture) deliveryFixture {
+	return parallelAdditionalOwner(t, a, true)
+}
+
+func parallelAdditionalOwner(t *testing.T, a deliveryFixture, parallel bool) deliveryFixture {
 	t.Helper()
 	root := a.R.WorkspaceRoot
 	w := a.D.Workspace
@@ -74,7 +78,7 @@ func parallelSecondOwner(t *testing.T, a deliveryFixture) deliveryFixture {
 		t.Fatal(e)
 	}
 	acceptance := filepath.Join(root, "acceptance-b.sh")
-	in := workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, SpecID: g.SpecID, Parallel: true, AcceptancePath: acceptance}
+	in := workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, SpecID: g.SpecID, Parallel: parallel, AcceptancePath: acceptance}
 	preview, e := workspace.PreviewTaskGoalExecution(w, in)
 	if e != nil {
 		t.Fatal(e)
@@ -102,7 +106,11 @@ func parallelSecondOwner(t *testing.T, a deliveryFixture) deliveryFixture {
 	if e = os.WriteFile(path, herdr, 0700); e != nil {
 		t.Fatal(e)
 	}
-	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery-b", WorkspaceRoot: root, PreparationID: prep.ID, PreparationSHA256: digest(prep), HandoffDraft: draft, Runtime: a.R.Runtime, HumanAuthority: a.R.HumanAuthority, HerdrExecutable: Executable{path, hash(herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "B", Delivery: DeliveryContract{StartupProtocol: MandateReceiptV1, AdmissionMode: workspace.AdmissionParallel, SourceReconciliation: workspace.SourceReconciliationMergeParent, OwnerClaim: "fixture owner B", Goal: FileBinding{filepath.Join(root, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(g.Spec.ManifestSHA256, "sha256:")+".json"), g.Spec.ManifestSHA256}, AcceptancePath: acceptance, LocalIntegration: DeliveryLocalIntegrationBoundary(prepared.Delivery), Agreement: prepared.Delivery}})
+	admission, reconciliation := "", ""
+	if parallel {
+		admission, reconciliation = workspace.AdmissionParallel, workspace.SourceReconciliationMergeParent
+	}
+	req, e := BuildDeliveryWorkflowRequest(DeliveryRequestInput{RequestKey: "fixture/delivery-b", WorkspaceRoot: root, PreparationID: prep.ID, PreparationSHA256: digest(prep), HandoffDraft: draft, Runtime: a.R.Runtime, HumanAuthority: a.R.HumanAuthority, HerdrExecutable: Executable{path, hash(herdr)}, HerdrWorkspaceID: "w-fixture", TabLabel: "B", Delivery: DeliveryContract{StartupProtocol: MandateReceiptV1, AdmissionMode: admission, SourceReconciliation: reconciliation, OwnerClaim: "fixture owner B", Goal: FileBinding{filepath.Join(root, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(g.Spec.ManifestSHA256, "sha256:")+".json"), g.Spec.ManifestSHA256}, AcceptancePath: acceptance, LocalIntegration: DeliveryLocalIntegrationBoundary(prepared.Delivery), Agreement: prepared.Delivery}})
 	if e != nil {
 		t.Fatal(e)
 	}

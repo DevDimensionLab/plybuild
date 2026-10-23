@@ -83,9 +83,23 @@ Run with complete closeout, and finite native consumer inventory. It preserves
 a byte-exact backup and one direct 4/5/6/7-to-8 boundary without intermediate
 upgrades.
 
+`--allow-retained-source` explicitly reuses the native retained-source CLI
+qualification gate: exact automatic local Epic delivery, automatic ownership
+release, current clean target/base, queue closure, integration ledger, passed
+review/verification and retained snapshot. The default still requires completed
+closeout. This option preserves all finite consumer checks and cleanup ownership.
+An installed CLI alone establishes neither eligibility nor activation.
+`qualified_reader_eligible` reports that the exact reader passed qualification;
+`source_cleanup_pending` reports retained cleanup independently. A `preview` is
+eligible, `blocked` names incompatible or unknown remaining readers, and only
+`activated` records the confirmed format boundary. Qualification failures return
+an error with `qualified_reader_eligible=false`.
+
 ```sh
 ply workspace registry activate-parallel --qualified-run RUN --coordinator CLAIM --check --format json
 ply workspace registry activate-parallel --qualified-run RUN --coordinator CLAIM --apply --confirm SHA256 --format json
+# Explicit retained-source eligibility check; cleanup remains pending:
+ply workspace registry activate-parallel --qualified-run RUN --coordinator CLAIM --allow-retained-source --check --format json
 ```
 
 An incompatible resumable owner (PAR-A01) blocks activation. Fully terminal
