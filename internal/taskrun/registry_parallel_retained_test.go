@@ -193,7 +193,8 @@ func TestParallelActivationRetainedSourceReachesCompatibility(t *testing.T) {
 	if _, err := os.Stat(f.Prepared.Preparation.Plan.WorktreePath); err != nil {
 		t.Fatal("activation removed retained source", err)
 	}
-	if gitOutput(t, f.Parent, "rev-parse", "HEAD") != o.Delivery.Candidates[0].OID || gitOutput(t, f.Parent, "status", "--porcelain") != "" {
+	status, err := exec.Command(testGit(t), "-C", f.Parent, "status", "--porcelain").Output()
+	if err != nil || len(status) != 0 || gitOutput(t, f.Parent, "rev-parse", "HEAD") != o.Delivery.Candidates[0].OID {
 		t.Fatal("activation changed target")
 	}
 	for _, path := range []string{filepath.Join(root, "ply-parallel-reader"), filepath.Join(root, ".ply", "workflow-runs", "cli-installations")} {
