@@ -1,0 +1,620 @@
+{
+  "schema_version": 1,
+  "task_code": "TC9E836AD",
+  "task_id": "ply-modularity-analysis-20261023",
+  "title": "Analyze Ply module seams for parallel agent work",
+  "analysis_basis": {
+    "commit": "31f3ca5073c7615933ec0e77bb78e22d9f69bed4",
+    "tree": "c721fced22323b2676c42fe60c90b05d6a08dd6b",
+    "source_clean": true,
+    "source_ref": "refs/heads/ply-task/analyze-ply-module-seams-for-parallel-ag-614f6f3349b0",
+    "coverage": "unknown_blocked",
+    "product_tests_executed": false,
+    "method": "Static source and test inspection plus local Git history; no process/provider/browser fixtures or full suite."
+  },
+  "recommended_order": [
+    "MOD-01",
+    "MOD-02",
+    "MOD-03"
+  ],
+  "candidates": [
+    {
+      "id": "MOD-01",
+      "priority": 1,
+      "title": "Separate event evidence reads from journal transitions",
+      "recommendation": "recommend",
+      "risk": "high",
+      "effort": "large",
+      "dependencies": [],
+      "first_slice": "Characterize acceptance_received replay, then separate its bound claim loading from its transition in the existing taskrun package.",
+      "sources": [
+        {
+          "path": "internal/taskrun/store.go",
+          "symbols": [
+            "readJournal",
+            "fold",
+            "appendEvent"
+          ]
+        },
+        {
+          "path": "internal/taskrun/provider_completion.go",
+          "symbols": [
+            "foldProviderCompletion"
+          ]
+        },
+        {
+          "path": "internal/taskrun/herdr_store.go",
+          "symbols": [
+            "workflowRead"
+          ]
+        },
+        {
+          "path": "internal/taskrun/result_cache.go",
+          "symbols": [
+            "resultCacheValue"
+          ]
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/taskrun/recovery_test.go",
+          "symbols": [
+            "TestR9CachePrefixAndCorruption"
+          ]
+        },
+        {
+          "path": "internal/taskrun/return_repair_history_test.go",
+          "symbols": [
+            "TestReturnRepairLegacyNegativeCacheKeepsClaimProvenance"
+          ]
+        },
+        {
+          "path": "internal/taskrun/scenarios_test.go",
+          "symbols": [
+            "TestR7ProcessEvidenceCannotBeInferredFromReport"
+          ]
+        }
+      ],
+      "current": "readJournal reads and verifies the chain, replays fold, projects unobserved process state and checks a cached prefix. fold both loads immutable claim/report/status bytes and validates transitions; foldProviderCompletion also loads launch and provider streams. readJournal replays fold again for cache validation, so knowledge of bound storage and historical transitions is interleaved.",
+      "direction": "Show/collection callers -> readJournal -> fold -> bound claim/report/status files and foldProviderCompletion; appendEvent also invokes the same fold. workflowRead is the separate WorkflowRun persisted-state reader, not a caller of fold.",
+      "interface": "Keep a package-private function: replayEvent(j *journal, e Event, load func(FileBinding, int) ([]byte, error)) error. The loader owns physical read and digest checks; replay owns event-specific path/identity checks and transition order. This is illustrative, not a final signature.",
+      "example": "// Existing journal/Event/Result remain authoritative.\nerr := replayEvent(&j, event, boundFileReader)\n// Production and an in-memory corrupt/missing-byte reader cross this seam.",
+      "invariants": [
+        "Exact chain sequence, predecessor digests and event UTC validation stay in readJournal.",
+        "Schema-1 negative claim/cache compatibility keeps original bytes and actual claim provenance.",
+        "A durable process start is not liveness; unknown setup must not relaunch.",
+        "Collection qualification still requires all current process, acceptance, delivery and budget facts; provider completion is not inferred from report prose.",
+        "Preserve error category, precedence, read limits and per-replay evidence freshness; do not cache across observations."
+      ],
+      "regression": "Through replayEvent, provide identical acceptance events with valid, missing, changed-digest and legacy negative claim bytes; assert complete existing Result and error category. Keep Show-level prefix/corruption and historical-return tests as caller-visible guards. Inventory fixture setup before selecting runnable tests; named journey tests may start helper processes.",
+      "migration": [
+        "Freeze one acceptance family with an in-memory evidence reader and characterization of existing failures.",
+        "Move only acceptance evidence acquisition behind the loader, preserving transition checks and read order.",
+        "Review the complete caller plus helper, then consider report/status families separately; provider stream validation is a later slice."
+      ],
+      "benefit": "A change to evidence acquisition becomes local without redistributing transition rules across callers. The cost is threading a reader through both replay paths and preserving subtle historical error ordering; moving switch cases alone buys little depth.",
+      "owner_a": {
+        "files": [
+          "internal/taskrun/store.go",
+          "internal/taskrun/provider_completion.go",
+          "internal/taskrun/result_cache.go"
+        ],
+        "work": "Own replay implementation, signatures, journal/cache compatibility and any new private fold file."
+      },
+      "owner_b": {
+        "files": [
+          "internal/taskrun/return_repair_history_test.go"
+        ],
+        "work": "Own a separate characterization test file using the agreed seam; coordinate before changing this existing historical fixture."
+      },
+      "single_owner": [
+        "internal/taskrun/types.go",
+        "internal/taskrun/fixture_test.go",
+        "internal/taskrun/recovery_test.go"
+      ],
+      "conflicts": "Text conflict if both edit store.go or shared fixtures. Even disjoint tests can accidentally bless a different negative-state projection or weaken completion evidence. Freeze Result/Event and expected errors before parallel writing.",
+      "integration": "Integrate characterization first when it uses existing callers; integrate the extraction next. Tests that require the new replay signature wait for that slice. Recheck Show/cache and historical negative-return behavior on the updated Epic before the next delivery.",
+      "backlog": "Reuse CRAP-01 and ply-task-run-sjeldne-crash-kombinasjoner.md; overlaps the first responsibility family ROB-01 may select. This narrows that existing candidate; it does not publish a competing Spec or require a full crash matrix."
+    },
+    {
+      "id": "MOD-02",
+      "priority": 2,
+      "title": "Make rejected-QA recovery proof distinct from effect publication",
+      "recommendation": "recommend",
+      "risk": "very_high",
+      "effort": "large",
+      "dependencies": [],
+      "first_slice": "Characterize the current unpublished-attempt eligibility decisions with captured evidence, then extract a private rejection-proof function without moving locks or writes.",
+      "sources": [
+        {
+          "path": "internal/taskrun/delivery_qa_recovery.go",
+          "symbols": [
+            "WorkflowPreviewDeliveryQARecovery",
+            "WorkflowRecoverDeliveryQA",
+            "deliveryQARecovery",
+            "deliveryQARecoveryOwner"
+          ]
+        },
+        {
+          "path": "internal/workflowhandoff/delivery_qa_rejection.go",
+          "symbols": [
+            "ValidateRejectedDeliveryHumanQA"
+          ]
+        },
+        {
+          "path": "cmd/workflow_execute_qa_recovery.go",
+          "symbols": [
+            "workflowExecuteQARecoveryCommand"
+          ]
+        },
+        {
+          "path": "internal/taskrun/herdr_store.go",
+          "symbols": [
+            "workflowRead",
+            "workflowSave"
+          ]
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/taskrun/delivery_qa_recovery_test.go",
+          "symbols": [
+            "TestDeliveryQARecoveryInterruptedAndConcurrent",
+            "TestDeliveryQARecoveryRejectsUnprovenEffectsAndAuthority",
+            "TestDeliveryQARecoveryPreservesEvidenceAndAllowsOrdinaryQA"
+          ]
+        }
+      ],
+      "current": "deliveryQARecovery combines owner/runtime observations, immutable request and staged-draft proof, current candidate checks, registry absence checks, receipt creation, report append and retirement of one attempted reservation. Preview and apply deliberately share that procedure; completed recovery is an early read-only receipt lookup.",
+      "direction": "CLI check/confirm adapter -> WorkflowPreviewDeliveryQARecovery or WorkflowRecoverDeliveryQA -> deliveryQARecovery -> workflowhandoff rejection/evidence validation and workspace locked registry snapshot -> workflowKeep/deliveryAppendEvent/workflowSave.",
+      "interface": "Prefer a private function proveRejectedQA(existing captured inputs) (deliveryQARejectionReceipt, error), using the existing receipt type. Keep preview/apply orchestration and current locked absence checks together. An abstract generic RecoveryEngine would hide the wrong facts.",
+      "example": "// Pseudocode: keep the existing lock nesting and live rechecks.\nreceipt, err := proveRejectedQA(state, request, stagedProof)\n// Only the existing locked executor may persist receipt/report/state.",
+      "invariants": [
+        "Only the known pre-publication +00:00 timestamp schema rejection qualifies; arbitrary failed/unknown effects do not.",
+        "Same live owner, original control/context, current runtime observation and unchanged qualified candidate remain required.",
+        "Keep TaskRun -> project -> work-items lock order; absence check and state save remain inside those locks.",
+        "Completed replay returns original receipt and leaves later QA/integration reservations intact.",
+        "Preserve receipt -> event -> state fault points, prior-receipt recovery and exactly one recover event.",
+        "No QA verdict, provider restart, changed callback control or integration authority is created."
+      ],
+      "regression": "Cross the existing preview/recover interface with injected Fault at after_receipt, after_event and after_state; retry concurrently and read workflow state to assert one event, no invented QA, and no retirement of a later attempt. Reuse the existing rejection table for changed owner/evidence/control/candidate and published QA. A pure proof table supplements rather than replaces these effect guards.",
+      "migration": [
+        "Name and characterize only eligibility proof, preserving the first failing diagnostic.",
+        "Extract the private proof computation while all read timing, locks and writes stay in deliveryQARecovery.",
+        "Only after separate review consider grouping publication steps; keep original fault stages and replay observations."
+      ],
+      "benefit": "Reviewers can distinguish why a rejected attempt is safe to retire from how its recovery is durably recorded. The cost is avoiding stale proof between preview and apply; a reusable proof must never become authority outside the locked recheck.",
+      "owner_a": {
+        "files": [
+          "internal/taskrun/delivery_qa_recovery.go",
+          "internal/workflowhandoff/delivery_qa_rejection.go"
+        ],
+        "work": "Own the proof extraction, orchestration and all lock/publication changes."
+      },
+      "owner_b": {
+        "files": [
+          "internal/taskrun/delivery_qa_recovery_test.go"
+        ],
+        "work": "Own behavior characterization in a dedicated new test file; existing shared rejectedQAFixture remains with A unless explicitly transferred."
+      },
+      "single_owner": [
+        "internal/taskrun/delivery_types.go",
+        "internal/taskrun/delivery_fixture_test.go",
+        "internal/taskrun/delivery_qa_recovery_test.go",
+        "internal/workflowhandoff/delivery_qa_rejection.go"
+      ],
+      "conflicts": "Both agents editing the fixture/test table is a text conflict. Disjoint proof and executor edits can accept stale absence evidence or retire another attempt. Do not divide those semantic responsibilities between simultaneous implementation owners.",
+      "integration": "Land caller-level characterization first, then the proof extraction; requalify interruption/concurrent-retry and ordinary-QA preservation checks on the new Epic base. No automatic dependency on MOD-01 because these are different stored run families.",
+      "backlog": "Reuse CRAP-02 and ply-task-run-native-avslutning-og-qa-friksjon.md; overlaps ROB-01 first-family selection and its second regression Spec. Startup/inventory recovery (CRAP-03/04) is explicitly separate: readInventoryRecovery only projects recorded metadata and never establishes live authority."
+    },
+    {
+      "id": "MOD-03",
+      "priority": 3,
+      "title": "Separate trace evidence capture from deterministic projection",
+      "recommendation": "recommend",
+      "risk": "medium",
+      "effort": "medium",
+      "dependencies": [],
+      "first_slice": "Characterize event identity/deduplication and per-chain order through the existing builder.finish result before moving projection orchestration.",
+      "sources": [
+        {
+          "path": "internal/workflowtrace/read.go",
+          "symbols": [
+            "Read",
+            "read",
+            "directoryDigest"
+          ]
+        },
+        {
+          "path": "internal/workflowtrace/project.go",
+          "symbols": [
+            "builder",
+            "event",
+            "journal",
+            "finish"
+          ]
+        },
+        {
+          "path": "internal/workflowtrace/analysis.go",
+          "symbols": [
+            "measure",
+            "analyze"
+          ]
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/workflowtrace/analysis_test.go",
+          "symbols": [
+            "TestTraceNativeDedupRetainsAttemptsCandidatesAndSeparateJudgments",
+            "TestTraceConflictsAndPartialSourcesDoNotChooseWinners",
+            "TestTraceSourceSequenceAndExactNativeDedupPreserveProjections"
+          ]
+        },
+        {
+          "path": "internal/workflowtrace/read_test.go",
+          "symbols": [
+            "TestTraceSourceRecheckRejectsChangedAndSymlinkedEvidence",
+            "TestTraceConcurrentJournalAppendMakesCapturedPrefixPartial"
+          ]
+        },
+        {
+          "path": "internal/workflowtrace/review_regression_test.go",
+          "symbols": [
+            "TestReviewChangedWaitingEvidenceDoesNotKeepNumericInterval"
+          ]
+        }
+      ],
+      "current": "Read captures registered sources, journal and run history, links native records, rechecks source bytes and registry freshness, then calls finish. builder owns event/source/candidate deduplication, provenance, chains and analysis. These responsibilities already form a useful internal module; expose less capture orchestration to that implementation rather than creating a second trace model.",
+      "direction": "cmd trace consumers -> workflowtrace.Read -> workspace/taskjournal/taskrun captured histories -> builder journal/history/linkNative -> finish/analyze -> Result. Trace reads state; it never authorizes a workflow action.",
+      "interface": "A private projectTrace function may accept existing captured snapshot/history/registry types and return the existing Result. Keep builder private. Capture passes final source validity and diagnostics after recheck; no new exported projector interface or alternative Event/Task-status schema.",
+      "example": "// Pseudocode; use existing record types, not a new wire format.\nresult := projectTrace(task, journalSnapshot, traceHistory, registry, sources)\nerr := ValidateReferences(result)",
+      "invariants": [
+        "Deduplicate exact native identity while retaining every source projection and actor provenance.",
+        "Independent chains have no asserted global chronology; sorting is presentation only.",
+        "Reported outcome, technical result, human QA and integration remain separate candidate axes.",
+        "Changed/missing sources make freshness or numeric evidence unknown; partial counts remain lower bounds.",
+        "Current goals remain separate from frozen runs; equal question text does not authenticate or merge actions."
+      ],
+      "regression": "Use the same projectTrace/Result seam as Read with synthetic existing records: duplicate native event with two chains, conflicting QA, missing source, and changed waiting evidence. Preserve Read-level source recheck and concurrent-append tests; pure projection tests cannot establish physical-source freshness.",
+      "migration": [
+        "Characterize current builder.finish outputs and ValidateReferences with existing records.",
+        "Group the already private projection orchestration behind one function without changing Result or capture recheck order.",
+        "Migrate one Read call site; retain physical-source tests and remove any duplicate adapter layer."
+      ],
+      "benefit": "Projection changes can be reviewed with small deterministic inputs while source acquisition keeps physical freshness checks local. This already has considerable depth, so the improvement must remove orchestration knowledge from Read; wrapping finish alone is not sufficient.",
+      "owner_a": {
+        "files": [
+          "internal/workflowtrace/project.go",
+          "internal/workflowtrace/analysis.go",
+          "internal/workflowtrace/analysis_test.go"
+        ],
+        "work": "Own projection and deterministic fixtures."
+      },
+      "owner_b": {
+        "files": [
+          "internal/workflowtrace/read.go",
+          "internal/workflowtrace/read_test.go"
+        ],
+        "work": "Own captured-source/recheck integration after the private input contract is agreed."
+      },
+      "single_owner": [
+        "internal/workflowtrace/types.go",
+        "internal/taskrun/read_trace.go",
+        "internal/taskjournal/types.go",
+        "cmd/workflow_trace.go"
+      ],
+      "conflicts": "project.go/analysis tests can be disjoint from Read files, but changing source validity or identity conventions can silently change numeric claims. One owner approves the input contract and unchanged Result schema before coding.",
+      "integration": "Land deterministic characterization, then the projection implementation, then adapt capture. Re-run partial-source, dedup, candidate-axis and changed-interval checks against the rebased Epic; do not reuse old candidate evidence.",
+      "backlog": "Related to CRAP-03 process-journal/observer work but narrower than startup recovery. Reuse that concern rather than duplicating ROB-01 lifecycle regressions; no trace feature or new metrics are selected."
+    },
+    {
+      "id": "MOD-04",
+      "priority": 4,
+      "title": "Preserve phase-scoped content observation as the validation seam",
+      "recommendation": "retain_existing_seam",
+      "risk": "high",
+      "effort": "small_if_needed",
+      "dependencies": [],
+      "first_slice": "Keep observeTaskContent intact; only a demonstrated caller problem justifies extracting combined closure validation, with same-phase and next-phase tests first.",
+      "sources": [
+        {
+          "path": "internal/workspace/content_observation.go",
+          "symbols": [
+            "observeTaskContent"
+          ]
+        },
+        {
+          "path": "internal/workspace/work_item_store.go",
+          "symbols": [
+            "validateClosure",
+            "publish"
+          ]
+        },
+        {
+          "path": "internal/workspace/goal_operation.go",
+          "symbols": [
+            "validateGoalOperationContent"
+          ]
+        },
+        {
+          "path": "internal/workspace/task_content_scope.go",
+          "symbols": [
+            "WithTaskContentScope",
+            "validateTaskScopeTransition"
+          ]
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/workspace/content_observation_test.go",
+          "symbols": [
+            "TestWorkItemSnapshotReusesVerifiedContentWithinObservation",
+            "TestContentObservationOwnsBytesAndRetriesMissingSources",
+            "TestWorkItemObservationRejectsCorruptionOnNextSnapshotAndPublication"
+          ]
+        }
+      ],
+      "current": "Content and queue closure validators share verified owned bytes within one phase. Work-item snapshot, locked publication and goal validation create fresh observations. Task scope limits which content is relevant; phase lifetime is as significant as read arguments.",
+      "direction": "WorkItems Snapshot/Publish or goal operation -> observeTaskContent -> TaskContentStorage.Read -> content/queue validators. Publication still belongs to the store/session, never the observing reader.",
+      "interface": "The existing observeTaskContent(*TaskContentStorage) *TaskContentStorage is small and deep enough. Prefer this concrete function/struct. A future validateClosure helper must preserve each caller’s validation/error order; do not introduce a repository/cache interface or a long-lived memoizer.",
+      "example": "view := observeTaskContent(source) // fresh for this phase only\n// Both existing validators consume view; it cannot publish.\n// New snapshot, lock acquisition or publication => a new view.",
+      "invariants": [
+        "Successful reads only are cached, keyed by root/kind/digest, with owned copies.",
+        "Failed reads are retried; identical digest in another root does not imply existence.",
+        "No observation survives a registry reread, lock acquisition or proposed publication.",
+        "Scope and queue/content closure checks both remain enforced; snapshot and publish error ordering is preserved."
+      ],
+      "regression": "Exercise WorkItemStore Snapshot and session Publish, the real caller seam: count unique managed reads within one phase, corrupt content before the next snapshot/relock/publication, and require rejection. Keep direct view tests for copy ownership, missing-file retry and cross-root separation.",
+      "migration": [
+        "Retain current implementation and document lifetime at any new caller.",
+        "If a later concrete duplication warrants it, characterize caller error order and factor only that repeated closure responsibility.",
+        "Review all phase creation sites together; never broaden observation lifetime for speed."
+      ],
+      "benefit": "Already concentrates verified-byte reuse without weakening publication. A new abstraction now would add interface cost with little leverage; future work should address a specific caller defect, not rename the existing module.",
+      "owner_a": {
+        "files": [
+          "internal/workspace/content_observation.go",
+          "internal/workspace/work_item_store.go",
+          "internal/workspace/goal_operation.go"
+        ],
+        "work": "Single owner for observation lifetime and closure orchestration if selected later."
+      },
+      "owner_b": {
+        "files": [
+          "internal/workspace/content_observation_test.go"
+        ],
+        "work": "Independently characterize mutation/corruption scenarios after lifetime contract is frozen."
+      },
+      "single_owner": [
+        "internal/workspace/task_content_scope.go",
+        "internal/workspace/work_item_store.go",
+        "internal/workspace/work_item_store_test.go"
+      ],
+      "conflicts": "Shared workspace store/scope files create text conflicts with registry/queue refactors. Disjoint caches and recovery edits can still reuse stale evidence across locked absence checks. Implementation should wait when those invariants are changing.",
+      "integration": "No refactor is currently recommended. If selected later, integrate focused characterization then a single lifetime-preserving slice; after other workspace delivery recheck scoped closure and corruption-on-publication before continuing.",
+      "backlog": "Related to CRAP-08 registry invariant families and ROB-01 prerequisite stability, not a replacement for queue validation. Git history e5c96d7 already introduced this verified-content reuse; preserve its work instead of proposing it as missing."
+    },
+    {
+      "id": "MOD-05",
+      "priority": 5,
+      "title": "Keep notification outcome classification shared and effect ownership separate",
+      "recommendation": "retain_existing_seam",
+      "risk": "medium",
+      "effort": "small_if_needed",
+      "dependencies": [],
+      "first_slice": "Retain classify(Observation, time.Time) Attempt and the injected Transport function; use a focused classification table only when an observed outcome needs a change.",
+      "sources": [
+        {
+          "path": "internal/workflownotification/transport.go",
+          "symbols": [
+            "sendHTTP",
+            "postHTTP",
+            "classify"
+          ]
+        },
+        {
+          "path": "internal/workflownotification/service.go",
+          "symbols": [
+            "Execute"
+          ]
+        },
+        {
+          "path": "internal/workflownotification/integration_transport.go",
+          "symbols": [
+            "ObserveIntegration",
+            "SendIntegration",
+            "RetryIntegration",
+            "sendIntegration"
+          ]
+        },
+        {
+          "path": "internal/workflownotification/types.go",
+          "symbols": [
+            "Dependencies",
+            "Observation",
+            "Attempt"
+          ]
+        }
+      ],
+      "tests": [
+        {
+          "path": "internal/workflownotification/transport_test.go",
+          "symbols": [
+            "TestHTTPClassificationAndBoundedAdapter",
+            "TestTruncatedBodyIsUnknown"
+          ]
+        },
+        {
+          "path": "internal/workflownotification/notification_test.go",
+          "symbols": [
+            "TestReservationAndReceiptFilesystemFailure",
+            "TestCorruptPriorStateNeverClaimsNotAttempted"
+          ]
+        }
+      ],
+      "current": "Both notification execution and integration notification sending call the same classify function after an injected transport observation. HTTP adapter bounds reads and disables redirects/replay. Separate effect owners reserve durable attempts and persist classification; unknown dispatch is deliberately distinct from proven non-delivery.",
+      "direction": "Execute or sendIntegration -> Dependencies.Transport -> postHTTP Observation -> classify -> caller-owned durable Attempt. ObserveIntegration is a read-only state observation and does not consult credentials or send.",
+      "interface": "The existing function classify(Observation, time.Time) Attempt is sufficient; the Transport function already has real HTTP and injected-test adapters. Do not introduce another Go interface, generic notifier or unified notification ledger.",
+      "example": "observation := deps.Transport(ctx, endpoint, payload)\nattempt := classify(observation, deps.Now())\n// The caller preserves its reserved attempt identity before dispatch.",
+      "invariants": [
+        "Only bounded exact 200/ok acknowledges transport; it never proves human reading or product approval.",
+        "Truncated/oversize or ambiguous dispatch remains unknown; unknown and acknowledged attempts cannot be retried.",
+        "Only recognized rejection or valid single Retry-After establishes a retryable result; retain explicit confirmation rules.",
+        "No hidden HTTP redirect, proxy lookup or replay; preserve separate route/event/credential bindings and durable reservation order."
+      ],
+      "regression": "At postHTTP/classify, use an injected RoundTripper for redirects, oversized/truncated body, timeout before versus after possible dispatch, and duplicate/invalid Retry-After. Keep owner-specific reservation/receipt-failure tests to prove shared classification does not create resend authority.",
+      "migration": [
+        "Keep classifier and injected transport unchanged unless a real defect is selected.",
+        "For a selected outcome change, add a focused caller-visible table case and review effect-owner retry consequences.",
+        "Avoid merging the two durable schemas; adjust callers only if behavior demands it."
+      ],
+      "benefit": "This is a positive example of depth: callers learn one observation/result contract and reuse precise outcome rules. Additional wrappers would add cost; the existing effect ledgers differ for valid ownership reasons.",
+      "owner_a": {
+        "files": [
+          "internal/workflownotification/transport.go",
+          "internal/workflownotification/transport_test.go"
+        ],
+        "work": "Own shared classification and HTTP adapter behavior."
+      },
+      "owner_b": {
+        "files": [
+          "internal/workflownotification/integration_transport.go"
+        ],
+        "work": "Own an independently justified integration receipt change with separate tests after classifier contract is fixed."
+      },
+      "single_owner": [
+        "internal/workflownotification/types.go",
+        "internal/workflownotification/service.go",
+        "internal/workflownotification/store.go"
+      ],
+      "conflicts": "Classifier and ledger files need not overlap textually, but a changed unknown/rejected distinction changes retry eligibility. One owner must approve any such behavior change; that would be a separately selected product change, not this refactor.",
+      "integration": "No extraction is currently recommended. If independent adapter/receipt maintenance is later selected, serialize Epic returns and rerun shared classification plus the second owner’s unknown-effect/retry guards on the updated base.",
+      "backlog": "No direct CRAP-01/02 or ROB-01 implementation duplicate. Existing notification/continuity work already owns retries and receipts; reuse its tests. Do not attach this to ROB-01 merely to increase candidate count."
+    }
+  ],
+  "pair_matrix": [
+    {
+      "candidates": [
+        "MOD-01",
+        "MOD-02"
+      ],
+      "analysis_parallel": true,
+      "implementation": "parallel_after_contract_freeze",
+      "text_conflict": "Separate store/fold and delivery_qa_recovery files; taskrun types/fixtures need one owner.",
+      "semantic_conflict": "Different run families, but shared TaskResult/evidence meanings must stay fixed.",
+      "integration_order": "MOD-01 then MOD-02; recheck recovery evidence and historical Result contracts.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-01",
+        "MOD-03"
+      ],
+      "analysis_parallel": true,
+      "implementation": "parallel_after_contract_freeze",
+      "text_conflict": "Disjoint packages if read_trace and journal types remain unchanged.",
+      "semantic_conflict": "Trace must not infer completion or change identity when fold historical projection changes.",
+      "integration_order": "MOD-01 then MOD-03; compare historical negative state, dedup and candidate axes.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-01",
+        "MOD-04"
+      ],
+      "analysis_parallel": true,
+      "implementation": "conditional",
+      "text_conflict": "Fold files disjoint; workspace types/store become shared if extraction expands.",
+      "semantic_conflict": "Evidence freshness and publication-phase assumptions may drift.",
+      "integration_order": "MOD-01 first; MOD-04 only if selected later, then validate fresh scoped closure.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-01",
+        "MOD-05"
+      ],
+      "analysis_parallel": true,
+      "implementation": "independent_scoped",
+      "text_conflict": "Disjoint taskrun and notification implementation files.",
+      "semantic_conflict": "Preserve shared meaning of unknown; neither may invent completion from a notice.",
+      "integration_order": "MOD-01 then selected MOD-05 maintenance; rerun both affected guards.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-02",
+        "MOD-03"
+      ],
+      "analysis_parallel": true,
+      "implementation": "parallel_after_contract_freeze",
+      "text_conflict": "Recovery and trace files disjoint; trace input record types frozen.",
+      "semantic_conflict": "Recovery report is not human QA or an integration; trace must preserve that distinction.",
+      "integration_order": "MOD-02 then MOD-03; recheck trace candidate axes after recovery fixture changes.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-02",
+        "MOD-04"
+      ],
+      "analysis_parallel": true,
+      "implementation": "serialize_implementation",
+      "text_conflict": "Potential overlap in workspace store/scope/evidence dependencies.",
+      "semantic_conflict": "Moving absence checks or reusing bytes across locks can retire an unknown effect.",
+      "integration_order": "Selected MOD-04 contract change first, then rebase MOD-02 and revalidate locked absence/replay; otherwise defer MOD-04.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-02",
+        "MOD-05"
+      ],
+      "analysis_parallel": true,
+      "implementation": "independent_scoped",
+      "text_conflict": "Recovery and notification files disjoint.",
+      "semantic_conflict": "Unknown recovery and unknown Slack delivery have separate receipts; sharing classification must not grant recovery authority.",
+      "integration_order": "MOD-02 then selected MOD-05 maintenance; verify neither side changes the other effect ledger.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-03",
+        "MOD-04"
+      ],
+      "analysis_parallel": true,
+      "implementation": "conditional",
+      "text_conflict": "Trace Read and workspace store disjoint unless ReadViewBasis/types change.",
+      "semantic_conflict": "Observation lifetime and source validity affect trace freshness.",
+      "integration_order": "Selected MOD-04 first, then rebase MOD-03 and recheck changed-source/partial-history behavior; otherwise MOD-03 alone.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-03",
+        "MOD-05"
+      ],
+      "analysis_parallel": true,
+      "implementation": "independent_scoped",
+      "text_conflict": "Disjoint trace and notification files.",
+      "semantic_conflict": "A transport acknowledgement must not become a human-judgment trace record.",
+      "integration_order": "MOD-03 then selected MOD-05 maintenance; retain distinct evidence classes.",
+      "integration_parallel": false
+    },
+    {
+      "candidates": [
+        "MOD-04",
+        "MOD-05"
+      ],
+      "analysis_parallel": true,
+      "implementation": "independent_scoped",
+      "text_conflict": "Workspace content and notification transport files disjoint.",
+      "semantic_conflict": "Keep separate observation lifetimes and receipt stores; no shared cache or new generic store.",
+      "integration_order": "Selected MOD-04 then selected MOD-05; recheck closure and notification replay independently.",
+      "integration_parallel": false
+    }
+  ],
+  "integration_policy": "Every integration to the same Epic is serial. Rebase later work on the observed new Epic base, preserve old evidence, obtain fresh exact-candidate review/acceptance. Proposed future slices require separately selected scope; this Task publishes no Specs/Tasks.",
+  "notification_owner": "backlog-coordinator w9:pE"
+}
