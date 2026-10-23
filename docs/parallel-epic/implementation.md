@@ -43,8 +43,11 @@ that source and active membership. Stage a real resolution, then use
 `--continue --operation ID`. `--abort --operation ID` refuses unexpected edits
 against the recorded conflict fingerprint. Unknown effects require observation
 of the same operation and cannot be replayed by a new attempt.
-Controlled merge preflight refuses collisions with ignored local files before
-creating a marker or attempting Git merge. The same owner may preserve or move
+Controlled merge preflight reads effective local configuration, including ordinary
+includes and enabled worktree configuration, and refuses custom merge drivers.
+Global/system configuration and inherited Git overrides remain excluded. It also
+refuses collisions with ignored local files before creating a marker or attempting
+Git merge. The same owner may preserve or move
 the local content and recheck the existing intent against its original source
 and parent. Actual unknown merge effects remain nonreplayable.
 An explicit `--cancel-unstarted --operation ID` closes only the same owned
@@ -52,7 +55,11 @@ intent with positive native pre-effect evidence, an exact clean before OID/tree,
 and no Git marker or pending operation. It publishes the existing aborted
 record without Git effects, then permits a fresh current-parent preview.
 `--abort` remains limited to a known pending merge. Native unstarted evidence
-is revoked durably before the Git adapter can start; absent historical evidence
+is revoked durably before the Git adapter can start. The owning adapter can restore
+only that original proof through its typed read-only preflight outcome, after
+observing the exact clean source and no marker or pending effect. This covers
+driver refusals and failed preflight reads as well as content/parent refusals;
+it ends before the first marker write attempt. Absent historical evidence
 or a missing marker after an attempted merge cannot authorize cancellation or
 replay. A conflict's original abort fingerprint is preserved across retries,
 including observation after staged resolutions. If conflict publication was

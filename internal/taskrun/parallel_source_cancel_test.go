@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -12,6 +13,15 @@ import (
 // Native records, Git, review sealing and executable acceptance are real;
 // owner/reviewer/Herdr/absence observations use the inspected fake runtime.
 func TestParallelCancelUnstartedThenFreshQualification(t *testing.T) {
+	parallelCancelUnstartedThenFreshQualification(t, false)
+}
+
+func TestParallelDriverRefusalThenCancelFreshQualification(t *testing.T) {
+	parallelCancelUnstartedThenFreshQualification(t, true)
+}
+
+func parallelCancelUnstartedThenFreshQualification(t *testing.T, driverRefusal bool) {
+	t.Helper()
 	f, owner, sibling, other := parallelOwnerPair(t)
 	source := f.Prepared.Preparation.Plan.WorktreePath
 	if e := os.WriteFile(filepath.Join(source, "owned.txt"), []byte("fixed owned source\n"), 0600); e != nil {
@@ -59,15 +69,27 @@ func TestParallelCancelUnstartedThenFreshQualification(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	f.D.Workspace.SourceReconciliationFault = func(stage, id string) error {
-		if stage == "after_intent" {
-			return errors.New("simulated pre-effect interruption")
+	if driverRefusal {
+		// Isolated repository-local config only. The driver is rejected before
+		// any invocation, even though no merge attribute selects it here.
+		runGit(t, source, "config", "--local", "merge.private-fixture.driver", "false")
+	} else {
+		f.D.Workspace.SourceReconciliationFault = func(stage, id string) error {
+			if stage == "after_intent" {
+				return errors.New("simulated pre-effect interruption")
+			}
+			return nil
 		}
-		return nil
 	}
 	intent, e := WorkflowDeliveryReconcileSource(f.D, f.R.WorkspaceRoot, owner.RunID, owner.Paths.Context, workspace.TaskSourceReconciliationInput{Apply: true, Confirmation: p.Confirmation})
 	if e == nil || intent.State != "intent" {
 		t.Fatalf("pre-effect intent: %+v %v", intent, e)
+	}
+	if driverRefusal {
+		if !strings.Contains(e.Error(), "source_merge_driver_unsupported") || !intent.Operation.Unstarted {
+			t.Fatalf("driver refusal consumed positive pre-effect proof: %+v %v", intent, e)
+		}
+		runGit(t, source, "config", "--local", "--unset", "merge.private-fixture.driver")
 	}
 	f.D.Workspace.SourceReconciliationFault = nil
 	moveParent("Parent two after unstarted intent")

@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -286,9 +287,10 @@ func ReconcileTaskSource(d Dependencies, in TaskSourceReconciliationInput) (Task
 			}
 			observed, e := adapter.ReconcileSource(prep.Plan, old, in.Action)
 			if e != nil {
-				// Only the adapter's positively observed pre-effect refusal can
-				// restore this fact; a missing marker alone cannot restore it.
-				if observed.Unstarted {
+				// Restore only original positive proof with the owning adapter's
+				// typed read-only outcome. A generic error/flag cannot invent it.
+				var noEffect *sourceReconciliationNoEffectError
+				if old.Unstarted && observed.Unstarted && errors.As(e, &noEffect) {
 					r.SourceReconciliations[i] = observed
 					if publishErr := s.Publish(r); publishErr != nil {
 						return publishErr

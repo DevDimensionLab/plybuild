@@ -15,6 +15,14 @@ type TaskSourceReconciliationGit interface {
 	ReconcileSource(WorkspaceTaskPreparePlan, TaskSourceReconciliation, string) (TaskSourceReconciliation, error)
 }
 
+// Only the owning adapter can establish that a verified, originally unstarted
+// operation returned from read-only preflight before attempting its first write.
+// An ordinary error or absent marker does not establish that fact.
+type sourceReconciliationNoEffectError struct{ cause error }
+
+func (e *sourceReconciliationNoEffectError) Error() string { return e.cause.Error() }
+func (e *sourceReconciliationNoEffectError) Unwrap() error { return e.cause }
+
 func (git *systemTaskIntegrationGit) sourceRun(path string, op TaskSourceReconciliation, args ...string) GitCommandOutcome {
 	prefix := []string{"-c", "core.hooksPath=" + os.DevNull, "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-c", "merge.autoStash=false", "-c", "rerere.enabled=false", "-c", "commit.gpgSign=false", "-c", "merge.gpgSign=false", "-c", "gc.auto=0", "-c", "user.name=Ply source reconciliation", "-c", "user.email=ply-source@localhost", "-C", path}
 	return git.run(append(prefix, args...), []string{"GIT_REFLOG_ACTION=ply source " + op.ID, "GIT_EDITOR=false", "GIT_MERGE_AUTOEDIT=no"})
@@ -109,7 +117,7 @@ func (git *systemTaskIntegrationGit) sourceIgnoredCollision(path string, op Task
 	return false, nil
 }
 
-func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePlan, op TaskSourceReconciliation, action string) (TaskSourceReconciliation, error) {
+func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePlan, op TaskSourceReconciliation, action string) (observed TaskSourceReconciliation, reconcileErr error) {
 	if action != "" && action != "continue" && action != "abort" && action != "cancel-unstarted" {
 		return op, WorkInvalidArguments("reconciliation action must be continue, abort or cancel-unstarted")
 	}
@@ -241,7 +249,21 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		op.State = "effect_unknown"
 		return op, nil
 	}
-	drivers := git.sourceRun(path, op, "config", "--local", "--name-only", "--get-regexp", `^merge\..*\.driver$`)
+	// The exact clean before-source, original positive native fact, and absence
+	// of a pending effect/marker have now been observed. All exits until the
+	// first marker write attempt are read-only. Classify them at this common
+	// boundary rather than maintaining an error-code list in native publication.
+	preflight := true
+	defer func() {
+		if preflight && reconcileErr != nil {
+			observed.Unstarted = true
+			reconcileErr = &sourceReconciliationNoEffectError{cause: reconcileErr}
+		}
+	}()
+	// Query the same effective configuration consumed by merge, including
+	// ordinary includes and enabled worktree config. sourceRun's environment
+	// still excludes global/system configuration and inherited Git overrides.
+	drivers := git.sourceRun(path, op, "config", "--includes", "--name-only", "--get-regexp", `^merge\..*\.driver$`)
 	if drivers.Exit != 1 {
 		return op, queueError("source_merge_driver_unsupported", "custom or unreadable merge drivers require a separately supported adapter")
 	}
@@ -253,7 +275,6 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		return op, collisionErr
 	}
 	if collision {
-		op.Unstarted = unstarted && os.IsNotExist(e)
 		return op, queueError("source_ignored_collision", "preserve or move ignored local content outside the source before rechecking this same operation")
 	}
 	if os.IsNotExist(e) {
@@ -262,10 +283,16 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 			return op, parentErr
 		}
 		if !parent.Clean || !parent.Symbolic || len(parent.InProgress) != 0 || parent.Ref != plan.Target.ParentRef || parent.GitCommonDir != plan.Target.GitCommonDir || parent.OID != op.Plan.Parent.OID || parent.Tree != op.Plan.Parent.Tree {
-			op.Unstarted = unstarted
 			return op, queueError("source_reconciliation_parent_changed", "the original clean parent must still match before this operation starts a merge")
 		}
 	}
+	contained, e2 := git.CheckAncestor(RepoRecord{Locator: path}, op.Plan.Parent.OID, op.Plan.BeforeOID)
+	if e2 != nil {
+		return op, e2
+	}
+	// Even a failed/partial marker creation is an attempted effect. From here
+	// onward no error, missing reply or later observation can restore proof.
+	preflight = false
 	if e != nil {
 		file, e2 := os.OpenFile(marker, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 		if e2 != nil {
@@ -282,10 +309,6 @@ func (git *systemTaskIntegrationGit) ReconcileSource(plan WorkspaceTaskPreparePl
 		if closeErr != nil {
 			return op, closeErr
 		}
-	}
-	contained, e2 := git.CheckAncestor(RepoRecord{Locator: path}, op.Plan.Parent.OID, op.Plan.BeforeOID)
-	if e2 != nil {
-		return op, e2
 	}
 	if contained {
 		op.State = "committed"
