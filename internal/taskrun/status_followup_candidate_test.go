@@ -34,7 +34,7 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	countPath := filepath.Join(binDir, "prompts")
 	agent := map[string]any{"workspace_id": s.Result.Transport.WorkspaceID, "tab_id": s.Result.Transport.TabID, "pane_id": s.Result.Transport.PaneID, "terminal_id": s.Result.Transport.TerminalID, "agent": "codex", "agent_status": "done", "interactive_ready": true, "agent_session": map[string]string{"agent": "codex", "kind": "id", "value": s.Result.Transport.AgentSessionID}, "title": "synthetic-private-title", "cwd": "/synthetic/private/path", "tokens": map[string]string{"token": "synthetic-private-token"}}
 	a, _ := json.Marshal(agent)
-	script := "#!/usr/bin/env python3\nimport json,sys\na=json.loads(" + string(mustJSON(string(a))) + ")\nu=dict(a);u['pane_id']='unbound-pane';u['terminal_id']='unbound-private-terminal';u['agent_session']={'agent':'codex','kind':'id','value':'unbound-private-session'}\nif sys.argv[1:3]==['agent','list']: r={'type':'agent_list','agents':[a,u]}\nelif sys.argv[1:3]==['agent','get']: r={'type':'agent_info','agent':u if sys.argv[3]=='unbound-pane' else a}\nelif sys.argv[1:3]==['agent','prompt']:\n with open(" + string(mustJSON(countPath)) + ",'a') as f: f.write('one\\n')\n r={'type':'agent_prompted','agent':a}\nelse: sys.exit(2)\nprint(json.dumps({'result':r}))\n"
+	script := "#!/usr/bin/env python3\nimport json,sys\na=json.loads(" + string(mustJSON(string(a))) + ")\nu=dict(a);u['pane_id']='unbound-pane';u['terminal_id']='unbound-private-terminal';u['agent_session']={'agent':'codex','kind':'id','value':'unbound-private-session'}\nif sys.argv[1:3]==['agent','list']: r={'type':'agent_list','agents':[a,u]}\nelif sys.argv[1:3]==['tab','list'] and sys.argv[3:]==['--workspace',a['workspace_id']]: r={'tabs':[{'workspace_id':a['workspace_id'],'tab_id':a['tab_id'],'label':'Actual fixture tab 🌱'}]}\nelif sys.argv[1:3]==['agent','get']: r={'type':'agent_info','agent':u if sys.argv[3]=='unbound-pane' else a}\nelif sys.argv[1:3]==['agent','prompt']:\n with open(" + string(mustJSON(countPath)) + ",'a') as f: f.write('one\\n')\n r={'type':'agent_prompted','agent':a}\nelse: sys.exit(2)\nprint(json.dumps({'result':r}))\n"
 	if e := os.WriteFile(filepath.Join(binDir, "herdr"), []byte(script), 0700); e != nil {
 		t.Fatal(e)
 	}
@@ -67,6 +67,9 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	var unbound map[string]any
 	for _, entry := range agents {
 		r := entry.(map[string]any)
+		if r["tab_label"] != "Actual fixture tab 🌱" {
+			t.Fatal("candidate lost optional public tab label", r)
+		}
 		if r["work"] != nil {
 			row = r
 		} else {

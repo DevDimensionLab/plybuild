@@ -111,5 +111,14 @@ func (s *Service) Overview() (Overview, error) {
 		}
 	}
 	sort.Slice(out.Agents, func(i, j int) bool { return out.Agents[i].AgentRef < out.Agents[j].AgentRef })
+	if labels, ok := s.Runtime.(interface {
+		tabLabels([]Agent) map[tabKey]string
+	}); ok {
+		metadata := labels.tabLabels(out.Agents)
+		for i := range out.Agents {
+			a := &out.Agents[i]
+			a.TabLabel = metadata[tabKey{a.Workspace, a.Tab}]
+		}
+	}
 	return out, nil
 }

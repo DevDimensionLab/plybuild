@@ -181,6 +181,7 @@ type Agent struct {
 	FollowupRefs  []Subject             `json:"followup_refs"`
 	Workspace     string                `json:"workspace"`
 	Tab           string                `json:"tab"`
+	TabLabel      string                `json:"tab_label,omitempty"`
 	BindingStatus string                `json:"binding_status"`
 	Work          *Work                 `json:"work"`
 	Capabilities  map[string]Capability `json:"capabilities"`

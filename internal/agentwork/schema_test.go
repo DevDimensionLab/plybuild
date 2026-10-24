@@ -56,3 +56,30 @@ func TestAgentWorkSchemaFieldParity(t *testing.T) {
 		}
 	}
 }
+
+func TestTabLabelFixtureCompatibility(t *testing.T) {
+	read := func(name string) Overview {
+		t.Helper()
+		b, e := os.ReadFile("../../schemas/agent-work-v1/examples/v1/" + name + ".json")
+		if e != nil {
+			t.Fatal(e)
+		}
+		var v Overview
+		if e = json.Unmarshal(b, &v); e != nil {
+			t.Fatal(e)
+		}
+		return v
+	}
+	old, current := read("overview-bound-unbound"), read("overview-tab-label")
+	if current.Kind != OverviewKind || current.SchemaVersion != 1 || current.Agents[0].TabLabel != "T965226AF owner Actual tab labels in Agent work" {
+		t.Fatal("optional label fixture changed contract", current)
+	}
+	current.Agents[0].TabLabel = ""
+	if !reflect.DeepEqual(old, current) {
+		t.Fatal("additive fixture changed existing fields")
+	}
+	b, _ := json.Marshal(current)
+	if strings.Contains(string(b), "tab_label") {
+		t.Fatal("old producer now requires label")
+	}
+}

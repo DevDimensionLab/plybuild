@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// HerdrRuntime calls only the supported list/get/prompt interface. The adapter
-// bounds time and bytes and never exports provider output or errors.
+// HerdrRuntime uses supported agent list/get/prompt and public tab-list metadata.
+// The adapter bounds time and bytes and never exports raw output or errors.
 type HerdrRuntime struct {
 	Executable string
 	Timeout    time.Duration
