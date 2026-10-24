@@ -710,19 +710,35 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 			if e := workflowLocation(s, a); e != nil {
 				return e
 			}
+			// A guarded skip is still provider input. Establish every available
+			// current/bound session fact before admitting even that action.
+			if a.Session != nil || a.CodexResumeIdentity != nil {
+				if e := workflowSession(s, a, false); e != nil {
+					return workflowError(4, "resumed provider is not the same bound session; no input was sent: "+e.Error())
+				}
+			} else if a.SessionObservationError != nil {
+				var call *HerdrCallError
+				var failure *Error
+				if errors.As(a.SessionObservationError, &call) || errors.As(a.SessionObservationError, &failure) && failure.Exit == 4 {
+					return a.SessionObservationError
+				}
+			}
 			transport := ownerStartup(s)
 			inspection, e := transport.inspect(d, deadline)
 			if e != nil {
 				return e
+			}
+			if inspection.Session != nil && *inspection.Session != s.Result.Transport.AgentSessionID {
+				return workflowError(4, "safe startup resumed native session differs from bound owner")
+			}
+			if a.Session != nil && inspection.Session == nil || a.Session == nil && a.CodexResumeIdentity == nil && inspection.Session != nil {
+				return workflowError(4, "safe startup resumed session differs from fresh identity evidence")
 			}
 			if inspection.Surface == "update_skip_once" {
 				if e = transport.skip(d, deadline, inspection); e != nil {
 					return e
 				}
 				continue
-			}
-			if inspection.Session != nil && *inspection.Session != s.Result.Transport.AgentSessionID {
-				return workflowError(4, "safe startup resumed native session differs from bound owner")
 			}
 			positive = inspection.PromptReady && !inspection.LaunchPending && inspection.Session != nil
 		}

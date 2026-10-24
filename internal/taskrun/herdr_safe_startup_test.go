@@ -211,6 +211,9 @@ func TestWorkflowStartupDeadlineCannotBeRevived(t *testing.T) {
 
 func TestDeliveryReviewSessionlessStartupUsesGuardedBootstrap(t *testing.T) {
 	f, o, _ := reviewRoundFixture(t)
+	// This positive round includes skip, bootstrap, settlement and brief. Its
+	// fixture budget must accommodate all of those real CLI exchanges.
+	f.D.HerdrTimeout = 10 * time.Second
 	reviewRoundCandidate(t, f, "fixed")
 	reviewRoundIn(t, "w-fixture:root")
 	workflowTestModel(t, f.workflowFixture, map[string]any{"review_sessionless": true, "review_safe_skip": true, "review_safe_lost": "bootstrap"})
@@ -296,5 +299,95 @@ func TestDeliveryReviewConcurrentStartupConsumesOneRound(t *testing.T) {
 	kinds := safeStartupKinds(t, f.workflowFixture)
 	if len(kinds) > 2 || workflowUnguardedCalls(t, f.workflowFixture) != 0 {
 		t.Fatalf("concurrent requests replayed input: %v", kinds)
+	}
+}
+
+func TestReviewR1RejectOwnerSessionBeforeSkip(t *testing.T) {
+	f, o, _ := reviewRoundFixture(t)
+	reviewRoundCandidate(t, f, "fixed")
+	reviewRoundIn(t, "w-fixture:root")
+	workflowTestModel(t, f.workflowFixture, map[string]any{"review_session_is_owner": true, "review_safe_skip": true})
+	before := len(safeStartupKinds(t, f.workflowFixture))
+	_, err := WorkflowDeliveryRequestReview(reviewRoundAsCoordinator(f), f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "fixture root"})
+	kinds := safeStartupKinds(t, f.workflowFixture)[before:]
+	if err == nil {
+		t.Fatal("owner session was accepted")
+	}
+	if len(kinds) != 0 {
+		t.Fatalf("input reached owner's native session before identity rejection: kinds=%v err=%v", kinds, err)
+	}
+}
+
+func TestReviewR1RejectInspectionSessionDriftBeforeSkip(t *testing.T) {
+	f := workflowTestFixture(t)
+	workflowTestModel(t, f, map[string]any{"safe_skip": true, "safe_override": map[string]any{"native_session": "foreign-session"}})
+	_, err := workflowReadinessStart(t, f)
+	kinds := safeStartupKinds(t, f)
+	if err == nil {
+		t.Fatal("inspection drift was accepted")
+	}
+	if len(kinds) != 0 {
+		t.Fatalf("input sent before native session drift rejection: kinds=%v err=%v", kinds, err)
+	}
+}
+
+func TestReviewR1OwnerResumeRejectsSessionBeforeSkip(t *testing.T) {
+	for _, drift := range []string{"inspection", "agent"} {
+		t.Run(drift, func(t *testing.T) {
+			f := newOwnerResumeFixture(t, "codex", false)
+			model := map[string]any{"safe_skip": true}
+			if drift == "inspection" {
+				model["safe_override"] = map[string]any{"native_session": "foreign-session"}
+			} else {
+				model["agent_session_id"] = "foreign-session"
+				model["safe_override"] = map[string]any{"native_session": f.Owner.Transport.AgentSessionID}
+			}
+			workflowTestModel(t, f.workflowFixture, model)
+			p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+			if err != nil || p.State != "ready" {
+				t.Fatalf("fixture failed before resume: %+v %v", p, err)
+			}
+			ownerResumePreserve(t, f, p)
+			before := len(safeStartupKinds(t, f.workflowFixture))
+			_, err = WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+			if err == nil {
+				t.Fatal("foreign session became ready")
+			}
+			if kinds := safeStartupKinds(t, f.workflowFixture)[before:]; len(kinds) != 0 {
+				t.Fatalf("resume input preceded identity check: %v, %v", kinds, err)
+			}
+		})
+	}
+}
+
+func TestReviewR1OwnerSessionlessMenuStillBootstraps(t *testing.T) {
+	f := workflowBootstrapFixture(t, "normal")
+	f.D.HerdrTimeout = 10 * time.Second
+	workflowTestModel(t, f, map[string]any{"safe_skip": true})
+	o, err := workflowReadinessStart(t, f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(safeStartupKinds(t, f), ",") != "skip_once,bootstrap,task" || workflowUnguardedCalls(t, f) != 0 || o.Transport.AgentSessionID != "fixture-session" {
+		t.Fatal("legitimate sessionless menu path changed")
+	}
+}
+func TestReviewR1ResumeSessionlessMenuStillBindsOwner(t *testing.T) {
+	f := newOwnerResumeFixture(t, "codex", false)
+	f.D.HerdrTimeout = 10 * time.Second
+	f.In.Timeout = 10 * time.Second
+	workflowTestModel(t, f.workflowFixture, map[string]any{"safe_skip": true, "session_absent_gets": 1})
+	p, err := WorkflowPreviewOwnerResume(f.D, f.R.WorkspaceRoot, f.In)
+	if err != nil || p.State != "ready" {
+		t.Fatalf("fixture failed before resume: %+v %v", p, err)
+	}
+	ownerResumePreserve(t, f, p)
+	before := len(safeStartupKinds(t, f.workflowFixture))
+	o, err := WorkflowResumeOwner(f.D, f.R.WorkspaceRoot, f.In, p.Confirmation)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(safeStartupKinds(t, f.workflowFixture)[before:], ",") != "skip_once,task" || workflowUnguardedCalls(t, f.workflowFixture) != 0 || o.Transport.AgentSessionID != f.Owner.Transport.AgentSessionID {
+		t.Fatal("resume sessionless menu did not preserve bound owner")
 	}
 }

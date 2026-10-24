@@ -122,14 +122,14 @@ func workflowAwaitReadinessGeneration(d Dependencies, root, id string, deadline 
 			if err != nil {
 				return err
 			}
+			if (inspection.Session == nil) != (a.Session == nil) || inspection.Session != nil && *inspection.Session != a.Session.Value {
+				return workflowError(4, "safe startup native session differs from fresh agent identity")
+			}
 			if inspection.Surface == "update_skip_once" {
 				if err = transport.skip(d, deadline, inspection); err != nil {
 					return err
 				}
 				continue
-			}
-			if (inspection.Session == nil) != (a.Session == nil) || inspection.Session != nil && *inspection.Session != a.Session.Value {
-				return workflowError(4, "safe startup native session differs from fresh agent identity")
 			}
 		}
 		ready := a.Session != nil && workflowSettled(a)

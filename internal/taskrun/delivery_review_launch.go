@@ -251,6 +251,12 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 			lastSession, lastStatus = observation.SessionID, observation.AgentStatus
 		}
 		observation.SessionID, observation.AgentStatus = lastSession, lastStatus
+		if e == nil && a.Session != nil && a.Session.Value == owner {
+			if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
+				return e
+			}
+			return workflowError(4, "the started reviewer reports the owner's own session; an independent review needs a distinct session")
+		}
 		positive := true
 		if e == nil && l.Provider == "codex" {
 			inspection, err := transport.inspect(d, deadline)
@@ -261,24 +267,18 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 				}
 				return err
 			}
+			if (inspection.Session == nil) != (a.Session == nil) || inspection.Session != nil && *inspection.Session != a.Session.Value {
+				return workflowError(4, "guarded reviewer session differs from fresh agent identity")
+			}
 			if inspection.Surface == "update_skip_once" {
 				if err = transport.skip(d, deadline, inspection); err != nil {
 					return err
 				}
 				continue
 			}
-			if (inspection.Session == nil) != (a.Session == nil) || inspection.Session != nil && *inspection.Session != a.Session.Value {
-				return workflowError(4, "guarded reviewer session differs from fresh agent identity")
-			}
 			positive = inspection.PromptReady && !inspection.LaunchPending
 		}
 		if e == nil && a.Session != nil {
-			if a.Session.Value == owner {
-				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
-					return e
-				}
-				return workflowError(4, "the started reviewer reports the owner's own session; an independent review needs a distinct session")
-			}
 			if workflowSettled(a) && positive {
 				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
 					return e
