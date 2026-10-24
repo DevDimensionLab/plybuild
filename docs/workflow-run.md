@@ -274,6 +274,15 @@ these same-attempt observations within the remaining time. Missing `launch_pendi
 is not proof that the provider exited. Only a full fresh,
 settled native session with no pending launch permits the first Task prompt.
 
+Owner startup, independent review and new-terminal owner resume use public
+Herdr `agent start`, `agent get` and `agent prompt` operations. They require no
+private startup capability or forced Codex status-line profile. Public readiness
+observations do not atomically prove that the terminal still contains an empty
+provider prompt when input arrives. A known update or security dialog is not
+permission to send Task text, approve an upgrade or answer the dialog; preserve
+the attempt and let the coordinator inspect it. Ply does not automatically skip
+update menus. Fixture tests establish Ply behavior only, not live-provider safety.
+
 If readiness remains blocked, disappears, changes identity or reaches the deadline,
 the coordinator inspects the preserved attempt and last observation. An unbound
 recipient is never asked to accept. Safe diagnostics retain the phase, exit or

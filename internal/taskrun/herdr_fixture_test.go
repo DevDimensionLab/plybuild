@@ -35,6 +35,13 @@ if model.get("bootstrap_mode"):
                 bootstrap_settled_before_call=model.get("bootstrap_settled_observed", False))
 with (root / "herdr-calls.jsonl").open("a") as f:
     f.write(json.dumps(call) + "\n")
+if model.get("public_contract_only"):
+    if args[:3] == ["status", "server", "--json"]:
+        print(json.dumps({"running":True,"compatible":True}))
+        raise SystemExit(0)
+    if args[:2] == ["agent", "startup"]:
+        print(json.dumps({"error":{"code":"method_not_found"}}))
+        raise SystemExit(1)
 cmd = args[:2]
 observation_delay = 0
 if cmd == ["agent", "start"]:
