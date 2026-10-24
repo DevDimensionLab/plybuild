@@ -10,6 +10,7 @@ must exist when the OS actually launches it.
 
 | Consumer | Change | Retained checks |
 | --- | --- | --- |
+| Named Goal preview/apply | Remove historical aggregate comparison and checksum prerequisite | Current named Goal/Spec, native authority, request identity, no duplicates and consistency during startup |
 | TaskRun preview/start and terminal accept/report | Keep original Ply observations in confirmation and context, without reading old bytes or comparing callback executable paths | Provider executable, policy evidence, preparation, context, Task cwd, request/session and immutable acceptance |
 | Herdr report and Delivery startup/callbacks | Remove Ply byte/path checks; current CLI reads old requests/contexts unchanged | Mandate, actual authority, live owner/native session, Herdr, stops, retirement and frozen inputs |
 | Stored Delivery continuation | Validate immutable transition history without requiring either historical controller file | Before-state, original request/context, accepted policy, session and record digests |
@@ -27,24 +28,29 @@ running cannot gain new code retroactively; ordinary upgraded CLI is the entry
 for existing Runs. No global installation or provider configuration changes are
 part of this Task.
 
-## Exact legacy representation limit
+## Human clarification: current named Goal startup
 
-Before PV-01, bound-start preview@1 returned a request containing only kind,
-schema_version, request_id, workspace, input and a SHA-256 binding. The binding
-hashed the entire preview basis, including Ply path/hash. Preview saved nothing;
-the request did not carry that basis. After any basis change, a digest alone
-cannot identify which field changed or recover the previous value. Removing the
-Ply component from an unknown preimage is impossible. Accepting arbitrary
-mismatches would also accept changed mandates, policies or delivery agreements.
+The explicit human clarification on 24 October removes the aggregate preview
+binding as a startup prerequisite for both old and new requests. Startup uses
+the currently registered named Goal/Spec and normal current-state authority.
+An old opaque request works without saved preview basis, old binaries or
+installation history. The checksum is optional information. No historical
+pre-preview comparison, recovery lookup or replacement stale-preview gate runs.
 
-`TestPlyUpgradeLegacyOpaquePreviewLimit` constructs exactly that old digest,
-replaces Ply, and proves apply rejects without creating an intent. This is a
-pre-existing representation limit, not a new compatibility gate. There is no
-claim of automatic support for an unretained legacy preview basis. Existing
-retained intents accept their original digest and preserve request/Run identity
-without rewriting their bytes (`TestPlyUpgradeLegacyRetainedIntentKeepsIdentity`).
-New previews exclude only Ply identity from the binding and survive upgrade
-between preview/apply, with one start on replay. All other inputs stay bound.
+The original request and prior native records remain preserved. Replays keep
+the first request's Run and session even if the informational checksum changes;
+changing selected inputs under that same request ID is still rejected. A prior
+unknown attempt is observed, never replayed. Current Goal validity, Task/cwd,
+actual runtime authority, known refusals, unknown effects, no duplicate input and
+exact tested-candidate checks remain in force. The existing consistency guard
+captures current state at startup and rejects changes during that same startup.
+
+`TestPlyUpgradeLegacyOpaqueRequestWithoutBasisOrHistory` reads an old request,
+replaces Ply, starts once and checks byte-identical original input. Tests also
+cover optional checksums, checksum-only replay, current named Goal/policy changes,
+invalid current selectors and interrupted/concurrent startup. The human answer
+and normative clarification were attached to a native progress report; original
+Spec publication and review1 were preserved unchanged.
 
 ## Verification and evidence
 
@@ -85,5 +91,6 @@ unsupported contract, unknown effects, remaining effects and other owner
 isolation. Parallel owners retain separate requests, contexts, native sessions,
 panes and Task sources while sharing ordinary installed Ply. CLI help points
 to that same supported command. No broad suite was repeated for these fixes.
-The old hash-only preview acceptance question is a separate coordinator/human
-decision; these technical fixes do not claim to resolve it.
+Review1 also identified the historical aggregate-preview requirement. The
+explicit human clarification above settles that product choice; removal is
+covered by separate RED-GREEN consumer tests.

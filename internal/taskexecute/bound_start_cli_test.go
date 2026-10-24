@@ -99,9 +99,10 @@ func TestBoundStartPublicCLIContract(t *testing.T) {
 		t.Fatal("public preview/status/check wrote native state")
 	}
 	request := filepath.Join(responses, "request.json")
+	preview.Request.Binding = "sha256:" + strings.Repeat("0", 64)
 	fixtureJSON(t, request, preview.Request)
 	changed := preview.Request
-	changed.Binding = "sha256:" + strings.Repeat("0", 64)
+	changed.Input.SpecID = "absent-goal"
 	bad := filepath.Join(root, "changed-request.json")
 	fixtureJSON(t, bad, changed)
 	rejected := call("rejected", false, "workflow", "execute", "apply", "--file", bad, "--format", "json")

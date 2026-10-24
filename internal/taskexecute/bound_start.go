@@ -112,9 +112,8 @@ type boundStartReceipt struct {
 }
 
 var boundRequestID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]{7,127}$`)
-var boundDigest = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 
-func validateBoundRequest(r BoundStartRequest, requireBinding bool) error {
+func validateBoundRequest(r BoundStartRequest) error {
 	if r.Kind != BoundStartRequestKind || r.SchemaVersion != 1 {
 		return boundError("bound_start_unsupported", "only ply.workflow.bound-start-request schema_version 1 is supported")
 	}
@@ -133,9 +132,6 @@ func validateBoundRequest(r BoundStartRequest, requireBinding bool) error {
 	if r.Input.HerdrWorkspace == "" || len(r.Input.HerdrWorkspace) > 128 || strings.ContainsAny(r.Input.HerdrWorkspace, "\x00\r\n") {
 		return boundError("bound_start_invalid_request", "an explicit Herdr workspace is required")
 	}
-	if requireBinding && !boundDigest.MatchString(r.Binding) {
-		return boundError("bound_start_invalid_binding", "the unchanged preview binding is required")
-	}
 	return nil
 }
 
@@ -147,14 +143,8 @@ func boundHash(v any) string {
 	return digestBytes(b)
 }
 func boundBinding(r BoundStartRequest, b BoundStartBasis) string {
-	// Ply is the command handling this request, not part of its authority.
-	b.Runtime.Runtime.PlyExecutable = taskrun.Executable{}
-	return legacyBoundBinding(r, b)
-}
-
-// Existing stored intents retain their original digest and history. A legacy
-// request with only an opaque digest cannot reconstruct a lost preview basis.
-func legacyBoundBinding(r BoundStartRequest, b BoundStartBasis) string {
+	// Informational preview checksum only. Startup observes the current named
+	// Goal and authority; no historical aggregate is a prerequisite.
 	r.Binding = ""
 	if b.DependencySHA256 != "" {
 		b.RegistrySHA256 = ""
@@ -379,7 +369,7 @@ func PreviewBoundStart(d taskrun.Dependencies, requestID string, input BoundStar
 		input.HerdrWorkspace = os.Getenv("HERDR_WORKSPACE_ID")
 	}
 	r := BoundStartRequest{Kind: BoundStartRequestKind, SchemaVersion: 1, RequestID: requestID, Workspace: "/", Input: input}
-	if err = validateBoundRequest(r, false); err != nil {
+	if err = validateBoundRequest(r); err != nil {
 		return out, err
 	}
 	observed, err := d.Workflow.Workspace.ObserveContaining()
@@ -413,11 +403,19 @@ func readBoundIntent(root, id string) (boundStartIntent, error) {
 	if err != nil {
 		return intent, err
 	}
-	if intent.Kind != "ply.workflow.bound-start-intent" || intent.SchemaVersion != 1 || intent.Request.RequestID != id || intent.Request.Workspace != root || validateBoundRequest(intent.Request, true) != nil || (boundBinding(intent.Request, intent.Basis) != intent.Request.Binding && legacyBoundBinding(intent.Request, intent.Basis) != intent.Request.Binding) || intent.RunID != boundRunID(intent.Request) {
+	if intent.Kind != "ply.workflow.bound-start-intent" || intent.SchemaVersion != 1 || intent.Request.RequestID != id || intent.Request.Workspace != root || validateBoundRequest(intent.Request) != nil || intent.RunID != boundRunID(intent.Request) {
 		return intent, boundError("bound_start_outcome_unknown", "preserved request identity or basis is damaged; never restart")
 	}
 	return intent, nil
 }
+
+// Request identity and selected inputs stay fixed after the first reservation.
+// An informational checksum cannot conflict with or replace that same request.
+func sameBoundRequest(a, b BoundStartRequest) bool {
+	a.Binding, b.Binding = "", ""
+	return boundHash(a) == boundHash(b)
+}
+
 func boundRequestKey(r BoundStartRequest) string {
 	return "bound-start/" + strings.TrimPrefix(boundHash([]string{r.RequestID, r.Binding}), "sha256:")
 }
@@ -465,20 +463,20 @@ func StatusBoundStart(d taskrun.Dependencies, root, id string) (out BoundStartSt
 	return out, nil
 }
 
-type approvedStartGuard struct {
+type currentStartGuard struct {
 	d        taskrun.Dependencies
 	request  BoundStartRequest
 	basis    BoundStartBasis
 	registry string
 }
 
-func (g *approvedStartGuard) Check(root string, r workspace.WorkItemRegistry) error {
+func (g *currentStartGuard) Check(root string, r workspace.WorkItemRegistry) error {
 	observed := r.RawSHA256
 	if g.basis.DependencySHA256 != "" {
 		observed = workspace.TaskStartupDependencySHA256(r, g.basis.Goal.Goal.TaskID)
 	}
 	if root != g.request.Workspace || observed != g.registry {
-		return boundError("bound_start_stale", "native registry changed before the approved start effect")
+		return boundError("bound_start_stale", "native registry changed during the current startup")
 	}
 	projects, repos, err := g.d.Workspace.Projects.Snapshot(root)
 	if err != nil {
@@ -504,14 +502,14 @@ func (g *approvedStartGuard) Check(root string, r workspace.WorkItemRegistry) er
 			}
 			actual, err := observeBoundPolicySource(filepath.Join(g.basis.Goal.WorktreePath, rel))
 			if err != nil || actual.State != source.State || actual.SHA256 != source.SHA256 {
-				return boundError("bound_start_stale", "Task policy or instructions differ from the approved source, including ignored files")
+				return boundError("bound_start_stale", "Task policy or instructions differ from the startup snapshot, including ignored files")
 			}
 		}
 	}
 	return g.runtime()
 }
 
-func (g *approvedStartGuard) git(requireTask bool) error {
+func (g *currentStartGuard) git(requireTask bool) error {
 	p := g.basis.Goal
 	for _, target := range []struct {
 		path, ref string
@@ -520,26 +518,26 @@ func (g *approvedStartGuard) git(requireTask bool) error {
 		if _, err := os.Lstat(target.path); os.IsNotExist(err) && target.optional {
 			continue
 		} else if err != nil {
-			return boundError("bound_start_stale", "approved Git worktree is unavailable")
+			return boundError("bound_start_stale", "startup Git worktree is unavailable")
 		}
 		observed, err := g.d.Workspace.WorkGit.ObserveWorktree(target.path)
 		if err != nil || !observed.InventoryMatch || !observed.Clean || observed.Locator != target.path || observed.Ref != target.ref || observed.OID != p.ParentOID || observed.Tree != p.ParentTree || observed.GitCommonDir != p.Target.GitCommonDir {
-			return boundError("bound_start_stale", "approved physical Git worktree, clean ref, OID or tree changed")
+			return boundError("bound_start_stale", "startup physical Git worktree, clean ref, OID or tree changed")
 		}
 		full, err := g.d.Workspace.IntegrationGit.ObserveIntegrationWorktree(target.path, target.ref)
 		if err != nil || !full.Clean || !full.Symbolic || len(full.InProgress) != 0 || full.OID != p.ParentOID || full.Tree != p.ParentTree {
-			return boundError("bound_start_stale", "approved Git start changed or has an operation in progress")
+			return boundError("bound_start_stale", "startup Git state changed or has an operation in progress")
 		}
 	}
 	return nil
 }
-func (g *approvedStartGuard) Committed(_ string, r workspace.WorkItemRegistry) {
+func (g *currentStartGuard) Committed(_ string, r workspace.WorkItemRegistry) {
 	g.registry = r.RawSHA256
 	if g.basis.DependencySHA256 != "" {
 		g.registry = workspace.TaskStartupDependencySHA256(r, g.basis.Goal.Goal.TaskID)
 	}
 }
-func (g *approvedStartGuard) runtime() error {
+func (g *currentStartGuard) runtime() error {
 	control, err := g.d.Executable()
 	if err != nil {
 		return err
@@ -567,7 +565,7 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 	out.State, out.ExecutionEffect = "rejected", "none"
 	defer func() {
 		if err != nil && out.State == "rejected" {
-			if retained, readErr := readBoundIntent(r.Workspace, r.RequestID); readErr == nil && boundHash(retained.Request) == boundHash(r) {
+			if retained, readErr := readBoundIntent(r.Workspace, r.RequestID); readErr == nil && sameBoundRequest(retained.Request, r) {
 				out.State, out.ExecutionEffect, out.Binding, out.ExpectedRunID = "retained_attempt", "unknown", r.Binding, retained.RunID
 				out.NextAction = "The immutable attempt is retained. Read this same identity; do not retry or create another writer."
 			}
@@ -580,13 +578,13 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 			out.Error = boundReason(err, fallback)
 		}
 	}()
-	if err = validateBoundRequest(r, true); err != nil {
+	if err = validateBoundRequest(r); err != nil {
 		return out, err
 	}
 	// Identity lookup precedes all fresh-basis checks. The first start may have
 	// changed its own queue, runtime trust and Run state legitimately.
 	if old, readErr := readBoundIntent(r.Workspace, r.RequestID); readErr == nil {
-		if boundHash(old.Request) != boundHash(r) {
+		if !sameBoundRequest(old.Request, r) {
 			return out, boundError("bound_start_request_conflict", "request_id already has different immutable content")
 		}
 		return StatusBoundStart(d, r.Workspace, r.RequestID)
@@ -603,7 +601,7 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 	owned := false
 	err = workspace.WithTaskSpecRegistrationSnapshot(d.Workspace, r.Workspace, func(s *workspace.TaskSpecSession) error {
 		if old, e := readBoundIntent(r.Workspace, r.RequestID); e == nil {
-			if boundHash(old.Request) != boundHash(r) {
+			if !sameBoundRequest(old.Request, r) {
 				return boundError("bound_start_request_conflict", "request_id already has different immutable content")
 			}
 			intent = old
@@ -614,9 +612,6 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 		basis, e := buildBoundBasis(d, s, r)
 		if e != nil {
 			return boundError("bound_start_stale", e.Error())
-		}
-		if boundBinding(r, basis) != r.Binding {
-			return boundError("bound_start_stale", "approved preview no longer matches Goal, queue, base, runtime, policy, executable, target, trust or agreement")
 		}
 		intent = boundStartIntent{Kind: "ply.workflow.bound-start-intent", SchemaVersion: 1, Request: r, Basis: basis, RunID: boundRunID(r), RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
 		body, e := taskrun.Canonical(intent)
@@ -646,7 +641,7 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 			return out, err
 		}
 	}
-	guard := &approvedStartGuard{d: d, request: r, basis: intent.Basis, registry: intent.Basis.RegistrySHA256}
+	guard := &currentStartGuard{d: d, request: r, basis: intent.Basis, registry: intent.Basis.RegistrySHA256}
 	locked := d
 	if intent.Basis.DependencySHA256 != "" {
 		guard.registry = intent.Basis.DependencySHA256
@@ -687,10 +682,23 @@ func ReadBoundStartRequest(path string) (BoundStartRequest, error) {
 	if err != nil {
 		return r, boundError("bound_start_invalid_request", err.Error())
 	}
+	// The checksum is optional information; all identity and selector fields
+	// retain their declared types and required presence.
+	if object, ok := value.(canonicaljson.Object); ok {
+		present := false
+		for _, member := range object {
+			if member.Name == "binding" {
+				present = true
+			}
+		}
+		if !present {
+			value = append(object, canonicaljson.Member{Name: "binding", Value: ""})
+		}
+	}
 	canonical, err := canonicaljson.Marshal(value)
 	expected, encodeErr := taskrun.Canonical(r)
 	if err != nil || encodeErr != nil || !bytes.Equal(canonical, expected) {
-		return r, boundError("bound_start_invalid_request", "all request fields must be present with their declared JSON types; null and omitted fields are not supported")
+		return r, boundError("bound_start_invalid_request", "request identity and selector fields must be present with their declared JSON types; binding is optional information")
 	}
-	return r, validateBoundRequest(r, true)
+	return r, validateBoundRequest(r)
 }

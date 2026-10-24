@@ -9,10 +9,10 @@
     "error": {"type":"object","required":["code","detail"],"properties":{"code":{"type":"string","pattern":"^bound_start_"},"detail":{"type":"string"}},"additionalProperties":true},
     "request": {
       "type":"object","additionalProperties":false,
-      "required":["kind","schema_version","request_id","workspace","input","binding"],
+      "required":["kind","schema_version","request_id","workspace","input"],
       "properties": {
         "kind":{"const":"ply.workflow.bound-start-request"},"schema_version":{"const":1},
-        "request_id":{"$ref":"#/$defs/requestId"},"workspace":{"type":"string","pattern":"^/"},"binding":{"$ref":"#/$defs/digest"},
+        "request_id":{"$ref":"#/$defs/requestId"},"workspace":{"type":"string","pattern":"^/"},"binding":{"type":"string","description":"Informational historical preview checksum; not a startup prerequisite or request identity selector."},
         "input": {
           "type":"object","additionalProperties":false,"required":["spec_id","target","start_mode","herdr_workspace","permission_profile"],
           "properties": {
@@ -29,7 +29,7 @@
     },
     "status": {
       "type":"object","required":["kind","schema_version","request_id","workspace","state","execution_effect","next_action"],"additionalProperties":true,
-      "properties":{"kind":{"const":"ply.workflow.bound-start-status"},"schema_version":{"const":1},"request_id":{"type":"string"},"workspace":{"type":"string"},"state":{"enum":["not_recorded","retained_attempt","existing_run","outcome_unknown","rejected"]},"execution_effect":{"enum":["not_confirmed","none","reserved","unknown"]},"binding":{"$ref":"#/$defs/digest"},"expected_run_id":{"type":"string","pattern":"^wfr_[0-9a-f]{64}$"},"run":{"type":"object","required":["run_id","state","freshness","unresolved"]},"next_action":{"type":"string"},"error":{"$ref":"#/$defs/error"}}
+      "properties":{"kind":{"const":"ply.workflow.bound-start-status"},"schema_version":{"const":1},"request_id":{"type":"string"},"workspace":{"type":"string"},"state":{"enum":["not_recorded","retained_attempt","existing_run","outcome_unknown","rejected"]},"execution_effect":{"enum":["not_confirmed","none","reserved","unknown"]},"binding":{"type":"string","description":"Informational historical preview checksum; not a startup prerequisite or request identity selector."},"expected_run_id":{"type":"string","pattern":"^wfr_[0-9a-f]{64}$"},"run":{"type":"object","required":["run_id","state","freshness","unresolved"]},"next_action":{"type":"string"},"error":{"$ref":"#/$defs/error"}}
     }
   }
 }

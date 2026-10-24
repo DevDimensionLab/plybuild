@@ -38,7 +38,10 @@ for path in [(), ("input",), ("input", "target")]:
         for key in path:
             at = at[key]
         del at[field]
-        assert not bound.is_valid(changed), (path, field, "missing field accepted")
+        if path == () and field == "binding":
+            assert bound.is_valid(changed), "informational checksum became mandatory"
+        else:
+            assert not bound.is_valid(changed), (path, field, "missing field accepted")
         at[field] = None
         assert not bound.is_valid(changed), (path, field, "null accepted")
     changed = copy.deepcopy(request)
@@ -47,4 +50,4 @@ for path in [(), ("input",), ("input", "target")]:
         at = at[key]
     at["unexpected"] = True
     assert not bound.is_valid(changed), (path, "unknown field accepted")
-print(f"Validated {count} actual CLI JSON responses and every request field's missing/null/unknown rejection.")
+print(f"Validated {count} actual CLI JSON responses and required identity/selector fields and optional informational checksum.")

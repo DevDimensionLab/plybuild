@@ -63,64 +63,36 @@ func TestBoundStartPreviewAndStatusAreReadOnly(t *testing.T) {
 	}
 }
 
-func TestBoundStartRejectsChangedBasisBeforeAnyIntent(t *testing.T) {
-	for _, change := range []string{"binding", "missing-binding", "schema", "mode", "model", "permission", "trust", "provider", "herdr-binary", "herdr-target", "environment", "queue", "goal", "base", "agreement"} {
+func TestBoundStartRejectsInvalidCurrentInputsBeforeAnyIntent(t *testing.T) {
+	for _, change := range []string{"schema", "mode", "missing-goal", "invalid-profile", "wrong-return", "dirty-base"} {
 		t.Run(change, func(t *testing.T) {
 			d, in, root, epic := boundFixture(t)
 			p := boundPreview(t, d, in)
 			r := p.Request
 			switch change {
-			case "binding":
-				r.Binding = "sha256:" + strings.Repeat("0", 64)
-			case "missing-binding":
-				r.Binding = ""
 			case "schema":
 				r.SchemaVersion = 2
 			case "mode":
 				r.Input.StartMode = "headless"
-			case "model", "permission", "trust":
-				path := filepath.Join(root, "codex-home", "config.toml")
-				raw, _ := os.ReadFile(path)
-				if change == "model" {
-					raw = []byte(strings.Replace(string(raw), "fixture-model", "changed-model", 1))
-				}
-				if change == "permission" {
-					raw = []byte(strings.Replace(string(raw), "network = false", "network = true", 1))
-				}
-				if change == "trust" {
-					raw = append(raw, []byte("\n[projects.'"+epic+"']\ntrust_level='trusted'\n")...)
-				}
-				if err := os.WriteFile(path, raw, 0600); err != nil {
+			case "missing-goal":
+				r.Input.SpecID = "absent-goal"
+			case "invalid-profile":
+				r.Input.PermissionProfile = "absent-profile"
+			case "wrong-return":
+				d.CWD = func() (string, error) { return root, nil }
+			case "dirty-base":
+				if err := os.WriteFile(filepath.Join(epic, "dirty.txt"), []byte("unfinished source"), 0600); err != nil {
 					t.Fatal(err)
 				}
-			case "control", "provider", "herdr-binary":
-				name := map[string]string{"control": "ply", "provider": "codex", "herdr-binary": "herdr"}[change]
-				if err := os.WriteFile(filepath.Join(root, "bin", name), []byte("#!/bin/sh\n# changed executable\nexit 0\n"), 0700); err != nil {
-					t.Fatal(err)
-				}
-			case "herdr-target":
-				r.Input.HerdrWorkspace = "different-workspace"
-			case "environment":
-				t.Setenv("PATH", os.Getenv("PATH")+string(os.PathListSeparator)+root)
-			case "queue":
-				boundChangeQueue(t, d, root)
-			case "goal", "agreement":
-				boundChangeGoal(t, d, root, change)
-			case "base":
-				if err := os.WriteFile(filepath.Join(epic, "another.txt"), []byte("different base"), 0600); err != nil {
-					t.Fatal(err)
-				}
-				fixtureGit(t, epic, "add", "another.txt")
-				fixtureGit(t, epic, "commit", "-m", "changed base")
 			}
 			before := recoveryFiles(t, filepath.Join(root, ".ply"))
 			trees := fixtureGit(t, epic, "worktree", "list", "--porcelain")
 			out, err := ApplyBoundStart(d, r)
 			if err == nil || out.State != "rejected" || out.ExecutionEffect != "none" || out.Error == nil {
-				t.Fatalf("change accepted: %+v %v", out, err)
+				t.Fatalf("invalid current startup accepted: %+v %v", out, err)
 			}
 			if !reflect.DeepEqual(before, recoveryFiles(t, filepath.Join(root, ".ply"))) || trees != fixtureGit(t, epic, "worktree", "list", "--porcelain") {
-				t.Fatal("stale/invalid approval wrote native state")
+				t.Fatal("invalid current startup wrote native state")
 			}
 		})
 	}
@@ -347,7 +319,7 @@ func TestBoundStartRequestRejectsDuplicateMissingNullAndUnknownFields(t *testing
 }
 
 func TestBoundStartNativeLockAndReservationRacesRejectChangedBasis(t *testing.T) {
-	for _, point := range []string{"bound_start_before_lock", "execute_before_preparation", "workflow_before_reservation", "workflow_before_tab_send", "workflow_before_agent_send"} {
+	for _, point := range []string{"execute_before_preparation", "workflow_before_reservation", "workflow_before_tab_send", "workflow_before_agent_send"} {
 		t.Run(point, func(t *testing.T) {
 			d, in, root, epic := boundFixture(t)
 			p := boundPreview(t, d, in)

@@ -11,7 +11,7 @@ func addBoundStartCommands(parent *cobra.Command, d taskrun.Dependencies) {
 	var in taskexecute.BoundStartInput
 	var id, format string
 	var target queueTargetFlags
-	preview := &cobra.Command{Use: "preview", Short: "Read an externally approvable initial Goal start without effects", Long: "Read-only version 1 bound-start preview. Shows the exact explicit Goal, queue/base, worktree, requested Codex runtime and policy, executables, Herdr target, trust and delivery agreement. No intent, reservation, trust grant, worktree, Run, agent or tab is created. The consumer supplies a stable request ID before approval and preserves the returned request unchanged. This binding does not authenticate the user or grant additional delivery authority. Only interactive Codex is supported; no --next, headless or startup recovery fallback.", Example: "  ply workflow execute preview --spec selected-goal --request-id 550e8400-e29b-41d4-a716-446655440000 --herdr-workspace w9 --format json", Args: cobra.NoArgs,
+	preview := &cobra.Command{Use: "preview", Short: "Read a named Goal startup without effects", Long: "Read-only version 1 bound-start preview. Shows the exact explicit Goal, queue/base, worktree, requested Codex runtime and policy, executables, Herdr target, trust and delivery agreement. No intent, reservation, trust grant, worktree, Run, agent or tab is created. The consumer supplies a stable request ID and selected inputs. The preview checksum is informational; startup uses the current registered named Goal/Spec and current native authority. Historical checksums, including legacy requests without a saved basis, require no new preview or approval. Only interactive Codex is supported; no --next, headless or startup recovery fallback.", Example: "  ply workflow execute preview --spec selected-goal --request-id 550e8400-e29b-41d4-a716-446655440000 --herdr-workspace w9 --format json", Args: cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if err := executeFormat(format); err != nil {
 				return err
@@ -36,7 +36,7 @@ func addBoundStartCommands(parent *cobra.Command, d taskrun.Dependencies) {
 	target.bind(preview)
 	parent.AddCommand(preview)
 	var file, applyFormat string
-	apply := &cobra.Command{Use: "apply", Short: "Start exactly one approved immutable Goal request", Long: "Apply only the unchanged request object from execute preview. Native locks recheck the full approved basis before new effects. The same identity and same request only read its retained attempt; a different request under that identity is rejected. Unknown or interrupted outcomes never automatically resume, retry, reopen, or create another agent. No fallback to ordinary execute. Explicit bound Herdr starts work from the registered return worktree without requiring HERDR_ENV; user authentication remains the consumer's responsibility.", Example: "  ply workflow execute apply --file /absolute/approved-request.json --format json", Args: cobra.NoArgs,
+	apply := &cobra.Command{Use: "apply", Short: "Start the named Goal once from current registered state", Long: "Apply the selected request identity using the current registered named Goal/Spec and normal current-state authority checks. The optional historical preview checksum is informational and is never compared with startup state. Native locks protect consistency during this startup. The same identity and selected inputs read the retained attempt even if its checksum changes; changed selected inputs under that identity are rejected. Unknown or interrupted outcomes never automatically resume, retry, reopen, or create another agent. No fallback to ordinary execute. Explicit bound Herdr starts work from the registered return worktree without requiring HERDR_ENV; user authentication remains the consumer's responsibility.", Example: "  ply workflow execute apply --file /absolute/approved-request.json --format json", Args: cobra.NoArgs,
 		RunE: func(c *cobra.Command, _ []string) error {
 			if e := executeFormat(applyFormat); e != nil {
 				return e
@@ -51,7 +51,7 @@ func addBoundStartCommands(parent *cobra.Command, d taskrun.Dependencies) {
 			}
 			return err
 		}}
-	apply.Flags().StringVar(&file, "file", "", "absolute immutable bound-start-request@1 JSON (required)")
+	apply.Flags().StringVar(&file, "file", "", "absolute named-Goal request JSON; historical binding is optional information (required)")
 	apply.Flags().StringVar(&applyFormat, "format", "text", "output format (text or json)")
 	parent.AddCommand(apply)
 	var root, statusFormat string
@@ -82,7 +82,7 @@ func writeBoundStart(c *cobra.Command, format string, value any) error {
 	case taskexecute.BoundStartPreview:
 		fmt.Fprintf(c.OutOrStdout(), "Bound start preview: %s\nRequest: %s\n", v.State, v.Request.RequestID)
 		if v.State == "ready" {
-			fmt.Fprintf(c.OutOrStdout(), "Goal: %s · Task %s\nReturn: %s\nPlanned Task: %s\nRuntime: %s · %s · %s\nHerdr: %s\nBinding: %s\nUse --format json and preserve the complete request object for apply. Runtime acceptance is still pending.\n", v.Basis.Goal.Goal.Goal.SpecID, v.Basis.Goal.Goal.TaskID, v.Basis.Goal.Target.ParentLocator, v.Basis.Goal.WorktreePath, v.Basis.Runtime.Runtime.Provider, v.Basis.Runtime.Runtime.Model, v.Basis.Runtime.ReasoningEffort, v.Basis.Runtime.HerdrWorkspace, v.Request.Binding)
+			fmt.Fprintf(c.OutOrStdout(), "Goal: %s · Task %s\nReturn: %s\nPlanned Task: %s\nRuntime: %s · %s · %s\nHerdr: %s\nPreview checksum (informational): %s\nUse --format json and preserve the complete request object for apply. Runtime acceptance is still pending.\n", v.Basis.Goal.Goal.Goal.SpecID, v.Basis.Goal.Goal.TaskID, v.Basis.Goal.Target.ParentLocator, v.Basis.Goal.WorktreePath, v.Basis.Runtime.Runtime.Provider, v.Basis.Runtime.Runtime.Model, v.Basis.Runtime.ReasoningEffort, v.Basis.Runtime.HerdrWorkspace, v.Request.Binding)
 		}
 	case taskexecute.BoundStartStatus:
 		fmt.Fprintf(c.OutOrStdout(), "Bound start: %s\nRequest: %s\nExecution effect: %s\n", v.State, v.RequestID, v.ExecutionEffect)
