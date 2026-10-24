@@ -80,6 +80,15 @@ func workflowStartupCall(d Dependencies, s workflowState, deadline time.Time, ar
 				return workflowError(4, "provider changed before reserved recovery start")
 			}
 		}
+		if s.Request.Runtime.Provider == "codex" && len(args) > 1 && args[0] == "agent" && args[1] == "start" {
+			path := workflowStartupPath(s, "startup-deadline.json")
+			if _, e := os.Lstat(path); !os.IsNotExist(e) {
+				return workflowError(4, "startup deadline already reserved; start is not replayed")
+			}
+			if _, e := workflowKeep(d, path, map[string]int64{"deadline_unix_ms": deadline.UnixMilli()}); e != nil {
+				return e
+			}
+		}
 		result, err = workflowCallUntil(d, s.Request, deadline, args...)
 		return err
 	})
@@ -115,6 +124,14 @@ func workflowCallUntil(d Dependencies, r WorkflowRequest, deadline time.Time, ar
 	}
 	if stdout.overflow || stderr.overflow {
 		return nil, workflowCallFailure(args, nil, nil, stdout, stderr, "output_limit")
+	}
+	// status server --json is the published raw status document, whereas
+	// agent operations use the ordinary JSON RPC result envelope.
+	if len(args) == 3 && args[0] == "status" && args[1] == "server" && args[2] == "--json" {
+		if _, e := canonicalTransportJSON(stdout.data); e != nil {
+			return nil, workflowCallFailure(args, nil, nil, stdout, stderr, "invalid_response")
+		}
+		return stdout.data, nil
 	}
 	var envelope struct {
 		Result json.RawMessage `json:"result"`
@@ -387,6 +404,24 @@ func workflowPromptGenerationUntil(d Dependencies, root, id string, findings []W
 	if e = workflowDeliveryGuide(d, s); e != nil {
 		return e
 	}
+	guarded := s.Request.Runtime.Provider == "codex" && s.Phase == "session_bound"
+	var safe startupSubmit
+	safePath := filepathForRound(s, "prompt-safe-submit.json")
+	if guarded {
+		transport := ownerStartup(s)
+		inspection, err := transport.inspect(d, deadline)
+		if err != nil {
+			return err
+		}
+		if inspection.Session == nil || *inspection.Session != s.Result.Transport.AgentSessionID {
+			return workflowError(4, "safe startup native session differs before Task input")
+		}
+		text := workflowInstructions(s, findings)
+		safe, err = transport.prepare(d, deadline, startupTask, &text, inspection)
+		if err != nil {
+			return err
+		}
+	}
 	prompt := workflowInstructions(s, findings)
 	generation := workflowStartupGeneration(s)
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
@@ -398,6 +433,11 @@ func workflowPromptGenerationUntil(d Dependencies, root, id string, findings []W
 		}
 		if s.Phase != "session_bound" && s.Phase != "correction_reserved" {
 			return workflowError(4, "prompt already attempted or not authorized")
+		}
+		if guarded {
+			if e := ownerStartup(*s).reserve(d, safePath, safe); e != nil {
+				return e
+			}
 		}
 		if e := d.writeValue(filepathForRound(*s, "prompt-attempt.json"), map[string]any{"argv": []string{"agent", "prompt", s.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000"}, "round": s.Result.Round.Number}); e != nil {
 			return e
@@ -417,7 +457,13 @@ func workflowPromptGenerationUntil(d Dependencies, root, id string, findings []W
 	if e = d.fault("workflow_before_prompt_send"); e != nil {
 		return e
 	}
-	_, callErr := workflowCallUntil(d, s.Request, deadline, "agent", "prompt", s.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000")
+	var callErr error
+	if guarded {
+		callErr = ownerStartup(s).submit(d, safePath, safe)
+	} else {
+		_, callErr = workflowCallUntil(d, s.Request, deadline, "agent", "prompt", s.Result.Transport.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000")
+	}
+
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
 		if callErr != nil {
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"herdr_prompt_response", callErr.Error()})

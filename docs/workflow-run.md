@@ -256,8 +256,11 @@ prompt. A recorded `withheld` outcome is final for that Run.
 Ply reserves the target before creating a background tab, binds its pane and
 terminal, starts the selected agent once, then binds the actual native session before sending
 the Task. Codex versions that defer their `SessionStart` hook until the first turn
-need a short readiness exchange. When Herdr explicitly reports an interactive,
-settled selected agent without a session, Ply sends one fixed message asking for `PLY_READY`
+need a short readiness exchange. New Codex launches require the selected running
+Herdr server's `safe_startup_v1` capability and fresh guarded inspection evidence
+for an empty editable provider prompt, with or without a native session. A session
+plus idle status is insufficient. When that prompt is sessionless, Ply sends one
+fixed message asking for `PLY_READY`
 without tools or file changes. This message contains no Task instructions. The
 attempt is recorded before input in `startup-bootstrap-attempt.json`; it is never
 replayed. Ply then waits for the real hook session and a fresh settled observation.
@@ -272,7 +275,24 @@ and named agent, checking both Herdr's provider and the native session's provide
 it never answers trust dialogs. An early nonzero start reply can be followed by
 these same-attempt observations within the remaining time. Missing `launch_pending`
 is not proof that the provider exited. Only a full fresh,
-settled native session with no pending launch permits the first Task prompt.
+settled native session with positive current provider-prompt evidence and no pending
+launch permits the first Task prompt. Codex bootstrap and first Task input use
+`agent startup submit --file` with the inspected binding, epoch, managed launch and
+evidence token; there is no legacy prompt or key fallback.
+
+A source-qualified update menu may receive one producer-owned `skip_once` action.
+Ply durably consumes the generation's skip slot before input, then reinspects the
+same launch. Lost skip replies may resolve through a fresh provider prompt;
+remaining menus get no second key. Unknown, blocked, updater, shell and security
+surfaces receive no startup text or guessed keys. Upgrade and app-safety decisions
+remain separate human actions. The qualified producer currently supports this
+capability on macOS/Unix; Windows and older servers stop Codex startup while
+unrelated commands and ordinary Claude startup remain usable.
+
+Generation-local private records preserve the original send deadline, epoch and
+managed launch plus immutable skip/bootstrap/Task requests and available writer
+outcomes. Missing, partial or unknown outcomes never release a consumed slot.
+Reinspection cannot extend the startup deadline or accept an epoch/identity change.
 
 If readiness remains blocked, disappears, changes identity or reaches the deadline,
 the coordinator inspects the preserved attempt and last observation. An unbound

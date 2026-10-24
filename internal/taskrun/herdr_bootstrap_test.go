@@ -44,6 +44,7 @@ func workflowBootstrapCalls(t *testing.T, f workflowFixture) []workflowBootstrap
 		if err := json.Unmarshal([]byte(row), &call); err != nil {
 			t.Fatal(err)
 		}
+		call.Argv = workflowInputArgv(t, call.Argv)
 		out = append(out, call)
 	}
 	return out

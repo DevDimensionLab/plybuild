@@ -26,8 +26,8 @@ func al33FailedReview(t *testing.T, model ...map[string]any) (deliveryFixture, W
 if cmd == ["agent", "start"] and "--pane" in args and args[args.index("--pane")+1].startswith("w-fixture:r"):
     sys.stderr.write(model.get("al33_start_stderr", "SECRET-child-message"))
     raise SystemExit(1)
-if cmd == ["agent", "prompt"] and args[2].startswith("w-fixture:r") and model.get("al33_bootstrap"):
-    time.sleep(1) # only the synthetic bootstrap consumes the 400ms fixture budget
+if cmd == ["agent", "startup"] and args[2] == "submit" and json.loads(Path(args[4]).read_text())["kind"] == "bootstrap" and model.get("al33_bootstrap"):
+    time.sleep(3) # only this synthetic guarded bootstrap exhausts the shared fixture budget
     raise SystemExit(0)
 if cmd == ["agent", "get"] and args[2].startswith("w-fixture:r"):
     if model.get("al33_bootstrap"):
@@ -56,7 +56,7 @@ if cmd == ["agent", "get"] and args[2].startswith("w-fixture:r"):
 	d.LocalProcesses = func(string, string) ([]LocalProcess, error) {
 		return []LocalProcess{{PID: os.Getpid(), ParentPID: 12345}}, nil
 	}
-	d.HerdrTimeout = 400 * time.Millisecond
+	d.HerdrTimeout = 2 * time.Second
 	reviewRoundIn(t, "w-fixture:root")
 	if _, err = WorkflowDeliveryRequestReview(d, f.R.WorkspaceRoot, o.RunID, DeliveryReviewRequestInput{Coordinator: "synthetic coordinator"}); err == nil {
 		t.Fatal("expected synthetic startup failure")

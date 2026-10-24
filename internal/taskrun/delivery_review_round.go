@@ -345,6 +345,11 @@ func WorkflowDeliveryRequestReview(d Dependencies, root, id string, in DeliveryR
 	})
 	if e == nil && launch != nil {
 		e = deliveryLaunchReviewer(d, s, round, *launch)
+		if e != nil {
+			if _, keepErr := workflowKeep(d, filepath.Join(round.Dir, "startup-stop.json"), map[string]string{"reason": e.Error()}); keepErr != nil {
+				return WorkflowRun{}, keepErr
+			}
+		}
 	}
 	o, err := WorkflowShow(d, root, id)
 	if e != nil {

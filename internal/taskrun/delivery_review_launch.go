@@ -104,7 +104,15 @@ func deliveryReviewRead(path string, v any) (bool, error) {
 	return true, json.Unmarshal(raw, v)
 }
 
-func deliveryReviewStartState(dir string) deliveryReviewStart {
+func deliveryReviewStartState(dir string) (result deliveryReviewStart) {
+	defer func() {
+		var stop struct {
+			Reason string `json:"reason"`
+		}
+		if ok, err := deliveryReviewRead(filepath.Join(dir, "startup-stop.json"), &stop); err == nil && ok && result.State != "started" {
+			result.Detail += "; " + stop.Reason
+		}
+	}()
 	var launch deliveryReviewLaunch
 	if ok, e := deliveryReviewRead(filepath.Join(dir, "launch.json"), &launch); e != nil || !ok {
 		if e != nil {
@@ -161,6 +169,19 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 		limit = d.HerdrTimeout
 	}
 	deadline := time.Now().Add(limit)
+	// Persist the one round window before creating its transport. A repeated
+	// pending review observes the same files; it cannot mint another launch.
+	if l.Provider == "codex" {
+		window := startupTransport{State: s, Dir: r.Dir, Review: &r}
+		var err error
+		deadline, err = window.window(d, deadline)
+		if err != nil {
+			return err
+		}
+		if err = startupCapability(d, s, deadline); err != nil {
+			return err
+		}
+	}
 	b, e := deliveryReviewCall(d, s, deadline, l.TabArgv...)
 	if e != nil {
 		return workflowError(5, "reviewer tab create outcome is unknown; it is not replayed: "+e.Error())
@@ -196,7 +217,9 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 		}
 	}
 	owner := deliveryOwnerSession(s)
-	bootstrapped := false
+	transport := reviewerStartup(s, r, l, pane)
+	_, bootstrapErr := os.Lstat(filepath.Join(r.Dir, "bootstrap-attempt.json"))
+	bootstrapped := !os.IsNotExist(bootstrapErr)
 	var last error
 	var firstObservationFailure *deliveryReviewFailure
 	var lastSession, lastStatus string
@@ -221,10 +244,34 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 				observation.AgentStatus = a.Status
 			}
 		}
+		if observation.SessionID != "" && lastSession != "" && observation.SessionID != lastSession {
+			return workflowError(4, "reviewer native session changed during startup")
+		}
 		if observation.SessionID != "" {
 			lastSession, lastStatus = observation.SessionID, observation.AgentStatus
 		}
 		observation.SessionID, observation.AgentStatus = lastSession, lastStatus
+		positive := true
+		if e == nil && l.Provider == "codex" {
+			inspection, err := transport.inspect(d, deadline)
+			if err != nil {
+				observation.TaskPromptStage = "not_attempted"
+				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
+					return e
+				}
+				return err
+			}
+			if inspection.Surface == "update_skip_once" {
+				if err = transport.skip(d, deadline, inspection); err != nil {
+					return err
+				}
+				continue
+			}
+			if (inspection.Session == nil) != (a.Session == nil) || inspection.Session != nil && *inspection.Session != a.Session.Value {
+				return workflowError(4, "guarded reviewer session differs from fresh agent identity")
+			}
+			positive = inspection.PromptReady && !inspection.LaunchPending
+		}
 		if e == nil && a.Session != nil {
 			if a.Session.Value == owner {
 				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
@@ -232,7 +279,7 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 				}
 				return workflowError(4, "the started reviewer reports the owner's own session; an independent review needs a distinct session")
 			}
-			if workflowSettled(a) {
+			if workflowSettled(a) && positive {
 				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
 					return e
 				}
@@ -248,15 +295,44 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 				}
 				break
 			}
-		} else if e == nil && !bootstrapped && a.InteractiveReady != nil && *a.InteractiveReady && workflowSettled(a) {
+		} else if e == nil && positive && !bootstrapped && a.InteractiveReady != nil && *a.InteractiveReady && workflowSettled(a) {
 			// The provider defers its session until a first, tool-free turn.
 			bootstrap := []string{"agent", "prompt", pane.PaneID, workflowBootstrapPrompt, "--wait", "--until", "working", "--timeout", "10000"}
+			var safe startupSubmit
+			safePath := filepath.Join(r.Dir, "bootstrap-safe-submit.json")
+			if l.Provider == "codex" {
+				inspection, err := transport.inspect(d, deadline)
+				if err != nil {
+					return err
+				}
+				text := workflowBootstrapPrompt
+				safe, err = transport.prepare(d, deadline, startupBootstrap, &text, inspection)
+				if err != nil {
+					return err
+				}
+				if err = withStore(s.Request.WorkspaceRoot, func() error {
+					if err := transport.fence(d); err != nil {
+						return err
+					}
+					return transport.reserve(d, safePath, safe)
+				}); err != nil {
+					return err
+				}
+			}
 			if _, e = workflowKeep(d, filepath.Join(r.Dir, "bootstrap-attempt.json"), map[string]any{"argv": bootstrap}); e != nil {
 				return e
 			}
 			bootstrapped = true
 			observation.BootstrapPromptStage = "attempted"
-			_, _ = deliveryReviewCall(d, s, deadline, bootstrap...)
+			if l.Provider == "codex" {
+				if err := transport.submit(d, safePath, safe); err != nil {
+					if _, e = workflowKeep(d, safePath+".failure.json", map[string]string{"error": err.Error()}); e != nil {
+						return e
+					}
+				}
+			} else {
+				_, _ = deliveryReviewCall(d, s, deadline, bootstrap...)
+			}
 		}
 		if !time.Now().Before(deadline) {
 			if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
@@ -275,10 +351,46 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 	}
 	prompt := fmt.Sprintf("You are the independent reviewer for Ply review round %d of Run %s, started by %s. Read and follow %s. Review only; %s", r.Request.Round, s.Result.RunID, r.Request.Coordinator, r.Request.Brief.Locator, deliveryReviewerTestMandate)
 	send := []string{"agent", "prompt", pane.PaneID, prompt, "--wait", "--until", "working", "--timeout", "10000"}
+	var safe startupSubmit
+	safePath := filepath.Join(r.Dir, "prompt-safe-submit.json")
+	if l.Provider == "codex" {
+		fresh, err := deliveryReviewAgentGet(d, s, pane, l.AgentName, l.Provider, deadline)
+		if err != nil {
+			return err
+		}
+		start := deliveryReviewStartState(r.Dir)
+		if start.Agent == nil || fresh.Session == nil || fresh.Session.Value != start.Agent.SessionID || fresh.Session.Value == owner {
+			return workflowError(4, "reviewer identity changed before brief")
+		}
+		inspection, err := transport.inspect(d, deadline)
+		if err != nil {
+			return err
+		}
+		if inspection.Session == nil || *inspection.Session != fresh.Session.Value {
+			return workflowError(4, "guarded reviewer session differs before brief")
+		}
+		safe, err = transport.prepare(d, deadline, startupTask, &prompt, inspection)
+		if err != nil {
+			return err
+		}
+		if err = withStore(s.Request.WorkspaceRoot, func() error {
+			if err := transport.fence(d); err != nil {
+				return err
+			}
+			return transport.reserve(d, safePath, safe)
+		}); err != nil {
+			return err
+		}
+	}
 	if _, e = workflowKeep(d, filepath.Join(r.Dir, "prompt-attempt.json"), map[string]any{"argv": send}); e != nil {
 		return e
 	}
-	_, sendErr := deliveryReviewCall(d, s, deadline, send...)
+	var sendErr error
+	if l.Provider == "codex" {
+		sendErr = transport.submit(d, safePath, safe)
+	} else {
+		_, sendErr = deliveryReviewCall(d, s, deadline, send...)
+	}
 	result := deliveryReviewPromptResult{Outcome: "sent"}
 	if sendErr != nil {
 		result = deliveryReviewPromptResult{Outcome: "unknown", Error: sendErr.Error()}

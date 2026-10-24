@@ -579,6 +579,11 @@ func WorkflowResumeOwner(d Dependencies, root string, in DeliveryOwnerResumeInpu
 			return err
 		}
 		s.Result.Transport = WorkflowTransport{WorkspaceID: a.WorkspaceID, TabID: a.TabID, PaneID: a.PaneID, TerminalID: a.TerminalID, AgentSessionID: record.NativeSessionID, State: "unknown", Observation: "fresh", ObservedAt: d.Now().UTC().Format(time.RFC3339Nano)}
+		if s.Request.Runtime.Provider == "codex" {
+			if _, err := workflowKeep(d, filepath.Join(filepath.Dir(s.OwnerResume.Locator), "startup-deadline.json"), map[string]int64{"deadline_unix_ms": deadline.UnixMilli()}); err != nil {
+				return err
+			}
+		}
 		return d.writeValue(filepath.Join(filepath.Dir(s.OwnerResume.Locator), "agent-start-attempt.json"), map[string]any{"resume_sha256": s.OwnerResume.SHA256, "transport_sha256": transport.SHA256, "argv": startArgv})
 	})
 	if err != nil {
@@ -628,7 +633,28 @@ func ownerResumeFinish(d Dependencies, root, id string, generation int, deadline
 	if !workflowSettled(agent) {
 		return workflowError(4, "resumed owner is no longer idle; no input sent")
 	}
+	var safe startupSubmit
+	safePath := filepath.Join(filepath.Dir(current.OwnerResume.Locator), "prompt-safe-submit.json")
+	if current.Request.Runtime.Provider == "codex" {
+		transport := ownerStartup(current)
+		inspection, err := transport.inspect(d, deadline)
+		if err != nil {
+			return err
+		}
+		if inspection.Session == nil || *inspection.Session != current.Result.Transport.AgentSessionID {
+			return workflowError(4, "safe startup cannot prove resumed native session; no continuation sent")
+		}
+		safe, err = transport.prepare(d, deadline, startupTask, &prompt, inspection)
+		if err != nil {
+			return err
+		}
+	}
 	err = ownerResumeAdvance(d, root, id, generation, ownerResumeStartAttempted, ownerResumePromptAttempt, func(s *workflowState) error {
+		if s.Request.Runtime.Provider == "codex" {
+			if err := ownerStartup(*s).reserve(d, safePath, safe); err != nil {
+				return err
+			}
+		}
 		return d.writeValue(filepath.Join(filepath.Dir(s.OwnerResume.Locator), "prompt-attempt.json"), map[string]any{"resume_sha256": s.OwnerResume.SHA256, "argv": promptArgv, "codex_runtime_identity": agent.CodexResumeIdentity})
 	})
 	if err != nil {
@@ -637,7 +663,13 @@ func ownerResumeFinish(d Dependencies, root, id string, generation int, deadline
 	if err = d.fault("owner_resume_before_prompt_send"); err != nil {
 		return err
 	}
-	if _, callErr := workflowCallUntil(d, current.Request, deadline, promptArgv...); callErr != nil {
+	var callErr error
+	if current.Request.Runtime.Provider == "codex" {
+		callErr = ownerStartup(current).submit(d, safePath, safe)
+	} else {
+		_, callErr = workflowCallUntil(d, current.Request, deadline, promptArgv...)
+	}
+	if callErr != nil {
 		_ = workflowUpdate(d, root, id, func(s *workflowState) error {
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"delivery_owner_resume_prompt_response", callErr.Error()})
 			s.Result.NextAction = WorkflowAction{"user", "Look at Herdr pane " + s.Result.Transport.PaneID + ": the continuation prompt may have arrived and is never resent; repeat ply workflow execute --resume --check for the next step."}
@@ -673,6 +705,28 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 			return err
 		}
 		a, err := workflowAgentRead(d, s, deadline)
+		positive := true
+		if err == nil && s.Request.Runtime.Provider == "codex" {
+			if e := workflowLocation(s, a); e != nil {
+				return e
+			}
+			transport := ownerStartup(s)
+			inspection, e := transport.inspect(d, deadline)
+			if e != nil {
+				return e
+			}
+			if inspection.Surface == "update_skip_once" {
+				if e = transport.skip(d, deadline, inspection); e != nil {
+					return e
+				}
+				continue
+			}
+			if inspection.Session != nil && *inspection.Session != s.Result.Transport.AgentSessionID {
+				return workflowError(4, "safe startup resumed native session differs from bound owner")
+			}
+			positive = inspection.PromptReady && !inspection.LaunchPending && inspection.Session != nil
+		}
+
 		if err == nil {
 			// Herdr can report the provider before its cwd or session settles.
 			// Absent or unsettled is not different; only another session is.
@@ -693,7 +747,7 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 				}
 			} else if err = workflowSession(s, a, false); err != nil {
 				return workflowError(4, "resumed provider is not the same bound session; no input was sent: "+err.Error())
-			} else if workflowSettled(a) {
+			} else if workflowSettled(a) && positive {
 				return workflowUpdate(d, root, id, func(s *workflowState) error {
 					workflowObserve(d, s, a)
 					return nil

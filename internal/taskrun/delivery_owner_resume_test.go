@@ -115,6 +115,10 @@ func newOwnerResumeFixture(t *testing.T, provider string, qualified bool, before
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	t.Setenv("HERDR_ENV", "1")
 	workflowTestModel(t, f.workflowFixture, map[string]any{"closed_transport": true, "agent_status": "idle"})
+	// Keep synthetic inventory observations stable across preview/apply so
+	// these tests reach the resume effects they are intended to exercise.
+	observed := f.D.Now()
+	f.D.Now = func() time.Time { return observed }
 	f.D.HerdrTimeout = 3 * time.Second
 	return ownerResumeFixture{f, o, DeliveryOwnerResumeInput{RunID: o.RunID, ProviderExecutable: f.R.Runtime.Executable, ControlExecutable: f.R.Runtime.PlyExecutable, Timeout: 3 * time.Second}}
 }
@@ -164,6 +168,7 @@ func ownerResumeArgv(t *testing.T, f deliveryFixture, command string) [][]string
 		if len(line) == 0 || json.Unmarshal(line, &x) != nil {
 			continue
 		}
+		x.Argv = workflowInputArgv(t, x.Argv)
 		if strings.Join(x.Argv[:2], " ") == command {
 			out = append(out, x.Argv)
 		}

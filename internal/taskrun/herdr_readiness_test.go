@@ -85,6 +85,7 @@ func TestWorkflowReadinessWaitsWithinOneStart(t *testing.T) {
 				if call.Argv[0] == "agent" && call.Argv[1] == "get" {
 					gets++
 				}
+				call.Argv = workflowInputArgv(t, call.Argv)
 				if call.Argv[0] == "agent" && call.Argv[1] == "prompt" && gets < 3 {
 					t.Fatal("prompt preceded fresh readiness")
 				}
