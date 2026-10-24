@@ -17,6 +17,11 @@ func agentWorkOutput(cmd *cobra.Command, format string, v any) error {
 		return json.NewEncoder(cmd.OutOrStdout()).Encode(v)
 	}
 	switch x := v.(type) {
+	case agentwork.MetadataReadback:
+		fmt.Fprintf(cmd.OutOrStdout(), "Agent metadata · read %s · source %s · coverage %s\n", x.ObservedAtUTC, x.Sources[0].Status, x.Sources[0].Coverage)
+		for _, a := range x.Agents {
+			fmt.Fprintf(cmd.OutOrStdout(), "%s %s · %s · tab %s · workspace %s\n", a.Pane, a.Provider, a.Status, a.Tab, a.Workspace)
+		}
 	case agentwork.Overview:
 		fmt.Fprintf(cmd.OutOrStdout(), "Agent work · read %s\n", x.ObservedAtUTC)
 		for _, s := range x.Sources {
@@ -59,9 +64,13 @@ func agentWorkFormat(cmd *cobra.Command, format string) error {
 }
 func newAgentWorkCommand(factory agentWorkFactory) *cobra.Command {
 	var root, format string
+	var metadataOnly bool
 	c := &cobra.Command{Use: "agents", SilenceUsage: true, Short: "Read public fresh agent observations and separate native work/follow-ups", Args: cobra.NoArgs, PersistentPreRunE: func(*cobra.Command, []string) error { return nil }, RunE: func(cmd *cobra.Command, _ []string) error {
 		if e := agentWorkFormat(cmd, format); e != nil {
 			return e
+		}
+		if metadataOnly {
+			return agentWorkOutput(cmd, format, agentwork.StatusMetadata(agentwork.HerdrRuntime{Executable: "herdr"}))
 		}
 		s, e := factory(root)
 		if e != nil {
@@ -73,6 +82,7 @@ func newAgentWorkCommand(factory agentWorkFactory) *cobra.Command {
 		}
 		return agentWorkOutput(cmd, format, o)
 	}}
+	c.Flags().BoolVar(&metadataOnly, "metadata-only", false, "read only versioned public status metadata; no native work or history reads")
 	c.Flags().StringVar(&root, "workspace", "", "physical Ply workspace root (default: discover)")
 	c.Flags().StringVar(&format, "format", "text", "text or json")
 	return c

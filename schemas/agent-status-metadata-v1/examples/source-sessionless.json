@@ -1,0 +1,18 @@
+{
+  "result": {
+    "agents": [
+      {
+        "agent": "codex",
+        "agent_status": "future-status",
+        "workspace_id": "w1",
+        "tab_id": "w1:t1",
+        "pane_id": "w1:p1",
+        "agent_session": null,
+        "terminal_id": {
+          "ignored": "execution-only"
+        }
+      }
+    ],
+    "type": "agent_list"
+  }
+}

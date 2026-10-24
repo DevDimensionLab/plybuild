@@ -29,7 +29,7 @@ func (b *limitedOutput) Write(p []byte) (int, error) {
 	b.data = append(b.data, p...)
 	return n, nil
 }
-func (h HerdrRuntime) call(args ...string) (json.RawMessage, error) {
+func (h HerdrRuntime) callBytes(args ...string) ([]byte, error) {
 	limit := h.Timeout
 	if limit <= 0 {
 		limit = 10 * time.Second
@@ -44,11 +44,18 @@ func (h HerdrRuntime) call(args ...string) (json.RawMessage, error) {
 	if e := c.Run(); e != nil || out.overflow || errout.overflow {
 		return nil, fmt.Errorf("herdr_source_unavailable")
 	}
+	return out.data, nil
+}
+func (h HerdrRuntime) call(args ...string) (json.RawMessage, error) {
+	data, e := h.callBytes(args...)
+	if e != nil {
+		return nil, e
+	}
 	var env struct {
 		Result json.RawMessage `json:"result"`
 		Error  json.RawMessage `json:"error"`
 	}
-	if !json.Valid(out.data) || json.Unmarshal(out.data, &env) != nil || len(env.Result) == 0 || string(env.Result) == "null" || len(env.Error) > 0 && string(env.Error) != "null" {
+	if !json.Valid(data) || json.Unmarshal(data, &env) != nil || len(env.Result) == 0 || string(env.Result) == "null" || len(env.Error) > 0 && string(env.Error) != "null" {
 		return nil, fmt.Errorf("herdr_response_invalid")
 	}
 	return env.Result, nil

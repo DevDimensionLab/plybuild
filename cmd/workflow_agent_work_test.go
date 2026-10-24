@@ -103,3 +103,54 @@ func TestAgentWorkSummaryOnlyTextReadback(t *testing.T) {
 		})
 	}
 }
+
+// SM01: metadata selects its transport before constructing the full native service.
+func TestAgentStatusMetadataCLIBypassesNative(t *testing.T) {
+	dir := t.TempDir()
+	calls := filepath.Join(dir, "calls")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> '" + calls + "'\n[ \"$*\" = 'agent list' ] || exit 8\nprintf '%s' '{\"result\":{\"type\":\"agent_list\",\"agents\":[{\"agent\":\"codex\",\"pane_id\":\"w1:p1\",\"tab_id\":\"w1:t1\",\"workspace_id\":\"w1\",\"agent_status\":\"done\",\"terminal_id\":{},\"agent_session\":false}]}}'\n"
+	if e := os.WriteFile(filepath.Join(dir, "herdr"), []byte(script), 0700); e != nil {
+		t.Fatal(e)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	for n := 0; n < 2; n++ {
+		c := newAgentWorkCommand(func(string) (*agentwork.Service, error) { t.Fatal("full/native factory called"); return nil, nil })
+		var out bytes.Buffer
+		c.SetOut(&out)
+		c.SetErr(&bytes.Buffer{})
+		c.SetArgs([]string{"--metadata-only", "--format", "json", "--workspace", "/nonexistent-metadata-needs-no-ply"})
+		if e := c.Execute(); e != nil {
+			t.Fatal(e)
+		}
+		var v struct {
+			Kind    string           `json:"kind"`
+			Agents  []map[string]any `json:"agents"`
+			Sources []struct {
+				Status   string `json:"status"`
+				Coverage string `json:"coverage"`
+			} `json:"sources"`
+		}
+		if e := json.Unmarshal(out.Bytes(), &v); e != nil {
+			t.Fatal(e)
+		}
+		if v.Kind != "AgentStatusMetadataReadback@1" || len(v.Agents) != 1 || len(v.Agents[0]) != 5 || v.Sources[0].Coverage != "complete" {
+			t.Fatal(out.String())
+		}
+	}
+	b, e := os.ReadFile(calls)
+	if e != nil || string(b) != "agent list\nagent list\n" {
+		t.Fatal(string(b), e)
+	}
+}
+
+func TestAgentStatusMetadataCapability(t *testing.T) {
+	for _, op := range coreCapabilities(capabilityBuild{}).ReadExtensions {
+		if op.ID == "workflow.agents" && op.Mode == "metadata-only" {
+			if len(op.ResultSchemas) != 1 || op.ResultSchemas[0].Kind != "AgentStatusMetadataReadback@1" || strings.Join(op.Selectors, " ") != "--metadata-only" {
+				t.Fatal(op)
+			}
+			return
+		}
+	}
+	t.Fatal("SM01 metadata capability missing")
+}

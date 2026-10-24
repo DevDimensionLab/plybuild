@@ -97,6 +97,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("worktree.list", "default", "WorkspaceWorktreeListReadback@1", []string{}, []string{"project", "repo"}, "independent_and"),
 	}
 	extensions = append(extensions, capabilityOperation{ID: "workflow.agents", Command: []string{"workflow", "agents"}, Mode: "default", Selectors: []string{"--workspace"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"AgentWorkReadback@1", &one}}, Effect: "read"})
+	extensions = append(extensions, capabilityOperation{ID: "workflow.agents", Command: []string{"workflow", "agents"}, Mode: "metadata-only", Selectors: []string{"--metadata-only"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"AgentStatusMetadataReadback@1", &one}}, Effect: "read"})
 	extensions = append(extensions, capabilityOperation{
 		ID: "workflow.status", Command: []string{"workflow", "status"}, Mode: "default",
 		Selectors: []string{"--all"}, Formats: []string{"text", "json"},
