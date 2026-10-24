@@ -57,6 +57,11 @@ if review_pane.startswith("w-fixture:r"):
     if model.get("review_sessionless") and not model.get("review_bootstrapped"):
         agent["agent_session"] = None
         agent["interactive_ready"] = True
+    if cmd == ["agent", "get"] and model.get("review_bootstrapped") and model.get("review_safe_unknown_while_working"):
+        count = model.get("review_bootstrap_gets", 0) + 1
+        model["review_bootstrap_gets"] = count
+        if count == 1:
+            agent["agent_status"] = "working"
     if model.get("al33_bootstrap"):
         agent.update(name=model["al33_name"],agent_session=None,interactive_ready=True)
     elif model.get("al33_live"):

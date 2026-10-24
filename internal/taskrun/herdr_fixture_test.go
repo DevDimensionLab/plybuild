@@ -61,7 +61,17 @@ def startup_fixture(agent):
     review = request["target"].startswith("w-fixture:r")
     prefix = "review_" if review else ""
     if args[2] == "inspect":
-        surface = model.get(prefix + "safe_surface", "provider_prompt")
+        index = model.get(prefix + "safe_inspect_count", 0)
+        sequence = model.get(prefix + "safe_inspections", [{}])
+        step = sequence[min(index, len(sequence) - 1)]
+        model[prefix + "safe_inspect_count"] = index + 1
+        if index == model.get(prefix + "safe_inspect_denied_at", -1):
+            path.write_text(json.dumps(model))
+            print(json.dumps({"error":{"code":"permission_denied","message":"synthetic inspection refusal"}}))
+            raise SystemExit(1)
+        surface = step.get("surface", model.get(prefix + "safe_surface", "provider_prompt"))
+        if model.get(prefix + "safe_unknown_while_working") and agent.get("agent_status") == "working":
+            surface = "unknown"
         if model.get(prefix + "safe_skip") and not model.get(prefix + "safe_skipped"):
             surface = "update_skip_once"
         if model.get("safe_require_thread_profile") and not model.get("safe_thread_profiles", {}).get(request["target"], False):
@@ -77,6 +87,7 @@ def startup_fixture(agent):
                   "launch_pending":agent.get("launch_pending",False), "native_session":session["value"] if session else None,
                   "menu":{"layout_id":"codex-0.164-picker-v1","selected_index":0,"skip_action":"skip_once"} if surface == "update_skip_once" else None,
                   "attempt":model.get(request.get("attempt_id"))}}
+        result["startup"].update(step)
         result["startup"].update(model.get(prefix + "safe_override",{}))
         for field in model.get(prefix + "safe_drop",[]):
             result["startup"].pop(field,None)
@@ -101,6 +112,9 @@ def startup_fixture(agent):
                       "bytes_written":model.get(prefix + "safe_bytes","some"), "reason":"synthetic writer result"}
         model[request["attempt_id"]] = submission
         result = {"submission":submission}
+    model.setdefault("safe_history", []).append({"operation": args[2], "target": request["target"],
+        "surface": result.get("startup", {}).get("surface"), "kind": request.get("kind"),
+        "deadline": request.get("deadline_unix_ms"), "at_ms": int(time.time()*1000)})
     path.write_text(json.dumps(model))
     if args[2] == "submit" and model.get(prefix + "safe_denied") == request["kind"]:
         print(json.dumps({"error":{"code":"permission_denied","message":"synthetic refusal"}}))

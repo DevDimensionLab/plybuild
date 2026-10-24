@@ -259,7 +259,12 @@ the Task. Codex versions that defer their `SessionStart` hook until the first tu
 need a short readiness exchange. New Codex launches require the selected running
 Herdr server's `safe_startup_v1` capability and fresh guarded inspection evidence
 for an empty editable provider prompt, with or without a native session. A session
-plus idle status is insufficient. When that prompt is sessionless, Ply sends one
+plus idle status is insufficient. During owner, reviewer and closed-tab resume
+readiness waits, a valid provisional `unknown` surface is observed again without
+input within the original saved window. This includes loading frames and working
+frames after bootstrap. Only a fresh positive provider prompt can end that wait;
+unknown evidence cannot authorize a skip, bootstrap, Task or review brief.
+When that prompt is sessionless, Ply sends one
 fixed message asking for `PLY_READY`
 without tools or file changes. This message contains no Task instructions. The
 attempt is recorded before input in `startup-bootstrap-attempt.json`; it is never
@@ -302,6 +307,11 @@ Generation-local private records preserve the original send deadline, epoch and
 managed launch plus immutable skip/bootstrap/Task requests and available writer
 outcomes. Missing, partial or unknown outcomes never release a consumed slot.
 Reinspection cannot extend the startup deadline or accept an epoch/identity change.
+Malformed, conflicting or stale inspection evidence, binding/session drift,
+known refusal and transport failures stop the dependent action immediately.
+Awaiting a provisional surface does not retry a failed call or replay a consumed
+input. A permanently unknown surface expires at the original deadline, retaining
+the last inspection for diagnosis.
 
 If readiness remains blocked, disappears, changes identity or reaches the deadline,
 the coordinator inspects the preserved attempt and last observation. An unbound

@@ -63,6 +63,11 @@ type startupSubmit struct {
 	Text      *string         `json:"text"`
 	Deadline  int64           `json:"deadline_unix_ms"`
 }
+
+func (p startupSubmit) submitted(result startupSubmission) bool {
+	return result.AttemptID == p.AttemptID && result.Kind == p.Kind && result.Binding == p.Binding && digestPattern.MatchString(result.PayloadDigest) && plain(result.Reason, 1, 2000) && result.Outcome == "submitted" && result.BytesWritten == "some"
+}
+
 type startupGuard struct {
 	Binding  startupBinding `json:"binding"`
 	Epoch    string         `json:"server_epoch"`
@@ -193,6 +198,20 @@ func startupCapability(d Dependencies, s workflowState, deadline time.Time) erro
 	return nil
 }
 func (t startupTransport) inspect(d Dependencies, deadline time.Time) (startupInspection, error) {
+	out, err := t.observe(d, deadline)
+	if err == nil && out.Surface != "provider_prompt" && out.Surface != "update_skip_once" {
+		err = workflowError(4, "safe startup surface="+out.Surface+"; coordinator must inspect the same terminal; no input sent")
+	}
+	return out, err
+}
+
+func (s startupInspection) positivePrompt() bool {
+	return s.Surface == "provider_prompt" && s.PromptReady && !s.LaunchPending
+}
+
+// Only startup readiness loops may await a valid unknown surface. Observation
+// still fences the same launch and original window; it grants no input authority.
+func (t startupTransport) observe(d Dependencies, deadline time.Time) (startupInspection, error) {
 	var out startupInspection
 	deadline, err := t.window(d, deadline)
 	if err != nil {
@@ -253,6 +272,9 @@ func (t startupTransport) inspect(d Dependencies, deadline time.Time) (startupIn
 	if out.Surface == "provider_prompt" && out.Menu != nil {
 		return out, workflowError(4, "conflicting startup menu and prompt evidence; no input sent")
 	}
+	if out.Surface == "unknown" && (out.PromptReady || out.Menu != nil) {
+		return out, workflowError(4, "conflicting unknown startup evidence; no input sent")
+	}
 	if out.Surface != "provider_prompt" && out.Surface != "update_skip_once" && out.Surface != "blocked" && out.Surface != "unknown" {
 		return out, workflowError(4, "unrecognized safe startup surface; no input sent")
 	}
@@ -264,8 +286,28 @@ func (t startupTransport) inspect(d Dependencies, deadline time.Time) (startupIn
 	}); err != nil {
 		return out, err
 	}
-	if out.Surface != "provider_prompt" && out.Surface != "update_skip_once" {
+	if out.Surface == "blocked" {
 		return out, workflowError(4, "safe startup surface="+out.Surface+"; coordinator must inspect the same terminal; no input sent")
+	}
+	if out.Surface == "unknown" {
+		// A provisional frame is waitable only before input or after a known
+		// submission. Do not turn an unresolved skip/bootstrap effect into
+		// startup lag. Existing fresh-positive resolution remains separate.
+		for _, name := range []string{"startup-skip-attempt.json", "startup-bootstrap-submit.json", "bootstrap-safe-submit.json"} {
+			path := filepath.Join(t.Dir, name)
+			request, err := readFile(path, 2<<20, true)
+			if os.IsNotExist(err) {
+				continue
+			} else if err != nil {
+				return out, err
+			}
+			raw, err := readFile(path+".result.json", 8192, true)
+			var reserved startupSubmit
+			var result startupSubmission
+			if err != nil || json.Unmarshal(request, &reserved) != nil || reserved.Binding != t.Binding || json.Unmarshal(raw, &result) != nil || !reserved.submitted(result) {
+				return out, workflowError(4, "guarded startup input has an unresolved outcome; unknown surface cannot resolve it; inspect without replay")
+			}
+		}
 	}
 	err = withStore(t.State.Request.WorkspaceRoot, func() error {
 		if err := t.fence(d); err != nil {
@@ -367,7 +409,7 @@ func (t startupTransport) submit(d Dependencies, path string, p startupSubmit) e
 		if _, err = workflowKeep(d, path+".result.json", result); err != nil {
 			return err
 		}
-		if result.AttemptID != p.AttemptID || result.Kind != p.Kind || result.Binding != p.Binding || !digestPattern.MatchString(result.PayloadDigest) || !plain(result.Reason, 1, 2000) || result.Outcome != "submitted" || result.BytesWritten != "some" {
+		if !p.submitted(*result) {
 			outcome, bytes := result.Outcome, result.BytesWritten
 			if outcome != "submitted" && outcome != "not_sent" && outcome != "unknown" {
 				outcome = "unrecognized"

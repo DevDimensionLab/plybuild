@@ -724,7 +724,7 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 				}
 			}
 			transport := ownerStartup(s)
-			inspection, e := transport.inspect(d, deadline)
+			inspection, e := transport.observe(d, deadline)
 			if e != nil {
 				return e
 			}
@@ -740,7 +740,7 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 				}
 				continue
 			}
-			positive = inspection.PromptReady && !inspection.LaunchPending && inspection.Session != nil
+			positive = inspection.positivePrompt() && inspection.Session != nil
 		}
 
 		if err == nil {

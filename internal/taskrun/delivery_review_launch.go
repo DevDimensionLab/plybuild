@@ -259,7 +259,7 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 		}
 		positive := true
 		if e == nil && l.Provider == "codex" {
-			inspection, err := transport.inspect(d, deadline)
+			inspection, err := transport.observe(d, deadline)
 			if err != nil {
 				observation.TaskPromptStage = "not_attempted"
 				if _, e = workflowKeep(d, filepath.Join(r.Dir, "session-observation.json"), observation); e != nil {
@@ -276,7 +276,7 @@ func deliveryLaunchReviewer(d Dependencies, s workflowState, r deliveryReviewRec
 				}
 				continue
 			}
-			positive = inspection.PromptReady && !inspection.LaunchPending
+			positive = inspection.positivePrompt()
 		}
 		if e == nil && a.Session != nil {
 			if workflowSettled(a) && positive {

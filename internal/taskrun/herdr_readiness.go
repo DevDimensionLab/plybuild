@@ -118,7 +118,7 @@ func workflowAwaitReadinessGeneration(d Dependencies, root, id string, deadline 
 		if s.Request.Runtime.Provider == "codex" {
 			transport := ownerStartup(s)
 			var err error
-			inspection, err = transport.inspect(d, deadline)
+			inspection, err = transport.observe(d, deadline)
 			if err != nil {
 				return err
 			}
@@ -135,8 +135,8 @@ func workflowAwaitReadinessGeneration(d Dependencies, root, id string, deadline 
 		ready := a.Session != nil && workflowSettled(a)
 		bootstrap := a.Session == nil && a.InteractiveReady != nil && *a.InteractiveReady && workflowSettled(a) && s.Phase == "agent_start_attempted"
 		if s.Request.Runtime.Provider == "codex" {
-			ready = ready && inspection.PromptReady && !inspection.LaunchPending
-			bootstrap = bootstrap && inspection.PromptReady && !inspection.LaunchPending
+			ready = ready && inspection.positivePrompt()
+			bootstrap = bootstrap && inspection.positivePrompt()
 		}
 
 		if e = workflowUpdate(d, root, id, func(s *workflowState) error {
