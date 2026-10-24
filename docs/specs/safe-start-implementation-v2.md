@@ -76,32 +76,39 @@ Task requires a nonempty text and an exact native session bound by inspection. S
 Bootstrap requires a sessionless provider prompt; Task requires a session-present provider prompt.
 Return `result.submission` with attempt ID, kind, binding, payload digest, outcome, bytes-written status and reason.
 Outcomes are `not_sent`, `submitted` or `unknown`; `submitted` means bytes including required submission were written, not model completion.
-Inspection with `attempt_id` returns the same durable record alongside fresh surface evidence, without sending bytes.
+Inspection with `attempt_id` returns the volatile outcome within the same server epoch, without sending bytes; after restart it is unavailable/unknown.
 Validation errors report `not_sent` only with positive zero-byte proof. Disconnect/timeout/partial write never implies zero bytes.
 
 ## Atomic submission and durable outcomes
 
 Implement at existing API/runtime/PTY seams, with narrow server-owned data; no generic dialog service or global settings.
-Use an owner-only startup journal beside the selected session's runtime state, separate from frozen snapshot codecs.
-Before any write, atomically reserve the unique `(managed_launch_id, kind)` slot, binding the Run/generation, attempt ID,
-full request digest, deadline and validated evidence. Flush the reservation durably before enqueuing input.
-Binding a launch to another Run/generation or another attempt for an occupied slot rejects without input.
-Identical retries return the existing outcome, never enqueue again; changed payloads under the same ID reject.
-Journal failure sends zero bytes. Crash after reservation stays unknown; preserve records across reconnect/restore.
-After server replacement, invalidate evidence tokens and retain unresolved reservations; do not silently create a new launch identity for surviving input.
-If restored journal/launch identity cannot be proved, disable startup submission and require coordinator inspection.
+Ply alone owns durable consumed reservations for skip/bootstrap/Task; no second durable Herdr journal or restore protocol is required.
+Herdr atomically consumes an epoch-bound volatile one-shot token and `(managed_launch_id, kind)` slot before queueing,
+binding Run/generation, attempt ID, request digest and deadline. Another ID, payload or generation cannot reuse an occupied slot.
+Same-epoch duplicate submissions return the existing outcome without enqueueing; Ply uses read-only lookup, never transport retries.
+Restart creates a new server epoch and invalidates all old tokens/outcomes; Ply retains every consumed reservation and treats missing outcomes as unknown.
+Fresh tokens, reconnects, restored terminals or new IDs cannot authorize resending a consumed/unknown Ply attempt.
+Crash after reservation but before a known write remains conservatively consumed; positive zero-byte evidence does not release the slot.
 
-The PTY consumer must revalidate immediately before the first byte, after queued delay, and before each remaining partial write:
-same binding/epoch/launch/session, current foreground provider, unexpired token/deadline and exact expected surface.
-Serialize observation validation and write admission with terminal updates and competing user/API input; invalidate the guard on intervening input.
-Use current parsed detection evidence and a revocable identity guard, not an App-state check followed by an unguarded queue.
-No unconsumed terminal output may be ignored to preserve a stale token. Unavailable evidence rejects without input.
+Use phase-aware guards at the existing PTY writer, with one serialized input transaction and current parsed detection evidence:
 
-For text plus delayed Enter, retain existing paste encoding/boundary handling and delay, but guard both boundaries on Unix and Windows.
-After text, the guard expects this transaction's editor content/echo rather than the old empty-composer digest.
-Any unrelated surface, foreground, session, input or deadline change cancels Enter and records partial/unknown;
-never send cleanup keys or replay text. Serialize other user submissions until completion/cancellation.
-After partial text, fresh idle/prompt appearance does not resolve submission as absent.
+- **first-byte admission:** after queueing/delay, require the exact token's fresh content/cursor, binding/epoch/launch/session,
+  foreground provider and deadline. Drain/process pending detection output before validation; token expiry sends zero bytes.
+  Activate the consumed token's transaction lease at admission; its two-second inspection TTL does not expire an admitted long paste.
+- **text-stream:** retain existing paste encoding/boundaries and Unix write offset; own prefix echo, redraw and cursor changes
+  do not require the old empty-composer revision or restart validation. Check a cheap revocable identity/input/deadline guard before each write continuation.
+  Parsed unrelated blockers/shell/updater/session changes revoke the lease. Serialize competing input; revoke on externally admitted input.
+  Windows uses an explicit guarded write loop in place of blind `write_all` for this path; advertise capability only where these guards work.
+- **echo-wait:** after all text bytes are acknowledged, process output and wait up to two seconds, clamped to the startup deadline,
+  for the same provider's editable composer showing this transaction's text or its version-supported paste-summary representation.
+  Delayed echo may succeed within that bound. Do not compare raw full text to a collapsed paste widget; an unrecognized representation,
+  unavailable echo or ambiguous attribution times out as partial/unknown, with no Enter. Own echo is attributed only while input remains exclusively leased.
+- **Enter admission:** retain the existing submit delay, then require the fresh compatible composer/own-paste evidence,
+  unchanged binding/foreground/session, unrevoked lease and remaining deadline immediately before writing Enter on both platforms.
+
+No new write syscall or Enter is admitted after deadline/revocation; already in-flight bytes cannot be retracted and remain possible partial input.
+Keep writer/parsed-state admission serialized; an API-layer check followed by an unguarded queued write is insufficient.
+Never send cleanup keys or replay partial text. A later idle/prompt appearance does not prove that text or Task submission was absent.
 After a lost skip reply, same-launch fresh provider-prompt evidence may establish dismissal and permit observation to continue;
 the skip attempt remains consumed and its uncertain write history remains recorded. A remaining/changed menu gets no second key.
 Bootstrap uncertainty resolves only through a fresh matching native session and settled positive provider prompt; Task uncertainty never permits resend.
@@ -110,6 +117,7 @@ Bootstrap uncertainty resolves only through a fresh matching native session and 
 
 Use the delivered producer's actual published schema/CLI, then extend only the cited startup/readiness/prompt/resume seams and fixtures.
 Check the selected server capability before any startup text; keep unsupported servers usable for unrelated actions.
+Hold consumer activation and subsequent real tasks until the named-endpoint gate below passes; keep the existing working controller meanwhile.
 Keep Run/Task/request, provider executable and permission controls unchanged; a receipt is not blanket runtime permission.
 
 1. Read preserved state first. Active denial, possible Task input, accepted work, missing reservation evidence or unresolved prior effect stops dependent sends.
@@ -146,11 +154,11 @@ Herdr engine tests use synthetic manifests/minimal strings; do not freeze invent
 | AT01 skip | Herdr `startup_skip_direct_key_is_one_shot`; Ply `TestWorkflowStartupSkipsOnceBeforeReadiness` | Source-bound layout metadata selects only byte `2`; concurrent/duplicate requests and lost replies write at most once; skip→fresh prompt→optional bootstrap→Task ordering. |
 | AT02 blocked | Herdr `startup_unknown_surface_writes_nothing`; Ply `TestWorkflowStartupRejectsBlockedSurface` | Unknown/truncated/missing-skip/updater/shell/security/model-offer surfaces write zero text/keys despite idle/session metadata; exact next actor. |
 | AT03 readiness | Ply `TestWorkflowStartupRequiresPositivePromptInBothBranches`; extend [bootstrap tests](../../internal/taskrun/herdr_bootstrap_test.go) | Both session branches reject absent/false evidence, stale Active and identity drift; sessionless bootstrap once, then fresh matching session/prompt. |
-| AT04 consumption | Herdr `startup_guard_rechecks_at_writer_and_enter` | Change menu/cursor/foreground/session after inspection, while queued, between text and Enter and during partial writes; reject before first byte or preserve partial/unknown with no Enter. |
-| AT05 durability | Herdr `startup_reservation_survives_crash_and_reconnect`; Ply `TestWorkflowStartupUnknownEffectsNeverReplay` | Crash before/after enqueue, disconnect, changed payload, new ID, concurrent resume, restored missing journal: no duplicate skip/bootstrap/Task input; refusal retained. |
+| AT04 consumption | Herdr `startup_guard_rechecks_at_writer_and_enter`, `startup_own_echo_allows_partial_paste` | Require positive long/partial paste with own redraw, delayed-echo success and supported paste-summary success. Unrelated surface/identity/input changes or unrecognized echo cancel safely before text/Enter; no self-invalidation on prefix echo. |
+| AT05 durability | Herdr `startup_token_is_consumed_within_epoch`; Ply `TestWorkflowStartupUnknownEffectsNeverReplay` | Crash before/after enqueue, disconnect, changed payload/new ID, concurrent resume and server epoch replacement: volatile slots reject duplicates; Ply durable consumed reservations prevent all replay even when producer lookup is unavailable; refusal retained. |
 | AT06 deadline | Herdr `startup_expiry_cancels_queued_input`; extend [readiness tests](../../internal/taskrun/herdr_readiness_test.go) | One total launch deadline, expired token/queue/Enter sends nothing further, resume does not revive expired reservations. |
 | AT07 recovery | Extend `TestDeliveryStartRecoveryRejectsUnsafeStartEvidence` in [recovery tests](../../internal/taskrun/delivery_start_recovery_test.go) and [generation tests](../../internal/taskrun/delivery_recovery_generation_test.go) | Human upgrade/security remain separate; possible Task input, dirty/drifted base, active launch, remaining child or unavailable exit proof rejects; old-generation Task sender cannot reserve or send. |
-| AT08 compatibility | Herdr `startup_capability_requires_guarded_methods`; Ply `TestWorkflowStartupRequiresProducerCapability` | Old server/missing fields/unknown contract fails closed locally, no unsafe fallback; existing codec/endpoint fixtures and unrelated supported actions stay compatible. |
+| AT08 compatibility | Herdr `startup_capability_requires_guarded_methods`; Ply `TestWorkflowStartupRequiresProducerCapability`, `TestWorkflowStartupBindsQualifiedNamedEndpoint` | Old server/missing fields/unknown contract fails closed locally, no unsafe fallback; codec fixtures stay compatible. Mismatched CLI/socket/caller pane or unqualified endpoint blocks activation; real named-shell execute/review routes to the capable server. |
 
 ## Sequential delivery and runtime smoke
 
@@ -160,18 +168,29 @@ Herdr engine tests use synthetic manifests/minimal strings; do not freeze invent
    source OID/tree, binary hash and focused test evidence after separate review and authorized native local return.
 2. Use [justfile](/Users/perottochristensen/github/herdr/justfile) recipes: `just test-one FILTER` for RED/GREEN, then `just check` before commit;
    unavailable toolchain/SDK is an explicit evidence gap, not a pass. Build in the isolated implementation worktree.
-   For debug testing clear `HERDR_SOCKET_PATH`/`HERDR_CLIENT_SOCKET_PATH` and use a disposable explicit named session with the private binary.
+   For isolated tests clear inherited `HERDR_SOCKET_PATH`/`HERDR_CLIENT_SOCKET_PATH` and use an explicit named session with the private binary.
    Verify its socket/session/capability before input. Debug Codex disables the update flow; synthetic tests cannot substitute for release-layout qualification.
 3. Before modifying a bundled detection rule, obtain the required detection-buffer text/ANSI and explain evidence in that isolated session,
    using installed provider/version and the repository's throwaway detection workflow. Observe a naturally available menu; do not provoke upgrade/security.
-   Keep preexisting overrides intact and restore temporary ones. Without a live capture, record modeled/source-grounded skip support only;
-   live layout compatibility remains unqualified. No real upgrade occurs in acceptance.
-4. Root starts Ply consumer from the then-delivered Ply Epic, binding the exact delivered Herdr contract/source and test binary/server.
-   Native bounded acceptance runs AT01–AT08 with isolated fixtures; relevant Go tests, producer tests and separate reviews qualify their exact candidates.
-   Integration smoke must use a running producer with the new capability: replacing only the CLI cannot upgrade the server.
-5. Coordinator owns any later runtime deployment decision and session-preserving migration. Do not restart/replace active Herdr or disturb protected PROD/PLAN.
-   Until a qualified producer runs at the selected endpoint, consumer startup reports the dependency stop.
-   Record isolated positive startup, negative changed-surface, and actual installed-menu smoke separately; an untriggered menu proves no skip behavior.
+   Keep preexisting overrides intact and restore temporary ones. The source-grounded modeled contract can be built/reviewed before capture;
+   live menu compatibility remains unqualified and no live skip pass is claimed. Do not change bundled manifests without their required capture.
+   Producer reports must state this limit separately from modeled tests; an untriggered menu proves no skip behavior. No real upgrade occurs in acceptance.
+4. Root deploys the qualified producer binary to an isolated named Herdr session for **real Task routing**, not merely smoke testing.
+   Keep the active default server, protected PROD/PLAN and existing working launcher intact. Replacing CLI bytes alone does not upgrade a server.
+   Required before consumer activation: observe the actual named session/socket, running producer capability/epoch, binary path/hash and positive/negative
+   guarded-submission smoke. Preserve these endpoint facts and results; if any check fails, retain the old controller and hold activation/next tasks.
+5. Root owns a visible coordination shell created by that named server. [Pane environment](/Users/perottochristensen/github/herdr/src/integration/env.rs)
+   supplies genuine `HERDR_BIN_PATH`, `HERDR_SOCKET_PATH` and workspace/tab/pane values; read and verify them, never copy old `w9:pE` identity.
+   Native execute inherits the actual socket through its environment: [workflowCallUntil](../../internal/taskrun/herdr_transport.go) inherits the caller environment,
+   and [Herdr socket selection](/Users/perottochristensen/github/herdr/src/session.rs) honors `HERDR_SOCKET_PATH` without an explicit conflicting session flag.
+   [Runtime selection](../../internal/taskexecute/runtime.go) resolves `herdr` from PATH; use command-scoped PATH selecting the verified binary's directory,
+   verify resolution/hash in execute `--check`, and use the same context for start/review/returns. `HERDR_BIN_PATH` alone does not select Ply's CLI.
+   [Native execute](../../cmd/workflow_execute.go) accepts the actual `--herdr-workspace`; live `deliveryCallerPane` checks must match shell ancestry on this endpoint.
+   Root may drive that real shell via supported pane commands with real handles/return files while retaining responsibility in this conversation.
+6. Root starts Ply consumer from the then-delivered Ply Epic, binds the delivered producer contract and qualified endpoint, and runs bounded AT01–AT08,
+   relevant Go/producer tests, separate reviews and native candidate qualification. Gate activation on a successful native preview/start/review from that
+   genuine coordination shell and its observed destination; then route the next cancellation and coverage tasks through the same proven endpoint.
+   Recheck capability/epoch and routing context before each start; drift blocks sends. No global launcher/config change or new orchestration service is needed.
 
 ## This documentation candidate
 
