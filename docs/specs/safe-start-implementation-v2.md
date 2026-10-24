@@ -14,6 +14,7 @@ installed Codex reports `0.164.0`. These observations do not identify the instal
 | --- | --- |
 | Ply launch/input | [herdr_transport.go](../../internal/taskrun/herdr_transport.go): `workflowLaunch`, `workflowStartupCall`, `workflowPromptGenerationUntil`; Task submission checks settlement, without current positive prompt evidence. Preserve `workflowStartArgv` provider/model/effort/profile/policy. |
 | Ply readiness/bootstrap | [herdr_readiness.go](../../internal/taskrun/herdr_readiness.go): `workflowAwaitReadinessGeneration` accepts session-present plus settled; sessionless bootstrap uses explicit `interactive_ready`. Neither closes the submission race. |
+| Ply reviewer startup | [delivery_review_launch.go](../../internal/taskrun/delivery_review_launch.go): `deliveryLaunchReviewer` has a separate readiness loop and direct bootstrap/brief `agent prompt` sends. [Review rounds](../../internal/taskrun/delivery_review_round.go) and `deliveryReviewStartState` retain pending/unknown starts. These must use the same guarded adapter as owner startup. |
 | Ply continuation | [delivery_resume.go](../../internal/taskrun/delivery_resume.go), [delivery_start_recovery.go](../../internal/taskrun/delivery_start_recovery.go), [startup_process.go](../../internal/taskrun/startup_process.go): retain generation, pre-Task, exact exit/no-child and replacement guards. |
 | Herdr classification | [Codex manifest](/Users/perottochristensen/github/herdr/src/detect/manifests/codex.toml), [agent_detection.rs](/Users/perottochristensen/github/herdr/src/pane/agent_detection.rs), [terminal/state.rs](/Users/perottochristensen/github/herdr/src/terminal/state.rs): existing update rule recognizes an older layout; `codex_prompt_ready` is startup-oriented and managed Active can outlive current prompt evidence. |
 | Herdr API/input | [api/agents.rs](/Users/perottochristensen/github/herdr/src/app/api/agents.rs): `queue_agent_prompt` checks blocked/pending/foreground before queuing text and delayed Enter; `handle_agent_send_keys` has no expected-menu or one-shot guard. [runtime.rs](/Users/perottochristensen/github/herdr/src/terminal/runtime.rs), [Unix actor](/Users/perottochristensen/github/herdr/src/pty/actor/unix.rs), [Windows actor](/Users/perottochristensen/github/herdr/src/pty/actor.rs) own consumption. |
@@ -30,7 +31,7 @@ This is authoritative versioned source evidence, not a live terminal capture or 
 
 ## Herdr producer contract (proposed)
 
-Add only a startup inspection and guarded submission for managed Codex before its first Task prompt.
+Add only a startup inspection and guarded submission for managed Codex before its first owner Task prompt or reviewer brief.
 Advertise optional JSON ping capability `safe_startup_v1: true` only when both methods and writer guards exist.
 Missing/false capability disables this startup path with a concrete dependency stop; CLI help or bundled schema alone is insufficient.
 Installed `herdr agent --help` has neither proposed operation. Add CLI `agent startup inspect --file PATH`
@@ -72,7 +73,7 @@ Submission request for that observation:
 ```
 
 `kind` is `skip_once`, `bootstrap` or `task`. Bootstrap accepts only the existing tool-free readiness text;
-Task requires a nonempty text and an exact native session bound by inspection. Skip requires null text and the recognized menu.
+Task (including reviewer brief) requires nonempty text and an exact native session bound by inspection. Skip requires null text and the recognized menu.
 Bootstrap requires a sessionless provider prompt; Task requires a session-present provider prompt.
 Return `result.submission` with attempt ID, kind, binding, payload digest, outcome, bytes-written status and reason.
 Outcomes are `not_sent`, `submitted` or `unknown`; `submitted` means bytes including required submission were written, not model completion.
@@ -131,6 +132,13 @@ Keep Run/Task/request, provider executable and permission controls unchanged; a 
 5. All startup sends use the existing generation send fence, including Task input. Concurrent owners/resume share the durable reservations.
    Reservation with lost response permits read-only lookup, never a new attempt ID. Preserve `prompt_unknown` and prior refusals.
 
+Apply this same small adapter to `deliveryLaunchReviewer`'s readiness/bootstrap/brief sends and every pending-review continuation;
+revalidate any `deliveryReviewAwait*` helpers present at the then-delivered consumer base. Use generation `review/<round>/<startup-generation>`
+and the reviewer's exact pane/name/cwd/session, preserving its distinct-from-owner session and candidate/round binding.
+Reserve round-local skip, `bootstrap-attempt.json` and `prompt-attempt.json` before input; pending continuation reads those durable files first,
+not an in-memory bootstrap flag. It cannot repeat a consumed send, replace a pending reviewer, or bypass positive prompt/writer guards.
+Reviewer startup shares one bounded launch deadline and the same human/unknown-effect rules; direct old-method prompt fallback is forbidden here too.
+
 Keep the existing shared startup deadline, normally 90 seconds, covering launch, skip, bootstrap, session bind and Task send.
 Clamp calls and producer deadlines to remaining time; no input or delayed Enter after expiry. Skip/reinspection never extends it.
 A supported resume gets its own bounded observation window but retains old reservations and their expired send deadlines.
@@ -153,9 +161,9 @@ Herdr engine tests use synthetic manifests/minimal strings; do not freeze invent
 | --- | --- | --- |
 | AT01 skip | Herdr `startup_skip_direct_key_is_one_shot`; Ply `TestWorkflowStartupSkipsOnceBeforeReadiness` | Source-bound layout metadata selects only byte `2`; concurrent/duplicate requests and lost replies write at most once; skip→fresh prompt→optional bootstrap→Task ordering. |
 | AT02 blocked | Herdr `startup_unknown_surface_writes_nothing`; Ply `TestWorkflowStartupRejectsBlockedSurface` | Unknown/truncated/missing-skip/updater/shell/security/model-offer surfaces write zero text/keys despite idle/session metadata; exact next actor. |
-| AT03 readiness | Ply `TestWorkflowStartupRequiresPositivePromptInBothBranches`; extend [bootstrap tests](../../internal/taskrun/herdr_bootstrap_test.go) | Both session branches reject absent/false evidence, stale Active and identity drift; sessionless bootstrap once, then fresh matching session/prompt. |
+| AT03 readiness | Ply `TestWorkflowStartupRequiresPositivePromptInBothBranches`, `TestDeliveryReviewStartupUsesGuardedInput`; extend [bootstrap tests](../../internal/taskrun/herdr_bootstrap_test.go) and [review startup tests](../../internal/taskrun/delivery_review_round_test.go) | Owner and reviewer session branches reject absent/false evidence, updater/shell, stale Active and identity drift; each skips/bootstrap/briefs only through guarded input. Reviewer session remains distinct from owner. |
 | AT04 consumption | Herdr `startup_guard_rechecks_at_writer_and_enter`, `startup_own_echo_allows_partial_paste` | Require positive long/partial paste with own redraw, delayed-echo success and supported paste-summary success. Unrelated surface/identity/input changes or unrecognized echo cancel safely before text/Enter; no self-invalidation on prefix echo. |
-| AT05 durability | Herdr `startup_token_is_consumed_within_epoch`; Ply `TestWorkflowStartupUnknownEffectsNeverReplay` | Crash before/after enqueue, disconnect, changed payload/new ID, concurrent resume and server epoch replacement: volatile slots reject duplicates; Ply durable consumed reservations prevent all replay even when producer lookup is unavailable; refusal retained. |
+| AT05 durability | Herdr `startup_token_is_consumed_within_epoch`; Ply `TestWorkflowStartupUnknownEffectsNeverReplay`, `TestDeliveryReviewPendingStartupNeverReplays` | Crash/disconnect, changed payload/new ID, concurrent owner resume or pending reviewer continuation and epoch replacement: volatile slots reject duplicates; durable owner/round reservations prevent skip/bootstrap/Task/brief replay even without producer lookup; refusal retained. |
 | AT06 deadline | Herdr `startup_expiry_cancels_queued_input`; extend [readiness tests](../../internal/taskrun/herdr_readiness_test.go) | One total launch deadline, expired token/queue/Enter sends nothing further, resume does not revive expired reservations. |
 | AT07 recovery | Extend `TestDeliveryStartRecoveryRejectsUnsafeStartEvidence` in [recovery tests](../../internal/taskrun/delivery_start_recovery_test.go) and [generation tests](../../internal/taskrun/delivery_recovery_generation_test.go) | Human upgrade/security remain separate; possible Task input, dirty/drifted base, active launch, remaining child or unavailable exit proof rejects; old-generation Task sender cannot reserve or send. |
 | AT08 compatibility | Herdr `startup_capability_requires_guarded_methods`; Ply `TestWorkflowStartupRequiresProducerCapability`, `TestWorkflowStartupBindsQualifiedNamedEndpoint` | Old server/missing fields/unknown contract fails closed locally, no unsafe fallback; codec fixtures stay compatible. Mismatched CLI/socket/caller pane or unqualified endpoint blocks activation; real named-shell execute/review routes to the capable server. |
