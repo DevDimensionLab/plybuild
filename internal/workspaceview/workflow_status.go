@@ -12,15 +12,23 @@ import (
 // ReadWorkflowStatus composes one registered basis and the existing process
 // batch. It performs no live preflight, creates no state, and starts no process.
 func ReadWorkflowStatus(d workspace.Dependencies, o WorkflowStatusOptions) (WorkflowStatus, error) {
+	out, _, err := ReadWorkflowStatusWithInventory(d, o)
+	return out, err
+}
+
+// ReadWorkflowStatusWithInventory returns the exact captured run inventory used
+// by this status projection. It is request-local evidence, never a cache or
+// authority for a later operation. Failed optional history remains diagnostic.
+func ReadWorkflowStatusWithInventory(d workspace.Dependencies, o WorkflowStatusOptions) (WorkflowStatus, taskrun.Inventory, error) {
 	if err := o.Filters.Validate(); err != nil {
-		return WorkflowStatus{}, err
+		return WorkflowStatus{}, taskrun.Inventory{}, err
 	}
 	s, err := LoadSnapshot(d)
 	if err != nil {
-		return WorkflowStatus{}, err
+		return WorkflowStatus{}, taskrun.Inventory{}, err
 	}
 	if err := ValidateTaskFilters(s, o.Filters); err != nil {
-		return WorkflowStatus{}, err
+		return WorkflowStatus{}, taskrun.Inventory{}, err
 	}
 	process := readProgressProcess(d, s)
 	var runs taskrun.Inventory
@@ -35,7 +43,8 @@ func ReadWorkflowStatus(d workspace.Dependencies, o WorkflowStatusOptions) (Work
 	}
 	queues := workspace.ReadRegisteredTaskQueues(d, s.Workspace, s.Projects, s.Registry)
 	s.RefreshFreshness(d)
-	return BuildWorkflowStatus(s, o, process, runs, queues)
+	out, err := BuildWorkflowStatus(s, o, process, runs, queues)
+	return out, runs, err
 }
 
 // BuildWorkflowStatus is a pure projection. The native Progress remains intact;

@@ -85,7 +85,7 @@ func (s *Service) Overview() (Overview, error) {
 		source.Status = "empty"
 	}
 	out.Sources = append(out.Sources, source, ns)
-	list, e := s.List(false)
+	list, e := s.list(false, func() NativeSnapshot { return n })
 	fs := Source{Source: "ply.followups", Status: "available", Freshness: "fresh", Coverage: "Local status-only follow-up store, maximum 512; no Task status copies."}
 	if e != nil {
 		fs.Status = "unavailable"

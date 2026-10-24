@@ -43,7 +43,7 @@ func deref(v *string) string {
 }
 func readNative(d workspace.Dependencies, root string) NativeSnapshot {
 	out := NativeSnapshot{Vetoes: map[string]string{}}
-	v, e := workspaceview.ReadWorkflowStatus(d, workspaceview.WorkflowStatusOptions{SchemaVersion: 2, IncludeAll: true})
+	v, inventory, e := workspaceview.ReadWorkflowStatusWithInventory(d, workspaceview.WorkflowStatusOptions{SchemaVersion: 2, IncludeAll: true})
 	if e != nil {
 		return out
 	}
@@ -83,8 +83,7 @@ func readNative(d workspace.Dependencies, root string) NativeSnapshot {
 	for key := range pending {
 		out.Vetoes[key] = "native_question"
 	}
-	inventory, err := taskrun.ReadInventory(taskrun.SystemDependencies(d), root)
-	scopeInventory(&out, inventory, err)
+	scopeInventory(&out, inventory, nil)
 
 	byID := map[string]taskrun.InventoryRun{}
 	for _, run := range inventory.Runs {

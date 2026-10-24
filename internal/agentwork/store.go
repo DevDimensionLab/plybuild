@@ -104,6 +104,11 @@ func (s *Service) Show(id string) (Followup, error) {
 	return s.public(r.Value), nil
 }
 func (s *Service) List(due bool) (List, error) {
+	return s.list(due, s.native)
+}
+
+// list projects each row against one request-local native basis.
+func (s *Service) list(due bool, native func() NativeSnapshot) (List, error) {
 	o := List{ListKind, 1, s.now(), []Followup{}}
 	db, e := s.read()
 	if e != nil {
@@ -114,7 +119,7 @@ func (s *Service) List(due bool) (List, error) {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
-	n := s.native()
+	n := native()
 	for _, id := range ids {
 		f := db.Records[id].Value
 		if !due || f.State == "waiting" && f.Transport.State == "not_sent" && s.isDue(f) {

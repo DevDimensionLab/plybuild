@@ -14,11 +14,15 @@ func workflowCompletedCloseout(root string, s workflowState) (*workspace.TaskClo
 }
 
 func workflowTaskCloseout(root string, s workflowState) (*workspace.TaskCloseoutReceipt, error) {
+	return workflowTaskCloseoutWithRead(root, s, workspace.ReadTaskCloseoutAt)
+}
+
+func workflowTaskCloseoutWithRead(root string, s workflowState, read func(string, workspace.TaskID) (*workspace.TaskCloseoutReceipt, error)) (*workspace.TaskCloseoutReceipt, error) {
 	if s.Result.Delivery == nil || len(s.Result.Delivery.Candidates) == 0 {
 		return nil, nil
 	}
 	c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
-	r, e := workspace.ReadTaskCloseoutAt(root, c.TaskResult.TaskID)
+	r, e := read(root, c.TaskResult.TaskID)
 	if e != nil || r == nil {
 		return nil, e
 	}

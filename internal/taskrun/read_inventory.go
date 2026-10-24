@@ -70,6 +70,10 @@ var workflowRunIDPattern = regexp.MustCompile(`^wfr_[0-9a-f]{64}$`)
 // cannot hide valid siblings. No lock, process probe, provider call or repair is
 // performed. "Fresh" describes the files read, never provider liveness.
 func ReadInventory(d Dependencies, root string) (Inventory, error) {
+	return readInventory(d, root, workspace.ReadTaskCloseoutsAt)
+}
+
+func readInventory(d Dependencies, root string, readCloseouts func(string) ([]workspace.TaskCloseoutReceipt, error)) (Inventory, error) {
 	out := Inventory{Runs: []InventoryRun{}, Reasons: []Reason{}}
 	observed, err := workspace.ObserveRoot(d.Workspace, root)
 	if err != nil {
@@ -77,6 +81,27 @@ func ReadInventory(d Dependencies, root string) (Inventory, error) {
 	}
 	if observed.Root != root {
 		return out, conflict("inventory root is not the physical workspace root")
+	}
+	// Load and validate the whole closeout history at most once for this
+	// inventory, including errors and absence. A later read/operation starts over.
+	// Keep exact candidate/source validation in workflowTaskCloseoutWithRead.
+	var closeouts map[workspace.TaskID]*workspace.TaskCloseoutReceipt
+	var closeoutErr error
+	closeout := func(root string, id workspace.TaskID) (*workspace.TaskCloseoutReceipt, error) {
+		if _, err := workspace.ParseTaskID(string(id)); err != nil {
+			return nil, err
+		}
+		if closeouts == nil {
+			closeouts = map[workspace.TaskID]*workspace.TaskCloseoutReceipt{}
+			rows, err := readCloseouts(root)
+			closeoutErr = err
+			if err == nil {
+				for i := range rows {
+					closeouts[rows[i].Plan.TaskID] = &rows[i]
+				}
+			}
+		}
+		return closeouts[id], closeoutErr
 	}
 	workflowIDs := map[string]bool{}
 	for _, store := range []struct{ path, kind string }{
@@ -108,7 +133,7 @@ func ReadInventory(d Dependencies, root string) (Inventory, error) {
 			var row InventoryRun
 			if store.kind == "herdr" {
 				workflowIDs[id] = true
-				row = readHerdrInventoryRun(d, root, id)
+				row = readHerdrInventoryRunWithCloseout(d, root, id, closeout)
 			} else {
 				row = readNativeInventoryRun(d, root, id)
 			}
@@ -282,6 +307,10 @@ func readNativeInventoryRun(d Dependencies, root, id string) InventoryRun {
 }
 
 func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
+	return readHerdrInventoryRunWithCloseout(d, root, id, workspace.ReadTaskCloseoutAt)
+}
+
+func readHerdrInventoryRunWithCloseout(d Dependencies, root, id string, closeout func(string, workspace.TaskID) (*workspace.TaskCloseoutReceipt, error)) (row InventoryRun) {
 	row = inventoryEmpty(id, "herdr")
 	defer func() {
 		if row.Delivery != nil && row.Freshness != "fresh" {
@@ -427,7 +456,7 @@ func readHerdrInventoryRun(d Dependencies, root, id string) (row InventoryRun) {
 			row.Delivery.NextAction = inventoryDeliveryUnknownAction(s, "Preserved delivery state could not be read or bound; inspect the recorded source.")
 		}
 	}
-	if closeout, e := workflowTaskCloseout(root, s); e != nil {
+	if closeout, e := workflowTaskCloseoutWithRead(root, s, closeout); e != nil {
 		inventoryProblem(&row, e)
 	} else if closeout != nil {
 		row.Closeout = closeout
