@@ -251,6 +251,10 @@ func workerProductFinalStart(d Dependencies, s workflowState, in workerAttemptIn
 }
 
 func workerLaunchProductContinuation(d Dependencies, s workflowState) error {
+	control, controlErr := currentPlyPath(d)
+	if controlErr != nil {
+		return controlErr
+	}
 	job := s.ProductContinuation
 	if job == nil {
 		return boundAnswerError("intent_unknown", "Continuation is not reserved.")
@@ -261,7 +265,7 @@ func workerLaunchProductContinuation(d Dependencies, s workflowState) error {
 	if e := d.fault("bound_answer_after_continuation_reservation"); e != nil {
 		return e
 	}
-	cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_attempt", s.Result.RunID, "--workspace", s.Request.WorkspaceRoot, "--job", job.ID)
+	cmd := exec.Command(control, "workflow", "worker", "_attempt", s.Result.RunID, "--workspace", s.Request.WorkspaceRoot, "--job", job.ID)
 	cmd.Dir, cmd.Stdout, cmd.Stderr = s.Observed.Target.WorktreeLocator, os.Stdout, os.Stderr
 	cmd.ExtraFiles = []*os.File{d.WorkerOwner.lock}
 	e := cmd.Run()

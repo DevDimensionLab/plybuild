@@ -64,7 +64,7 @@ func TestBoundStartPreviewAndStatusAreReadOnly(t *testing.T) {
 }
 
 func TestBoundStartRejectsChangedBasisBeforeAnyIntent(t *testing.T) {
-	for _, change := range []string{"binding", "missing-binding", "schema", "mode", "model", "permission", "trust", "control", "provider", "herdr-binary", "herdr-target", "environment", "queue", "goal", "base", "agreement"} {
+	for _, change := range []string{"binding", "missing-binding", "schema", "mode", "model", "permission", "trust", "provider", "herdr-binary", "herdr-target", "environment", "queue", "goal", "base", "agreement"} {
 		t.Run(change, func(t *testing.T) {
 			d, in, root, epic := boundFixture(t)
 			p := boundPreview(t, d, in)

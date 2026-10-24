@@ -53,7 +53,7 @@ func workflowDeliveryGuide(d Dependencies, s workflowState) error {
 	if err != nil {
 		return err
 	}
-	control, id, context := ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context)
+	control, id, context := "ply", s.Result.RunID, ShellQuote(s.Result.Paths.Context)
 	guide := fmt.Sprintf(`# Delivery callback guide
 
 This guide and the adjacent templates describe the frozen callback contract.
@@ -68,7 +68,8 @@ submit only files you chose. Runtime acceptance, human QA and other
 authenticating or control files keep the owner-only (0600) requirement.
 Run callbacks from the bound Task worktree: %s.
 
-Control executable: %s
+Command: ply (ordinary installed CLI; upgrades need no rebinding)
+Historical control observation: %s
 Run: %s
 Context: %s
 Provider and native session observed by Herdr: %s / %s
@@ -80,7 +81,7 @@ Otherwise honor the existing notification contract in the delivery instructions.
 
 ## Begin with actual observations before Task writes
 
-Use the bound control's workflow execute begin command with this Run
+Use ordinary installed ply's workflow execute begin command with this Run
 and --context. Supply --provider, --native-session,
 --policy (your effective runtime observation and its source), and repeat
 --read-root / --write-root for actual physical roots. Include
@@ -287,7 +288,7 @@ qualify and release the candidate again before a new human integration decision.
 		receipt := fmt.Sprintf(`## Receive the frozen mandate
 
 Startup protocol: mandate_receipt_v1. Run this small idempotent receipt from
-this exact Task and immutable control:
+this exact Task with ordinary installed ply:
 
 %s workflow execute check-in %s --context %s --provider %s --native-session %s
 

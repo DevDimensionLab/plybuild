@@ -105,16 +105,18 @@ func escape(s string) string {
 	return b.String()
 }
 
-// Plist uses only the copied control and narrowly selected login environment.
+// Plist resolves ordinary installed Ply in the narrowly selected login environment.
 // Successful terminal states remain exited; a crashed controller is restarted.
-func Plist(b Binding) []byte {
+func Plist(b Binding) []byte { return weekPlist(b, []string{"/usr/bin/env", "ply"}) }
+
+func weekPlist(b Binding, command []string) []byte {
 	dir, _ := runDir(b.Contract.Workspace, b.ID)
 	var s strings.Builder
 	s.WriteString("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n")
 	kv := func(k, v string) { fmt.Fprintf(&s, "<key>%s</key><string>%s</string>\n", escape(k), escape(v)) }
 	kv("Label", serviceLabel(b))
 	s.WriteString("<key>ProgramArguments</key><array>\n")
-	for _, a := range []string{b.Control.Path, "workflow", "week", "_supervise", b.ID, "--workspace", b.Contract.Workspace} {
+	for _, a := range append(command, "workflow", "week", "_supervise", b.ID, "--workspace", b.Contract.Workspace) {
 		fmt.Fprintf(&s, "<string>%s</string>\n", escape(a))
 	}
 	s.WriteString("</array>\n")
@@ -148,7 +150,9 @@ func ServiceReadback(b Binding, ctl Launchctl) (ServiceStatus, error) {
 	if err != nil {
 		return out, err
 	}
-	if !bytes.Equal(data, Plist(b)) {
+	// Compare every non-runtime setting. Older services serialized the historical
+	// Ply path; reading their unchanged configuration does not require that file.
+	if !bytes.Equal(data, Plist(b)) && !bytes.Equal(data, weekPlist(b, []string{b.Control.Path})) {
 		return out, fmt.Errorf("installed launchd service differs from the frozen week binding")
 	}
 	out.State = "installed"
@@ -178,9 +182,6 @@ func (m Manager) Service(root, id, action string) (ServiceStatus, error) {
 	}
 	b, dir, err := readBinding(root, id)
 	if err != nil {
-		return ServiceStatus{}, err
-	}
-	if err = verifyControl(b); err != nil {
 		return ServiceStatus{}, err
 	}
 	path := servicePath(b)

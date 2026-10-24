@@ -167,7 +167,7 @@ func productRead(d Dependencies, root, id string) (productAnswerBasis, error) {
 }
 
 func productSourceCurrent(d Dependencies, s workflowState, q productQuestionRecord) error {
-	if verifyExecutable(s.Request.Runtime.Executable) != nil || verifyExecutable(s.Request.Runtime.PlyExecutable) != nil {
+	if verifyExecutable(s.Request.Runtime.Executable) != nil {
 		return boundAnswerError("runtime_changed", "A frozen provider or controller executable changed.")
 	}
 	qual, e := productRuntimeQualification(d, s)

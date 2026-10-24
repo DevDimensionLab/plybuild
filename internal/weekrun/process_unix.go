@@ -3,8 +3,10 @@
 package weekrun
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,15 +15,30 @@ import (
 	"time"
 )
 
-func launchDetached(b Binding) error {
-	if err := verifyControl(b); err != nil {
+func launchDetached(b Binding, current ...string) error {
+	control, err := os.Executable()
+	if len(current) > 0 {
+		control, err = current[0], nil
+	}
+	if err != nil {
 		return err
 	}
 	dir, _ := runDir(b.Contract.Workspace, b.ID)
 	// Loaded launchd owns restart supervision. Kickstart does not kill an active
 	// service, unlike -k; an already-running service will observe its control file.
 	if serviceInstalled(b) {
-		return wakeService(b)
+		data, readErr := os.ReadFile(servicePath(b))
+		if readErr != nil {
+			return readErr
+		}
+		if bytes.Equal(data, Plist(b)) {
+			return wakeService(b)
+		}
+		if !bytes.Equal(data, weekPlist(b, []string{b.Control.Path})) {
+			return fmt.Errorf("installed launchd service differs from the frozen week binding")
+		}
+		// An old launchd entry may name removed Ply. The ordinary CLI can
+		// run the same controller under its existing locks without rewriting it.
 	}
 	guard, err := lock(filepath.Join(dir, "launch.lock"))
 	if errors.Is(err, errOwned) {
@@ -39,7 +56,7 @@ func launchDetached(b Binding) error {
 		return err
 	}
 	defer log.Close()
-	cmd := exec.Command(b.Control.Path, "workflow", "week", "_serve", b.ID, "--workspace", b.Contract.Workspace)
+	cmd := exec.Command(control, "workflow", "week", "_serve", b.ID, "--workspace", b.Contract.Workspace)
 	cmd.Dir = b.Contract.ReturnWorktree
 	keys := []string{}
 	for k := range b.Environment {

@@ -111,9 +111,6 @@ func (m Manager) existingBoundStart(b Binding, dir string, check bool) (State, e
 		if pending != nil || history != taskrun.ControlRevision([]string{}) {
 			return fmt.Errorf("incomplete registration after a bound control")
 		}
-		if e = verifyControl(b); e != nil {
-			return e
-		}
 		q, e := m.Native.Queue(b.Contract)
 		if e != nil {
 			return e
@@ -229,10 +226,6 @@ func (m Manager) ControlBasis(root, id string) (taskrun.ControlBasis, error) {
 		return o, nil
 	}
 	o.StateRevision = taskrun.ControlRevision([]string{o.StateRevision, hash(canonical(g))})
-	if verifyControl(b) != nil {
-		o.Unavailable("frozen_control_unavailable")
-		return o, nil
-	}
 	if s.ActiveTaskID != "" {
 		ix := entryIndex(&s, s.ActiveTaskID)
 		if ix < 0 {
@@ -356,9 +349,6 @@ func (m Manager) receiptBound(b Binding, dir string, s *State, g *taskrun.Parent
 		return taskrun.FinishControl(d, r, *s.ControlReceipt)
 	}
 	return taskrun.WithControlStore(b.Contract.Workspace, func() error {
-		if verifyControl(b) != nil {
-			return taskrun.FailControlConsumption(d, r)
-		}
 		if effect != "superseded" {
 			if e := m.verifyChildBoundary(b, *s, r); e != nil {
 				return taskrun.FailControlConsumption(d, r)

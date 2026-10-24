@@ -201,14 +201,16 @@ Ply or provider install, a removed provider launcher, or a Codex config or
 `observed`, `handling`) and the operation continues. The request keeps the original
 launch bindings; nothing is rewritten and no new authority is inferred.
 
-These checks still apply after launch: the callback runs from the bound Ply path,
-in the exact Task worktree, with the exact context, run, request and native
+These checks still apply after launch: the callback runs in the exact Task
+worktree, with the exact context, run, request and native
 session; frozen inputs, policy evidence, receipts, reports and the Herdr
 executable keep their bytes; preserved stops, negative acceptance and retirement
 stay in force. A saved trust binding that contradicts the request is an integrity
 error, not drift. Before the session is bound, provider and trust facts are
-checked as before. Delivery Runs keep their immutable control and `workflow
-execute continue`; headless workers still check the control they execute.
+checked as before. Ordinary installed Ply also handles Delivery and headless
+Runs with historical control paths or hashes. A Ply upgrade needs no
+`workflow execute continue`, old binary copy or new approval. Provider-specific
+continuation and actual authority checks remain in force.
 
 ### Optional Codex process trust
 

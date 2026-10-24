@@ -309,7 +309,7 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 			intent.ClaudeProjectTrust = &taskrun.ClaudeProjectTrust{Mode: "configuration", WorktreeRoot: plan.WorktreePath}
 		}
 	}
-	if input.expectedRuntime != nil && boundHash(intent.Runtime) != boundHash(*input.expectedRuntime) {
+	if input.expectedRuntime != nil && !sameRuntimeAuthority(intent.Runtime, *input.expectedRuntime) {
 		return out, boundError("bound_start_stale", "the actual launcher intent has different runtime or policy from the approved preview")
 	}
 	out.Runtime = &intent.Runtime

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/currentstate"
-	"github.com/devdimensionlab/plybuild/internal/taskexecute"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -156,10 +155,7 @@ func (m Manager) Start(c Contract, check bool) (State, error) {
 	if err != nil {
 		return s, err
 	}
-	b.Control, err = taskexecute.PreserveControl(source, dir)
-	if err != nil {
-		return s, err
-	}
+	b.Control = source
 	b.Environment = map[string]string{"HOME": os.Getenv("HOME"), "PATH": os.Getenv("PATH"), "TMPDIR": os.Getenv("TMPDIR")}
 	if v := os.Getenv("CODEX_HOME"); v != "" {
 		b.Environment["CODEX_HOME"] = v
@@ -227,9 +223,6 @@ func (m Manager) existingStart(c Contract, check bool) (State, error) {
 	if _, err = readState(b, dir); err == nil {
 		return m.Show(c.Workspace, b.ID)
 	} else if !os.IsNotExist(err) {
-		return State{}, err
-	}
-	if err = verifyControl(b); err != nil {
 		return State{}, err
 	}
 	q, err := m.Native.Queue(c)
@@ -355,9 +348,6 @@ func (m Manager) Control(root, id, action string) (State, error) {
 func (m Manager) LaunchRun(root, id string) error {
 	b, _, err := readBinding(root, id)
 	if err != nil {
-		return err
-	}
-	if err = verifyControl(b); err != nil {
 		return err
 	}
 	if m.Launch == nil {
@@ -738,9 +728,6 @@ func (m Manager) Serve(ctx context.Context, root, id string) error {
 func (m Manager) serve(ctx context.Context, root, id string, service bool) error {
 	b, dir, err := readBinding(root, id)
 	if err != nil {
-		return err
-	}
-	if err = verifyControl(b); err != nil {
 		return err
 	}
 	owner, err := lock(filepath.Join(dir, "owner.lock"))

@@ -206,7 +206,7 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 		return o, nil
 	}
 	if s.Result.Delivery.Phase == "completed" || w.Phase == "completed" {
-		if verifyExecutable(s.Request.Runtime.PlyExecutable) != nil || verifyExecutable(s.Request.Runtime.Executable) != nil {
+		if verifyExecutable(s.Request.Runtime.Executable) != nil {
 			o.Unavailable("frozen_control_unavailable")
 			return o, nil
 		}
@@ -247,7 +247,7 @@ func (b workerControlBackend) ControlBasis(root, id string) (ControlBasis, error
 			return o, nil
 		}
 	}
-	if verifyExecutable(s.Request.Runtime.PlyExecutable) != nil || verifyExecutable(s.Request.Runtime.Executable) != nil {
+	if verifyExecutable(s.Request.Runtime.Executable) != nil {
 		o.Unavailable("frozen_control_unavailable")
 		return o, nil
 	}
@@ -357,7 +357,7 @@ func workerConsumeBoundControl(d Dependencies, s workflowState) (bool, error) {
 	e = workerStateUpdate(d, s.Request.WorkspaceRoot, s.Result.RunID, func(current *workflowState) error {
 		w := current.Result.Worker
 		fail := func() error { return FailControlConsumption(d, *r) }
-		if verifyExecutable(current.Request.Runtime.PlyExecutable) != nil || verifyExecutable(current.Request.Runtime.Executable) != nil {
+		if verifyExecutable(current.Request.Runtime.Executable) != nil {
 			return fail()
 		}
 		if r.Basis.WorkerSession == nil || *r.Basis.WorkerSession != w.SessionID || r.Basis.RunRequestHash == nil || *r.Basis.RunRequestHash != current.Result.RequestSHA256 || !workerControlGenerationAllowed(*current, *r) {

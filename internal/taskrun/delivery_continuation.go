@@ -161,11 +161,6 @@ func workflowContinuationRecordMode(s workflowState, policy bool) (*deliveryCont
 	if r.Confirmation != deliveryContinuationConfirmation(old, r.SourceControl, r.ControlExecutable, r.ReaderCapability, r.RuntimeObservation) {
 		return nil, deliveryContinuityError("continuation_integrity", "compatibility proof confirmation differs from its preserved observations")
 	}
-	for _, control := range []Executable{r.PreviousControl, r.ControlExecutable} {
-		if err = verifyExecutable(control); err != nil {
-			return nil, deliveryContinuityError("continuation_integrity", "preserved continuation control: "+err.Error())
-		}
-	}
 	return &r, nil
 }
 
@@ -307,7 +302,7 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 		if r.ControlExecutable.SHA256 == in.ControlExecutable.SHA256 && (r.RuntimeObservation != nil || equal(r.RuntimeObservation, p.RuntimeObservation)) {
 			p.State, p.Generation, p.Directory, p.ControlExecutable, p.Proof, p.Confirmation = "existing", r.Generation, filepath.Dir(s.Continuation.Locator), r.ControlExecutable, s.Continuation, r.Confirmation
 			p.RuntimeObservation = r.RuntimeObservation
-			p.NextAction = "Continue callbacks with " + ShellQuote(p.ControlExecutable.Path) + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "."
+			p.NextAction = "Continue callbacks with " + "ply" + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "."
 			return p, nil
 		}
 	}
@@ -463,7 +458,7 @@ func WorkflowContinueDelivery(d Dependencies, root string, in DeliveryContinuati
 				return err
 			}
 			p.State = "continued"
-			p.NextAction = "Continue callbacks with " + ShellQuote(p.ControlExecutable.Path) + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "."
+			p.NextAction = "Continue callbacks with " + "ply" + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "."
 			return nil
 		}
 		beforePath := filepath.Join(p.Directory, "before-state.json")
@@ -518,7 +513,7 @@ func WorkflowContinueDelivery(d Dependencies, root string, in DeliveryContinuati
 			return err
 		}
 		p.State, p.Proof = "continued", &proof
-		p.NextAction = "Continue callbacks with " + ShellQuote(p.ControlExecutable.Path) + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "; reuse a completed verification only with verify --reuse ATTEMPT_ID."
+		p.NextAction = "Continue callbacks with " + "ply" + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "; reuse a completed verification only with verify --reuse ATTEMPT_ID."
 		return nil
 	})
 	return p, err

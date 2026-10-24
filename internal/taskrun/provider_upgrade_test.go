@@ -416,7 +416,7 @@ func TestDeliveryIncompleteReportRetainsIdentityAndArtifactGuards(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, mutation := range []string{"working", "fabricated_exit", "wrong_session", "wrong_request", "wrong_context_path", "wrong_cwd", "changed_context", "changed_request", "changed_control", "missing_herdr", "changed_herdr", "changed_acceptance", "changed_goal", "missing_session", "replaced_session", "replaced_provider", "replaced_pane", "replaced_owner", "missing_foreground", "pending_launch", "unknown_status"} {
+	for _, mutation := range []string{"working", "fabricated_exit", "wrong_session", "wrong_request", "wrong_context_path", "wrong_cwd", "changed_context", "changed_request", "missing_herdr", "changed_herdr", "changed_acceptance", "changed_goal", "missing_session", "replaced_session", "replaced_provider", "replaced_pane", "replaced_owner", "missing_foreground", "pending_launch", "unknown_status"} {
 		t.Run(mutation, func(t *testing.T) {
 			d, context, input := f.D, o.Paths.Context, file
 			bad := r

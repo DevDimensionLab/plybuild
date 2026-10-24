@@ -256,11 +256,11 @@ Headless workers and frozen historical Runs retain their existing contracts.
 
 ### Receive the mandate with check-in
 
-From the exact Task and bound immutable control, use the command in its callback
+From the exact Task use ordinary installed `ply` with the Run and context in its callback
 guide:
 
 ```shell
-/absolute/ply-control workflow execute check-in RUN_ID --context /absolute/context.json \
+ply workflow execute check-in RUN_ID --context /absolute/context.json \
   --provider claude --native-session ACTUAL_SESSION
 ```
 
@@ -318,7 +318,7 @@ After the cause is clarified, the same owner names the changed action it will
 take under the same Run mandate:
 
 ```shell
-/absolute/ply-control workflow execute resolve-stop RUN_ID --context /absolute/context.json \
+ply workflow execute resolve-stop RUN_ID --context /absolute/context.json \
   --stop sha256:ACTUAL_STOP_DIGEST --resolution 'Actual clarified cause and who clarified it' \
   --action 'Changed action this owner takes now'
 ```
@@ -330,10 +330,10 @@ checks and refuses an unresolved attempt. It preserves the denial, starts
 nothing and sends no input. If acceptance is absent, the owner uses the startup
 command selected by the frozen callback guide before Task writes. Older stops
 resolved with the earlier `--permission-confirmed` flag remain readable history.
-Neither operation releases a writer; selected replacement uses `execute retire`. These owner
-commands must be present in the bound control; do not overwrite an older control
-to acquire them. Existing accepted Runs can use the supported compatible-control
-continuation when needed. Historical denied Runs remain preserved.
+Neither operation releases a writer; selected replacement uses `execute retire`. Use ordinary installed `ply` for these owner commands, including Runs whose
+historical control path was removed. Ply upgrades need no continuation, rebinding
+or repeated approval. Historical denied Runs remain preserved. Provider changes
+retain their existing runtime-observation requirements.
 
 Native folder trust remains separate. If its existing configuration lock cannot
 be acquired, the same Claude tab may require its native trust decision before

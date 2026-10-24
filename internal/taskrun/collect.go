@@ -117,7 +117,7 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 }
 func finishCollectPreview(p *CollectPreview, r Request, statusPath string) {
 	p.Confirmation = ptr(confirmation(*p))
-	p.NextArgv = []string{r.Runtime.PlyExecutable.Path, "workspace", "task", "run", "collect", p.RunID, "--apply", "--confirm", *p.Confirmation}
+	p.NextArgv = []string{"ply", "workspace", "task", "run", "collect", p.RunID, "--apply", "--confirm", *p.Confirmation}
 	if statusPath != "" {
 		p.NextArgv = append(p.NextArgv, "--task-status", statusPath)
 	}

@@ -61,7 +61,9 @@ and acceptance agreement. `runtime_acceptance` is explicitly `requested_only`.
 The recipient still confirms its actual runtime and permissions before Task
 writes. No persistent Codex configuration or trust is changed by this command.
 
-The opaque binding covers the complete shown basis and request. It is a
+The opaque binding covers the shown basis and request except historical Ply executable
+identity. Replacing or removing that Ply installation leaves a new preview valid;
+provider, Herdr, mandate, policy, environment and delivery inputs remain bound. It is a
 comparison token, not a user authentication credential or new Git/delivery
 authorization. Plyapp retains WebAuthn, Slack identity and user confirmation.
 
@@ -84,11 +86,19 @@ the bound environment again before the tab and agent effects. A valid request
 can therefore leave a retained attempt when a later conflict stops progress;
 it never silently selects another revision or weaker policy.
 
-The first Run freezes its control executable and exact launch environment. Bound
+The first Run preserves its historical Ply observation and exact launch environment. Bound
 apply can operate from an app CLI process without `HERDR_ENV=1` because the
 request names the approved Herdr workspace; there is no public bypass switch.
 Ordinary interactive execute keeps its terminal requirement and history.
-AW-01 headless contracts, workers and frozen controls are unchanged.
+Headless contracts retain their authority and use the current Ply invocation.
+
+Legacy previews made before PV-01 included Ply in the opaque digest but returned
+no prior basis in the request and saved nothing on preview. If that basis was
+never retained, a changed digest cannot be distinguished from a changed mandate
+or policy. Such a request remains rejected without effects; arbitrary old
+digests are never accepted. Existing retained intents, requests, contexts and
+Run identities remain readable without rewriting history. See
+[PV-01 evidence and consumer inventory](ply-upgrades.md).
 
 Status `kind` is `ply.workflow.bound-start-status`, `schema_version` is 1:
 

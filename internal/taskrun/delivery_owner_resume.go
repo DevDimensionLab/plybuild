@@ -368,11 +368,11 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 			p.NextAction = WorkflowAction{"user", "Apply to continue the same reserved resume: the same session is live in pane " + pane + "; only its one continuation prompt is sent."}
 			return p, nil
 		case workflowSession(s, a, false) == nil && s.OwnerResumeStep == ownerResumePromptAttempt:
-			runtime, err := workflowEffectiveRuntime(s)
+			_, err := workflowEffectiveRuntime(s)
 			if err != nil {
 				return p, err
 			}
-			return p, ownerResumeBlock(&p, "prompt_unconfirmed", "the continuation prompt to pane "+pane+" was attempted but its arrival is unknown; Ply never resends it", WorkflowAction{"user", "Look at Herdr pane " + pane + ": if the resumed owner received the continuation, its next callback confirms it. Otherwise ask it to run " + ShellQuote(runtime.PlyExecutable.Path) + " workflow execute show " + s.Result.RunID + " and continue."})
+			return p, ownerResumeBlock(&p, "prompt_unconfirmed", "the continuation prompt to pane "+pane+" was attempted but its arrival is unknown; Ply never resends it", WorkflowAction{"user", "Look at Herdr pane " + pane + ": if the resumed owner received the continuation, its next callback confirms it. Otherwise ask it to run " + "ply" + " workflow execute show " + s.Result.RunID + " and continue."})
 		case a.Session != nil && pending:
 			return p, ownerResumeBlock(&p, "session_mismatch", "pane "+pane+" runs a different provider session than the bound one", WorkflowAction{"user", "Close Herdr pane " + pane + " (it is not this owner), then repeat ply workflow execute --resume."})
 		}
@@ -711,16 +711,16 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 }
 
 func ownerResumePrompt(s workflowState) (string, error) {
-	runtime, err := workflowEffectiveRuntime(s)
+	_, err := workflowEffectiveRuntime(s)
 	if err != nil {
 		return "", err
 	}
-	control := ShellQuote(runtime.PlyExecutable.Path)
-	return fmt.Sprintf("Ply resumed this same Task after its previous Herdr tab closed. Your conversation, Task worktree %s, frozen mandate, private context %s, answers, candidates and recorded evidence are unchanged. From now on use only this control executable for owner callbacks: %s; the earlier control is closed. The updated callback guide is %s. First read the current native state with %s workflow execute show %s and continue from its actual next action and gate (%s). Do not repeat answered questions, valid evidence or completed effects, and never resend uncertain input.", s.Observed.Target.WorktreeLocator, ShellQuote(s.Result.Paths.Context), control, filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), control, s.Result.RunID, deliveryResumePhase(s)), nil
+	control := "ply"
+	return fmt.Sprintf("Ply resumed this same Task after its previous Herdr tab closed. Your conversation, Task worktree %s, frozen mandate, private context %s, answers, candidates and recorded evidence are unchanged. Use ordinary installed %s for owner callbacks with the same context and session. The updated callback guide is %s. First read the current native state with %s workflow execute show %s and continue from its actual next action and gate (%s). Do not repeat answered questions, valid evidence or completed effects, and never resend uncertain input.", s.Observed.Target.WorktreeLocator, ShellQuote(s.Result.Paths.Context), control, filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), control, s.Result.RunID, deliveryResumePhase(s)), nil
 }
 
 // ownerResumeNoteCallback is called only at owner callbacks that passed
-// deliveryCallback, which requires the resumed control, exact context and the
+// deliveryCallback, which requires the exact context and the
 // same live session. Coordinator events and installed-reader reports never call it.
 func ownerResumeNoteCallback(s *workflowState, eventID string) {
 	if s.OwnerResume == nil {

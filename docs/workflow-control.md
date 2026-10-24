@@ -3,7 +3,7 @@
 `workflow control` lets a client inspect, approve and follow one exact pause,
 stop or resume request. It supports opted-in native Codex headless workers on
 macOS, either standalone or owned by an opted-in week. Interactive Herdr runs,
-older frozen controllers and unknown ownership return no actions. Installing a
+contracts without control opt-in and unknown ownership return no actions. Installing a
 new CLI does not change an existing Run's frozen contract.
 
 ## Opt in when starting new work

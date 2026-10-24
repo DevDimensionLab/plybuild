@@ -141,7 +141,7 @@ ply workflow week service uninstall WEEK_ID --workspace /absolute/workspace
 ```
 
 The label is `com.ply.week.WEEK_ID`; its plist lives in the invoking account's
-`~/Library/LaunchAgents`. It uses `gui/UID`, the frozen control executable, the
+`~/Library/LaunchAgents`. It uses `gui/UID`, ordinary installed `ply` resolved through the saved PATH, the
 registered return directory and the original HOME/PATH/TMPDIR plus an explicitly
 set CODEX_HOME. It preserves existing authentication files. It needs the user's
 available login environment; it is not a system-wide daemon.

@@ -500,7 +500,7 @@ func TestWeekCheckAndShowAreReadOnly(t *testing.T) {
 		t.Fatal("preview wrote state")
 	}
 }
-func TestWeekFrozenExecutableChangeBlocksRecovery(t *testing.T) {
+func TestWeekPlyUpgradeAllowsRecovery(t *testing.T) {
 	f := newFixture(t)
 	if err := os.Chmod(f.b.Control.Path, 0700); err != nil {
 		t.Fatal(err)
@@ -508,8 +508,8 @@ func TestWeekFrozenExecutableChangeBlocksRecovery(t *testing.T) {
 	if err := os.WriteFile(f.b.Control.Path, []byte("changed"), 0700); err != nil {
 		t.Fatal(err)
 	}
-	if err := f.m.Serve(context.Background(), f.c.Workspace, f.s.ID); err == nil {
-		t.Fatal("executed changed control")
+	if err := f.m.Serve(context.Background(), f.c.Workspace, f.s.ID); err != nil {
+		t.Fatal("Ply upgrade blocked recovery", err)
 	}
 }
 func TestWeekOwnedControllerDoesNotDuplicateEffects(t *testing.T) {

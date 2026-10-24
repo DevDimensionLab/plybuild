@@ -62,13 +62,13 @@ adds a real human judgment after automatic verification. Optional
 This does not expand the separate local Epic restrictions on headless execution,
 backup Goals, worktree adoption, acceptance amendments, or CLI installation.
 
-From the accepted owner's Task checkout, use its preserved control executable:
+From the accepted owner's Task checkout, use ordinary installed `ply`:
 
 ```shell
-/absolute/ply-control workflow execute verify wfr_<id> \
+ply workflow execute verify wfr_<id> \
   --context /absolute/context.json --review /absolute/candidate-review.json \
   --candidate-binary /absolute/private/built-candidate
-/absolute/ply-control workflow execute integrate wfr_<id> \
+ply workflow execute integrate wfr_<id> \
   --context /absolute/context.json
 ```
 
@@ -153,22 +153,18 @@ values and the human's exact policy-choice answer:
 }
 ```
 
-Use the current compatible control returned by the run. If the original immutable
-control predates the command, first run the supported `workflow execute continue`
-from the private built or installed CLI. Preserve the original control and use
-the compatible control path returned by continuation:
+Use ordinary installed `ply` with the unchanged Run and context. No Ply-only
+continuation or rebinding is needed, including for existing Runs:
 
 ```shell
-/absolute/private/ply workflow execute continue wfr_<id> \
-  --context /absolute/original/context.json --format json
-/absolute/returned/ply-control workflow execute acceptance wfr_<id> \
+ply workflow execute acceptance wfr_<id> \
   --context /absolute/original/context.json \
   --file /absolute/private/acceptance-choice.json --format json
-/absolute/returned/ply-control workflow execute verify wfr_<id> \
+ply workflow execute verify wfr_<id> \
   --context /absolute/original/context.json \
   --review /absolute/private/candidate-review.json \
   --candidate-binary /absolute/private/built-candidate
-/absolute/returned/ply-control workflow execute integrate wfr_<id> \
+ply workflow execute integrate wfr_<id> \
   --context /absolute/original/context.json
 ```
 

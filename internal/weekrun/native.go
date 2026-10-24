@@ -35,7 +35,13 @@ func at(c Contract, fn func() error) error {
 type NativeAdapter struct{ Dependencies taskrun.Dependencies }
 
 func New(d taskrun.Dependencies) Manager {
-	return Manager{Native: NativeAdapter{d}, Now: time.Now, Executable: d.Executable, Launch: launchDetached}
+	return Manager{Native: NativeAdapter{d}, Now: time.Now, Executable: d.Executable, Launch: func(b Binding) error {
+		path, err := d.Executable()
+		if err != nil {
+			return err
+		}
+		return launchDetached(b, path)
+	}}
 }
 func (n NativeAdapter) Queue(c Contract) (q workspace.WorkspaceTaskQueueReadback, err error) {
 	err = at(c, func() error {
@@ -57,7 +63,6 @@ func workerContract(c Contract) *taskrun.WorkerContract {
 func (n NativeAdapter) execute(c Contract, s Selection, control taskrun.Executable, check bool) (out taskexecute.Result, err error) {
 	err = at(c, func() error {
 		d := n.Dependencies
-		d.Executable = func() (string, error) { return control.Path, nil }
 		var e error
 		var contract *taskrun.ControlContract
 		if c.RuntimeControl != nil {

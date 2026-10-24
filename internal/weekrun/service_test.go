@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-func TestWeekPlistBindsFrozenControlAndLoginEnvironment(t *testing.T) {
+func TestWeekPlistUsesInstalledPlyAndLoginEnvironment(t *testing.T) {
 	f := newFixture(t)
 	f.b.Environment = map[string]string{"HOME": f.c.Workspace, "PATH": "/custom/codex:/usr/bin:/bin", "CODEX_HOME": "/synthetic/account<&>"}
 	data := Plist(f.b)
@@ -30,7 +30,7 @@ func TestWeekPlistBindsFrozenControlAndLoginEnvironment(t *testing.T) {
 			t.Fatal("invalid XML", err)
 		}
 	}
-	for _, want := range []string{f.b.Control.Path, "_supervise", f.b.ID, "<key>RunAtLoad</key><true/>", "<key>SuccessfulExit</key><false/>", "/synthetic/account&lt;&amp;&gt;"} {
+	for _, want := range []string{"/usr/bin/env", "<string>ply</string>", "_supervise", f.b.ID, "<key>RunAtLoad</key><true/>", "<key>SuccessfulExit</key><false/>", "/synthetic/account&lt;&amp;&gt;"} {
 		if !strings.Contains(string(data), want) {
 			t.Fatalf("plist misses %q", want)
 		}
@@ -183,7 +183,7 @@ func TestWeekDetachedRecoveryUsesFrozenLoginEnvironment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = launchDetached(f.b); err != nil {
+	if err = launchDetached(f.b, path); err != nil {
 		t.Fatal(err)
 	}
 	until := time.Now().Add(time.Second)

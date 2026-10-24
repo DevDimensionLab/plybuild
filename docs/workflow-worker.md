@@ -70,8 +70,10 @@ the supervisor waits and starts the next controller generation only afterward.
 The next generation consumes the same immutable attempt result. This version is
 not an installed login service: after host reboot or loss of the supervisor,
 run `worker resume`. It still requires positive completion or native recovery
-evidence. Keep the frozen control and Codex executables: replacing either blocks
-dependent work instead of silently upgrading a Run.
+evidence. Ply child processes use the current invocation, so historical Ply paths
+and hashes are diagnostic observations. Ply upgrades do not block controls or
+require recovery. The frozen Codex executable and provider authority checks
+remain in force.
 
 ## Development, tests and delivery
 

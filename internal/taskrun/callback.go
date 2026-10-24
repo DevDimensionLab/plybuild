@@ -58,20 +58,6 @@ func callbackContext(d Dependencies, root, id string) (journal, Context, error) 
 	if e = physical(cwd, false); e != nil {
 		return j, ctx, e
 	}
-	if d.Executable == nil {
-		return j, ctx, conflict("callback executable observer is unavailable")
-	}
-	actual, e := d.Executable()
-	if e != nil {
-		return j, ctx, e
-	}
-	actual, e = filepath.EvalSymlinks(actual)
-	if e != nil || actual != ctx.PlyExecutable.Path {
-		return j, ctx, conflict("callback is not the bound Ply executable")
-	}
-	if e = verifyExecutable(ctx.PlyExecutable); e != nil {
-		return j, ctx, e
-	}
 	return j, ctx, nil
 }
 func claimBinding(id, request, session string, j journal) error {

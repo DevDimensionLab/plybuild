@@ -211,13 +211,3 @@ func executable(path string) (taskrun.Executable, error) {
 	}
 	return taskrun.Executable{Path: p, SHA256: "sha256:" + hex.EncodeToString(h.Sum(nil))}, nil
 }
-func verifyControl(b Binding) error {
-	got, err := executable(b.Control.Path)
-	if err != nil {
-		return err
-	}
-	if got != b.Control {
-		return fmt.Errorf("frozen week control changed")
-	}
-	return nil
-}

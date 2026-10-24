@@ -12,9 +12,11 @@ owns Git, PR, evidence, locking and recovery; this skill supplies the workflow.
 
 Read the frozen goal and mandate from the start message. Reuse their human
 authorization. The bound callback guide selects the startup protocol and gives
-the immutable control, context, provider and native session.
+the immutable context, provider and native session. Use ordinary installed `ply`
+for callbacks, including historical Runs with missing control files. Historical
+Ply paths and hashes are informative; upgrades need no rebinding or approval.
 
-For `mandate_receipt_v1`, run that control's `workflow execute check-in RUN_ID
+For `mandate_receipt_v1`, run `ply workflow execute check-in RUN_ID
 --context PATH --provider PROVIDER --native-session SESSION` before Task writes.
 Ply checks the frozen mandate, exact owner and cwd and keeps an idempotent receipt.
 Optional model, profile, policy and roots are actual sourced observations; omit

@@ -384,6 +384,10 @@ func workerRunReserved(d Dependencies, s workflowState) (workerAttemptResult, er
 }
 
 func workerLaunchAttempt(d Dependencies, s workflowState, in workerAttemptIntent, dir string) error {
+	control, controlErr := currentPlyPath(d)
+	if controlErr != nil {
+		return controlErr
+	}
 	in.RunID, in.Generation = s.Result.RunID, s.Result.Worker.Generation
 	in.JobID = filepath.Base(dir)
 	if err := d.fault("worker_before_attempt_reservation"); err != nil {
@@ -409,7 +413,7 @@ func workerLaunchAttempt(d Dependencies, s workflowState, in workerAttemptIntent
 	}
 	// Reservation precedes launch. A crash in this gap is deliberately unknown,
 	// not permission to launch the same command twice.
-	cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_attempt", s.Result.RunID, "--workspace", s.Request.WorkspaceRoot, "--job", job.ID)
+	cmd := exec.Command(control, "workflow", "worker", "_attempt", s.Result.RunID, "--workspace", s.Request.WorkspaceRoot, "--job", job.ID)
 	cmd.Dir, cmd.Stdout, cmd.Stderr = s.Observed.Target.WorktreeLocator, os.Stdout, os.Stderr
 	cmd.ExtraFiles = []*os.File{d.WorkerOwner.lock}
 	if err := cmd.Run(); err != nil {

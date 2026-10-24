@@ -176,6 +176,12 @@ func preserveRuntime(preview RuntimePreview, directory string) (RuntimePreview, 
 	}
 	preview.Runtime.PermissionBinding.EffectivePolicySHA256 = digestBytes(policy)
 	preview.Runtime.PermissionBinding.Evidence = []taskrun.Evidence{{Locator: policyPath, SHA256: digestBytes(policy), Role: "runtime_contract"}}
-	preview.Runtime.PlyExecutable, err = PreserveControl(preview.Runtime.PlyExecutable, directory)
-	return preview, err
+	return preview, nil
+}
+
+// Runtime facts about Ply remain available for diagnostics, but are excluded
+// when comparing requested provider choices and policy across an upgrade.
+func sameRuntimeAuthority(a, b RuntimePreview) bool {
+	a.Runtime.PlyExecutable, b.Runtime.PlyExecutable = taskrun.Executable{}, taskrun.Executable{}
+	return boundHash(a) == boundHash(b)
 }

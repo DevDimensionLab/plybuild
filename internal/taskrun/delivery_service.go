@@ -124,6 +124,11 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 		return e
 	}
 	rt, p := r.Runtime, r.Runtime.PermissionBinding
+	// The serialized observation remains well-formed history even if that
+	// installation has since disappeared. It supplies no runtime authority.
+	if x := rt.PlyExecutable; !digestPattern.MatchString(x.SHA256) || !filepath.IsAbs(x.Path) || filepath.Clean(x.Path) != x.Path {
+		return workflowError(2, "invalid historical Ply observation")
+	}
 	if rt.Mode != "interactive" || !plain(rt.Model, 1, 256) || (rt.Provider != "codex" && rt.Provider != "claude") || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) || rt.Provider == "claude" && (rt.ConfigProfile != nil || p.ProfileID != "manual" && p.ProfileID != "auto") {
 		return workflowError(2, "delivery requires the explicitly selected interactive Codex or manual/auto Claude runtime")
 	}
@@ -133,7 +138,7 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 	if e := deliveryEvidence(p.Evidence); e != nil {
 		return e
 	}
-	for _, x := range []Executable{rt.Executable, rt.PlyExecutable, r.Herdr.Executable} {
+	for _, x := range []Executable{rt.Executable, r.Herdr.Executable} {
 		if !digestPattern.MatchString(x.SHA256) {
 			return workflowError(2, "invalid delivery executable digest")
 		}
@@ -220,7 +225,7 @@ func deliveryInstructions(s workflowState) string {
 	if c.NotificationContext != nil {
 		notification = "Reuse the existing notification identity at " + c.NotificationContext.Locator + "; do not create a second binding. Internal delegates stay quiet."
 	}
-	return fmt.Sprintf("You own the selected delivery through its frozen completion boundary. Work in %s. Read the frozen goal %s and native mandate %s for scope and existing human authority. Next, read %s for the bound provider/session and run %s workflow execute begin %s --context %s --help; submit only your actual runtime observations through begin before Task writes. Ply handles identities, private evidence and hashes. Unknown permission stops dependent work; never change provider policy to make acceptance pass. The installed ply-delivery skill describes the normal workflow. Use the callback guide for verification, reporting and the exact delivery gates. Own meaningful tests, review and corrections; implement the acceptance entrypoint %s. Keep this session and the immutable control executable; do not restart or resend uncertain input. Local installation allowed: %t. Delegation allowed: %t. %s %s A launch, candidate, human judgment and final delivery are separate facts.", s.Observed.Target.WorktreeLocator, c.Goal.Locator, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context), c.AcceptancePath, c.AllowLocalInstall, c.AllowSubagents, deliveryDelegationGuidance, notification)
+	return fmt.Sprintf("You own the selected delivery through its frozen completion boundary. Work in %s. Read the frozen goal %s and native mandate %s for scope and existing human authority. Next, read %s for the bound provider/session and run %s workflow execute begin %s --context %s --help; submit only your actual runtime observations through begin before Task writes. Ply handles identities, private evidence and hashes. Unknown permission stops dependent work; never change provider policy to make acceptance pass. The installed ply-delivery skill describes the normal workflow. Use the callback guide for verification, reporting and the exact delivery gates. Own meaningful tests, review and corrections; implement the acceptance entrypoint %s. Keep this session and use ordinary installed ply for callbacks; do not restart or resend uncertain input. Local installation allowed: %t. Delegation allowed: %t. %s %s A launch, candidate, human judgment and final delivery are separate facts.", s.Observed.Target.WorktreeLocator, c.Goal.Locator, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), "ply", s.Result.RunID, ShellQuote(s.Result.Paths.Context), c.AcceptancePath, c.AllowLocalInstall, c.AllowSubagents, deliveryDelegationGuidance, notification)
 }
 
 func workflowDeliveryFresh(d Dependencies, s workflowState, target bool) error {
@@ -389,7 +394,7 @@ func deliveryReceiptInstructions(s workflowState, runtime Runtime) string {
 	if _, ok := deliveryTaskPresentation(s); ok {
 		prefix = deliveryTaskCodeInstructions(goal)
 	}
-	return prefix + fmt.Sprintf("Your authorized assignment is %s: %s Work in %s. Receive this frozen mandate with %s workflow execute check-in %s --context %s --provider %s --native-session %s. This idempotent receipt records identity and mandate receipt; runtime reviews each action when it happens. A known refusal or unknown previous effect stops dependent work. Preserve provider controls and the same session. Edit and test this Task, make controlled commits on its source branch, and own separate review and the exact delivery.%s Local installation allowed: %t. Delegation allowed: %t. %s Read %s for complete scope and %s for callbacks, verification and gates. Implement acceptance at %s. The frozen goal is %s. Parent-owned notifications stay with the parent; otherwise use the existing authorized route. Receipt, actual work, technical acceptance, human judgment and delivery are separate facts.", goal.Title, goal.Objective, s.Observed.Target.WorktreeLocator, ShellQuote(runtime.PlyExecutable.Path), s.Result.RunID, ShellQuote(s.Result.Paths.Context), s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID), scope, s.Request.Delivery.AllowLocalInstall, s.Request.Delivery.AllowSubagents, deliveryDelegationGuidance, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), s.Request.Delivery.AcceptancePath, s.Request.Delivery.Goal.Locator)
+	return prefix + fmt.Sprintf("Your authorized assignment is %s: %s Work in %s. Receive this frozen mandate with %s workflow execute check-in %s --context %s --provider %s --native-session %s. This idempotent receipt records identity and mandate receipt; runtime reviews each action when it happens. A known refusal or unknown previous effect stops dependent work. Preserve provider controls and the same session. Edit and test this Task, make controlled commits on its source branch, and own separate review and the exact delivery.%s Local installation allowed: %t. Delegation allowed: %t. %s Read %s for complete scope and %s for callbacks, verification and gates. Implement acceptance at %s. The frozen goal is %s. Parent-owned notifications stay with the parent; otherwise use the existing authorized route. Receipt, actual work, technical acceptance, human judgment and delivery are separate facts.", goal.Title, goal.Objective, s.Observed.Target.WorktreeLocator, "ply", s.Result.RunID, ShellQuote(s.Result.Paths.Context), s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID), scope, s.Request.Delivery.AllowLocalInstall, s.Request.Delivery.AllowSubagents, deliveryDelegationGuidance, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), s.Request.Delivery.AcceptancePath, s.Request.Delivery.Goal.Locator)
 }
 
 type deliveryReceiptGoal struct {

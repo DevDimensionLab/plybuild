@@ -220,8 +220,8 @@ func TestAL04IdentityHistoryAndArtifactGuardsAfterDrift(t *testing.T) {
 	}
 	executable := f.D.Executable
 	f.D.Executable = func() (string, error) { return other, nil }
-	if _, err := WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file); err == nil || !strings.Contains(err.Error(), "bound Ply executable") {
-		t.Fatalf("an unbound control path reported for the owner: %v", err)
+	if _, err := WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file); err != nil {
+		t.Fatalf("ordinary upgraded Ply could not report for the same owner: %v", err)
 	}
 	f.D.Executable = executable
 	wrong := report

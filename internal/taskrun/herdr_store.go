@@ -230,7 +230,7 @@ func workflowFreshRuntime(d Dependencies, s workflowState, target bool, runtime 
 // An interactive report owner's native session is bound, so its launch has
 // consumed the provider executable and any process-local trust grant. Report
 // callbacks and observations never launch again; Delivery keeps its own
-// continuation and headless workers still execute the bound control.
+// continuation checks and headless workers use the current Ply invocation.
 func workflowReportLaunched(s workflowState) bool {
 	return !deliveryRun(s.Request) && !headlessRun(s.Request) && s.Result.Transport.AgentSessionID != ""
 }
@@ -273,7 +273,7 @@ func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool,
 		if e := deliveryAcceptedAuthority(s); e != nil {
 			return e
 		}
-		if _, e := runtimeOperationBindings(runtime, []Executable{runtime.PlyExecutable}); e != nil {
+		if _, e := runtimeOperationBindings(runtime, nil); e != nil {
 			return deliveryContinuityError("runtime_dependency", "accepted delivery control or launch-contract evidence: "+e.Error())
 		}
 	} else if _, e := runtimeBindings(runtime); e != nil {

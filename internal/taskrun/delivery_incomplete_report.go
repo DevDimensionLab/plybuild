@@ -35,13 +35,6 @@ func deliveryIncompleteReportCallback(d Dependencies, s workflowState, contextPa
 	if target.Ref != s.Observed.Target.Ref || target.GitCommonDir != s.Observed.Target.GitCommonDir || target.Locator != cwd {
 		return deliveryContinuityError("report_owner", "original Task identity changed; the report cannot substitute another owner")
 	}
-	runtime, err := workflowEffectiveRuntimeMode(s, false)
-	if err != nil {
-		return err
-	}
-	if err = verifyExecutable(runtime.PlyExecutable); err != nil {
-		return deliveryContinuityError("report_integrity", "preserved callback control is missing or changed: "+err.Error())
-	}
 	actual, err := d.Executable()
 	if err == nil {
 		actual, err = filepath.EvalSymlinks(actual)

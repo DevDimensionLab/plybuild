@@ -141,8 +141,8 @@ func mr05ParentRuntimeDrift(t *testing.T) {
 			err := f.m.Tick(f.b, f.dir, &f.s)
 			status, e := f.m.Controls().Status(f.c.Workspace, r.RequestID)
 			g, ge := taskrun.ReadParentControl(f.c.Workspace, f.b.ControlContract)
-			if err == nil || e == nil || status.ControlEffect != "unknown" || status.Receipt != nil || ge != nil || g.ResumeAllowed || len(f.n.starts) != 0 {
-				t.Error("changed parent runtime confirmed a boundary", status, err, e, ge)
+			if err != nil || e != nil || status.Receipt == nil || ge != nil || len(f.n.starts) != 0 || (action == "pause" && (status.ControlEffect != "paused" || g.ResumeAllowed)) || (action == "resume" && (status.ControlEffect != "resumed" || !g.ResumeAllowed)) {
+				t.Error("Ply upgrade blocked unchanged parent control", status, err, e, ge)
 			}
 		})
 	}

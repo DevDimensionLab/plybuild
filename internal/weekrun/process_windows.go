@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-func launchDetached(Binding) error { return fmt.Errorf("week controller requires macOS") }
+func launchDetached(Binding, ...string) error { return fmt.Errorf("week controller requires macOS") }
 func (m Manager) Supervise(context.Context, string, string) error {
 	return fmt.Errorf("week controller requires macOS")
 }

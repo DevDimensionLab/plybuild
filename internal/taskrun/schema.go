@@ -377,7 +377,20 @@ func parseRequestForSurface(b []byte, herdr, receipt bool) (Request, error) {
 	return r, nil
 }
 func runtimeBindings(r Runtime) ([]FileBinding, error) {
-	return runtimeOperationBindings(r, []Executable{r.Executable, r.PlyExecutable})
+	bindings, err := runtimeOperationBindings(r, []Executable{r.Executable})
+	if err != nil {
+		return nil, err
+	}
+	// Keep historical observations in confirmations without requiring old Ply
+	// bytes to remain installed. Provider and policy checks still apply.
+	bindings = append(bindings, FileBinding{r.PlyExecutable.Path, r.PlyExecutable.SHA256})
+	sort.Slice(bindings, func(i, j int) bool { return bindings[i].Locator < bindings[j].Locator })
+	for i := 1; i < len(bindings); i++ {
+		if bindings[i].Locator == bindings[i-1].Locator {
+			return nil, invalid("runtime binding locators must be unique")
+		}
+	}
+	return bindings, nil
 }
 
 // Launching a provider requires its executable. An accepted owner callback

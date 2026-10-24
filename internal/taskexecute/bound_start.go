@@ -147,6 +147,14 @@ func boundHash(v any) string {
 	return digestBytes(b)
 }
 func boundBinding(r BoundStartRequest, b BoundStartBasis) string {
+	// Ply is the command handling this request, not part of its authority.
+	b.Runtime.Runtime.PlyExecutable = taskrun.Executable{}
+	return legacyBoundBinding(r, b)
+}
+
+// Existing stored intents retain their original digest and history. A legacy
+// request with only an opaque digest cannot reconstruct a lost preview basis.
+func legacyBoundBinding(r BoundStartRequest, b BoundStartBasis) string {
 	r.Binding = ""
 	if b.DependencySHA256 != "" {
 		b.RegistrySHA256 = ""
@@ -325,7 +333,7 @@ func buildBoundBasis(d taskrun.Dependencies, s *workspace.TaskSpecSession, r Bou
 	out := BoundStartBasis{Goal: p, Runtime: runtime, Environment: env, PolicySources: sources, PermissionDefinition: definition,
 		DependencySHA256: workspace.TaskStartupDependencySHA256(s.Registry, p.Goal.TaskID), RegistrySHA256: s.Registry.RawSHA256, ProjectSHA256: boundHash(s.Projects),
 		Trust: "Native Codex onboarding only; no persistent or process-local trust grant by Ply.", RuntimeAcceptance: "requested_only; the recipient must confirm actual runtime and permissions before Task writes",
-		Effects: []string{"Preserve this immutable request identity before any execution effect", "Publish the exact Goal execution Spec, assessment and selection, and bind the queue", "Reserve and create the shown Task branch and worktree from the bound base", "Preserve launch policy, frozen Ply control, native Run and delivery handoff", "Create at most one Herdr tab in the shown workspace and start its assigned Codex agent", "Require actual runtime acceptance and the unchanged delivery/acceptance agreement; no new Git or delivery authority"}}
+		Effects: []string{"Preserve this immutable request identity before any execution effect", "Publish the exact Goal execution Spec, assessment and selection, and bind the queue", "Reserve and create the shown Task branch and worktree from the bound base", "Preserve launch policy, historical Ply observations, native Run and delivery handoff", "Create at most one Herdr tab in the shown workspace and start its assigned Codex agent", "Require actual runtime acceptance and the unchanged delivery/acceptance agreement; no new Git or delivery authority"}}
 	if _, err := taskrun.Canonical(out); err != nil {
 		return BoundStartBasis{}, boundError("bound_start_unsupported", "selected runtime or permission policy cannot be canonically bound: "+err.Error())
 	}
@@ -405,7 +413,7 @@ func readBoundIntent(root, id string) (boundStartIntent, error) {
 	if err != nil {
 		return intent, err
 	}
-	if intent.Kind != "ply.workflow.bound-start-intent" || intent.SchemaVersion != 1 || intent.Request.RequestID != id || intent.Request.Workspace != root || validateBoundRequest(intent.Request, true) != nil || boundBinding(intent.Request, intent.Basis) != intent.Request.Binding || intent.RunID != boundRunID(intent.Request) {
+	if intent.Kind != "ply.workflow.bound-start-intent" || intent.SchemaVersion != 1 || intent.Request.RequestID != id || intent.Request.Workspace != root || validateBoundRequest(intent.Request, true) != nil || (boundBinding(intent.Request, intent.Basis) != intent.Request.Binding && legacyBoundBinding(intent.Request, intent.Basis) != intent.Request.Binding) || intent.RunID != boundRunID(intent.Request) {
 		return intent, boundError("bound_start_outcome_unknown", "preserved request identity or basis is damaged; never restart")
 	}
 	return intent, nil
@@ -548,7 +556,7 @@ func (g *approvedStartGuard) runtime() error {
 	if err != nil {
 		return boundError("bound_start_stale", err.Error())
 	}
-	if boundHash(runtime) != boundHash(g.basis.Runtime) || env != g.basis.Environment || boundHash(sources) != boundHash(g.basis.PolicySources) || boundHash(definition) != boundHash(g.basis.PermissionDefinition) {
+	if !sameRuntimeAuthority(runtime, g.basis.Runtime) || env != g.basis.Environment || boundHash(sources) != boundHash(g.basis.PolicySources) || boundHash(definition) != boundHash(g.basis.PermissionDefinition) {
 		return boundError("bound_start_stale", "runtime, policy, trust, executable or launch environment changed")
 	}
 	return nil

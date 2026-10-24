@@ -477,7 +477,7 @@ func deliveryReviewBrief(s workflowState, r deliveryReviewRound, earlier []deliv
 	b.WriteString("A complete review with product findings is a completed review: use changes_requested with concrete findings. Use blocked when evidence is insufficient to judge. passed requires no findings. Keep truthful evidence gaps; they never block the return.\n\n")
 	b.WriteString(DeliveryReviewReturnGuidance)
 	fmt.Fprintf(&b, "Copy %s to your own file and fill in the decision, summary, findings and evidence gaps (reviewer_claim and reviewer_session_id are optional: Ply binds the session it started for you). Return from this reviewer pane, inside the workspace %s:\n\n", template, root)
-	fmt.Fprintf(&b, "    %s workflow execute review-return %s --context %s --file <your-review.json>\n\n", ShellQuote(executable), r.RunID, ShellQuote(context))
+	fmt.Fprintf(&b, "    %s workflow execute review-return %s --context %s --file <your-review.json>\n\n", "ply", r.RunID, ShellQuote(context))
 	b.WriteString("Ply assigns finding IDs and ordering. Repeating the same file is safe; a changed judgment for this candidate needs a new round from the coordinator.\n")
 	return b.String()
 }

@@ -83,7 +83,8 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 	if err = workerPreparationCurrent(d, s); err != nil {
 		return s.Result, err
 	}
-	if err = verifyExecutable(s.Request.Runtime.PlyExecutable); err != nil {
+	control, err := currentPlyPath(d)
+	if err != nil {
 		return s.Result, err
 	}
 	dir := workerDirectory(s)
@@ -107,7 +108,7 @@ func StartWorker(d Dependencies, root, id string, resume bool) (WorkflowRun, err
 	defer log.Close()
 	// Controllers stay outside the Task source they finally remove. Serve
 	// selects its own cwd; only callbacks and attempts work in the source.
-	cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_supervise", id, "--workspace", root, "--format", "json")
+	cmd := exec.Command(control, "workflow", "worker", "_supervise", id, "--workspace", root, "--format", "json")
 	cmd.Dir, cmd.Stdout, cmd.Stderr = s.Request.WorkspaceRoot, log, log
 	cmd.Stdin = nil
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
@@ -436,13 +437,14 @@ func SuperviseWorker(d Dependencies, root, id string) error {
 			return e
 		}
 		probe.Close()
-		if err = verifyExecutable(s.Request.Runtime.PlyExecutable); err != nil {
+		control, err := currentPlyPath(d)
+		if err != nil {
 			return err
 		}
 		if err = d.fault("worker_supervisor_before_serve"); err != nil {
 			return err
 		}
-		cmd := exec.Command(s.Request.Runtime.PlyExecutable.Path, "workflow", "worker", "_serve", id, "--workspace", root, "--format", "json")
+		cmd := exec.Command(control, "workflow", "worker", "_serve", id, "--workspace", root, "--format", "json")
 		cmd.Dir, cmd.Stdout, cmd.Stderr = s.Request.WorkspaceRoot, os.Stdout, os.Stderr
 		if e = cmd.Run(); e != nil {
 			fmt.Fprintln(os.Stderr, "worker controller ended:", e)
