@@ -95,6 +95,7 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 
 	found := false
 	readyGoal := false
+	var parentDiagnostic *QueuePending
 	for i, entry := range fold.Pending {
 		if in.Selector.Kind == "task" && entry.TaskID != *in.Selector.TaskID {
 			continue
@@ -102,6 +103,17 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 		found = true
 		row, p := queueMixedEntryEvaluation(d, root, r, projects, q.Target, q.QueueID, entry, i+1)
 		if p == nil {
+			for _, reason := range row.Reasons {
+				if reason.Code == "task_queue_git_capability_unsupported" || reason.Code == "task_queue_observation_unknown" {
+					if parentDiagnostic == nil {
+						parentDiagnostic = &row
+					}
+					if in.Selector.Kind == "task" {
+						out.Freshness = "unknown"
+					}
+					break
+				}
+			}
 			if entry.Goal != nil && row.State == "ready" {
 				readyGoal = true
 				row.State = "blocked"
@@ -130,6 +142,12 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 	}
 	if !found && in.Selector.Kind == "task" {
 		return out, queueError("task_queue_task_not_pending", "named Task is not an active pending entry")
+	}
+	if parentDiagnostic != nil {
+		out.State = parentDiagnostic.State
+		out.Reasons = parentDiagnostic.Reasons
+		out.Freshness = "unknown"
+		return out, nil
 	}
 	if readyGoal {
 		out.State = "blocked"

@@ -288,6 +288,12 @@ func queueParentObservation(d Dependencies, t QueueTarget) (PlanWorktreeObservat
 	if full.OID != o.OID || full.Tree != o.Tree || !full.Symbolic || !full.Clean || len(full.InProgress) != 0 {
 		return PlanWorktreeObservation{}, queueError("task_queue_observation_unknown", "Epic observation changed or has an operation in progress")
 	}
+	if full.ObjectFormat != "sha1" && full.ObjectFormat != "sha256" {
+		return PlanWorktreeObservation{}, queueError("task_queue_git_capability_unsupported", fmt.Sprintf("Git observation for rev-parse --show-object-format=storage returned %q; this Task path requires \"sha1\" or \"sha256\" storage", full.ObjectFormat))
+	}
+	if full.RefFormat != "files" {
+		return PlanWorktreeObservation{}, queueError("task_queue_git_capability_unsupported", fmt.Sprintf("Git observation for rev-parse --show-ref-format returned %q; this Task path requires \"files\" storage", full.RefFormat))
+	}
 	return planObservation(full), nil
 }
 func queueUnresolved(r WorkItemRegistry, t QueueTarget) []string {
