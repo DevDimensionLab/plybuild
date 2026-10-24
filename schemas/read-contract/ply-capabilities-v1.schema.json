@@ -606,7 +606,10 @@
             "human_input_answer_record",
             "agent_reported_receipt",
             "agent_reported_continuation",
-            "human_input_question_withdrawal"
+            "human_input_question_withdrawal",
+            "scoped_disposition_or_read",
+            "fixed_status_prompt_best_effort",
+            "followup_record"
           ]
         }
       },

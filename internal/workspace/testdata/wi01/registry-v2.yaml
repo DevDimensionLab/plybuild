@@ -1,0 +1,35 @@
+format_version: 2
+epics:
+  - id: epic
+    title: Epic
+    project_id: project
+    repo_bindings:
+      - repo_id: repo
+        git_common_dir: /wi01/main/.git
+        worktree:
+          id: wt_11111111111111111111111111111111
+          owner_kind: epic
+          owner_id: epic
+          origin: adopted
+          locator: /wi01/epic
+          ref: refs/heads/epic
+          oid: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          tree: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+          git_common_dir: /wi01/main/.git
+tasks:
+  - id: task
+    title: Task
+    description: Description
+    parent_epic_id: epic
+    project_id: project
+    repo_id: repo
+    git_common_dir: /wi01/main/.git
+    worktree_state: unbound
+    worktree: null
+worktree_operations: []
+task_results: []
+human_qa_records: []
+integration_authorities: []
+integration_intents: []
+integration_attempts: []
+integration_results: []

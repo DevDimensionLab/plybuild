@@ -10,14 +10,16 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/devdimensionlab/plybuild/internal/workitem"
 )
 
 const identifierRule = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$ (1..63 ASCII bytes)"
 
 var identifierPattern = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 
-type ProjectID string
-type RepoID string
+type ProjectID = workitem.ProjectID
+type RepoID = workitem.RepoID
 
 type ProjectAddInput struct {
 	ProjectID ProjectID

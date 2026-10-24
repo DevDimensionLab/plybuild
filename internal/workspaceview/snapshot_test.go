@@ -129,6 +129,11 @@ func TestProgressFiltersValidateKnownIDsBeforeIntersection(t *testing.T) {
 	missing := workspace.EpicID("missing")
 	if _, err := BuildTaskList(s, workspace.TaskListFilters{ProjectID: &p, EpicID: &missing}, nil); err == nil {
 		t.Fatal("unknown Epic hidden by empty intersection")
+	} else {
+		var workError *workspace.WorkItemError
+		if !errors.As(err, &workError) || workError.Class != workspace.ErrorWorkNotFound || err.Error() != "workspace_work_not_found: Epic missing is not registered" || errors.Unwrap(err) != nil {
+			t.Fatalf("Epic filter error changed: %#v", err)
+		}
 	}
 	empty := workspace.ProjectID("")
 	if _, err := ReadTaskList(workspace.Dependencies{}, workspace.TaskListFilters{ProjectID: &empty}); err == nil {

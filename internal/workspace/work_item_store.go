@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/workitem"
 	"gopkg.in/yaml.v3"
 )
 
@@ -991,13 +992,14 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			return err
 		}
 		epic, ok := epics[task.ParentEpicID]
-		if !ok || epic.ProjectID != task.ProjectID {
-			return fmt.Errorf("Task %s has invalid Epic/Project reference", task.ID)
+		var parent *EpicRecord
+		if ok {
+			parent = &epic
+		}
+		if err := workitem.ValidateTaskParent(task, parent); err != nil {
+			return err
 		}
 		binding, _ := findEpicRepo(epic, task.RepoID)
-		if binding == nil || binding.GitCommonDir != task.GitCommonDir {
-			return fmt.Errorf("Task %s has invalid repository binding", task.ID)
-		}
 		operation, hasOperation := operations[task.ID]
 		if hasOperation && (operation.ProjectID != task.ProjectID || operation.RepoID != task.RepoID || operation.GitCommonDir != task.GitCommonDir || operation.ParentEpicID != task.ParentEpicID || operation.ParentWorktreeID != binding.Worktree.ID || operation.ParentRef != binding.Worktree.Ref || !historicalEpicBaseMatches(registry, task.ParentEpicID, task.RepoID, operation.ParentWorktreeID, operation.ParentRef, operation.ParentOID, operation.ParentTree)) {
 			return fmt.Errorf("Task %s operation differs from its parent repository binding", task.ID)

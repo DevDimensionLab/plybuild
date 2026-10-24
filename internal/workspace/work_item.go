@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
+	"github.com/devdimensionlab/plybuild/internal/workitem"
 )
 
 const (
@@ -22,76 +23,25 @@ const (
 	workItemsLock = "work-items.lock"
 )
 
-type EpicID string
-type TaskID string
-type WorktreeID string
-type WorktreeOperationID string
-
-type WorkItemState string
+// Compatibility names retain the workspace API; workitem owns their definitions.
+type EpicID = workitem.EpicID
+type TaskID = workitem.TaskID
+type WorktreeID = workitem.WorktreeID
+type WorktreeOperationID = workitem.WorktreeOperationID
+type WorkItemState = workitem.WorkItemState
+type EpicWorktreeBinding = workitem.EpicWorktreeBinding
+type EpicRepoBinding = workitem.EpicRepoBinding
+type EpicRecord = workitem.EpicRecord
+type TaskWorktreeBinding = workitem.TaskWorktreeBinding
+type TaskRecord = workitem.TaskRecord
 
 const (
-	WorkItemUnbound                WorkItemState = "unbound"
-	WorkItemCreating               WorkItemState = "creating"
-	WorkItemReady                  WorkItemState = "worktree_ready"
-	WorkItemRetired                WorkItemState = "retired"
-	WorkItemReconciliationRequired WorkItemState = "reconciliation_required"
+	WorkItemUnbound                = workitem.WorkItemUnbound
+	WorkItemCreating               = workitem.WorkItemCreating
+	WorkItemReady                  = workitem.WorkItemReady
+	WorkItemRetired                = workitem.WorkItemRetired
+	WorkItemReconciliationRequired = workitem.WorkItemReconciliationRequired
 )
-
-type EpicWorktreeBinding struct {
-	ID           WorktreeID `yaml:"id" json:"id"`
-	OwnerKind    string     `yaml:"owner_kind" json:"owner_kind"`
-	OwnerID      EpicID     `yaml:"owner_id" json:"owner_id"`
-	Origin       string     `yaml:"origin" json:"origin"`
-	Locator      string     `yaml:"locator" json:"locator"`
-	Ref          string     `yaml:"ref" json:"ref"`
-	OID          string     `yaml:"oid" json:"oid"`
-	Tree         string     `yaml:"tree" json:"tree"`
-	GitCommonDir string     `yaml:"git_common_dir" json:"git_common_dir"`
-}
-
-type EpicRepoBinding struct {
-	RepoID       RepoID              `yaml:"repo_id" json:"repo_id"`
-	GitCommonDir string              `yaml:"git_common_dir" json:"git_common_dir"`
-	Worktree     EpicWorktreeBinding `yaml:"worktree" json:"worktree"`
-}
-
-type EpicRecord struct {
-	ID           EpicID            `yaml:"id" json:"epic_id"`
-	Title        string            `yaml:"title" json:"title"`
-	ProjectID    ProjectID         `yaml:"project_id" json:"project_id"`
-	RepoBindings []EpicRepoBinding `yaml:"repo_bindings" json:"repo_bindings"`
-}
-
-type TaskWorktreeBinding struct {
-	ID               WorktreeID          `yaml:"id" json:"id"`
-	OwnerKind        string              `yaml:"owner_kind" json:"owner_kind"`
-	OwnerID          TaskID              `yaml:"owner_id" json:"owner_id"`
-	Origin           string              `yaml:"origin" json:"origin"`
-	Locator          string              `yaml:"locator" json:"locator"`
-	Ref              string              `yaml:"ref" json:"ref"`
-	OID              string              `yaml:"oid" json:"oid"`
-	Tree             string              `yaml:"tree" json:"tree"`
-	GitCommonDir     string              `yaml:"git_common_dir" json:"git_common_dir"`
-	ParentEpicID     EpicID              `yaml:"parent_epic_id" json:"parent_epic_id"`
-	ParentWorktreeID WorktreeID          `yaml:"parent_worktree_id" json:"parent_worktree_id"`
-	ParentRef        string              `yaml:"parent_ref" json:"parent_ref"`
-	ParentOID        string              `yaml:"parent_oid" json:"parent_oid"`
-	ParentTree       string              `yaml:"parent_tree" json:"parent_tree"`
-	OperationID      WorktreeOperationID `yaml:"operation_id" json:"operation_id"`
-	IntentDigest     string              `yaml:"intent_digest" json:"intent_digest"`
-}
-
-type TaskRecord struct {
-	ID            TaskID               `yaml:"id" json:"task_id"`
-	Title         string               `yaml:"title" json:"title"`
-	Description   string               `yaml:"description" json:"description"`
-	ParentEpicID  EpicID               `yaml:"parent_epic_id" json:"parent_epic_id"`
-	ProjectID     ProjectID            `yaml:"project_id" json:"project_id"`
-	RepoID        RepoID               `yaml:"repo_id" json:"repo_id"`
-	GitCommonDir  string               `yaml:"git_common_dir" json:"git_common_dir"`
-	WorktreeState WorkItemState        `yaml:"worktree_state" json:"worktree_state"`
-	Worktree      *TaskWorktreeBinding `yaml:"worktree" json:"worktree"`
-}
 
 type WorktreeObservationRecord struct {
 	Classification             string   `yaml:"classification" json:"classification"`
@@ -566,20 +516,10 @@ func intentDigest(operation WorktreeOperationRecord) (string, error) {
 }
 
 func findEpic(registry WorkItemRegistry, id EpicID) (*EpicRecord, int) {
-	for i := range registry.Epics {
-		if registry.Epics[i].ID == id {
-			return &registry.Epics[i], i
-		}
-	}
-	return nil, -1
+	return workitem.FindEpic(registry.Epics, id)
 }
 func findTask(registry WorkItemRegistry, id TaskID) (*TaskRecord, int) {
-	for i := range registry.Tasks {
-		if registry.Tasks[i].ID == id {
-			return &registry.Tasks[i], i
-		}
-	}
-	return nil, -1
+	return workitem.FindTask(registry.Tasks, id)
 }
 func findOperation(registry WorkItemRegistry, taskID TaskID) (*WorktreeOperationRecord, int) {
 	for i := range registry.WorktreeOperations {
@@ -590,12 +530,7 @@ func findOperation(registry WorkItemRegistry, taskID TaskID) (*WorktreeOperation
 	return nil, -1
 }
 func findEpicRepo(epic EpicRecord, repoID RepoID) (*EpicRepoBinding, int) {
-	for i := range epic.RepoBindings {
-		if epic.RepoBindings[i].RepoID == repoID {
-			return &epic.RepoBindings[i], i
-		}
-	}
-	return nil, -1
+	return workitem.FindEpicRepo(epic, repoID)
 }
 
 func sortWorkRegistry(registry *WorkItemRegistry) {

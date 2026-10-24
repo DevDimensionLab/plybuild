@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/workitem"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -134,11 +135,7 @@ func ValidateTaskFilters(s *Snapshot, filters workspace.TaskListFilters) error {
 		}
 	}
 	if filters.EpicID != nil {
-		found := false
-		for _, e := range s.Registry.Epics {
-			found = found || e.ID == *filters.EpicID
-		}
-		if !found {
+		if epic, _ := workitem.FindEpic(s.Registry.Epics, *filters.EpicID); epic == nil {
 			return notFound("Epic", string(*filters.EpicID))
 		}
 	}

@@ -166,17 +166,22 @@ forventninger til regel, sti og linje), ikke ved å skade produksjonstreet:
 
 ## Responsibility and callers
 
-Pil betyr import fra kaller til eier. Heltrukne piler er eksisterende importer;
-stiplede piler er planlagte faktiske importer etter denne implementasjonen.
-Dette er et ansvarskart, ikke en påstand om at alle tillatte importer finnes.
+Pil betyr import fra kaller til eier. Implementert WI01-kart med observerte
+importkanter, navngitte kallere og ansvar finnes i
+[workitem-core.md](../workitem-core.md). Kartet under viser de observerte
+importene mellom de fem berørte pakkene, samt kjernens fmt-import; øvrige
+importer ligger utenfor dette avgrensede kartet.
 
 ```mermaid
 flowchart TD
   TR[taskrun: execution/readback] --> W
+  TR --> WH
+  V --> TR
   WH[workflowhandoff: mandate/delivery] --> W
   V[workspaceview: snapshot/filter/projections] --> W
-  W[workspace: registry/storage/history/Git/effects] -.-> C
-  V -.-> C[workitem: 12 types / 3 lookups / Task parent-repo rule]
+  W[workspace: registry/storage/history/Git/effects] --> C
+  V --> C[workitem: 12 types / 3 lookups / Task parent-repo rule]
+  C --> F[fmt: errors]
 ```
 
 Ved implementasjon oppdateres kartet til observerte importer og navngitte kall:
@@ -200,7 +205,9 @@ installasjon eller ekstern server er en testforutsetning.
 2. Flytt tolv typer og tilstander; innfør workspace-aliaser. Flytt de tre oppslagene
    og Task-parent/repo-kontrollen. Koble eksisterende workspace-kall og Epic-filteret.
 3. Gjør reglene og deres lovlige/ulovlige fixtures grønne, oppdater kartet og kjør
-   fokuserte tester og `go test ./...`. Rett konkrete regresjoner innen dette scope.
+   kandidatbundne fokuserte tester etter WI01-verifikasjonsaddendumen nedenfor.
+   Rett konkrete regresjoner innen dette scope. Arkitekturreglene inngår fortsatt
+   i vanlig `go test ./...`; en grønn generell fullsuite er ikke leveranseport.
 
 ## Acceptance criteria
 
@@ -235,10 +242,25 @@ på faktisk import og tillatt retning. Kan leses uten server.
 
 ### WI01-AC06 — teknisk verifikasjon
 
-Fokuserte workitem-/architecture-/workspace-/workspaceview-tester og `go test ./...`
-er faktisk kjørt og passerer. Acceptance-entrypoint kjører meningsfulle kontroller
-uten provider credentials. Kontrollbevis kan foreligge før rapportretur; senere
-review, kvalifisering og integrasjon er ikke tekniske forhåndsvilkår her.
+Kandidatbundne core-/scanner-tester med lovlige og ulovlige fixtures,
+WI01Compatibility og relevante registrerings-/read-view-/filter-/historisk-base-/
+adoption-/scoped-content-tester er faktisk kjørt og passerer. De seks navngitte
+CLI-/schema-testene kjøres med eksakt privat kandidat og eksisterende schema-Python;
+berørte pakker bygges/vettes, og dokumentets observerte importkanter kontrolleres.
+Se [fokusert verifikasjon](../workitem-core.md#focused-verification) for kommandoene.
+Acceptance-entrypoint kjører meningsfulle kontroller uten provider credentials.
+Kontrollbevis kan foreligge før rapportretur; senere review, kvalifisering og
+integrasjon er ikke tekniske forhåndsvilkår her.
+
+Verifikasjonsaddendumen av 25.10.2026 erstatter bare det tidligere generelle
+fullsuitekravet her og i Implementation sequence. Forgjenger-Run
+`wfr_6ae5012d784ef46160ec84a3baf362deb607a8953b2abb0ee93af1bc78e81b86`
+er retired med faktisk `failed` / `not_qualified` / `not_delivered` bevart.
+Den brede kjøringen feilet på en urelatert InstallAuthority-fixture som forventet
+exit 0 ved `owner_handoff`/exit 5, manglende Python-forutsetning i
+ParallelPrivateCandidate og timeouts i store legacy-suiter. Ingen gammel aksept
+eller review arves. Ingen ny generell fullsuite eller urelatert lifecycle-reparasjon
+inngår i WI01; alle øvrige produktkrav og arkitekturregler gjelder uendret.
 
 ### WI01-AC07 — avgrenset scope
 
