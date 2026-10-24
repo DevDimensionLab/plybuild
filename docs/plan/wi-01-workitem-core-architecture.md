@@ -119,7 +119,7 @@ Modulens reelle importprefiks er `github.com/devdimensionlab/plybuild`.
 
 | Regel | Produksjonskode som kontrolleres |
 | --- | --- |
-| WI01-R1 | Hele `internal/workitem` kan bare importere stdlib `fmt`. Ingen andre stdlib-, Ply- eller tredjepakker, heller ikke underpakker. Dette holder IO, prosess og nettverk ute. |
+| WI01-R1 | Hele `internal/workitem` kan bare importere stdlib `fmt`. Ingen andre stdlib-, Ply- eller tredjepakker, heller ikke underpakker. Dette begrenser importavhengigheter; det beviser ikke fravær av IO, siden blant annet `fmt.Print` skriver. Implementasjonen bruker `fmt` kun til feilbygging med `fmt.Errorf`; ingen generell purity-plattform innføres. |
 | WI01-R2 | `internal/workspace` kan ikke importere `internal/workspaceview`, `internal/taskrun` eller `internal/workflowhandoff`, inkludert underpakker. Workspace/workspaceview kan importere workitem. Eksisterende taskrun/workflowhandoff → workspace bevares. |
 | WI01-R3 | De tolv reserverte typenavnene defineres bare i `internal/workitem`. Utenfor kjernen tillates bare workspace sine direkte aliaser til korrekt workitem-navn. Definisjon, struct-kopi, `type TaskID workitem.TaskID` og alias til feil mål avvises. Hver kanonisk type og hvert av de tolv workspace-aliasene må finnes. |
 
@@ -233,17 +233,18 @@ Repoet inneholder oppdatert diagramkilde, tekstlig ansvar/kallertabell og observ
 importkanter, med forklaring av gjenværende workspace-avhengigheter og forskjellen
 på faktisk import og tillatt retning. Kan leses uten server.
 
-### WI01-AC06 — verifisert kandidat
+### WI01-AC06 — teknisk verifikasjon
 
 Fokuserte workitem-/architecture-/workspace-/workspaceview-tester og `go test ./...`
 er faktisk kjørt og passerer. Acceptance-entrypoint kjører meningsfulle kontroller
-uten provider credentials; separat native review og eksakt kandidatverifikasjon
-kvalifiserer samme rene commit/tree. Fremtidig integrasjon er ikke en testforutsetning.
+uten provider credentials. Kontrollbevis kan foreligge før rapportretur; senere
+review, kvalifisering og integrasjon er ikke tekniske forhåndsvilkår her.
 
-### WI01-AC07 — avgrenset levering
+### WI01-AC07 — avgrenset scope
 
-Implementasjonen returneres gjennom Delivery nedenfor. Ingen utvidelser til
-utelatt funksjonalitet, andre prosjekter, gamle Runs eller generell arkitektur.
+Endringene holder seg til avtalt scope, uten utvidelser til utelatt funksjonalitet,
+andre prosjekter, gamle Runs eller generell arkitektur. Delivery eier senere
+integrasjon og installasjon; utført levering er ikke et teknisk forhåndsvilkår.
 
 ## Delivery
 
@@ -253,8 +254,9 @@ Denne Specen starter ingen utvikling. Bruk stående Codex-backup under bevart
 Claude-kvotestopp til 25. oktober kl. 17 Europe/Oslo; ingen kvoteprobe, upgrades,
 interne subagenter eller direkte Herdr-agentstart.
 
-Implementasjonsløpet tillater Task-commits, separat native review/fiks og automatisk
-verifikasjon av eksakt kandidat, deretter `local_epic_integration` til
+Etter rapportretur krever Delivery separat native review/fiks og automatisk
+verifikasjon som kvalifiserer samme rene commit/tree før integrasjon.
+Implementasjonsløpet tillater Task-commits og deretter `local_epic_integration` til
 `refs/heads/ply_agentic_workflow_support` ved
 `/Users/perottochristensen/github/ply/ply_agentic_workflow_support`.
 Ingen ekstra menneskelig QA-port, push/PR/master- eller hel-Epic-levering.
