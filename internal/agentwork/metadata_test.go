@@ -137,3 +137,38 @@ printf '%s' '{"result":{"type":"agent_list","agents":[]}}'`)
 		t.Fatal(v, e)
 	}
 }
+
+// SM01 r001-f01: malformed rows still claim panes before other fields qualify.
+func TestStatusMetadataOmitsEveryMalformedDuplicatePane(t *testing.T) {
+	valid := metadataRaw(metadataRow("w1:p1"))
+	unaffected := metadataRaw(metadataRow("w1:p-safe"))
+	cases := map[string]string{}
+	for name, field := range map[string]string{"invalid-status": "agent_status", "null-tab": "tab_id", "invalid-provider": "agent"} {
+		row := metadataRow("w1:p1")
+		row[field] = 42
+		if name == "null-tab" {
+			row[field] = nil
+		}
+		cases[name] = metadataRaw(row)
+	}
+	cases["duplicate-status-before-pane"] = `{"agent":"codex","agent_status":"idle","agent_status":42,"pane_id":"w1:p1","tab_id":"t","workspace_id":"w"}`
+	cases["duplicate-status-after-pane"] = `{"pane_id":"w1:p1","agent":"codex","agent_status":"idle","agent_status":42,"tab_id":"t","workspace_id":"w"}`
+	cases["duplicate-provider-before-pane"] = `{"agent":"codex","agent":42,"pane_id":"w1:p1","tab_id":"t","workspace_id":"w","agent_status":"idle"}`
+	cases["duplicate-pane-same-claim"] = `{"agent":"codex","pane_id":"w1:p1","pane_id":"w1:p1","tab_id":"t","workspace_id":"w","agent_status":"idle"}`
+	cases["duplicate-pane-different-claims"] = `{"agent":"codex","pane_id":"w1:p1","pane_id":"w1:p2","tab_id":"t","workspace_id":"w","agent_status":"idle"}`
+	for name, malformed := range cases {
+		for _, reverse := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/reverse=%t", name, reverse), func(t *testing.T) {
+				rows := []string{valid, malformed, unaffected}
+				if reverse {
+					rows[0], rows[1] = rows[1], rows[0]
+				}
+				raw := `{"result":{"type":"agent_list","agents":[` + strings.Join(rows, ",") + `]}}`
+				v := metadataFixture(t, raw)
+				if v.Sources[0].Status != "partial" || v.Sources[0].Coverage != "partial" || len(v.Agents) != 1 || v.Agents[0].Pane != "w1:p-safe" {
+					t.Fatalf("ambiguous pane survives or unrelated pane lost: %+v", v)
+				}
+			})
+		}
+	}
+}

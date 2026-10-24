@@ -43,6 +43,25 @@ with tempfile.TemporaryDirectory(prefix="sm01-cli-") as tmp:
         ("timeout", None, "unavailable", "unknown", 0, "sleep 20"),
         ("inherited-pipes", None, "unavailable", "unknown", 0, "sleep 20 & wait"),
     ]
+    # r001-f01: a malformed duplicate still invalidates the valid pane claim.
+    malformed = {}
+    for name, field in (("invalid-status", "agent_status"), ("null-tab", "tab_id"), ("invalid-provider", "agent")):
+        bad = row()
+        bad[field] = None if name == "null-tab" else 42
+        malformed[name] = json.dumps(bad)
+    malformed["duplicate-status-before-pane"] = '{"agent":"codex","agent_status":"idle","agent_status":42,"pane_id":"w1:p1","tab_id":"t","workspace_id":"w"}'
+    malformed["duplicate-status-after-pane"] = '{"pane_id":"w1:p1","agent":"codex","agent_status":"idle","agent_status":42,"tab_id":"t","workspace_id":"w"}'
+    malformed["duplicate-provider-before-pane"] = '{"agent":"codex","agent":42,"pane_id":"w1:p1","tab_id":"t","workspace_id":"w","agent_status":"idle"}'
+    malformed["duplicate-pane-same-claim"] = '{"agent":"codex","pane_id":"w1:p1","pane_id":"w1:p1","tab_id":"t","workspace_id":"w","agent_status":"idle"}'
+    malformed["duplicate-pane-different-claims"] = '{"agent":"codex","pane_id":"w1:p1","pane_id":"w1:p2","tab_id":"t","workspace_id":"w","agent_status":"idle"}'
+    for name, bad in malformed.items():
+        for reverse in (False, True):
+            rows = [json.dumps(row()), bad]
+            if reverse:
+                rows.reverse()
+            rows.append(json.dumps(row("w1:p-safe")))
+            raw = '{"result":{"type":"agent_list","agents":[' + ','.join(rows) + ']}}'
+            modes.append((f"malformed-duplicate-{name}-reverse-{reverse}", raw, "partial", "partial", 1, None))
     for name, payload, status, coverage, count, command in modes:
         fixture.write_text(payload if isinstance(payload, str) else json.dumps(payload), encoding="utf-8")
         # No provider execution; this executable accepts exactly the public List operation.
@@ -66,6 +85,8 @@ with tempfile.TemporaryDirectory(prefix="sm01-cli-") as tmp:
         assert (source["status"], source["coverage"], len(v["agents"])) == (status, coverage, count), name
         assert source["source"] == "herdr.agent.list"
         assert source["source_observed_at_utc"] == (None if status == "unavailable" else v["observed_at_utc"])
+        if name.startswith("malformed-duplicate-"):
+            assert [a["pane"] for a in v["agents"]] == ["w1:p-safe"], name
         for agent in v["agents"]:
             assert set(agent) == {"pane", "provider", "status", "tab", "workspace"}
             assert agent["pane"]

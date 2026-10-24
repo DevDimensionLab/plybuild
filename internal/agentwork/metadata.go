@@ -58,13 +58,14 @@ func StatusMetadata(h HerdrRuntime) MetadataReadback {
 
 // Decode only selected object members. Execution fields are opaque raw JSON;
 // their types and duplicate members never qualify metadata completeness.
-func metadataObject(raw []byte, selected map[string]bool) (map[string]json.RawMessage, error) {
+func metadataObject(raw []byte, selected map[string]bool, observe func(string, json.RawMessage)) (map[string]json.RawMessage, error) {
 	d := json.NewDecoder(bytes.NewReader(raw))
 	tok, e := d.Token()
 	if e != nil || tok != json.Delim('{') {
 		return nil, fmt.Errorf("metadata_object_invalid")
 	}
 	out := map[string]json.RawMessage{}
+	duplicate := false
 	for d.More() {
 		tok, e = d.Token()
 		if e != nil {
@@ -78,11 +79,16 @@ func metadataObject(raw []byte, selected map[string]bool) (map[string]json.RawMe
 		if e = d.Decode(&v); e != nil {
 			return nil, e
 		}
+		if observe != nil {
+			observe(key, v)
+		}
 		if selected == nil || selected[key] {
 			if _, exists := out[key]; exists {
-				return nil, fmt.Errorf("metadata_duplicate")
+				// Keep scanning: a malformed member cannot hide later pane claims.
+				duplicate = true
+			} else {
+				out[key] = v
 			}
-			out[key] = v
 		}
 	}
 	if _, e = d.Token(); e != nil {
@@ -90,6 +96,9 @@ func metadataObject(raw []byte, selected map[string]bool) (map[string]json.RawMe
 	}
 	if _, e = d.Token(); e != io.EOF {
 		return nil, fmt.Errorf("metadata_trailing")
+	}
+	if duplicate {
+		return nil, fmt.Errorf("metadata_duplicate")
 	}
 	return out, nil
 }
@@ -106,14 +115,14 @@ func metadataText(raw []byte, nonempty bool) (string, bool) {
 	return s, s == "" || plain(s)
 }
 func decodeMetadata(raw []byte, out MetadataReadback) MetadataReadback {
-	env, e := metadataObject(raw, nil)
+	env, e := metadataObject(raw, nil, nil)
 	if e != nil {
 		return out
 	}
 	if v, exists := env["error"]; exists && string(bytes.TrimSpace(v)) != "null" {
 		return out
 	}
-	result, e := metadataObject(env["result"], nil)
+	result, e := metadataObject(env["result"], nil, nil)
 	if e != nil {
 		return out
 	}
@@ -148,7 +157,15 @@ func decodeMetadata(raw []byte, out MetadataReadback) MetadataReadback {
 	selected := map[string]bool{"agent": true, "agent_status": true, "pane_id": true, "tab_id": true, "workspace_id": true}
 	seen := map[string]int{}
 	for _, rawRow := range rows {
-		row, e := metadataObject(rawRow, selected)
+		// Every valid pane claim participates in uniqueness, even when another
+		// field or duplicate key makes this row ineligible for publication.
+		row, e := metadataObject(rawRow, selected, func(key string, value json.RawMessage) {
+			if key == "pane_id" {
+				if pane, ok := metadataText(value, true); ok {
+					seen[pane]++
+				}
+			}
+		})
 		if e != nil {
 			partial()
 			continue
@@ -174,7 +191,6 @@ func decodeMetadata(raw []byte, out MetadataReadback) MetadataReadback {
 		default:
 			status = "unknown"
 		}
-		seen[pane]++
 		out.Agents = append(out.Agents, StatusAgent{pane, provider, status, tab, workspace})
 	}
 	// Pane is the consumer's unique key; discard every occurrence of ambiguity.
