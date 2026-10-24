@@ -88,7 +88,7 @@ func TestExecuteAcceptancePublicHelpAndCapabilitiesPreserveSeparateMeaning(t *te
 	if err != nil || c.Name() != "acceptance" {
 		t.Fatalf("existing-run policy choice is not discoverable: %v", err)
 	}
-	for _, meaning := range []string{"DeliveryAcceptanceChoice@1", "no test result, human QA or runtime permission", "workflow execute continue"} {
+	for _, meaning := range []string{"DeliveryAcceptanceChoice@1", "no test result, human QA or runtime permission", "ordinary installed ply"} {
 		if !strings.Contains(c.Long, meaning) {
 			t.Fatalf("acceptance help omitted %q", meaning)
 		}

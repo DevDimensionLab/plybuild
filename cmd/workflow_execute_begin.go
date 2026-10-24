@@ -18,7 +18,7 @@ func newWorkflowExecuteReceiptCommand(d taskrun.Dependencies, receipt bool) *cob
 	var in taskrun.DeliveryBeginInput
 	var contextPath, format string
 	c := &cobra.Command{Use: "begin RUN_ID", Short: "Record actual recipient observations and accept the existing startup mandate",
-		Long: "From the bound Task and control executable, report your actual provider, native session, policy and filesystem roots. Ply preserves the observation, hashes evidence, binds the frozen agreement and submits native acceptance. --permission-confirmed means the observed runtime covers all selected effects and targets; the launch request alone cannot establish it. Unknown authority stops dependent work. No handwritten acceptance JSON is needed. Repeat identical observations after a lost response; changed observations never overwrite acceptance.",
+		Long: "From the bound Task with ordinary installed ply, report your actual provider, native session, policy and filesystem roots. Ply preserves the observation, hashes evidence, binds the frozen agreement and submits native acceptance. --permission-confirmed means the observed runtime covers all selected effects and targets; the launch request alone cannot establish it. Unknown authority stops dependent work. No handwritten acceptance JSON is needed. Repeat identical observations after a lost response; changed observations never overwrite acceptance.",
 		Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 			if err := executeFormat(format); err != nil {
 				return err
@@ -42,7 +42,7 @@ func newWorkflowExecuteReceiptCommand(d taskrun.Dependencies, receipt bool) *cob
 	if receipt {
 		c.Use = "check-in RUN_ID"
 		c.Short = "Acknowledge the frozen mandate and bound session without asserting runtime permissions"
-		c.Long = "From the bound Task and immutable control, supply --context, --provider and --native-session. Ply checks the frozen mandate, exact owner and cwd and records an idempotent receipt. Optional model, profile, policy and roots are sourced recipient observations; omitted facts stay unknown. Reported roots never attest sandbox coverage. The human mandate supplies scope and target; runtime reviews actions when they happen. A known denial or unresolved prior effect remains binding. Repeat identical input only after a lost response; no handwritten acceptance or blanket permission flag is required."
+		c.Long = "From the bound Task with ordinary installed ply, supply --context, --provider and --native-session. Ply checks the frozen mandate, exact owner and cwd and records an idempotent receipt. Optional model, profile, policy and roots are sourced recipient observations; omitted facts stay unknown. Reported roots never attest sandbox coverage. The human mandate supplies scope and target; runtime reviews actions when they happen. A known denial or unresolved prior effect remains binding. Repeat identical input only after a lost response; no handwritten acceptance or blanket permission flag is required."
 	}
 	c.Flags().StringVar(&contextPath, "context", "", "exact private execution context")
 	c.Flags().StringVar(&in.Provider, "provider", "", "actual provider: codex or claude")

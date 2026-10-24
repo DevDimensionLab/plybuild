@@ -215,7 +215,12 @@ func TestMR05ControlStaleBasisAndABA(t *testing.T) {
 				f.s.Request.Runtime.Model = "changed"
 				f.save()
 			}
-			if _, e := WorkerControls(f.d).Apply(r); e == nil || w.Load() != 0 {
+			_, e := WorkerControls(f.d).Apply(r)
+			if name == "frozen" {
+				if e != nil || w.Load() != 1 {
+					t.Fatal("Ply upgrade blocked unchanged control", e)
+				}
+			} else if e == nil || w.Load() != 0 {
 				t.Fatal("binding drift accepted", e)
 			}
 		})
@@ -417,7 +422,7 @@ func TestMR05ControlFaultsPreserveUnknown(t *testing.T) {
 			}
 		})
 	}
-	t.Run("runtime_drift_after_reservation", func(t *testing.T) {
+	t.Run("ply_upgrade_after_reservation", func(t *testing.T) {
 		f, _ := mr05Worker(t)
 		r := mr05Preview(t, f, "pause", "consume-drift-0001")
 		if _, e := WorkerControls(f.d).Apply(r); e != nil {
@@ -427,8 +432,12 @@ func TestMR05ControlFaultsPreserveUnknown(t *testing.T) {
 		if e := os.WriteFile(f.s.Request.Runtime.PlyExecutable.Path, []byte("different controller"), 0700); e != nil {
 			t.Fatal(e)
 		}
-		if _, e := workerConsumeBoundControl(f.d, f.s); e == nil {
-			t.Fatal("changed controller produced confirmed effect")
+		if consumed, e := workerConsumeBoundControl(f.d, f.s); e != nil || !consumed {
+			t.Fatal("Ply upgrade blocked the reserved control", e)
+		}
+		f.reload()
+		if f.s.Result.Worker.Phase != "paused" {
+			t.Fatal("reserved pause was not confirmed")
 		}
 	})
 	for _, point := range []string{"control_before_reserve", "control_after_reserve", "control_before_wake", "control_after_wake", "control_before_consume", "control_after_consume", "control_before_receipt", "control_after_receipt"} {

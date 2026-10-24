@@ -207,7 +207,18 @@ func (m Manager) Service(root, id, action string) (ServiceStatus, error) {
 			err = fmt.Errorf("install this named service first")
 		}
 		if err == nil {
-			err = wakeServiceUsing(b, ctl)
+			data, readErr := os.ReadFile(path)
+			if readErr != nil {
+				return st, readErr
+			}
+			if bytes.Equal(data, Plist(b)) {
+				err = wakeServiceUsing(b, ctl)
+			} else {
+				// Readback validated the original service settings. Its old
+				// ProgramArguments are history, so use the current controller
+				// under the same owner locks without rewriting the plist.
+				err = m.LaunchRun(root, id)
+			}
 		}
 	case "stop", "uninstall":
 		st, e := ServiceReadback(b, ctl)

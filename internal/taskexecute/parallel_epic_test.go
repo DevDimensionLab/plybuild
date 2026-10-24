@@ -225,7 +225,7 @@ func TestParallelNativeTwoOwners(t *testing.T) {
 	if first.Run == nil || second.Run == nil || first.Run.RunID == second.Run.RunID || first.Run.Transport.AgentSessionID == second.Run.Transport.AgentSessionID || first.Run.Transport.PaneID == second.Run.Transport.PaneID || first.RequestPath == second.RequestPath {
 		t.Fatal("parallel launch shared identity")
 	}
-	controls := map[string]bool{}
+	sources := map[string]bool{}
 	for _, result := range []Result{first, second} {
 		var request taskrun.WorkflowRequest
 		raw, err = os.ReadFile(result.RequestPath)
@@ -239,10 +239,14 @@ func TestParallelNativeTwoOwners(t *testing.T) {
 			t.Fatal("launch lost frozen parallel authority")
 		}
 		control := request.Runtime.PlyExecutable.Path
-		if controls[control] || !strings.HasPrefix(control, filepath.Dir(result.RequestPath)+string(filepath.Separator)) {
-			t.Fatal("owners share immutable control path")
+		if result.Goal == nil || sources[result.Goal.WorktreePath] || first.Run.Paths.Context == second.Run.Paths.Context {
+			t.Fatal("parallel owners share Task source or callback context")
 		}
-		controls[control] = true
+		sources[result.Goal.WorktreePath] = true
+		installed, e := d.Executable()
+		if e != nil || control != installed {
+			t.Fatalf("Ply observation differs from installed invocation: %s %v", control, e)
+		}
 		t.Logf("simulated native owner Run=%s pane=%s session=%s control=%s", result.Run.RunID, result.Run.Transport.PaneID, result.Run.Transport.AgentSessionID, control)
 	}
 	in.SpecID = "observable-goal"

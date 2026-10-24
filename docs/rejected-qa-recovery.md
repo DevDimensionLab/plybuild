@@ -46,10 +46,10 @@ uncertain result before retrying.
 The recovery receipt establishes only that the rejected reservation was safely
 recovered. Prepare a new attestation file with supported UTC timestamps, preserving
 the human's actual answer and exact candidate binding. Keep the rejected file
-unchanged. Then use the original bound callback control's ordinary QA command:
+unchanged. Then use ordinary installed `ply` with the unchanged context:
 
 ```shell
-/absolute/original/ply-control workflow execute qa RUN_ID OUTCOME \
+ply workflow execute qa RUN_ID OUTCOME \
   --context /absolute/original/context.json \
   --evidence /absolute/corrected-human-attestation.json --format json
 ```

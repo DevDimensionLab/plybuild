@@ -231,7 +231,7 @@ func TestParallelActivationHumanReleaseRequiresEveryRemainingControl(t *testing.
 		t.Fatal(e)
 	}
 	wrong, e := parallelConsumerClass(f.D, s, "sha256:"+strings.Repeat("c", 64))
-	if e != nil || wrong.Class != "PAR-A04" || wrong.Compatible || len(wrong.RemainingEffects) != 3 {
+	if e != nil || wrong.Class != "PAR-A04" || !wrong.Compatible || len(wrong.RemainingEffects) != 3 {
 		t.Fatalf("human release removed remaining effects: %+v %v", wrong, e)
 	}
 	runtime, e := workflowEffectiveRuntime(s)
@@ -240,11 +240,11 @@ func TestParallelActivationHumanReleaseRequiresEveryRemainingControl(t *testing.
 	}
 	compatible, e := parallelConsumerClass(f.D, s, runtime.PlyExecutable.SHA256)
 	if e != nil || !compatible.Compatible || compatible.Class != "PAR-A04" {
-		t.Fatalf("exact modeled compatible controls refused: %+v %v", compatible, e)
+		t.Fatalf("modeled remaining effects refused: %+v %v", compatible, e)
 	}
 	missing, e := parallelConsumerClass(f.D, s, "")
-	if e != nil || missing.Compatible {
-		t.Fatal("missing coordinator permitted activation")
+	if e != nil || !missing.Compatible || missing.Class != "PAR-A04" || len(missing.RemainingEffects) != 3 {
+		t.Fatal("informative reader hash changed remaining effects")
 	}
 	after, e := workflowRead(b.R.WorkspaceRoot, second.RunID)
 	if e != nil || !equal(before, after) {

@@ -300,8 +300,8 @@ func TestDeliveryContinuationRejectsTamperedPriorControlAndAuthority(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = workflowEffectiveRuntime(s); err == nil || !strings.Contains(err.Error(), "delivery_continuation_integrity") {
-		t.Fatalf("tampered prior executable was ignored: %v", err)
+	if _, err = workflowEffectiveRuntime(s); err != nil {
+		t.Fatalf("historical Ply upgrade blocked continuation: %v", err)
 	}
 	s.Request.SchemaVersion = 9
 	if err = deliveryContinuationAuthority(s); err == nil || !strings.Contains(err.Error(), "delivery_continuation_unsupported") {

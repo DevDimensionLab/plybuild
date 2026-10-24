@@ -233,7 +233,7 @@ func deliveryQARecovery(d Dependencies, root string, in DeliveryQARecoveryInput,
 				}
 				binding := FileBinding{path, digest(r)}
 				out.State, out.Confirmation, out.Receipt = "ready", binding.SHA256, &binding
-				out.NextAction = "Confirm this exact recovery to retire only the proven rejected reservation; then record the preserved actual answer through the unchanged bound control with a new timestamp-corrected evidence file."
+				out.NextAction = "Confirm this exact recovery to retire only the proven rejected reservation; then record the preserved actual answer through ordinary installed ply with a new timestamp-corrected evidence file."
 				if !apply {
 					return nil
 				}
@@ -258,7 +258,7 @@ func deliveryQARecovery(d Dependencies, root string, in DeliveryQARecoveryInput,
 				}
 				s.Result.Delivery.Attempt = nil
 				s.Result.Delivery.Phase, s.Result.Round.State = "awaiting_human_qa", "awaiting_human_qa"
-				out.NextAction = "The rejected reservation is retired. Record the preserved actual human answer through the unchanged bound control's ordinary QA callback with a new equivalent Z-timestamp attestation."
+				out.NextAction = "The rejected reservation is retired. Record the preserved actual human answer through ordinary installed ply with the unchanged context with a new equivalent Z-timestamp attestation."
 				s.Result.NextAction = WorkflowAction{"recipient", out.NextAction}
 				if e = workflowSave(d, s); e != nil {
 					return e

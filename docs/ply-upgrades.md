@@ -68,3 +68,22 @@ not a live provider start, human product judgment, installed smoke or delivery.
 Broad taskrun/taskexecute diagnostic results remain separate; their known base
 suite timeouts do not establish a regression pass or fail for PV-01. Root owns
 independent native review and the later installed Ply smoke.
+
+## Review round 1 corrections
+
+Independent review of candidate `0378f024` requested a concrete legacy service
+startup fix and remaining old-lock test corrections. The reviewer's isolated
+service-start reproducer was adopted as `TestPlyUpgradeLegacyWeekServiceStart`:
+it failed while synthetic launchctl attempted the removed historical executable.
+The corrected start selects the current controller through the existing owner
+locks, keeping the original plist and binding unchanged. The fix was followed
+by its focused GREEN test and the reviewer's exact targeted command.
+
+Worker preview/consume, stored continuation and parallel activation tests now
+expect Ply-only changes to succeed while still testing provider, policy,
+unsupported contract, unknown effects, remaining effects and other owner
+isolation. Parallel owners retain separate requests, contexts, native sessions,
+panes and Task sources while sharing ordinary installed Ply. CLI help points
+to that same supported command. No broad suite was repeated for these fixes.
+The old hash-only preview acceptance question is a separate coordinator/human
+decision; these technical fixes do not claim to resolve it.

@@ -42,7 +42,7 @@ func newWorkflowWeekCommand(d taskrun.Dependencies) *cobra.Command {
 	start.Flags().StringVar(&file, "file", "", "absolute JSON week contract path")
 	start.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	start.Flags().BoolVar(&check, "check", false, "validate selected native bindings without writes or startup")
-	start.Flags().BoolVar(&service, "service", false, "install and bootstrap a named per-user launchd service using the frozen control")
+	start.Flags().BoolVar(&service, "service", false, "install and bootstrap a named per-user launchd service using ordinary installed Ply")
 	_ = start.MarkFlagRequired("file")
 	setWorkFlagErrors(start)
 	parent.AddCommand(start)
