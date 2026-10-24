@@ -348,6 +348,11 @@ func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
 	return tabArgs
 }
 
+// Codex 0.164.0 exposes thread-id only after session configuration. Context
+// percentages alone can render earlier; the guarded producer needs both fields.
+// Keep this invocation-only override shared by owner, reviewer and resume starts.
+const managedCodexThreadFooter = `tui.status_line=["thread-id","context-remaining"]`
+
 func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
 	if r.Runtime.Provider == "claude" {
 		// Claude inherits the exact tab cwd. Its native permission mode is the
@@ -359,7 +364,7 @@ func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
 		}
 		return argv
 	}
-	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
+	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID), "-c", managedCodexThreadFooter}
 	if r.Runtime.ConfigProfile != nil {
 		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
 	}

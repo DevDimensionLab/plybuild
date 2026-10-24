@@ -266,6 +266,15 @@ attempt is recorded before input in `startup-bootstrap-attempt.json`; it is neve
 replayed. Ply then waits for the real hook session and a fresh settled observation.
 It neither invents a session ID nor parses terminal text to obtain one.
 
+Managed Codex owner, reviewer and closed-tab resume starts share the invocation
+override `-c 'tui.status_line=["thread-id","context-remaining"]'`. No global config
+is edited. The guarded producer requires a complete canonical thread UUID first,
+then ` · Context N% left`, on the owned footer row. Percentages, model and cwd can
+render before thread configuration and do not prove readiness. Missing or clipped
+identity fails closed. Footer evidence never creates native-session authority;
+known native identity must match. See the [initialized-thread correction](specs/safe-start-implementation-v2.md#initialized-thread-correction-tc89b0c74-three-01f)
+for source proof and the separate root-owned live qualification gate.
+
 Agent start, the optional readiness exchange and fresh observations share one
 90-second window. If
 an ungranted legacy request encounters native onboarding, the attempt remains

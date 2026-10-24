@@ -38,6 +38,18 @@ with (root / "herdr-calls.jsonl").open("a") as f:
 if args[:3] == ["status", "server", "--json"]:
     print(json.dumps({"running":True,"compatible":True,"capabilities":{"safe_startup_v1":model.get("safe_capability",True)}}))
     raise SystemExit(0)
+# Model the producer's initialized-thread requirement from the actual child argv.
+# This is invocation evidence only, never native-session authority.
+if args[:2] == ["agent", "start"] and model.get("safe_require_thread_profile"):
+    import tomllib
+    child = args[args.index("--") + 1:]
+    config = {}
+    for i, arg in enumerate(child[:-1]):
+        if arg == "-c":
+            config.update(tomllib.loads(child[i + 1]))
+    profile = config.get("tui", {}).get("status_line")
+    model.setdefault("safe_thread_profiles", {})[args[args.index("--pane") + 1]] = (
+        profile == ["thread-id", "context-remaining"] and not model.get("safe_omit_thread_marker", False))
 def startup_fixture(agent):
     if args[:2] != ["agent", "startup"]:
         if args[:2] == ["agent", "get"]:
@@ -52,6 +64,8 @@ def startup_fixture(agent):
         surface = model.get(prefix + "safe_surface", "provider_prompt")
         if model.get(prefix + "safe_skip") and not model.get(prefix + "safe_skipped"):
             surface = "update_skip_once"
+        if model.get("safe_require_thread_profile") and not model.get("safe_thread_profiles", {}).get(request["target"], False):
+            surface = "unknown"
         session = agent.get("agent_session")
         ready = agent.get("agent_status") in ("idle", "done") and not agent.get("launch_pending", False)
         if not session:

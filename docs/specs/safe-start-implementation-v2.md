@@ -29,6 +29,47 @@ The [upstream render snapshot](https://raw.githubusercontent.com/openai/codex/6a
 grounds one proposed layout: version header, release-notes line, ordered Update/Skip/persistent-skip options and footer.
 This is authoritative versioned source evidence, not a live terminal capture or proof of installed detection.
 
+## Initialized-thread correction (TC89B0C74, Three-01F)
+
+The historical implementation plan below is retained as design history. The delivered
+Three-01E producer contract supersedes percentage-only initialization assumptions.
+Managed Codex owner, independent reviewer and closed-tab resume launches now select
+one command-scoped override:
+
+```sh
+-c 'tui.status_line=["thread-id","context-remaining"]'
+```
+
+The supported owned footer is one complete row, for example
+`0199aabb-ccdd-7eef-8123-0123456789ab · Context 100% left`.
+A complete canonical thread UUID must appear first, followed by the context segment.
+Missing, clipped, wrapped, ellipsized or ambiguous identity fails closed. Default
+percentages and custom context/model/cwd footers can render before initialization;
+they cannot establish readiness.
+
+Source proof is pinned to Codex `rust-v0.164.0`, commit
+`6aaac694803004a63c6f393d153c96d22521a6b9`: `utils/cli/src/config_override.rs`
+defines invocation TOML overrides; `tui/src/bottom_pane/status_line_setup.rs`
+defines `thread-id` and omission until thread start;
+`tui/src/chatwidget/status_surfaces.rs` emits it only from `self.thread_id`;
+`constructor.rs` starts with no thread ID and `session_flow.rs` assigns it on
+session configuration. The fresh normal widget can already render context 100%.
+The footer UUID remains volatile screen evidence; it never supplies native-session
+authority. Known native identity must agree with it. The existing capability,
+inspection, guarded writer, deadline and no-replay rules still apply.
+
+The override affects only managed child invocations. It preserves model, effort,
+permissions, cwd, profile and resume identity/order; global user config and ordinary
+interactive Codex are unchanged. Claude receives no Codex override.
+
+The earlier consumer's technical PASS remains evidence for its unchanged adapter,
+not joint live qualification. The custom-layout live owner attempt
+`wfr_f3f6f23a60c19cc8259a59f1f9352b4d7a5b71572909dac98ff8adf04e60ebed`
+failed safe and remained unprompted; its history is preserved. Three-01F uses
+synthetic producer and built CLI regression checks. Root owns installation,
+producer rollout and actual guarded owner/reviewer/resume qualification before
+ordinary activation; this change does not claim those live results.
+
 ## Herdr producer contract (proposed)
 
 Add only a startup inspection and guarded submission for managed Codex before its first owner Task prompt or reviewer brief.

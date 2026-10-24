@@ -168,7 +168,7 @@ func TestWorkflowProviderRoundTrip(t *testing.T) {
 			if tc.provider == "claude" {
 				wantStart = append(wantStart, "--model", f.R.Runtime.Model, "--permission-mode", "manual")
 			} else {
-				wantStart = append(wantStart, "-C", cwd, "--model", f.R.Runtime.Model, "-a", "on-request", "-c", "approvals_reviewer=\"auto_review\"", "-c", "default_permissions=\""+f.R.Runtime.PermissionBinding.ProfileID+"\"")
+				wantStart = append(wantStart, "-C", cwd, "--model", f.R.Runtime.Model, "-a", "on-request", "-c", "approvals_reviewer=\"auto_review\"", "-c", "default_permissions=\""+f.R.Runtime.PermissionBinding.ProfileID+"\"", "-c", `tui.status_line=["thread-id","context-remaining"]`)
 			}
 			if len(starts) != 1 || !reflect.DeepEqual(starts[0], wantStart) {
 				t.Fatalf("wrong selected provider argv: %q; want %q", starts, wantStart)

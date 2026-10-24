@@ -546,6 +546,14 @@ send deadline and requires the capable server's fresh positive prompt evidence;
 an expired window cannot be revived by increasing `--timeout`. `show` and `follow`
 remain observers.
 
+Managed Codex owner, reviewer and closed-tab resume invocations share
+`-c 'tui.status_line=["thread-id","context-remaining"]'`. This command override
+selects the initialized-thread footer required by the guarded producer without
+editing global config. A percentage alone does not establish initialization;
+readiness requires the complete owned thread UUID plus context segment and
+agreement with known native identity. See [startup usage](workflow-run.md)
+for the profile and source-grounded qualification limits.
+
 Independent Codex review rounds use the same guarded inspection/submission path
 for sessionless readiness and the brief. Each exact parent Run/round/candidate has
 separate durable skip, bootstrap and brief slots and one startup deadline. A
