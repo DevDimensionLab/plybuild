@@ -466,15 +466,20 @@ func capacityRejectedStopResolution(s workflowState, in DeliveryQuotaReconcileIn
 	if exit != 4 || len(argv) != 3 || argv[0] != "/bin/zsh" || argv[1] != "-lc" || s.Result.RunID == "" || s.Result.Delivery == nil || s.Result.Delivery.ActiveStop == nil {
 		return false
 	}
-	runtime, err := workflowEffectiveRuntime(s)
-	if err != nil {
+	if _, err := workflowEffectiveRuntime(s); err != nil {
 		return false
 	}
-	prefix := runtime.PlyExecutable.Path + " workflow execute resolve-stop " + s.Result.RunID + " --context " + s.Result.Paths.Context + " --stop " + in.StopSHA256 + " --resolution '"
-	if !strings.HasPrefix(argv[2], prefix) {
+	// The transcript binds the actual invocation and native rejection. Ply's
+	// historical executable path is not authority for this same owner's proof.
+	control, command, ok := strings.Cut(argv[2], " ")
+	if !ok || control == "" || strings.Contains(control, "=") {
 		return false
 	}
-	rest := strings.TrimPrefix(argv[2], prefix)
+	prefix := "workflow execute resolve-stop " + s.Result.RunID + " --context " + s.Result.Paths.Context + " --stop " + in.StopSHA256 + " --resolution '"
+	if !strings.HasPrefix(command, prefix) {
+		return false
+	}
+	rest := strings.TrimPrefix(command, prefix)
 	resolution, rest, ok := strings.Cut(rest, "'")
 	if !ok || resolution == "" || !strings.HasPrefix(rest, " --action '") {
 		return false
@@ -484,7 +489,7 @@ func capacityRejectedStopResolution(s workflowState, in DeliveryQuotaReconcileIn
 		return false
 	}
 	// Unquoted executable/identity fields must be literal shell words.
-	for _, word := range []string{runtime.PlyExecutable.Path, s.Result.RunID, s.Result.Paths.Context, in.StopSHA256} {
+	for _, word := range []string{control, s.Result.RunID, s.Result.Paths.Context, in.StopSHA256} {
 		if strings.ContainsAny(word, " \t\r\n;|&<>$`\\\"'(){}[]*?!#~") {
 			return false
 		}

@@ -7,7 +7,8 @@ publish TaskResult, attest provider inactivity, install a candidate, perform hum
 QA or integrate changes.
 
 Run the coordinator commands inside the bound Ply workspace. Run recipient
-callbacks from the exact Task worktree using the hash-bound Ply executable.
+callbacks from the exact Task worktree using ordinary installed `ply` and the
+original context/session. Historical Ply path/hash observations are informative.
 
 ```sh
 ply workflow run start --file /absolute/prepared-task-request.json --check

@@ -241,7 +241,8 @@ keeps this same delivery owner: correct and qualify a new candidate.
 
 Integration requires actual pass on the exact candidate and unchanged parent.
 Follow any unknown effect through the preserved same attempt. Never replay an
-unknown start, verifier or integration and never replace the control executable.
+unknown start, verifier or integration. Use ordinary installed ply with the
+unchanged context, session and mandate; historical Ply identity is informative.
 `, s.Observed.Target.WorktreeLocator, runtime.PlyExecutable.Path, id, s.Result.Paths.Context, s.Request.Runtime.Provider, s.Result.Transport.AgentSessionID, control, id, context, control, id, context, s.Request.Delivery.AcceptancePath, control, id, context, control, id, context, control, id, context)
 	if a := s.Request.Delivery.Agreement; a != nil {
 		guide += fmt.Sprintf("\n## Frozen delivery agreement\n\nMode: %s. Source: %s. Target: %s. Repository: %s. Local target: %s.\nAgreement SHA256: %s.\n\nFor positive acceptance, delivery_permission.delivery_agreement_sha256 must name\nthis exact agreement. Set delivery_permission.allowed_effects to %s only after\nthe actual runtime policy covers those exact effects and targets. This is an\nactual permission claim; templates do not establish it. No mode or target\nsubstitution is allowed. An altered agreement requires a revised Spec and a new\nauthorized execution.\n", a.Mode, a.SourceRef, a.TargetRef, a.GitHubRepository, a.TargetWorktree, workspace.DeliveryAgreementDigest(*a), workflowJSON(workflowhandoff.DeliveryAllowedEffects(*a)))

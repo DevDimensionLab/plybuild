@@ -68,7 +68,7 @@ ply workflow week start --file /absolute/week.json --check --format json
 ply workflow week start --file /absolute/week.json --service --format json
 ```
 
-The check is read-only. Start freezes a private control executable, the exact
+The check is read-only. Start records informative Ply identity and freezes the exact
 selection and dependencies, the return target, the model, attempt bounds, actual
 start time and deadline. Duration is 1–604800 seconds from this start, including
 sleep and downtime. Repeating the same name/contract reads the same week;
@@ -78,7 +78,7 @@ without starting work. Later queue additions never expand this selection.
 Without `--service`, a detached controller survives closure of its launching
 terminal. Detached recovery uses the same captured login environment as launchd;
 a later shell cannot silently select a different HOME, CODEX_HOME or PATH. `--service` installs and starts the named per-user launchd service
-immediately, using the copied executable. Neither mode publishes or installs a
+immediately, resolving ordinary installed `ply` through the saved PATH. Neither mode publishes or installs a
 worker's product candidate; native local Epic return is the authorized effect.
 
 # Observe, pause and resume

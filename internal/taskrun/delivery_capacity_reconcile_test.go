@@ -337,7 +337,7 @@ func TestCapacityReconcileRejectedResolutionOnly(t *testing.T) {
 	if !capacityRejectedStopResolution(s, in, argv, output, 4) {
 		t.Fatal("exact native stop rejection not recognized")
 	}
-	for _, mode := range []string{"permission_denial", "extra_command", "shell_substitution", "wrong_stop", "wrong_run", "generic_failure"} {
+	for _, mode := range []string{"permission_denial", "extra_command", "shell_substitution", "wrong_stop", "wrong_run", "generic_failure", "executable_substitution", "executable_assignment", "wrong_context"} {
 		t.Run(mode, func(t *testing.T) {
 			a := append([]string(nil), argv...)
 			o := output
@@ -355,6 +355,12 @@ func TestCapacityReconcileRejectedResolutionOnly(t *testing.T) {
 				o = strings.Replace(o, s.Result.RunID, "other", 1)
 			case "generic_failure":
 				exit = 1
+			case "executable_substitution":
+				a[2] = strings.Replace(a[2], s.Request.Runtime.PlyExecutable.Path, "$(unexpected-effect)", 1)
+			case "executable_assignment":
+				a[2] = strings.Replace(a[2], s.Request.Runtime.PlyExecutable.Path, "ENV=value", 1)
+			case "wrong_context":
+				a[2] = strings.Replace(a[2], s.Result.Paths.Context, "/another/context.json", 1)
 			}
 			if capacityRejectedStopResolution(s, in, a, o, exit) {
 				t.Fatal("unsupported failed command allowed")

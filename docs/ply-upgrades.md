@@ -18,6 +18,7 @@ must exist when the OS actually launches it.
 | Worker supervision, attempts and product-answer continuation | Child processes use current `Dependencies.Executable`; runtime controls no longer hash historical Ply | Provider/policy, parent/worker ownership locks, request/generation, queue, candidate, unknown attempts and explicit opt-in |
 | Week scheduler, controls and detached recovery | Historical Ply no longer blocks progress; native adapter uses current invocation; new service command resolves installed Ply through saved PATH | Contract/workset/deadline, parent/child control, environment, queue and effect ownership |
 | Existing week service records | Read the original serialized command as history; current CLI can run under the existing locks without rewriting an old launchd entry | All non-runtime plist settings remain compared; no provider is killed or uncertain input replayed |
+| Capacity-stop reconciliation | Recognize the actual literal CLI invocation and exact preserved native rejection without a historical executable path prerequisite | Native source/session/cwd/completion, Run/context/stop, literal grammar, exact rejection, and unresolved-effect checks |
 | Parallel registry consumer inventory | Classify actual remaining effects without comparing archived CLI bytes with reader hash | Run/Task evidence, release/integration state and unresolved effects |
 | Build/release/install and tested product candidate | Unchanged: these hashes identify actual tested/installed product bytes | Exact candidate and provenance checks remain mandatory |
 
@@ -94,3 +95,15 @@ to that same supported command. No broad suite was repeated for these fixes.
 Review1 also identified the historical aggregate-preview requirement. The
 explicit human clarification above settles that product choice; removal is
 covered by separate RED-GREEN consumer tests.
+
+## Review round 2 corrections
+
+The independent review confirmed the human clarification and all round 1 fixes.
+Its full native-transcript capacity reproducer failed when only the executable
+word changed from a historical controller to installed Ply. The corrected
+consumer keeps the actual invocation, exact rejected resolve-stop command and
+native output, source/session/cwd, completion and unknown-effect evidence, while
+allowing ordinary installed `ply` or its literal path. Shell substitutions,
+assignment prefixes, unrelated failures and wrong Run/context/stop still fail.
+The same reproducer covers this behavior in `TestPlyUpgradeCapacityRejectionUsesInstalledCLI`.
+Current callback and week-service documentation consistently uses installed Ply.

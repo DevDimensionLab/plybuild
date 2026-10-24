@@ -555,9 +555,9 @@ does not establish provider or writer absence; recovery still requires its fresh
 guarded checks. If onboarding remains active in the existing tab, complete it
 there and use the same-start `execute resume` path above.
 
-Owner callbacks use the **absolute preserved control executable**, exact Task
-cwd and private context printed in the start guide. Installing another Ply
-candidate does not replace that control binary. Callback surfaces are `report`,
+Owner callbacks use ordinary installed `ply`, the exact Task cwd and private
+context printed in the start guide. Historical Ply path/hash observations stay
+informative; upgrades require no old executable, rebinding or reapproval. Callback surfaces are `report`,
 `acceptance`, `verify`, `qa` and `integrate` under `workflow execute`; runtime
 acceptance uses `workflow run accept`. The `acceptance` callback records the
 explicit policy choice for an eligible existing run. Consult each command's
