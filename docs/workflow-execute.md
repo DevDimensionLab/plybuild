@@ -531,8 +531,8 @@ read failure returns unknown transport, never cached working as fresh liveness.
 Each continuation rechecks authority and session identity; provider input is never
 resent. Preserved stops and delivery results remain separate facts.
 
-For an unfinished native startup, inspect the preserved tab and continue the
-same reserved start within its original send window:
+If a native trust dialog outlasts the initial startup window, resolve it in the
+preserved tab, then continue that same startup:
 
 ```shell
 ply workflow execute resume wfr_<digest> --timeout 60
@@ -541,30 +541,7 @@ ply workflow execute resume wfr_<digest> --timeout 60
 Resume checks the existing provider, pane and terminal. It can complete the
 readiness exchange and send the first Task prompt only when no Task prompt has
 been attempted. It grants no trust or permissions, starts no additional process
-and refuses to replay an uncertain prompt. Codex continuation retains its original
-send deadline and requires the capable server's fresh positive prompt evidence;
-an expired window cannot be revived by increasing `--timeout`. `show` and `follow`
-remain observers.
-
-Managed Codex owner, reviewer and closed-tab resume invocations share
-`-c 'tui.status_line=["thread-id","context-remaining"]'`. This command override
-selects the initialized-thread footer required by the guarded producer without
-editing global config. A percentage alone does not establish initialization;
-readiness requires the complete owned thread UUID plus context segment and
-agreement with known native identity. See [startup usage](workflow-run.md)
-for the profile and source-grounded qualification limits.
-
-Independent Codex review rounds use the same guarded inspection/submission path
-for sessionless readiness and the brief. Each exact parent Run/round/candidate has
-separate durable skip, bootstrap and brief slots and one startup deadline. A
-pending request reads the same round; it cannot launch a duplicate reviewer or
-resend a consumed brief. Reviewer identity must remain distinct from the owner,
-including a fresh check immediately before brief submission. Missing capability,
-blocked evidence or a changed epoch/launch preserves the startup reason for the
-coordinator. Old recorded histories remain readable without acquiring new startup
-permission. Closed-tab Codex owner resumes also require the fresh guarded prompt
-and exact bound native session before their one continuation input; their own
-resume generation retains the send window and consumed slot.
+and refuses to replay an uncertain prompt. `show` and `follow` remain observers.
 
 After a stopped startup with no bound owner session and no attempted Task prompt,
 readback directs the coordinator to inspect the preserved phase and error:

@@ -35,99 +35,6 @@ if model.get("bootstrap_mode"):
                 bootstrap_settled_before_call=model.get("bootstrap_settled_observed", False))
 with (root / "herdr-calls.jsonl").open("a") as f:
     f.write(json.dumps(call) + "\n")
-if args[:3] == ["status", "server", "--json"]:
-    print(json.dumps({"running":True,"compatible":True,"capabilities":{"safe_startup_v1":model.get("safe_capability",True)}}))
-    raise SystemExit(0)
-# Model the producer's initialized-thread requirement from the actual child argv.
-# This is invocation evidence only, never native-session authority.
-if args[:2] == ["agent", "start"] and model.get("safe_require_thread_profile"):
-    import tomllib
-    child = args[args.index("--") + 1:]
-    config = {}
-    for i, arg in enumerate(child[:-1]):
-        if arg == "-c":
-            config.update(tomllib.loads(child[i + 1]))
-    profile = config.get("tui", {}).get("status_line")
-    model.setdefault("safe_thread_profiles", {})[args[args.index("--pane") + 1]] = (
-        profile == ["thread-id", "context-remaining"] and not model.get("safe_omit_thread_marker", False))
-def startup_fixture(agent):
-    if args[:2] != ["agent", "startup"]:
-        if args[:2] == ["agent", "get"]:
-            model.setdefault("safe_last_agents",{})[args[2]] = agent
-        return
-    request = json.loads(Path(args[4]).read_text())
-    binding = request["binding"]
-    agent = model.get("safe_last_agents",{}).get(request["target"],agent)
-    review = request["target"].startswith("w-fixture:r")
-    prefix = "review_" if review else ""
-    if args[2] == "inspect":
-        index = model.get(prefix + "safe_inspect_count", 0)
-        sequence = model.get(prefix + "safe_inspections", [{}])
-        step = sequence[min(index, len(sequence) - 1)]
-        model[prefix + "safe_inspect_count"] = index + 1
-        if index == model.get(prefix + "safe_inspect_denied_at", -1):
-            path.write_text(json.dumps(model))
-            print(json.dumps({"error":{"code":"permission_denied","message":"synthetic inspection refusal"}}))
-            raise SystemExit(1)
-        surface = step.get("surface", model.get(prefix + "safe_surface", "provider_prompt"))
-        if model.get(prefix + "safe_unknown_while_working") and agent.get("agent_status") == "working":
-            surface = "unknown"
-        if model.get(prefix + "safe_skip") and not model.get(prefix + "safe_skipped"):
-            surface = "update_skip_once"
-        if model.get("safe_require_thread_profile") and not model.get("safe_thread_profiles", {}).get(request["target"], False):
-            surface = "unknown"
-        session = agent.get("agent_session")
-        ready = agent.get("agent_status") in ("idle", "done") and not agent.get("launch_pending", False)
-        if not session:
-            ready = ready and agent.get("interactive_ready") is True
-        result = {"startup":{"contract":"safe_startup_v1", "server_epoch":model.get(prefix + "safe_epoch","epoch-fixture"),
-                  "managed_launch_id":"launch-" + request["target"], "evidence_token":"token-fixture", "binding":binding,
-                  "observed_at_unix_ms":int(time.time()*1000), "surface":surface,
-                  "prompt_ready":model.get(prefix + "safe_prompt_ready",ready) if surface == "provider_prompt" else False,
-                  "launch_pending":agent.get("launch_pending",False), "native_session":session["value"] if session else None,
-                  "menu":{"layout_id":"codex-0.164-picker-v1","selected_index":0,"skip_action":"skip_once"} if surface == "update_skip_once" else None,
-                  "attempt":model.get(request.get("attempt_id"))}}
-        result["startup"].update(step)
-        result["startup"].update(model.get(prefix + "safe_override",{}))
-        for field in model.get(prefix + "safe_drop",[]):
-            result["startup"].pop(field,None)
-    else:
-        kind = request["kind"]
-        if kind == "skip_once":
-            model[prefix + "safe_skipped"] = not model.get(prefix + "safe_menu_remains",False)
-            if model.get(prefix + "safe_epoch_after_skip"):
-                model[prefix + "safe_epoch"] = model[prefix + "safe_epoch_after_skip"]
-        elif review:
-            model.setdefault("review_prompts", {})[request["target"]] = request["text"]
-            if kind == "bootstrap":
-                model["review_bootstrapped"] = True
-        elif kind == "bootstrap":
-            model["bootstrap_prompt_count"] = model.get("bootstrap_prompt_count",0) + 1
-            model["bootstrap_started"] = True
-        else:
-            model["task_prompt_count"] = model.get("task_prompt_count",0) + 1
-            model["agent_status"] = "working"
-        submission = {"attempt_id":request["attempt_id"], "kind":kind, "binding":binding,
-                      "payload_digest":"sha256:" + "a"*64, "outcome":model.get(prefix + "safe_outcome","submitted"),
-                      "bytes_written":model.get(prefix + "safe_bytes","some"), "reason":"synthetic writer result"}
-        model[request["attempt_id"]] = submission
-        result = {"submission":submission}
-    model.setdefault("safe_history", []).append({"operation": args[2], "target": request["target"],
-        "surface": result.get("startup", {}).get("surface"), "kind": request.get("kind"),
-        "deadline": request.get("deadline_unix_ms"), "at_ms": int(time.time()*1000)})
-    path.write_text(json.dumps(model))
-    if args[2] == "submit" and model.get(prefix + "safe_denied") == request["kind"]:
-        print(json.dumps({"error":{"code":"permission_denied","message":"synthetic refusal"}}))
-        raise SystemExit(1)
-    if args[2] == "submit" and request["kind"] != "skip_once":
-        if model.get("delay_command") == "agent prompt":
-            time.sleep(model["delay_millis"] / 1000 if "delay_millis" in model else model.get("delay_seconds",2))
-        if model.get("prompt_mode") == "lost_reply" or model.get("lost_command") == "agent prompt" or model.get("bootstrap_mode") == "lost_reply" and request["kind"] == "bootstrap":
-            raise SystemExit(7)
-    if args[2] == "submit" and (model.get(prefix + "safe_lost") == request["kind"] or review and model.get("review_prompt_lost")):
-        raise SystemExit(7)
-    print(json.dumps({"id":"fixture", "result":result}))
-    raise SystemExit(0)
 cmd = args[:2]
 observation_delay = 0
 if cmd == ["agent", "start"]:
@@ -164,7 +71,6 @@ if cmd == ["agent", "get"] and model.get("observations"):
     for field in observation.get("drop_fields", []):
         agent.pop(field, None)
     model["observation_index"] = index + 1
-startup_fixture(agent)
 result = {}
 if cmd == ["tab", "create"]:
     result = {"root_pane": agent}

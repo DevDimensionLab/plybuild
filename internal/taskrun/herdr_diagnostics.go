@@ -58,14 +58,6 @@ func workflowCallFailure(args []string, contextErr, processErr error, stdout, st
 			phase = args[0] + " " + args[1]
 		}
 	}
-	if len(args) >= 3 && args[0] == "agent" && args[1] == "startup" && (args[2] == "inspect" || args[2] == "submit") {
-		phase = "agent startup " + args[2]
-		readOnly = args[2] == "inspect"
-	}
-	if len(args) >= 2 && args[0] == "status" && args[1] == "server" {
-		phase = "status server"
-		readOnly = true
-	}
 	switch class {
 	case "output_limit", "invalid_response", "unsuccessful_envelope":
 	default:

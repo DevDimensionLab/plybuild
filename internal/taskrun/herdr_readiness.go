@@ -17,21 +17,6 @@ func workflowBootstrap(d Dependencies, root, id string, deadline time.Time, gene
 	if workflowStartupGeneration(s) != generation {
 		return workflowError(4, "startup generation changed before readiness exchange")
 	}
-	var safe startupSubmit
-	guarded := s.Request.Runtime.Provider == "codex"
-	safePath := workflowStartupPath(s, "startup-bootstrap-submit.json")
-	if guarded {
-		transport := ownerStartup(s)
-		inspection, err := transport.inspect(d, deadline)
-		if err != nil {
-			return err
-		}
-		text := workflowBootstrapPrompt
-		safe, err = transport.prepare(d, deadline, startupBootstrap, &text, inspection)
-		if err != nil {
-			return err
-		}
-	}
 	argv := []string{"agent", "prompt", s.Result.Transport.PaneID, workflowBootstrapPrompt, "--wait", "--until", "working", "--timeout", "10000"}
 	e = workflowUpdate(d, root, id, func(s *workflowState) error {
 		if workflowStartupGeneration(*s) != generation {
@@ -42,11 +27,6 @@ func workflowBootstrap(d Dependencies, root, id string, deadline time.Time, gene
 		}
 		if !time.Now().Before(deadline) {
 			return workflowError(5, "Herdr startup deadline expired before readiness exchange; no Task prompt sent")
-		}
-		if guarded {
-			if e := ownerStartup(*s).reserve(d, safePath, safe); e != nil {
-				return e
-			}
 		}
 		if e := d.writeValue(workflowStartupPath(*s, "startup-bootstrap-attempt.json"), map[string]any{"argv": argv}); e != nil {
 			return e
@@ -60,13 +40,7 @@ func workflowBootstrap(d Dependencies, root, id string, deadline time.Time, gene
 	if e = d.fault("workflow_before_bootstrap_send"); e != nil {
 		return e
 	}
-	var callErr error
-	if guarded {
-		callErr = ownerStartup(s).submit(d, safePath, safe)
-	} else {
-		_, callErr = workflowStartupCall(d, s, deadline, argv...)
-	}
-	if callErr != nil {
+	if _, callErr := workflowStartupCall(d, s, deadline, argv...); callErr != nil {
 		return workflowUpdate(d, root, id, func(s *workflowState) error {
 			if workflowStartupGeneration(*s) != generation {
 				return workflowError(4, "startup generation changed during readiness exchange")
@@ -114,31 +88,8 @@ func workflowAwaitReadinessGeneration(d Dependencies, root, id string, deadline 
 			}
 			observedSession = a.Session.Value
 		}
-		var inspection startupInspection
-		if s.Request.Runtime.Provider == "codex" {
-			transport := ownerStartup(s)
-			var err error
-			inspection, err = transport.observe(d, deadline)
-			if err != nil {
-				return err
-			}
-			if (inspection.Session == nil) != (a.Session == nil) || inspection.Session != nil && *inspection.Session != a.Session.Value {
-				return workflowError(4, "safe startup native session differs from fresh agent identity")
-			}
-			if inspection.Surface == "update_skip_once" {
-				if err = transport.skip(d, deadline, inspection); err != nil {
-					return err
-				}
-				continue
-			}
-		}
 		ready := a.Session != nil && workflowSettled(a)
 		bootstrap := a.Session == nil && a.InteractiveReady != nil && *a.InteractiveReady && workflowSettled(a) && s.Phase == "agent_start_attempted"
-		if s.Request.Runtime.Provider == "codex" {
-			ready = ready && inspection.positivePrompt()
-			bootstrap = bootstrap && inspection.positivePrompt()
-		}
-
 		if e = workflowUpdate(d, root, id, func(s *workflowState) error {
 			if workflowStartupGeneration(*s) != generation {
 				return workflowError(4, "startup generation changed before readiness binding")

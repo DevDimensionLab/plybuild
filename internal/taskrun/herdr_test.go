@@ -48,43 +48,6 @@ func workflowTestModel(t *testing.T, f workflowFixture, changes map[string]any) 
 	}
 	writeAny(t, f.R.WorkspaceRoot, filepath.Base(f.Model), m)
 }
-
-// workflowInputArgv lets the established prompt-content/order assertions apply
-// to both provider transports. Raw CLI logs remain unchanged; safe-start tests
-// separately reject every legacy agent.prompt call.
-func workflowInputArgv(t *testing.T, args []string) []string {
-	t.Helper()
-	if len(args) == 5 && strings.Join(args[:3], " ") == "agent startup submit" {
-		raw, err := os.ReadFile(args[4])
-		if err != nil {
-			t.Fatal(err)
-		}
-		var p struct {
-			Target string
-			Text   *string
-			Kind   string
-		}
-		if err = json.Unmarshal(raw, &p); err != nil {
-			t.Fatal(err)
-		}
-		if p.Text != nil {
-			return []string{"agent", "prompt", p.Target, *p.Text, "--wait", "--until", "working", "--timeout", "10000"}
-		}
-	}
-	return args
-}
-func workflowUnguardedCalls(t *testing.T, f workflowFixture) int {
-	t.Helper()
-	b, _ := os.ReadFile(f.Calls)
-	n := 0
-	for _, line := range bytes.Split(b, []byte("\n")) {
-		var x struct{ Argv []string }
-		if json.Unmarshal(line, &x) == nil && len(x.Argv) > 1 && strings.Join(x.Argv[:2], " ") == "agent prompt" {
-			n++
-		}
-	}
-	return n
-}
 func workflowTestCalls(t *testing.T, f workflowFixture, command string) int {
 	t.Helper()
 	b, e := os.ReadFile(f.Calls)
@@ -105,7 +68,7 @@ func workflowTestCalls(t *testing.T, f workflowFixture, command string) int {
 		if e = json.Unmarshal(line, &x); e != nil {
 			t.Fatal(e)
 		}
-		if strings.Join(workflowInputArgv(t, x.Argv)[:2], " ") == command {
+		if strings.Join(x.Argv[:2], " ") == command {
 			n++
 		}
 	}

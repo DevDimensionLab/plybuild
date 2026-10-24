@@ -40,7 +40,7 @@ if cmd == ["tab", "create"] and (args[args.index("--label") + 1].startswith("rev
     path.write_text(json.dumps(model))
     print(json.dumps({"id":"fixture", "result":{"root_pane":{"workspace_id":"w-fixture", "tab_id":"tab-review-%d" % n, "pane_id":pane, "terminal_id":"terminal-review-%d" % n}}}))
     raise SystemExit(0)
-review_pane = args[args.index("--pane") + 1] if cmd == ["agent", "start"] and "--pane" in args else (args[2] if len(args) > 2 and cmd in (["agent", "get"], ["agent", "prompt"]) else (json.loads(Path(args[4]).read_text())["target"] if cmd == ["agent", "startup"] else ""))
+review_pane = args[args.index("--pane") + 1] if cmd == ["agent", "start"] and "--pane" in args else (args[2] if len(args) > 2 and cmd in (["agent", "get"], ["agent", "prompt"]) else "")
 if review_pane.startswith("w-fixture:r"):
     agents = model.setdefault("review_agents", {})
     if cmd == ["agent", "start"]:
@@ -54,19 +54,6 @@ if review_pane.startswith("w-fixture:r"):
     agent = {"workspace_id":"w-fixture", "tab_id":"tab-review-" + review_pane.split(":r")[1], "pane_id":review_pane, "terminal_id":"terminal-review-" + review_pane.split(":r")[1],
              "name":agents.get(review_pane, "unstarted"), "agent":model.get("provider", "codex"), "agent_status":"idle",
              "agent_session":{"agent":model.get("provider", "codex"), "kind":"id", "value":session}}
-    if model.get("review_sessionless") and not model.get("review_bootstrapped"):
-        agent["agent_session"] = None
-        agent["interactive_ready"] = True
-    if cmd == ["agent", "get"] and model.get("review_bootstrapped") and model.get("review_safe_unknown_while_working"):
-        count = model.get("review_bootstrap_gets", 0) + 1
-        model["review_bootstrap_gets"] = count
-        if count == 1:
-            agent["agent_status"] = "working"
-    if model.get("al33_bootstrap"):
-        agent.update(name=model["al33_name"],agent_session=None,interactive_ready=True)
-    elif model.get("al33_live"):
-        agent.update(name=model["al33_name"],agent_status="working",agent_session={"agent":"codex","kind":"id","value":"synthetic-live-session"})
-    startup_fixture(agent)
     path.write_text(json.dumps(model))
     print(json.dumps({"id":"fixture", "result":{"agent":agent}}))
     raise SystemExit(0)
@@ -137,7 +124,6 @@ func reviewRoundArgv(t *testing.T, f deliveryFixture, command string) [][]string
 		if err = json.Unmarshal(line, &x); err != nil {
 			t.Fatal(err)
 		}
-		x.Argv = workflowInputArgv(t, x.Argv)
 		if strings.Join(x.Argv[:2], " ") == command {
 			out = append(out, x.Argv)
 		}
