@@ -16,7 +16,7 @@ uses no cross-request cache. Existing `workflow agents` without the flag keeps
 its `AgentWorkReadback@1` execution completeness and fresh dispatch vetoes.
 
 The supported enumeration is the nonpaginated public envelope
-`{"result":{"type":"agent_list","agents":[...]}}` with absent or null `error`.
+`{"result":{"type":"agent_list","agents":[...]}}` with optional transport `id` and absent or null `error`.
 Only `agent`, `agent_status`, `pane_id`, `tab_id`, and `workspace_id` are decoded
 from rows; execution fields are opaque, including wrongly typed session fields.
 Codex and Claude rows are included regardless of Ply binding or native session.
@@ -29,7 +29,7 @@ The single source has independently qualified `coverage`:
 - `complete`: a recognized `agent_list` enumeration, at most 4096 source rows,
   with valid unique metadata for all recognized agents.
 - `partial`: valid enumeration with malformed rows, duplicate pane identities,
-  limits exceeded, or additional result members that could signal narrowed,
+  limits exceeded, or additional envelope/result members that could signal narrowed,
   paginated, unknown or truncated enumeration. Every ambiguous pane is omitted;
   valid rows are preserved, ordered by pane. At most the first 4096 source rows
   are considered; exceeding that bound never reports complete coverage.

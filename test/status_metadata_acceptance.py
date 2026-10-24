@@ -30,6 +30,7 @@ with tempfile.TemporaryDirectory(prefix="sm01-cli-") as tmp:
         ("partial", envelope([row(), 42]), "partial", "partial", 1, None),
         ("duplicate", envelope([row(), row()]), "partial", "partial", 0, None),
         ("unknown-type", dict(result=dict(type="future", agents=[])), "unavailable", "unknown", 0, None),
+        ("envelope-truncation", dict(envelope([]), truncated=True), "partial", "partial", 0, None),
         ("truncation-signal", envelope([], truncated=True), "partial", "partial", 0, None),
         ("utf16-256", envelope([row("😀" * 128)]), "available", "complete", 1, None),
         ("utf16-257", envelope([row("😀" * 128 + "a")]), "partial", "partial", 0, None),

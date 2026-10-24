@@ -106,7 +106,7 @@ func metadataText(raw []byte, nonempty bool) (string, bool) {
 	return s, s == "" || plain(s)
 }
 func decodeMetadata(raw []byte, out MetadataReadback) MetadataReadback {
-	env, e := metadataObject(raw, map[string]bool{"result": true, "error": true})
+	env, e := metadataObject(raw, nil)
 	if e != nil {
 		return out
 	}
@@ -133,6 +133,11 @@ func decodeMetadata(raw []byte, out MetadataReadback) MetadataReadback {
 	partial := func() { src.Status = "partial"; src.Coverage = "partial" }
 	// agent_list is the supported nonpaginated public enumeration. Any additional
 	// result member could narrow that enumeration: preserve uncertainty.
+	for key := range env {
+		if key != "id" && key != "result" && key != "error" {
+			partial()
+		}
+	}
 	if len(result) != 2 {
 		partial()
 	}

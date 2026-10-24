@@ -42,6 +42,7 @@ func TestStatusMetadataQualification(t *testing.T) {
 		{"source-error", `{"result":{"type":"agent_list","agents":[]},"error":{}}`, "unavailable", "unknown", 0},
 		{"duplicate-envelope", `{"result":{},"result":{"type":"agent_list","agents":[]}}`, "unavailable", "unknown", 0},
 		{"truncated", `{"result":{"type":"agent_list","agents":[]`, "unavailable", "unknown", 0},
+		{"envelope-truncation-signal", `{"id":"read","result":{"type":"agent_list","agents":[]},"truncated":true}`, "partial", "partial", 0},
 		{"truncation-signal", `{"result":{"type":"agent_list","agents":[],"truncated":true}}`, "partial", "partial", 0},
 		{"unknown-scope", `{"result":{"type":"agent_list","agents":[],"scope":"subset"}}`, "partial", "partial", 0},
 		{"bad-row", envelope([]any{row, 42}), "partial", "partial", 1},
