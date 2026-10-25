@@ -129,16 +129,25 @@ fresh validation during apply. Unsupported history and changed proof/control or
 before-state remain errors; recovery grants no candidate, review, QA or delivery
 authority and starts no provider, prompt or tab.
 
-After the pointer has been saved, the existing new-transition rules apply:
-calling with the original digest (including at a different path) returns
-`existing`; a different digest previews a **new** generation. That is a separate
-transition, not another recovery of the pending proof. Reusing the old recovery
-confirmation cannot apply it. In particular, repeating the ordinary command
-with a different digest after successful recovery may request a new transition;
-use `--check` to observe this boundary. F01 does not change those rules or add
-candidate-2 behavior. Concurrent recovery calls preserve the first generation;
-a losing caller with a different digest must obtain a fresh preview rather than
-using its stale recovery confirmation.
+## F02: reuse a registered continuation (TB58A978A)
+
+After the pointer has been saved, a CLI-only change of path or bytes returns
+`existing` with the same generation, proof, confirmation, historical control
+binding and validated runtime observation. Repeated and concurrent calls reuse
+that registered continuation, including after F01 recovery, without another
+control copy, generation directory, provider start, prompt or tab. The archived
+Ply control need not remain on disk. Stored runtime evidence need not be
+resubmitted when the historical provider launcher is unavailable. Explicitly
+supplied runtime evidence is still validated before returning `existing`;
+equivalent evidence leaves the original observation binding unchanged.
+
+A genuinely needed runtime observation absent from the registered record can
+still be registered through a new transition using `--runtime-evidence` and a
+fresh preview/apply confirmation. That transition must pass the existing
+freshness, authority, live-owner, immutable-history and unknown-effect checks.
+A CLI digest change alone never requires that transition or makes the registered
+continuation's original confirmation stale. Pending F01 proof recovery retains
+its exact original runtime-binding requirement described above.
 
 Synthetic taskrun, taskexecute and public CLI regressions cover changed caller
 path/bytes, changes between preview/apply, concurrent and repeated recovery before
