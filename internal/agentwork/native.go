@@ -49,37 +49,16 @@ func readNative(d workspace.Dependencies, root string) NativeSnapshot {
 	}
 	out.Available = true
 	out.Partial = v.Freshness != "fresh" || len(v.Diagnostics) > 0
-	// Human-input questions are a separate native veto source. Read all pages;
-	// insufficient/corrupt coverage fails closed while status remains readable.
+	// Human-input questions are a separate native veto source. Damaged history
+	// of a validated question vetoes its own session; unidentifiable questions
+	// fail closed for all while status remains readable.
+	blocked, unknown, partial := humaninput.ReadQuestionBlockers(root)
+	out.CoverageUnknown = out.CoverageUnknown || unknown
+	out.Partial = out.Partial || partial
 	pending := map[string]bool{}
-	for _, project := range v.Projects {
-		var cursor *string
-		for pages := 0; pages < 256; pages++ {
-			q, e := humaninput.List(humaninput.SystemDependencies(), root, humaninput.ListQuery{ProjectID: string(project.ProjectID), Limit: 20, Cursor: cursor})
-			if e != nil {
-				out.Partial = true
-				out.CoverageUnknown = true
-				break
-			}
-			for _, question := range q.Questions {
-				if question.State != humaninput.StateContinued && question.State != humaninput.StateWithdrawn {
-					if question.Source.SessionID == nil {
-						out.CoverageUnknown = true
-					}
-					pending[question.Source.Provider+":"+deref(question.Source.SessionID)] = true
-				}
-			}
-			if q.NextCursor == nil {
-				break
-			}
-			cursor = q.NextCursor
-			if pages == 255 {
-				out.Partial = true
-				out.CoverageUnknown = true
-			}
-		}
+	for _, source := range blocked {
+		pending[source.Provider+":"+*source.SessionID] = true
 	}
-
 	for key := range pending {
 		out.Vetoes[key] = "native_question"
 	}
