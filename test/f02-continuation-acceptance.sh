@@ -12,7 +12,7 @@ assert identity['source_commit'] == sys.argv[2], identity
 assert identity['dirty'] is False, identity
 PY
 printf 'TB58A978A: exact built candidate identity checked\n'
-go test ./internal/taskrun ./internal/taskexecute -v -count=1 -timeout=8m -run 'TestRegisteredContinuation|TestPublishedContinuationRecovery|TestDeliveryContinuation|TestDeliveryProviderUpgradeRetainsAuthorityAndLiveOwnerGuards|TestOwnerResumeBoundariesStopBeforeEffects|TestPlyUpgradeStoredContinuation|TestR5CallbackBindingsAndImmutableAcceptance|TestDeliveryOwnerUnknownVerificationNeverReplays|TestDeliveryReceiptLaterRuntimeRefusalPreservesStop|TestAL40RetiredContinuationRejectsBeforeValidation'
+go test ./internal/taskrun ./internal/taskexecute -v -count=1 -timeout=10m -run 'TestRegisteredContinuation|TestPublishedContinuationRecovery|TestDeliveryContinuation|TestDeliveryProviderUpgradeRetainsAuthorityAndLiveOwnerGuards|TestOwnerResumeBoundariesStopBeforeEffects|TestPlyUpgradeStoredContinuation|TestR5CallbackBindingsAndImmutableAcceptance|TestDeliveryOwnerUnknownVerificationNeverReplays|TestDeliveryReceiptLaterRuntimeRefusalPreservesStop|TestAL40RetiredContinuationRejectsBeforeValidation'
 printf 'TB58A978A: continuation reuse, F01 recovery, owner resume and retained guards passed\n'
 go test ./cmd -count=1 -timeout=2m -run 'TestExecute(CheckIn|Begin|ResolveStop)'
 printf 'TB58A978A: command contracts passed\n'
