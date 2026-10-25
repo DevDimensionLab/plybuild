@@ -107,3 +107,41 @@ allowing ordinary installed `ply` or its literal path. Shell substitutions,
 assignment prefixes, unrelated failures and wrong Run/context/stop still fail.
 The same reproducer covers this behavior in `TestPlyUpgradeCapacityRejectionUsesInstalledCLI`.
 Current callback and week-service documentation consistently uses installed Ply.
+
+## F01: finish an already published continuation (T93C57C19)
+
+If a continuation proof was published but its Run pointer was not saved, run
+ordinary installed `ply workflow execute continue RUN --context ORIGINAL_CONTEXT`.
+`--check` inspects the same recovery without publishing. The caller may have a
+new path or new bytes. Recovery selects the original proof's control and runtime
+observation, validates its history and current owner under the Run lock, and
+finishes that one pointer publication. It never copies the current executable
+into the occupied slot or rewrites the original proof, timestamp, generation,
+source/previous control, confirmation, before-state, mandate or QA.
+
+The preserved runtime observation can be used without `--runtime-evidence`, even
+when its original launcher is unavailable or its freshness window has expired.
+If supplied, `--runtime-evidence` must identify that exact original binding;
+another otherwise valid observation is rejected. This does not replace current
+session, Task/cwd, authority, policy, frozen-artifact or unknown-effect checks.
+The current caller's actual executable path and digest are still checked, with
+fresh validation during apply. Unsupported history and changed proof/control or
+before-state remain errors; recovery grants no candidate, review, QA or delivery
+authority and starts no provider, prompt or tab.
+
+After the pointer has been saved, the existing new-transition rules apply:
+calling with the original digest (including at a different path) returns
+`existing`; a different digest previews a **new** generation. That is a separate
+transition, not another recovery of the pending proof. Reusing the old recovery
+confirmation cannot apply it. In particular, repeating the ordinary command
+with a different digest after successful recovery may request a new transition;
+use `--check` to observe this boundary. F01 does not change those rules or add
+candidate-2 behavior. Concurrent recovery calls preserve the first generation;
+a losing caller with a different digest must obtain a fresh preview rather than
+using its stale recovery confirmation.
+
+Synthetic taskrun, taskexecute and public CLI regressions cover changed caller
+path/bytes, changes between preview/apply, concurrent and repeated recovery before
+and after pointer publication, original artifact bytes, no extra native effects,
+and rejection of changed runtime bindings and current dependencies. These tests
+are protocol evidence, separate from live provider execution or human QA.

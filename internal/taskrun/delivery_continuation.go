@@ -224,6 +224,15 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 	if err != nil {
 		return p, err
 	}
+	// A published proof selects the original transition, independently of the
+	// installed caller. Validate its immutable history before using its runtime
+	// observation; all current authority/session/effect checks still run below.
+	p.Generation = deliveryContinuationGeneration(s) + 1
+	p.Directory = deliveryContinuationDirectory(s, p.Generation)
+	recovering, err := deliveryPendingContinuation(s, &p)
+	if err != nil {
+		return p, err
+	}
 	p.HistoricalLauncher = deliveryLauncherObservation(runtime.Executable)
 	if in.RuntimeEvidencePath != "" {
 		binding, _, e := deliveryReadBinding(in.RuntimeEvidencePath, 1<<20)
@@ -233,8 +242,11 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 		if e = deliveryRuntimeObservation(s, binding); e != nil {
 			return p, e
 		}
+		if recovering && !equal(p.RuntimeObservation, &binding) {
+			return p, deliveryContinuityError("continuation_integrity", "pending continuation requires its original runtime observation binding; omit --runtime-evidence to use the preserved binding")
+		}
 		p.RuntimeObservation = &binding
-	} else if s.Continuation != nil {
+	} else if !recovering && s.Continuation != nil {
 		prior, e := workflowContinuationRecord(s)
 		if e != nil {
 			return p, e
@@ -294,6 +306,9 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 			return p, deliveryContinuityError("effect_unknown", err.Error())
 		}
 	}
+	if recovering {
+		return p, nil
+	}
 	if s.Continuation != nil {
 		r, err := workflowContinuationRecord(s)
 		if err != nil {
@@ -312,12 +327,6 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 	}
 	p.Directory = deliveryContinuationDirectory(s, p.Generation)
 	p.ControlExecutable = Executable{filepath.Join(p.Directory, "ply-control"), in.ControlExecutable.SHA256}
-	// A durable proof is an already-validated transition whose final state
-	// pointer may be missing. Observe it before checking freshness for a new
-	// effect; recovery must retain intervening reports and its original bytes.
-	if recovered, err := deliveryPendingContinuation(s, in, &p); err != nil || recovered {
-		return p, err
-	}
 	if err = deliveryContinuationPreparation(s, p); err != nil {
 		return p, err
 	}
@@ -392,7 +401,7 @@ func deliveryContinuationBeforeState(s workflowState, raw []byte, generation int
 	return before, nil
 }
 
-func deliveryPendingContinuation(s workflowState, in DeliveryContinuationInput, p *DeliveryContinuationPreview) (bool, error) {
+func deliveryPendingContinuation(s workflowState, p *DeliveryContinuationPreview) (bool, error) {
 	binding, raw, err := deliveryReadBinding(filepath.Join(p.Directory, "continuation.json"), 1<<20)
 	if os.IsNotExist(err) {
 		return false, nil
@@ -404,20 +413,18 @@ func deliveryPendingContinuation(s workflowState, in DeliveryContinuationInput, 
 	if err = decode(raw, 1<<20, &record); err != nil {
 		return false, err
 	}
-	if record.SourceControl != in.ControlExecutable || !equal(record.RuntimeObservation, p.RuntimeObservation) {
-		return false, deliveryContinuityError("effect_unknown", "a continuation proof is already preserved; resume its exact source control and runtime observation before requesting a different transition")
-	}
 	pending := s
 	pending.Continuation = &binding
 	if _, err = workflowContinuationRecord(pending); err != nil {
 		return false, err
 	}
 	p.State, p.Proof = "ready", &binding
+	p.ControlExecutable, p.RuntimeObservation = record.ControlExecutable, record.RuntimeObservation
 	p.Confirmation = digest([]any{s, binding, "resume-published-continuation"})
 	if digest(s) == record.BeforeState.SHA256 {
 		p.Confirmation = record.Confirmation
 	}
-	p.NextAction = "Resume the preserved continuation proof in this same session; retain any intervening report and do not publish another control."
+	p.NextAction = "Use installed ply to finish this original published proof in the same session; retain its control, runtime observation and any intervening report. No new control is published."
 	return true, nil
 }
 

@@ -120,13 +120,17 @@ func ContinueDelivery(d taskrun.Dependencies, input ContinuationInput) (out Cont
 	if p.State == "existing" || input.Check {
 		return out, nil
 	}
-	preserved, err := PreserveControl(control, p.Directory)
-	if err != nil {
-		out.State = "blocked"
-		return out, err
-	}
-	if preserved != p.ControlExecutable {
-		return out, fmt.Errorf("preserved continuation control differs from the observed preview")
+	// Published-proof recovery uses the original control. Copying the current
+	// caller would conflict with or overwrite that immutable transition.
+	if p.Proof == nil {
+		preserved, err := PreserveControl(control, p.Directory)
+		if err != nil {
+			out.State = "blocked"
+			return out, err
+		}
+		if preserved != p.ControlExecutable {
+			return out, fmt.Errorf("preserved continuation control differs from the observed preview")
+		}
 	}
 	p, err = taskrun.WorkflowContinueDelivery(d, ws.Observation.Root, in, p.Confirmation)
 	out.Preview, out.State, out.NextAction = &p, p.State, p.NextAction

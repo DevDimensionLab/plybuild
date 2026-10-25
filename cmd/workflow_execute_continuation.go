@@ -13,7 +13,7 @@ func newWorkflowExecuteContinueCommand(d taskrun.Dependencies) *cobra.Command {
 	var input taskexecute.ContinuationInput
 	var format string
 	c := &cobra.Command{Use: "continue RUN_ID", Short: "Continue the same accepted delivery across a compatible Ply update",
-		Long: "Preserve a compatible control for the same live owner, Task worktree, frozen context and accepted authority. The installed CLI validates the old control and required contracts, preserves a durable compatibility proof, and returns the new exact callback executable. It never restarts an agent, sends input, replaces frozen bytes, grants authority or replays uncertain effects. Use --check to inspect without publication; the ordinary path requires no renewed human permission.",
+		Long: "Preserve a compatible control for the same live owner, Task worktree, frozen context and accepted authority. The installed CLI validates the old control and required contracts, preserves a durable compatibility proof, and returns the new exact callback executable. It never restarts an agent, sends input, replaces frozen bytes, grants authority or replays uncertain effects. If a published proof is pending, finish its original transition with installed Ply even after the caller changes; recovery retains the original control and runtime observation binding. Use --check to inspect without publication; the ordinary path requires no renewed human permission.",
 		Args: func(c *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return workspace.WorkInvalidArguments("expected one run ID")
