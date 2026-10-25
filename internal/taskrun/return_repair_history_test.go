@@ -143,7 +143,9 @@ func TestReturnRepairCallbackTransportRejectsDriftBeforeWrite(t *testing.T) {
 	runner := d.Runner.(*fakeRunner)
 	runner.inside = func(s LaunchSpec) error {
 		path := writeAny(t, r.WorkspaceRoot, "claim.json", acceptance(t, d, r))
-		for _, mode := range []string{"empty", "missing", "conflicting-env", "wrong-path", "symlink", "cwd", "executable", "context-session"} {
+		// 0378f02 removed the historical Ply executable gate: callbackContext
+		// no longer consumes d.Executable, so no executable drift case exists.
+		for _, mode := range []string{"empty", "missing", "conflicting-env", "wrong-path", "symlink", "cwd", "context-session"} {
 			bad := d
 			explicit := s.ContextPath
 			bad.CallbackContext = &explicit
@@ -165,8 +167,6 @@ func TestReturnRepairCallbackTransportRejectsDriftBeforeWrite(t *testing.T) {
 				}
 			case "cwd":
 				bad.CWD = func() (string, error) { return r.WorkspaceRoot, nil }
-			case "executable":
-				bad.Executable = func() (string, error) { return r.Runtime.Executable.Path, nil }
 			case "context-session":
 				var ctx Context
 				json.Unmarshal(contextBytes, &ctx)
@@ -180,6 +180,7 @@ func TestReturnRepairCallbackTransportRejectsDriftBeforeWrite(t *testing.T) {
 			if before != treeState(t, r.WorkspaceRoot) {
 				return errors.New("callback wrote before rejecting " + mode)
 			}
+			t.Logf("rejected %s callback drift before any write", mode)
 			if mode == "context-session" {
 				if e := os.WriteFile(s.ContextPath, contextBytes, 0600); e != nil {
 					return e
