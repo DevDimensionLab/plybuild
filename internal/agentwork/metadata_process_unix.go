@@ -8,12 +8,14 @@ import (
 	"syscall"
 )
 
-// When a process adapter made Ply its group leader, children must remain in
-// that group: even SIGKILL of Ply must not let Herdr escape the adapter's final
-// group cleanup. In this mode CommandContext owns the direct child and bounds
-// pipe draining; the external adapter owns descendant cleanup.
-// For ordinary invocations without a dedicated Ply group, isolate each read
-// so cancellation can clean up its descendants without signaling the shell.
+// Keep a group leader's children in its group so a caller's group cleanup can
+// still reach them after Ply is hard-killed. Group leadership proves topology,
+// not that such a cleanup owner exists. Without caller cleanup, this branch
+// retains the F02 standalone descendant leak on normal timeout (r001-f01).
+// CommandContext/WaitDelay bound only the direct child and pipe draining here.
+// For nonleaders, isolate each read so its own cancellation can clean up the
+// child group without signaling the invoking shell. See the documented scope
+// and open Ply-plan backlog; this helper does not establish caller authority.
 func configureMetadataProcess(c *exec.Cmd) func() {
 	if syscall.Getpgrp() == os.Getpid() {
 		return func() {}

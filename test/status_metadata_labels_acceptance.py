@@ -2,7 +2,9 @@
 """T03079C2A: isolated staged-CLI semantics, monotonic timings and child cleanup.
 
 Run with the test-only jsonschema dependency and the exact private candidate.
-This does not measure or qualify the downstream HTTP surface.
+This does not measure or qualify the downstream HTTP surface or claim general
+standalone descendant cleanup. External-group samples explicitly supply caller
+killpg; r001-f01 remains a separately reproduced open baseline limitation.
 """
 import concurrent.futures
 import json
@@ -159,9 +161,10 @@ with tempfile.TemporaryDirectory(prefix="T03079C2A-cli-") as directory:
     read('cancel-list', healthy=False, cancel=True)
     (root/'config').write_text('{}')
     read('recovery-cancel')
-    # Compose the unchanged external process-group ownership contract with Ply.
-    # A dedicated group is created before exec; cleanup kills that same group
-    # even after the direct Ply process has exited or was hard-stopped.
+    # Model an explicit external cleanup owner, not an inferred one. This
+    # fixture supplies killpg after exit; start_new_session alone guarantees no
+    # cleanup. The separate r001-f01 baseline reproducer omits caller killpg and
+    # remains red for unmanaged group-leader timeout. No standalone pass here.
     for target in ('list', 'label'):
         for stop in ('normal-timeout', 'term', 'hard-kill'):
             for pattern in ('process-*', 'child-*'):
@@ -215,4 +218,4 @@ with tempfile.TemporaryDirectory(prefix="T03079C2A-cli-") as directory:
         assert args == ['agent', 'list'] or (len(args)==4 and args[:3]==['tab','list','--workspace'])
     assert not (root/'.ply').exists(), 'native state created'
 
-print(json.dumps(dict(task_code='T03079C2A', samples=samples, max_elapsed_ms=max(s['elapsed_ms'] for s in samples), whole_http_3s='not_run; root/server owner responsibility')), flush=True)
+print(json.dumps(dict(task_code='T03079C2A', samples=samples, max_elapsed_ms=max(s['elapsed_ms'] for s in samples), whole_http_3s='not_run; root/server owner responsibility', cleanup_scope='isolated caller-owned group cleanup plus nonleader cleanup; no standalone group-leader pass', open_baseline_limitation='T03079C2A/r001-f01: unmanaged group-leader descendants may survive normal timeout; tracked by Ply-plan')), flush=True)

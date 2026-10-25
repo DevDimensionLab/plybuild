@@ -82,12 +82,18 @@ retain this per-request bound (at most sixteen concurrent label children).
 One 2-second budget starts before membership transport. The transport deadline
 reserves 50 ms for pipe cleanup, shared by all label workers. A smaller supplied
 adapter timeout and parent cancellation are honored; no new label deadline
-starts after membership. When an external adapter starts Ply as a process-group leader, Herdr inherits
-that group so the adapter can kill all descendants even after hard-stopping Ply.
-The adapter retains final group-cleanup responsibility, including after a normal
-Ply timeout/exit. Without such an external group, Unix reads own a child group
-and terminate it on cancellation/completion; an uncatchable hard kill of an
-unmanaged Ply process cannot execute that cleanup. Windows
+starts after membership. On Unix, when Ply is a process-group leader, Herdr
+inherits that group so a caller's final group cleanup can reach descendants
+even after Ply is hard-stopped. **Group leadership is not evidence that a
+cleanup owner exists.** Ply bounds its direct child and pipes in this branch;
+without caller cleanup, descendants may survive even a normal timeout/return.
+The identical isolated reproducer confirmed this preexisting limitation on
+installed clean F02 `7eb42e741e4cd0646c6447fdb2f5f615fbb14620` and the producer
+candidate. No standalone cleanup pass is claimed.
+
+When Ply is not group leader, each read owns a child group and terminates it on
+cancellation/completion. An unmanaged, uncatchable hard kill cannot execute
+Ply's deferred cleanup. Windows
 bounds the direct child/pipes but does not claim descendant cleanup. Decode and
 serialization are bounded by the byte/row limits; actual full-process timings
 must still qualify against the consumer's unchanged 2600 ms read timeout and
@@ -129,6 +135,25 @@ schema/negative fixtures and complete-name timing matrix (cold-first/repeated,
 Every sample includes process startup, full JSON read and semantic validation;
 all samples and the maximum are printed. This is producer evidence, not an HTTP
 pass. JSON Schema scalar maxLength is supplemented by the explicit UTF-16 check.
+
+The external-group samples explicitly perform caller `killpg` after Ply exits;
+they qualify that isolated composition only. They do not prove standalone
+cleanup or identify a cleanup owner from process topology. The existing bound
+server adapter's Setpgid/group.finish behavior still needs exact-artifact
+qualification for timeout, TERM, hard kill/inherited pipes, permits/recovery,
+four supported concurrent reads, complete healthy membership/status/names and
+full-body HTTP <=3000 ms. Group escape and regressions are not exempted.
+
+Open baseline limitation **T03079C2A / r001-f01** is tracked by Ply-plan in
+`planning/koe/metadata-standalone-gruppeleder-cleanup.md`, not in a second product
+backlog. The consumer clarification is
+`planning/design/evidence/metadata-tab-label-20261025/standalone-cleanup-scope.md`.
+These are source-bound review evidence, not edits to the frozen Goal/Spec or a
+replacement for independent review. The retained red reproducer compares the
+exact installed F02 binary with each reviewed candidate and records timeout,
+descendant survival and external cleanup separately. The standalone limitation
+remains open; no generic runner, watchdog, process inspection or new ownership
+protocol is introduced by this task.
 
 Compatibility hold: the old strict server rejects the new optional field.
 Deliver the clean source, exact schema/examples and retained staged binary first.
