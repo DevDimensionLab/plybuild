@@ -27,6 +27,7 @@ func legalFixture(t *testing.T) string {
 	}
 	put(t, root, "internal/workitem/model.go", core)
 	put(t, root, "internal/workspace/aliases.go", aliases)
+	put(t, root, "internal/workspace/content_physical_read.go", wr01FixtureRead)
 	put(t, root, "internal/workspaceview/view.go", "package workspaceview\nimport _ \""+fixtureModule+"/internal/workitem\"\n")
 	for _, p := range []string{"taskrun", "workflowhandoff"} {
 		put(t, root, "internal/"+p+"/model.go", "package "+p+"\nimport _ \""+fixtureModule+"/internal/workspace\"\n")

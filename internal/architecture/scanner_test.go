@@ -17,6 +17,7 @@ import (
 )
 
 const modulePath = "github.com/devdimensionlab/plybuild"
+const physicalReadFile = "internal/workspace/content_physical_read.go"
 
 var ownedTypes = []string{"ProjectID", "RepoID", "EpicID", "TaskID", "WorktreeID", "WorktreeOperationID", "WorkItemState", "EpicWorktreeBinding", "EpicRepoBinding", "EpicRecord", "TaskWorktreeBinding", "TaskRecord"}
 var affectedPackages = []string{"internal/workitem", "internal/workspace", "internal/workspaceview", "internal/taskrun", "internal/workflowhandoff"}
@@ -44,6 +45,12 @@ func scanRepository(root string, access scanIO) scanResult {
 	result := scanResult{}
 	population := map[string]int{}
 	canonical, aliases := map[string]bool{}, map[string]bool{}
+	readFileFound := false
+	readDefinitions := map[string]int{}
+	readOwners := map[string]token.Token{
+		"contentPhysical": token.FUNC, "contentReadBounded": token.FUNC,
+		"contentReadBoundedWith": token.FUNC, "contentReadFile": token.TYPE, "contentReadOps": token.TYPE,
+	}
 	edgeSet := map[string]bool{}
 	reserved := map[string]bool{}
 	for _, name := range ownedTypes {
@@ -76,6 +83,7 @@ func scanRepository(root string, access scanIO) scanResult {
 		if !strings.HasSuffix(file, ".go") || strings.HasSuffix(file, "_test.go") {
 			return nil
 		}
+		readFileFound = readFileFound || file == physicalReadFile
 		directory := filepath.ToSlash(filepath.Dir(relative))
 		population[directory]++
 		pkg := modulePath + "/" + directory
@@ -110,6 +118,13 @@ func scanRepository(root string, access scanIO) scanResult {
 			}
 			imports[name] = imported
 			edgeSet[pkg+" -> "+imported] = true
+			if file == physicalReadFile {
+				switch imported {
+				case "fmt", "io", "os", "path/filepath":
+				default:
+					report(file, position.Line, position.Column, "WR01-R1", "read file imports "+imported)
+				}
+			}
 			if within(directory, "internal/workitem") && imported != "fmt" {
 				report(file, position.Line, position.Column, "WI01-R1", pkg+" imports "+imported)
 			}
@@ -122,7 +137,24 @@ func scanRepository(root string, access scanIO) scanResult {
 			}
 		}
 		topLevel := map[*ast.TypeSpec]bool{}
+		readDefinition := func(name string, kind token.Token, pos token.Pos) {
+			if readOwners[name] != kind {
+				return
+			}
+			position := fset.Position(pos)
+			if file != physicalReadFile {
+				report(file, position.Line, position.Column, "WR01-R1", "definition "+name+" must be in "+physicalReadFile)
+				return
+			}
+			readDefinitions[name]++
+			if readDefinitions[name] > 1 {
+				report(file, position.Line, position.Column, "WR01-R1", "duplicate definition "+name)
+			}
+		}
 		for _, declaration := range node.Decls {
+			if function, ok := declaration.(*ast.FuncDecl); ok && function.Recv == nil {
+				readDefinition(function.Name.Name, token.FUNC, function.Pos())
+			}
 			if group, ok := declaration.(*ast.GenDecl); ok && group.Tok == token.TYPE {
 				for _, declaration := range group.Specs {
 					topLevel[declaration.(*ast.TypeSpec)] = true
@@ -131,6 +163,9 @@ func scanRepository(root string, access scanIO) scanResult {
 		}
 		ast.Inspect(node, func(n ast.Node) bool {
 			spec, ok := n.(*ast.TypeSpec)
+			if ok && topLevel[spec] {
+				readDefinition(spec.Name.Name, token.TYPE, spec.Pos())
+			}
 			if !ok || !reserved[spec.Name.Name] {
 				return true
 			}
@@ -168,6 +203,15 @@ func scanRepository(root string, access scanIO) scanResult {
 	})
 	if err != nil {
 		report(".", 1, 1, "WI01-SCAN", "walk: "+err.Error())
+	}
+	if !readFileFound {
+		report(physicalReadFile, 1, 1, "WR01-R1", "missing production read file")
+	} else {
+		for name := range readOwners {
+			if readDefinitions[name] == 0 {
+				report(physicalReadFile, 1, 1, "WR01-R1", "missing definition "+name)
+			}
+		}
 	}
 	for _, pkg := range affectedPackages {
 		if population[pkg] == 0 {

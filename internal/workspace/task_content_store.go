@@ -42,63 +42,6 @@ func taskContentPath(root, kind, digest string) string {
 	}
 	return filepath.Join(taskContentRoot(root), kind, "sha256", strings.TrimPrefix(digest, "sha256:")+suffix)
 }
-func contentPhysical(path string) error {
-	if !filepath.IsAbs(path) || filepath.Clean(path) != path {
-		return contentError("task_content_invalid_input", "path must be absolute and clean", nil)
-	}
-	resolved, err := filepath.EvalSymlinks(path)
-	if err != nil {
-		return err
-	}
-	if resolved != path {
-		return contentError("task_content_integrity_conflict", "path contains a symlink: "+path, nil)
-	}
-	return nil
-}
-func contentReadBounded(path string, limit int, immutable bool) (data []byte, err error) {
-	if err = contentPhysical(path); err != nil {
-		return nil, err
-	}
-	before, err := os.Lstat(path)
-	if err != nil {
-		return nil, err
-	}
-	if !before.Mode().IsRegular() || immutable && before.Mode().Perm() != 0o400 {
-		return nil, contentError("task_content_integrity_conflict", "unexpected file type or immutable mode: "+path, nil)
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if e := f.Close(); err == nil {
-			err = e
-		}
-	}()
-	opened, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-	if !os.SameFile(before, opened) {
-		return nil, contentError("task_content_integrity_conflict", "file changed before read", nil)
-	}
-	data, err = io.ReadAll(io.LimitReader(f, int64(limit)+1))
-	if err != nil {
-		return nil, err
-	}
-	if len(data) > limit {
-		return nil, contentError("task_content_invalid_input", fmt.Sprintf("file exceeds %d bytes", limit), nil)
-	}
-	after, e := f.Stat()
-	current, p := os.Lstat(path)
-	if e != nil || p != nil {
-		return nil, firstError(e, p)
-	}
-	if !current.Mode().IsRegular() || !os.SameFile(opened, current) || opened.Size() != int64(len(data)) || after.Size() != opened.Size() || after.ModTime() != opened.ModTime() {
-		return nil, contentError("task_content_integrity_conflict", "file changed or was short during read", nil)
-	}
-	return data, nil
-}
 func (s *TaskContentStorage) ReadSource(path string, limit int) ([]byte, error) {
 	if e := s.check("source-read"); e != nil {
 		return nil, e
