@@ -106,7 +106,7 @@ func TestR8PartialSemanticReportRecoversWithoutNewCandidate(t *testing.T) {
 		t.Fatalf("partial return: %+v", out)
 	}
 }
-func TestR9CachePrefixAndCorruption(t *testing.T) {
+func TestR9JournalAuthorityOverStaleAndContradictoryCache(t *testing.T) {
 	d, r, f := fixture(t)
 	p, e := PreviewStart(d, f)
 	if e != nil {
@@ -114,6 +114,10 @@ func TestR9CachePrefixAndCorruption(t *testing.T) {
 	}
 	_, _ = Start(d, f, *p.(Preview).Confirmation)
 	j, e := readJournal(r.WorkspaceRoot, RunID(r.RequestKey))
+	if e != nil {
+		t.Fatal(e)
+	}
+	baseline, e := Show(d, r.WorkspaceRoot, RunID(r.RequestKey))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -125,20 +129,25 @@ func TestR9CachePrefixAndCorruption(t *testing.T) {
 		prefix.Result.LastEventSHA256 = &j.Hashes[i]
 	}
 	path := filepath.Join(runPaths(r).RunRoot, "result.json")
-	if e = replaceValue(path, prefix.Result); e != nil {
-		t.Fatal(e)
-	}
-	before := treeState(t, r.WorkspaceRoot)
-	if _, e = Show(d, r.WorkspaceRoot, RunID(r.RequestKey)); e != nil {
-		t.Fatal(e)
-	}
-	if before != treeState(t, r.WorkspaceRoot) {
-		t.Fatal("show repaired cache")
-	}
-	prefix.Result.Launch.State = "failed"
-	replaceValue(path, prefix.Result)
-	if _, e = Show(d, r.WorkspaceRoot, RunID(r.RequestKey)); e == nil {
-		t.Fatal("contradictory cache accepted")
+	// A stale prefix cache and a contradictory cache are derived output; the
+	// full journal result is shown unchanged and the cache is never repaired.
+	for _, mutate := range []func(*Result){func(*Result) {}, func(x *Result) { x.Launch.State = "failed" }} {
+		cache := prefix.Result
+		mutate(&cache)
+		if e = replaceValue(path, cache); e != nil {
+			t.Fatal(e)
+		}
+		before := treeState(t, r.WorkspaceRoot)
+		got, e := Show(d, r.WorkspaceRoot, RunID(r.RequestKey))
+		if e != nil {
+			t.Fatal(e)
+		}
+		if !equal(got, baseline) {
+			t.Fatal("cache changed the journal result")
+		}
+		if before != treeState(t, r.WorkspaceRoot) {
+			t.Fatal("show repaired cache")
+		}
 	}
 }
 

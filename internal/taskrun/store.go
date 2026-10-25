@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
@@ -257,55 +256,6 @@ func readJournal(root, id string) (journal, error) {
 		j.Result.Process.State = "unknown"
 		j.Result.Process.Quiescence = nil
 		j.Result.Reasons = append(j.Result.Reasons, Reason{"task_run_process_unobserved", "A process start was preserved, but no bound Wait/group-end observation is available yet."})
-	}
-	// A cache must name a known chain prefix and exactly match its derived state.
-	var cache Result
-	rawCache, cacheErr := readFile(filepath.Join(run, "result.json"), 4<<20, true)
-	e = cacheErr
-	if e == nil {
-		cache, e = decodeResultCache(rawCache)
-	}
-	if e == nil {
-		if cache.LastEventSHA256 == nil {
-			return j, integrity("cache has no event binding")
-		}
-		idx := -1
-		for i, h := range j.Hashes {
-			if h == *cache.LastEventSHA256 {
-				idx = i
-			}
-		}
-		if idx < 0 {
-			return j, integrity("cache refers to an unknown chain")
-		}
-		prefix := journal{Request: r, Binding: j.Binding, Result: initial(r)}
-		for i := 0; i <= idx; i++ {
-			if e = fold(&prefix, j.Events[i]); e != nil {
-				return j, e
-			}
-			prefix.Result.LastEventSHA256 = &j.Hashes[i]
-		}
-		expected := prefix.Result
-		if cache.SchemaVersion == 1 {
-			// The old producer collapsed negative states in the event/cache. Validate
-			// those exact historical bytes, while current readback follows the claim.
-			for _, ev := range j.Events[:idx+1] {
-				if ev.Type == "acceptance_received" {
-					var p struct {
-						State string `json:"state"`
-					}
-					if err := json.Unmarshal(ev.Payload, &p); err != nil {
-						return j, integrity(err.Error())
-					}
-					expected.Acceptance.State = p.State
-				}
-			}
-		}
-		if !equal(resultCacheValue(cache, cache.SchemaVersion), resultCacheValue(expected, cache.SchemaVersion)) {
-			return j, integrity("cache contradicts its event prefix")
-		}
-	} else if !os.IsNotExist(e) {
-		return j, e
 	}
 	return j, nil
 }

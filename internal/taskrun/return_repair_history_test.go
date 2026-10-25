@@ -47,7 +47,7 @@ func TestReturnRepairLegacyNegativeCacheKeepsClaimProvenance(t *testing.T) {
 		j.Result = prefix.Result
 		j.Result.Acceptance.State = "rejected"
 		j.Result.LastEventSHA256 = ptr(hash(raw))
-		if e = replaceValue(filepath.Join(runPaths(r).RunRoot, "result.json"), resultCacheValue(j.Result, 1)); e != nil {
+		if e = replaceValue(filepath.Join(runPaths(r).RunRoot, "result.json"), legacyV1ResultCache(j.Result)); e != nil {
 			return e
 		}
 		before := treeState(t, r.WorkspaceRoot)
@@ -317,7 +317,7 @@ func legacyResultFixture(t *testing.T, d Dependencies, r Request, registered boo
 	if e != nil {
 		t.Fatal(e)
 	}
-	if e = replaceValue(filepath.Join(runPaths(r).RunRoot, "result.json"), resultCacheValue(j.Result, 1)); e != nil {
+	if e = replaceValue(filepath.Join(runPaths(r).RunRoot, "result.json"), legacyV1ResultCache(j.Result)); e != nil {
 		t.Fatal(e)
 	}
 	return draft
@@ -435,4 +435,16 @@ func TestReturnRepairLegacyCachePublicationAndReservation(t *testing.T) {
 			}
 		})
 	}
+}
+
+// legacyV1ResultCache builds the exact bytes the old v1 producer published:
+// the current result shape without the later runtime and execution fields.
+func legacyV1ResultCache(r Result) map[string]any {
+	r.SchemaVersion = 1
+	raw, _ := Canonical(r)
+	var m map[string]any
+	json.Unmarshal(raw, &m)
+	delete(m, "runtime_facts")
+	delete(m, "task_execution")
+	return m
 }
