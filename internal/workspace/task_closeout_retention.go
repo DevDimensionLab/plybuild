@@ -122,6 +122,24 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 		inputs  any
 	}
 	observations := []inputObservation{}
+	// Verifier stdout/stderr are text data. Only their exact native bindings
+	// are retained without expansion: the TaskResult verifier artifact IDs and
+	// the log edges of the bound verification receipt. Names, roles and kinds
+	// grant nothing; a separate native edge to the same bytes still expands.
+	logs := map[string]bool{}
+	for _, v := range tr.VerifierResults {
+		for _, id := range []*string{v.StdoutArtifactID, v.StderrArtifactID} {
+			if id != nil {
+				logs[*id] = true
+			}
+		}
+	}
+	receipts := map[string]bool{}
+	for _, a := range tr.Artifacts {
+		if a.ArtifactID == "verification-receipt" {
+			receipts[a.SHA256] = true
+		}
+	}
 	total := 0
 	var add func(string, string, string, int64, bool) error
 	var walk func(any, map[inputReference]string) error
@@ -189,6 +207,20 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 					observations = append(observations, inputObservation{sha, document["observed_inputs"]})
 					// Only the decoded copy changes. Signed receipt bytes remain exact.
 					delete(document, "observed_inputs")
+				}
+				if receipts[e.sha] {
+					for _, key := range []string{"stdout", "stderr"} {
+						log, ok := document[key].(map[string]any)
+						if !ok {
+							continue
+						}
+						path, _ := log["locator"].(string)
+						sha, _ := log["sha256"].(string)
+						if err := add("verifier_log", path, sha, -1, false); err != nil {
+							return err
+						}
+						delete(document, key)
+					}
 				}
 			}
 			return walk(value, nil)
@@ -267,7 +299,7 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 		}
 	}
 	for _, a := range tr.Artifacts {
-		if err := add(a.Role, a.Locator, a.SHA256, a.SizeBytes, true); err != nil {
+		if err := add(a.Role, a.Locator, a.SHA256, a.SizeBytes, !logs[a.ArtifactID]); err != nil {
 			return nil, err
 		}
 	}
