@@ -76,7 +76,7 @@ with tempfile.TemporaryDirectory(prefix="sm01-cli-") as tmp:
         elapsed = time.monotonic() - start
         assert proc.returncode == 0, (name, proc.returncode, proc.stderr)
         assert not proc.stderr, (name, proc.stderr)
-        assert elapsed < 4.0, (name, elapsed)
+        assert elapsed < 2.6, (name, elapsed)
         v = json.loads(proc.stdout)
         assert set(v) == {"kind", "schema_version", "observed_at_utc", "sources", "agents"}, v.keys()
         assert v["kind"] == "AgentStatusMetadataReadback@1" and v["schema_version"] == 1
@@ -95,7 +95,9 @@ with tempfile.TemporaryDirectory(prefix="sm01-cli-") as tmp:
             for text in agent.values():
                 assert isinstance(text, str) and len(text.encode("utf-16-le")) // 2 <= 256
                 assert "never-export" not in text
-        print(f"SM01 {name}: exit=0 source={status} coverage={coverage} agents={count} elapsed={elapsed:.3f}s margin_to_5s={5-elapsed:.3f}s", flush=True)
-    assert calls.read_text().splitlines() == ["agent list"] * len(modes), "extra source operation or cache"
+        print(f"SM01 {name}: exit=0 source={status} coverage={coverage} agents={count} elapsed={elapsed:.3f}s margin_to_2600ms={2.6-elapsed:.3f}s", flush=True)
+    observed = calls.read_text().splitlines()
+    assert observed.count("agent list") == len(modes), "extra list or cache"
+    assert all(call in ("agent list", "tab list --workspace w1") for call in observed), "unexpected source operation"
     assert not (root / ".ply").exists(), "readback created native state"
 print("SM01 CLI conformance passed")

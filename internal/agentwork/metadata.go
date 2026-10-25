@@ -2,12 +2,16 @@ package agentwork
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"sort"
+	"strings"
 	"time"
+	"unicode"
 	"unicode/utf16"
+	"unicode/utf8"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
@@ -23,6 +27,7 @@ type StatusAgent struct {
 	Status    string `json:"status"`
 	Tab       string `json:"tab"`
 	Workspace string `json:"workspace"`
+	TabLabel  string `json:"tab_label,omitempty"`
 }
 type MetadataSource struct {
 	Source              string  `json:"source"`
@@ -40,20 +45,61 @@ type MetadataReadback struct {
 	Agents        []StatusAgent    `json:"agents"`
 }
 
-// StatusMetadata performs exactly one public List call, independently of
-// execution identity, the full Service, workspace discovery and native stores.
-// Transport takes at most 2s plus the existing 1s pipe cleanup allowance.
+// StatusMetadata reads public membership and optional tab names, without native
+// stores or execution identity. All transport shares one request budget.
 func StatusMetadata(h HerdrRuntime) MetadataReadback {
+	return StatusMetadataContext(context.Background(), h)
+}
+
+func StatusMetadataContext(parent context.Context, h HerdrRuntime) MetadataReadback {
 	if h.Timeout <= 0 || h.Timeout > MetadataTimeout {
 		h.Timeout = MetadataTimeout
 	}
-	raw, err := h.callBytes("agent", "list")
+	// Reserve pipe cleanup inside the shared budget, not after a second timeout.
+	transport := h.Timeout - tabLabelCleanup
+	if transport < 0 {
+		transport = 0
+	}
+	ctx, cancel := context.WithTimeout(parent, transport)
+	defer cancel()
+	raw, err := h.callBytesContext(ctx, tabLabelCleanup, "agent", "list")
 	observed := time.Now().UTC().Format(time.RFC3339Nano)
 	out := MetadataReadback{Kind: MetadataKind, SchemaVersion: 1, ObservedAtUTC: observed, Agents: []StatusAgent{}, Sources: []MetadataSource{{Source: "herdr.agent.list", Status: "unavailable", Freshness: "unknown", Coverage: "unknown", Scope: metadataScope}}}
 	if err != nil {
 		return out
 	}
-	return decodeMetadata(raw, out)
+	out = decodeMetadata(raw, out)
+	agents := make([]Agent, 0, len(out.Agents))
+	for _, a := range out.Agents {
+		if a.Workspace != "" && a.Tab != "" {
+			agents = append(agents, Agent{Workspace: a.Workspace, Tab: a.Tab})
+		}
+	}
+	labels := h.tabLabelsContext(ctx, agents)
+	for i := range out.Agents {
+		a := &out.Agents[i]
+		if label := labels[tabKey{a.Workspace, a.Tab}]; validPublicTabLabel(label) {
+			a.TabLabel = label
+		}
+	}
+	return out
+}
+
+// Full AgentWork retains its existing display policy. Public labels additionally
+// meet the narrow contract's UTF-16, format-control and privacy constraints.
+func validPublicTabLabel(label string) bool {
+	if !utf8.ValidString(label) || !plain(label) || strings.ContainsFunc(label, func(r rune) bool {
+		return unicode.Is(unicode.Cf, r) || r == '\u2028' || r == '\u2029' || r == '\ufffd'
+	}) {
+		return false
+	}
+	lower := strings.ToLower(label)
+	for _, marker := range []string{"session_id", "terminal_id", "cwd=", "token=", "secret=", "password="} {
+		if strings.Contains(lower, marker) {
+			return false
+		}
+	}
+	return true
 }
 
 // Decode only selected object members. Execution fields are opaque raw JSON;
@@ -191,7 +237,7 @@ func decodeMetadata(raw []byte, out MetadataReadback) MetadataReadback {
 		default:
 			status = "unknown"
 		}
-		out.Agents = append(out.Agents, StatusAgent{pane, provider, status, tab, workspace})
+		out.Agents = append(out.Agents, StatusAgent{Pane: pane, Provider: provider, Status: status, Tab: tab, Workspace: workspace})
 	}
 	// Pane is the consumer's unique key; discard every occurrence of ambiguity.
 	safe := out.Agents[:0]

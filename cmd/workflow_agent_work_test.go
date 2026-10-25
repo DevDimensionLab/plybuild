@@ -108,7 +108,15 @@ func TestAgentWorkSummaryOnlyTextReadback(t *testing.T) {
 func TestAgentStatusMetadataCLIBypassesNative(t *testing.T) {
 	dir := t.TempDir()
 	calls := filepath.Join(dir, "calls")
-	script := "#!/bin/sh\nprintf '%s\\n' \"$*\" >> '" + calls + "'\n[ \"$*\" = 'agent list' ] || exit 8\nprintf '%s' '{\"result\":{\"type\":\"agent_list\",\"agents\":[{\"agent\":\"codex\",\"pane_id\":\"w1:p1\",\"tab_id\":\"w1:t1\",\"workspace_id\":\"w1\",\"agent_status\":\"done\",\"terminal_id\":{},\"agent_session\":false}]}}'\n"
+	script := `#!/bin/sh
+printf '%s\n' "$*" >> '` + calls + `'
+case "$*" in
+'agent list') printf '%s' '{"result":{"type":"agent_list","agents":[{"agent":"codex","pane_id":"w1:p1","tab_id":"w1:t1","workspace_id":"w1","agent_status":"done","terminal_id":{},"agent_session":false}]}}';;
+'tab list --workspace w1') printf '%s' '{"result":{"tabs":[{"workspace_id":"w1","tab_id":"w1:t1","label":"Actual 🌱"}]}}';;
+*) exit 8;;
+esac
+`
+
 	if e := os.WriteFile(filepath.Join(dir, "herdr"), []byte(script), 0700); e != nil {
 		t.Fatal(e)
 	}
@@ -133,12 +141,12 @@ func TestAgentStatusMetadataCLIBypassesNative(t *testing.T) {
 		if e := json.Unmarshal(out.Bytes(), &v); e != nil {
 			t.Fatal(e)
 		}
-		if v.Kind != "AgentStatusMetadataReadback@1" || len(v.Agents) != 1 || len(v.Agents[0]) != 5 || v.Sources[0].Coverage != "complete" {
+		if v.Kind != "AgentStatusMetadataReadback@1" || len(v.Agents) != 1 || len(v.Agents[0]) != 6 || v.Agents[0]["tab_label"] != "Actual 🌱" || v.Sources[0].Coverage != "complete" {
 			t.Fatal(out.String())
 		}
 	}
 	b, e := os.ReadFile(calls)
-	if e != nil || string(b) != "agent list\nagent list\n" {
+	if e != nil || string(b) != "agent list\ntab list --workspace w1\nagent list\ntab list --workspace w1\n" {
 		t.Fatal(string(b), e)
 	}
 }

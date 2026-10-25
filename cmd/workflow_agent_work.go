@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 type agentWorkFactory func(string) (*agentwork.Service, error)
@@ -70,7 +72,9 @@ func newAgentWorkCommand(factory agentWorkFactory) *cobra.Command {
 			return e
 		}
 		if metadataOnly {
-			return agentWorkOutput(cmd, format, agentwork.StatusMetadata(agentwork.HerdrRuntime{Executable: "herdr"}))
+			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			return agentWorkOutput(cmd, format, agentwork.StatusMetadataContext(ctx, agentwork.HerdrRuntime{Executable: "herdr"}))
 		}
 		s, e := factory(root)
 		if e != nil {

@@ -36,12 +36,24 @@ func (h HerdrRuntime) callBytes(args ...string) ([]byte, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), limit)
 	defer cancel()
+	return h.runBytes(ctx, time.Second, false, args...)
+}
+
+func (h HerdrRuntime) callBytesContext(ctx context.Context, cleanup time.Duration, args ...string) ([]byte, error) {
+	return h.runBytes(ctx, cleanup, true, args...)
+}
+
+func (h HerdrRuntime) runBytes(ctx context.Context, cleanup time.Duration, owned bool, args ...string) ([]byte, error) {
 	c := exec.CommandContext(ctx, h.Executable, args...)
-	c.WaitDelay = time.Second
+	c.WaitDelay = cleanup
+	if owned {
+		finish := configureMetadataProcess(c)
+		defer finish()
+	}
 	var out, errout limitedOutput
 	c.Stdout = &out
 	c.Stderr = &errout
-	if e := c.Run(); e != nil || out.overflow || errout.overflow {
+	if e := c.Run(); e != nil || ctx.Err() != nil || out.overflow || errout.overflow {
 		return nil, fmt.Errorf("herdr_source_unavailable")
 	}
 	return out.data, nil

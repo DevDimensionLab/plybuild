@@ -1,6 +1,7 @@
 package agentwork
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -31,10 +32,14 @@ const (
 type tabKey struct{ workspace, tab string }
 
 // These presentation reads deliberately do not belong to Runtime.List/Get or
-// Identity. Overview alone invokes them, after constructing the base result.
+// Identity. Readers invoke them only after constructing base membership.
 func (h HerdrRuntime) tabLabels(agents []Agent) map[tabKey]string {
 	ctx, cancel := context.WithTimeout(context.Background(), tabLabelDeadline)
 	defer cancel()
+	return h.tabLabelsContext(ctx, agents)
+}
+
+func (h HerdrRuntime) tabLabelsContext(ctx context.Context, agents []Agent) map[tabKey]string {
 	labels := map[tabKey]string{}
 	workspaces := map[string]bool{}
 	for _, a := range agents {
@@ -96,6 +101,8 @@ func (b *tabLabelOutput) Write(p []byte) (int, error) {
 func (h HerdrRuntime) workspaceTabLabels(ctx context.Context, workspace string) map[tabKey]string {
 	c := exec.CommandContext(ctx, h.Executable, "tab", "list", "--workspace", workspace)
 	c.WaitDelay = tabLabelCleanup
+	finish := configureMetadataProcess(c)
+	defer finish()
 	var out, errout tabLabelOutput
 	c.Stdout, c.Stderr = &out, &errout
 	if c.Run() != nil || ctx.Err() != nil || !utf8.Valid(out.data) {
@@ -109,33 +116,66 @@ func (h HerdrRuntime) workspaceTabLabels(ctx context.Context, workspace string) 
 }
 
 func decodeTabLabels(ctx context.Context, data []byte, workspace string) map[tabKey]string {
-	var env struct {
-		Error  json.RawMessage `json:"error"`
-		Result *struct {
-			Tabs *[]json.RawMessage `json:"tabs"`
-		} `json:"result"`
+	env, err := metadataObject(data, nil, nil)
+	if err != nil {
+		return nil
 	}
-	if json.Unmarshal(data, &env) != nil || env.Result == nil || env.Result.Tabs == nil ||
-		len(env.Error) > 0 && string(env.Error) != "null" || len(*env.Result.Tabs) > tabLabelTabLimit {
+	if e, ok := env["error"]; ok && string(bytes.TrimSpace(e)) != "null" {
+		return nil
+	}
+	result, err := metadataObject(env["result"], nil, nil)
+	if err != nil {
+		return nil
+	}
+	var rows []json.RawMessage
+	if json.Unmarshal(result["tabs"], &rows) != nil || rows == nil || len(rows) > tabLabelTabLimit {
 		return nil
 	}
 	labels := map[tabKey]string{}
 	seen := map[tabKey]bool{}
-	for _, raw := range *env.Result.Tabs {
+	for _, raw := range rows {
 		if ctx.Err() != nil {
 			return nil
 		}
-		// Decode the join fields separately so a malformed label on a duplicate
-		// row still invalidates that tab's metadata, regardless of row order.
-		var row struct {
-			Workspace string          `json:"workspace_id"`
-			Tab       string          `json:"tab_id"`
-			Label     json.RawMessage `json:"label"`
-		}
-		if json.Unmarshal(raw, &row) != nil || row.Workspace != workspace || row.Tab == "" {
+		// Observe all join claims before validating the row. Duplicate or malformed
+		// members cannot hide a conflicting claim behind JSON's last-key-wins rule.
+		var workspaces, tabs []string
+		row, rowErr := metadataObject(raw, nil, func(name string, value json.RawMessage) {
+			if name != "workspace_id" && name != "tab_id" {
+				return
+			}
+			v, err := canonicaljson.DecodeStrict(value)
+			text, ok := v.(string)
+			if err != nil || !ok {
+				return
+			}
+			if name == "workspace_id" {
+				workspaces = append(workspaces, text)
+			} else {
+				tabs = append(tabs, text)
+			}
+		})
+		if rowErr != nil {
+			claimsWorkspace := false
+			for _, w := range workspaces {
+				if w == workspace {
+					claimsWorkspace = true
+					break
+				}
+			}
+			if claimsWorkspace {
+				for _, tab := range tabs {
+					key := tabKey{workspace, tab}
+					seen[key] = true
+					delete(labels, key)
+				}
+			}
 			continue
 		}
-		key := tabKey{workspace, row.Tab}
+		if len(workspaces) != 1 || len(tabs) != 1 || workspaces[0] != workspace || tabs[0] == "" {
+			continue
+		}
+		key := tabKey{workspace, tabs[0]}
 		if seen[key] {
 			delete(labels, key)
 			continue
@@ -143,7 +183,7 @@ func decodeTabLabels(ctx context.Context, data []byte, workspace string) map[tab
 		seen[key] = true
 		// The shared strict decoder rejects invalid Unicode rather than
 		// repairing lone surrogate escapes into an invented replacement name.
-		value, err := canonicaljson.DecodeStrict(row.Label)
+		value, err := canonicaljson.DecodeStrict(row["label"])
 		label, ok := value.(string)
 		if err == nil && ok && validTabLabel(label) {
 			labels[key] = label

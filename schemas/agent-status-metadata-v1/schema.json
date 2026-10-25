@@ -118,6 +118,13 @@
             "type": "string",
             "maxLength": 256,
             "description": "At most 256 UTF-16 code units; no controls, paths or surrounding whitespace."
+          },
+          "tab_label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^(?![\\s\\uFEFF])(?!.*[\\s\\uFEFF]$)(?!.*(?:[sS][eE][sS][sS][iI][oO][nN]_[iI][dD]|[tT][eE][rR][mM][iI][nN][aA][lL]_[iI][dD]|[cC][wW][dD]=|[tT][oO][kK][eE][nN]=|[sS][eE][cC][rR][eE][tT]=|[pP][aA][sS][sS][wW][oO][rR][dD]=))[^/\\\\@\\u0000-\\u001F\\u007F-\\u009F\\u2028\\u2029\\uD800-\\uDFFF\\uFFFD\u00ad\u0600-\u0605\u061c\u06dd\u070f\u0890-\u0891\u08e2\u180e\u200b-\u200f\u202a-\u202e\u2060-\u2064\u2066-\u206f\ufeff\ufff9-\ufffb\ud804\udcbd\ud804\udccd\ud80d\udc30-\ud80d\udc3f\ud82f\udca0-\ud82f\udca3\ud834\udd73-\ud834\udd7a\udb40\udc01\udb40\udc20-\udb40\udc7f]+$",
+            "description": "Optional actual tab name, display only; preserved verbatim. At most 256 UTF-16 code units (runtime constraint in addition to maxLength). No controls, Unicode Cf, line/paragraph separators, replacement characters, paths, @, surrounding whitespace or case-insensitive private markers. Absent on invalid or unavailable label; base membership remains valid."
           }
         }
       }
