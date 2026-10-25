@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 )
@@ -158,9 +159,8 @@ func TestPublishedContinuationRecoveryPublicCLI(t *testing.T) {
 	if got := call(false); got.State != "continued" || got.Preview.Generation != 1 {
 		t.Fatalf("recover: %+v", got)
 	}
-	// The installed binary has a different digest: after pointer publication,
-	// --check describes a new transition under the existing rules. Do not apply it.
-	if got := call(true); got.State != "ready" || got.Preview.Generation != 2 || got.Preview.Proof != nil {
+	// A different installed CLI reuses the registered proof.
+	if got := call(true); got.State != "existing" || got.Preview.Generation != 1 || got.Preview.Proof == nil {
 		t.Fatalf("post-pointer check: %+v", got)
 	}
 	if !reflect.DeepEqual(original, recoveryFiles(t, dir)) {
@@ -173,5 +173,104 @@ func TestPublishedContinuationRecoveryPublicCLI(t *testing.T) {
 	}
 	if model.Tabs != after.Tabs || model.Starts != after.Starts || model.Prompts != after.Prompts {
 		t.Fatal("CLI caused new native effects")
+	}
+}
+
+func TestRegisteredContinuationInstalledPly(t *testing.T) {
+	for _, change := range []string{"path", "bytes"} {
+		for _, launcher := range []string{"present", "missing"} {
+			t.Run(change+"/"+launcher, func(t *testing.T) {
+				d, start, root, _ := boundFixture(t)
+				p := boundPreview(t, d, start)
+				out, err := ApplyBoundStart(d, p.Request)
+				if err != nil {
+					t.Fatal(err)
+				}
+				run, err := taskrun.WorkflowShow(d, root, out.ExpectedRunID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				var model struct {
+					CWD                   string `json:"cwd"`
+					Tabs, Starts, Prompts int
+				}
+				modelPath := filepath.Join(root, "bin", "recovery-model.json")
+				raw, _ := os.ReadFile(modelPath)
+				if err = json.Unmarshal(raw, &model); err != nil {
+					t.Fatal(err)
+				}
+				if err = os.Chdir(model.CWD); err != nil {
+					t.Fatal(err)
+				}
+				if _, err = taskrun.WorkflowDeliveryReceipt(d, root, run.RunID, run.Paths.Context, taskrun.DeliveryBeginInput{Provider: "codex", NativeSession: run.Transport.AgentSessionID}, true); err != nil {
+					t.Fatal(err)
+				}
+				input := ContinuationInput{RunID: run.RunID, ContextPath: run.Paths.Context}
+				var accepted taskrun.DeliveryAcceptance
+				raw, err = os.ReadFile(filepath.Join(run.Paths.RunRoot, "acceptance.json"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err = json.Unmarshal(raw, &accepted); err != nil {
+					t.Fatal(err)
+				}
+				contextRaw, err := os.ReadFile(run.Paths.Context)
+				if err != nil {
+					t.Fatal(err)
+				}
+				observation := taskrun.DeliveryRuntimeObservation{Envelope: taskrun.Envelope{Kind: "ply.workflow.delivery-runtime-observation", SchemaVersion: 1}, RunID: run.RunID, RequestSHA256: run.RequestSHA256, SessionID: run.SessionID, Context: taskrun.FileBinding{Locator: run.Paths.Context, SHA256: digestBytes(contextRaw)}, Acceptance: taskrun.FileBinding{Locator: filepath.Join(run.Paths.RunRoot, "acceptance.json"), SHA256: digestBytes(raw)}, RuntimeClaim: accepted.RuntimeClaim, DeliveryPermission: accepted.DeliveryPermission, ObservedAtUTC: d.Now().UTC().Format(time.RFC3339Nano)}
+				observationRaw, _ := json.Marshal(observation)
+				input.RuntimeEvidencePath = filepath.Join(root, "runtime-observation.json")
+				if err = os.WriteFile(input.RuntimeEvidencePath, observationRaw, 0600); err != nil {
+					t.Fatal(err)
+				}
+				first, err := ContinueDelivery(d, input)
+				input.RuntimeEvidencePath = ""
+				if err != nil || first.State != "continued" {
+					t.Fatalf("first: %+v %v", first, err)
+				}
+				if err = os.Remove(first.Preview.ControlExecutable.Path); err != nil {
+					t.Fatal(err)
+				}
+				if launcher == "missing" {
+					if err = os.Remove(p.Basis.Runtime.Runtime.Executable.Path); err != nil {
+						t.Fatal(err)
+					}
+				}
+				original := recoveryFiles(t, run.Paths.RunRoot)
+				path, _ := d.Executable()
+				raw, err = os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if change == "path" {
+					path += "-new"
+				} else {
+					raw = append(raw, []byte("# upgrade\n")...)
+				}
+				if err = os.WriteFile(path, raw, 0700); err != nil {
+					t.Fatal(err)
+				}
+				d.Executable = func() (string, error) { return path, nil }
+				for _, check := range []bool{true, false, false} {
+					input.Check = check
+					got, err := ContinueDelivery(d, input)
+					if err != nil || got.State != "existing" || got.Preview.Generation != first.Preview.Generation || got.Preview.Confirmation != first.Preview.Confirmation || !reflect.DeepEqual(got.Preview.Proof, first.Preview.Proof) {
+						t.Fatalf("reuse: %+v %v", got, err)
+					}
+				}
+				if !reflect.DeepEqual(original, recoveryFiles(t, run.Paths.RunRoot)) {
+					t.Fatal("reuse created or changed artifacts")
+				}
+				var after struct{ Tabs, Starts, Prompts int }
+				raw, _ = os.ReadFile(modelPath)
+				if err = json.Unmarshal(raw, &after); err != nil {
+					t.Fatal(err)
+				}
+				if model.Tabs != after.Tabs || model.Starts != after.Starts || model.Prompts != after.Prompts {
+					t.Fatal("reuse caused native effects")
+				}
+			})
+		}
 	}
 }

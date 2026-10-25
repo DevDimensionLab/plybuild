@@ -392,24 +392,24 @@ func TestPublishedContinuationRecoveryChangedCaller(t *testing.T) {
 			for e := range errs {
 				if e == nil {
 					successes++
-				} else if change != "bytes" || !strings.Contains(e.Error(), "delivery_continuation_stale") {
+				} else {
 					t.Fatal(e)
 				}
 			}
-			if change == "bytes" && successes != 1 || change == "path" && successes != 2 {
+			if successes != 2 {
 				t.Fatalf("unexpected successful recoveries/reuses: %d", successes)
 			}
 			// A lost reply after pointer publication reuses the old confirmation.
 			_, err = WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, preview.Confirmation)
-			if change == "path" && err != nil || change == "bytes" && (err == nil || !strings.Contains(err.Error(), "delivery_continuation_stale")) {
+			if err != nil {
 				t.Fatalf("post-pointer repeat: %v", err)
 			}
 			again, err := WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if change == "path" && (again.State != "existing" || again.Generation != 1) || change == "bytes" && (again.State != "ready" || again.Generation != 2 || again.Proof != nil) {
-				t.Fatalf("new-transition rules changed: %+v", again)
+			if again.State != "existing" || again.Generation != 1 || again.Proof == nil {
+				t.Fatalf("registered proof was not reused: %+v", again)
 			}
 			state, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
 			if err != nil || deliveryContinuationGeneration(state) != 1 || !equal(state.Result.Delivery, beforeState.Result.Delivery) {
@@ -462,108 +462,130 @@ func TestPublishedContinuationRecoveryRejectsDifferentRuntimeBinding(t *testing.
 }
 
 func TestPublishedContinuationRecoveryGuardsUnderLock(t *testing.T) {
-	for _, guard := range []string{"proof", "control", "before-state", "context", "task", "owner", "session", "policy", "runtime", "released", "unknown", "caller-path", "caller-bytes"} {
-		t.Run(guard, func(t *testing.T) {
-			f := newDeliveryFixture(t, "codex")
-			o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
-			d, in, p := continuationTestInput(t, f, o)
-			fault := d
-			fault.Fault = func(point string) error {
-				if point == "delivery_after_continuation_proof" {
-					return errors.New("interrupted proof")
+	for _, registered := range []bool{false, true} {
+		for _, guard := range []string{"proof", "acceptance", "control", "before-state", "context", "task", "owner", "session", "policy", "runtime", "released", "unknown", "caller-path", "caller-bytes"} {
+			name := "pending/" + guard
+			if registered {
+				name = "registered/" + guard
+			}
+			// Registered controls need not remain on disk; pending publication
+			// still checks the control it will adopt.
+			if registered && guard == "control" {
+				continue
+			}
+			t.Run(name, func(t *testing.T) {
+				f := newDeliveryFixture(t, "codex")
+				o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
+				d, in, p := continuationTestInput(t, f, o)
+				fault := d
+				fault.Fault = func(point string) error {
+					if point == "delivery_after_continuation_proof" {
+						return errors.New("interrupted proof")
+					}
+					return nil
 				}
-				return nil
-			}
-			if _, err := WorkflowContinueDelivery(fault, f.R.WorkspaceRoot, in, p.Confirmation); err == nil {
-				t.Fatal("fault did not interrupt")
-			}
-			// Preview is valid, then the dependency changes before apply's locked read.
-			preview, err := WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in)
-			if err != nil {
-				t.Fatal(err)
-			}
-			state, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			switch guard {
-			case "proof", "before-state":
-				name := "continuation.json"
-				if guard == "before-state" {
-					name = "before-state.json"
+				if registered {
+					if _, err := WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, p.Confirmation); err != nil {
+						t.Fatal(err)
+					}
+					if err := os.WriteFile(in.ControlExecutable.Path, []byte("#!/bin/sh\n# upgraded reader\nexit 0\n"), 0700); err != nil {
+						t.Fatal(err)
+					}
+					in.ControlExecutable.SHA256 = hashFileTest(t, in.ControlExecutable.Path)
+				} else if _, err := WorkflowContinueDelivery(fault, f.R.WorkspaceRoot, in, p.Confirmation); err == nil {
+					t.Fatal("fault did not interrupt")
 				}
-				path := filepath.Join(p.Directory, name)
-				raw, err := os.ReadFile(path)
+				// Preview is valid, then the dependency changes before apply's locked read.
+				preview, err := WorkflowPreviewDeliveryContinuation(d, f.R.WorkspaceRoot, in)
 				if err != nil {
 					t.Fatal(err)
 				}
-				// Valid JSON still has to match the original binding/confirmation.
-				if err = os.WriteFile(path, append(raw, ' '), 0600); err != nil {
+				state, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+				if err != nil {
 					t.Fatal(err)
 				}
-				if guard == "proof" { // A semantic proof edit, not just a serialization change.
-					var record deliveryContinuationRecord
-					if err = readValue(path, 1<<20, &record); err != nil {
+				switch guard {
+				case "proof", "before-state", "acceptance":
+					name := "continuation.json"
+					if guard == "before-state" {
+						name = "before-state.json"
+					}
+					path := filepath.Join(p.Directory, name)
+					if guard == "acceptance" {
+						path = filepath.Join(o.Paths.RunRoot, "acceptance.json")
+					}
+					raw, err := os.ReadFile(path)
+					if err != nil {
 						t.Fatal(err)
 					}
-					record.SourceControl.SHA256 = "sha256:" + strings.Repeat("0", 64)
-					writeAny(t, p.Directory, name, record)
+					// Valid JSON still has to match the original binding/confirmation.
+					if err = os.WriteFile(path, append(raw, ' '), 0600); err != nil {
+						t.Fatal(err)
+					}
+					if guard == "proof" { // A semantic proof edit, not just a serialization change.
+						var record deliveryContinuationRecord
+						if err = readValue(path, 1<<20, &record); err != nil {
+							t.Fatal(err)
+						}
+						record.SourceControl.SHA256 = "sha256:" + strings.Repeat("0", 64)
+						writeAny(t, p.Directory, name, record)
+					}
+				case "control":
+					if err = os.Chmod(p.ControlExecutable.Path, 0700); err != nil {
+						t.Fatal(err)
+					}
+					if err = os.WriteFile(p.ControlExecutable.Path, []byte("#!/bin/sh\n# tampered control\n"), 0500); err != nil {
+						t.Fatal(err)
+					}
+				case "context":
+					in.ContextPath += "-wrong"
+				case "task":
+					d.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
+				case "owner", "session":
+					model := workflowProviderDocument(t, f.Model)
+					if guard == "session" {
+						model["agent_session_id"] = "other-session"
+					} else {
+						model["foreground_cwd"] = f.R.WorkspaceRoot
+						model["cwd"] = f.R.WorkspaceRoot
+					}
+					writeAny(t, f.R.WorkspaceRoot, filepath.Base(f.Model), model)
+				case "policy":
+					v := "sha256:" + strings.Repeat("0", 64)
+					state.Result.Delivery.ActualPolicySHA256 = &v
+				case "runtime":
+					var observation DeliveryRuntimeObservation
+					if err = readValue(in.RuntimeEvidencePath, 1<<20, &observation); err != nil {
+						t.Fatal(err)
+					}
+					v := "other-session"
+					observation.RuntimeClaim.NativeSessionID = &v
+					writeAny(t, filepath.Dir(in.RuntimeEvidencePath), filepath.Base(in.RuntimeEvidencePath), observation)
+				case "released":
+					state.Result.Delivery.OwnershipRelease = &FileBinding{}
+				case "unknown":
+					state.Result.Delivery.Attempt = &DeliveryAttempt{Kind: "integration", State: "attempted", ID: "unknown-effect"}
+				case "caller-path":
+					in.ControlExecutable.Path += "-not-caller"
+				case "caller-bytes":
+					if err = os.WriteFile(in.ControlExecutable.Path, []byte("#!/bin/sh\n# changed since caller binding\n"), 0700); err != nil {
+						t.Fatal(err)
+					}
 				}
-			case "control":
-				if err = os.Chmod(p.ControlExecutable.Path, 0700); err != nil {
-					t.Fatal(err)
+				if guard == "policy" || guard == "released" || guard == "unknown" {
+					if err = workflowSave(d, state); err != nil {
+						t.Fatal(err)
+					}
 				}
-				if err = os.WriteFile(p.ControlExecutable.Path, []byte("#!/bin/sh\n# tampered control\n"), 0500); err != nil {
-					t.Fatal(err)
+				if _, err = WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, preview.Confirmation); err == nil {
+					t.Fatalf("locked recovery bypassed %s", guard)
 				}
-			case "context":
-				in.ContextPath += "-wrong"
-			case "task":
-				d.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
-			case "owner", "session":
-				model := workflowProviderDocument(t, f.Model)
-				if guard == "session" {
-					model["agent_session_id"] = "other-session"
-				} else {
-					model["foreground_cwd"] = f.R.WorkspaceRoot
-					model["cwd"] = f.R.WorkspaceRoot
+				state, err = workflowRead(f.R.WorkspaceRoot, o.RunID)
+				if err == nil && !registered && state.Continuation != nil {
+					t.Fatal("rejected recovery published pointer")
 				}
-				writeAny(t, f.R.WorkspaceRoot, filepath.Base(f.Model), model)
-			case "policy":
-				v := "sha256:" + strings.Repeat("0", 64)
-				state.Result.Delivery.ActualPolicySHA256 = &v
-			case "runtime":
-				var observation DeliveryRuntimeObservation
-				if err = readValue(in.RuntimeEvidencePath, 1<<20, &observation); err != nil {
-					t.Fatal(err)
-				}
-				v := "other-session"
-				observation.RuntimeClaim.NativeSessionID = &v
-				writeAny(t, filepath.Dir(in.RuntimeEvidencePath), filepath.Base(in.RuntimeEvidencePath), observation)
-			case "released":
-				state.Result.Delivery.OwnershipRelease = &FileBinding{}
-			case "unknown":
-				state.Result.Delivery.Attempt = &DeliveryAttempt{Kind: "integration", State: "attempted", ID: "unknown-effect"}
-			case "caller-path":
-				in.ControlExecutable.Path += "-not-caller"
-			case "caller-bytes":
-				if err = os.WriteFile(in.ControlExecutable.Path, []byte("#!/bin/sh\n# changed since caller binding\n"), 0700); err != nil {
-					t.Fatal(err)
-				}
-			}
-			if guard == "policy" || guard == "released" || guard == "unknown" {
-				if err = workflowSave(d, state); err != nil {
-					t.Fatal(err)
-				}
-			}
-			if _, err = WorkflowContinueDelivery(d, f.R.WorkspaceRoot, in, preview.Confirmation); err == nil {
-				t.Fatalf("locked recovery bypassed %s", guard)
-			}
-			state, err = workflowRead(f.R.WorkspaceRoot, o.RunID)
-			if err == nil && state.Continuation != nil {
-				t.Fatal("rejected recovery published pointer")
-			}
-		})
+			})
+		}
 	}
 }
 

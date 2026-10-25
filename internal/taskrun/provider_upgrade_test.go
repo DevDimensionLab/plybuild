@@ -233,17 +233,16 @@ func TestDeliveryProviderUpgradeRetainsAuthorityAndLiveOwnerGuards(t *testing.T)
 	r := providerUpgradeIncomplete(t, f, o, "stopped")
 	r.Phase, r.EventID = "working", "guarded-working"
 	file := writeAny(t, f.R.WorkspaceRoot, "guarded-working.json", r)
+
 	for name, path := range map[string]string{
-		"context":          o.Paths.Context,
-		"request":          workflowIndex(f.R.WorkspaceRoot, o.RunID),
-		"original_control": f.R.Runtime.PlyExecutable.Path,
-		"current_control":  continued.ControlExecutable.Path,
-		"acceptance":       filepath.Join(o.Paths.RunRoot, "acceptance.json"),
-		"goal":             f.R.Delivery.Goal.Locator,
-		"launch_policy":    f.R.Runtime.PermissionBinding.Evidence[0].Locator,
-		"actual_policy":    filepath.Join(f.R.WorkspaceRoot, "actual-policy.json"),
-		"current_runtime":  in.RuntimeEvidencePath,
-		"herdr":            f.R.Herdr.Executable.Path,
+		"context":         o.Paths.Context,
+		"request":         workflowIndex(f.R.WorkspaceRoot, o.RunID),
+		"acceptance":      filepath.Join(o.Paths.RunRoot, "acceptance.json"),
+		"goal":            f.R.Delivery.Goal.Locator,
+		"launch_policy":   f.R.Runtime.PermissionBinding.Evidence[0].Locator,
+		"actual_policy":   filepath.Join(f.R.WorkspaceRoot, "actual-policy.json"),
+		"current_runtime": in.RuntimeEvidencePath,
+		"herdr":           f.R.Herdr.Executable.Path,
 	} {
 		t.Run(name, func(t *testing.T) {
 			providerUpgradeCorruptFile(t, path, false)
@@ -282,6 +281,31 @@ func TestDeliveryProviderUpgradeRetainsAuthorityAndLiveOwnerGuards(t *testing.T)
 	}
 	if got, err := WorkflowDeliveryReport(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file); err != nil || got.Delivery.Phase != "working" {
 		t.Fatalf("guard fixture has another hidden callback blocker: %+v %v", got, err)
+	}
+	// PV01 already permits ordinary installed CLI callbacks: control paths and
+	// digests are historical bindings, while proof, authority and owner stay
+	// immutable. The unchanged F01 base also accepts these two byte changes.
+	for name, path := range map[string]string{
+		"original_control": f.R.Runtime.PlyExecutable.Path,
+		"current_control":  continued.ControlExecutable.Path,
+	} {
+		t.Run(name, func(t *testing.T) {
+			current, err := WorkflowShow(d, f.R.WorkspaceRoot, o.RunID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			report := r
+			report.EventID, report.PreviousEventSHA256 = "cli-"+name, current.Delivery.LastEventSHA256
+			file := writeAny(t, f.R.WorkspaceRoot, name+"-report.json", report)
+			providerUpgradeCorruptFile(t, path, false)
+			got, err := WorkflowPreviewDeliveryContinuation(previewD, f.R.WorkspaceRoot, in)
+			if err != nil || got.State != "existing" || !equal(got.Proof, continued.Proof) || got.Confirmation != continued.Confirmation {
+				t.Fatalf("CLI-only control change duplicated or blocked continuation: %+v %v", got, err)
+			}
+			if _, err = WorkflowDeliveryReport(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file); err != nil {
+				t.Fatalf("CLI-only control change blocked installed callback: %v", err)
+			}
+		})
 	}
 	providerUpgradeNoRestart(t, f, probe)
 }

@@ -134,8 +134,16 @@ published while its observation was fresh can be adopted after a lost reply,
 without expiring that already-performed transition or overwriting its before
 state. Current immutable evidence and live ownership are still rechecked, and
 intervening reports remain in the current state. Concurrent/repeated calls bind
-one generation and one control. An equivalent current observation reaffirms the
-existing proof for the same control; it does not create another generation.
+one generation and one control. A registered continuation reuses its original
+proof, confirmation, control binding and validated runtime observation after the
+installed CLI changes path or bytes. The archived control need not remain on
+disk. Use ordinary installed `ply` with the original context; stored runtime
+evidence need not be resubmitted when the historical provider launcher is gone.
+An explicitly supplied observation is still validated before returning
+`existing`; equivalent evidence leaves the original binding unchanged. A new
+transition remains available when the registered proof lacks genuinely needed
+runtime evidence. Live ownership, accepted authority, immutable history and
+unknown-effect checks still apply, including after owner resume.
 Requalification retains its original attempt
 key, receipt and exact candidate conditions.
 

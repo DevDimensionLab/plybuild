@@ -251,9 +251,9 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 		if e != nil {
 			return p, e
 		}
-		if prior.ControlExecutable.SHA256 == in.ControlExecutable.SHA256 {
-			p.RuntimeObservation = prior.RuntimeObservation
-		}
+		// The observation belongs to the accepted owner and immutable proof,
+		// independently of the installed reader's path or bytes.
+		p.RuntimeObservation = prior.RuntimeObservation
 	}
 	if p.HistoricalLauncher.State != "present" && p.RuntimeObservation == nil {
 		return p, deliveryContinuityError("runtime_observation_required", "historical provider launcher is "+p.HistoricalLauncher.State+" at "+runtime.Executable.Path+"; continuation requires --runtime-evidence from the original owner observing its current session and unchanged authority; do not restore or substitute the old launcher")
@@ -314,7 +314,7 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 		if err != nil {
 			return p, err
 		}
-		if r.ControlExecutable.SHA256 == in.ControlExecutable.SHA256 && (r.RuntimeObservation != nil || equal(r.RuntimeObservation, p.RuntimeObservation)) {
+		if r.RuntimeObservation != nil || equal(r.RuntimeObservation, p.RuntimeObservation) {
 			p.State, p.Generation, p.Directory, p.ControlExecutable, p.Proof, p.Confirmation = "existing", r.Generation, filepath.Dir(s.Continuation.Locator), r.ControlExecutable, s.Continuation, r.Confirmation
 			p.RuntimeObservation = r.RuntimeObservation
 			p.NextAction = "Continue callbacks with " + "ply" + " and the unchanged --context " + ShellQuote(p.Context.Locator) + "."
