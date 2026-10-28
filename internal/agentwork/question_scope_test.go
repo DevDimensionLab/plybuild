@@ -173,6 +173,11 @@ func TestNativeQuestionHistoryVetoesOnlyItsVerifiedSession(t *testing.T) {
 			rt := &fakeRuntime{agents: []Observation{{Identity: a, Status: "idle", Ready: boolp(true)}, {Identity: bi, Status: "idle", Ready: boolp(true)}}}
 			sent := map[Identity]int{}
 			before := treeSnapshot(t, store)
+			binary, err := os.Executable()
+			if err != nil {
+				t.Fatal(err)
+			}
+			qualifyTestCallback(t, root, binary)
 			s := &Service{Root: root, Now: func() time.Time { return now }, Runtime: rt, Native: func() NativeSnapshot { return readNative(d, root) }, Send: func(i Identity, _ string) error { sent[i]++; return nil }}
 			n := readNative(d, root)
 			if tc.aSent && (!n.Partial || n.CoverageUnknown || !n.VetoCoverageComplete || n.Vetoes[bi.sessionKey()] != "native_question") {

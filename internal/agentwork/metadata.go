@@ -85,10 +85,8 @@ func StatusMetadataContext(parent context.Context, h HerdrRuntime) MetadataReadb
 	return out
 }
 
-// Full AgentWork retains its existing display policy. Public labels additionally
-// meet the narrow contract's UTF-16, format-control and privacy constraints.
 func validPublicTabLabel(label string) bool {
-	if !utf8.ValidString(label) || !plain(label) || strings.ContainsFunc(label, func(r rune) bool {
+	if privateText(label) || !utf8.ValidString(label) || !plain(label) || strings.ContainsFunc(label, func(r rune) bool {
 		return unicode.Is(unicode.Cf, r) || r == '\u2028' || r == '\u2029' || r == '\ufffd'
 	}) {
 		return false

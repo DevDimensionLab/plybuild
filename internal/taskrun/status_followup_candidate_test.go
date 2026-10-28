@@ -1,7 +1,9 @@
 package taskrun
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,10 +33,34 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	if e := os.MkdirAll(binDir, 0700); e != nil {
 		t.Fatal(e)
 	}
+	binary, err := filepath.EvalSymlinks(binary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidateBytes, err := os.ReadFile(binary)
+	if err != nil {
+		t.Fatal(err)
+	}
+	callbackDir := f.R.WorkspaceRoot
+	if err = os.MkdirAll(callbackDir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	pin := map[string]string{"path": binary, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(candidateBytes)), "qualification_ref": "TA2E037F9-candidate-test"}
+	if err = os.WriteFile(filepath.Join(callbackDir, "ply-callback.local.json"), mustJSON(pin), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(binDir, "ply"), []byte("#!/bin/sh\nexit 93\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	promptPath := filepath.Join(binDir, "prompt-text")
+	labelPath := filepath.Join(binDir, "label")
+	if err = os.WriteFile(labelPath, []byte("Actual fixture tab 🌱"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	countPath := filepath.Join(binDir, "prompts")
 	agent := map[string]any{"workspace_id": s.Result.Transport.WorkspaceID, "tab_id": s.Result.Transport.TabID, "pane_id": s.Result.Transport.PaneID, "terminal_id": s.Result.Transport.TerminalID, "agent": "codex", "agent_status": "done", "interactive_ready": true, "agent_session": map[string]string{"agent": "codex", "kind": "id", "value": s.Result.Transport.AgentSessionID}, "title": "synthetic-private-title", "cwd": "/synthetic/private/path", "tokens": map[string]string{"token": "synthetic-private-token"}}
 	a, _ := json.Marshal(agent)
-	script := "#!/usr/bin/env python3\nimport json,sys\na=json.loads(" + string(mustJSON(string(a))) + ")\nu=dict(a);u['pane_id']='unbound-pane';u['terminal_id']='unbound-private-terminal';u['agent_session']={'agent':'codex','kind':'id','value':'unbound-private-session'}\nif sys.argv[1:3]==['agent','list']: r={'type':'agent_list','agents':[a,u]}\nelif sys.argv[1:3]==['tab','list'] and sys.argv[3:]==['--workspace',a['workspace_id']]: r={'tabs':[{'workspace_id':a['workspace_id'],'tab_id':a['tab_id'],'label':'Actual fixture tab 🌱'}]}\nelif sys.argv[1:3]==['agent','get']: r={'type':'agent_info','agent':u if sys.argv[3]=='unbound-pane' else a}\nelif sys.argv[1:3]==['agent','prompt']:\n with open(" + string(mustJSON(countPath)) + ",'a') as f: f.write('one\\n')\n r={'type':'agent_prompted','agent':a}\nelse: sys.exit(2)\nprint(json.dumps({'result':r}))\n"
+	script := "#!/usr/bin/env python3\nimport json,sys\na=json.loads(" + string(mustJSON(string(a))) + ")\nu=dict(a);u['pane_id']='unbound-pane';u['terminal_id']='unbound-private-terminal';u['agent_session']={'agent':'codex','kind':'id','value':'unbound-private-session'}\nif sys.argv[1:3]==['agent','list']: r={'type':'agent_list','agents':[a,u]}\nelif sys.argv[1:3]==['tab','list'] and sys.argv[3:]==['--workspace',a['workspace_id']]: r={'tabs':[{'workspace_id':a['workspace_id'],'tab_id':a['tab_id'],'label':open(" + string(mustJSON(labelPath)) + ").read()}]}\nelif sys.argv[1:3]==['agent','get']: r={'type':'agent_info','agent':u if sys.argv[3]=='unbound-pane' else a}\nelif sys.argv[1:3]==['agent','prompt']:\n with open(" + string(mustJSON(promptPath)) + ",'w') as p: p.write(sys.argv[4])\n with open(" + string(mustJSON(countPath)) + ",'a') as f: f.write('one\\n')\n r={'type':'agent_prompted','agent':a}\nelse: sys.exit(2)\nprint(json.dumps({'result':r}))\n"
 	if e := os.WriteFile(filepath.Join(binDir, "herdr"), []byte(script), 0700); e != nil {
 		t.Fatal(e)
 	}
@@ -83,6 +109,26 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	if work["phase"] != "working" {
 		t.Fatal("completed turn changed native phase", work)
 	}
+	for _, label := range []string{"~/github/repo", "/tmp/build", "/uSeRs/me", "xoxb-value", "xapp-value", "token=value", "password=value", "secret=value", "run 12345678-abcd-abcd-abcd-123456789abc", " ", "bad\nlabel", strings.Repeat("😀", 129)} {
+		if e := os.WriteFile(labelPath, []byte(label), 0600); e != nil {
+			t.Fatal(e)
+		}
+		for _, args := range [][]string{{"workflow", "agents"}, {"workflow", "agents", "--metadata-only"}} {
+			o := run(args...)
+			rows := o["agents"].([]any)
+			if len(rows) != 2 {
+				t.Fatal(o)
+			}
+			for _, entry := range rows {
+				if _, exists := entry.(map[string]any)["tab_label"]; exists {
+					t.Fatalf("private label exported: %q", label)
+				}
+			}
+		}
+	}
+	if e := os.WriteFile(labelPath, []byte("Actual fixture tab 🌱"), 0600); e != nil {
+		t.Fatal(e)
+	}
 	target := row["agent_ref"].(string)
 	write := func(name string, v any) string {
 		t.Helper()
@@ -114,9 +160,47 @@ func TestStatusFollowupCandidateJourney(t *testing.T) {
 	if e != nil || string(b) != "one\n" {
 		t.Fatal("cycle replay", string(b), e)
 	}
+	promptBytes, e := os.ReadFile(promptPath)
+	if e != nil {
+		t.Fatal(e)
+	}
+	commands := strings.Split(string(promptBytes), "`")
+	if len(commands) != 5 || !strings.HasPrefix(commands[1], "'"+binary+"' workflow followup show ") || !strings.HasPrefix(commands[3], "'"+binary+"' workflow followup recheck ") {
+		t.Fatal("callback is not pinned to the candidate", string(promptBytes))
+	}
+	callback := func(command string) ([]byte, error) {
+		c := exec.Command("/bin/sh", "-c", command)
+		c.Dir = f.R.WorkspaceRoot
+		c.Env = append(os.Environ(), "PATH="+binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+		return c.CombinedOutput()
+	}
+	if b, e := callback(commands[1]); e != nil || !json.Valid(b) {
+		t.Fatal("actual show callback", string(b), e)
+	}
 	mutation := map[string]any{"request_id": "fixture-fulfilled", "owner_ref": "fixture-owner", "expected_revision": sent["revision"], "generation": sent["generation"], "target_ref": target, "outcome": "fulfilled", "summary": "Checked actual fixture sources"}
+	mutation["summary"] = "private /Users/fixture"
 	p = write("recheck.json", mutation)
-	done := run("workflow", "followup", "recheck", id, "--file", p)
+	actualCommand := strings.Replace(commands[3], "<mutation.json>", "'"+p+"'", 1)
+	if b, e := callback(actualCommand); e == nil || !strings.Contains(string(b), "followup_invalid_recheck") {
+		t.Fatal("actual new executor did not apply P3", string(b), e)
+	}
+	unchanged := run("workflow", "followup", "show", id)
+	if unchanged["revision"] != sent["revision"] || unchanged["recheck"] != nil {
+		t.Fatal("rejected callback persisted", unchanged)
+	}
+	mutation["summary"] = "Checked actual fixture sources"
+	p = write("recheck.json", mutation)
+	b, e = callback(actualCommand)
+	if e != nil {
+		t.Fatal("corrected callback", string(b), e)
+	}
+	var done map[string]any
+	if e = json.Unmarshal(b, &done); e != nil {
+		t.Fatal(e)
+	}
+	if done["cycle"] != sent["cycle"] || done["transport"].(map[string]any)["state"] != "sent" || len(done["history"].([]any)) != 0 {
+		t.Fatal("fulfilled advanced or rearmed", done)
+	}
 	if done["state"] != "fulfilled" {
 		t.Fatal(done)
 	}

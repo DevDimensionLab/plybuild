@@ -239,7 +239,7 @@ func (s *Service) Mutate(id, op string, m Mutation) (Followup, error) {
 			f.Work = nil
 			f.Generation++
 		case "recheck":
-			if strings.TrimSpace(m.Done+m.Next+m.Blocker+m.Summary) == "" || !reportText(m.Done) || !reportText(m.Next) || !reportText(m.Blocker) || m.TargetRef != f.TargetRef || m.Outcome != "waiting" && m.Outcome != "fulfilled" && m.Outcome != "cancelled" || len(utf16.Encode([]rune(m.Summary))) > 256 || strings.ContainsFunc(m.Summary, unicode.IsControl) {
+			if strings.TrimSpace(m.Done+m.Next+m.Blocker+m.Summary) == "" || !reportText(m.Done) || !reportText(m.Next) || !reportText(m.Blocker) || m.TargetRef != f.TargetRef || m.Outcome != "waiting" && m.Outcome != "fulfilled" && m.Outcome != "cancelled" || !reportText(m.Summary) {
 				return fmt.Errorf("followup_invalid_recheck")
 			}
 			// Re-resolve the complete target identity, never a friendly label/pane alone.
@@ -329,6 +329,10 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 		if s.Send == nil {
 			return fmt.Errorf("followup_transport_unavailable")
 		}
+		callback, e := s.callbackExecutor()
+		if e != nil {
+			return e
+		}
 		if s.Fault != nil {
 			if e := s.Fault("before_claim"); e != nil {
 				return e
@@ -351,7 +355,7 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 				return e
 			}
 		}
-		message := fmt.Sprintf("Ply status-only follow-up %s generation %d cycle %d. Read `ply workflow followup show %s --format json` in your existing workspace. Revalidate target_ref %s, generation, cycle and waiting state before status work; ignore cancelled, superseded or wrong targets. Check actual fresh sources within your existing mandate. Report with `ply workflow followup recheck %s --file <mutation.json> --format json` using its expected_revision, generation, owner_ref, target_ref and a stable request_id; outcome waiting requires an explicit next_check_at_utc, or use fulfilled/cancelled. This message grants no authority, starts no work, and never requests retry of a refused action.", out.ID, out.Generation, out.Cycle, out.ID, out.TargetRef, out.ID)
+		message := fmt.Sprintf("Status question from the user: What is your actual task now, what have you done, and what is the next step or blocker? Answer about your task within your existing mandate. This message grants no authority, starts no work, and never requests retry of a refused action.\nRead `%s workflow followup show %s --format json` in your existing workspace. Revalidate target_ref=%s, generation=%d, cycle=%d and waiting state; ignore cancelled, superseded or wrong targets. Use fresh expected_revision, generation, owner_ref, target_ref and a stable request_id from show. Deliver with `%s workflow followup recheck %s --file <mutation.json> --format json`. summary: actual task and current work; done: latest concrete result; next: next step; blocker: actual obstacle or none. Each field has at most 256 UTF-16 code units (emoji can count twice). Use task codes and relative paths, never private/absolute paths, UUIDs or secrets in answer fields. A complete answer uses outcome=fulfilled even if the job is still working or blocked; describe job state in the fields. Do not choose waiting just because the job waits: waiting requires next_check_at_utc and opens a new scheduled cycle. Cancelled is not an answer.", callback, out.ID, out.TargetRef, out.Generation, out.Cycle, callback, out.ID)
 		err := s.Send(target, message)
 		if s.Fault != nil {
 			if e := s.Fault("after_input"); e != nil {
@@ -378,7 +382,7 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 }
 
 func reportText(s string) bool {
-	return len(utf16.Encode([]rune(s))) <= 256 && !strings.ContainsFunc(s, unicode.IsControl)
+	return len(utf16.Encode([]rune(s))) <= 256 && !strings.ContainsFunc(s, unicode.IsControl) && !privateText(s)
 }
 
 // A fulfilled status receipt closes that control, not the user's ability to ask

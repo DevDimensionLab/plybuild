@@ -117,7 +117,9 @@ func (s *Service) Overview() (Overview, error) {
 		metadata := labels.tabLabels(out.Agents)
 		for i := range out.Agents {
 			a := &out.Agents[i]
-			a.TabLabel = metadata[tabKey{a.Workspace, a.Tab}]
+			if label := metadata[tabKey{a.Workspace, a.Tab}]; validPublicTabLabel(label) {
+				a.TabLabel = label
+			}
 		}
 	}
 	return out, nil

@@ -25,6 +25,11 @@ func fixture(t *testing.T) (*Service, Draft, *atomic.Int32) {
 	s := &Service{Root: root, Now: func() time.Time { return now }, Runtime: rt, Native: func() NativeSnapshot {
 		return NativeSnapshot{Available: true, Bindings: []Binding{{Identity: target, Work: Work{ProjectID: "project-fixture", RepoID: "repo-fixture", EpicID: "epic-fixture", TaskID: "task-fixture", RunID: "run-fixture", AttemptRef: "run-fixture", Phase: "working", NextActor: "agent", NextAction: "continue_delivery", Reason: "Read the registered native action before continuing.", DetailRef: "workflow.trace:task-fixture", Source: "registered", Freshness: "fresh"}, Veto: "clear"}}}
 	}, Send: func(Identity, string) error { calls.Add(1); return nil }}
+	binary, e := os.Executable()
+	if e != nil {
+		t.Fatal(e)
+	}
+	qualifyTestCallback(t, root, binary)
 	d := Draft{PublicationKey: "review/1", OwnerRef: "owner-fixture", MandateRef: "mandate-fixture", Registrar: Registrar{Kind: HumanRequested, ActorRef: "human-fixture"}, TargetRef: target.Ref(), WaitKind: "review", WaitRef: "review-fixture", NextCheckAtUTC: now.Add(time.Minute).Format(time.RFC3339)}
 	return s, d, calls
 }
