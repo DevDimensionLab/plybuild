@@ -215,6 +215,31 @@ func (s *TaskContentStorage) Sync(root, kind, digest string) error {
 	}
 	return platformSyncDirectory(filepath.Join(root, MarkerDirectory))
 }
+
+func (s *TaskContentStorage) retainCloseout(root, origin string, b []byte) (string, error) {
+	digest := digestTaskBytes(b)
+	for _, kind := range []string{"objects", "manifests", "requests"} {
+		if origin != taskContentPath(root, kind, digest) {
+			continue
+		}
+		if err := s.Sync(root, kind, digest); err != nil {
+			return "", err
+		}
+		if err := s.directories(root, "closeout", true); err != nil {
+			return "", err
+		}
+		err := s.check("object-link")
+		if err == nil {
+			err = os.Link(origin, taskContentPath(root, "closeout", digest))
+		}
+		if err == nil {
+			return digest, s.Sync(root, "closeout", digest)
+		}
+		break
+	}
+	return s.Publish(root, "closeout", b)
+}
+
 func contentManifestOperation(kind string) string {
 	switch kind {
 	case "WorkspaceTaskProblemRevision@1":

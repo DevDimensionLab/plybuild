@@ -124,6 +124,9 @@ func qualifiedCLIInstallationWithOptions(d Dependencies, root, id, destination, 
 	if err = validateAutomaticReceipt(s, v, false); err != nil {
 		return out, nil, err
 	}
+	if v.Automatic.CandidateBinarySnapshot.Locator == "" {
+		return out, nil, workflowError(4, "this candidate has no executable artifact to install")
+	}
 	if options.AllowRetainedSource {
 		if err = qualifiedRetainedCLIState(d, s, c, integrated, registry); err != nil {
 			return out, nil, err

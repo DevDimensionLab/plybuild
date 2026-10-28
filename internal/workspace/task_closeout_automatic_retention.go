@@ -82,7 +82,8 @@ func automaticCloseoutSnapshots(r WorkItemRegistry, tr TaskResultRecord) (map[st
 			}
 			executed = executed[3:]
 		}
-		if len(executed) != 2 || executed[0] != "/bin/sh" || executed[1] != receipt.AcceptanceSnapshot.Locator || automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(receipt.AcceptanceSnapshot.Locator), "candidate-executable") {
+		hasBinary := automatic.CandidateBinary != (closeoutSnapshotBinding{}) || automatic.CandidateBinarySnapshot != (closeoutSnapshotBinding{})
+		if len(executed) != 2 || executed[0] != "/bin/sh" || executed[1] != receipt.AcceptanceSnapshot.Locator || hasBinary && automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(receipt.AcceptanceSnapshot.Locator), "candidate-executable") {
 			return nil, fmt.Errorf("automatic retention snapshots differ from the executed invocation")
 		}
 		var review *TaskArtifactRecord
@@ -100,8 +101,13 @@ func automaticCloseoutSnapshots(r WorkItemRegistry, tr TaskResultRecord) (map[st
 			size             int64
 		}{
 			{receipt.Acceptance, receipt.AcceptanceSnapshot, -1},
-			{automatic.CandidateBinary, automatic.CandidateBinarySnapshot, -1},
 			{receipt.Review, closeoutSnapshotBinding{Locator: review.Locator, SHA256: review.SHA256}, review.SizeBytes},
+		}
+		if hasBinary {
+			pairs = append(pairs, struct {
+				origin, snapshot closeoutSnapshotBinding
+				size             int64
+			}{automatic.CandidateBinary, automatic.CandidateBinarySnapshot, -1})
 		}
 		for _, pair := range pairs {
 			origin, snapshot := pair.origin, pair.snapshot

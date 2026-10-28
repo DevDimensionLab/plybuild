@@ -51,7 +51,8 @@ func ValidateAutomaticInstructions(v AutomaticVerificationInstructions, agreemen
 	if agreement == nil || !agreement.AutomaticAcceptance() || !canonicalEqual(bridgeValue(v.Policy), bridgeValue(agreement.Acceptance)) || v.ExpectedExit != 0 {
 		return fmt.Errorf("automatic invocation differs from its frozen acceptance policy")
 	}
-	if !filepath.IsAbs(v.CandidateBinary.Locator) || filepath.Clean(v.CandidateBinary.Locator) != v.CandidateBinary.Locator || !validateDigest(v.CandidateBinary.SHA256) || validatePlainText("executor_claim", v.ExecutorClaim, 1, 256) != nil || validatePlainText("executor_session_id", v.ExecutorSessionID, 1, 256) != nil {
+	hasBinary := v.CandidateBinary != (AutomaticBinaryBinding{}) || v.CandidateBinarySnapshot != (AutomaticBinaryBinding{})
+	if hasBinary && (!filepath.IsAbs(v.CandidateBinary.Locator) || filepath.Clean(v.CandidateBinary.Locator) != v.CandidateBinary.Locator || !validateDigest(v.CandidateBinary.SHA256)) || validatePlainText("executor_claim", v.ExecutorClaim, 1, 256) != nil || validatePlainText("executor_session_id", v.ExecutorSessionID, 1, 256) != nil {
 		return fmt.Errorf("automatic invocation lacks an exact candidate binary or actual executor identity")
 	}
 	executed := v.ExecutedArgv
@@ -62,7 +63,7 @@ func ValidateAutomaticInstructions(v AutomaticVerificationInstructions, agreemen
 		}
 		executed = executed[3:]
 	}
-	if !filepath.IsAbs(v.CandidateBinarySnapshot.Locator) || filepath.Clean(v.CandidateBinarySnapshot.Locator) != v.CandidateBinarySnapshot.Locator || v.CandidateBinarySnapshot.SHA256 != v.CandidateBinary.SHA256 || len(executed) != 2 || executed[0] != "/bin/sh" || !filepath.IsAbs(executed[1]) {
+	if hasBinary && (!filepath.IsAbs(v.CandidateBinarySnapshot.Locator) || filepath.Clean(v.CandidateBinarySnapshot.Locator) != v.CandidateBinarySnapshot.Locator || v.CandidateBinarySnapshot.SHA256 != v.CandidateBinary.SHA256) || len(executed) != 2 || executed[0] != "/bin/sh" || !filepath.IsAbs(executed[1]) {
 		return fmt.Errorf("automatic execution requires the preserved script and candidate binary snapshots")
 	}
 	if len(v.Environment) == 0 || !slices.IsSorted(v.Environment) {
@@ -81,7 +82,13 @@ func ValidateAutomaticInstructions(v AutomaticVerificationInstructions, agreemen
 		}
 		seen[key] = true
 	}
-	for _, entry := range []string{"PLY_CANDIDATE_BINARY=" + v.CandidateBinarySnapshot.Locator, "PLY_CANDIDATE_OID=" + oid, "PLY_CANDIDATE_TREE=" + tree} {
+	required := []string{"PLY_CANDIDATE_OID=" + oid, "PLY_CANDIDATE_TREE=" + tree}
+	if hasBinary {
+		required = append(required, "PLY_CANDIDATE_BINARY="+v.CandidateBinarySnapshot.Locator)
+	} else if seen["PLY_CANDIDATE_BINARY"] {
+		return fmt.Errorf("automatic environment names a candidate binary without its binding")
+	}
+	for _, entry := range required {
 		if !slices.Contains(v.Environment, entry) {
 			return fmt.Errorf("automatic environment differs from candidate binding")
 		}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	log "github.com/sirupsen/logrus"
 )
 
 // DeliveryCandidateInput contains observations from the delivery runtime's actual
@@ -346,6 +347,15 @@ func QualifyDeliveryCandidate(d Dependencies, in DeliveryCandidateInput) (Delive
 		return out, e
 	}
 	out.TaskResult = recorded.Record
+	var cleanupError error
+	for _, a := range artifactInputs {
+		if err := d.Files.Remove(filepath.Join(staging, a.id)); err != nil && !os.IsNotExist(err) && cleanupError == nil {
+			cleanupError = err
+		}
+	}
+	if cleanupError != nil {
+		log.WithError(cleanupError).Warn("Published candidate staging cleanup incomplete")
+	}
 	return out, nil
 }
 
@@ -448,9 +458,11 @@ func validateDeliveryVerification(files FileSystem, raw []byte, in DeliveryCandi
 				return nil, fmt.Errorf("automatic sandbox policy differs from its preserved binding")
 			}
 		}
-		binary, err := deliveryReadFile(files, instructions.CandidateBinarySnapshot.Locator, AutomaticCandidateBinaryLimit)
-		if err != nil || digestBytes(binary) != instructions.CandidateBinarySnapshot.SHA256 {
-			return nil, fmt.Errorf("automatic candidate binary changed or is unavailable: %v", err)
+		if instructions.CandidateBinarySnapshot.Locator != "" {
+			binary, err := deliveryReadFile(files, instructions.CandidateBinarySnapshot.Locator, AutomaticCandidateBinaryLimit)
+			if err != nil || digestBytes(binary) != instructions.CandidateBinarySnapshot.SHA256 {
+				return nil, fmt.Errorf("automatic candidate binary changed or is unavailable: %v", err)
+			}
 		}
 	}
 	b, e := deliveryReadFile(files, objectMapString(s, "locator"), 4<<20)

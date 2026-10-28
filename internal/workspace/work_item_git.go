@@ -309,7 +309,10 @@ func parseWorktreeInventory(output []byte, files FileSystem) ([]GitWorktreeInven
 		}
 		physical, err := canonicalDirectory(files, "", current.Locator, "Git worktree inventory path")
 		if err != nil {
-			return err
+			if !current.Prunable || !errors.Is(err, os.ErrNotExist) || !validStoredPath(current.Locator) {
+				return err
+			}
+			physical = current.Locator
 		}
 		current.Locator = physical
 		entries = append(entries, *current)

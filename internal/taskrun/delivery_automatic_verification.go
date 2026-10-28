@@ -100,24 +100,28 @@ func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deli
 		}
 		return nil
 	}
-	if !filepath.IsAbs(binary) {
-		return workflowError(4, "automatic acceptance is blocked: --candidate-binary must name the built private candidate executable")
+	var binaryBytes []byte
+	var binding FileBinding
+	if binary != "" {
+		if !filepath.IsAbs(binary) {
+			return workflowError(4, "automatic acceptance is blocked: --candidate-binary must name the built private candidate executable")
+		}
+		if err := physical(binary, true); err != nil {
+			return err
+		}
+		info, err := os.Stat(binary)
+		if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
+			return workflowError(4, "automatic acceptance is blocked: candidate binary is missing or not executable")
+		}
+		if info.Size() > workflowhandoff.AutomaticCandidateBinaryLimit {
+			return workflowError(4, "automatic acceptance is blocked: candidate binary exceeds the 64 MiB native evidence limit")
+		}
+		binaryBytes, err = readFile(binary, workflowhandoff.AutomaticCandidateBinaryLimit, false)
+		if err != nil {
+			return err
+		}
+		binding = FileBinding{Locator: binary, SHA256: hash(binaryBytes)}
 	}
-	if err := physical(binary, true); err != nil {
-		return err
-	}
-	info, err := os.Stat(binary)
-	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
-		return workflowError(4, "automatic acceptance is blocked: candidate binary is missing or not executable")
-	}
-	if info.Size() > workflowhandoff.AutomaticCandidateBinaryLimit {
-		return workflowError(4, "automatic acceptance is blocked: candidate binary exceeds the 64 MiB native evidence limit")
-	}
-	binaryBytes, err := readFile(binary, workflowhandoff.AutomaticCandidateBinaryLimit, false)
-	if err != nil {
-		return err
-	}
-	binding := FileBinding{Locator: binary, SHA256: hash(binaryBytes)}
 	if err := privateDir(filepath.Join(path, "home")); err != nil {
 		return err
 	}
@@ -130,21 +134,27 @@ func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deli
 			_ = os.RemoveAll(scratch)
 		}
 	}()
-	binarySnapshot := filepath.Join(path, "candidate-executable")
-	if err := d.writeOnce(binarySnapshot, binaryBytes); err != nil {
-		return err
-	}
-	if err := os.Chmod(binarySnapshot, 0700); err != nil {
-		return err
+	binarySnapshot := ""
+	if binary != "" {
+		binarySnapshot = filepath.Join(path, "candidate-executable")
+		if err := d.writeOnce(binarySnapshot, binaryBytes); err != nil {
+			return err
+		}
+		if err := os.Chmod(binarySnapshot, 0700); err != nil {
+			return err
+		}
 	}
 	v := &workflowhandoff.AutomaticVerificationInstructions{
 		Policy:                  *a.Acceptance,
 		CandidateBinary:         workflowhandoff.AutomaticBinaryBinding{Locator: binding.Locator, SHA256: binding.SHA256},
 		CandidateBinarySnapshot: workflowhandoff.AutomaticBinaryBinding{Locator: binarySnapshot, SHA256: binding.SHA256},
 		ExecutedArgv:            []string{"/bin/sh", receipt.AcceptanceSnapshot.Locator},
-		Environment:             []string{"HOME=" + filepath.Join(path, "home"), "TMPDIR=" + scratch, "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_BINARY=" + binarySnapshot, "PLY_CANDIDATE_OID=" + receipt.CandidateOID, "PLY_CANDIDATE_TREE=" + receipt.CandidateTree},
+		Environment:             []string{"HOME=" + filepath.Join(path, "home"), "TMPDIR=" + scratch, "PATH=" + os.Getenv("PATH"), "LC_ALL=C", "PLY_CANDIDATE_OID=" + receipt.CandidateOID, "PLY_CANDIDATE_TREE=" + receipt.CandidateTree},
 		ExecutorClaim:           s.Request.Runtime.Provider + " / " + s.Request.Delivery.OwnerClaim,
 		ExecutorSessionID:       deliveryOwnerSession(s), ExpectedExit: 0,
+	}
+	if binary != "" {
+		v.Environment = append(v.Environment, "PLY_CANDIDATE_BINARY="+binarySnapshot)
 	}
 	if headlessRun(s.Request) {
 		policy, err := workerVerifierPolicy(d, s, path, scratch)
@@ -188,7 +198,8 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 	if r.Automatic.ExecutorSessionID != deliveryOwnerSession(s) || r.Acceptance.Locator != s.Request.Delivery.AcceptancePath || r.CWD != s.Observed.Target.WorktreeLocator || r.Acceptance.SHA256 != r.AcceptanceSnapshot.SHA256 {
 		return workflowError(4, "automatic acceptance differs from its actual owner or frozen entrypoint")
 	}
-	if r.Automatic.ExecutedArgv[len(r.Automatic.ExecutedArgv)-1] != r.AcceptanceSnapshot.Locator || r.Automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(r.AcceptanceSnapshot.Locator), "candidate-executable") {
+	hasBinary := r.Automatic.CandidateBinarySnapshot.Locator != ""
+	if r.Automatic.ExecutedArgv[len(r.Automatic.ExecutedArgv)-1] != r.AcceptanceSnapshot.Locator || hasBinary && r.Automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(r.AcceptanceSnapshot.Locator), "candidate-executable") {
 		return workflowError(4, "automatic execution snapshots differ from the reserved attempt")
 	}
 	if headlessRun(s.Request) && r.Automatic.SandboxPolicy == nil {
@@ -202,8 +213,10 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 	if err := workerValidateReview(s, r.Review, r.CandidateOID, r.CandidateTree); err != nil {
 		return err
 	}
-	if _, err := workflowBound(FileBinding{Locator: r.Automatic.CandidateBinarySnapshot.Locator, SHA256: r.Automatic.CandidateBinarySnapshot.SHA256}, workflowhandoff.AutomaticCandidateBinaryLimit); err != nil {
-		return err
+	if hasBinary {
+		if _, err := workflowBound(FileBinding{Locator: r.Automatic.CandidateBinarySnapshot.Locator, SHA256: r.Automatic.CandidateBinarySnapshot.SHA256}, workflowhandoff.AutomaticCandidateBinaryLimit); err != nil {
+			return err
+		}
 	}
 	if live {
 		if _, err := inputBound(r.Acceptance, inputAcceptance, 256<<20); err != nil {
@@ -212,9 +225,11 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 		if _, err := inputBound(r.Review, inputCandidateReview, 256<<20); err != nil {
 			return fmt.Errorf("automatic acceptance input changed: %w", err)
 		}
-		raw, err := readFile(r.Automatic.CandidateBinary.Locator, workflowhandoff.AutomaticCandidateBinaryLimit, false)
-		if err != nil || hash(raw) != r.Automatic.CandidateBinary.SHA256 {
-			return workflowError(4, "automatic acceptance candidate binary changed or is unavailable")
+		if hasBinary {
+			raw, err := readFile(r.Automatic.CandidateBinary.Locator, workflowhandoff.AutomaticCandidateBinaryLimit, false)
+			if err != nil || hash(raw) != r.Automatic.CandidateBinary.SHA256 {
+				return workflowError(4, "automatic acceptance candidate binary changed or is unavailable")
+			}
 		}
 	}
 	return nil

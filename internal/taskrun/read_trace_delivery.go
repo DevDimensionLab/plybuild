@@ -335,7 +335,7 @@ func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, ca
 			e.Sources = append(e.Sources, input)
 		}
 	}
-	if v.Automatic != nil {
+	if v.Automatic != nil && v.Automatic.CandidateBinarySnapshot.Locator != "" {
 		input := FileBinding{v.Automatic.CandidateBinarySnapshot.Locator, v.Automatic.CandidateBinarySnapshot.SHA256}
 		if _, err := r.bound(input, 256<<20); err != nil || input.Locator != filepath.Join(path, "candidate-executable") {
 			vp.InputsBound = false

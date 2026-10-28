@@ -338,13 +338,6 @@ func collectCloseoutRetention(d Dependencies, root string, r WorkItemRegistry, t
 			return nil, err
 		}
 	}
-	// Preserve the exact native registry bytes, including TaskResult, QA, Spec
-	// references and integration history. No signed or hashed facts are rewritten.
-	registry, err := contentReadBounded(workItemsPath(root), closeoutEvidenceLimit, false)
-	if err != nil {
-		return nil, err
-	}
-	entries = append(entries, closeoutEvidence{"native_registry", workItemsPath(root), digestTaskBytes(registry), registry})
 	sort.Slice(entries, func(i, j int) bool {
 		if entries[i].origin != entries[j].origin {
 			return entries[i].origin < entries[j].origin
@@ -363,7 +356,7 @@ func retainCloseoutEvidence(d Dependencies, root string, p TaskCloseoutPlan, ent
 		return m, fmt.Errorf("retention store is inside source")
 	}
 	for _, e := range entries {
-		sha, err := d.TaskContent.Publish(root, "closeout", e.bytes)
+		sha, err := d.TaskContent.retainCloseout(root, e.origin, e.bytes)
 		if err != nil {
 			return m, err
 		}

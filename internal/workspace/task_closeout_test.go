@@ -113,8 +113,21 @@ func TestTaskCloseoutPreviewAndApplyRequireDifferentIntegrationPhases(t *testing
 			t.Fatalf("retired source misclassified: %v", readback.Reasons)
 		}
 	}
-	if receipt.Retention == nil || len(receipt.Retention.Entries) < 7 {
+	if receipt.Retention == nil {
 		t.Fatalf("incomplete retention: %+v", receipt.Retention)
+	}
+	origins := map[string]bool{}
+	for _, entry := range receipt.Retention.Entries {
+		origins[entry.OriginLocator] = true
+	}
+	for _, path := range []string{
+		filepath.Join(f.root, "handoff"), filepath.Join(f.root, "start"),
+		filepath.Join(f.root, "terminal"), filepath.Join(f.root, "owner-release"),
+		filepath.Join(f.taskPath, "result.txt"), filepath.Join(f.root, "qa-report.txt"),
+	} {
+		if !origins[path] {
+			t.Fatalf("required closeout evidence was not retained: %s", path)
+		}
 	}
 	retained, err := ReadTaskRetainedEvidence(f.root, "task", filepath.Join(f.taskPath, "result.txt"), digestTaskBytes([]byte("result\n")))
 	if err != nil || string(retained) != "result\n" {
