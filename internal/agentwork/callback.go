@@ -35,13 +35,22 @@ func (s *Service) callbackExecutor() (string, error) {
 	if taskrun.PhysicalPath(q.Path) != nil {
 		return "", invalid
 	}
-	f, err := os.Open(q.Path)
+	before, err := os.Lstat(q.Path)
+	if err != nil || !before.Mode().IsRegular() || before.Mode().Perm()&0111 == 0 {
+		return "", invalid
+	}
+	if s.Fault != nil {
+		if err = s.Fault("before_callback_open"); err != nil {
+			return "", err
+		}
+	}
+	f, err := openCallbackExecutable(q.Path)
 	if err != nil {
 		return "", invalid
 	}
 	defer f.Close()
 	info, err := f.Stat()
-	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
+	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 || !os.SameFile(before, info) {
 		return "", invalid
 	}
 	digest := sha256.New()
