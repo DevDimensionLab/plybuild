@@ -39,59 +39,6 @@ func (s inventoryWorkflowState) state() workflowState {
 	return out
 }
 
-type inventoryRecoveryRecord struct {
-	Kind                   string                    `json:"kind"`
-	SchemaVersion          int                       `json:"schema_version"`
-	RunID                  string                    `json:"run_id"`
-	RequestSHA256          string                    `json:"request_sha256"`
-	BeforeState            FileBinding               `json:"before_state"`
-	SourceControl          Executable                `json:"source_control"`
-	ProviderExecutable     Executable                `json:"provider_executable"`
-	ControlExecutable      Executable                `json:"control_executable"`
-	Context                FileBinding               `json:"context"`
-	ExitEvidence           *inventoryStartupExit     `json:"exit_evidence,omitempty"`
-	Confirmation           string                    `json:"confirmation"`
-	RecordedAtUTC          string                    `json:"recorded_at_utc"`
-	Generation             int                       `json:"generation,omitempty"`
-	TransportMode          string                    `json:"transport_mode,omitempty"`
-	DestinationWorkspaceID string                    `json:"destination_workspace_id,omitempty"`
-	AbsentTransport        *inventoryAbsentTransport `json:"absent_transport,omitempty"`
-}
-
-type inventoryStartupExit struct {
-	WorkspaceID              string `json:"workspace_id"`
-	TabID                    string `json:"tab_id"`
-	PaneID                   string `json:"pane_id"`
-	TerminalID               string `json:"terminal_id"`
-	CWD                      string `json:"cwd"`
-	ShellPID                 int    `json:"shell_pid"`
-	ForegroundProcessGroupID int    `json:"foreground_process_group_id"`
-	ShellName                string `json:"shell_name"`
-	ProcessTree              []struct {
-		PID            int `json:"pid"`
-		ParentPID      int `json:"parent_pid"`
-		ProcessGroupID int `json:"process_group_id"`
-	} `json:"process_tree"`
-	ManagedAgentState string `json:"managed_agent_state,omitempty"`
-}
-
-type inventoryAbsentTransport struct {
-	Transport       WorkflowTransport `json:"transport"`
-	PaneState       string            `json:"pane_state"`
-	TerminalState   string            `json:"terminal_state"`
-	InventorySHA256 string            `json:"inventory_sha256"`
-	ProcessLiveness string            `json:"process_liveness"`
-	TaskAuthority   string            `json:"task_authority"`
-}
-
-type inventoryRecoveryTransport struct {
-	WorkspaceID string `json:"workspace_id"`
-	TabID       string `json:"tab_id"`
-	PaneID      string `json:"pane_id"`
-	TerminalID  string `json:"terminal_id"`
-	CWD         string `json:"cwd"`
-}
-
 type inventoryCapturedSource struct {
 	binding FileBinding
 	bytes   []byte
@@ -124,15 +71,11 @@ func readInventoryRecovery(s inventoryWorkflowState) (sources []inventoryCapture
 	if err != nil {
 		return sources, err
 	}
-	var record inventoryRecoveryRecord
+	var record deliveryStartRecoveryRecord
 	if err = decode(raw, 1<<20, &record); err != nil {
 		return sources, err
 	}
-	generation := record.Generation
-	if generation == 0 {
-		generation = 1
-	}
-	if record.Kind != "PlyDeliveryStartupRecovery@1" || record.SchemaVersion != 1 || generation != metadata.Generation || record.RunID != s.Result.RunID || record.RequestSHA256 != s.Result.RequestSHA256 || record.BeforeState.Locator != filepath.Join(dir, "before-state.json") || record.ControlExecutable.Path != filepath.Join(dir, "ply-control") || record.Context.Locator != filepath.Join(dir, "context.json") || record.Context.Locator != s.Result.Paths.Context || record.Context.SHA256 != s.ContextSHA256 || !digestPattern.MatchString(record.Confirmation) {
+	if record.Kind != "PlyDeliveryStartupRecovery@1" || record.SchemaVersion != 1 || record.Generation != metadata.Generation || record.RunID != s.Result.RunID || record.RequestSHA256 != s.Result.RequestSHA256 || record.ControlExecutable.Path != filepath.Join(dir, "ply-control") || record.Context.Locator != filepath.Join(dir, "context.json") || record.Context.Locator != s.Result.Paths.Context || record.Context.SHA256 != s.ContextSHA256 || !digestPattern.MatchString(record.Confirmation) {
 		return sources, integrity("startup recovery source identity differs from its preserved run")
 	}
 	if _, err = parseInventoryTime(record.RecordedAtUTC); err != nil {
@@ -146,32 +89,12 @@ func readInventoryRecovery(s inventoryWorkflowState) (sources []inventoryCapture
 	if record.SourceControl.SHA256 != record.ControlExecutable.SHA256 || metadata.OriginalProviderExecutable != s.Request.Runtime.Executable || metadata.OriginalControlExecutable != s.Request.Runtime.PlyExecutable || metadata.ProviderExecutable != record.ProviderExecutable || metadata.ControlExecutable != record.ControlExecutable || metadata.TransportMode != record.TransportMode || !equal(metadata.ReplacementTransport, s.RecoveryTransport) {
 		return sources, integrity("startup recovery readback differs from its bound record")
 	}
-	before, err := readSource(record.BeforeState, 8<<20)
-	if err != nil {
-		return sources, err
+	previousTransport := record.PreviousTransport
+	if record.AbsentTransport != nil {
+		previousTransport = &record.AbsentTransport.Transport
 	}
-	var old inventoryWorkflowState
-	if err = decode(before, 8<<20, &old); err != nil {
-		return sources, err
-	}
-	previousGeneration := 0
-	if old.Recovery != nil {
-		if old.Result.StartupRecovery == nil || old.Result.StartupRecovery.Binding != *old.Recovery {
-			return sources, integrity("previous startup recovery generation has no matching binding")
-		}
-		previousGeneration = old.Result.StartupRecovery.Generation
-	} else if old.Result.StartupRecovery != nil || old.RecoveryTransport != nil {
-		return sources, integrity("previous startup recovery metadata has no source")
-	}
-	if previousGeneration != metadata.Generation-1 || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.RunID != s.Result.RunID || old.Result.RequestSHA256 != s.Result.RequestSHA256 || old.Result.SessionID != s.Result.SessionID || old.Result.Handoff != s.Result.Handoff {
-		return sources, integrity("startup recovery before-state differs from its preserved run")
-	}
-	var previousTransport *WorkflowTransport
-	if record.TransportMode != "" {
-		previousTransport = &old.Result.Transport
-	}
-	if !equal(metadata.OriginalTransport, previousTransport) {
-		return sources, integrity("startup recovery original transport differs from before-state")
+	if previousTransport == nil || !equal(metadata.OriginalTransport, previousTransport) {
+		return sources, integrity("startup recovery original transport differs from its record")
 	}
 	context, err := readSource(record.Context, 1<<20)
 	if err != nil {
@@ -184,18 +107,15 @@ func readInventoryRecovery(s inventoryWorkflowState) (sources []inventoryCapture
 	if claim.Envelope != workflowEnv("run-context") || claim.RunID != s.Result.RunID || claim.RequestSHA256 != s.Result.RequestSHA256 || claim.SessionID != s.Result.SessionID || claim.HandoffSHA256 != s.Result.Handoff.SHA256 || claim.PlyExecutable != record.ControlExecutable {
 		return sources, integrity("startup recovery context differs from its run binding")
 	}
-	identity := func(t WorkflowTransport) inventoryRecoveryTransport {
-		return inventoryRecoveryTransport{WorkspaceID: t.WorkspaceID, TabID: t.TabID, PaneID: t.PaneID, TerminalID: t.TerminalID}
-	}
-	previous, current := identity(old.Result.Transport), identity(s.Result.Transport)
+	previous, current := deliveryTransportIdentity(*previousTransport), deliveryTransportIdentity(s.Result.Transport)
 	switch record.TransportMode {
-	case "", "reuse_terminal":
-		if record.ExitEvidence == nil || record.AbsentTransport != nil || s.RecoveryTransport != nil || previous != current {
+	case deliveryRecoveryReuseTerminal:
+		if record.ExitEvidence == nil || record.PreviousTransport == nil || record.AbsentTransport != nil || s.RecoveryTransport != nil || previous != current || previous.WorkspaceID != record.ExitEvidence.WorkspaceID || previous.TabID != record.ExitEvidence.TabID || previous.PaneID != record.ExitEvidence.PaneID || previous.TerminalID != record.ExitEvidence.TerminalID || record.ExitEvidence.CWD != s.Observed.Target.WorktreeLocator {
 			return sources, integrity("startup recovery reused transport differs from its record")
 		}
-	case "replace_missing_terminal":
+	case deliveryRecoveryReplaceTerminal:
 		absent := record.AbsentTransport
-		if record.ExitEvidence != nil || absent == nil || !equal(absent.Transport, old.Result.Transport) || absent.PaneState != "not_found" || absent.TerminalState != "absent_from_all_panes" || absent.ProcessLiveness != "unknown" || absent.TaskAuthority != "not_issued" || !digestPattern.MatchString(absent.InventorySHA256) || !plain(record.DestinationWorkspaceID, 1, 128) {
+		if record.ExitEvidence != nil || record.PreviousTransport != nil || absent == nil || absent.PaneState != "not_found" || absent.TerminalState != "absent_from_all_panes" || absent.ProcessLiveness != "unknown" || absent.TaskAuthority != "not_issued" || !digestPattern.MatchString(absent.InventorySHA256) || !plain(record.DestinationWorkspaceID, 1, 128) {
 			return sources, integrity("startup recovery replacement transport has no matching recorded absence")
 		}
 		if s.RecoveryTransport == nil {
@@ -211,7 +131,7 @@ func readInventoryRecovery(s inventoryWorkflowState) (sources []inventoryCapture
 		if err != nil {
 			return sources, err
 		}
-		var transport inventoryRecoveryTransport
+		var transport deliveryRecoveryTransport
 		if err = decode(raw, 1<<20, &transport); err != nil {
 			return sources, err
 		}

@@ -163,10 +163,6 @@
               "sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
             },
             {
-              "locator": "/work/.ply/workflow-runs/runs/wfr_1111111111111111111111111111111111111111111111111111111111111111/startup-recovery/001/before-state.json",
-              "sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
-            },
-            {
               "locator": "/work/.ply/workflow-runs/runs/wfr_1111111111111111111111111111111111111111111111111111111111111111/startup-recovery/001/context.json",
               "sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444"
             },

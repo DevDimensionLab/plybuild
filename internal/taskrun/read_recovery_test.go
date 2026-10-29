@@ -17,10 +17,7 @@ func deliveryInventoryRecovery(t *testing.T, f deliveryFixture) (workflowState, 
 	// reservation. This fixture is readable by both native and history readers.
 	s.Phase = "bootstrap_attempted"
 	dir := filepath.Join(s.Result.Paths.RunRoot, "startup-recovery", "001")
-	before, err := workflowKeep(f.D, filepath.Join(dir, "before-state.json"), s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	s.Result.Transport.AgentSessionID, s.Result.Transport.ObservedAt, s.Result.Transport.LaunchPending = "prior-session", "2026-10-06T09:00:00Z", ptr(true)
 	previousTransport := s.Result.Transport
 	provider := Executable{Path: filepath.Join(f.R.WorkspaceRoot, "removed-provider"), SHA256: hash([]byte("historical provider"))}
 	control := Executable{Path: filepath.Join(dir, "ply-control"), SHA256: hash([]byte("historical control"))}
@@ -36,7 +33,7 @@ func deliveryInventoryRecovery(t *testing.T, f deliveryFixture) (workflowState, 
 	}
 	record, err := workflowKeep(f.D, filepath.Join(dir, "recovery.json"), map[string]any{
 		"kind": "PlyDeliveryStartupRecovery@1", "schema_version": 1, "generation": 1, "run_id": s.Result.RunID, "request_sha256": s.Result.RequestSHA256,
-		"before_state": before, "source_control": control, "provider_executable": provider, "control_executable": control, "context": contextBinding, "confirmation": hash([]byte("historical confirmation")), "recorded_at_utc": "2026-10-06T10:00:00Z", "transport_mode": "replace_missing_terminal", "destination_workspace_id": s.Result.Transport.WorkspaceID,
+		"source_control": control, "provider_executable": provider, "control_executable": control, "context": contextBinding, "confirmation": hash([]byte("historical confirmation")), "recorded_at_utc": "2026-10-06T10:00:00Z", "transport_mode": "replace_missing_terminal", "destination_workspace_id": s.Result.Transport.WorkspaceID,
 		"absent_transport": map[string]any{"transport": previousTransport, "pane_state": "not_found", "terminal_state": "absent_from_all_panes", "inventory_sha256": hash([]byte("historical transport inventory")), "process_liveness": "unknown", "task_authority": "not_issued"},
 	})
 	if err != nil {
@@ -82,7 +79,7 @@ func TestReadInventoryPreservesDeliveryReportAfterBoundStartupRecovery(t *testin
 	if row.StartupRecovery == nil || row.StartupRecovery.Generation != 1 || row.StartupRecovery.ProviderExecutable.Path != filepath.Join(f.R.WorkspaceRoot, "removed-provider") || row.StartupRecovery.ReplacementTransport == nil {
 		t.Fatalf("bound recovery metadata was not preserved: %+v", row.StartupRecovery)
 	}
-	for _, name := range []string{"recovery.json", "before-state.json", "context.json", "transport.json"} {
+	for _, name := range []string{"recovery.json", "context.json", "transport.json"} {
 		found := false
 		for _, source := range row.Sources {
 			found = found || filepath.Base(source.Locator) == name
@@ -155,5 +152,74 @@ func TestReadInventoryRejectsUnknownOrUnboundRecoveryMetadata(t *testing.T) {
 				t.Fatalf("%s weakened strict source identity checks: %+v delivery=%+v", condition, row, row.Delivery)
 			}
 		})
+	}
+}
+
+func TestReadRecoveryRequiresCurrentContextAndTransportEvidence(t *testing.T) {
+	f := newDeliveryFixture(t, "codex")
+	base, value := deliveryInventoryRecovery(t, f)
+	stateBytes, _ := Canonical(value)
+	recordBytes, err := workflowBound(value["startup_recovery"].(FileBinding), 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	contextBytes, err := os.ReadFile(base.Result.Paths.Context)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, mode := range []string{deliveryRecoveryReuseTerminal, deliveryRecoveryReplaceTerminal} {
+		for _, change := range []string{"valid", "mode", "generation", "missing_previous", "both_previous", "exit_identity", "run_id", "request_sha256", "session_id", "handoff_sha256", "ply_executable"} {
+			t.Run(mode+"/"+change, func(t *testing.T) {
+				var s workflowState
+				var r deliveryStartRecoveryRecord
+				var context map[string]any
+				if decode(stateBytes, 8<<20, &s) != nil || decode(recordBytes, 1<<20, &r) != nil || json.Unmarshal(contextBytes, &context) != nil {
+					t.Fatal("invalid fixture")
+				}
+				absent := *r.AbsentTransport
+				previous := absent.Transport
+				exit := &DeliveryStartupExitEvidence{WorkspaceID: previous.WorkspaceID, TabID: previous.TabID, PaneID: previous.PaneID, TerminalID: previous.TerminalID, CWD: s.Observed.Target.WorktreeLocator, ProcessTree: []StartupProcess{}}
+				r.TransportMode = mode
+				if mode == deliveryRecoveryReuseTerminal {
+					r.PreviousTransport, r.AbsentTransport, s.RecoveryTransport = &previous, nil, nil
+					s.Result.Transport = previous
+					r.ExitEvidence = exit
+				}
+				switch change {
+				case "valid":
+				case "mode":
+					r.TransportMode = ""
+				case "generation":
+					r.Generation = 0
+				case "missing_previous":
+					r.PreviousTransport, r.AbsentTransport = nil, nil
+				case "both_previous":
+					r.PreviousTransport, r.AbsentTransport = &previous, &absent
+				case "exit_identity":
+					r.ExitEvidence = exit
+					exit.TerminalID = "another-terminal"
+				case "ply_executable":
+					context[change] = Executable{Path: "/different-control", SHA256: r.ControlExecutable.SHA256}
+				default:
+					context[change] = "different-context-binding"
+				}
+				writeAny(t, filepath.Dir(r.Context.Locator), "context.json", context)
+				r.Context.SHA256 = hashFileTest(t, r.Context.Locator)
+				s.ContextSHA256 = r.Context.SHA256
+				writeAny(t, filepath.Dir(s.Recovery.Locator), "recovery.json", r)
+				s.Recovery.SHA256 = hashFileTest(t, s.Recovery.Locator)
+				s.Result.StartupRecovery = ptr(deliveryRecoveryReadback(s, r))
+				raw, _ := Canonical(s)
+				var historical inventoryWorkflowState
+				if err := decode(raw, 8<<20, &historical); err != nil {
+					t.Fatal(err)
+				}
+				_, nativeErr := workflowRecoveryRecord(s)
+				_, historyErr := readInventoryRecovery(historical)
+				if (nativeErr == nil) != (change == "valid") || (historyErr == nil) != (change == "valid") {
+					t.Fatalf("native=%v history=%v", nativeErr, historyErr)
+				}
+			})
+		}
 	}
 }

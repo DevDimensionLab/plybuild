@@ -68,9 +68,28 @@ func TestDeliveryClosedTransportPreservesRunAndStartsOneNewTab(t *testing.T) {
 	if err != nil || o.Transport.TerminalID == original.Transport.TerminalID || o.StartupRecovery == nil || o.StartupRecovery.ReplacementTransport == nil {
 		t.Fatalf("new transport was not bound: %+v, %v", o.StartupRecovery, err)
 	}
-	if o.RunID != original.RunID || o.RequestSHA256 != original.RequestSHA256 || o.Handoff != original.Handoff {
-		t.Fatal("replacement changed Task ownership")
+	if _, err := os.Stat(filepath.Join(p.RecoveryDirectory, "before-state.json")); !os.IsNotExist(err) {
+		t.Fatalf("recovery retained a full before-state: %v", err)
 	}
+	if o.RunID != original.RunID || o.RequestSHA256 != original.RequestSHA256 || o.Handoff != original.Handoff || !equal(o.StartupRecovery.OriginalTransport, &p.AbsentTransport.Transport) {
+		t.Fatal("replacement changed Task ownership or historical transport")
+	}
+	if binary := os.Getenv("PLY_RECOVERY_TEST_BINARY"); binary != "" {
+		shown, output, err := cleanupCLIAt(binary, f.Parent, "execute", "show", o.RunID)
+		if err != nil || shown.RunID != o.RunID || !equal(shown.StartupRecovery, o.StartupRecovery) {
+			t.Fatalf("binary recovery readback: %v\n%s", err, output)
+		}
+	}
+	if row := readHerdrInventoryRun(f.D, f.R.WorkspaceRoot, o.RunID); row.StartupRecovery == nil || hasInventoryReason(row, "delivery_state_unavailable") || traceReason(traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID), "trace_recovery_unavailable") {
+		t.Fatalf("recovery history unavailable: %+v", row)
+	}
+	files, size := 0, 0
+	for path, raw := range deliveryRecoveryFiles(t, p.RecoveryDirectory) {
+		if filepath.Ext(path) == ".json" {
+			files, size = files+1, size+len(raw)
+		}
+	}
+	t.Logf("startup recovery JSON: files=%d bytes=%d", files, size)
 	deliveryRecoveryUnchanged(t, before, filepath.Join(original.Paths.RunRoot, "state.json"))
 	if workflowTestCalls(t, f.workflowFixture, "tab create") != 2 || workflowTestCalls(t, f.workflowFixture, "agent start") != 2 {
 		t.Fatal("replacement did not create exactly one new tab and agent")
@@ -149,22 +168,30 @@ func TestDeliveryClosedTransportCanReplaceAnotherClosedReadinessGeneration(t *te
 	if err != nil || state.Phase != "session_bound" || state.Result.Transport.AgentSessionID == "" {
 		t.Fatalf("readiness was not bound: %v", err)
 	}
-	prior := deliveryRecoveryFiles(t, original.Paths.RunRoot)
-	oldContext := state.Result.Paths.Context
-	workflowTestModel(t, f.workflowFixture, map[string]any{"closed_pane": state.Result.Transport.PaneID})
-	second := deliveryRecoveryTestPreview(t, f, in)
-	if second.Generation != 2 || second.RecoveryDirectory == first.RecoveryDirectory {
-		t.Fatalf("next explicit replacement did not append a generation: %+v", second)
+	var second DeliveryStartRecoveryPreview
+	for generation := 2; generation <= 3; generation++ {
+		prior := deliveryRecoveryFiles(t, original.Paths.RunRoot)
+		oldContext := state.Result.Paths.Context
+		workflowTestModel(t, f.workflowFixture, map[string]any{"closed_pane": state.Result.Transport.PaneID})
+		second = deliveryRecoveryTestPreview(t, f, in)
+		if second.Generation != generation || second.RecoveryDirectory == first.RecoveryDirectory {
+			t.Fatalf("next explicit replacement did not append a generation: %+v", second)
+		}
+		deliveryRecoveryPreserveControl(t, in, second)
+		if _, err = WorkflowRecoverDeliveryStart(f.D, f.R.WorkspaceRoot, in, second.Confirmation); err == nil {
+			t.Fatal("fixture should again stop before Task prompt")
+		}
+		state, err = workflowRead(f.R.WorkspaceRoot, original.RunID)
+		if err != nil || state.Result.StartupRecovery.Generation != generation || state.Result.Paths.Context == oldContext || state.Result.Transport.WorkspaceID != in.DestinationWorkspaceID {
+			t.Fatalf("replacement chain is not readable: %v", err)
+		}
+		deliveryRecoveryUnchanged(t, prior, filepath.Join(original.Paths.RunRoot, "state.json"))
+		for _, name := range []string{"recovery.json", "context.json"} {
+			if err := os.Remove(filepath.Join(filepath.Dir(oldContext), name)); err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
-	deliveryRecoveryPreserveControl(t, in, second)
-	if _, err = WorkflowRecoverDeliveryStart(f.D, f.R.WorkspaceRoot, in, second.Confirmation); err == nil {
-		t.Fatal("fixture should again stop before Task prompt")
-	}
-	state, err = workflowRead(f.R.WorkspaceRoot, original.RunID)
-	if err != nil || state.Result.StartupRecovery.Generation != 2 || state.Result.Paths.Context == oldContext || state.Result.Transport.WorkspaceID != in.DestinationWorkspaceID {
-		t.Fatalf("replacement chain is not readable: %v", err)
-	}
-	deliveryRecoveryUnchanged(t, prior, filepath.Join(original.Paths.RunRoot, "state.json"))
 	f.D.Files = nil
 	o, err := WorkflowResumeDeliveryStart(f.D, f.R.WorkspaceRoot, original.RunID, 3*time.Second)
 	if err != nil {
@@ -172,10 +199,10 @@ func TestDeliveryClosedTransportCanReplaceAnotherClosedReadinessGeneration(t *te
 	}
 	f.D.Executable = func() (string, error) { return second.ControlExecutable.Path, nil }
 	o = deliveryTestAccept(t, f, o)
-	if o.StartupRecovery.Generation != 2 || o.Delivery.PermissionState != "recipient_confirmed_contract" {
+	if o.StartupRecovery.Generation != 3 || o.Delivery.PermissionState != "recipient_confirmed_contract" {
 		t.Fatal("latest generation could not accept the unchanged Task mandate")
 	}
-	if workflowTestCalls(t, f.workflowFixture, "tab create") != 3 || workflowTestCalls(t, f.workflowFixture, "agent start") != 3 {
+	if workflowTestCalls(t, f.workflowFixture, "tab create") != 4 || workflowTestCalls(t, f.workflowFixture, "agent start") != 4 {
 		t.Fatal("replacement chain repeated a transport effect")
 	}
 }

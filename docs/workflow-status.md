@@ -149,12 +149,13 @@ proves liveness. The first contract promises no whole-response cache tag, includ
 for external Git state, process state or referenced artifacts.
 
 Known startup recovery metadata is read through a separate historical adapter.
-Its record, before-state, context and replacement transport remain bound to their
+Its record, previous transport, context and replacement transport remain bound to their
 captured source digests and original run. The adapter does not inspect executable
 bytes, contact a provider, attest permissions or authorize another recovery.
 Original transport state and observation fields retain their recorded meaning;
-they do not establish present liveness. Recovery does not supply a missing report
-timestamp. The mutation and callback schemas keep their existing validation rules.
+they do not establish present liveness. The full previous transport remains in
+the current record; reading it does not require older startup records or state
+snapshots. Recovery does not supply a missing report timestamp. The mutation and callback schemas keep their existing validation rules.
 
 Run technical acceptance with the pinned schema-validator environment:
 

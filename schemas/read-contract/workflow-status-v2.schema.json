@@ -2076,7 +2076,7 @@
         }
       },
       "additionalProperties": true,
-      "description": "Optional source-bound startup recovery history. The read-only adapter verifies preserved record, before-state, context and transport identities without probing binaries or changing runtime/permission authority. Recovery timestamps do not fill missing delivery report times."
+      "description": "Optional source-bound startup recovery history. The read-only adapter verifies preserved record, context and transport identities without probing binaries or changing runtime/permission authority. Recovery timestamps do not fill missing delivery report times."
     }
   }
 }

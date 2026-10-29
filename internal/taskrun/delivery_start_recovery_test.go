@@ -273,6 +273,10 @@ func TestDeliveryStartRecoveryPreservesHistoryAndUsesNewCallbacks(t *testing.T) 
 
 func TestDeliveryStartRecoveryConcurrentApplyStartsOnce(t *testing.T) {
 	f, _, in := deliveryRecoveryFixture(t)
+	original, err := workflowRead(f.R.WorkspaceRoot, in.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
 	p := deliveryRecoveryTestPreview(t, f, in)
 	deliveryRecoveryPreserveControl(t, in, p)
 	var wg sync.WaitGroup
@@ -291,6 +295,13 @@ func TestDeliveryStartRecoveryConcurrentApplyStartsOnce(t *testing.T) {
 		if err != nil {
 			t.Fatalf("concurrent apply: %v", err)
 		}
+	}
+	o, err := WorkflowShow(f.D, f.R.WorkspaceRoot, in.RunID)
+	if err != nil || o.StartupRecovery == nil || !equal(o.StartupRecovery.OriginalTransport, &original.Result.Transport) {
+		t.Fatalf("reuse lost full historical transport: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(p.RecoveryDirectory, "before-state.json")); !os.IsNotExist(err) {
+		t.Fatalf("reuse retained a full before-state: %v", err)
 	}
 	if workflowTestCalls(t, f.workflowFixture, "tab create") != 1 || workflowTestCalls(t, f.workflowFixture, "agent start") != 2 || workflowTestCalls(t, f.workflowFixture, "agent prompt") != 3 {
 		t.Fatal("concurrent recovery replayed an effect")

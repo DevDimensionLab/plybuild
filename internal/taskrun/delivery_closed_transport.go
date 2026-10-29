@@ -48,16 +48,19 @@ func deliveryRecoveryNoManagedAgent(d Dependencies, s workflowState) error {
 	return nil
 }
 
-func deliveryRecoveryValidateTransport(s, old workflowState, r deliveryStartRecoveryRecord) error {
-	previous := deliveryTransportIdentity(old.Result.Transport)
+func deliveryRecoveryValidateTransport(s workflowState, original *WorkflowTransport, r deliveryStartRecoveryRecord) error {
+	if original == nil {
+		return workflowError(4, "startup recovery has no previous transport")
+	}
+	previous := deliveryTransportIdentity(*original)
 	current := deliveryTransportIdentity(s.Result.Transport)
 	switch r.TransportMode {
-	case "", deliveryRecoveryReuseTerminal:
-		if r.ExitEvidence == nil || r.AbsentTransport != nil || s.RecoveryTransport != nil || previous != current {
+	case deliveryRecoveryReuseTerminal:
+		if r.ExitEvidence == nil || r.PreviousTransport == nil || r.AbsentTransport != nil || s.RecoveryTransport != nil || previous != current || previous.WorkspaceID != r.ExitEvidence.WorkspaceID || previous.TabID != r.ExitEvidence.TabID || previous.PaneID != r.ExitEvidence.PaneID || previous.TerminalID != r.ExitEvidence.TerminalID || r.ExitEvidence.CWD != s.Observed.Target.WorktreeLocator {
 			return workflowError(4, "reused startup transport binding differs")
 		}
 	case deliveryRecoveryReplaceTerminal:
-		if r.ExitEvidence != nil || r.AbsentTransport == nil || !equal(r.AbsentTransport.Transport, old.Result.Transport) || r.AbsentTransport.PaneState != "not_found" || r.AbsentTransport.TerminalState != "absent_from_all_panes" || r.AbsentTransport.ProcessLiveness != "unknown" || r.AbsentTransport.TaskAuthority != "not_issued" || !plain(r.DestinationWorkspaceID, 1, 128) {
+		if r.ExitEvidence != nil || r.PreviousTransport != nil || r.AbsentTransport == nil || r.AbsentTransport.PaneState != "not_found" || r.AbsentTransport.TerminalState != "absent_from_all_panes" || r.AbsentTransport.ProcessLiveness != "unknown" || r.AbsentTransport.TaskAuthority != "not_issued" || !plain(r.DestinationWorkspaceID, 1, 128) {
 			return workflowError(4, "replacement transport lacks its bound absence evidence")
 		}
 		if s.RecoveryTransport == nil {

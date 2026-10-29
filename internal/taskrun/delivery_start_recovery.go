@@ -71,7 +71,7 @@ type deliveryStartRecoveryRecord struct {
 	SchemaVersion          int                              `json:"schema_version"`
 	RunID                  string                           `json:"run_id"`
 	RequestSHA256          string                           `json:"request_sha256"`
-	BeforeState            FileBinding                      `json:"before_state"`
+	PreviousTransport      *WorkflowTransport               `json:"previous_transport,omitempty"`
 	SourceControl          Executable                       `json:"source_control"`
 	ProviderExecutable     Executable                       `json:"provider_executable"`
 	ControlExecutable      Executable                       `json:"control_executable"`
@@ -79,8 +79,8 @@ type deliveryStartRecoveryRecord struct {
 	ExitEvidence           *DeliveryStartupExitEvidence     `json:"exit_evidence,omitempty"`
 	Confirmation           string                           `json:"confirmation"`
 	RecordedAtUTC          string                           `json:"recorded_at_utc"`
-	Generation             int                              `json:"generation,omitempty"`
-	TransportMode          string                           `json:"transport_mode,omitempty"`
+	Generation             int                              `json:"generation"`
+	TransportMode          string                           `json:"transport_mode"`
 	DestinationWorkspaceID string                           `json:"destination_workspace_id,omitempty"`
 	AbsentTransport        *DeliveryAbsentTransportEvidence `json:"absent_transport,omitempty"`
 }
@@ -154,45 +154,34 @@ func workflowRecoveryRecord(s workflowState) (*deliveryStartRecoveryRecord, erro
 	if err = decode(b, 1<<20, &r); err != nil {
 		return nil, err
 	}
-	recordedGeneration := r.Generation
-	if recordedGeneration == 0 {
-		recordedGeneration = 1
-	}
-	if r.Kind != "PlyDeliveryStartupRecovery@1" || r.SchemaVersion != 1 || recordedGeneration != generation || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.BeforeState.Locator != filepath.Join(dir, "before-state.json") || r.ControlExecutable.Path != filepath.Join(dir, "ply-control") || r.Context.Locator != filepath.Join(dir, "context.json") || s.Result.Paths.Context != r.Context.Locator || s.ContextSHA256 != r.Context.SHA256 {
+	if r.Kind != "PlyDeliveryStartupRecovery@1" || r.SchemaVersion != 1 || r.Generation != generation || r.RunID != s.Result.RunID || r.RequestSHA256 != s.Result.RequestSHA256 || r.ControlExecutable.Path != filepath.Join(dir, "ply-control") || r.Context.Locator != filepath.Join(dir, "context.json") || s.Result.Paths.Context != r.Context.Locator || s.ContextSHA256 != r.Context.SHA256 {
 		return nil, workflowError(4, "startup recovery differs from its original run")
 	}
-	before, err := workflowBound(r.BeforeState, 8<<20)
+	context, err := workflowBound(r.Context, 1<<20)
 	if err != nil {
 		return nil, err
 	}
-	if _, err = workflowBound(r.Context, 1<<20); err != nil {
+	var claim workflowContext
+	if err = decode(context, 1<<20, &claim); err != nil {
 		return nil, err
 	}
-	var old workflowState
-	if err = decode(before, 8<<20, &old); err != nil {
+	if claim.Envelope != workflowEnv("run-context") || claim.RunID != s.Result.RunID || claim.RequestSHA256 != s.Result.RequestSHA256 || claim.SessionID != s.Result.SessionID || claim.HandoffSHA256 != s.Result.Handoff.SHA256 || claim.PlyExecutable != r.ControlExecutable {
+		return nil, workflowError(4, "startup recovery context differs from its run binding")
+	}
+	want := deliveryRecoveryReadback(s, r)
+	if err = deliveryRecoveryValidateTransport(s, want.OriginalTransport, r); err != nil {
 		return nil, err
 	}
-	if deliveryRecoveryGeneration(old) != generation-1 || !equal(old.Request, s.Request) || !equal(old.Observed, s.Observed) || old.Result.RunID != s.Result.RunID || old.Result.Handoff != s.Result.Handoff || !deliveryRecoveryStateEligible(old) {
-		return nil, workflowError(4, "startup recovery before-state is not an unstarted delivery generation")
-	}
-	if _, err = workflowRecoveryRecord(old); err != nil {
-		return nil, err
-	}
-	if err = deliveryRecoveryValidateTransport(s, old, r); err != nil {
-		return nil, err
-	}
-	want := deliveryRecoveryReadback(s, old, r)
 	if s.Result.StartupRecovery == nil || !equal(*s.Result.StartupRecovery, want) {
 		return nil, workflowError(4, "startup recovery readback binding differs")
 	}
 	return &r, nil
 }
 
-func deliveryRecoveryReadback(s, old workflowState, r deliveryStartRecoveryRecord) DeliveryStartRecoveryReadback {
-	out := DeliveryStartRecoveryReadback{Generation: deliveryRecoveryGeneration(s), Binding: *s.Recovery, OriginalProviderExecutable: s.Request.Runtime.Executable, OriginalControlExecutable: s.Request.Runtime.PlyExecutable, ProviderExecutable: r.ProviderExecutable, ControlExecutable: r.ControlExecutable, TransportMode: r.TransportMode, ReplacementTransport: s.RecoveryTransport}
-	if r.TransportMode != "" {
-		previous := old.Result.Transport
-		out.OriginalTransport = &previous
+func deliveryRecoveryReadback(s workflowState, r deliveryStartRecoveryRecord) DeliveryStartRecoveryReadback {
+	out := DeliveryStartRecoveryReadback{Generation: deliveryRecoveryGeneration(s), Binding: *s.Recovery, OriginalProviderExecutable: s.Request.Runtime.Executable, OriginalControlExecutable: s.Request.Runtime.PlyExecutable, ProviderExecutable: r.ProviderExecutable, ControlExecutable: r.ControlExecutable, TransportMode: r.TransportMode, ReplacementTransport: s.RecoveryTransport, OriginalTransport: r.PreviousTransport}
+	if r.AbsentTransport != nil {
+		out.OriginalTransport = &r.AbsentTransport.Transport
 	}
 	return out
 }
@@ -535,31 +524,26 @@ func WorkflowRecoverDeliveryStart(d Dependencies, root string, in DeliveryStartR
 		if err = verifyExecutable(p.ControlExecutable); err != nil {
 			return err
 		}
-		before, err := readFile(filepath.Join(s.Result.Paths.RunRoot, "state.json"), 8<<20, true)
-		if err != nil {
-			return err
-		}
-		beforeBinding := FileBinding{filepath.Join(p.RecoveryDirectory, "before-state.json"), hash(before)}
-		if err = d.writeOnce(beforeBinding.Locator, before); err != nil {
-			return err
-		}
 		contextPath := filepath.Join(p.RecoveryDirectory, "context.json")
 		contextValue := workflowContext{workflowEnv("run-context"), s.Result.RunID, s.Result.RequestSHA256, s.Result.SessionID, s.Result.Handoff.SHA256, s.Result.Round.Number, s.Result.Round.ControlID, s.Result.Round.PreviousReportSHA256, p.ControlExecutable}
 		contextBinding, err := workflowKeep(d, contextPath, contextValue)
 		if err != nil {
 			return err
 		}
-		r := deliveryStartRecoveryRecord{Kind: "PlyDeliveryStartupRecovery@1", SchemaVersion: 1, RunID: in.RunID, RequestSHA256: s.Result.RequestSHA256, BeforeState: beforeBinding, SourceControl: in.ControlExecutable, ProviderExecutable: in.ProviderExecutable, ControlExecutable: p.ControlExecutable, Context: contextBinding, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Generation: p.Generation, TransportMode: p.TransportMode, DestinationWorkspaceID: p.DestinationWorkspaceID, AbsentTransport: p.AbsentTransport}
+		r := deliveryStartRecoveryRecord{Kind: "PlyDeliveryStartupRecovery@1", SchemaVersion: 1, RunID: in.RunID, RequestSHA256: s.Result.RequestSHA256, SourceControl: in.ControlExecutable, ProviderExecutable: in.ProviderExecutable, ControlExecutable: p.ControlExecutable, Context: contextBinding, Confirmation: p.Confirmation, RecordedAtUTC: d.Now().UTC().Format(time.RFC3339Nano), Generation: p.Generation, TransportMode: p.TransportMode, DestinationWorkspaceID: p.DestinationWorkspaceID, AbsentTransport: p.AbsentTransport}
 		if p.ExitEvidence != nil {
 			r.ExitEvidence = p.ExitEvidence
+		}
+		if p.TransportMode == deliveryRecoveryReuseTerminal {
+			previous := s.Result.Transport
+			r.PreviousTransport = &previous
 		}
 		binding, err := workflowKeep(d, filepath.Join(p.RecoveryDirectory, "recovery.json"), r)
 		if err != nil {
 			return err
 		}
-		old := s
 		s.Recovery, s.RecoveryTransport = &binding, nil
-		s.Result.StartupRecovery = ptr(deliveryRecoveryReadback(s, old, r))
+		s.Result.StartupRecovery = ptr(deliveryRecoveryReadback(s, r))
 		s.Result.Paths.Context, s.ContextSHA256 = contextPath, contextBinding.SHA256
 		// Reserve each external effect before its send. Unknown replies stay
 		// attached to this generation; repeating its confirmation never replays.
