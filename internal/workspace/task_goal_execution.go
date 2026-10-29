@@ -139,7 +139,7 @@ func storedGoalExecutionInTarget(d Dependencies, root string, r WorkItemRegistry
 		if pub := taskPublication(r, "goal-execute/"+strings.TrimPrefix(digest, "sha256:")+"/spec"); pub != nil {
 			task, _ := findTask(r, pub.TaskID)
 			if task != nil && task.ProjectID == target.ProjectID && task.RepoID == target.RepoID && task.ParentEpicID == target.EpicID {
-				candidates[task.ID] = true
+				candidates = map[TaskID]bool{task.ID: true}
 			}
 		}
 	}
@@ -293,8 +293,21 @@ func buildGoalExecutionPreviewInTarget(d Dependencies, root string, r WorkItemRe
 		return out, WorkInvalidArguments("parallel requires an explicitly selected local Epic delivery")
 	}
 	if in.AcceptancePath == "" {
+		dataRoot := filepath.Join(root, MarkerDirectory)
+		if d.ProjectDataRoot != nil {
+			configured, err := d.ProjectDataRoot(string(target.ProjectID))
+			if err != nil {
+				return out, err
+			}
+			if configured != "" {
+				if contentPath(configured) != nil {
+					return out, WorkInvalidArguments("project data_root must be absolute and clean")
+				}
+				dataRoot = configured
+			}
+		}
 		key := strings.TrimPrefix(queueDigest(map[string]any{"queue_id": out.QueueID, "task_id": chosen.TaskID, "goal": chosen.Goal}), "sha256:")
-		in.AcceptancePath = filepath.Join(root, MarkerDirectory, "task-executions", key, "acceptance.sh")
+		in.AcceptancePath = filepath.Join(dataRoot, "task-executions", key, "acceptance.sh")
 		out.Input, out.AcceptancePath = in, in.AcceptancePath
 	}
 	if e = validateGoalExecuteInput(in); e != nil {
@@ -405,7 +418,7 @@ func publishGoalExecutionContent(d Dependencies, root string, session WorkItemSt
 
 // materializeGoalExecution retains a full immutable request before the first Git
 // effect. Partial metadata publication is recovered by its publication keys.
-func materializeGoalExecution(d Dependencies, root string, session WorkItemStoreSession, r WorkItemRegistry, projects ProjectSnapshot, p TaskGoalExecutePreview, human QueueHumanDecision) (TaskDecisionRef, error) {
+func materializeGoalExecution(d Dependencies, root string, session WorkItemStoreSession, r WorkItemRegistry, projects ProjectSnapshot, p TaskGoalExecutePreview, human QueueHumanDecision, specOnly bool) (TaskDecisionRef, error) {
 	if r.FormatVersion < 4 {
 		if e := upgradeQueueRegistry(d, root, &r, p.RegistryUpgrade); e != nil {
 			return TaskDecisionRef{}, e
@@ -422,7 +435,7 @@ func materializeGoalExecution(d Dependencies, root string, session WorkItemStore
 		return TaskDecisionRef{}, e
 	}
 	spec, e := publishGoalExecutionContent(d, root, session, r, projects, *task, "spec_record", specDraft)
-	if e != nil {
+	if e != nil || specOnly {
 		return TaskDecisionRef{}, e
 	}
 	r, e = session.Snapshot()
@@ -458,6 +471,10 @@ func materializeGoalExecution(d Dependencies, root string, session WorkItemStore
 }
 
 func resumeGoalPreview(d Dependencies, root string, r WorkItemRegistry, in TaskGoalExecuteInput, task TaskID, target QueueTarget) (*TaskGoalExecutePreview, error) {
+	if op, _ := findOperation(r, task); op != nil && op.Execution != nil && op.Release == nil {
+		p, _, err := storedGoalExecutionInTarget(d, root, r, in, op.Execution.Confirmation, target)
+		return p, err
+	}
 	for i := len(r.TaskSpecRevisions) - 1; i >= 0; i-- {
 		ref := r.TaskSpecRevisions[i]
 		if ref.TaskID != task {
@@ -670,6 +687,15 @@ func bindGoalExecutionQueue(d Dependencies, root string, session WorkItemStoreSe
 }
 
 func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmation string, human QueueHumanDecision) (TaskGoalPreparedExecution, error) {
+	return prepareTaskGoalExecution(d, in, confirmation, human, false)
+}
+
+func FreezeTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmation string, human QueueHumanDecision) error {
+	_, err := prepareTaskGoalExecution(d, in, confirmation, human, true)
+	return err
+}
+
+func prepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmation string, human QueueHumanDecision, specOnly bool) (TaskGoalPreparedExecution, error) {
 	var out TaskGoalPreparedExecution
 	if e := validateGoalExecuteInput(in); e != nil {
 		return out, e
@@ -763,8 +789,8 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 					return queueError("adoption_execution_conflict", "another execution request owns this adoption")
 				}
 			}
-			selected, e = materializeGoalExecution(d, root, session, r, projects, p, human)
-			if e != nil {
+			selected, e = materializeGoalExecution(d, root, session, r, projects, p, human, specOnly)
+			if e != nil || specOnly {
 				return e
 			}
 			r, e = session.Snapshot()
@@ -774,7 +800,7 @@ func PrepareTaskGoalExecution(d Dependencies, in TaskGoalExecuteInput, confirmat
 			return bindGoalExecutionQueue(d, root, session, r, p, selected)
 		})
 	})
-	if e != nil {
+	if e != nil || specOnly {
 		return out, e
 	}
 	id := p.Goal.TaskID

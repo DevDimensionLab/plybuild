@@ -743,3 +743,42 @@ func TestAdoptionLegacyCreateCannotFinalizeReservation(t *testing.T) {
 		})
 	}
 }
+
+func TestAdoptionKeepsDataRootBeforeFirstSpecPublication(t *testing.T) {
+	f, in := adoptionFixture(t)
+	adoption, err := AdoptTaskWorktree(f.dependencies, in, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = AdoptTaskWorktree(f.dependencies, in, true, adoption.Confirmation); err != nil {
+		t.Fatal(err)
+	}
+	data := filepath.Join(filepath.Dir(f.wrapper), "first-data")
+	f.dependencies.ProjectDataRoot = func(string) (string, error) { return data, nil }
+	input := TaskGoalExecuteInput{Target: in.Target, Next: true}
+	first, err := PreviewTaskGoalExecution(f.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.dependencies.TaskContent.fault = func(stage string) error {
+		if stage == "before-registry-replace" {
+			return errInjected
+		}
+		return nil
+	}
+	if err = FreezeTaskGoalExecution(f.dependencies, first.Input, first.Confirmation, goalHumanFixture()); err == nil {
+		t.Fatal("missing Spec publication interruption")
+	}
+	f.dependencies.TaskContent.fault = nil
+	data = filepath.Join(filepath.Dir(f.wrapper), "second-data")
+	resumed, err := PreviewTaskGoalExecution(f.dependencies, input)
+	if err != nil || resumed.Confirmation != first.Confirmation || resumed.AcceptancePath != first.AcceptancePath {
+		t.Fatalf("adoption forgot its frozen request: %+v %v", resumed, err)
+	}
+	if err = FreezeTaskGoalExecution(f.dependencies, resumed.Input, resumed.Confirmation, goalHumanFixture()); err != nil {
+		t.Fatal(err)
+	}
+	if len(mustQueueRegistry(t, f).TaskPreparations) != 0 {
+		t.Fatal("Spec-only retry prepared adopted worktree")
+	}
+}

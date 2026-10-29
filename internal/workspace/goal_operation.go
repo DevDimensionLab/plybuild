@@ -1,10 +1,5 @@
 package workspace
 
-import (
-	"path/filepath"
-	"strings"
-)
-
 // goalOperationContent narrows external dependency validation, not write
 // authority. Queue materialization legitimately changes multiple Tasks' shared
 // queue records, so WithTaskContentScope's write fence cannot be used here.
@@ -76,31 +71,10 @@ func goalExecutionCandidates(root string, r WorkItemRegistry, in TaskGoalExecute
 			tasks[p.Plan.TaskID] = true
 		}
 	}
-	// A repeated exact acceptance path can refer to a completed/removed queue
-	// entry. Recover its Task from preserved queue metadata, without scanning
-	// every historical manifest. Custom paths conservatively retain prepared
-	// Tasks in this target because the registry does not index those paths.
 	if in.AcceptancePath != "" {
-		custom := !strings.HasPrefix(in.AcceptancePath, filepath.Join(root, MarkerDirectory, "task-executions")+string(filepath.Separator))
-		for _, event := range r.TaskQueueEvents {
-			if event.QueueID != qid || event.Kind != "set" {
-				continue
-			}
-			for _, entry := range decodeQueueDraft(queueRequestValue(event.Request)).Entries {
-				if entry.Goal == nil {
-					continue
-				}
-				key := strings.TrimPrefix(queueDigest(map[string]any{"queue_id": qid, "task_id": entry.TaskID, "goal": entry.Goal}), "sha256:")
-				if in.AcceptancePath == filepath.Join(root, MarkerDirectory, "task-executions", key, "acceptance.sh") {
-					tasks[entry.TaskID] = true
-				}
-			}
-		}
-		if custom {
-			for _, p := range r.TaskPreparations {
-				if p.Plan.QueueID == qid {
-					tasks[p.Plan.TaskID] = true
-				}
+		for _, p := range r.TaskPreparations {
+			if p.Plan.QueueID == qid {
+				tasks[p.Plan.TaskID] = true
 			}
 		}
 	}

@@ -87,11 +87,16 @@ type LocalConfigDir struct {
 	impl DirConfig
 }
 
+type ProjectStorageConfig struct {
+	DataRoot string `yaml:"data_root"`
+}
+
 type LocalConfiguration struct {
-	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
-	SourceProvider SourceProvider `yaml:"sourceProvider"`
-	Nexus          Nexus          `yaml:"nexus"`
-	TerminalConfig TerminalConfig `yaml:"terminal"`
+	Projects       map[string]ProjectStorageConfig `yaml:"projects,omitempty"`
+	CloudConfig    LocalGitConfig                  `yaml:"cloudConfig"`
+	SourceProvider SourceProvider                  `yaml:"sourceProvider"`
+	Nexus          Nexus                           `yaml:"nexus"`
+	TerminalConfig TerminalConfig                  `yaml:"terminal"`
 }
 
 type LocalConfigFile interface {
@@ -240,4 +245,19 @@ func (localCfgDir LocalConfigDir) GetTerminalConfig() (TerminalConfig, error) {
 	}
 
 	return terminalConfig, nil
+}
+
+func ProjectDataRoot(project string) (string, error) {
+	profile, err := GetActiveProfilePath()
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	if err != nil {
+		return "", err
+	}
+	cfg, err := OpenLocalConfig(profile).Config()
+	if os.IsNotExist(err) {
+		return "", nil
+	}
+	return cfg.Projects[project].DataRoot, err
 }

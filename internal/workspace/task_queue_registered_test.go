@@ -125,7 +125,7 @@ func TestRegisteredQueuesPendingExecutionRetainsOriginalGoal(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			selection, err := materializeGoalExecution(f.dependencies, root, session, r, projects, preview, goalHumanFixture())
+			selection, err := materializeGoalExecution(f.dependencies, root, session, r, projects, preview, goalHumanFixture(), false)
 			if err != nil {
 				return err
 			}

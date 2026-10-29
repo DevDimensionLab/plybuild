@@ -414,7 +414,7 @@ func TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault(t *testing.T) {
 	}
 }
 
-func TestExecuteCanRefreshUnstartedIntentAfterPlannerQueueUpdate(t *testing.T) {
+func TestExecuteKeepsFrozenIntentAfterPlannerQueueUpdate(t *testing.T) {
 	d, in, root, _ := launcherFixture(t)
 	d.Fault = func(point string) error {
 		if point == "execute_before_preparation" {
@@ -455,8 +455,8 @@ func TestExecuteCanRefreshUnstartedIntentAfterPlannerQueueUpdate(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "fixture interrupted before any preparation") {
 		t.Fatalf("planner metadata permanently blocked unstarted intent: %v", err)
 	}
-	if second.RequestPath == first.RequestPath {
-		t.Fatal("fresh selection overwrote original intent namespace")
+	if second.RequestPath != first.RequestPath {
+		t.Fatal("planner queue revision created another intent namespace")
 	}
 	after, err := os.ReadFile(intentPath)
 	if err != nil || string(after) != string(before) {

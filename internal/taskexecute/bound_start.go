@@ -651,7 +651,7 @@ func ApplyBoundStart(d taskrun.Dependencies, r BoundStartRequest) (out BoundStar
 	locked.ApprovedGoalStart = func() error {
 		return workspace.WithTaskSpecRegistrationSnapshot(locked.Workspace, r.Workspace, func(*workspace.TaskSpecSession) error { return nil })
 	}
-	in := Input{SpecID: r.Input.SpecID, Target: r.Input.Target, Runtime: boundRuntimeOptions(r.Input), ExpectedTaskID: intent.Basis.Goal.Goal.TaskID, ExpectedGoal: &intent.Basis.Goal.Goal.Goal, boundEnvironment: &intent.Basis.Environment, expectedRuntime: &intent.Basis.Runtime, boundRequestKey: boundRequestKey(r)}
+	in := Input{SpecID: r.Input.SpecID, Target: r.Input.Target, Runtime: boundRuntimeOptions(r.Input), ExpectedTaskID: intent.Basis.Goal.Goal.TaskID, ExpectedGoal: &intent.Basis.Goal.Goal.Goal, boundEnvironment: &intent.Basis.Environment, expectedRuntime: &intent.Basis.Runtime, boundRequestKey: boundRequestKey(r), expectedExecution: &intent.Basis.Goal}
 	result, runErr := Execute(locked, in)
 	receipt := boundStartReceipt{RequestSHA256: boundHash(r), Result: result}
 	if runErr != nil {

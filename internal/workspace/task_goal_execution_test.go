@@ -451,3 +451,94 @@ func TestExecutionManifestRejectsForeignPreservedScope(t *testing.T) {
 		})
 	}
 }
+
+func TestGoalExecutionRecoversCustomHashPathAfterRelease(t *testing.T) {
+	for _, scenario := range []string{"unrecognized", "another-goal"} {
+		t.Run(scenario, func(t *testing.T) {
+			f := newWorkItemJourneyFixture(t)
+			goal := goalFixture(t, f, "task", "goal")
+			entries := []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}}
+			key := strings.Repeat("a", 64)
+			if scenario == "another-goal" {
+				create, _ := ParseTaskCreateInput("other", "other", "Independent goal", "epic", "ply", "ply")
+				if _, err := CreateTask(f.dependencies, create); err != nil {
+					t.Fatal(err)
+				}
+				other := goalFixture(t, f, "other", "other-goal")
+				entries = append(entries, TaskGoalQueueEntry{TaskID: "other", Goal: &other})
+				goalQueueFixture(t, f, entries[1:])
+				otherPreview, err := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
+				if err != nil {
+					t.Fatal(err)
+				}
+				key = filepath.Base(filepath.Dir(otherPreview.AcceptancePath))
+			}
+			goalQueueFixture(t, f, entries)
+			in := TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true, AcceptancePath: filepath.Join(filepath.Dir(f.wrapper), "custom", key, "acceptance.sh")}
+			preview, err := PreviewTaskGoalExecution(f.dependencies, in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			prepared, err := PrepareTaskGoalExecution(f.dependencies, preview.Input, preview.Confirmation, goalHumanFixture())
+			if err != nil {
+				t.Fatal(err)
+			}
+			q, err := ListTaskQueue(f.dependencies, in.Target, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err = CloseTaskQueue(f.dependencies, in.Target, prepared.Preparation.Preparation.ID, q.Revision, "fixture release keeps exact request readable", "release"); err != nil {
+				t.Fatal(err)
+			}
+			repeated, err := PreviewTaskGoalExecution(f.dependencies, in)
+			if err != nil || repeated.Confirmation != preview.Confirmation {
+				t.Fatalf("released execution at custom hash path was lost: %v", err)
+			}
+		})
+	}
+}
+
+func TestFrozenGoalRecoversPublishedSpecAfterLostReply(t *testing.T) {
+	for _, stage := range []string{"before-registry-replace", "postread"} {
+		t.Run(stage, func(t *testing.T) {
+			f := newWorkItemJourneyFixture(t)
+			goal := goalFixture(t, f, "task", "goal")
+			goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}})
+			data := filepath.Join(filepath.Dir(f.wrapper), "first-data")
+			f.dependencies.ProjectDataRoot = func(string) (string, error) { return data, nil }
+			input := TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true}
+			first, err := PreviewTaskGoalExecution(f.dependencies, input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			f.dependencies.TaskContent.fault = func(at string) error {
+				if at == stage {
+					return errInjected
+				}
+				return nil
+			}
+			if err = FreezeTaskGoalExecution(f.dependencies, first.Input, first.Confirmation, goalHumanFixture()); err == nil {
+				t.Fatal("publication fault was not returned")
+			}
+			f.dependencies.TaskContent.fault = nil
+			data = filepath.Join(filepath.Dir(f.wrapper), "second-data")
+			resumed, err := PreviewTaskGoalExecution(f.dependencies, input)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if (resumed.Confirmation == first.Confirmation) != (stage == "postread") {
+				t.Fatal("recovery did not follow registered Spec publication")
+			}
+			if err = FreezeTaskGoalExecution(f.dependencies, resumed.Input, resumed.Confirmation, goalHumanFixture()); err != nil {
+				t.Fatal(err)
+			}
+			r := mustQueueRegistry(t, f)
+			if len(r.TaskSpecRevisions) != 2 || len(r.TaskSpecAssessments) != 0 || len(r.TaskPreparations) != 0 {
+				t.Fatal("Spec-only publication changed later preparation state")
+			}
+			if _, err = os.Stat(resumed.WorktreePath); !os.IsNotExist(err) {
+				t.Fatal("Spec-only publication created Git worktree")
+			}
+		})
+	}
+}

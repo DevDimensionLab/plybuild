@@ -32,6 +32,7 @@ type Input struct {
 	boundEnvironment    *taskrun.GoalStartEnvironment
 	expectedRuntime     *RuntimePreview
 	boundRequestKey     string
+	expectedExecution   *workspace.TaskGoalExecutePreview
 }
 
 type Result struct {
@@ -110,6 +111,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 		return out, workspace.WorkInvalidArguments("--restart requires an explicit --spec and cannot select --next")
 	}
 	goalInput := workspace.TaskGoalExecuteInput{Parallel: input.Parallel, Target: input.Target, Next: input.Next, SpecID: input.SpecID}
+	if input.expectedExecution != nil {
+		goalInput.AcceptancePath = input.expectedExecution.AcceptancePath
+	}
 	input.Runtime.Headless = input.Worker != nil
 	if input.ControlContract != nil {
 		if input.Worker == nil {
@@ -130,6 +134,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	if input.ExpectedGoal != nil && plan.Goal.Goal != *input.ExpectedGoal || input.ExpectedTaskID != "" && plan.Goal.TaskID != input.ExpectedTaskID {
 		return out, workspace.WorkInvalidArguments("selected immutable week Goal or Task changed before execution")
 	}
+	if input.expectedExecution != nil && plan.Confirmation != input.expectedExecution.Confirmation {
+		return out, boundError("bound_start_stale", "the execution differs from the approved preview")
+	}
 	out.Goal = &plan
 	if input.Worker != nil {
 		w, a := input.Worker, plan.Delivery
@@ -146,9 +153,6 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	if err = checkOrigin(d, plan.Target); err != nil {
 		return out, err
 	}
-	// A pre-preparation interruption may leave only launcher files. A later
-	// explicit execution can bind a fresh queue/base without replacing those
-	// files. After Spec publication, Preview recovers the original confirmation.
 	directory := filepath.Join(filepath.Dir(plan.AcceptancePath), "attempts", strings.TrimPrefix(plan.Confirmation, "sha256:"))
 	if err = physicalPath(directory); err != nil {
 		return out, err
@@ -334,6 +338,9 @@ func Execute(d taskrun.Dependencies, input Input) (Result, error) {
 	}
 	if input.Worker == nil && os.Getenv("HERDR_ENV") != "1" && d.ApprovedGoalStart == nil {
 		return out, fmt.Errorf("execute start requires a local Herdr terminal (HERDR_ENV=1)")
+	}
+	if err = workspace.FreezeTaskGoalExecution(d.Workspace, intent.Goal.Input, intent.Goal.Confirmation, intent.Human); err != nil {
+		return out, err
 	}
 	if old == nil {
 		intent.Runtime, err = preserveRuntime(intent.Runtime, directory)

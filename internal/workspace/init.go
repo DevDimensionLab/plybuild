@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/pkg/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -77,6 +78,7 @@ func (err *Error) Error() string {
 func (err *Error) Unwrap() error { return err.Err }
 
 type Dependencies struct {
+	ProjectDataRoot           func(string) (string, error)
 	SourceReconciliationFault func(string, string) error
 	SourceWriters             func(string) (SourceWriterObservation, error)
 	TaskContent               *TaskContentStorage
@@ -102,6 +104,7 @@ func SystemDependencies() Dependencies {
 	files := systemFileSystem{}
 	projects := newSystemProjectStore()
 	return Dependencies{
+		ProjectDataRoot:  config.ProjectDataRoot,
 		TaskContent:      &TaskContentStorage{},
 		TaskContentIDs:   cryptoTaskContentIDs{},
 		Files:            files,
