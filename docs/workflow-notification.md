@@ -145,12 +145,20 @@ use structural and instant validation on readback, duplicate send and explicit r
 they never depend on the process TZ, current clock or later timezone data.
 
 Task@1/Event@1 continues to generate request-v2 exactly, with its original six-line
-renderer. V1 human-gate payloads are also unchanged. Absent new fields are omitted from
-Go serialization so old database integrity digests remain valid. Route-v1 bytes and the
-state root do not change. No migration or receipt rewriting is needed. The historical
+renderer. V1 human-gate payloads are also unchanged. Route-v1 bytes and the
+state root do not change. The historical
 `agent-event-v2` identity namespace is shared by v2 and v3, and the helper key contains
 only activity/run/event ID. Recasting an existing event as v3 conflicts or reads its
 existing state; unknown delivery never gains another attempt.
+
+Each state record stores the exact request bytes once, in `request_bytes`.
+After checking database integrity, the reader parses those bytes into an in-memory
+request before checking identity, route, payload and attempts. Historical reads
+need neither the original request file nor current timezone data. The stored route,
+payload, confirmations and attempt history remain unchanged. The previous internal
+state format with a separate `request` field is rejected; there is no migration or
+compatibility reader. Reinitializing live state requires a separately agreed reset;
+old events must not be replayed as new sends.
 
 The [skill](../skills/ply-agent-notify/SKILL.md) supplies the Event@2 example and invocation;
 its [usage contract](../skills/ply-agent-notify/references/usage.md) supplies legacy Task

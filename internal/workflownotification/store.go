@@ -11,7 +11,7 @@ import (
 type record struct {
 	RequestBytes     []byte    `json:"request_bytes"`
 	RequestPath      string    `json:"request_path"`
-	Request          Request   `json:"request"`
+	Request          Request   `json:"-"`
 	Route            Route     `json:"route"`
 	RouteSHA         string    `json:"route_sha256"`
 	CredentialSHA    string    `json:"credential_sha256"`
@@ -74,11 +74,10 @@ func readDatabase(dir *os.File) (*database, error) {
 		return nil, fail(4, "state_changed", "The state root binding is incomplete or changed.")
 	}
 	for id, r := range db.Records {
-		if r == nil || !idPattern.MatchString(id) || id != identity(r.Request) || r.Route.Name != db.Route || r.RouteSHA != db.RouteSHA || r.Basis == "" || !digestPattern.MatchString(r.CredentialSHA) || !digestPattern.MatchString(r.SendConfirmation) || len(r.Attempts) == 0 || digestValue(r.Payload) != digestValue(message(r.Request)) {
-			return nil, fail(1, "state_corrupt", "Notification state is incomplete or corrupt.")
+		if r != nil {
+			r.Request, e = parseStoredRequest(r.RequestBytes, "")
 		}
-		req, e := parseStoredRequest(r.RequestBytes, "")
-		if e != nil || digestValue(req) != digestValue(r.Request) {
+		if r == nil || e != nil || !idPattern.MatchString(id) || id != identity(r.Request) || r.Route.Name != db.Route || r.RouteSHA != db.RouteSHA || r.Basis == "" || !digestPattern.MatchString(r.CredentialSHA) || !digestPattern.MatchString(r.SendConfirmation) || len(r.Attempts) == 0 || digestValue(r.Payload) != digestValue(message(r.Request)) {
 			return nil, fail(1, "state_corrupt", "Notification state is incomplete or corrupt.")
 		}
 		for i, a := range r.Attempts {

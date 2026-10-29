@@ -16,7 +16,7 @@ import tempfile
 import time
 
 REPO = Path(__file__).resolve().parents[1]
-BASE = 'c8f9dd00ee36d3f57191355c278d982808d421a8'
+HELPER_BASELINE = 'c8f9dd00ee36d3f57191355c278d982808d421a8'
 ENV = 'PLY_SLACK_WEBHOOK_URL'
 
 
@@ -282,16 +282,8 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
         assert not self.posts(f)
         self.checks.append('bootstrap/install conflicts, directory/leaf symlinks, unsafe modes, and injected foreign-owner observation are rejected without repair')
 
-    def legacy_state(self):
-        # Build the exact pre-change command graph. Every old state byte below
-        # comes from that binary, never a hand-crafted database or new serializer.
-        baseline=self.root/'baseline-source';baseline.mkdir(mode=0o700)
-        c=subprocess.run(['git','archive',BASE],cwd=REPO,env=self.env,capture_output=True,check=True)
-        with tarfile.open(fileobj=io.BytesIO(c.stdout)) as archive:
-            archive.extractall(baseline,filter='data')
-        old=self.root/'baseline-driver'
-        self.command(['go','test','-c','-o',old,'./test/notification-driver'],cwd=baseline)
-        f=self.fixture('legacy-mixed')
+    def request_versions_and_helper_upgrade(self):
+        f=self.fixture('request-versions')
         route=f/'config/route.json';baseargs=['--config',f/'driver.json','--','workflow','notification']
         records=[]
         for version in [1,2]:
@@ -299,10 +291,10 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
                 name='v%d-%s'%(version,state)
                 cfg=json.loads((f/'driver.json').read_bytes());cfg['transport']=transport;put(f/'driver.json',cfg)
                 source={'kind':'external','activity':'fixture/activity','run':'run-1','worktree':str(f/'work'),'handoff':loc(f/'handoff.md'),'start_receipt':loc(f/'start.json',True),'report':loc(f/'report.json',True)}
-                req={'kind':'ply.workflow.notification-request','schema_version':version,'route':'ply-log','source':source,'sender':{'actor_claim':'legacy-fixture'}}
+                req={'kind':'ply.workflow.notification-request','schema_version':version,'route':'ply-log','source':source,'sender':{'actor_claim':'request-version-fixture'}}
                 if version==1:
                     req['gate']={'id':name,'revision':1,'opened_at':'2026-10-04T14:00:00Z','reason':'result_control','state':'waiting_for_human'}
-                    req['public']={'task_title':'Legacy report','next_action':'Start result control.'}
+                    req['public']={'task_title':'Version 1 report','next_action':'Start result control.'}
                 else:
                     event=json.loads((f/'event.json').read_bytes());event['event_id']=name
                     event_path=put(f/(name+'-event.json'),event)
@@ -310,12 +302,12 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
                     req['event']={'id':name,'type':event['event_type'],'phase':event['phase'],'occurred_at':event['occurred_at'],'record':loc(event_path,True)}
                 path=put(f/(name+'.json'),req)
                 send=['send','--file',path,'--route',route,'--format','json']
-                p=json.loads(self.command([old,*baseargs,*send,'--check'],env=self.secret_env()).stdout)
-                old_result=self.command([old,*baseargs,*send,'--apply','--confirm',p['confirmation']],env=self.secret_env(),expected=(0,5)).stdout
-                records.append({'version':version,'state':state,'path':str(path),'preview':p,'result':json.loads(old_result)})
+                p=json.loads(self.command([self.driver,*baseargs,*send,'--check'],env=self.secret_env()).stdout)
+                produced_result=self.command([self.driver,*baseargs,*send,'--apply','--confirm',p['confirmation']],env=self.secret_env(),expected=(0,5)).stdout
+                records.append({'version':version,'state':state,'path':str(path),'preview':p,'result':json.loads(produced_result)})
         original=(f/'state/state.json').read_bytes()
-        put(f/'baseline-state.json',original)
-        put(f/'baseline-provenance.json',{'base_oid':BASE,'producer_sha256':sha(old),'state_sha256':sha(f/'baseline-state.json'),'records':records,'network':False})
+        put(f/'request-version-state.json',original)
+        put(f/'request-version-provenance.json',{'producer_sha256':sha(self.driver),'state_sha256':sha(f/'request-version-state.json'),'records':records,'network':False})
         for record in records:
             p=record['preview'];send=['send','--file',record['path'],'--route',route,'--format','json']
             r=json.loads(self.command([self.driver,*baseargs,'show',p['notification_id'],'--route',route,'--format','json']).stdout)
@@ -349,15 +341,17 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
             task,event=self.compact_task(f,'codex','done',json.loads(Path(record['path']).read_bytes())['event']['id'])
             result=self.notify(f,cwd=task['origin_cwd'],expected=(0,5))
             assert result['reason']=='preview_rejected' and result['preview_exit']==4 and len(self.posts(f))==9
+        self.checks.append('current CLI produces mixed v1/v2 acknowledged/rejected/unknown state; exact readback/payload/replay, permitted retry, mixed v3 and identity conflicts pass')
+        baseline=self.root/'helper-baseline-source';baseline.mkdir(mode=0o700)
+        c=subprocess.run(['git','archive',HELPER_BASELINE,'skills/ply-agent-notify'],cwd=REPO,env=self.env,capture_output=True,check=True)
+        with tarfile.open(fileobj=io.BytesIO(c.stdout)) as archive:
+            archive.extractall(baseline,filter='data')
         # The old helper first writes an immutable v2 request; the new helper
         # must read that exact byte sequence without another apply.
         old_helper=self.fixture('legacy-helper')
-        wrapper=old_helper/'ply-fixture'
-        wrapper.write_text(wrapper.read_text().replace(str(self.driver),str(old)))
         argv=self.notify_args(old_helper);argv[1]=str(baseline/'skills/ply-agent-notify/scripts/notify.py')
         result=json.loads(self.command(argv).stdout)
         request=Path(result['request']);original_request=request.read_bytes()
-        wrapper.write_text(wrapper.read_text().replace(str(old),str(self.driver)))
         repeated=self.notify(old_helper)
         assert repeated['reason']=='preserved_attempt_readback' and request.read_bytes()==original_request and len(self.posts(old_helper))==1
         # Exercise the actual explicit upgrade command only in this private fixture.
@@ -371,7 +365,7 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
             assert (backup/name).read_bytes()==(baseline/'skills/ply-agent-notify'/name).read_bytes()
             assert stat.S_IMODE((installed/name).stat().st_mode)==stat.S_IMODE(path.stat().st_mode)
             assert stat.S_IMODE((backup/name).stat().st_mode)==stat.S_IMODE(path.stat().st_mode)
-        self.checks.append('base c8f9dd0 binary produced mixed v1/v2 acknowledged/rejected/unknown state; exact readback/payload/replay, permitted retry, mixed v3 and version conflicts pass')
+        self.checks.append('helper baseline c8f9dd0 preserves exact v2 request readback through current CLI; explicit fixture upgrade retains private backup and permissions')
 
     def compact_task(self,f,provider,status,event_id=None):
         origin=f/'ply'/('planning' if provider=='codex' else 'varsler');origin.mkdir(mode=0o700,parents=True,exist_ok=True)
@@ -450,7 +444,7 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
 
     def run(self):
         self.command([sys.executable,REPO/'test/agent_notify_regression_test.py'])
-        self.setup();self.journeys();self.failures();self.incomplete_attempt_record();self.concurrency();self.unsafe_setup();self.compact_journeys();self.frozen_timezone();self.legacy_state();self.privacy()
+        self.setup();self.journeys();self.failures();self.incomplete_attempt_record();self.concurrency();self.unsafe_setup();self.compact_journeys();self.frozen_timezone();self.request_versions_and_helper_upgrade();self.privacy()
         # Production executable help and preview are exercised without transport.
         for parts in [[],['workflow'],['workflow','notification'],['workflow','notification','send'],['workflow','notification','show'],['workflow','notification','retry']]:
             self.command([self.ply,*parts,'--help'])
@@ -462,7 +456,7 @@ sys.exit(0 if cfg.get('force_zero_exit') else c.returncode)
         c=self.command([self.ply,'workflow','notification','send','--file',r['request'],'--route',f/'config/route.json','--check','--format','json'],env=self.secret_env())
         assert json.loads(c.stdout)['allowed'] is True and not self.posts(f) and not (f/'state/state.json').exists()
         self.privacy()
-        put(self.root/'result.json',{'kind':'PlyAgentNotificationAcceptance@1','outcome':'passed','checks':self.checks,'commands':'commands.json','root':str(self.root),'live_network':False,'legacy_baseline':BASE})
+        put(self.root/'result.json',{'kind':'PlyAgentNotificationAcceptance@1','outcome':'passed','checks':self.checks,'commands':'commands.json','root':str(self.root),'live_network':False,'helper_baseline':HELPER_BASELINE})
         print(json.dumps({'outcome':'passed','checks':len(self.checks),'fixture':str(self.root),'commands':len(self.commands)}))
 
 

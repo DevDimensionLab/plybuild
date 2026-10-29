@@ -136,6 +136,19 @@ func TestReportReadyJourneyPreservesLocalReturn(t *testing.T) {
 		t.Fatalf("bad result %+v", r)
 	}
 	stored := stateBytes(t, f)
+	var state struct {
+		Records map[string]map[string]json.RawMessage `json:"records"`
+	}
+	if e = json.Unmarshal(stored, &state); e != nil {
+		t.Fatal(e)
+	}
+	if _, exists := state.Records[p.ID]["request"]; exists {
+		t.Fatal("stored a second request representation")
+	}
+	var requestBytes []byte
+	if e = json.Unmarshal(state.Records[p.ID]["request_bytes"], &requestBytes); e != nil || Digest(requestBytes) != r.RequestSHA {
+		t.Fatal("stored request bytes changed", e)
+	}
 	for _, s := range []string{syntheticSecret, "PRIVATE_SOURCE_SENTINEL"} {
 		if bytes.Contains(stored, []byte(s)) {
 			t.Fatal("private source or credential leaked")

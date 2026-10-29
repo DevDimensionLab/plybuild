@@ -263,27 +263,48 @@ func TestCorruptV1StateRetainsGateWireContract(t *testing.T) {
 	}
 }
 func TestMalformedStoredIdentityDoesNotPanic(t *testing.T) {
-	f := newFixture(t)
-	p := f.preview(t)
-	f.apply(t, p)
-	dir, err := stateDirectory(f.route.StateRoot, false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer dir.Close()
-	db, err := readDatabase(dir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	r := db.Records[p.ID]
-	delete(db.Records, p.ID)
-	r.Request.Gate = nil
-	db.Records[""] = r
-	if err = writeDatabase(dir, db); err != nil {
-		t.Fatal(err)
-	}
-	if _, err = Execute(f.deps, Input{Operation: "show", ID: p.ID, Route: f.input.Route}); err == nil {
-		t.Fatal("malformed identity accepted")
+	for _, variant := range []string{"nil-record", "malformed-bytes", "missing-gate", "invalid-key", "identity-mismatch"} {
+		t.Run(variant, func(t *testing.T) {
+			f := newFixture(t)
+			p := f.preview(t)
+			if _, err := f.apply(t, p); err != nil {
+				t.Fatal(err)
+			}
+			dir, err := stateDirectory(f.route.StateRoot, false)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer dir.Close()
+			db, err := readDatabase(dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r := db.Records[p.ID]
+			switch variant {
+			case "nil-record":
+				db.Records[p.ID] = nil
+			case "malformed-bytes":
+				r.RequestBytes = []byte("{broken")
+			case "missing-gate":
+				r.Request.Gate = nil
+				r.RequestBytes, err = json.Marshal(r.Request)
+			case "invalid-key":
+				delete(db.Records, p.ID)
+				db.Records[""] = r
+			case "identity-mismatch":
+				r.Request.Source.Run = "other-run"
+				r.RequestBytes, err = json.Marshal(r.Request)
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = writeDatabase(dir, db); err != nil {
+				t.Fatal(err)
+			}
+			if _, err = Execute(f.deps, Input{Operation: "show", ID: p.ID, Route: f.input.Route}); err == nil || f.posts != 1 {
+				t.Fatal("malformed state accepted or dispatched", err)
+			}
+		})
 	}
 }
 
