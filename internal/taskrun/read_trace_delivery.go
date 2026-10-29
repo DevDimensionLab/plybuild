@@ -2,7 +2,6 @@ package taskrun
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +37,7 @@ func (r *traceReader) delivery(s workflowState) {
 		predecessor := previous
 		previous = ptr(event.Binding.SHA256)
 		boundPaths[event.Binding.Locator] = true
-		if !key(event.ID) || seen[event.ID] || event.Binding.Locator != filepath.Join(eventRoot, fmt.Sprintf("%08d.json", i+1)) {
+		if !key(event.ID) || seen[event.ID] || event.Binding.Locator != deliveryEventPath(s.Result.Paths.RunRoot, event.ID, event.Kind, i+1) {
 			r.problem("trace_delivery_event_unbound", "Duplicate or invalid event slot: "+event.ID)
 			continue
 		}
@@ -370,8 +369,7 @@ func (r *traceReader) verification(s workflowState, e TraceEntry, raw []byte, ca
 	e.Data = traceJSON(data)
 	c, qualified := candidates[v.AttemptID]
 	if qualified {
-		bound, err := r.bound(c.Verification, 256<<10)
-		if err != nil || hash(bound) != hash(raw) || c.OID != v.CandidateOID || c.Tree != v.CandidateTree || v.Exit == nil || *v.Exit != 0 || v.Error != "" || v.Automatic != nil && v.Outcome != "pass" {
+		if c.Verification != e.Source || c.OID != v.CandidateOID || c.Tree != v.CandidateTree || v.Exit == nil || *v.Exit != 0 || v.Error != "" || v.Automatic != nil && v.Outcome != "pass" {
 			r.problem("trace_candidate_verification_unbound", "Qualified generation does not match its successful verifier event: "+c.Key)
 			qualified = false
 		} else {

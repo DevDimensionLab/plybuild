@@ -127,11 +127,72 @@ func TestDeliveryRequalificationAfterNativePublicationIsConcurrentAndIdempotent(
 	if err != nil || len(shown.Delivery.Candidates) != 1 || len(shown.Delivery.Events) != 1 {
 		t.Fatalf("duplicate candidate or event: %+v %v", shown.Delivery, err)
 	}
+	deliveryTestSingleReceipt(t, shown)
 	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
 	if err != nil || len(registry.TaskResults) != 1 {
 		t.Fatalf("duplicate native result: %d %v", len(registry.TaskResults), err)
 	}
 	if raw, err := os.ReadFile(counter); err != nil || string(raw) != "executed\n" {
 		t.Fatalf("recovery repeated acceptance: %q %v", raw, err)
+	}
+}
+
+func TestDeliveryVerificationEventAndCandidateBindings(t *testing.T) {
+	f := newDeliveryFixture(t, "codex")
+	o := deliveryCLIQualified(t, f)
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, change := range []string{"event_locator", "event_hash", "event_kind", "missing_event", "candidate_hash", "orphan"} {
+		t.Run(change, func(t *testing.T) {
+			changed, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			switch change {
+			case "event_locator":
+				changed.Result.Delivery.Events[0].Binding.Locator = filepath.Join(o.Paths.RunRoot, "foreign-receipt.json")
+			case "event_hash":
+				changed.Result.Delivery.Events[0].Binding.SHA256 = hash([]byte("other"))
+			case "event_kind":
+				changed.Result.Delivery.Events[0].Kind = "report"
+			case "missing_event":
+				changed.Result.Delivery.Events = []DeliveryEventRecord{}
+			case "candidate_hash":
+				changed.Result.Delivery.Candidates[0].Verification.SHA256 = hash([]byte("other"))
+			case "orphan":
+				path := filepath.Join(o.Paths.RunRoot, "delivery", "events", "00000001.json")
+				if err = f.D.writeOnce(path, []byte("unbound event in verification slot")); err != nil {
+					t.Fatal(err)
+				}
+				defer os.Remove(path)
+			}
+			if err = workflowSave(f.D, changed); err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				if err := workflowSave(f.D, s); err != nil {
+					t.Error(err)
+				}
+			}()
+			run := traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID)
+			if run.Coverage != "partial" || change != "orphan" && len(traceKind(run, "task_result_technical")) != 0 {
+				t.Fatalf("changed binding retained qualified trace: %+v", run)
+			}
+			row := deliveryInventoryRows(t, f)[o.RunID]
+			if change == "orphan" && (!traceReason(run, "trace_delivery_event_orphaned") || !hasInventoryReason(row, "delivery_event_orphaned")) {
+				t.Fatal("verification slot concealed an unbound event")
+			}
+			if strings.HasPrefix(change, "event_") || change == "missing_event" {
+				shown, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
+				if err != nil || shown.DeliveryStatus.Verification.Outcome != "unknown" {
+					t.Fatalf("changed event retained verification status: %+v %v", shown.DeliveryStatus, err)
+				}
+				if _, err = WorkflowDeliveryRequalify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "", o.Delivery.Attempt.ID); err == nil {
+					t.Fatal("receipt reuse ignored changed event")
+				}
+			}
+		})
 	}
 }

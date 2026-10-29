@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,11 +22,8 @@ func (f deliveryRejectStopState) Replace(path string, b []byte) error {
 }
 
 func TestDeliveryObservedStopInterruptedPublicationRetainsBlock(t *testing.T) {
-	for _, accepted := range []bool{false, true} {
-		name := "before_acceptance"
-		if accepted {
-			name = "after_acceptance"
-		}
+	for _, name := range []string{"before_acceptance", "after_acceptance", "after_verification"} {
+		accepted := name != "before_acceptance"
 		t.Run(name, func(t *testing.T) {
 			f := newDeliveryFixture(t, "codex")
 			o := workflowTestStart(t, f.workflowFixture)
@@ -37,6 +35,15 @@ func TestDeliveryObservedStopInterruptedPublicationRetainsBlock(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
+			if name == "after_verification" {
+				deliveryTestCandidate(t, f, "stop after verification")
+				o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "stop"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				deliveryTestSingleReceipt(t, o)
+			}
+			next := len(o.Delivery.Events) + 1
 			proof := writeAny(t, f.R.WorkspaceRoot, "denial.json", map[string]string{"observed": "Synthetic provider rejected callback transport"})
 			stage := "acceptance"
 			if accepted {
@@ -50,10 +57,10 @@ func TestDeliveryObservedStopInterruptedPublicationRetainsBlock(t *testing.T) {
 			if _, err = WorkflowObserveDeliveryStop(fault, f.R.WorkspaceRoot, o.RunID, stop); err == nil {
 				t.Fatal("injected state write failure did not occur")
 			}
-			if _, err = os.Stat(filepath.Join(o.Paths.RunRoot, "delivery", "events", "00000001.json")); err != nil {
+			if _, err = os.Stat(filepath.Join(o.Paths.RunRoot, "delivery", "events", fmt.Sprintf("%08d.json", next))); err != nil {
 				t.Fatalf("expected durable stop event: %v", err)
 			}
-			eventPath := filepath.Join(o.Paths.RunRoot, "delivery", "events", "00000001.json")
+			eventPath := filepath.Join(o.Paths.RunRoot, "delivery", "events", fmt.Sprintf("%08d.json", next))
 			original, err := os.ReadFile(eventPath)
 			if err != nil {
 				t.Fatal(err)
@@ -88,7 +95,7 @@ func TestDeliveryObservedStopInterruptedPublicationRetainsBlock(t *testing.T) {
 			if err != nil || string(after) != string(original) {
 				t.Fatal("recovery changed original denial or timestamp")
 			}
-			if recovered.Delivery.ActiveStop == nil || len(recovered.Delivery.Events) != 1 {
+			if recovered.Delivery.ActiveStop == nil || len(recovered.Delivery.Events) != next {
 				t.Fatal("recovery lost or duplicated the denial")
 			}
 			changed := stop
@@ -98,7 +105,7 @@ func TestDeliveryObservedStopInterruptedPublicationRetainsBlock(t *testing.T) {
 			}
 			stop.EventID = "later-denial"
 			later, err := WorkflowObserveDeliveryStop(f.D, f.R.WorkspaceRoot, o.RunID, stop)
-			if err != nil || len(later.Delivery.Events) != 2 {
+			if err != nil || len(later.Delivery.Events) != next+1 {
 				t.Fatalf("recovered index cannot preserve a later denial: %v", err)
 			}
 		})

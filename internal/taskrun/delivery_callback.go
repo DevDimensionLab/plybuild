@@ -119,6 +119,13 @@ func deliveryTarget(d Dependencies, s workflowState) (workspace.IntegrationWorkt
 	return x, nil
 }
 
+func deliveryEventPath(root, id, kind string, sequence int) string {
+	if kind == "verification" {
+		return filepath.Join(root, "delivery", "attempts", id, "verification.json")
+	}
+	return filepath.Join(root, "delivery", "events", fmt.Sprintf("%08d.json", sequence))
+}
+
 func deliveryAppendEvent(d Dependencies, s *workflowState, id, kind string, value any) (FileBinding, error) {
 	raw, e := Canonical(value)
 	if e != nil {
@@ -132,8 +139,12 @@ func deliveryAppendEvent(d Dependencies, s *workflowState, id, kind string, valu
 			return event.Binding, nil
 		}
 	}
-	path := filepath.Join(s.Result.Paths.RunRoot, "delivery", "events", fmt.Sprintf("%08d.json", len(s.Result.Delivery.Events)+1))
-	binding, e := workflowKeep(d, path, value)
+	binding := FileBinding{deliveryEventPath(s.Result.Paths.RunRoot, id, kind, len(s.Result.Delivery.Events)+1), hash(raw)}
+	if kind == "verification" {
+		_, e = workflowBound(binding, 256<<10)
+	} else {
+		e = d.writeOnce(binding.Locator, raw)
+	}
 	if e != nil {
 		return binding, e
 	}
@@ -381,9 +392,12 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 					return e
 				}
 			}
-			receipt, e = deliveryRecoverVerification(*current, reviewPath)
+			receipt, _, e = deliveryRecoverVerification(*current)
 			if e != nil {
 				return e
+			}
+			if receipt.Review.Locator != reviewPath {
+				return deliveryContinuityError("receipt_mismatch", "receipt recovery must preserve the original candidate review")
 			}
 			if len(binaryPaths) > 0 && binaryPaths[0] != "" && (receipt.Automatic == nil || receipt.Automatic.CandidateBinary.Locator != binaryPaths[0]) {
 				return workflowError(4, "receipt recovery must preserve the original candidate binary")
@@ -660,40 +674,49 @@ func deliveryVerifier(d Dependencies, s workflowState, cwd, acceptance string) (
 
 // A completed command receipt can be reconciled after a crash; an attempt with
 // no receipt is unknown and must never cause the command to run a second time.
-func deliveryRecoverVerification(s workflowState, reviewPath string) (deliveryVerificationReceipt, error) {
+func deliveryRecoverVerification(s workflowState) (deliveryVerificationReceipt, FileBinding, error) {
 	var receipt, initial deliveryVerificationReceipt
+	var binding FileBinding
 	a := s.Result.Delivery.Attempt
 	raw, e := readFile(filepath.Join(a.Path, "attempt.json"), 256<<10, true)
 	if e != nil || hash(raw) != a.InputSHA256 {
-		return receipt, workflowError(4, "verification attempt evidence is missing or changed; no replay is safe")
+		return receipt, binding, workflowError(4, "verification attempt evidence is missing or changed; no replay is safe")
 	}
 	if e = decode(raw, 256<<10, &initial); e != nil {
-		return receipt, e
+		return receipt, binding, e
 	}
 	raw, e = readFile(filepath.Join(a.Path, "verification.json"), 256<<10, true)
 	if e != nil {
-		return receipt, deliveryContinuityError("effect_unknown", "verification outcome is unknown; inspect the reserved attempt and running process without replaying it")
+		return receipt, binding, deliveryContinuityError("effect_unknown", "verification outcome is unknown; inspect the reserved attempt and running process without replaying it")
 	}
+	binding = FileBinding{filepath.Join(a.Path, "verification.json"), hash(raw)}
 	if e = decode(raw, 256<<10, &receipt); e != nil {
-		return receipt, e
+		return receipt, binding, e
 	}
 	copy := receipt
 	copy.Exit, copy.Stdout, copy.Stderr, copy.FinishedAt, copy.Error = nil, FileBinding{}, FileBinding{}, "", ""
 	copy.Outcome = ""
 	started, startErr := time.Parse(time.RFC3339Nano, receipt.StartedAt)
 	finished, finishErr := time.Parse(time.RFC3339Nano, receipt.FinishedAt)
-	if !equal(initial, copy) || !deliveryVerificationVersion(receipt) || a.Path != filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", a.ID) || receipt.AttemptID != a.ID || receipt.CandidateOID != a.CandidateOID || receipt.CandidateTree != a.CandidateTree || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256 || receipt.Review.Locator != reviewPath || startErr != nil || finishErr != nil || finished.Before(started) {
-		return receipt, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its reserved attempt, candidate or original review; preserve it and reverify changed inputs explicitly")
+	if !equal(initial, copy) || !deliveryVerificationVersion(receipt) || a.Path != filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", a.ID) || receipt.AttemptID != a.ID || receipt.CandidateOID != a.CandidateOID || receipt.CandidateTree != a.CandidateTree || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256 || startErr != nil || finishErr != nil || finished.Before(started) {
+		return receipt, binding, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its reserved attempt, candidate or original review; preserve it and reverify changed inputs explicitly")
 	}
+	recorded := a.State != "recorded"
 	for _, event := range s.Result.Delivery.Events {
-		if event.ID == a.ID && (event.Kind != "verification" || event.Binding.SHA256 != hash(raw)) {
-			return receipt, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its immutable recorded event")
+		if event.ID == a.ID {
+			if event.Kind != "verification" || event.Binding != binding {
+				return receipt, binding, deliveryContinuityError("receipt_mismatch", "completed verification receipt differs from its immutable recorded event")
+			}
+			recorded = true
 		}
+	}
+	if !recorded {
+		return receipt, binding, deliveryContinuityError("receipt_mismatch", "recorded verification receipt has no immutable event")
 	}
 	for _, b := range []FileBinding{receipt.AcceptanceSnapshot, receipt.Stdout, receipt.Stderr} {
 		if _, e = workflowBound(b, 4<<20); e != nil {
-			return receipt, e
+			return receipt, binding, e
 		}
 	}
-	return receipt, nil
+	return receipt, binding, nil
 }

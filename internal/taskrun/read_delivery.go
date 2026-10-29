@@ -221,7 +221,7 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 	for i, event := range events {
 		predecessor := previous
 		previous = ptr(event.Binding.SHA256)
-		if !key(event.ID) || seen[event.ID] || event.Binding.Locator != filepath.Join(s.Result.Paths.RunRoot, "delivery", "events", fmt.Sprintf("%08d.json", i+1)) {
+		if !key(event.ID) || seen[event.ID] || event.Binding.Locator != deliveryEventPath(s.Result.Paths.RunRoot, event.ID, event.Kind, i+1) {
 			inventoryDeliveryProblem(row, "delivery_event_invalid", fmt.Sprintf("Delivery event %q has a duplicate or invalid slot binding", event.ID))
 			continue
 		}

@@ -298,11 +298,7 @@ func deliveryContinuationPreview(d Dependencies, s workflowState, in DeliveryCon
 		if a.Kind != "verification" {
 			return p, deliveryContinuityError("effect_unknown", "observe unresolved "+a.Kind+" attempt "+a.ID+" through its native records before continuing; no effect is replayed")
 		}
-		var initial deliveryVerificationReceipt
-		if err = readValue(filepath.Join(a.Path, "attempt.json"), 256<<10, &initial); err != nil {
-			return p, deliveryContinuityError("effect_unknown", "verification reservation is unreadable; observe the same attempt without replaying it")
-		}
-		if _, err = deliveryRecoverVerification(s, initial.Review.Locator); err != nil {
+		if _, _, err = deliveryRecoverVerification(s); err != nil {
 			return p, deliveryContinuityError("effect_unknown", err.Error())
 		}
 	}

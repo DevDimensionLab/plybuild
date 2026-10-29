@@ -275,6 +275,7 @@ func TestReadTraceDeliveryLoopsExactBindingsAndNoProbes(t *testing.T) {
 	if json.Unmarshal(run.Contract, &frozen) != nil || frozen.Goal.Objective != "Observe a complete delivery without attributing synthetic evidence to a real human." || len(frozen.Goal.Requirements) != 1 || frozen.Goal.Requirements[0].Acceptance != "The actual acceptance entrypoint observes the fixture behavior." || frozen.Execution.ContractKind != "execution" {
 		t.Fatalf("current goal replaced frozen declarations: %s", run.Contract)
 	}
+	deliveryTestSingleReceipt(t, o)
 	verifications, results, qa, integration := traceKind(run, "verification"), traceKind(run, "task_result_technical"), traceKind(run, "human_qa"), traceKind(run, "integration")
 	if len(verifications) != 3 || len(results) != 2 || len(qa) != 2 || len(integration) != 1 {
 		t.Fatalf("attempt/candidate/QA counts=%d/%d/%d/%d; reasons=%+v", len(verifications), len(results), len(qa), len(integration), run.Reasons)

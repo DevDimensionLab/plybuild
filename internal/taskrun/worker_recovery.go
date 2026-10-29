@@ -111,7 +111,7 @@ func workerRecordedVerification(s workflowState) (deliveryVerificationReceipt, e
 	if err = workerNativeIntentMatches(s, in); err != nil {
 		return deliveryVerificationReceipt{}, err
 	}
-	r, err := deliveryRecoverVerification(s, w.Review.Locator)
+	r, _, err := deliveryRecoverVerification(s)
 	if err != nil {
 		return r, err
 	}

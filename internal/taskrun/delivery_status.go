@@ -2,7 +2,6 @@ package taskrun
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -310,37 +309,12 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 			v.Qualification = "not_qualified"
 		}
 		// Recover only observation here; this never executes or qualifies anything.
-		initialBytes, err := readFile(filepath.Join(attempt.Path, "attempt.json"), 256<<10, true)
-		var initial deliveryVerificationReceipt
-		if err == nil {
-			err = decode(initialBytes, 256<<10, &initial)
-		}
-		if err == nil {
-			_, err = deliveryRecoverVerification(s, initial.Review.Locator)
-		}
+		_, b, err := deliveryRecoverVerification(s)
 		if err != nil {
 			problem("delivery_verification_evidence_unknown", fmt.Sprintf("Attempt %s: %s", attempt.ID, err))
 			return out
 		}
-		b, _, err := deliveryReadBinding(filepath.Join(attempt.Path, "verification.json"), 256<<10)
-		if err != nil {
-			problem("delivery_verification_evidence_unknown", err.Error())
-			return out
-		}
 		binding = &b
-		// Recorded evidence is additionally bound by the immutable event chain.
-		if attempt.State == "recorded" {
-			found := false
-			for _, event := range delivery.Events {
-				if event.ID == attempt.ID && event.Kind == "verification" {
-					found = event.Binding.SHA256 == b.SHA256
-				}
-			}
-			if !found {
-				problem("delivery_verification_evidence_invalid", "Verification receipt differs from its recorded event")
-				return out
-			}
-		}
 	} else {
 		for i := len(delivery.Events) - 1; i >= 0; i-- {
 			event := delivery.Events[i]

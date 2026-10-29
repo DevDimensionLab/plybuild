@@ -242,7 +242,11 @@ func TestReadInventoryDeliveryOlderQuestionsAndReportedVerifiersStayHistorical(t
 	}
 	// A later domain event supersedes the reported question without promoting
 	// the cached delivery phase to a native technical/QA result.
-	_, err = deliveryAppendEvent(f.D, &s, "preserved-verification", "verification", deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256})
+	receipt := deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: s.Result.RunID, RequestSHA256: s.Result.RequestSHA256}
+	if err = f.D.writeValue(filepath.Join(s.Result.Paths.RunRoot, "delivery", "attempts", "preserved-verification", "verification.json"), receipt); err != nil {
+		t.Fatal(err)
+	}
+	_, err = deliveryAppendEvent(f.D, &s, "preserved-verification", "verification", receipt)
 	if err != nil {
 		t.Fatal(err)
 	}

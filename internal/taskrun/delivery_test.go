@@ -58,6 +58,30 @@ func deliveryTestHuman(t *testing.T, f deliveryFixture, o WorkflowRun, outcome s
 	return writeAny(t, f.R.WorkspaceRoot, fmt.Sprintf("human-%d-%s.json", c.Number, outcome), workflowhandoff.DeliveryHumanAttestation{Kind: "DeliveryHumanAttestation@1", SchemaVersion: 1, TaskID: "task", TaskResultID: string(c.TaskResult.ID), ResultOID: c.OID, ResultTree: c.Tree, Outcome: outcome, ActorClaim: "Synthetic fixture human, not real product approval", StartSurface: "isolated automated test", StartedAtUTC: "2026-10-05T00:00:00Z", CompletedAtUTC: "2026-10-05T00:00:01Z", Answer: outcome, Observation: "Synthetic protocol fixture only; no actual human QA."})
 }
 
+func deliveryTestSingleReceipt(t *testing.T, o WorkflowRun) {
+	t.Helper()
+	for i, event := range o.Delivery.Events {
+		if event.Kind != "verification" {
+			continue
+		}
+		path := filepath.Join(o.Paths.RunRoot, "delivery", "attempts", event.ID, "verification.json")
+		if event.Binding.Locator != path {
+			t.Errorf("verification does not bind its one receipt: %s", event.Binding.Locator)
+		}
+		if _, err := workflowBound(event.Binding, 256<<10); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(filepath.Join(o.Paths.RunRoot, "delivery", "events", fmt.Sprintf("%08d.json", i+1))); !os.IsNotExist(err) {
+			t.Errorf("verification retained a duplicate numbered event: %v", err)
+		}
+		for _, candidate := range o.Delivery.Candidates {
+			if candidate.Key == event.ID && candidate.Verification != event.Binding {
+				t.Error("candidate and event bind different receipts")
+			}
+		}
+	}
+}
+
 func TestDeliveryOwnerActualAcceptanceAndTruthfulProgress(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")
 	o := workflowTestStart(t, f.workflowFixture)
@@ -249,6 +273,7 @@ func TestDeliveryOwnerFailedVerifierReviewAndCandidateDrift(t *testing.T) {
 	if e == nil || o.Delivery.Phase != "working" || len(o.Delivery.Candidates) != 0 {
 		t.Fatalf("failed command qualified: %+v %v", o, e)
 	}
+	deliveryTestSingleReceipt(t, o)
 	var failed deliveryVerificationReceipt
 	if e = readValue(o.Delivery.Events[0].Binding.Locator, 1<<20, &failed); e != nil {
 		t.Fatal(e)
@@ -275,32 +300,67 @@ func TestDeliveryOwnerFailedVerifierReviewAndCandidateDrift(t *testing.T) {
 	}
 }
 
-func TestDeliveryOwnerCompletedVerificationRecoversWithoutRerun(t *testing.T) {
-	f := newDeliveryFixture(t, "codex")
-	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
-	deliveryTestCandidate(t, f, "one execution")
-	review := deliveryTestReview(t, f, "once")
-	counter := filepath.Join(f.R.WorkspaceRoot, "verifier-started")
-	if e := os.WriteFile(f.AcceptancePath, []byte("printf 'run\\n' >> "+ShellQuote(counter)+"\ntest \"$(cat README.md)\" = 'one execution'\n"), 0600); e != nil {
-		t.Fatal(e)
-	}
-	d := f.D
-	d.Fault = func(point string) error {
-		if point == "delivery_after_verification_receipt" {
-			return errors.New("synthetic lost response")
+type deliveryInterruptVerificationState struct {
+	systemFileSystem
+	after bool
+}
+
+func (f deliveryInterruptVerificationState) Replace(path string, raw []byte) error {
+	var s workflowState
+	if filepath.Base(path) == "state.json" && decode(raw, 8<<20, &s) == nil && s.Result.Delivery != nil && s.Result.Delivery.Attempt != nil && s.Result.Delivery.Attempt.State == "recorded" {
+		if f.after {
+			if err := f.systemFileSystem.Replace(path, raw); err != nil {
+				return err
+			}
 		}
-		return nil
+		return errors.New("interrupted verification state publication")
 	}
-	if _, e := WorkflowDeliveryVerify(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review); e == nil {
-		t.Fatal("fault did not stop")
-	}
-	var e error
-	o, e = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review)
-	if e != nil || o.Delivery.Phase != "awaiting_human_qa" {
-		t.Fatalf("receipt recovery failed: %+v %v", o, e)
-	}
-	b, e := os.ReadFile(counter)
-	if e != nil || string(b) != "run\n" {
-		t.Fatalf("verifier was replayed: %q %v", b, e)
+	return f.systemFileSystem.Replace(path, raw)
+}
+
+func TestDeliveryOwnerCompletedVerificationRecoversWithoutRerun(t *testing.T) {
+	for _, point := range []string{"delivery_after_verification_receipt", "state_before_replace", "state_after_replace"} {
+		t.Run(point, func(t *testing.T) {
+			f := newDeliveryFixture(t, "codex")
+			o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
+			deliveryTestCandidate(t, f, "one execution")
+			review := deliveryTestReview(t, f, "once")
+			counter := filepath.Join(f.R.WorkspaceRoot, "verifier-started")
+			if e := os.WriteFile(f.AcceptancePath, []byte("printf 'run\\n' >> "+ShellQuote(counter)+"\ntest \"$(cat README.md)\" = 'one execution'\n"), 0600); e != nil {
+				t.Fatal(e)
+			}
+			d := f.D
+			d.Fault = func(stage string) error {
+				if point == stage {
+					return errors.New("synthetic lost response")
+				}
+				return nil
+			}
+			if strings.HasPrefix(point, "state_") {
+				d.Files = deliveryInterruptVerificationState{after: point == "state_after_replace"}
+			}
+			if _, e := WorkflowDeliveryVerify(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review); e == nil {
+				t.Fatal("fault did not stop")
+			}
+			path := filepath.Join(o.Paths.RunRoot, "delivery", "attempts", "verify-00000001", "verification.json")
+			before, e := os.ReadFile(path)
+			if e != nil {
+				t.Fatal(e)
+			}
+			o, e = WorkflowDeliveryRequalify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review, "verify-00000001")
+			if e != nil || o.Delivery.Phase != "awaiting_human_qa" {
+				t.Fatalf("receipt recovery failed: %+v %v", o, e)
+			}
+			deliveryTestSingleReceipt(t, o)
+			after, err := os.ReadFile(path)
+			registry, registryErr := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
+			if err != nil || registryErr != nil || string(before) != string(after) || len(o.Delivery.Events) != 1 || len(o.Delivery.Candidates) != 1 || len(registry.TaskResults) != 1 {
+				t.Fatalf("recovery changed receipt or duplicated publication: %v %v", err, registryErr)
+			}
+			b, e := os.ReadFile(counter)
+			if e != nil || string(b) != "run\n" {
+				t.Fatalf("verifier was replayed: %q %v", b, e)
+			}
+		})
 	}
 }
