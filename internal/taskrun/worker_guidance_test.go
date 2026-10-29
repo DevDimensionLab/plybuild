@@ -88,7 +88,7 @@ func newAW01Fixture(t *testing.T) *aw01Fixture {
 	x := workspace.PlanWorktreeObservation{WorktreeLocator: root, Ref: "refs/heads/fixture", GitCommonDir: filepath.Join(root, "fixture.git"), OID: strings.Repeat("a", 40), Tree: strings.Repeat("b", 40), Clean: true, StatusEntries: []workspace.IntegrationStatusEntry{}, InProgress: []string{}}
 	f.d.Workspace.IntegrationGit = aw01Git{x: workspace.IntegrationWorktreeObservation{Locator: root, Ref: x.Ref, GitCommonDir: x.GitCommonDir, OID: x.OID, Tree: x.Tree, Clean: true}}
 	f.s = workflowState{Request: r, Observed: Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}}, Records: []workflowRecord{}, Result: WorkflowRun{
-		Envelope: deliveryEnv("run"), RunID: id, SessionID: "ply:" + id, RequestSHA256: digest(r), Paths: workflowPaths(r, 1),
+		Envelope: deliveryEnv("run"), RunID: id, SessionID: "ply:" + id, RequestSHA256: digest(r), Paths: testWorkflowPaths(r, 1),
 		Handoff: WorkflowHandoff{ID: "fixture", Locator: handoff.Locator, SHA256: handoff.SHA256},
 		Round:   WorkflowRound{Number: 1, State: "working"}, Reasons: []Reason{}, Delivery: &DeliveryState{Phase: "working", ActualPolicyEvidence: []Evidence{}, Events: []DeliveryEventRecord{}, Candidates: []DeliveryCandidate{}},
 		Worker:     &WorkerStatus{SessionID: "ply-worker:" + id, Phase: "running", Stage: "reviewer", Generation: 2, Iteration: 1, OwnerPID: 12345, DeveloperSessions: []string{}},

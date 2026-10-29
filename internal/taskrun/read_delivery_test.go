@@ -20,7 +20,7 @@ func deliveryInventoryState(t *testing.T, f deliveryFixture, key string) workflo
 	r.Delivery = &contract
 	r.Delivery.Goal = FileBinding{filepath.Join(r.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
 	x := workspace.PlanWorktreeObservation{StatusEntries: []workspace.IntegrationStatusEntry{}, InProgress: []string{}}
-	s := workflowInitial(r, Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
+	s := workflowInitial(r, testWorkflowPaths(r, 0), Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
 	s.Result.Transport = WorkflowTransport{WorkspaceID: "workspace", TabID: key, PaneID: key, TerminalID: key, AgentSessionID: "native-" + key, State: "working", ObservedAt: "2026-10-05T10:00:00Z"}
 	for _, path := range []string{filepath.Dir(workflowIndex(r.WorkspaceRoot, s.Result.RunID)), s.Result.Paths.RunRoot} {
 		if err := os.MkdirAll(path, 0700); err != nil {
@@ -150,7 +150,7 @@ func TestReadInventoryDeliveryCorruptionAndOrphansPreserveValidSiblings(t *testi
 		t.Fatal(err)
 	}
 	rows := deliveryInventoryRows(t, f)
-	if len(rows) != 4 || rows[valid.Result.RunID].Delivery.Report == nil || !rows[valid.Result.RunID].Delivery.Report.Current || rows[valid.Result.RunID].Freshness != "fresh" {
+	if len(rows) != 3 || rows[valid.Result.RunID].Delivery.Report == nil || !rows[valid.Result.RunID].Delivery.Report.Current || rows[valid.Result.RunID].Freshness != "fresh" {
 		t.Fatalf("corruption hid a valid sibling: %+v", rows)
 	}
 	bad := rows[brokenReport.Result.RunID]
@@ -161,9 +161,8 @@ func TestReadInventoryDeliveryCorruptionAndOrphansPreserveValidSiblings(t *testi
 	if bad.TaskID == nil || *bad.TaskID != "task" || bad.Freshness != "unknown" || !hasInventoryReason(bad, "delivery_state_unavailable") {
 		t.Fatalf("valid immutable Task binding lost with damaged mutable state: %+v", bad)
 	}
-	orphan := rows[orphanID]
-	if orphan.TaskID != nil || orphan.Delivery != nil || orphan.Freshness != "unknown" || !hasInventoryReason(orphan, "run_source_orphaned") {
-		t.Fatalf("orphan source acquired an invented Task: %+v", orphan)
+	if _, present := rows[orphanID]; present {
+		t.Fatal("unreserved directory became a run")
 	}
 }
 

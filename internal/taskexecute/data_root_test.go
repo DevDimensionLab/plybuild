@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/mitchellh/go-homedir"
 )
@@ -107,8 +108,12 @@ func TestExecuteFreezesConfiguredDataRootBeforeIntent(t *testing.T) {
 	if err != nil || started.State != "started" || started.Run == nil || started.RequestPath != first.RequestPath {
 		t.Fatalf("frozen attempt could not resume: %+v %v", started, err)
 	}
+	if started.Run.Paths.RunRoot != filepath.Join(root, "data-two", "workflow-runs", "runs", started.Run.RunID) {
+		t.Fatalf("new Run did not select current root: %+v", started.Run.Paths)
+	}
+	setProjectDataRoot(t, profile, filepath.Join(root, "data-three"))
 	repeated, err := Execute(d, in)
-	if err != nil || repeated.State != "existing" || repeated.Run == nil || repeated.Run.RunID != started.Run.RunID {
+	if err != nil || repeated.State != "existing" || repeated.Run == nil || repeated.Run.RunID != started.Run.RunID || repeated.Run.Paths != started.Run.Paths {
 		t.Fatalf("recovery restarted Run: %+v %v", repeated, err)
 	}
 	var model map[string]any
@@ -116,7 +121,7 @@ func TestExecuteFreezesConfiguredDataRootBeforeIntent(t *testing.T) {
 	if err != nil || json.Unmarshal(raw, &model) != nil || model["starts"] != float64(1) || model["prompts"] != float64(1) {
 		t.Fatalf("recovery duplicated provider: %s %v", raw, err)
 	}
-	for _, absent := range []string{filepath.Join(root, "data-two"), filepath.Join(root, ".ply", "task-executions")} {
+	for _, absent := range []string{filepath.Join(root, "data-two", "task-executions"), filepath.Join(root, "data-three"), filepath.Join(root, ".ply", "task-executions")} {
 		if _, err = os.Stat(absent); !os.IsNotExist(err) {
 			t.Fatalf("retry wrote outside frozen data root: %s", absent)
 		}
@@ -218,12 +223,20 @@ func TestBoundStartUsesFrozenRootAfterIntentPublication(t *testing.T) {
 	if _, err := os.Stat(firstRoot); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(secondRoot); !os.IsNotExist(err) {
-		t.Fatal("bound start wrote into new profile root")
+	if _, err := os.Stat(filepath.Join(secondRoot, "task-executions")); !os.IsNotExist(err) {
+		t.Fatal("bound start moved the frozen attempt")
 	}
 	d.Fault = nil
+	setProjectDataRoot(t, profile, firstRoot)
 	repeated, err := ApplyBoundStart(d, p.Request)
 	if err != nil || repeated.Run == nil || repeated.Run.RunID != started.Run.RunID {
 		t.Fatalf("bound replay changed Run: %+v %v", repeated, err)
+	}
+	shown, err := taskrun.WorkflowShow(d, root, started.Run.RunID)
+	if err != nil || shown.Paths.RunRoot != filepath.Join(secondRoot, "workflow-runs", "runs", started.Run.RunID) {
+		t.Fatalf("bound Run lost its reserved root: %+v %v", shown.Paths, err)
+	}
+	if _, err = os.Stat(shown.Paths.Context); err != nil {
+		t.Fatal(err)
 	}
 }

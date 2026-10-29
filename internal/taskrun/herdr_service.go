@@ -119,9 +119,9 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	}
 	return r, nil
 }
-func workflowInitial(r WorkflowRequest, observed Observed) workflowState {
+func workflowInitial(r WorkflowRequest, paths WorkflowPaths, observed Observed) workflowState {
 	id := workflowID(r)
-	o := WorkflowRun{Envelope: workflowEnv("run"), RunID: id, RequestSHA256: digest(r), SessionID: "ply:" + id, Paths: workflowPaths(r, 0), Transport: WorkflowTransport{WorkspaceID: r.Herdr.WorkspaceID, State: "unknown", Observation: "cached"}, Round: WorkflowRound{State: "awaiting_acceptance"}, Budget: WorkflowBudget{MeasurementSource: "unknown"}, FinalReturn: WorkflowFinal{State: "pending"}, TaskResultState: "not_published", Reasons: []Reason{}, NextAction: WorkflowAction{"coordinator", "Inspect the reserved startup and any native onboarding in the same tab; wait for a bound session and prompt before recipient acceptance. Do not restart."}, RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "unknown"}}
+	o := WorkflowRun{Envelope: workflowEnv("run"), RunID: id, RequestSHA256: digest(r), SessionID: "ply:" + id, Paths: paths, Transport: WorkflowTransport{WorkspaceID: r.Herdr.WorkspaceID, State: "unknown", Observation: "cached"}, Round: WorkflowRound{State: "awaiting_acceptance"}, Budget: WorkflowBudget{MeasurementSource: "unknown"}, FinalReturn: WorkflowFinal{State: "pending"}, TaskResultState: "not_published", Reasons: []Reason{}, NextAction: WorkflowAction{"coordinator", "Inspect the reserved startup and any native onboarding in the same tab; wait for a bound session and prompt before recipient acceptance. Do not restart."}, RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "unknown"}}
 	o.Provider = r.Runtime.Provider
 	if deliveryRun(r) {
 		o.Envelope = deliveryEnv("run")
@@ -156,8 +156,8 @@ func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
 	}
 	return &s.Result, nil
 }
-func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPreview, error) {
-	p := WorkflowPreview{Envelope: workflowEnv("run-preview"), RunID: workflowID(r), RequestSHA256: digest(r), Reasons: []Reason{}, Effects: []string{"Reserve this Task target and one native handoff", "Create one background Herdr tab and one Codex session", "If needed, send one tool-free readiness message before binding the native session and sending the Task", "Preserve acceptance, immutable round reports and coordinator review", "Return a reviewed report; do not publish TaskResult or attest provider inactivity"}, Paths: workflowPaths(r, 0)}
+func workflowPreview(d Dependencies, r WorkflowRequest, file string, paths WorkflowPaths) (WorkflowPreview, error) {
+	p := WorkflowPreview{Envelope: workflowEnv("run-preview"), RunID: workflowID(r), RequestSHA256: digest(r), Reasons: []Reason{}, Effects: []string{"Reserve this Task target and one native handoff", "Create one background Herdr tab and one Codex session", "If needed, send one tool-free readiness message before binding the native session and sending the Task", "Preserve acceptance, immutable round reports and coordinator review", "Return a reviewed report; do not publish TaskResult or attest provider inactivity"}, Paths: paths}
 	p.Provider = r.Runtime.Provider
 	if r.Runtime.Provider == "claude" {
 		p.Effects[1] = "Create one background Herdr tab and one Claude session in " + r.Runtime.PermissionBinding.ProfileID + " permission mode"
@@ -181,6 +181,25 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string) (WorkflowPr
 		n, e = previewLocked(d, workflowNativeRequest(r), file)
 	}
 	p.Observed = n.Observed
+	if e == nil && p.Paths.RunRoot == "" {
+		dataRoot := filepath.Join(r.WorkspaceRoot, ".ply")
+		if d.Workspace.ProjectDataRoot != nil {
+			var configured string
+			configured, e = d.Workspace.ProjectDataRoot(string(n.Preparation.Plan.Target.ProjectID))
+			if configured != "" {
+				dataRoot = configured
+			}
+		}
+		if e == nil {
+			e = physical(dataRoot, true)
+		}
+		if e == nil {
+			p.Paths = workflowPaths(filepath.Join(dataRoot, "workflow-runs", "runs", p.RunID), 0)
+		}
+	}
+	if e == nil {
+		e = workflowRunPath(p.Paths, p.RunID)
+	}
 	if headlessRun(r) {
 		p.Effects = []string{"Reserve exactly one selected Goal, Task and native Run", "Start a detached supervisor and one bounded Codex developer at a time", "Enforce Task-file writes and a separate read-only reviewer session; preserve actual test and review evidence", "Qualify automatic acceptance and integrate only into the frozen local Epic", "Retain Task resources on completion; pause, stop and resume preserve this same Run"}
 	}
@@ -235,7 +254,7 @@ func WorkflowPreviewStart(d Dependencies, file string) (any, error) {
 		}
 		return nil, e
 	}
-	p, e := workflowPreview(d, r, file)
+	p, e := workflowPreview(d, r, file, WorkflowPaths{})
 	if e == nil && p.CodexTrust != nil && p.CodexTrust.Effect != "" {
 		workflowLogCodexTrust(r, "preview", p.CodexTrust.Effect, p.CodexTrust.Reason)
 	}
@@ -255,7 +274,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 		}
 		return WorkflowRun{}, e
 	}
-	p, e := workflowPreview(d, r, file)
+	p, e := workflowPreview(d, r, file, WorkflowPaths{})
 	if e != nil {
 		return WorkflowRun{}, e
 	}
@@ -283,14 +302,14 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 		return workflowhandoff.WithTaskRunSnapshot(d.Workflow, r.WorkspaceRoot, func(wf workflowhandoff.Dependencies) error {
 			locked := d
 			locked.Workflow = wf
-			fresh, e := workflowPreview(locked, r, file)
+			fresh, e := workflowPreview(locked, r, file, p.Paths)
 			if e != nil {
 				return e
 			}
 			if fresh.Confirmation == nil || *fresh.Confirmation != confirm {
 				return &Error{Code: WorkflowStartBindingConflict, Exit: 4, Detail: "start bindings changed before reservation"}
 			}
-			s := workflowInitial(r, fresh.Observed)
+			s := workflowInitial(r, fresh.Paths, fresh.Observed)
 			s.CodexTrust = fresh.CodexTrust
 			s.ClaudeTrust = fresh.ClaudeTrust
 			if e = d.writeValue(workflowIndex(r.WorkspaceRoot, s.Result.RunID), s); e != nil {
@@ -377,7 +396,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 func workflowNewContext(d Dependencies, s *workflowState) error {
 	o := &s.Result
 	if s.Recovery == nil {
-		o.Paths = workflowPaths(s.Request, o.Round.Number)
+		o.Paths.Context = workflowPaths(o.Paths.RunRoot, o.Round.Number).Context
 	}
 	runtime, e := workflowEffectiveRuntime(*s)
 	if e != nil {

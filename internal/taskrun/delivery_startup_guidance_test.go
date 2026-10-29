@@ -42,7 +42,7 @@ func al51FailedStartup(t *testing.T, f deliveryFixture, bootstrap bool) Workflow
 		workflowTestModel(t, f.workflowFixture, map[string]any{
 			"bootstrap_mode": "no_session", "interactive_ready": true,
 			"bootstrap_expected_prompt": workflowExpectedBootstrapPrompt,
-			"bootstrap_run_root":        workflowPaths(f.R, 0).RunRoot,
+			"bootstrap_run_root":        testWorkflowPaths(f.R, 0).RunRoot,
 		})
 	} else {
 		workflowTestModel(t, f.workflowFixture, map[string]any{

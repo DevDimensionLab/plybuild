@@ -15,8 +15,10 @@ func (r *traceReader) workflow(root, id string) {
 	if err == nil {
 		err = decode(raw, 4<<20, &reserved)
 	}
-	expected := filepath.Join(workflowRoot(root), "runs", id)
-	if err != nil || workflowID(reserved.Request) != id || reserved.Request.WorkspaceRoot != root || reserved.Result.RunID != id || reserved.Result.RequestSHA256 != digest(reserved.Request) || reserved.Result.SessionID != "ply:"+id || reserved.Result.Paths.RunRoot != expected {
+	if err == nil {
+		err = workflowReservation(root, id, reserved)
+	}
+	if err != nil {
 		r.problem("trace_run_unbound", "Workflow reservation identity is unavailable: "+reservationPath)
 		return
 	}
@@ -53,6 +55,7 @@ func (r *traceReader) workflow(root, id string) {
 	entry.Data = traceJSON(map[string]any{"family": r.run.Family, "request_sha256": r.run.RequestSHA256, "human_authority": reserved.Request.HumanAuthority, "meaning": "The preserved request declares authority; it is not a present runtime observation or an authenticated human action."})
 	r.run.Entries = append(r.run.Entries, entry)
 	s := reserved
+	expected := reserved.Result.Paths.RunRoot
 	statePath := filepath.Join(expected, "state.json")
 	stateBytes, err := r.read(statePath, 8<<20)
 	if err == nil {

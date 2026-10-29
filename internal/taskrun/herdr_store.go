@@ -17,6 +17,26 @@ func workflowRoundName(n int) string { return fmt.Sprintf("%03d", n) }
 func workflowIndex(root, id string) string {
 	return filepath.Join(workflowRoot(root), "requests", id+".json")
 }
+func workflowRunPath(paths WorkflowPaths, id string) error {
+	root := paths.RunRoot
+	if filepath.Base(root) != id || filepath.Base(filepath.Dir(root)) != "runs" || filepath.Base(filepath.Dir(filepath.Dir(root))) != "workflow-runs" || paths.Context != workflowPaths(root, 0).Context {
+		return integrity("run path differs from its reservation")
+	}
+	dir, err := physicalRoot(root, false)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	return dir.Close()
+}
+func workflowReservation(root, id string, s workflowState) error {
+	if workflowID(s.Request) != id || s.Request.WorkspaceRoot != root || s.Result.RunID != id || s.Result.RequestSHA256 != digest(s.Request) || s.Result.SessionID != "ply:"+id {
+		return integrity("reservation binding changed")
+	}
+	return workflowRunPath(s.Result.Paths, id)
+}
 func workflowRead(root, id string) (workflowState, error) {
 	var s workflowState
 	if !regexp.MustCompile(`^wfr_[0-9a-f]{64}$`).MatchString(id) {
@@ -26,8 +46,8 @@ func workflowRead(root, id string) (workflowState, error) {
 	if e != nil {
 		return s, e
 	}
-	if workflowID(s.Request) != id || s.Request.WorkspaceRoot != root || s.Result.RequestSHA256 != digest(s.Request) {
-		return s, workflowError(4, "reservation binding changed")
+	if e = workflowReservation(root, id, s); e != nil {
+		return s, e
 	}
 	var saved workflowState
 	if headlessRun(s.Request) {

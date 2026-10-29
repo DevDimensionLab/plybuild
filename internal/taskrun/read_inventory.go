@@ -103,7 +103,6 @@ func readInventory(d Dependencies, root string, readCloseouts func(string) ([]wo
 		}
 		return closeouts[id], closeoutErr
 	}
-	workflowIDs := map[string]bool{}
 	for _, store := range []struct{ path, kind string }{
 		{filepath.Join(storeRoot(root), "runs"), "native"},
 		{filepath.Join(workflowRoot(root), "requests"), "herdr"},
@@ -132,7 +131,6 @@ func readInventory(d Dependencies, root string, readCloseouts func(string) ([]wo
 			}
 			var row InventoryRun
 			if store.kind == "herdr" {
-				workflowIDs[id] = true
 				row = readHerdrInventoryRunWithCloseout(d, root, id, closeout)
 			} else {
 				row = readNativeInventoryRun(d, root, id)
@@ -140,29 +138,6 @@ func readInventory(d Dependencies, root string, readCloseouts func(string) ([]wo
 			out.Runs = append(out.Runs, row)
 		}
 		inventoryCheckEntries(&out, store.path, entries)
-	}
-	// A run directory without its request cannot safely acquire a Task identity.
-	// Keep it as an identifiable orphan instead of silently dropping evidence.
-	path := filepath.Join(workflowRoot(root), "runs")
-	entries, err := inventoryEntries(path)
-	if err != nil && !os.IsNotExist(err) {
-		out.Reasons = append(out.Reasons, Reason{"run_store_unavailable", "herdr run directories could not be read: " + err.Error()})
-	}
-	for _, entry := range entries {
-		id := entry.Name()
-		if strings.HasPrefix(id, ".publish-") || workflowIDs[id] {
-			continue
-		}
-		if !workflowRunIDPattern.MatchString(id) {
-			out.Reasons = append(out.Reasons, Reason{"run_entry_unrecognized", fmt.Sprintf("Unrecognized entry in herdr run directories: %q", id)})
-			continue
-		}
-		row := inventoryEmpty(id, "herdr")
-		row.Reasons = append(row.Reasons, Reason{"run_source_orphaned", "Preserved run directory has no captured request: " + filepath.Join(path, id)})
-		out.Runs = append(out.Runs, row)
-	}
-	if err == nil {
-		inventoryCheckEntries(&out, path, entries)
 	}
 	sort.Slice(out.Runs, func(i, j int) bool { return out.Runs[i].RunID < out.Runs[j].RunID })
 	return out, nil
@@ -330,21 +305,16 @@ func readHerdrInventoryRunWithCloseout(d Dependencies, root, id string, closeout
 		return row
 	}
 	defer func() { inventorySource(&row, reservation, b, 4<<20) }()
-	// Do not follow a stored run path until it matches its request-derived path.
 	var reserved workflowState
 	if err = decode(b, 4<<20, &reserved); err != nil {
 		inventoryProblem(&row, err)
 		return row
 	}
-	if workflowID(reserved.Request) != id || reserved.Request.WorkspaceRoot != root || reserved.Result.RunID != id || reserved.Result.RequestSHA256 != digest(reserved.Request) || reserved.Result.SessionID != "ply:"+id {
-		inventoryProblem(&row, integrity("reservation binding changed"))
+	if err = workflowReservation(root, id, reserved); err != nil {
+		inventoryProblem(&row, err)
 		return row
 	}
-	expected := filepath.Join(workflowRoot(root), "runs", id)
-	if reserved.Result.Paths.RunRoot != expected {
-		inventoryProblem(&row, integrity("run root differs from its registered store"))
-		return row
-	}
+	expected := reserved.Result.Paths.RunRoot
 	statePath := filepath.Join(expected, "state.json")
 	stateBytes, stateErr := readFile(statePath, 8<<20, true)
 	// Decode the bytes captured here instead of rereading mutable state through

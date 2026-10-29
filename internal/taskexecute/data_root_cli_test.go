@@ -9,6 +9,9 @@ import (
 	"strings"
 	"testing"
 	"unicode/utf8"
+
+	"github.com/devdimensionlab/plybuild/internal/taskrun"
+	"github.com/devdimensionlab/plybuild/internal/workflowtrace"
 )
 
 func TestProjectDataRootPublicCLIStartupAndReadback(t *testing.T) {
@@ -56,6 +59,9 @@ func TestProjectDataRootPublicCLIStartupAndReadback(t *testing.T) {
 			if err := json.Unmarshal(call(epic, args...), &first); err != nil || first.Run == nil || first.State != "started" {
 				t.Fatalf("startup failed: %+v %v", first, err)
 			}
+			if first.Run.Paths.RunRoot != filepath.Join(data, "workflow-runs", "runs", first.Run.RunID) {
+				t.Fatalf("Run ignored configured root: %+v", first.Run.Paths)
+			}
 			setProjectDataRoot(t, profile, filepath.Join(root, "changed-root"))
 			if err := json.Unmarshal(call(epic, args...), &repeated); err != nil || repeated.Run == nil || repeated.State != "existing" || repeated.Run.RunID != first.Run.RunID || repeated.RequestPath != first.RequestPath {
 				t.Fatalf("repeat changed attempt: %+v %v", repeated, err)
@@ -66,12 +72,27 @@ func TestProjectDataRootPublicCLIStartupAndReadback(t *testing.T) {
 			if err := json.Unmarshal(call(root, "workflow", "execute", "show", first.Run.RunID, "--format", "json"), &shown); err != nil || shown.RunID != first.Run.RunID {
 				t.Fatalf("readback from another cwd failed: %+v %v", shown, err)
 			}
+			var inventory struct{ Runs []taskrun.InventoryRun }
+			if err := json.Unmarshal(call(root, "workspace", "run", "list", "--format", "json"), &inventory); err != nil || len(inventory.Runs) != 1 || inventory.Runs[0].RunID != first.Run.RunID || inventory.Runs[0].Freshness != "fresh" {
+				t.Fatalf("inventory lost Run: %+v %v", inventory, err)
+			}
+			var trace workflowtrace.Result
+			if err := json.Unmarshal(call(root, "workflow", "trace", "goal", "--format", "json"), &trace); err != nil || len(trace.Runs) != 1 || trace.Runs[0].ID != first.Run.RunID {
+				t.Fatalf("trace lost Run: %+v %v", trace, err)
+			}
+			stateRead := false
+			for _, source := range trace.Sources {
+				stateRead = stateRead || source.Locator == filepath.Join(first.Run.Paths.RunRoot, "state.json") && source.Status == "valid"
+			}
+			if !stateRead {
+				t.Fatal("trace did not read valid reserved state")
+			}
 			var model map[string]any
 			raw, err := os.ReadFile(filepath.Join(root, "bin", "recovery-model.json"))
 			if err != nil || json.Unmarshal(raw, &model) != nil || model["tabs"] != float64(1) || model["starts"] != float64(1) || model["prompts"] != float64(1) {
 				t.Fatalf("duplicate transport: %s %v", raw, err)
 			}
-			for _, absent := range []string{filepath.Join(root, "changed-root"), filepath.Join(root, ".ply", "task-executions")} {
+			for _, absent := range []string{filepath.Join(root, "changed-root"), filepath.Join(root, ".ply", "task-executions"), filepath.Join(root, ".ply", "workflow-runs", "runs")} {
 				if _, err := os.Stat(absent); !os.IsNotExist(err) {
 					t.Fatalf("unexpected attempt files: %s", absent)
 				}

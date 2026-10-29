@@ -27,7 +27,7 @@ func workflowBootstrapFixture(t *testing.T, mode string) workflowFixture {
 	workflowTestModel(t, f, map[string]any{
 		"bootstrap_mode": mode, "interactive_ready": true,
 		"bootstrap_expected_prompt": workflowExpectedBootstrapPrompt,
-		"bootstrap_run_root":        workflowPaths(f.R, 0).RunRoot,
+		"bootstrap_run_root":        testWorkflowPaths(f.R, 0).RunRoot,
 	})
 	return f
 }

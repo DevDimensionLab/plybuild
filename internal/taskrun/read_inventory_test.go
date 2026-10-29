@@ -28,7 +28,7 @@ func TestReadInventoryPreservesProviderAndDoesNotClaimCachedLiveness(t *testing.
 		w := WorkflowRequest{Envelope: workflowEnv("herdr-run-request"), RequestKey: "inventory/" + provider, WorkspaceRoot: r.WorkspaceRoot, PreparationID: r.PreparationID, PreparationSHA256: r.PreparationSHA256, HandoffDraft: r.HandoffDraft, Runtime: r.Runtime}
 		w.Runtime.Provider = provider
 		x := workspace.PlanWorktreeObservation{StatusEntries: []workspace.IntegrationStatusEntry{}, InProgress: []string{}}
-		s := workflowInitial(w, Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
+		s := workflowInitial(w, testWorkflowPaths(w, 0), Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
 		s.Result.Transport = WorkflowTransport{WorkspaceID: "w1", TabID: "t7", PaneID: "p7", AgentSessionID: provider + "-native", State: "working", ObservedAt: "2026-10-05T10:00:00Z"}
 		for _, path := range []string{filepath.Dir(workflowIndex(r.WorkspaceRoot, s.Result.RunID)), s.Result.Paths.RunRoot} {
 			if err := os.MkdirAll(path, 0700); err != nil {

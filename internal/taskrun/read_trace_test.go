@@ -456,7 +456,7 @@ func traceLegacyFixture(t *testing.T, f deliveryFixture) func() (string, string)
 	return func() (string, string) {
 		t.Helper()
 		x := workspace.PlanWorktreeObservation{StatusEntries: []workspace.IntegrationStatusEntry{}, InProgress: []string{}}
-		s := workflowInitial(old, Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
+		s := workflowInitial(old, testWorkflowPaths(old, 0), Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
 		s.Result.Handoff = WorkflowHandoff{link.HandoffID, link.Locator, link.SHA256}
 		for _, path := range []string{filepath.Dir(workflowIndex(old.WorkspaceRoot, s.Result.RunID)), s.Result.Paths.RunRoot, runPaths(native).RunRoot} {
 			if err = os.MkdirAll(path, 0700); err != nil {
@@ -584,7 +584,7 @@ func TestReadTraceOmitsRunWhoseRequestDisappearsAfterInventory(t *testing.T) {
 			if family == "workflow" {
 				wr := WorkflowRequest{Envelope: workflowEnv("herdr-run-request"), RequestKey: "trace/disappearing", WorkspaceRoot: request.WorkspaceRoot, PreparationID: request.PreparationID, PreparationSHA256: request.PreparationSHA256, HandoffDraft: request.HandoffDraft, Runtime: request.Runtime}
 				x := workspace.PlanWorktreeObservation{StatusEntries: []workspace.IntegrationStatusEntry{}, InProgress: []string{}}
-				s := workflowInitial(wr, Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
+				s := workflowInitial(wr, testWorkflowPaths(wr, 0), Observed{Target: x, Epic: x, RuntimeBindings: []FileBinding{}})
 				id, path, content = s.Result.RunID, workflowIndex(request.WorkspaceRoot, s.Result.RunID), s
 			}
 			if err = os.MkdirAll(filepath.Dir(path), 0700); err != nil {

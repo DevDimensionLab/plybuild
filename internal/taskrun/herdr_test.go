@@ -139,39 +139,71 @@ func workflowTestReview(t *testing.T, f workflowFixture, o WorkflowRun, decision
 }
 
 func TestWorkflowConcurrentStartsAndLegacyReservation(t *testing.T) {
-	f := workflowTestFixture(t)
-	p, e := WorkflowPreviewStart(f.D, f.File)
-	if e != nil {
-		t.Fatal(e)
-	}
-	confirmation := *p.(WorkflowPreview).Confirmation
-	var wg sync.WaitGroup
-	errs := make(chan error, 2)
-	for i := 0; i < 2; i++ {
-		wg.Add(1)
-		go func() { defer wg.Done(); _, e := WorkflowStart(f.D, f.File, confirmation); errs <- e }()
-	}
-	wg.Wait()
-	close(errs)
-	for e := range errs {
-		if e != nil {
-			t.Fatal(e)
-		}
-	}
-	for _, cmd := range []string{"tab create", "agent start", "agent prompt"} {
-		if n := workflowTestCalls(t, f, cmd); n != 1 {
-			t.Fatalf("%s: %d", cmd, n)
-		}
-	}
-	r := workflowNativeRequest(f.R)
-	r.RequestKey = "another/native"
-	if _, e = PreviewStart(f.D, writeAny(t, f.R.WorkspaceRoot, "native-other.json", r)); e == nil {
-		t.Fatal("legacy start ignored workflow target reservation")
-	}
-	other := f.R
-	other.RequestKey = "another/workflow"
-	if _, e = WorkflowPreviewStart(f.D, writeAny(t, f.R.WorkspaceRoot, "other.json", other)); e == nil {
-		t.Fatal("second workflow ignored target reservation")
+	for _, different := range []bool{false, true} {
+		t.Run(fmt.Sprint(different), func(t *testing.T) {
+			f := workflowTestFixture(t)
+			f.D.Workspace.ProjectDataRoot = func(string) (string, error) { return filepath.Join(f.R.WorkspaceRoot, "selected-data"), nil }
+			p, e := WorkflowPreviewStart(f.D, f.File)
+			if e != nil {
+				t.Fatal(e)
+			}
+			var wg, ready sync.WaitGroup
+			ready.Add(2)
+			errs := make(chan error, 2)
+			for i := 0; i < 2; i++ {
+				d := f.D
+				if different && i == 1 {
+					d.Workspace.ProjectDataRoot = func(string) (string, error) { return filepath.Join(f.R.WorkspaceRoot, "other-data"), nil }
+					p, e = WorkflowPreviewStart(d, f.File)
+					if e != nil {
+						t.Fatal(e)
+					}
+				}
+				confirmation := *p.(WorkflowPreview).Confirmation
+				d.Fault = func(point string) error {
+					if point == "workflow_before_reservation" {
+						ready.Done()
+						ready.Wait()
+					}
+					return nil
+				}
+				wg.Add(1)
+				go func() { defer wg.Done(); _, e := WorkflowStart(d, f.File, confirmation); errs <- e }()
+			}
+			wg.Wait()
+			close(errs)
+			for e := range errs {
+				if e != nil {
+					t.Fatal(e)
+				}
+			}
+			for _, cmd := range []string{"tab create", "agent start", "agent prompt"} {
+				if n := workflowTestCalls(t, f, cmd); n != 1 {
+					t.Fatalf("%s: %d", cmd, n)
+				}
+			}
+			if different {
+				created := 0
+				for _, name := range []string{"selected-data", "other-data"} {
+					if _, err := os.Stat(filepath.Join(f.R.WorkspaceRoot, name)); err == nil {
+						created++
+					}
+				}
+				if created != 1 {
+					t.Fatalf("both competing roots were written: %d", created)
+				}
+			}
+			r := workflowNativeRequest(f.R)
+			r.RequestKey = "another/native"
+			if _, e = PreviewStart(f.D, writeAny(t, f.R.WorkspaceRoot, "native-other.json", r)); e == nil {
+				t.Fatal("legacy start ignored workflow target reservation")
+			}
+			other := f.R
+			other.RequestKey = "another/workflow"
+			if _, e = WorkflowPreviewStart(f.D, writeAny(t, f.R.WorkspaceRoot, "other.json", other)); e == nil {
+				t.Fatal("second workflow ignored target reservation")
+			}
+		})
 	}
 }
 func TestWorkflowLegacyReservationBlocksHerdr(t *testing.T) {
@@ -281,6 +313,8 @@ func TestWorkflowCrashReservationsCannotRestart(t *testing.T) {
 	for _, point := range []string{"workflow_after_reservation", "workflow_before_tab_send", "workflow_before_agent_send", "workflow_before_prompt_send"} {
 		t.Run(point, func(t *testing.T) {
 			f := workflowTestFixture(t)
+			data := filepath.Join(f.R.WorkspaceRoot, "selected-data")
+			f.D.Workspace.ProjectDataRoot = func(string) (string, error) { return data, nil }
 			p, e := WorkflowPreviewStart(f.D, f.File)
 			if e != nil {
 				t.Fatal(e)
@@ -293,6 +327,24 @@ func TestWorkflowCrashReservationsCannotRestart(t *testing.T) {
 				return nil
 			}
 			_, _ = WorkflowStart(d, f.File, *p.(WorkflowPreview).Confirmation)
+			f.D.Workspace.ProjectDataRoot = func(string) (string, error) { return "", errors.New("mapping removed") }
+			s, readErr := workflowRead(f.R.WorkspaceRoot, workflowID(f.R))
+			if readErr != nil || s.Result.Paths.RunRoot != filepath.Join(data, "workflow-runs", "runs", workflowID(f.R)) {
+				t.Fatalf("crash lost selected root: %+v %v", s.Result.Paths, readErr)
+			}
+			if point == "workflow_after_reservation" {
+				rows, err := ReadInventory(f.D, f.R.WorkspaceRoot)
+				if err != nil || len(rows.Runs) != 1 || rows.Runs[0].TaskID == nil {
+					t.Fatalf("lost incomplete reservation: %+v %v", rows, err)
+				}
+				traced := traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), s.Result.RunID)
+				if !traceReason(traced, "trace_state_unavailable") {
+					t.Fatal("missing state became complete trace")
+				}
+				if _, err = os.Stat(s.Result.Paths.RunRoot); !os.IsNotExist(err) {
+					t.Fatal("reservation wrote Run files")
+				}
+			}
 			before := workflowTestCalls(t, f, "tab create") + workflowTestCalls(t, f, "agent start") + workflowTestCalls(t, f, "agent prompt")
 			if _, e = WorkflowStart(f.D, f.File, *p.(WorkflowPreview).Confirmation); e != nil {
 				t.Fatal(e)

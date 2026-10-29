@@ -68,13 +68,13 @@ func TestWorkflowStartupConfirmationUsesRelevantContentDependencies(t *testing.T
 	if _, err := workspace.CreateTask(f.D.Workspace, workspace.TaskCreateInput{TaskID: "sibling", Title: "Sibling", Description: "Independent content", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
-	before, err := workflowPreview(f.D, f.R, f.File)
+	before, err := workflowPreview(f.D, f.R, f.File, WorkflowPaths{})
 	if err != nil {
 		t.Fatal(err)
 	}
 	beforeCLI := cliPreview()
 	startupPublishSiblingProblem(t, f.D, f.R.WorkspaceRoot)
-	after, err := workflowPreview(f.D, f.R, f.File)
+	after, err := workflowPreview(f.D, f.R, f.File, WorkflowPaths{})
 	if err != nil {
 		t.Fatal(err)
 	}

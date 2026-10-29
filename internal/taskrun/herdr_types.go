@@ -214,9 +214,8 @@ func workflowID(r WorkflowRequest) string {
 	return "wfr_" + strings.TrimPrefix(digest([]string{r.WorkspaceRoot, r.RequestKey}), "sha256:")
 }
 func workflowRoot(root string) string { return filepath.Join(root, ".ply", "workflow-runs") }
-func workflowPaths(r WorkflowRequest, round int) WorkflowPaths {
-	p := filepath.Join(workflowRoot(r.WorkspaceRoot), "runs", workflowID(r))
-	return WorkflowPaths{p, filepath.Join(p, "rounds", workflowRoundName(round), "context.json")}
+func workflowPaths(root string, round int) WorkflowPaths {
+	return WorkflowPaths{root, filepath.Join(root, "rounds", workflowRoundName(round), "context.json")}
 }
 func workflowNativeRequest(r WorkflowRequest) Request {
 	return Request{Envelope: env("request"), RequestKey: r.RequestKey, WorkspaceRoot: r.WorkspaceRoot, PreparationID: r.PreparationID, PreparationSHA256: r.PreparationSHA256, HandoffDraft: r.HandoffDraft, Runtime: r.Runtime, Agreement: r.Agreement, HumanAuthority: HumanAuthority{r.HumanAuthority.ActorClaim, "human_ordinary_terminal", r.HumanAuthority.Authorized}, ReturnPolicy: ReturnPolicy{true, true, "separate", "separate"}}

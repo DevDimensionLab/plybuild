@@ -67,7 +67,7 @@ func deliveryRecoveryNewFixture(t *testing.T) deliveryFixture {
 	workflowTestModel(t, f.workflowFixture, map[string]any{
 		"bootstrap_mode": "no_session", "interactive_ready": true,
 		"bootstrap_expected_prompt": workflowExpectedBootstrapPrompt,
-		"bootstrap_run_root":        workflowPaths(f.R, 0).RunRoot,
+		"bootstrap_run_root":        testWorkflowPaths(f.R, 0).RunRoot,
 	})
 	return f
 }
