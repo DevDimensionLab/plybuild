@@ -941,8 +941,7 @@
             "operation_id",
             "plan_sha256",
             "state",
-            "resource_state",
-            "lifecycle_completed"
+            "resource_state"
           ],
           "properties": {
             "kind": {
@@ -972,9 +971,6 @@
                 "retired",
                 "kept"
               ]
-            },
-            "lifecycle_completed": {
-              "type": "boolean"
             }
           },
           "additionalProperties": true,

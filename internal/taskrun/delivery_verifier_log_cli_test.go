@@ -52,7 +52,7 @@ func assertVerifierLogsRetained(t *testing.T, f deliveryFixture, o WorkflowRun, 
 	t.Helper()
 	c := o.Delivery.Candidates[0]
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved || closeout.Retention == nil {
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved || closeout.Retention == nil {
 		t.Fatalf("native closeout with retained evidence incomplete: %+v %v", closeout, err)
 	}
 	logs := 0

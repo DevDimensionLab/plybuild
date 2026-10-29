@@ -90,7 +90,7 @@ func TestTaskCloseoutPreviewAndApplyRequireDifferentIntegrationPhases(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	if receipt.State != "complete" || receipt.ResourceState != "retired" || !receipt.BranchRemoved || !receipt.WorktreeRemoved || !receipt.LifecycleCompleted {
+	if receipt.State != "complete" || receipt.ResourceState != "retired" || !receipt.BranchRemoved || !receipt.WorktreeRemoved {
 		t.Fatalf("receipt = %+v", receipt)
 	}
 	if _, err := os.Stat(f.taskPath); !os.IsNotExist(err) {
@@ -138,6 +138,9 @@ func TestTaskCloseoutPreviewAndApplyRequireDifferentIntegrationPhases(t *testing
 		t.Fatal(err)
 	}
 	storeBefore, _ := os.ReadFile(filepath.Join(f.root, MarkerDirectory, taskCloseoutsFile))
+	if strings.Contains(string(storeBefore), `"lifecycle_completed"`) {
+		t.Fatal("closeout receipt serialized a duplicate completion marker")
+	}
 	in.OperationID = "second-delivery-same-effect"
 	repeated, err := ApplyTaskCloseout(f.dependencies, in, preview.PlanSHA256)
 	if err != nil || repeated.OperationID != receipt.OperationID {

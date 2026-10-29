@@ -547,7 +547,7 @@ func (r *traceReader) deliveryCloseout(s workflowState, e TraceEntry, raw []byte
 	}
 	c, found := candidates[observed.Candidate]
 	plan := observed.Result.Plan
-	if !found || deliveryEffectiveAgreement(s) == nil || !deliveryEffectiveAgreement(s).AutomaticAcceptance() || plan.TaskID != c.TaskResult.TaskID || plan.TaskResultID != c.TaskResult.ID || plan.ResultOID != c.OID || plan.ResultTree != c.Tree || plan.Source.Locator != c.TaskResult.SourceLocator || plan.Source.Ref != c.TaskResult.SourceRef || observed.Result.State != "complete" || !observed.Result.LifecycleCompleted || plan.Keep && (observed.Result.ResourceState != "kept" || observed.Result.WorktreeRemoved || observed.Result.BranchRemoved) || !plan.Keep && (observed.Result.ResourceState != "retired" || !observed.Result.WorktreeRemoved || !observed.Result.BranchRemoved) {
+	if !found || deliveryEffectiveAgreement(s) == nil || !deliveryEffectiveAgreement(s).AutomaticAcceptance() || plan.TaskID != c.TaskResult.TaskID || plan.TaskResultID != c.TaskResult.ID || plan.ResultOID != c.OID || plan.ResultTree != c.Tree || plan.Source.Locator != c.TaskResult.SourceLocator || plan.Source.Ref != c.TaskResult.SourceRef || observed.Result.State != "complete" || plan.Keep && (observed.Result.ResourceState != "kept" || observed.Result.WorktreeRemoved || observed.Result.BranchRemoved) || !plan.Keep && (observed.Result.ResourceState != "retired" || !observed.Result.WorktreeRemoved || !observed.Result.BranchRemoved) {
 		r.problem("trace_closeout_unbound", "Automatic Task closeout differs from its exact candidate: "+e.ID)
 		return
 	}

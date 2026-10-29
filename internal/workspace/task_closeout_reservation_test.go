@@ -34,7 +34,7 @@ func TestTaskCloseoutReservationProtectsPendingInstallationAndStartup(t *testing
 		return nil
 	}
 	r, err := ReserveTaskCloseout(f.dependencies, in, p.PlanSHA256, "installation_pending", guard)
-	if err != nil || guardCalls != 1 || r.Retention != nil || r.WorktreeRemoved || r.LifecycleCompleted || r.NativeIntegrationID == "" || r.State != "cleanup_pending" {
+	if err != nil || guardCalls != 1 || r.Retention != nil || r.WorktreeRemoved || r.NativeIntegrationID == "" || r.State != "cleanup_pending" {
 		t.Fatalf("reservation invented effects: %+v %v", r, err)
 	}
 	select {

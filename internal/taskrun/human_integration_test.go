@@ -579,7 +579,7 @@ func TestWorkflowCloseoutReadbackPreservesInterruptedRemoval(t *testing.T) {
 	}
 	f.D.CWD = func() (string, error) { return f.Parent, nil }
 	shown, err := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID)
-	if err != nil || shown.Closeout == nil || shown.Closeout.State != "cleanup_pending" || !shown.Closeout.WorktreeRemoved || shown.Closeout.LifecycleCompleted || !strings.Contains(shown.NextAction.Message, "closeout") {
+	if err != nil || shown.Closeout == nil || shown.Closeout.State != "cleanup_pending" || !shown.Closeout.WorktreeRemoved || !strings.Contains(shown.NextAction.Message, "closeout") {
 		t.Fatalf("pending observed removal lost its resume action: %+v %v", shown, err)
 	}
 	for _, reason := range shown.Reasons {

@@ -279,7 +279,7 @@ func parallelConsumerClass(d Dependencies, s workflowState, readerSHA string) (w
 		if e != nil {
 			return fact, e
 		}
-		if ds.Phase == "completed" && release != nil && closeout != nil && closeout.State == "complete" && closeout.LifecycleCompleted {
+		if ds.Phase == "completed" && release != nil && closeout != nil && closeout.State == "complete" {
 			if observed && integrated.Completed {
 				return terminal([]any{release, integrated, closeout})
 			}

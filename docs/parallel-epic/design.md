@@ -159,7 +159,7 @@ all existing boundaries. No automatic 4→7 or 4→8 conversion, including on
 [delivery_cli_install.go](../../internal/taskrun/delivery_cli_install.go),
 `qualifiedCLIInstallation` (lines 62–77), requires the feature Run's
 `phase=completed` and `ObserveAutomaticLocalDelivery` with
-`Closeout.State=complete` and `LifecycleCompleted=true`, plus the registered
+`Closeout.State=complete` after lifecycle completion, plus the registered
 return checkout, exact native qualification/authority and retained binary
 checks. A source-delivered/released feature Run still in closing cannot native-install
 its binary while cleanup prevents those facts. Embedded commit metadata,

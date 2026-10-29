@@ -246,7 +246,7 @@ func ResumeAutomaticLocalDelivery(d Dependencies, root, id string, resultID work
 		if keep {
 			resource = "kept"
 		}
-		if closeoutErr != nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != resource {
+		if closeoutErr != nil || closeout.State != "complete" || closeout.ResourceState != resource {
 			current.Result.Delivery.Phase, current.Result.Round.State, current.Result.FinalReturn.State = "closing", "closing", "closing"
 			if keep {
 				current.Result.NextAction = WorkflowAction{"recipient", "Local integration, queue closure and Epic base update are observed. Resume this same automatic delivery to finish native Task closeout; the source worktree and branch remain retained."}

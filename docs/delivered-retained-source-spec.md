@@ -130,7 +130,7 @@ known denial/uncertainty evidence. Store owner/reason/time in that record.
 No invented new session, repeated integration or separate registry is needed.
 
 The closeout receipt gains an explicit validated terminal lifecycle/resource
-combination: `state=complete`, `lifecycle_completed=true`,
+combination: `state=complete` after lifecycle completion,
 `resource_state=retained_cleanup_open`, removal booleans false, verified retention
 manifest and open obligation. The immutable original plan keeps `Keep=false`.
 Do not relax the normal complete invariant: this combination is legal only with

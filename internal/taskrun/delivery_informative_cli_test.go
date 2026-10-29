@@ -59,7 +59,7 @@ func assertInformativeRetained(t *testing.T, f deliveryFixture, o WorkflowRun, r
 	c := o.Delivery.Candidates[0]
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
 	resource := map[bool]string{true: "kept", false: "retired"}[closeout != nil && closeout.Plan.Keep]
-	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != resource || closeout.WorktreeRemoved == closeout.Plan.Keep || closeout.BranchRemoved == closeout.Plan.Keep || closeout.Retention == nil {
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != resource || closeout.WorktreeRemoved == closeout.Plan.Keep || closeout.BranchRemoved == closeout.Plan.Keep || closeout.Retention == nil {
 		t.Fatalf("native closeout with retained evidence incomplete: %+v %v", closeout, err)
 	}
 	found := false

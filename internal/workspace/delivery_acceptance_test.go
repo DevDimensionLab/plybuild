@@ -449,7 +449,7 @@ func TestAutomaticNativeCloseoutRetainsSourceAndRecoversLifecycleReceipt(t *test
 		t.Fatalf("actual lifecycle completion was lost: %+v %v", state, err)
 	}
 	receipt, err := ApplyTaskCloseoutWithOwnershipGuard(f.dependencies, closeIn, preview.PlanSHA256, func() error { return nil })
-	if err != nil || receipt.State != "complete" || receipt.ResourceState != "kept" || !receipt.LifecycleCompleted || receipt.WorktreeRemoved || receipt.BranchRemoved || receipt.Retention == nil || git.count() != 1 {
+	if err != nil || receipt.State != "complete" || receipt.ResourceState != "kept" || receipt.WorktreeRemoved || receipt.BranchRemoved || receipt.Retention == nil || git.count() != 1 {
 		t.Fatalf("closeout did not resume retained lifecycle: %+v %v merges=%d", receipt, err, git.count())
 	}
 	if _, err := os.Stat(f.taskPath); err != nil {

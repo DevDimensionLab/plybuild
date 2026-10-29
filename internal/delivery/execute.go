@@ -258,7 +258,7 @@ func (s *Service) recordLocalCompletion(root string, r *Receipt, fx *effect, res
 		return err
 	}
 	s.event(r, "delivery.local_observed", "local_observed", "Exact local integration, native base update and this Task's queue closure observed.", "")
-	if r.Manifest.Agreement.AutomaticAcceptance() && (completionErr != nil || result.Closeout == nil || result.Closeout.State != "complete" || !result.Closeout.LifecycleCompleted || result.Closeout.ResourceState != automaticResourceState(result.Closeout.Plan.Keep)) {
+	if r.Manifest.Agreement.AutomaticAcceptance() && (completionErr != nil || result.Closeout == nil || result.Closeout.State != "complete" || result.Closeout.ResourceState != automaticResourceState(result.Closeout.Plan.Keep)) {
 		r.NativeClosed = false
 		return s.stop(root, r, "pending_closeout", joinError("Local integration, queue and Epic base are observed; native Task closeout remains pending", completionErr), "Resume this Delivery ID from outside the Task source after its owner has left it to finish native closeout; a frozen retention keeps the worktree and branch. The Git integration will not be repeated.")
 	}

@@ -71,7 +71,7 @@ func TestAutomaticDeliveryIntegratesWithoutHumanRecord(t *testing.T) {
 		t.Fatal("automatic delivery did not update the agreed local Epic")
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved {
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved {
 		t.Fatalf("automatic delivery did not complete native source cleanup: %+v %v", closeout, err)
 	}
 	observed, handled, err := ObserveAutomaticLocalDelivery(f.D, f.R.WorkspaceRoot, o.RunID, c.TaskResult.ID)

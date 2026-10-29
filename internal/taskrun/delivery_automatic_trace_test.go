@@ -1,6 +1,7 @@
 package taskrun
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"testing"
@@ -46,13 +47,16 @@ func TestAutomaticDeliveryTracePreservesNativeVerificationAndRetainedCloseout(t 
 		t.Fatalf("trace omitted native automatic Task closeout: entries=%+v reasons=%+v", closed, run.Reasons)
 	}
 	var closeout struct {
-		ResourceState      string `json:"resource_state"`
-		LifecycleCompleted bool   `json:"lifecycle_completed"`
-		WorktreeRemoved    bool   `json:"worktree_removed"`
-		BranchRemoved      bool   `json:"branch_removed"`
+		State           string `json:"state"`
+		ResourceState   string `json:"resource_state"`
+		WorktreeRemoved bool   `json:"worktree_removed"`
+		BranchRemoved   bool   `json:"branch_removed"`
 	}
-	if err = json.Unmarshal(closed[0].Data, &closeout); err != nil || closeout.ResourceState != "retired" || !closeout.LifecycleCompleted || !closeout.WorktreeRemoved || !closeout.BranchRemoved {
+	if err = json.Unmarshal(closed[0].Data, &closeout); err != nil || closeout.State != "complete" || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved {
 		t.Fatalf("trace misstates automatic source cleanup: %s (%v)", closed[0].Data, err)
+	}
+	if bytes.Contains(closed[0].Data, []byte(`"lifecycle_completed"`)) {
+		t.Fatal("trace serialized a duplicate closeout completion marker")
 	}
 	releases := traceKind(run, "source_ownership_release")
 	if len(releases) != 1 || releases[0].Role != "ply" || releases[0].ActorClaim != "ply automatic delivery closeout" {

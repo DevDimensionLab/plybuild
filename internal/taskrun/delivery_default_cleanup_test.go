@@ -150,7 +150,7 @@ func assertCleanupRemoved(t *testing.T, f deliveryFixture, o WorkflowRun, reflog
 		t.Fatal("source branch was not handled by the existing closeout ref policy")
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || !closeout.LifecycleCompleted || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved || closeout.Retention == nil || closeout.Plan.Keep {
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" || !closeout.WorktreeRemoved || !closeout.BranchRemoved || closeout.Retention == nil || closeout.Plan.Keep {
 		t.Fatalf("native closeout did not record physical removal: %+v %v", closeout, err)
 	}
 	if gitOutput(t, f.Parent, "rev-parse", closeout.Plan.ArchiveRef) != c.OID {

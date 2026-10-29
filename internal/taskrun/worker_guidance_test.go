@@ -121,7 +121,9 @@ func (f *aw01Fixture) job(kind string) {
 
 func (f *aw01Fixture) save() {
 	f.t.Helper()
-	if err := (Dependencies{}).replaceValue(workflowIndex(f.s.Request.WorkspaceRoot, f.s.Result.RunID), f.s); err != nil {
+	reservation := f.s
+	reservation.Result.Paths.Context = workflowPaths(f.s.Result.Paths.RunRoot, 0).Context
+	if err := (Dependencies{}).replaceValue(workflowIndex(f.s.Request.WorkspaceRoot, f.s.Result.RunID), reservation); err != nil {
 		f.t.Fatal(err)
 	}
 	if err := workflowSave(Dependencies{}, f.s); err != nil {
@@ -514,7 +516,7 @@ func (f *aw01Fixture) closeout(state string) workspace.TaskCloseoutReceipt {
 	}
 	r := workspace.TaskCloseoutReceipt{Kind: "WorkspaceTaskCloseoutReceipt@1", SchemaVersion: 1, OperationID: "isolated-closeout", Plan: p, PlanSHA256: hash(raw), State: state, ResourceState: "retained", Phase: "cleanup_pending", CreatedAtUTC: f.now.Format(time.RFC3339Nano), UpdatedAtUTC: f.now.Format(time.RFC3339Nano)}
 	if state == "complete" {
-		r.LifecycleCompleted, r.ResourceState, r.Phase = true, "kept", "complete"
+		r.ResourceState, r.Phase = "kept", "complete"
 		r.Retention = &workspace.TaskRetentionManifest{Entries: []workspace.TaskRetainedEvidence{}}
 	}
 	store := map[string]any{"kind": "WorkspaceTaskCloseoutStore@1", "schema_version": 1, "receipts": []workspace.TaskCloseoutReceipt{r}}

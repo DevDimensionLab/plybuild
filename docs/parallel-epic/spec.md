@@ -322,7 +322,7 @@ Coordinator may later install only the exact qualified feature binary with its
 old backup/history preserved and run a relevant installed smoke under the
 separate selected installation mandate. The current `qualifiedCLIInstallation`
 gate additionally requires that feature Run phase completed and native closeout
-State complete/LifecycleCompleted true. A delivered/released Run still closing
+State complete after lifecycle completion. A delivered/released Run still closing
 cannot pass native installation while cleanup prevents completion. Coordinator
 must first finish its supported native closeout, or report the precise missing
 installer prerequisite/possible separately selected bounded producer dependency;

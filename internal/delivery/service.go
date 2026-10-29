@@ -433,7 +433,7 @@ func (s *Service) Check(cwd, id string) (Receipt, error) {
 			}
 			if err != nil {
 				r.Reasons = append(r.Reasons, err.Error())
-			} else if observed.Closeout != nil && observed.Closeout.State == "complete" && observed.Closeout.LifecycleCompleted {
+			} else if observed.Closeout != nil && observed.Closeout.State == "complete" {
 				r.State, r.NativeClosed, r.Reasons = "ready", true, []string{}
 				r.NextAction = "Execute this Delivery ID to record the already observed native completion; its source resource is " + observed.Closeout.ResourceState + ". No integration will be repeated."
 			}

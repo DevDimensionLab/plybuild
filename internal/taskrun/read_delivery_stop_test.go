@@ -74,7 +74,7 @@ func TestAutomaticDeliveryCLIClosesResolvedStopHistoryWithoutReplay(t *testing.T
 		}
 	}
 	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || !closeout.LifecycleCompleted || closeout.ResourceState != "retired" {
+	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" {
 		t.Fatalf("Task not closed: %+v %v", closeout, err)
 	}
 	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)

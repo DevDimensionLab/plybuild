@@ -87,7 +87,7 @@ func qualifiedCLIInstallationWithOptions(d Dependencies, root, id, destination, 
 	if err != nil {
 		return out, nil, err
 	}
-	if !handled || !integrated.Completed || (!options.AllowRetainedSource || s.Result.Delivery.Phase == "completed") && (integrated.Closeout == nil || integrated.Closeout.State != "complete" || !integrated.Closeout.LifecycleCompleted) {
+	if !handled || !integrated.Completed || (!options.AllowRetainedSource || s.Result.Delivery.Phase == "completed") && (integrated.Closeout == nil || integrated.Closeout.State != "complete") {
 		return out, nil, workflowError(4, "native delivery and closeout must be observed before coordinator installation")
 	}
 	registry, err := d.Workspace.WorkItems.Snapshot(root)

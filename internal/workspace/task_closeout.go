@@ -96,7 +96,6 @@ type TaskCloseoutReceipt struct {
 	Retention           *TaskRetentionManifest     `json:"retention"`
 	WorktreeRemoved     bool                       `json:"worktree_removed"`
 	BranchRemoved       bool                       `json:"branch_removed"`
-	LifecycleCompleted  bool                       `json:"lifecycle_completed"`
 	CreatedAtUTC        string                     `json:"created_at_utc"`
 	UpdatedAtUTC        string                     `json:"updated_at_utc"`
 	RemovedAtUTC        string                     `json:"removed_at_utc,omitempty"`
@@ -123,7 +122,7 @@ func readTaskCloseouts(root string) (taskCloseoutStore, error) {
 	}
 	seen := map[TaskID]bool{}
 	for _, r := range s.Receipts {
-		if seen[r.Plan.TaskID] || r.Kind != "WorkspaceTaskCloseoutReceipt@1" || r.SchemaVersion != 1 || r.PlanSHA256 != closeoutPlanDigest(r.Plan) || r.Plan.WorkspaceRoot != root || !validTaskUTC(r.CreatedAtUTC) || !validTaskUTC(r.UpdatedAtUTC) || (r.State != "cleanup_pending" && r.State != "complete") || (r.State == "complete" && (!r.LifecycleCompleted || r.Retention == nil || (!r.Plan.Keep && (!r.WorktreeRemoved || !r.BranchRemoved || r.ResourceState != "retired")) || (r.Plan.Keep && r.ResourceState != "kept"))) {
+		if seen[r.Plan.TaskID] || r.Kind != "WorkspaceTaskCloseoutReceipt@1" || r.SchemaVersion != 1 || r.PlanSHA256 != closeoutPlanDigest(r.Plan) || r.Plan.WorkspaceRoot != root || !validTaskUTC(r.CreatedAtUTC) || !validTaskUTC(r.UpdatedAtUTC) || (r.State != "cleanup_pending" && r.State != "complete") || (r.State == "complete" && (r.Retention == nil || (!r.Plan.Keep && (!r.WorktreeRemoved || !r.BranchRemoved || r.ResourceState != "retired")) || (r.Plan.Keep && r.ResourceState != "kept"))) {
 			return s, fmt.Errorf("invalid or conflicting closeout receipt")
 		}
 		seen[r.Plan.TaskID] = true
@@ -512,7 +511,7 @@ func applyTaskCloseoutGuarded(d Dependencies, in TaskCloseoutInput, expected str
 		if err := check("after-lifecycle"); err != nil {
 			return err
 		}
-		receipt.LifecycleCompleted, receipt.State, receipt.CompletedAtUTC = true, "complete", now()
+		receipt.State, receipt.CompletedAtUTC = "complete", now()
 		receipt.ResourceState = "retired"
 		if in.Keep {
 			receipt.ResourceState = "kept"

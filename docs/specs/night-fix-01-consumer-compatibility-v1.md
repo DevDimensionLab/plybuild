@@ -76,7 +76,7 @@ integration policy. Tests extend the fixture seams below.
 4. **Completed local delivery terminal proof.** Reject any unresolved native
    delivery attempt before success. For the latest exact candidate require a
    valid `deliveryRelease`, recorded native integration completion and
-   `workflowTaskCloseout` with state=complete and lifecycle_completed=true,
+   `workflowTaskCloseout` with state=complete after lifecycle completion,
    plus delivery.phase=completed. Use `automaticIntegratedResult` unchanged for
    automatic delivery, including headless. For accepted human takeover use
    `preservedHumanIntegration` and the human integration binding below. Either
