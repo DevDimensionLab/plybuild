@@ -1,5 +1,10 @@
 # Scoped same-owner continuation (DEP02 / TABBB0A4A)
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 This operation records a decision to continue specific native work while the
 original denial and unknown effects remain active. It is **not** effect
 reconciliation, OS sandboxing, runtime approval, or evidence that old writers

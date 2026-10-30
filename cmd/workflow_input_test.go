@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
-	"github.com/devdimensionlab/plybuild/internal/taskrun"
 )
 
 // HI07: every advertised cooperative_agent_v1 operation is an actual command
@@ -77,17 +76,5 @@ func TestHI07InputCapabilitiesMatchActualCommands(t *testing.T) {
 			t.Fatalf("capability %s appears %d times", id, seen[id])
 		}
 	}
-	// The schema 2 same-owner answer contract stays separate and unchanged.
-	legacy := 0
-	for _, op := range coreCapabilities(capabilityBuild{}).WorkflowExtensions {
-		if op.Mode == taskrun.BoundAnswerMode {
-			legacy++
-			if op.Command[1] != "execute" {
-				t.Fatalf("legacy answer operation moved: %#v", op)
-			}
-		}
-	}
-	if legacy != 4 {
-		t.Fatalf("legacy schema 2 answer operations changed: %d", legacy)
-	}
+
 }

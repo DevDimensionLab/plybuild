@@ -338,7 +338,7 @@ func newWorkflowInputCommand(d humaninput.Dependencies) *cobra.Command {
 		"The agent reports receipt of the recorded answer (state agent_received, provenance reported_by_agent). The request ID and digest must be the recorded winner's. This attests no new model turn, process or delivery. Repeating the same acknowledgement is idempotent.",
 		"  ply workflow input acknowledge QUESTION_ID --workspace /physical/workspace --request-id ID --request-sha256 DIGEST", false))
 	input.AddCommand(report("continue", "Report how the agent used the answer after doing the work",
-		"After actually continuing its work with the answer, the agent reports what it did (state agent_reported_continued, provenance reported_by_agent). Requires a prior acknowledge of the same answer. This is not native process observation and not Task, Epic or main delivery. The same summary again is idempotent; another summary is refused.",
+		"After actually continuing its work with the answer, the agent reports what it did (state agent_reported_continued, provenance reported_by_agent). A prior acknowledge is optional; the recorded answer identity must match. This is not native process observation and not Task, Epic or main delivery. The same summary again is idempotent; another summary is refused.",
 		"  ply workflow input continue QUESTION_ID --workspace /physical/workspace --request-id ID --request-sha256 DIGEST --summary 'Wrote the full version into README.md.'", true))
 
 	var withdrawFlags inputFlags

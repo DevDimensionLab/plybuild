@@ -122,6 +122,7 @@ func journalFixture(t *testing.T, roots ...string) (Dependencies, Request, strin
 	if _, err := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "journal-acceptance", Title: "Fixture Task", Description: "Fixture need", ParentEpicID: "journal-fixture-epic", ProjectID: "ply-journal-fixture", RepoID: "fixture-repo"}); err != nil {
 		t.Fatal(err)
 	}
+	recordFixtureProblem(t, w, root, "journal-acceptance")
 	r, err := w.WorkItems.Snapshot(root)
 	if err != nil {
 		t.Fatal(err)

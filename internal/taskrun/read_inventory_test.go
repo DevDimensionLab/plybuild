@@ -102,20 +102,6 @@ func TestReadInventoryKeepsValidSiblingsWhenOneRunIsCorrupt(t *testing.T) {
 	}
 }
 
-func TestReadInventoryFactoryTransportIsHeadless(t *testing.T) {
-	d, r, _, _ := factoryFixture(t)
-	if err := os.MkdirAll(runPaths(r).RunRoot, 0700); err != nil {
-		t.Fatal(err)
-	}
-	if err := writeValue(filepath.Join(runPaths(r).RunRoot, "request.json"), r); err != nil {
-		t.Fatal(err)
-	}
-	out, err := ReadInventory(d, r.WorkspaceRoot)
-	if err != nil || len(out.Runs) != 1 || out.Runs[0].Transport == nil || *out.Runs[0].Transport != "headless" {
-		t.Fatalf("inventory: %+v, %v", out, err)
-	}
-}
-
 func TestReadInventoryQualifiedReturnSurvivesCheckoutDrift(t *testing.T) {
 	d, r, file := fixture(t)
 	runner := d.Runner.(*fakeRunner)

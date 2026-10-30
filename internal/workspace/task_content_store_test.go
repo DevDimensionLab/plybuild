@@ -222,7 +222,7 @@ func TestTaskContentMigrationPreservesRawBackupAndLegacyRecords(t *testing.T) {
 	}
 }
 
-func TestTaskCreateRetryRechecksPublishedContent(t *testing.T) {
+func TestTaskCreateRetryDoesNotRequireOptionalDocumentContent(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
 	r, err := f.dependencies.WorkItems.Snapshot(root)
@@ -239,8 +239,11 @@ func TestTaskCreateRetryRechecksPublishedContent(t *testing.T) {
 	}
 	in, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
 	out, err := CreateTask(f.dependencies, in)
-	if err == nil || out.Content == nil || out.Content.Classification != "unknown" {
-		t.Fatalf("create retry hid missing immutable content: %#v %v", out, err)
+	if err != nil || out.Created || out.Content != nil {
+		t.Fatalf("registration retry required optional document content: %#v %v", out, err)
+	}
+	if err = verifyManifestDocuments(f.dependencies.TaskContent, root, p); err == nil {
+		t.Fatal("explicit document verification hid missing immutable content")
 	}
 }
 

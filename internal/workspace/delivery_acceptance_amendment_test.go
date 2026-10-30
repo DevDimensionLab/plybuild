@@ -1,7 +1,6 @@
 package workspace
 
 import (
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -53,103 +52,6 @@ func TestDeliveryAcceptanceAmendmentPreservesFrozenScopeAndEffects(t *testing.T)
 			mutate(&a, &choice)
 			if _, err := ApplyDeliveryAcceptanceAmendment(a, choice); err == nil {
 				t.Fatal("invalid acceptance amendment was accepted")
-			}
-		})
-	}
-}
-
-func newAmendedIntegrationFixture(t *testing.T) (integrationJourneyFixture, TaskIntegrationInput) {
-	t.Helper()
-	f := newIntegrationJourneyFixtureHistory(t, false, false, fixtureAgreement(DeliveryLocalEpic, "refs/heads/epic"))
-	verifier := TaskVerifierResultRecord{VerifierID: "acceptance", Outcome: "passed", Argv: []string{"/bin/sh", "/private/acceptance.sh"}, CWD: f.taskPath, Exit: 0, BoundOIDOrSHA256: f.resultOID}
-	if err := f.dependencies.WorkItems.WithLock(f.root, func(s WorkItemStoreSession) error {
-		r, err := s.Snapshot()
-		if err != nil {
-			return err
-		}
-		findTaskResult(r, f.resultID).VerifierResults = []TaskVerifierResultRecord{verifier}
-		r.HumanQARecords = []TaskHumanQARecord{}
-		return s.Publish(r)
-	}); err != nil {
-		t.Fatal(err)
-	}
-	f.evidence.evidence.VerifierResults = []TaskVerifierResultRecord{verifier}
-	f.evidence.evidence.ExpectedVerifierIDs = []string{verifier.VerifierID}
-	auth := f.evidence.evidence.DeliveryAuthorization
-	amendment := acceptanceAmendmentFixture(auth.Agreement)
-	amendment.RunID, amendment.RequestSHA256, amendment.MandateSHA256 = auth.RunID, auth.RequestSHA256, auth.MandateSHA256
-	amendment.DecisionLocator = filepath.Join(f.root, "native-acceptance-choice.json")
-	effective, err := ApplyDeliveryAcceptanceAmendment(auth.Agreement, amendment)
-	if err != nil {
-		t.Fatal(err)
-	}
-	auth.Agreement, auth.AgreementSHA256, auth.AcceptanceAmendment = effective, DeliveryAgreementDigest(effective), &amendment
-	in := deliveryIntegrationInput(f)
-	in.HumanQARecordID = ""
-	in.DeliveryOwner = &DeliveryIntegrationOwner{RunID: auth.RunID, RequestSHA256: auth.RequestSHA256, ActorClaim: "fixture orchestrator", PreparationID: "fixture-preparation"}
-	return f, in
-}
-
-func TestDeliveryAcceptanceAmendmentNativeIntegrationKeepsOriginalSpec(t *testing.T) {
-	f, in := newAmendedIntegrationFixture(t)
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	original, err := deliveryAgreementForResult(f.dependencies, f.root, r, *findTaskResult(r, f.resultID))
-	if err != nil || original == nil || original.SchemaVersion != 1 || original.Acceptance != nil {
-		t.Fatalf("fixture lost original frozen agreement: %+v %v", original, err)
-	}
-	check, err := CheckTaskIntegration(f.dependencies, in)
-	if err != nil || check.Readback.Classification != "ready" || check.Readback.HumanQA != nil || check.Readback.Acceptance == nil || check.Readback.Acceptance.Outcome != "pass" {
-		t.Fatalf("explicit amended automatic candidate was blocked: %+v %v", check.Readback, err)
-	}
-	in.Apply, in.Confirmation = true, integrationDigest(t, check.Readback)
-	if _, err = ApplyTaskIntegration(f.dependencies, in); err != nil {
-		t.Fatal(err)
-	}
-	r, err = f.dependencies.WorkItems.Snapshot(f.root)
-	if err != nil || len(r.HumanQARecords) != 0 || len(r.IntegrationAuthorities) != 1 || len(r.IntegrationResults) != 1 {
-		t.Fatalf("native amended integration did not preserve exact machine history: %v", err)
-	}
-	auth := r.IntegrationAuthorities[0].Plan.DeliveryAuthorization
-	if auth == nil || !contentTypedEqual(auth, in.DeliveryAuthorization) || auth.AcceptanceAmendment.PreviousAgreementSHA256 != DeliveryAgreementDigest(*original) {
-		t.Fatal("native published authority lost explicit amendment binding")
-	}
-	after, err := deliveryAgreementForResult(f.dependencies, f.root, r, *findTaskResult(r, f.resultID))
-	if err != nil || !contentTypedEqual(original, after) {
-		t.Fatalf("native integration rewrote immutable Spec agreement: %v", err)
-	}
-}
-
-func TestDeliveryAcceptanceAmendmentNativeGateRequiresExactRevalidatedBinding(t *testing.T) {
-	for _, defect := range []string{"omitted amendment", "changed target", "missing native amendment", "different decision", "changed native policy"} {
-		t.Run(defect, func(t *testing.T) {
-			f, in := newAmendedIntegrationFixture(t)
-			auth := *in.DeliveryAuthorization
-			amendment := *auth.AcceptanceAmendment
-			auth.AcceptanceAmendment, in.DeliveryAuthorization = &amendment, &auth
-			switch defect {
-			case "omitted amendment":
-				auth.AcceptanceAmendment = nil
-			case "changed target":
-				auth.Agreement.TargetRef = "refs/heads/another-epic"
-				auth.AgreementSHA256 = DeliveryAgreementDigest(auth.Agreement)
-			case "missing native amendment":
-				f.evidence.evidence.DeliveryAuthorization.AcceptanceAmendment = nil
-			case "different decision":
-				amendment.DecisionSHA256 = "sha256:" + strings.Repeat("3", 64)
-			case "changed native policy":
-				f.evidence.evidence.DeliveryAuthorization.PermissionConfirmed = false
-			}
-			git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
-			f.dependencies.IntegrationGit = git
-			got, err := CheckTaskIntegration(f.dependencies, in)
-			if err == nil && got.Readback.Classification == "ready" {
-				t.Fatalf("%s bypassed native amendment validation", defect)
-			}
-			if git.count() != 0 || runLocalGit(t, filepath.Join(f.wrapper, "epic"), "rev-parse", "HEAD") != f.oid {
-				t.Fatal("rejected acceptance amendment changed target")
 			}
 		})
 	}

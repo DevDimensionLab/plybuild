@@ -20,13 +20,10 @@ test -x "$PLY_CANDIDATE_BINARY"
 test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 # Writer composition, real local observers, distinct caller policies, historical
-# authority and CL02's exact-binary public follow journeys in disposable repos.
-"$ar03_go" test ./internal/taskrun -run 'Test(AR03|SystemLocalProcessesObservesRealWriters|OwnerResume|CodexResume|DeliveryRetire|FS02ReviewRetire|DefaultCleanup|IntegrationCLIClosedOwnerRecovery|IntegrationCLIRecoversClosedOwner|HumanOwnerRecovery)' -count=1 -timeout=600s
-# Preserve the delivered architecture stages without unrelated Worker suites.
-"$ar03_go" test ./internal/currentstate ./internal/taskrun ./internal/weekrun ./internal/taskexecute ./cmd -run 'Test(AR01|AR02)' -count=1 -timeout=600s
+"$ar03_go" test ./internal/taskrun -run '^(TestAR03RetirementDoesNotReplayDeniedHerdrInspection|TestCodexResumeWriterHelper|TestDeliveryRetireEndsSelectedOwnerAndFreesQueueWithoutOwnerCallback|TestDeliveryRetireStopsOnActiveWriterOrUnknownEffect|TestFS02ReviewRetirePreservesEarlierUnknownEffect|TestFS02ReviewRetireRecoversDurableEventAfterStateFailure|TestOwnerResumeAfterStartupRecoveryKeepsRecoveryHistory|TestSystemLocalProcessesObservesRealWriters)$' -count=1 -timeout=600s
 "$ar03_go" vet ./internal/taskrun
 git diff --check
 test -z "$(git status --porcelain)"
 test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
-printf 'AR03 writer composition, action policies, historical authority and exact-candidate public CLI journeys passed. Scratch: %s\n' "$ar03_scratch"
+printf 'Retained concrete regression tests passed; removed process journeys are excluded.\n'

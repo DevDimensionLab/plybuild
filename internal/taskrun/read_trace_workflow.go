@@ -23,16 +23,7 @@ func (r *traceReader) workflow(root, id string) {
 		return
 	}
 	delivery := deliveryRun(reserved.Request)
-	if headlessRun(reserved.Request) {
-		if err = workerValidateIdentity(reserved); err != nil {
-			r.problem("trace_run_unbound", err.Error())
-			return
-		}
-		r.contractField("worker", reserved.Request.Worker)
-	} else if reserved.Request.Worker != nil || reserved.Result.Worker != nil {
-		r.problem("trace_run_unbound", "interactive reservation cannot acquire a worker")
-		return
-	}
+
 	r.run.Family = "workflow_run_v1"
 	if delivery {
 		r.run.Family = "goal_execute_v2"
@@ -62,7 +53,7 @@ func (r *traceReader) workflow(root, id string) {
 		var captured inventoryWorkflowState
 		if err = decode(stateBytes, 8<<20, &captured); err == nil {
 			saved := captured.state()
-			if !equal(saved.Request, reserved.Request) || !equal(saved.Observed, reserved.Observed) || !equal(saved.CodexTrust, reserved.CodexTrust) || !equal(saved.ClaudeTrust, reserved.ClaudeTrust) || saved.Result.RunID != id || saved.Result.RequestSHA256 != r.run.RequestSHA256 || saved.Result.SessionID != r.run.SessionID || saved.Result.Paths.RunRoot != expected {
+			if !equal(saved.Request, reserved.Request) || !equal(saved.Observed, reserved.Observed) || saved.Result.RunID != id || saved.Result.RequestSHA256 != r.run.RequestSHA256 || saved.Result.SessionID != r.run.SessionID || saved.Result.Paths.RunRoot != expected {
 				err = integrity("preserved workflow state differs from reservation")
 			} else {
 				s = saved
@@ -82,12 +73,7 @@ func (r *traceReader) workflow(root, id string) {
 		r.problem("trace_state_unavailable", statePath+": "+err.Error())
 	}
 	r.nativeHandoff(s.Result.Handoff, s.Request.HandoffDraft)
-	if headlessRun(s.Request) {
-		if err = workerValidateIdentity(s); err != nil {
-			r.problem("trace_state_unavailable", err.Error())
-			return
-		}
-	}
+
 	if s.Acceptance != nil {
 		r.workflowAcceptance(s)
 	}
@@ -130,10 +116,7 @@ func (r *traceReader) workflowAcceptance(s workflowState) {
 	e.Role, e.ActorClaim, e.EvidenceClass = "agent", "recipient", "agent_report"
 	e.Outcome = nonempty(a.Acceptance)
 	e.Data = traceJSON(map[string]any{"acceptance": a.Acceptance, "runtime_claim": a.RuntimeClaim, "meaning": "Recipient runtime and permission claims are preserved; provider identity is not human authentication."})
-	if headlessRun(s.Request) {
-		e.Role, e.ActorClaim, e.EvidenceClass = "runtime", "Ply worker", "native_observation"
-		e.Data = traceJSON(map[string]any{"acceptance": a.Acceptance, "runtime_claim": a.RuntimeClaim, "meaning": "Native controller acceptance after an actual delegate sandbox probe; selected model is not an observed model identity."})
-	}
+
 	r.run.Entries = append(r.run.Entries, e)
 }
 
@@ -141,7 +124,7 @@ func (r *traceReader) deliveryGoal(s workflowState) {
 	binding := s.Request.Delivery.Goal
 	r.run.FrozenGoalSource = &binding
 	raw, err := r.bound(binding, 8<<20)
-	if err == nil {
+	if err == nil && r.run.FrozenBasis != nil {
 		r.run.FrozenGoal, err = inventoryDeliveryGoal(raw, *r.run.FrozenBasis, binding.SHA256)
 	}
 	if err != nil {
@@ -149,17 +132,7 @@ func (r *traceReader) deliveryGoal(s workflowState) {
 	} else {
 		r.contractField("frozen_goal_declaration", traceManifestDeclaration(raw))
 	}
-	basis := r.run.FrozenBasis
-	specBinding := FileBinding{filepath.Join(s.Request.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(basis.Spec.ManifestSHA256, "sha256:")+".json"), basis.Spec.ManifestSHA256}
-	spec, specErr := r.bound(specBinding, 8<<20)
-	if specErr == nil && r.run.FrozenGoal != nil {
-		specErr = inventoryDeliveryGoalOrigin(spec, *basis, *r.run.FrozenGoal)
-	}
-	if specErr != nil {
-		r.problem("trace_frozen_execution_unavailable", specBinding.Locator+": "+specErr.Error())
-	} else {
-		r.contractField("frozen_execution_declaration", traceManifestDeclaration(spec))
-	}
+
 }
 
 func traceManifestDeclaration(raw []byte) map[string]json.RawMessage {

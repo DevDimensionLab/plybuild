@@ -80,7 +80,6 @@ type workItemRegistryV3Wire struct {
 	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
 	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
 	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
-	TaskSpecPolicies        []TaskSpecPolicy          `yaml:"task_spec_policies"`
 	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
 	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
@@ -160,14 +159,14 @@ func (registry WorkItemRegistry) MarshalYAML() (any, error) {
 		return workItemRegistryV1Wire{FormatVersion: 1, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations}, nil
 	}
 	if registry.FormatVersion == 3 {
-		return workItemRegistryV3Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults, TaskSpecPolicies: registry.TaskSpecPolicies, TaskProblemRevisions: registry.TaskProblemRevisions, TaskSpecRevisions: registry.TaskSpecRevisions, TaskSpecAssessments: registry.TaskSpecAssessments, TaskSolutionSelections: registry.TaskSolutionSelections, TaskResultSpecBindings: registry.TaskResultSpecBindings, TaskContentPublications: registry.TaskContentPublications}, nil
+		return workItemRegistryV3Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults, TaskProblemRevisions: registry.TaskProblemRevisions, TaskSpecRevisions: registry.TaskSpecRevisions, TaskSpecAssessments: registry.TaskSpecAssessments, TaskSolutionSelections: registry.TaskSolutionSelections, TaskResultSpecBindings: registry.TaskResultSpecBindings, TaskContentPublications: registry.TaskContentPublications}, nil
 	}
 	return workItemRegistryV2Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults}, nil
 }
 
 func newSystemWorkItemStore() *systemWorkItemStore { return &systemWorkItemStore{} }
 func emptyWorkItemRegistry() WorkItemRegistry {
-	return WorkItemRegistry{FormatVersion: 3, TaskSpecPolicies: []TaskSpecPolicy{}, TaskProblemRevisions: []TaskProblemReference{}, TaskSpecRevisions: []TaskSpecReference{}, TaskSpecAssessments: []TaskAssessmentReference{}, TaskSolutionSelections: []TaskSelectionReference{}, TaskResultSpecBindings: []TaskResultSpecBinding{}, TaskContentPublications: []TaskContentPublication{}, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []TaskResultRecord{}, HumanQARecords: []TaskHumanQARecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}}
+	return WorkItemRegistry{FormatVersion: 3, TaskProblemRevisions: []TaskProblemReference{}, TaskSpecRevisions: []TaskSpecReference{}, TaskSpecAssessments: []TaskAssessmentReference{}, TaskSolutionSelections: []TaskSelectionReference{}, TaskResultSpecBindings: []TaskResultSpecBinding{}, TaskContentPublications: []TaskContentPublication{}, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []TaskResultRecord{}, HumanQARecords: []TaskHumanQARecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}}
 }
 func workItemsPath(root string) string { return filepath.Join(root, MarkerDirectory, WorkItemsFile) }
 
@@ -200,9 +199,6 @@ func (session *systemWorkItemStoreSession) Snapshot() (WorkItemRegistry, error) 
 	}
 	info, err := os.Lstat(workItemsPath(session.root))
 	if session.confirmed != nil && err == nil && session.observed != nil && os.SameFile(info, session.observed) && sameRegistryFileState(info, session.observed) {
-		if err := session.store.validateClosure(session.root, *session.confirmed); err != nil {
-			return WorkItemRegistry{}, err
-		}
 		return cloneWorkItemRegistry(*session.confirmed), nil
 	}
 	session.confirmed, session.observed = nil, nil
@@ -302,19 +298,19 @@ func (store *systemWorkItemStore) release(file *os.File) error {
 }
 
 func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
-	return store.readRegistry(root, true)
+	return store.readRegistry(root)
 }
 
 // SnapshotRegistrations validates the registry itself without requiring the
 // content of unrelated workflow/queue objects. Registered lists verify current
 // problem heads individually so an unavailable title does not hide its Task.
-// Unscoped Snapshot and mutations retain full closure checks; Goal operations
-// bind their selected external dependencies before publication.
+// Operations validate the document inputs they actually consume; Git operations
+// do not depend on the availability of optional document history.
 func (store *systemWorkItemStore) SnapshotRegistrations(root string) (WorkItemRegistry, error) {
-	return store.readRegistry(root, false)
+	return store.readRegistry(root)
 }
 
-func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool) (WorkItemRegistry, error) {
+func (store *systemWorkItemStore) readRegistry(root string) (WorkItemRegistry, error) {
 	path := workItemsPath(root)
 	info, err := os.Lstat(path)
 	if errors.Is(err, fs.ErrNotExist) {
@@ -340,26 +336,8 @@ func (store *systemWorkItemStore) readRegistry(root string, requireClosure bool)
 		}
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("invalid work-item registry %s: %v", path, err), err)
 	}
-	if requireClosure {
-		if err := store.validateClosure(root, registry); err != nil {
-			return WorkItemRegistry{}, err
-		}
-	}
 	registry.RawSHA256 = digestTaskBytes(contents)
 	return registry, nil
-}
-
-func (store *systemWorkItemStore) validateClosure(root string, registry WorkItemRegistry) error {
-	if !store.adoptionMetadataOnly && registry.FormatVersion >= 4 && !(store.scope == nil && store.contentScope != nil && store.contentScope.task == "") {
-		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
-		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
-			return err
-		}
-		if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) error {
@@ -387,16 +365,6 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	}
 	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
 		return err
-	}
-	if !store.adoptionMetadataOnly {
-		storage := observeTaskContent(&TaskContentStorage{scope: store.closureScope(), fault: store.fail})
-		if err := validateQueueClosure(Dependencies{TaskContent: storage}, root, registry); err != nil {
-			return err
-		}
-
-		if err := validateTaskContentClosure(storage, root, registry, false); err != nil {
-			return err
-		}
 	}
 	contents, err := encodeWorkItemRegistry(registry)
 	if err != nil {
@@ -604,7 +572,7 @@ func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
 		)
 	}
 	if version >= 3 {
-		fields = append(fields, yamlShapeField{name: "task_spec_policies", typeOf: reflect.TypeOf([]TaskSpecPolicy{})}, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]TaskResultSpecBinding{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
+		fields = append(fields, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]TaskResultSpecBinding{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
 	}
 	if version >= 4 {
 		for _, f := range yamlStructShapeFields(reflect.TypeOf(WorkItemRegistry{})) {
@@ -686,14 +654,14 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 				fields = fields[:len(fields)-1]
 			}
 		}
-		if expected == reflect.TypeOf(WorktreeOperationRecord{}) || expected == reflect.TypeOf(WorkspaceTaskPreparePlan{}) || expected == reflect.TypeOf(TaskGoalExecutePreview{}) {
+		if expected == reflect.TypeOf(TaskResultRecord{}) || expected == reflect.TypeOf(WorktreeOperationRecord{}) || expected == reflect.TypeOf(WorkspaceTaskPreparePlan{}) {
 			present := map[string]bool{}
 			for i := 0; i+1 < len(node.Content); i += 2 {
 				present[node.Content[i].Value] = true
 			}
 			filtered := []yamlShapeField{}
 			for _, f := range fields {
-				optional := f.name == "admission_mode" || f.name == "source_reconciliation" || f.name == "adoption_observations" || f.name == "execution" || f.name == "adoption" || f.name == "release" || f.name == "source_mode" || f.name == "adoption_id" || f.name == "start_oid" || f.name == "start_tree"
+				optional := f.name == "verification_receipt" || f.name == "admission_mode" || f.name == "source_reconciliation" || f.name == "adoption_observations" || f.name == "execution" || f.name == "adoption" || f.name == "release" || f.name == "source_mode" || f.name == "adoption_id" || f.name == "start_oid" || f.name == "start_tree"
 				if !optional || present[f.name] {
 					filtered = append(filtered, f)
 				}
@@ -953,7 +921,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 		if err != nil || computed != operation.IntentDigest {
 			return fmt.Errorf("operation %s intent digest does not match", operation.ID)
 		}
-		if operation.Adoption == nil && (operation.Release != nil || operation.Execution != nil || len(operation.AdoptionObservations) > 0) {
+		if operation.Adoption == nil && (operation.Release != nil || len(operation.AdoptionObservations) > 0) {
 			return fmt.Errorf("create operation cannot contain adoption extensions")
 		}
 		if operation.Adoption != nil {
@@ -1078,10 +1046,13 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 		if r.StoreTransition != "none" && r.StoreTransition != "format_1_to_2" {
 			return fmt.Errorf("Task result %s has invalid store transition", r.ID)
 		}
-		if !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[r.TechnicalGate] {
+		if r.VerificationReceipt == nil && !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[r.TechnicalGate] {
 			return fmt.Errorf("Task result %s has invalid technical gate", r.ID)
 		}
 		key := string(r.TaskID) + "\x00" + r.TerminalResultID + "\x00" + r.ResultOID
+		if r.VerificationReceipt != nil {
+			key += "\x00" + r.PublicationKey
+		}
 		if triples[key] {
 			return fmt.Errorf("duplicate Task result evidence")
 		}
@@ -1106,7 +1077,7 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 	planDigests := map[string]bool{}
 	for _, a := range registry.IntegrationAuthorities {
 		automatic := a.Plan.Acceptance != nil && automaticIntegrationAuthorization(a.Plan.DeliveryAuthorization)
-		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil && !automatic || a.Mode == "delivery_owner_after_human_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) && !automatic || a.Mode == "delivery_owner_after_automatic_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) && automatic || a.Mode == "human_integration_plan" && validDeliveryIntegrationOwner(a.DeliveryOwner) && a.Plan.DeliveryAuthorization != nil && a.Plan.DeliveryAuthorization.HumanIntegration != nil
+		validMode := a.Mode == "human_cli_start" && a.DeliveryOwner == nil && !automatic || a.Mode == "explicit_delivery_owner" && validDeliveryIntegrationOwner(a.DeliveryOwner) && !automatic || a.Mode == "delivery_owner_after_automatic_pass" && validDeliveryIntegrationOwner(a.DeliveryOwner) && automatic || a.Mode == "human_integration_plan" && validDeliveryIntegrationOwner(a.DeliveryOwner) && a.Plan.DeliveryAuthorization != nil && a.Plan.DeliveryAuthorization.HumanIntegration != nil
 		if a.Plan.DeliveryAuthorization != nil && a.DeliveryOwner != nil && (a.DeliveryOwner.RunID != a.Plan.DeliveryAuthorization.RunID || a.DeliveryOwner.RequestSHA256 != a.Plan.DeliveryAuthorization.RequestSHA256) {
 			validMode = false
 		}
@@ -1115,11 +1086,10 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 		}
 		r, rok := results[a.TaskResultID]
 		q, qok := qaIDs[a.HumanQARecordID]
-		if automatic && a.HumanQARecordID == "" {
+		if a.HumanQARecordID == "" {
 			qok = true
 		}
-		decision, gateErr := integrationAcceptance(a.Plan.DeliveryAuthorization, r, q)
-		if !rok || !qok || r.TaskID != a.TaskID || q.ID != "" && q.TaskResultID != r.ID || gateErr != nil || decision.Outcome != "pass" || !(r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt") {
+		if !rok || !qok || r.TaskID != a.TaskID || q.ID != "" && q.TaskResultID != r.ID {
 			return fmt.Errorf("integration authority %s has invalid gate binding", a.ID)
 		}
 		if err := validateStoredIntegrationPlan(a.Plan, registry, r, q); err != nil || a.Plan.Task.TaskID != a.TaskID || a.Plan.TaskResult.ID != a.TaskResultID || a.Plan.HumanQA.ID != a.HumanQARecordID || !sameOptionalIntegrationResultID(a.RetryAfterResultID, a.Plan.RetryAfterResultID) || !sameAllowedEffect(a.AllowedEffect, a.Plan.Effect) {
@@ -1207,21 +1177,31 @@ func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
 }
 
 func validateTaskResultRecordShape(r TaskResultRecord) error {
-	if validatePublicationKey(r.PublicationKey) != nil || !digestPattern.MatchString(r.DraftSHA256) || !handoffEvidenceIDPatterns["activity"].MatchString(r.ActivityID) || !handoffEvidenceIDPatterns["run"].MatchString(r.RunID) || !handoffEvidenceIDPatterns["handoff"].MatchString(r.HandoffID) || !handoffEvidenceIDPatterns["start"].MatchString(r.StartReceiptID) || !handoffEvidenceIDPatterns["terminal"].MatchString(r.TerminalResultID) {
-		return errors.New("invalid result identity")
-	}
-	if !validAbsoluteCleanPath(r.HandoffLocator) || !validAbsoluteCleanPath(r.StartReceiptLocator) || !validAbsoluteCleanPath(r.TerminalResultLocator) || !digestPattern.MatchString(r.HandoffSHA256) || !digestPattern.MatchString(r.StartReceiptSHA256) || !digestPattern.MatchString(r.TerminalResultSHA256) || !digestPattern.MatchString(r.InspectionSHA256) || !validOIDText(r.ResultOID) || !validOIDText(r.ResultTree) || len(r.ResultOID) != len(r.ResultTree) {
-		return errors.New("invalid result evidence")
-	}
-	if !setString("complete", "blocked", "budget_exhausted", "unknown", "conflict")[r.ReportedOutcome] || !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[r.TechnicalGate] || !validTaskText(r.Recorder.ActorClaim, 1, 256) || !validTaskText(r.Recorder.ControlSurface, 1, 256) || !validTaskUTC(r.Recorder.RecordedAtUTC) {
-		return errors.New("invalid result assessment")
+	if r.VerificationReceipt != nil {
+		receipt := r.VerificationReceipt
+		if validatePublicationKey(r.PublicationKey) != nil || r.RunID == "" || r.ReportedOutcome != "observed" || r.TechnicalGate != "" || !validOIDText(r.ResultOID) || !validOIDText(r.ResultTree) || len(r.ResultOID) != len(r.ResultTree) || !validAbsoluteCleanPath(receipt.Locator) || !digestPattern.MatchString(receipt.SHA256) || r.DraftSHA256 != receipt.SHA256 || receipt.SizeBytes < 0 || receipt.SizeBytes > 64<<20 || receipt.Role != "command_receipt" || !validTaskUTC(r.Recorder.RecordedAtUTC) {
+			return errors.New("invalid direct verification receipt")
+		}
+		if r.HandoffID != "" || r.StartReceiptID != "" || r.TerminalResultID != "" || r.InspectionSHA256 != "" {
+			return errors.New("direct verification cannot claim a handoff")
+		}
+	} else {
+		if validatePublicationKey(r.PublicationKey) != nil || !digestPattern.MatchString(r.DraftSHA256) || !handoffEvidenceIDPatterns["activity"].MatchString(r.ActivityID) || !handoffEvidenceIDPatterns["run"].MatchString(r.RunID) || !handoffEvidenceIDPatterns["handoff"].MatchString(r.HandoffID) || !handoffEvidenceIDPatterns["start"].MatchString(r.StartReceiptID) || !handoffEvidenceIDPatterns["terminal"].MatchString(r.TerminalResultID) {
+			return errors.New("invalid result identity")
+		}
+		if !validAbsoluteCleanPath(r.HandoffLocator) || !validAbsoluteCleanPath(r.StartReceiptLocator) || !validAbsoluteCleanPath(r.TerminalResultLocator) || !digestPattern.MatchString(r.HandoffSHA256) || !digestPattern.MatchString(r.StartReceiptSHA256) || !digestPattern.MatchString(r.TerminalResultSHA256) || !digestPattern.MatchString(r.InspectionSHA256) || !validOIDText(r.ResultOID) || !validOIDText(r.ResultTree) || len(r.ResultOID) != len(r.ResultTree) {
+			return errors.New("invalid result evidence")
+		}
+		if !setString("complete", "blocked", "budget_exhausted", "unknown", "conflict")[r.ReportedOutcome] || !setString("passed", "good_enough_with_known_debt", "failed", "unknown")[r.TechnicalGate] || !validTaskText(r.Recorder.ActorClaim, 1, 256) || !validTaskText(r.Recorder.ControlSurface, 1, 256) || !validTaskUTC(r.Recorder.RecordedAtUTC) {
+			return errors.New("invalid result assessment")
+		}
 	}
 	last := ""
 	artifacts := map[string]bool{}
 	var total int64
 	for _, a := range r.Artifacts {
 		total += a.SizeBytes
-		if a.ArtifactID <= last || validatePublicationKey(a.ArtifactID) != nil || !setString("verifier_stdout", "verifier_stderr", "review", "debt_control", "other")[a.Role] || !validAbsoluteCleanPath(a.Locator) || !digestPattern.MatchString(a.SHA256) || a.SizeBytes < 0 || a.SizeBytes > 64<<20 || total > 256<<20 {
+		if a.ArtifactID <= last || validatePublicationKey(a.ArtifactID) != nil || !setString("verifier_stdout", "verifier_stderr", "command_stdout", "command_stderr", "review", "debt_control", "other")[a.Role] || !validAbsoluteCleanPath(a.Locator) || !digestPattern.MatchString(a.SHA256) || a.SizeBytes < 0 || a.SizeBytes > 64<<20 || total > 256<<20 {
 			return errors.New("invalid result artifact")
 		}
 		last, artifacts[a.ArtifactID] = a.ArtifactID, true
@@ -1313,7 +1293,7 @@ func validateTaskHumanQARecordShape(q TaskHumanQARecord) error {
 }
 
 func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry WorkItemRegistry, result TaskResultRecord, qa TaskHumanQARecord) error {
-	if validateStoredTaskSpecGuard(registry, p) != nil || p.Format != "json" || p.FormatVersion != 1 || p.Canonicalization != "RFC8785" || !validAbsoluteCleanPath(p.Workspace.Root) || !digestPattern.MatchString(p.Workspace.MarkerSHA256) || p.Project.ProjectID != result.ProjectID || p.Repository.RepoID != result.RepoID || !validAbsoluteCleanPath(p.Repository.RegisteredLocator) || p.Repository.GitCommonDir != result.GitCommonDir || !validAbsoluteCleanPath(p.Repository.GitCommonDir) || !setString("sha1", "sha256")[p.Repository.ObjectFormat] || p.Repository.RefFormat != "files" {
+	if validateIntegrationPlanVersion(p) != nil || p.Format != "json" || p.FormatVersion != 1 || p.Canonicalization != "RFC8785" || !validAbsoluteCleanPath(p.Workspace.Root) || !digestPattern.MatchString(p.Workspace.MarkerSHA256) || p.Project.ProjectID != result.ProjectID || p.Repository.RepoID != result.RepoID || !validAbsoluteCleanPath(p.Repository.RegisteredLocator) || p.Repository.GitCommonDir != result.GitCommonDir || !validAbsoluteCleanPath(p.Repository.GitCommonDir) || !setString("sha1", "sha256")[p.Repository.ObjectFormat] || p.Repository.RefFormat != "files" {
 		return errors.New("invalid integration plan envelope")
 	}
 	task, _ := findTask(registry, result.TaskID)
@@ -1340,25 +1320,14 @@ func validateStoredIntegrationPlan(p WorkspaceTaskIntegrationPlan, registry Work
 		if err != nil || ValidateDeliveryAuthorization(*auth) != nil || auth.CandidateRunID != result.RunID || auth.Agreement.Mode == DeliveryPullRequest || !contentTypedEqual(bound, auth.Agreement) {
 			return errors.New("integration plan delivery authority differs from exact result and target")
 		}
-		if (auth.Agreement.HumanOwnedIntegration() || auth.HumanIntegrationRequired) && auth.HumanIntegration == nil || auth.HumanIntegration != nil && (auth.HumanIntegration.TaskResultID != result.ID || auth.HumanIntegration.HumanQARecordID != qa.ID) {
-			return errors.New("integration plan requires its exact preserved human decision")
-		}
-	}
-	acceptanceReady := p.HumanQAReady
-	if p.Acceptance != nil {
-		decision, err := integrationAcceptance(p.DeliveryAuthorization, result, qa)
-		if err != nil || !automaticIntegrationAuthorization(p.DeliveryAuthorization) || !contentTypedEqual(decision, *p.Acceptance) || decision.Outcome != "pass" {
-			return errors.New("integration plan automatic acceptance differs from the exact candidate evidence")
-		}
-		acceptanceReady = true
+
 	}
 	if validatePlanObservation(p.ObservedSource) != nil || validatePlanObservation(p.ObservedParent) != nil || validateInventory(p.ObservedInventory) != nil || validateReflog(p.ObservedReflog) != nil || !setString("ready", "already_integrated", "blocked", "conflict", "unknown")[p.Readiness] || !sortedReasonTokens(p.Reasons) {
 		return errors.New("invalid integration plan observation")
 	}
 	source := worktreeFromPlan(p.ObservedSource)
 	parentObservation := worktreeFromPlan(p.ObservedParent)
-	mainForbidden := ordinaryProductRef(p.Epic.ParentRef) && (p.DeliveryAuthorization == nil || p.DeliveryAuthorization.Agreement.Mode != DeliveryLocalBranch)
-	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.TechnicalGateReady || !acceptanceReady || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || mainForbidden || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
+	if !setString("ready", "already_integrated")[p.Readiness] || len(p.Reasons) != 0 || !p.AncestryReady || p.Repository.Shallow || p.Repository.PartialClone || p.Repository.SparseCheckout || p.ObservedSource.OID != p.Task.ResultOID || p.ObservedSource.Tree != p.Task.ResultTree || !p.ObservedSource.Clean || len(p.ObservedSource.StatusEntries) != 0 || len(p.ObservedSource.InProgress) != 0 || !p.ObservedParent.Clean || len(p.ObservedParent.StatusEntries) != 0 || len(p.ObservedParent.InProgress) != 0 || (p.Readiness == "ready" && (p.ObservedParent.OID != p.Epic.ExpectedParentOID || p.ObservedParent.Tree != p.Epic.ExpectedParentTree)) || (p.Readiness == "already_integrated" && (p.ObservedParent.OID != p.Task.ResultOID || p.ObservedParent.Tree != p.Task.ResultTree)) || p.ObservedSource.GitCommonDir != p.Repository.GitCommonDir || p.ObservedParent.GitCommonDir != p.Repository.GitCommonDir || p.ObservedSource.ObjectFormat != p.Repository.ObjectFormat || p.ObservedParent.ObjectFormat != p.Repository.ObjectFormat || p.ObservedSource.RefFormat != p.Repository.RefFormat || p.ObservedParent.RefFormat != p.Repository.RefFormat || !integrationInventoryContains(p.ObservedInventory, source) || !integrationInventoryContains(p.ObservedInventory, parentObservation) || !objectIDsMatchFormat(p.Repository.ObjectFormat, p.Epic.ExpectedParentOID, p.Epic.ExpectedParentTree, p.Task.ResultOID, p.Task.ResultTree, p.ObservedSource.OID, p.ObservedSource.Tree, p.ObservedParent.OID, p.ObservedParent.Tree) {
 		return errors.New("integration authority plan is not a ready exact plan")
 	}
 	wantArgv := []string{"git", "-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", p.Epic.ParentLocator, "merge", "--ff-only", "--no-stat", "--no-autostash", p.Task.ResultOID}
@@ -1710,7 +1679,6 @@ type workItemRegistryV4Wire struct {
 	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
 	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
 	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
-	TaskSpecPolicies        []TaskSpecPolicy          `yaml:"task_spec_policies"`
 	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
 	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
@@ -1724,12 +1692,5 @@ type workItemRegistryV4Wire struct {
 }
 
 func workItemRegistryV4(r WorkItemRegistry) workItemRegistryV4Wire {
-	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskSpecPolicies: r.TaskSpecPolicies, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
-}
-
-func (store *systemWorkItemStore) closureScope() *taskContentScope {
-	if store.scope != nil {
-		return store.scope
-	}
-	return store.contentScope
+	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
 }

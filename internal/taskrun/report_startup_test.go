@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
@@ -156,9 +155,9 @@ func al01CLIOK(t *testing.T, binary string, f workflowFixture, args ...string) W
 	t.Helper()
 	c := exec.Command(binary, append([]string{"workflow"}, append(args, "--format", "json")...)...)
 	c.Dir, _ = f.D.CWD()
-	out, err := c.CombinedOutput()
+	out, stderr, err := al14Command(t, c)
 	if err != nil {
-		t.Fatalf("CLI %v: %v %s", args, err, out)
+		t.Fatalf("CLI %v: %v %s %s", args, err, out, stderr)
 	}
 	var o WorkflowRun
 	if err = json.Unmarshal(out, &o); err != nil {
@@ -253,142 +252,6 @@ func TestAL01ReportCLIJourney(t *testing.T) {
 	}
 }
 
-func TestAL01LegacyRetirementCLIAndFreshReplacement(t *testing.T) {
-	binary := automaticCLIBinary(t)
-	legacyBinary := continuitySourceBinary(t, "007bac90da1f99aa65d0aa320c83cc407a7b32d6", "PLY_AL01_LEGACY_BINARY")
-	f := workflowTestFixture(t)
-	// Model historical schema1 bytes, including absent protocol, rather than a
-	// new explicitly selected legacy request. The old start is synthetic fixture
-	// setup; receipt, retirement and replacement cross the current public CLI.
-	f.R.StartupProtocol = ""
-	historical := filepath.Join(f.R.WorkspaceRoot, "historical-ply")
-	b, err := os.ReadFile(legacyBinary)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = os.WriteFile(historical, b, 0700); err != nil {
-		t.Fatal(err)
-	}
-	// The baseline CLI freezes schema1 with the absent protocol unchanged.
-	f.R.Runtime.PlyExecutable = Executable{historical, hashFileTest(t, historical)}
-	f.D.Executable = func() (string, error) { return historical, nil }
-	herdr, _ := os.ReadFile(f.R.Herdr.Executable.Path)
-	herdr = bytes.Replace(herdr, []byte("cmd = args[:2]\n"), []byte("cmd = args[:2]\n"+closedTransportInspectStandin+integrationOwnerRecoveryStandin), 1)
-	if err = os.WriteFile(f.R.Herdr.Executable.Path, herdr, 0700); err != nil {
-		t.Fatal(err)
-	}
-	f.R.Herdr.Executable.SHA256 = hash(herdr)
-	f.File = writeAny(t, f.R.WorkspaceRoot, "historical-report.json", f.R)
-	previewLegacy := al01PreviewCLI(t, historical, f.R.WorkspaceRoot, f.File)
-	o := al01CLIOK(t, historical, f, "run", "start", "--file", f.File, "--apply", "--confirm", *previewLegacy.Confirmation)
-	a := f.Acceptance
-	a.RequestSHA256 = o.RequestSHA256
-	a.Acceptance = "unknown"
-	a.RuntimeClaim = RuntimeClaim{NativeSessionID: ptr(o.Transport.AgentSessionID)}
-	a.Sandbox = json.RawMessage(`null`)
-	a.Issues = json.RawMessage(`[{"type":"unknown","detail":"Profile and effective policy cannot be observed."}]`)
-	acceptance := writeAny(t, f.R.WorkspaceRoot, "negative-acceptance.json", a)
-	al01CLIOK(t, historical, f, "run", "accept", o.RunID, "--context", o.Paths.Context, "--file", acceptance)
-	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	originalRequest, _ := Canonical(s.Request)
-	originalAcceptance, _ := os.ReadFile(s.Acceptance.Locator)
-	stop := al01StopReport(f)
-	stop.RequestSHA256 = o.RequestSHA256
-	stopFile := writeAny(t, f.R.WorkspaceRoot, "negative-stop.json", stop)
-	rejected := exec.Command(historical, "workflow", "run", "report", o.RunID, "--context", o.Paths.Context, "--file", stopFile)
-	rejected.Dir, _ = f.D.CWD()
-	rejectedOutput, rejectedErr := rejected.CombinedOutput()
-	if rejectedErr == nil {
-		t.Fatal("baseline unexpectedly accepted pre-start stop")
-	}
-	t.Logf("Historical CLI report rejection preserved: %s", rejectedOutput)
-	// A normal update leaves the launch-time hash historical. The replacement
-	// binary is still a valid executable, with observably different bytes.
-	if err = os.WriteFile(historical, mustReadAL01(t, binary), 0700); err != nil {
-		t.Fatal(err)
-	}
-	workflowTestModel(t, f, map[string]any{"closed_transport": true})
-	f.D.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
-	args := []string{"run", "retire", o.RunID, "--observer", "synthetic coordinator", "--reason", "Replace clean absent negative-acceptance owner after CLI upgrade"}
-	retired := al01CLIOK(t, binary, f, args...)
-	al01CLIOK(t, binary, f, args...)
-	if retired.ReportStartup == nil || retired.ReportStartup.Retirement == nil || retired.FinalReturn.TerminalSHA256 != nil {
-		t.Fatal("CLI retirement missing or fabricated terminal")
-	}
-	s, err = workflowRead(f.R.WorkspaceRoot, o.RunID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	afterRequest, _ := Canonical(s.Request)
-	afterAcceptance, _ := os.ReadFile(s.Acceptance.Locator)
-	if !bytes.Equal(originalRequest, afterRequest) || !bytes.Equal(originalAcceptance, afterAcceptance) {
-		t.Fatal("historical request or negative acceptance rewritten")
-	}
-	t.Log("Current candidate CLI retired upgraded historical negative-acceptance fixture; request/acceptance bytes unchanged; identical retry preserved retirement")
-	// Native creation/selection puts a fresh Task copy in the same Epic queue.
-	al01QueueReplacementTask(t, f)
-	// Native preparation supplies a fresh queue/current binding and worktree.
-	prepare := func(args ...string) workspace.TaskPreparationReadback {
-		c := exec.Command(binary, append([]string{"workspace", "task", "prepare", "--next", "--project", "ply", "--repo", "ply", "--epic", "epic", "--format", "json"}, args...)...)
-		c.Dir = f.R.WorkspaceRoot
-		out, e := c.CombinedOutput()
-		if e != nil {
-			t.Fatalf("native prepare: %v %s", e, out)
-		}
-		var p workspace.TaskPreparationReadback
-		if e = json.Unmarshal(out, &p); e != nil {
-			t.Fatal(e)
-		}
-		return p
-	}
-	preview := prepare("--check")
-	if preview.Confirmation == nil {
-		t.Fatalf("fresh preparation unavailable: %+v", preview)
-	}
-	fresh := prepare("--apply", "--confirm", *preview.Confirmation)
-	if fresh.Preparation == nil || fresh.Preparation.ID == f.R.PreparationID {
-		t.Fatal("replacement reused old preparation")
-	}
-	oldWorktree := s.Observed.Target.WorktreeLocator
-	r := f.R
-	r.StartupProtocol = ""
-	r.RequestKey = "al01/fresh-replacement"
-	r.PreparationID = fresh.Preparation.ID
-	r.PreparationSHA256 = digest(*fresh.Preparation)
-	r.Runtime.PlyExecutable = Executable{binary, hashFileTest(t, binary)}
-	draft := strings.ReplaceAll(string(r.HandoffDraft), oldWorktree, fresh.Plan.WorktreePath)
-	draft = strings.ReplaceAll(draft, s.Observed.Target.Ref, "refs/heads/"+fresh.Plan.Branch)
-	var fields map[string]any
-	json.Unmarshal([]byte(draft), &fields)
-	fields["publication_key"] = "al01/fresh-replacement"
-	fields["activity_key"] = "al01/fresh-replacement"
-	selected, err := workspace.ShowTaskSpec(f.D.Workspace, workspace.TaskContentQuery{TaskID: "replacement", SpecID: "solution", Revision: 1})
-	if err != nil {
-		t.Fatal(err)
-	}
-	basis, _ := objectMember(selected.Value, "task_spec_binding")
-	inputs, _ := objectMember(selected.Value, "required_inputs")
-	basisRaw, _ := canonicaljson.Marshal(basis)
-	inputsRaw, _ := canonicaljson.Marshal(inputs)
-	fields["task_spec_binding"] = json.RawMessage(basisRaw)
-	fields["inputs"] = json.RawMessage(inputsRaw)
-	r.HandoffDraft, _ = Canonical(fields)
-	file := writeAny(t, f.R.WorkspaceRoot, "fresh-replacement.json", r)
-	workflowTestModel(t, f, map[string]any{"closed_transport": false, "foreground_cwd": fresh.Plan.WorktreePath, "agent_session_id": "replacement-session", "agent_status": "idle"})
-	p := al01PreviewCLI(t, binary, f.R.WorkspaceRoot, file)
-	replacement := al01CLIOK(t, binary, f, "run", "start", "--file", file, "--apply", "--confirm", *p.Confirmation)
-	freshFixture := f
-	freshFixture.D.CWD = func() (string, error) { return fresh.Plan.WorktreePath, nil }
-	started := al01CLIOK(t, binary, freshFixture, "run", "check-in", replacement.RunID, "--context", replacement.Paths.Context, "--provider", "codex", "--native-session", replacement.Transport.AgentSessionID)
-	if started.RunID == o.RunID || started.Delivery != nil || started.ReportStartup.Receipt == nil || started.ReportStartup.Protocol != MandateReceiptV1 {
-		t.Fatal("fresh replacement did not receive its own report mandate")
-	}
-	t.Log("Current candidate CLI prepared a fresh Task, started replacement and recorded unknown-facts report receipt under a new mandate")
-}
-
 func al01PreviewCLI(t *testing.T, binary, cwd, file string) WorkflowPreview {
 	t.Helper()
 	c := exec.Command(binary, "workflow", "run", "start", "--file", file, "--check", "--format", "json")
@@ -429,6 +292,7 @@ func al01QueueReplacementTask(t *testing.T, f workflowFixture) {
 	if _, err := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "replacement", Title: "Fixture Task", Description: "Fixture need", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
+	recordFixtureProblem(t, w, root, "replacement")
 	r, err := w.WorkItems.Snapshot(root)
 	if err != nil {
 		t.Fatal(err)

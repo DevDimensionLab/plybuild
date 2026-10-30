@@ -34,7 +34,6 @@ func TestRegisteredTaskListTitleFactsAndReadOnlyDependencies(t *testing.T) {
 		task.ID = "legacy"
 		task.Title = "Legacy: æøå (registered)"
 		r.Tasks = append(r.Tasks, task)
-		r.TaskSpecPolicies = append(r.TaskSpecPolicies, TaskSpecPolicy{TaskID: "legacy", Mode: "legacy", LegacyResultIDs: []TaskResultID{}})
 		sortWorkRegistry(&r)
 		return s.Publish(r)
 	})
@@ -76,7 +75,7 @@ func TestRegisteredTaskListTitleFactsAndReadOnlyDependencies(t *testing.T) {
 				t.Fatalf("literal=%+v", sentinel)
 			}
 		} else {
-			for _, title := range []TaskListTitle{current, sentinel} {
+			for _, title := range []TaskListTitle{current} {
 				if title.Title != nil || title.Source != "problem_revision" || title.Status != "unavailable" {
 					t.Fatalf("unavailable=%+v", title)
 				}
@@ -229,14 +228,15 @@ func TestRegisteredV4TaskListKeepsUnavailableTitleWhileReadyRemainsStrict(t *tes
 	if err != nil || len(list.Tasks) != 1 || list.Titles["task"].Title != nil || list.Titles["task"].Status != "unavailable" {
 		t.Fatalf("list=%+v err=%v", list, err)
 	}
-	if _, err = f.dependencies.WorkItems.Snapshot(root); err == nil {
-		t.Fatal("strict registry read lost closure check")
+	if _, err = f.dependencies.WorkItems.Snapshot(root); err != nil {
+		t.Fatalf("registry read required optional document content: %v", err)
 	}
 	if _, err = ListTaskQueue(f.dependencies, queueTargetFixture(), true); err == nil {
 		t.Fatal("ready swallowed content corruption")
 	}
-	if _, err = ShowTask(f.dependencies, "task"); err == nil {
-		t.Fatal("Task show swallowed content corruption")
+	shown, err := ShowTask(f.dependencies, "task")
+	if err != nil || shown.Content == nil || contentFields(contentFields(shown.Content)["problem"])["integrity"] == "valid" {
+		t.Fatalf("Task show must preserve unavailable document facts: %v", err)
 	}
 	after, err := os.ReadFile(workItemsPath(root))
 	if err != nil || string(before) != string(after) {
@@ -268,7 +268,6 @@ func TestRegisteredListRejectsUnverifiableProblemPublication(t *testing.T) {
 				r.TaskContentPublications[i].PublicationKey = changedKey
 			}
 		}
-		r.TaskSpecPolicies[0].ActivationPublicationKey = &changedKey
 		sortWorkRegistry(&r)
 		data, err := encodeWorkItemRegistry(r)
 		if err != nil {

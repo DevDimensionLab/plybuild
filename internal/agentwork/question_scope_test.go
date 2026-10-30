@@ -110,22 +110,10 @@ func treeSnapshot(t *testing.T, root string) map[string]string {
 	return out
 }
 
-// F03: damaged history of a validated question on session B vetoes B only;
-// an otherwise authorized status follow-up to unrelated A is sent exactly once.
-// Unidentifiable questions and an own question still keep A from being sent.
-func TestNativeQuestionHistoryVetoesOnlyItsVerifiedSession(t *testing.T) {
-	for _, tc := range []struct {
-		damage string
-		aSent  bool
-	}{
-		{"answer", true},
-		{"receipt", true},
-		{"continuation", true},
-		{"withdrawal-after-continued", true},
-		{"question-digest", false},
-		{"inventory-entry", false},
-		{"open-question-without-session", false},
-		{"own-open-question", false},
+func TestQuestionHistoryDoesNotControlHumanFollowup(t *testing.T) {
+	for _, tc := range []struct{ damage string }{
+		{"answer"}, {"receipt"}, {"continuation"}, {"withdrawal-after-continued"},
+		{"question-digest"}, {"inventory-entry"}, {"open-question-without-session"}, {"own-open-question"},
 	} {
 		t.Run(tc.damage, func(t *testing.T) {
 			d, h, root, repo := questionWorkspace(t)
@@ -179,10 +167,6 @@ func TestNativeQuestionHistoryVetoesOnlyItsVerifiedSession(t *testing.T) {
 			}
 			qualifyTestCallback(t, root, binary)
 			s := &Service{Root: root, Now: func() time.Time { return now }, Runtime: rt, Native: func() NativeSnapshot { return readNative(d, root) }, Send: func(i Identity, _ string) error { sent[i]++; return nil }}
-			n := readNative(d, root)
-			if tc.aSent && (!n.Partial || n.CoverageUnknown || !n.VetoCoverageComplete || n.Vetoes[bi.sessionKey()] != "native_question") {
-				t.Fatalf("known B failure not scoped to B with diagnostics: %+v", n)
-			}
 			for _, target := range []Identity{a, bi} {
 				draft := Draft{PublicationKey: "f03/" + target.Session, OwnerRef: "owner", MandateRef: "mandate", Registrar: Registrar{Kind: HumanRequested, ActorRef: "human"}, TargetRef: target.Ref(), WaitKind: "status", WaitRef: target.Ref(), NextCheckAtUTC: now.Format(time.RFC3339)}
 				f, err := s.Register(draft)
@@ -195,12 +179,8 @@ func TestNativeQuestionHistoryVetoesOnlyItsVerifiedSession(t *testing.T) {
 					}
 				}
 			}
-			wantA := 0
-			if tc.aSent {
-				wantA = 1
-			}
-			if sent[a] != wantA || sent[bi] != 0 {
-				t.Fatalf("sends A=%d B=%d; want A=%d B=0", sent[a], sent[bi], wantA)
+			if sent[a] != 1 || sent[bi] != 1 {
+				t.Fatalf("human follow-up was blocked by question history: A=%d B=%d", sent[a], sent[bi])
 			}
 			if after := treeSnapshot(t, store); !reflect.DeepEqual(before, after) {
 				t.Fatalf("native question reads changed the human-input store:\n%v\n%v", before, after)

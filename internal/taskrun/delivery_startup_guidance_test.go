@@ -2,9 +2,9 @@ package taskrun
 
 import (
 	"bytes"
-	"encoding/json"
+
 	"os"
-	"os/exec"
+
 	"path/filepath"
 	"strings"
 	"testing"
@@ -76,7 +76,7 @@ func al51FailedStartup(t *testing.T, f deliveryFixture, bootstrap bool) Workflow
 
 func al51AssertInspection(t *testing.T, action WorkflowAction) {
 	t.Helper()
-	if action.Actor != "coordinator" || !strings.Contains(action.Message, "ply workflow execute recover-start wfr_") || !strings.Contains(action.Message, " --check --format json") {
+	if action.Actor != "coordinator" || !strings.Contains(action.Message, "ply workflow run show wfr_") || !strings.Contains(action.Message, " --format json") {
 		t.Errorf("AL51 failed unbound startup must advise coordinator inspection: %+v", action)
 	}
 	for _, falseClaim := range []string{"Complete any native onboarding", "shell-only", "writer absent", "restart-ready"} {
@@ -128,39 +128,6 @@ func TestAL51FailedUnboundStartupGuidance(t *testing.T) {
 	}
 }
 
-func TestAL51FailedStartupCLIRead(t *testing.T) {
-	binary := os.Getenv("PLY_DELIVERY_TEST_BINARY")
-	if binary == "" {
-		t.Skip("AL51 public reads require an explicitly supplied candidate")
-	}
-	f := al51StartupFixture(t, true)
-	o := al51FailedStartup(t, f, false)
-	before := treeState(t, f.R.WorkspaceRoot)
-	for _, format := range []string{"json", "text"} {
-		c := exec.Command(binary, "workflow", "execute", "show", o.RunID, "--format", format)
-		c.Dir = f.Prepared.Preparation.Preparation.Plan.WorktreePath
-		output, err := c.CombinedOutput()
-		if err != nil {
-			t.Fatalf("AL51 CLI read: %v\n%s", err, output)
-		}
-		if format == "json" {
-			var shown WorkflowRun
-			if err = json.Unmarshal(output, &shown); err != nil {
-				t.Fatal(err)
-			}
-			al51AssertInspection(t, shown.NextAction)
-		} else if !strings.Contains(string(output), "Next: coordinator") || !strings.Contains(string(output), "recover-start "+o.RunID+" --check --format json") || !strings.Contains(string(output), "provider_code=agent_not_found") {
-			t.Fatalf("AL51 text read lost inspection or diagnosis: %s", output)
-		}
-	}
-	if before != treeState(t, f.R.WorkspaceRoot) {
-		t.Fatal("AL51 public read changed fixture files or sent input")
-	}
-	if _, err := os.Stat(filepath.Join(o.Paths.RunRoot, "rounds", "000", "prompt-attempt.json")); !os.IsNotExist(err) {
-		t.Fatal("AL51 public read attempted Task input")
-	}
-}
-
 func TestAL51StartupGuidanceBoundaries(t *testing.T) {
 	f, o := deliveryPausedStartup(t)
 	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
@@ -173,10 +140,10 @@ func TestAL51StartupGuidanceBoundaries(t *testing.T) {
 	live.Result.Reasons = nil
 	live.Result.Transport.State, live.Result.Transport.LaunchPending = "blocked", ptr(true)
 	action := deliveryStartupAction(live)
-	if action.Actor != "user" || !strings.Contains(action.Message, "workflow execute resume "+o.RunID) || strings.Contains(action.Message, "recover-start") {
+	if action.Actor != "user" || !strings.Contains(action.Message, "workflow run show "+o.RunID) || strings.Contains(action.Message, "recover-start") {
 		t.Fatalf("AL51 changed in-progress onboarding guidance: %+v", action)
 	}
-	if !strings.Contains(o.NextAction.Message, "If native onboarding is still active") || !strings.Contains(o.NextAction.Message, "workflow execute resume "+o.RunID) {
+	if !strings.Contains(o.NextAction.Message, "before the human chooses further action") || !strings.Contains(o.NextAction.Message, "workflow run show "+o.RunID) {
 		t.Fatalf("AL51 stopped observation lost live onboarding's conditional continuation: %+v", o.NextAction)
 	}
 	// A later preserved stop or necessary question must retain its actor and

@@ -153,9 +153,9 @@ func TestFollowupVetoAndTargetRevalidation(t *testing.T) {
 		{"launch_pending", func(s *Service) { s.Runtime.(*fakeRuntime).agents[0].LaunchPending = true }},
 		{"new_session", func(s *Service) { s.Runtime.(*fakeRuntime).agents[0].Session = "reused-pane" }},
 		{"native_unknown", func(s *Service) { s.Native = func() NativeSnapshot { return NativeSnapshot{} } }},
-		{"question", func(s *Service) {
+		{"refusal", func(s *Service) {
 			n := s.Native()
-			n.Bindings[0].Veto = "question"
+			n.Bindings[0].Veto = "refusal"
 			s.Native = func() NativeSnapshot { return n }
 		}},
 		{"refusal", func(s *Service) {
@@ -308,7 +308,7 @@ func TestFollowupUnboundSelfRegisteredRuntime(t *testing.T) {
 	if e != nil || f.Transport.State != "sent" || c.Load() != 1 {
 		t.Fatal("unbound exact runtime cannot receive reminder", f, e)
 	}
-	for _, veto := range []string{"question", "refusal", "unknown"} {
+	for _, veto := range []string{"refusal", "unknown"} {
 		t.Run(veto, func(t *testing.T) {
 			s, d, c := fixture(t)
 			d.NextCheckAtUTC = s.now()
@@ -332,7 +332,7 @@ func TestFollowupUnboundSelfRegisteredRuntime(t *testing.T) {
 }
 
 // R1 regression: unrelated historical diagnostics do not become this target's
-// veto. Own question or unidentifiable relevant coverage must still prevent input.
+// veto. Actual refusal or unidentifiable relevant coverage must still prevent input.
 func TestFollowupTargetSpecificVetoCoverage(t *testing.T) {
 	for _, bound := range []bool{true, false} {
 		name := "unbound"

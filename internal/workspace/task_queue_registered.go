@@ -184,7 +184,7 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 				if r.FormatVersion == ParallelRegistryFormat {
 					pending.SerialReadiness = pending.State
 					pending.ParallelReadiness = pending.State
-					if len(fold.Active) > 0 && admissionAllowed(r, fold, AdmissionParallel) && entry.Goal != nil && pending.Freshness == "fresh" {
+					if len(fold.Active) > 0 && entry.Goal != nil && pending.Freshness == "fresh" {
 						pending.ParallelReadiness = "preflight_required"
 					}
 				}
@@ -357,17 +357,6 @@ func registeredQueueSelection(d Dependencies, root string, r WorkItemRegistry, t
 	if err != nil {
 		return err
 	}
-	if contentString(contentFields(spec), "contract_kind") == "execution" {
-		var goal TaskGoalRef
-		if err = contentDecode(contentFields(spec)["goal_origin"], &goal); err != nil {
-			return err
-		}
-		if err = validateExecutionGoalOrigin(d, root, r, task.ID, spec); err != nil {
-			return err
-		}
-		row.Goal = &goal
-		row.EvidenceIDs = append(row.EvidenceIDs, goal.Spec.ManifestSHA256)
-	}
 	if err = taskSpecStructurallyReady(spec); err != nil {
 		row.State = "blocked"
 		row.Reasons = append(row.Reasons, queueErrorReasons(err)...)
@@ -417,15 +406,6 @@ func registeredCurrentPreparation(d Dependencies, root string, r WorkItemRegistr
 		implementation := contentFields(contentFields(eval.Spec)["implementation_basis"])
 		if contentString(implementation, "parent_oid") != p.ParentOID || contentString(implementation, "parent_tree") != p.ParentTree || contentString(implementation, "start_oid") != p.ParentOID || contentString(implementation, "start_tree") != p.ParentTree {
 			err = queueError("task_queue_integrity_conflict", "preparation plan differs from the selected registered implementation basis")
-		}
-		if err == nil && contentString(contentFields(eval.Spec), "contract_kind") == "execution" {
-			var goal TaskGoalRef
-			err = contentDecode(contentFields(eval.Spec)["goal_origin"], &goal)
-			if err == nil {
-				row.Goal = &goal
-				row.EvidenceIDs = registeredQueueEvidence(append(row.EvidenceIDs, goal.Spec.ManifestSHA256))
-				err = validateExecutionGoalOrigin(d, root, r, p.TaskID, eval.Spec)
-			}
 		}
 		if err == nil && !contentTypedEqual(eval.RequiredInputs, p.RequiredInputs) {
 			err = queueError("task_queue_integrity_conflict", "preserved preparation inputs differ from their selected content")

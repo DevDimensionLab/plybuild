@@ -763,9 +763,6 @@
               "answer": {
                 "$ref": "#/$defs/answer"
               },
-              "receipt": {
-                "$ref": "#/$defs/receipt"
-              },
               "continuation": {
                 "$ref": "#/$defs/continuation"
               },

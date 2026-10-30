@@ -70,7 +70,6 @@ func outsideTaskContentScope(r WorkItemRegistry, scope *taskContentScope) WorkIt
 	}
 	out.IntegrationAttempts = outsideScope(r.IntegrationAttempts, func(v IntegrationAttempt) bool { return ownedAuthority(v.AuthorityID) })
 	out.IntegrationResults = outsideScope(r.IntegrationResults, func(v IntegrationResult) bool { return ownedAuthority(v.AuthorityID) })
-	out.TaskSpecPolicies = outsideScope(r.TaskSpecPolicies, func(v TaskSpecPolicy) bool { return v.TaskID == id })
 	out.TaskProblemRevisions = outsideScope(r.TaskProblemRevisions, func(v TaskProblemReference) bool { return v.TaskID == id })
 	out.TaskSpecRevisions = outsideScope(r.TaskSpecRevisions, func(v TaskSpecReference) bool { return v.TaskID == id })
 	out.TaskSpecAssessments = outsideScope(r.TaskSpecAssessments, func(v TaskAssessmentReference) bool { return v.TaskID == id })

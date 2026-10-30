@@ -129,7 +129,6 @@ func RecordedTaskProgressFacts(r WorkItemRegistry) map[TaskID]TaskRecordedProgre
 // clocks are not. A new unselected Spec revision deliberately leaves the selected
 // basis unchanged, as does an Epic base advance after successful integration.
 func recordedResultRelevance(r WorkItemRegistry) map[TaskResultID]bool {
-	required := map[TaskID]bool{}
 	problems := map[TaskID]TaskProblemReference{}
 	selections := map[TaskID]TaskSelectionReference{}
 	type assessmentKey struct {
@@ -139,9 +138,6 @@ func recordedResultRelevance(r WorkItemRegistry) map[TaskResultID]bool {
 	}
 	assessments := map[assessmentKey]TaskAssessmentReference{}
 	links := map[TaskResultID]TaskResultSpecBinding{}
-	for _, policy := range r.TaskSpecPolicies {
-		required[policy.TaskID] = policy.Mode == "spec_required"
-	}
 	for _, problem := range r.TaskProblemRevisions {
 		if problem.Revision > problems[problem.TaskID].Revision {
 			problems[problem.TaskID] = problem
@@ -163,7 +159,7 @@ func recordedResultRelevance(r WorkItemRegistry) map[TaskResultID]bool {
 	}
 	relevant := make(map[TaskResultID]bool, len(r.TaskResults))
 	for _, result := range r.TaskResults {
-		if !required[result.TaskID] {
+		if _, linked := links[result.ID]; !linked {
 			relevant[result.ID] = true
 			continue
 		}

@@ -144,14 +144,14 @@ func TestAgentWorkContractFixtures(t *testing.T) {
 		t.Fatal(e)
 	}
 	artifact(t, "overview-bound-unbound", v)
-	for _, state := range []string{"clear", "question", "partial"} {
+	for _, state := range []string{"clear", "refusal", "partial"} {
 		self, sd, _ := fixture(t)
 		sd.NextCheckAtUTC = self.now()
 		sd.Registrar = Registrar{Kind: AgentSelfRegistered, ActorRef: sd.TargetRef}
 		identity := self.Runtime.(*fakeRuntime).agents[0].Identity
 		coverage := NativeSnapshot{Available: true, VetoCoverageComplete: true, Vetoes: map[string]string{}}
-		if state == "question" {
-			coverage.Vetoes[identity.sessionKey()] = "native_question"
+		if state == "refusal" {
+			coverage.Vetoes[identity.sessionKey()] = "native_refusal"
 		}
 		if state == "partial" {
 			coverage.CoverageUnknown = true

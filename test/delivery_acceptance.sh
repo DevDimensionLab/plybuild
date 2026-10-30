@@ -2,24 +2,7 @@
 set -eu
 
 delivery_repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
-# This exact Task alone has the preserved AW-01 focused acceptance agreement.
-delivery_task_ref=$(GIT_OPTIONAL_LOCKS=0 git -c core.fsmonitor=false -c core.hooksPath=/dev/null -C "$delivery_repo_root" symbolic-ref --quiet HEAD 2>/dev/null || true)
-if [ "$delivery_task_ref" = 'refs/heads/ply-task/aw-01-current-resume-guidance-038968865f8f' ]; then
-    cd "$delivery_repo_root"
-    exec /bin/sh ./test/resume-next-action-acceptance.sh
-fi
-# MR-05 replacement only; root must match this expected ref to fresh native preview.
-if [ "$delivery_task_ref" = 'refs/heads/ply-task/mr-05-bound-runtime-control-replacement-ae7cec4dc362' ]; then
-    cd "$delivery_repo_root"
-    exec /bin/sh ./test/mr05-acceptance.sh
-fi
-# MR-05 project/repo projection correction only; fresh native preview must match.
-if [ "$delivery_task_ref" = 'refs/heads/ply-task/mr-05-standalone-project-binding-correct-20951f628816' ]; then
-    cd "$delivery_repo_root"
-    exec /bin/sh ./test/mr05-projection-acceptance.sh
-fi
-# Native automatic verification supplies TMPDIR inside the Run. Disposable Ply
-# workspace fixtures must live outside the real workspace to avoid nesting it.
+# Disposable workspace fixtures must live outside the real workspace.
 delivery_test_root=$(mktemp -d "/tmp/ply-delivery-acceptance.XXXXXX")
 delivery_test_root=$(CDPATH='' cd -- "$delivery_test_root" && pwd -P)
 trap 'delivery_status=$?; if [ "$delivery_status" -eq 0 ]; then rm -rf "$delivery_test_root"; else printf "Acceptance did not pass; temporary evidence retained at %s\n" "$delivery_test_root"; fi' EXIT

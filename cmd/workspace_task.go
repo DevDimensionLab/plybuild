@@ -55,9 +55,9 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 }
 
 func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.Command {
-	command := &cobra.Command{Use: "task", Short: "Manage Tasks in a Ply workspace", Long: "Create, inspect, and advance repository-bound Tasks owned by workspace Epics.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check"}
-	var title, description, epicID, projectID, repoID, createFormat, upgradeStore string
-	create := &cobra.Command{Use: "create <task-id>", Short: "Create a repository-bound Task and record its initial problem", Long: "Create one Task under an existing Epic and record its initial problem. A format 1 or 2 registry requires --upgrade-store with its exact digest. Solution selection, worktree creation, agent start, QA and integration remain separate actions.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply", Args: func(cmd *cobra.Command, args []string) error {
+	command := &cobra.Command{Use: "task", Short: "Manage Tasks in a Ply workspace", Long: "Create, inspect, and advance repository-bound Tasks owned by workspace Epics.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check"}
+	var title, description, epicID, projectID, repoID, createFormat string
+	create := &cobra.Command{Use: "create <task-id>", Short: "Register a repository-bound Task", Long: "Register one Task under an existing Epic with the supplied title and description.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
@@ -70,9 +70,6 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		}
 		if err := validateWorkFormat(createFormat); err != nil {
 			return err
-		}
-		if upgradeStore != "" {
-			input.RegistryUpgrade = &workspace.TaskRegistryUpgrade{RegistrySHA256: upgradeStore}
 		}
 		result, err := services.create(input)
 		if createFormat == "json" && result.Content != nil {
@@ -109,7 +106,6 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		return nil
 	}}
 	create.Flags().StringVar(&createFormat, "format", "text", "output format (text or json)")
-	create.Flags().StringVar(&upgradeStore, "upgrade-store", "", "acknowledge the exact SHA-256 digest of a format 1 or 2 registry")
 	create.Flags().StringVar(&title, "title", "", "Task display title")
 	create.Flags().StringVar(&description, "description", "", "one-line Task description")
 	create.Flags().StringVar(&epicID, "epic", "", "parent Epic ID")
@@ -296,7 +292,7 @@ func newWorkspaceTaskQACommand(services workspaceTaskServices) *cobra.Command {
 func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Command {
 	var resultID, qaID, resultOID, parentOID, confirm, retry, format string
 	var check, apply bool
-	command := &cobra.Command{Use: "integrate <task-id>", Short: "Integrate a Task into its Epic parent", Long: "Check or apply one confirmed local fast-forward from an exact Task result to its registered Epic parent.", Example: "  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --qa hqa_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>", Args: func(cmd *cobra.Command, args []string) error {
+	command := &cobra.Command{Use: "integrate <task-id>", Short: "Integrate a Task into its Epic parent", Long: "Check or apply one confirmed local fast-forward from an exact Task result to its registered Epic parent.", Example: "  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --result trs_0123456789abcdef0123456789abcdef --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
@@ -339,7 +335,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 		return err
 	}}
 	command.Flags().StringVar(&resultID, "result", "", "controlled Task result ID")
-	command.Flags().StringVar(&qaID, "qa", "", "human QA record ID")
+	command.Flags().StringVar(&qaID, "qa", "", "optional human QA record ID")
 	command.Flags().StringVar(&resultOID, "expected-result-oid", "", "expected exact Task result commit object ID")
 	command.Flags().StringVar(&parentOID, "expected-parent-oid", "", "expected current Epic parent commit object ID")
 	command.Flags().BoolVar(&check, "check", false, "check the exact integration plan without writing state")

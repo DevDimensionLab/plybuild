@@ -202,18 +202,18 @@ class ReadContractSchemas(unittest.TestCase):
             with self.subTest(count=count):
                 self.assertFalse(validator.is_valid(replace(example, ("project", "repo_count"), count)))
 
-    def test_catalog_backup_goal_effect_keeps_unknown_effects_invalid(self):
+    def test_catalog_followup_effect_keeps_unknown_effects_invalid(self):
         example = copy.deepcopy(self.valid_examples["ply-capabilities-v1.build-known.valid.json"])
         example["workflow_extensions"] = [{
-            "id": "workflow.execute.backup-goal",
-            "command": ["workflow", "execute", "backup-goal"],
-            "mode": "retired_goal_registration",
-            "selectors": ["--task", "--spec", "--provider", "--apply", "--confirmation"],
+            "id": "workflow.followup.register",
+            "command": ["workflow", "followup", "register"],
+            "mode": "status_only_v1",
+            "selectors": ["--file"],
             "formats": ["text", "json"],
             "filters": [],
             "filter_policy": "none",
-            "result_schemas": [{"kind": "ply.workflow.backup-goal", "schema_version": 1}],
-            "effect": "preview_or_fresh_goal_registration",
+            "result_schemas": [{"kind": "AgentFollowup@1", "schema_version": 1}],
+            "effect": "followup_record",
         }]
         self.valid(example)
         validator = self.validators[example["kind"]]

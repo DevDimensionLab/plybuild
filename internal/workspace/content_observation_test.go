@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-// Exercise the consumed store boundary, including both content and queue closure.
-func TestWorkItemSnapshotReusesVerifiedContentWithinObservation(t *testing.T) {
+// Registry observations do not consume optional document bytes.
+func TestWorkItemSnapshotDoesNotReadUnselectedDocuments(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	goal := goalFixture(t, f, "task", "goal")
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}})
@@ -23,30 +23,10 @@ func TestWorkItemSnapshotReusesVerifiedContentWithinObservation(t *testing.T) {
 	if _, err := store.Snapshot(root); err != nil {
 		t.Fatal(err)
 	}
-	// Every managed file in this fixture is reachable. No source may be read twice.
-	unique := 0
-	err := filepath.WalkDir(taskContentRoot(root), func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if !d.IsDir() {
-			unique++
-		}
-		return nil
-	})
-	if err != nil {
-		t.Fatal(err)
+	if reads != 0 {
+		t.Fatalf("registry observation read %d unselected document files", reads)
 	}
-	if reads != unique {
-		t.Fatalf("physical reads = %d, available unique sources = %d; want every source exactly once", reads, unique)
-	}
-	before := reads
-	if _, err := store.Snapshot(root); err != nil {
-		t.Fatal(err)
-	}
-	if reads-before != before {
-		t.Fatalf("new observation reused old bytes: first=%d second=%d", before, reads-before)
-	}
+
 }
 
 func TestContentObservationOwnsBytesAndRetriesMissingSources(t *testing.T) {
@@ -91,7 +71,7 @@ func TestContentObservationOwnsBytesAndRetriesMissingSources(t *testing.T) {
 	}
 }
 
-func TestWorkItemObservationRejectsCorruptionOnNextSnapshotAndPublication(t *testing.T) {
+func TestWorkItemObservationKeepsUnavailableDocumentsAsSeparateFacts(t *testing.T) {
 	for _, operation := range []string{"snapshot", "publish", "relock"} {
 		t.Run(operation, func(t *testing.T) {
 			f := newWorkItemJourneyFixture(t)
@@ -128,8 +108,11 @@ func TestWorkItemObservationRejectsCorruptionOnNextSnapshotAndPublication(t *tes
 					return s.Publish(r)
 				})
 			}
-			if err == nil {
-				t.Fatal("accepted corrupt content in a new observation")
+			if err != nil {
+				t.Fatalf("registry operation consumed unrelated document bytes: %v", err)
+			}
+			if _, err := f.dependencies.TaskContent.Read(root, "manifests", goal.Spec.ManifestSHA256); err == nil {
+				t.Fatal("explicit document read hid corruption")
 			}
 		})
 	}

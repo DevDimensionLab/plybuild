@@ -104,7 +104,6 @@ type WorkspaceTaskIntegrationPlan struct {
 	Readiness             string                      `yaml:"readiness" json:"readiness"`
 	Reasons               []string                    `yaml:"reasons" json:"reasons"`
 	Effect                IntegrationPlanEffect       `yaml:"effect" json:"effect"`
-	TaskSpecGuard         *TaskSpecRelevance          `yaml:"task_spec_guard,omitempty" json:"task_spec_guard"`
 	DeliveryAuthorization *DeliveryAuthorization      `yaml:"delivery_authorization,omitempty" json:"delivery_authorization,omitempty"`
 	Acceptance            *DeliveryAcceptanceDecision `yaml:"acceptance,omitempty" json:"acceptance,omitempty"`
 }
@@ -318,9 +317,11 @@ func ParseTaskIntegrationInput(taskID, resultID, qaID, resultOID, parentOID, ret
 	if err != nil {
 		return TaskIntegrationInput{}, err
 	}
-	qa, err := ParseHumanQARecordID(qaID)
-	if err != nil {
-		return TaskIntegrationInput{}, err
+	qa := HumanQARecordID(qaID)
+	if qaID != "" {
+		if _, err := ParseHumanQARecordID(qaID); err != nil {
+			return TaskIntegrationInput{}, err
+		}
 	}
 	input := TaskIntegrationInput{TaskID: task, TaskResultID: result, HumanQARecordID: qa, ExpectedResultOID: resultOID, ExpectedParentOID: parentOID, Apply: apply, Confirmation: confirmation}
 	if retryAfter != "" {
@@ -378,7 +379,6 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 			if err := revalidateIntegrationEvidence(dependencies, ctx.Result, ctx.QA); err != nil {
 				return TaskIntegrationResult{}, err
 			}
-			ctx.TaskSpecRelevance = taskResultSpecRelevance(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repos}, registry, ctx.Task, ctx.Result.ID)
 			ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, result)
 			return TaskIntegrationResult{Readback: newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, result)}, nil
 		}
@@ -428,7 +428,6 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 				if err != nil {
 					return err
 				}
-				ctx.TaskSpecRelevance = taskResultSpecRelevance(dependencies, root, projects, registry, ctx.Task, ctx.Result.ID)
 				ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, stored)
 				if stored != nil {
 					output = newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, stored)
@@ -441,10 +440,6 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 					return err
 				}
 				ctx.PreconditionReason = authorityProjectBindingReason(projects, authority.Plan)
-				ctx.TaskSpecRelevance = taskResultSpecRelevance(dependencies, root, projects, registry, ctx.Task, ctx.Result.ID)
-				if ctx.TaskSpecRelevance != nil && ctx.TaskSpecRelevance.Relevance != "current" {
-					ctx.PreconditionReason = "task_spec_result_not_current"
-				}
 				return continueIntegrationAuthority(dependencies, session, &registry, root, ctx, *authority, *intent, &output, true)
 			}
 			plan, digest, ctx, err := buildIntegrationPlan(dependencies, root, projects, registry, input)
@@ -470,7 +465,7 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 			now := dependencies.WorkClock.Now().UTC().Format(time.RFC3339Nano)
 			authority := IntegrationAuthority{ID: authorityID, Mode: "human_cli_start", CreatedAtUTC: now, PlanSHA256: digest, Plan: plan, RetryAfterResultID: input.RetryAfterResultID, TaskID: input.TaskID, TaskResultID: input.TaskResultID, HumanQARecordID: input.HumanQARecordID, AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: plan.Epic.ExpectedParentOID, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
 			if input.DeliveryOwner != nil {
-				authority.Mode = "delivery_owner_after_human_pass"
+				authority.Mode = "explicit_delivery_owner"
 				if plan.Acceptance != nil && plan.Acceptance.Mode == "automatic" {
 					authority.Mode = "delivery_owner_after_automatic_pass"
 				}
@@ -500,7 +495,6 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 }
 
 type integrationContext struct {
-	TaskSpecRelevance         *TaskSpecRelevance
 	Task                      TaskRecord
 	Epic                      EpicRecord
 	Parent                    EpicRepoBinding
@@ -537,7 +531,7 @@ func validateIntegrationInput(input TaskIntegrationInput) error {
 	if _, err := ParseTaskResultID(string(input.TaskResultID)); err != nil {
 		return err
 	}
-	if input.HumanQARecordID != "" || !automaticIntegrationAuthorization(input.DeliveryAuthorization) {
+	if input.HumanQARecordID != "" {
 		if _, err := ParseHumanQARecordID(string(input.HumanQARecordID)); err != nil {
 			return err
 		}
@@ -551,7 +545,7 @@ func validateIntegrationInput(input TaskIntegrationInput) error {
 	return nil
 }
 func requireIntegrationDependencies(d Dependencies) error {
-	if d.Files == nil || d.Projects == nil || d.ProjectLocks == nil || d.WorkItems == nil || d.TaskLifecycleIDs == nil || d.WorkClock == nil || d.HandoffEvidence == nil || d.IntegrationGit == nil {
+	if d.Files == nil || d.Projects == nil || d.ProjectLocks == nil || d.WorkItems == nil || d.TaskLifecycleIDs == nil || d.WorkClock == nil || d.IntegrationGit == nil {
 		return workError(ErrorWorkIO, "integration dependencies are required", nil)
 	}
 	return nil
@@ -575,13 +569,13 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	}
 	tr := findTaskResult(registry, input.TaskResultID)
 	qa := findHumanQA(registry, input.HumanQARecordID)
-	if qa == nil && input.HumanQARecordID == "" && automaticIntegrationAuthorization(input.DeliveryAuthorization) {
+	if qa == nil && input.HumanQARecordID == "" {
 		qa = &TaskHumanQARecord{}
 	}
 	if tr == nil || qa == nil {
 		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "selected Task result or human QA record is missing", nil)
 	}
-	if automaticIntegrationAuthorization(input.DeliveryAuthorization) && qa.ID != "" && qa.TaskResultID != tr.ID {
+	if qa.ID != "" && qa.TaskResultID != tr.ID {
 		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "selected human QA belongs to a different Task result", nil)
 	}
 	_, repo, err := projectAndRepo(projects, task.ProjectID, task.RepoID)
@@ -656,21 +650,8 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	if tr.TaskID != task.ID || tr.TaskWorktreeID != task.Worktree.ID || tr.ResultOID != input.ExpectedResultOID || tr.ResultTree == "" || tr.SourceLocator != task.Worktree.Locator || tr.SourceRef != task.Worktree.Ref {
 		conflict("task_result_binding_mismatch")
 	}
-	if !technical {
-		block("technical_gate_not_ready")
-	}
-	if acceptance.Outcome != "pass" {
-		if acceptance.Mode == "automatic" {
-			block("automatic_acceptance_not_ready")
-		} else {
-			block("human_qa_not_ready")
-		}
-	}
 	if input.ExpectedParentOID != task.Worktree.ParentOID || input.ExpectedResultOID != tr.ResultOID {
 		conflict("expected_oid_mismatch")
-	}
-	if ordinaryProductRef(parent.Worktree.Ref) && (input.DeliveryAuthorization == nil || input.DeliveryAuthorization.Agreement.Mode != DeliveryLocalBranch) {
-		block("ordinary_main_parent_forbidden")
 	}
 	if source.OID != tr.ResultOID || source.Tree != tr.ResultTree || source.Ref != task.Worktree.Ref || source.GitCommonDir != task.GitCommonDir {
 		conflict("source_binding_mismatch")
@@ -759,16 +740,6 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 	}
 	argv := []string{"git", "-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", parent.Worktree.Locator, "merge", "--ff-only", "--no-stat", "--no-autostash", tr.ResultOID}
 	plan := WorkspaceTaskIntegrationPlan{Kind: "WorkspaceTaskIntegrationPlan@1", SchemaVersion: 1, Format: "json", FormatVersion: 1, Canonicalization: "RFC8785", Workspace: IntegrationPlanWorkspace{Root: root, MarkerSHA256: digestTaskBytes(markerBytes)}, Project: IntegrationPlanProject{ProjectID: task.ProjectID}, Repository: IntegrationPlanRepository{RepoID: task.RepoID, RegisteredLocator: repo.Locator, GitCommonDir: repo.GitCommonDir, GitVersion: repository.GitVersion, ObjectFormat: repository.ObjectFormat, RefFormat: repository.RefFormat, Shallow: repository.Shallow, PartialClone: repository.PartialClone, SparseCheckout: repository.SparseCheckout}, Epic: IntegrationPlanEpic{EpicID: epic.ID, ParentWorktreeID: parent.Worktree.ID, ParentLocator: parent.Worktree.Locator, ParentRef: parent.Worktree.Ref, ExpectedParentOID: task.Worktree.ParentOID, ExpectedParentTree: task.Worktree.ParentTree}, Task: IntegrationPlanTask{TaskID: task.ID, TaskWorktreeID: task.Worktree.ID, SourceLocator: task.Worktree.Locator, SourceRef: task.Worktree.Ref, ResultOID: tr.ResultOID, ResultTree: tr.ResultTree}, TaskResult: IntegrationPlanTaskResult{ID: tr.ID, DraftSHA256: tr.DraftSHA256, TechnicalGate: tr.TechnicalGate}, HumanQA: IntegrationPlanHumanQA{ID: qa.ID, DraftSHA256: qa.DraftSHA256, Outcome: qa.Outcome}, RetryAfterResultID: input.RetryAfterResultID, WorkItemsSHA256: storeDigest, StoreTransition: tr.StoreTransition, ObservedSource: planObservation(source), ObservedParent: planObservation(parentObs), ObservedInventory: repository.Inventory, ObservedReflog: reflog, TechnicalGateReady: technical, HumanQAReady: human, AncestryReady: ancestor, Readiness: readiness, Reasons: reasons, Effect: IntegrationPlanEffect{Kind: "local_ff_only", ParentRef: parent.Worktree.Ref, ExpectedParentOID: task.Worktree.ParentOID, ResultOID: tr.ResultOID, MaxOccurrences: 1, Argv: argv}}
-	if taskRequiresSpec(registry, task.ID) {
-		plan.Kind = "WorkspaceTaskIntegrationPlan@2"
-		plan.SchemaVersion = 2
-		plan.TaskSpecGuard = taskResultSpecRelevance(d, root, projects, registry, *task, tr.ID)
-		ctx.TaskSpecRelevance = plan.TaskSpecGuard
-		if plan.TaskSpecGuard.Relevance != "current" {
-			plan.Readiness = "blocked"
-			plan.Reasons = sortedReasons(append(plan.Reasons, plan.TaskSpecGuard.Reasons...))
-		}
-	}
 	if input.DeliveryAuthorization != nil {
 		plan.Kind, plan.SchemaVersion = "WorkspaceTaskIntegrationPlan@3", 3
 		copy := *input.DeliveryAuthorization
@@ -793,6 +764,12 @@ func taskResultEvidenceRequest(result TaskResultRecord) TaskHandoffEvidenceReque
 }
 
 func revalidateIntegrationEvidence(d Dependencies, result TaskResultRecord, qa TaskHumanQARecord) error {
+	if result.VerificationReceipt != nil {
+		return ValidateTaskVerificationReceipt(d, result)
+	}
+	if d.HandoffEvidence == nil {
+		return workError(ErrorTaskIntegrationBlocked, "handoff evidence reader is required for this result", nil)
+	}
 	evidence, err := d.HandoffEvidence.ReadTaskEvidence(taskResultEvidenceRequest(result))
 	if err != nil {
 		return workError(ErrorTaskIntegrationBlocked, "immutable handoff evidence can no longer be validated", err)
@@ -1180,7 +1157,7 @@ func findAuthorityByPlan(r WorkItemRegistry, digest string, input TaskIntegratio
 }
 
 func validDeliveryIntegrationOwner(o *DeliveryIntegrationOwner) bool {
-	return o != nil && validTaskText(o.RunID, 1, 256) && digestPattern.MatchString(o.RequestSHA256) && validTaskText(o.ActorClaim, 1, 256) && validTaskText(o.PreparationID, 1, 256)
+	return o != nil && validTaskText(o.RunID, 1, 256) && digestPattern.MatchString(o.RequestSHA256) && validTaskText(o.ActorClaim, 1, 256) && (o.PreparationID == "" || validTaskText(o.PreparationID, 1, 256))
 }
 
 func integrationNoEffectNextAction(authority IntegrationAuthority, resultID IntegrationResultID) IntegrationNextAction {
@@ -1338,7 +1315,6 @@ func checkPersistedDeliveryIntegration(d Dependencies, root string, projects Pro
 			}
 		}
 	}
-	ctx.TaskSpecRelevance = taskResultSpecRelevance(d, root, projects, registry, ctx.Task, ctx.Result.ID)
 	ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, result)
 	out := newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, result)
 	out.HistoricalCompletion = historical
@@ -1421,7 +1397,7 @@ func contextFromPlan(r WorkItemRegistry, p WorkspaceTaskIntegrationPlan) (integr
 	epic, _ := findEpic(r, p.Epic.EpicID)
 	tr := findTaskResult(r, p.TaskResult.ID)
 	qa := findHumanQA(r, p.HumanQA.ID)
-	if qa == nil && p.HumanQA.ID == "" && p.Acceptance != nil && automaticIntegrationAuthorization(p.DeliveryAuthorization) {
+	if qa == nil && p.HumanQA.ID == "" {
 		qa = &TaskHumanQARecord{}
 	}
 	if task == nil || epic == nil || tr == nil || qa == nil {

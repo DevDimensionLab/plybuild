@@ -206,8 +206,11 @@ func TestWorkItemSessionCurrentScopeAndExternalFreshness(t *testing.T) {
 				} else {
 					err = s.Publish(r)
 				}
-				if err == nil {
-					t.Fatal("retained registry hid removed external content")
+				if err != nil {
+					t.Fatalf("registry operation required optional content: %v", err)
+				}
+				if err = validateTaskContentClosure(d.TaskContent, root, r, false); err == nil {
+					t.Fatal("explicit content validation hid removed input")
 				}
 				return nil
 			}); err != nil {
@@ -236,11 +239,14 @@ func TestWorkItemSessionLateScopeBinding(t *testing.T) {
 			return err
 		}
 		scope.task = "task"
-		if _, err = s.Snapshot(); err == nil {
-			t.Fatal("snapshot reused initial unbound content check")
+		if _, err = s.Snapshot(); err != nil {
+			t.Fatalf("snapshot required optional content after scope binding: %v", err)
 		}
-		if err = s.Publish(r); err == nil {
-			t.Fatal("publish reused initial unbound content check")
+		if err = s.Publish(r); err != nil {
+			t.Fatalf("publish required optional content after scope binding: %v", err)
+		}
+		if err = validateTaskContentClosure(d.TaskContent, root, r, false); err == nil {
+			t.Fatal("explicit content validation ignored bound scope")
 		}
 		return nil
 	}); err != nil {
@@ -274,28 +280,6 @@ func TestWorkItemSessionNestedSnapshotOwnership(t *testing.T) {
 	}
 }
 
-type generationGuard struct{ committed WorkItemRegistry }
-
-func (g *generationGuard) Check(_ string, _ WorkItemRegistry) error { return nil }
-func (g *generationGuard) Committed(_ string, r WorkItemRegistry)   { g.committed = r }
-
-func TestWorkItemSessionGuardCommittedHash(t *testing.T) {
-	root := createProjectWorkspace(t)
-	store := newSystemWorkItemStore()
-	g := &generationGuard{}
-	guarded := guardedTaskStartStore{store, g}
-	if err := guarded.WithLock(root, func(s WorkItemStoreSession) error { return s.Publish(minimalEpicRegistry(root)) }); err != nil {
-		t.Fatal(err)
-	}
-	b, err := os.ReadFile(workItemsPath(root))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if g.committed.RawSHA256 != digestTaskBytes(b) {
-		t.Fatal("guard committed hash differs from published bytes")
-	}
-}
-
 func TestWorkItemSessionConfirmedMatchesPersistedShape(t *testing.T) {
 	for version := 1; version <= 4; version++ {
 		t.Run(string(rune('0'+version)), func(t *testing.T) {
@@ -304,7 +288,6 @@ func TestWorkItemSessionConfirmedMatchesPersistedShape(t *testing.T) {
 			r := emptyWorkItemRegistry()
 			r.FormatVersion = version
 			if version < 3 {
-				r.TaskSpecPolicies = nil
 				r.TaskProblemRevisions = nil
 				r.TaskSpecRevisions = nil
 				r.TaskSpecAssessments = nil
@@ -373,7 +356,7 @@ func TestWorkItemSessionDoesNotRetainAfterUnlock(t *testing.T) {
 }
 
 func TestWorkItemSessionDoesNotConfirmReplacementDuringObservation(t *testing.T) {
-	for _, during := range []string{"read-closure", "post-rename"} {
+	for _, during := range []string{"registry-read", "post-rename"} {
 		t.Run(during, func(t *testing.T) {
 			f := newWorkItemJourneyFixture(t)
 			goalQueueFixture(t, f, []TaskGoalQueueEntry{})
@@ -390,7 +373,7 @@ func TestWorkItemSessionDoesNotConfirmReplacementDuringObservation(t *testing.T)
 			replaced := false
 			armed := false
 			store := &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(op string) error {
-				match := during == "read-closure" && op == "managed-read" || during == "post-rename" && op == "directory-sync"
+				match := during == "registry-read" && op == "registry-read" || during == "post-rename" && op == "directory-sync"
 				if armed && match && !replaced {
 					replaced = true
 					temp := filepath.Join(root, MarkerDirectory, "replacement")
@@ -409,7 +392,7 @@ func TestWorkItemSessionDoesNotConfirmReplacementDuringObservation(t *testing.T)
 					}
 				}
 				armed = true
-				if during == "read-closure" {
+				if during == "registry-read" {
 					_, err = s.Snapshot()
 				} else {
 					err = s.Publish(r)

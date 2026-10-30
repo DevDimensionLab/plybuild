@@ -69,7 +69,6 @@ type WorktreeObservationRecord struct {
 
 type WorktreeOperationRecord struct {
 	AdoptionObservations []TaskAdoptionObservation `yaml:"adoption_observations,omitempty" json:"adoption_observations,omitempty"`
-	Execution            *TaskGoalExecutePreview   `yaml:"execution,omitempty" json:"execution,omitempty"`
 	Adoption             *TaskAdoptionIntent       `yaml:"adoption,omitempty" json:"adoption,omitempty"`
 	Release              *TaskAdoptionRelease      `yaml:"release,omitempty" json:"release,omitempty"`
 	ID                   WorktreeOperationID       `yaml:"id" json:"id"`
@@ -108,7 +107,6 @@ type WorkItemRegistry struct {
 	IntegrationIntents      []IntegrationIntent        `yaml:"integration_intents,omitempty"`
 	IntegrationAttempts     []IntegrationAttempt       `yaml:"integration_attempts,omitempty"`
 	IntegrationResults      []IntegrationResult        `yaml:"integration_results,omitempty"`
-	TaskSpecPolicies        []TaskSpecPolicy           `yaml:"task_spec_policies"`
 	TaskProblemRevisions    []TaskProblemReference     `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference        `yaml:"task_spec_revisions"`
 	TaskSpecAssessments     []TaskAssessmentReference  `yaml:"task_spec_assessments"`
@@ -135,13 +133,12 @@ type EpicAdoptInput struct {
 }
 
 type TaskCreateInput struct {
-	RegistryUpgrade *TaskRegistryUpgrade
-	TaskID          TaskID
-	Title           string
-	Description     string
-	ParentEpicID    EpicID
-	ProjectID       ProjectID
-	RepoID          RepoID
+	TaskID       TaskID
+	Title        string
+	Description  string
+	ParentEpicID EpicID
+	ProjectID    ProjectID
+	RepoID       RepoID
 }
 
 type TaskWorktreeCreateInput struct {
@@ -699,26 +696,15 @@ func CreateTask(dependencies Dependencies, input TaskCreateInput) (TaskMutationR
 				if existing.Title == input.Title && existing.Description == input.Description && existing.ParentEpicID == input.ParentEpicID && existing.ProjectID == input.ProjectID && existing.RepoID == input.RepoID && existing.GitCommonDir == repository.GitCommonDir {
 					result.Task = *existing
 					result.Epic = *epic
-					if pub := taskPublication(registry, "task-create/"+string(input.TaskID)); pub != nil {
-						content := newTaskContentMutation(root, input.TaskID, pub.PublicationKey, pub.IntentSHA256)
-						content.PreState = taskContentState(registry, input.TaskID)
-						content.PostState = content.PreState
-						content.Classification = "existing"
-						content.OutcomeRef = &pub.OutcomeRef
-						result.Content = &content
-						if err := validateTaskContentClosure(dependencies.TaskContent, root, registry, true); err != nil {
-							return err
-						}
-						return syncTaskRegistry(root)
-					}
+
 					return nil
 				}
 				return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Task %s already exists with different fields", input.TaskID), nil)
 			}
 			task := TaskRecord{ID: input.TaskID, Title: input.Title, Description: input.Description, ParentEpicID: input.ParentEpicID, ProjectID: input.ProjectID, RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, WorktreeState: WorkItemUnbound, Worktree: nil}
-			content, err := createTaskProblem(dependencies, root, session, registry, projects, task, input.RegistryUpgrade)
-			result.Content = &content
-			if err != nil {
+			registry.Tasks = append(registry.Tasks, task)
+			sortWorkRegistry(&registry)
+			if _, err := publishWorkItemRegistryRecover(session, registry); err != nil {
 				return err
 			}
 			result.Task = task
@@ -727,13 +713,7 @@ func CreateTask(dependencies Dependencies, input TaskCreateInput) (TaskMutationR
 			return nil
 		})
 	})
-	if result.Content != nil {
-		finished, finishErr := finishTaskContentMutation(dependencies, *result.Content, err)
-		result.Content = &finished
-		if finishErr != nil {
-			return result, finishErr
-		}
-	}
+
 	if err != nil {
 		return result, mapMutationError(err)
 	}

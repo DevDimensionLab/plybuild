@@ -15,9 +15,6 @@ import (
 func positiveDeliveryClaim(a Acceptance, permission DeliveryPermissionAcceptance, r WorkflowRequest) error {
 	c := a.RuntimeClaim
 	runtimeID := r.Runtime.Provider
-	if headlessRun(r) {
-		runtimeID = "ply-worker"
-	}
 	// The request's profile is a launch selector. The actual runtime may expose
 	// another label (or none), particularly after native permission onboarding.
 	// Authority comes from confirmed, bound actual policy and validated scope,
@@ -334,7 +331,6 @@ type deliveryVerificationReceipt struct {
 	CWD                string                                             `json:"cwd"`
 	Acceptance         FileBinding                                        `json:"acceptance"`
 	AcceptanceSnapshot FileBinding                                        `json:"acceptance_snapshot"`
-	Review             FileBinding                                        `json:"review"`
 	Exit               *int                                               `json:"exit"`
 	Stdout             FileBinding                                        `json:"stdout"`
 	Stderr             FileBinding                                        `json:"stderr"`
@@ -350,17 +346,16 @@ func deliveryReadBinding(path string, max int) (FileBinding, []byte, error) {
 	return FileBinding{path, hash(raw)}, raw, e
 }
 
-func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath string) (WorkflowRun, error) {
-	return workflowDeliveryVerify(d, root, id, contextPath, reviewPath, "")
+func WorkflowDeliveryVerify(d Dependencies, root, id, contextPath string) (WorkflowRun, error) {
+	return workflowDeliveryVerify(d, root, id, contextPath, "")
 }
 
-func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, reuseAttempt string, binaryPaths ...string) (WorkflowRun, error) {
+func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reuseAttempt string, binaryPaths ...string) (WorkflowRun, error) {
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
 	}
 	var s workflowState
 	var receipt deliveryVerificationReceipt
-	var verifierID string
 	recoverReceipt := false
 	alreadyQualified := false
 	// Scratch allocated by this call; it is handed onward only with a
@@ -386,18 +381,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			if e = recoverAutomaticResult(d, *current); e != nil {
 				return e
 			}
-			if reviewPath == "" {
-				// A native review round was frozen into the reserved attempt.
-				if reviewPath, e = deliveryAttemptReview(*current); e != nil {
-					return e
-				}
-			}
 			receipt, _, e = deliveryRecoverVerification(*current)
 			if e != nil {
 				return e
-			}
-			if receipt.Review.Locator != reviewPath {
-				return deliveryContinuityError("receipt_mismatch", "receipt recovery must preserve the original candidate review")
 			}
 			if len(binaryPaths) > 0 && binaryPaths[0] != "" && (receipt.Automatic == nil || receipt.Automatic.CandidateBinary.Locator != binaryPaths[0]) {
 				return workflowError(4, "receipt recovery must preserve the original candidate binary")
@@ -415,23 +401,13 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 						return nil
 					}
 				}
-				if current.Result.Delivery.Phase == "human_qa_passed" || current.Result.Delivery.Phase == "integrating" {
-					return workflowError(4, "withdraw the current candidate explicitly before requalifying another attempt")
-				}
 				// Retain the original key and input digest while reserving its
 				// bookkeeping continuation. No command is sent again.
 				current.Result.Delivery.Attempt.State = "attempted"
 				current.Result.Delivery.Phase = "verifying"
 			}
-			verifierID, e = deliveryVerifier(d, *current, receipt.CWD, receipt.Acceptance.Locator)
-			if e != nil {
-				return e
-			}
 			s, recoverReceipt = *current, true
 			return nil
-		}
-		if current.Result.Delivery.Phase == "human_qa_passed" || current.Result.Delivery.Phase == "integrating" {
-			return workflowError(4, "withdraw the current candidate explicitly before another verification")
 		}
 		x, e := deliveryTarget(d, *current)
 		if e != nil {
@@ -441,26 +417,10 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		if e != nil {
 			return e
 		}
-		if (current.Request.SchemaVersion == 3 || deliveryObservedStop(*current)) && reviewPath != "" {
-			return workflowError(4, "parallel qualification requires the sealed independent native review round; omit --review")
-		}
-		if reviewPath == "" {
-			if reviewPath, e = deliveryNativeCandidateReview(d, *current, x.OID, x.Tree); e != nil {
-				return e
-			}
-		}
-		review, _, e := readInputBinding(reviewPath, inputCandidateReview, 1<<20)
-		if e != nil {
-			return e
-		}
 		attemptID := fmt.Sprintf("verify-%08d", len(current.Result.Delivery.Events)+1)
 		path := filepath.Join(current.Result.Paths.RunRoot, "delivery", "attempts", attemptID)
-		verifierID, e = deliveryVerifier(d, *current, x.Locator, acceptance.Locator)
-		if e != nil {
-			return e
-		}
 		snapshot := FileBinding{filepath.Join(path, "acceptance.sh"), acceptance.SHA256}
-		receipt = deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: id, RequestSHA256: current.Result.RequestSHA256, AttemptID: attemptID, CandidateOID: x.OID, CandidateTree: x.Tree, Argv: []string{"/bin/sh", acceptance.Locator}, CWD: x.Locator, Acceptance: acceptance, Review: review, StartedAt: d.Now().UTC().Format(time.RFC3339Nano)}
+		receipt = deliveryVerificationReceipt{Kind: "PlyDeliveryVerification@1", SchemaVersion: 1, RunID: id, RequestSHA256: current.Result.RequestSHA256, AttemptID: attemptID, CandidateOID: x.OID, CandidateTree: x.Tree, Argv: []string{"/bin/sh", acceptance.Locator}, CWD: x.Locator, Acceptance: acceptance, StartedAt: d.Now().UTC().Format(time.RFC3339Nano)}
 		receipt.EffectiveBasis, e = deliveryEffectiveBasis(d, *current)
 		if e != nil {
 			return e
@@ -495,7 +455,6 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 	}
 	if !recoverReceipt {
 		warnSharedInput(inputAcceptance, receipt.Acceptance.Locator)
-		warnSharedInput(inputCandidateReview, receipt.Review.Locator)
 		if e = d.fault("delivery_after_verification_reservation"); e != nil {
 			o, _ := WorkflowShow(d, root, id)
 			return o, e
@@ -532,15 +491,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		o, _ := WorkflowShow(d, root, id)
 		return o, e
 	}
-	var candidate *workflowhandoff.DeliveryCandidateResult
-	if receipt.Exit != nil && *receipt.Exit == 0 && receipt.Error == "" {
-		e = validateAutomaticReceipt(s, receipt, true)
-		if e == nil {
-			_, e = inputBound(receipt.Acceptance, inputAcceptance, 4<<20)
-		}
-		if e == nil {
-			_, e = inputBound(receipt.Review, inputCandidateReview, 1<<20)
-		}
+	var candidate *workspace.TaskResultRecord
+	if receipt.Exit != nil && receipt.Error == "" {
+		_, e = inputBound(receipt.Acceptance, inputAcceptance, 4<<20)
 		if e == nil {
 			x, err := deliveryTarget(d, s)
 			e = err
@@ -549,27 +502,29 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 			}
 		}
 		if e == nil {
-			e = workerValidateReview(s, receipt.Review, receipt.CandidateOID, receipt.CandidateTree)
-			if e == nil {
-				e = deliveryRequireBasis(d, s, receipt.EffectiveBasis)
-			}
-		}
-		if e == nil {
-			// Candidate publication follows the existing TaskRun -> workspace
-			// lock order. Concurrent receipt observers may recover the same
-			// native publication, but cannot race its staging/start/terminal.
 			e = withStore(root, func() error {
 				current, err := workflowRead(root, id)
 				if err != nil {
 					return err
 				}
 				if current.Result.Delivery.Attempt == nil || current.Result.Delivery.Attempt.ID != receipt.AttemptID || current.Result.Delivery.Attempt.InputSHA256 != s.Result.Delivery.Attempt.InputSHA256 {
-					return workflowError(4, "verification reservation changed before qualification")
+					return workflowError(4, "verification reservation changed before publication")
 				}
-				if err = deliveryScopedCallback(d, current, contextPath, "verify"); err != nil {
+				if err := deliveryScopedCallback(d, current, contextPath, "verify"); err != nil {
 					return err
 				}
-				value, err := workflowhandoff.QualifyDeliveryCandidate(d.Workflow, workflowhandoff.DeliveryCandidateInput{EffectiveBasis: receipt.EffectiveBasis, RequireIndependentReview: headlessRun(s.Request) || s.Request.SchemaVersion == 3, AcceptanceAmendment: s.EffectiveAcceptanceAmendment, ParentHandoffLocator: s.Result.Handoff.Locator, RunID: id, RequestSHA256: s.Result.RequestSHA256, CandidateKey: receipt.AttemptID, Summary: "Acceptance and the preserved review qualify this exact technical candidate.", CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, VerifierID: verifierID, CWD: receipt.CWD, Argv: receipt.Argv, Exit: *receipt.Exit, StdoutPath: receipt.Stdout.Locator, StderrPath: receipt.Stderr.Locator, ReviewPath: reviewPath, VerificationPath: verification.Locator})
+				registry, err := d.Workspace.WorkItems.Snapshot(root)
+				if err != nil {
+					return err
+				}
+				var taskID workspace.TaskID
+				for _, task := range registry.Tasks {
+					if task.Worktree != nil && task.Worktree.Locator == receipt.CWD && task.GitCommonDir == s.Observed.Target.GitCommonDir {
+						taskID = task.ID
+						break
+					}
+				}
+				value, err := workspace.RecordTaskVerification(d.Workspace, workspace.TaskVerificationInput{TaskID: taskID, ReceiptPath: verification.Locator})
 				if err == nil {
 					candidate = &value
 				}
@@ -588,7 +543,7 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		}
 		for _, old := range current.Result.Delivery.Candidates {
 			if old.Key == receipt.AttemptID {
-				if candidate == nil || old.OID != receipt.CandidateOID || old.Tree != receipt.CandidateTree || old.Verification != verification || old.TaskResult.ID != candidate.TaskResult.ID {
+				if candidate == nil || old.OID != receipt.CandidateOID || old.Tree != receipt.CandidateTree || old.Verification != verification || old.TaskResult.ID != candidate.ID {
 					return workflowError(4, "candidate publication differs from the completed verification reservation")
 				}
 				return nil
@@ -600,43 +555,16 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		ownerResumeNoteCallback(current, receipt.AttemptID)
 		current.Result.Delivery.Attempt.State = "recorded"
 		current.Result.Delivery.Phase = "working"
-		current.Result.NextAction = WorkflowAction{"recipient", "Inspect the preserved verification and review evidence, fix within the selected goal, then verify again."}
+		current.Result.NextAction = WorkflowAction{"recipient", "Inspect the preserved command result; choose any further action explicitly."}
 		if qualificationErr != nil {
 			current.Result.Reasons = append(current.Result.Reasons, Reason{"delivery_candidate_not_qualified", qualificationErr.Error()})
 		}
 		if candidate != nil {
-			c := DeliveryCandidate{Number: len(current.Result.Delivery.Candidates) + 1, Key: receipt.AttemptID, OID: receipt.CandidateOID, Tree: receipt.CandidateTree, Verification: verification, Handoff: WorkflowHandoff{candidate.Handoff.HandoffID, candidate.Handoff.Locator, candidate.Handoff.SHA256}, TaskResult: candidate.TaskResult}
+			c := DeliveryCandidate{Number: len(current.Result.Delivery.Candidates) + 1, Key: receipt.AttemptID, OID: receipt.CandidateOID, Tree: receipt.CandidateTree, Verification: verification, TaskResult: *candidate}
 			current.Result.Delivery.Candidates = append(current.Result.Delivery.Candidates, c)
-			current.Result.Delivery.Phase = "awaiting_human_qa"
-			current.Result.TaskResultState = "candidate_qualified"
-			current.Result.NextAction = WorkflowAction{"recipient", "Prepare the exact installed candidate journey and request the human's actual product judgment; retain ownership of the same session."}
-			if a := deliveryEffectiveAgreement(*current); a != nil && a.AutomaticAcceptance() {
-				registry, err := d.Workspace.WorkItems.Snapshot(root)
-				if err != nil {
-					return err
-				}
-				qa, err := LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, c.TaskResult, a, current.Request.SchemaVersion == 3)
-				if err != nil {
-					return err
-				}
-				decision, err := workspace.EvaluateDeliveryAcceptance(a, c.TaskResult, qa)
-				if err != nil {
-					return err
-				}
-				if decision.Outcome == "pass" && !a.Acceptance.RequireHumanQA {
-					current.Result.Delivery.Phase = "automatic_acceptance_passed"
-					current.Result.NextAction = WorkflowAction{"recipient", "Automatic acceptance and review passed for this exact candidate. Complete its authorized native local Epic delivery; preserve machine evidence separately from human QA."}
-					if a.Mode == workspace.DeliveryLocalBranch {
-						current.Result.NextAction.Message = strings.ReplaceAll(current.Result.NextAction.Message, "local Epic delivery", "local branch delivery")
-					}
-				} else if qa != nil && qa.Outcome != "pass" {
-					current.Result.Delivery.Phase = "working"
-					current.Result.NextAction = WorkflowAction{"recipient", decision.Reason + " Preserve that human answer and correct the candidate before continuing delivery."}
-				}
-			}
-			if a := deliveryEffectiveAgreement(*current); a != nil && a.HumanOwnedIntegration() && a.Mode != workspace.DeliveryPullRequest && (!a.AutomaticAcceptance() || current.Result.Delivery.Phase != "working") {
-				current.Result.NextAction = WorkflowAction{"recipient", "Register the exact Delivery and explicitly release source ownership with ply workflow execute release. The human starts ply integration; stop before integration."}
-			}
+			current.Result.Delivery.Phase = "verified"
+			current.Result.TaskResultState = "verification_recorded"
+			current.Result.NextAction = WorkflowAction{"user", "The exact command result is recorded. Choose any subsequent work or effect explicitly."}
 		}
 		current.Result.Round.State = current.Result.Delivery.Phase
 		return nil
@@ -645,31 +573,9 @@ func workflowDeliveryVerify(d Dependencies, root, id, contextPath, reviewPath, r
 		e = qualificationErr
 	}
 	if e == nil && candidate == nil {
-		e = workflowError(4, "verification did not qualify a candidate; actual output and exit are preserved")
+		e = workflowError(4, "verification could not record the candidate; actual output and exit are preserved")
 	}
 	return deliveryReadback(d, root, id, e)
-}
-
-func deliveryVerifier(d Dependencies, s workflowState, cwd, acceptance string) (string, error) {
-	view, e := workflowhandoff.TaskRunHandoffView(d.Workflow, s.Result.Handoff.Locator)
-	if e != nil {
-		return "", e
-	}
-	var mandate struct {
-		Verifiers []struct {
-			ID           string   `json:"id"`
-			Argv         []string `json:"argv"`
-			CWD          string   `json:"cwd"`
-			ExpectedExit int      `json:"expected_exit"`
-		} `json:"verifiers"`
-	}
-	if e = json.Unmarshal(view, &mandate); e != nil {
-		return "", e
-	}
-	if len(mandate.Verifiers) != 1 || !equal(mandate.Verifiers[0].Argv, []string{"/bin/sh", acceptance}) || mandate.Verifiers[0].CWD != cwd || mandate.Verifiers[0].ExpectedExit != 0 {
-		return "", workflowError(4, "delivery verifier differs from the frozen acceptance entrypoint")
-	}
-	return mandate.Verifiers[0].ID, nil
 }
 
 // A completed command receipt can be reconciled after a crash; an attempt with

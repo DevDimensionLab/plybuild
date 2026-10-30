@@ -25,22 +25,6 @@ func (q *queueFold) projectCurrent() {
 	}
 }
 
-func admissionAllowed(r WorkItemRegistry, q queueFold, mode string) bool {
-	if mode != AdmissionParallel {
-		return len(q.Active) == 0
-	}
-	if r.FormatVersion != ParallelRegistryFormat {
-		return false
-	}
-	for _, id := range q.Active {
-		p := findPreparation(r, id)
-		if p == nil || p.Plan.AdmissionMode != AdmissionParallel {
-			return false
-		}
-	}
-	return true
-}
-
 func preparationActive(disposition string) bool {
 	return disposition == "current" || disposition == "active"
 }
@@ -49,13 +33,6 @@ func preparationActive(disposition string) bool {
 func PreparationIsActive(r WorkItemRegistry, id string) bool {
 	p := findPreparation(r, id)
 	return p != nil && foldQueue(r, p.Plan.QueueID).contains(id)
-}
-
-func validGoalAdmission(p TaskGoalExecutePreview) bool {
-	if p.SchemaVersion == 1 {
-		return p.Kind == "WorkspaceTaskGoalExecutePlan@1" && !p.Input.Parallel && p.AdmissionMode == "" && p.SourceReconciliation == ""
-	}
-	return p.SchemaVersion == 2 && p.Kind == "WorkspaceTaskGoalExecutePlan@2" && p.Input.Parallel && !p.Input.Next && p.Input.SpecID != "" && p.AdmissionMode == AdmissionParallel && p.SourceReconciliation == SourceReconciliationMergeParent && p.SourceMode == ""
 }
 
 func validPreparationAdmission(p WorkspaceTaskPreparePlan, format int) bool {

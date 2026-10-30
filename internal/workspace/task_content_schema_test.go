@@ -102,7 +102,7 @@ func TestTaskContentVersionThreeEmptyRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, err := decodeWorkItemRegistry(b)
-	if err != nil || got.FormatVersion != 3 || got.TaskContentPublications == nil || got.TaskSpecPolicies == nil {
+	if err != nil || got.FormatVersion != 3 || got.TaskContentPublications == nil {
 		t.Fatalf("v3 shape: %#v %v", got, err)
 	}
 	again, err := encodeWorkItemRegistry(got)

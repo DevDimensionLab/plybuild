@@ -610,8 +610,6 @@ func TestHI05AcknowledgeAndContinueRequireTheRecordedWinner(t *testing.T) {
 	wantCode(t, err, CodeNotAnswered)
 	r := f.answer(q.QuestionID, "request-report-1", "full")
 	sha := digestOf(r)
-	_, err = Continue(f.d, f.root, q.QuestionID, r.RequestID, sha, "Used it.")
-	wantCode(t, err, CodeNotAcknowledged)
 	_, err = Acknowledge(f.d, f.root, q.QuestionID, r.RequestID, "sha256:"+strings.Repeat("b", 64))
 	wantCode(t, err, CodeAnswerMismatch)
 	_, err = Acknowledge(f.d, f.root, q.QuestionID, "request-report-2", sha)

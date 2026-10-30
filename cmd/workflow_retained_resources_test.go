@@ -9,7 +9,7 @@ import (
 )
 
 func TestAL40RetireFlagHelpAndNoManualSelectors(t *testing.T) {
-	for _, constructor := range []func(taskrun.Dependencies) *cobra.Command{newWorkflowExecuteCommand, newWorkflowRunCommand} {
+	for _, constructor := range []func(taskrun.Dependencies) *cobra.Command{newWorkflowRunCommand} {
 		root := constructor(taskrun.Dependencies{})
 		c, _, err := root.Find([]string{"retire"})
 		if err != nil {

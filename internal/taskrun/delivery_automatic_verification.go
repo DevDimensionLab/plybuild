@@ -2,6 +2,7 @@ package taskrun
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,8 +19,8 @@ import (
 
 // WorkflowDeliveryVerifyWithBinary runs the existing native candidate verifier,
 // additionally binding a private executable for explicitly automatic agreements.
-func WorkflowDeliveryVerifyWithBinary(d Dependencies, root, id, contextPath, reviewPath, binary string) (WorkflowRun, error) {
-	return workflowDeliveryVerify(d, root, id, contextPath, reviewPath, "", binary)
+func WorkflowDeliveryVerifyWithBinary(d Dependencies, root, id, contextPath, binary string) (WorkflowRun, error) {
+	return workflowDeliveryVerify(d, root, id, contextPath, "", binary)
 }
 
 // automaticScratchBases lists, in preference order, the temporary roots that
@@ -156,18 +157,6 @@ func prepareAutomaticVerification(d Dependencies, s workflowState, receipt *deli
 	if binary != "" {
 		v.Environment = append(v.Environment, "PLY_CANDIDATE_BINARY="+binarySnapshot)
 	}
-	if headlessRun(s.Request) {
-		policy, err := workerVerifierPolicy(d, s, path, scratch)
-		if err != nil {
-			return err
-		}
-		binding, _, err := deliveryReadBinding(policy, 1<<20)
-		if err != nil {
-			return err
-		}
-		v.SandboxPolicy = &workflowhandoff.AutomaticBinaryBinding{Locator: binding.Locator, SHA256: binding.SHA256}
-		v.ExecutedArgv = []string{"/usr/bin/sandbox-exec", "-f", policy, "/bin/sh", receipt.AcceptanceSnapshot.Locator}
-	}
 	sort.Strings(v.Environment)
 	v.InstructionsSHA256 = workflowhandoff.AutomaticInstructionsDigest(*v, receipt.Argv, receipt.CWD, receipt.Acceptance.SHA256, receipt.CandidateOID, receipt.CandidateTree)
 	if err := workflowhandoff.ValidateAutomaticInstructions(*v, a, receipt.Argv, receipt.CWD, receipt.Acceptance.SHA256, receipt.CandidateOID, receipt.CandidateTree); err != nil {
@@ -189,8 +178,8 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 		}
 		return nil
 	}
-	if !deliveryVerificationVersion(r) || r.Automatic == nil || r.Outcome != "pass" || r.Exit == nil || *r.Exit != 0 || r.Error != "" {
-		return workflowError(4, "automatic acceptance has no successful preserved execution")
+	if !deliveryVerificationVersion(r) || r.Automatic == nil || r.Exit == nil || r.Error != "" || (r.Outcome != "pass" && r.Outcome != "fail") || (r.Outcome == "pass") != (*r.Exit == 0) {
+		return workflowError(4, "automatic acceptance has no consistent preserved command completion")
 	}
 	if err := workflowhandoff.ValidateAutomaticInstructions(*r.Automatic, a, r.Argv, r.CWD, r.Acceptance.SHA256, r.CandidateOID, r.CandidateTree); err != nil {
 		return err
@@ -202,16 +191,10 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 	if r.Automatic.ExecutedArgv[len(r.Automatic.ExecutedArgv)-1] != r.AcceptanceSnapshot.Locator || hasBinary && r.Automatic.CandidateBinarySnapshot.Locator != filepath.Join(filepath.Dir(r.AcceptanceSnapshot.Locator), "candidate-executable") {
 		return workflowError(4, "automatic execution snapshots differ from the reserved attempt")
 	}
-	if headlessRun(s.Request) && r.Automatic.SandboxPolicy == nil {
-		return workflowError(4, "worker verification requires its preserved sandbox")
-	}
 	if p := r.Automatic.SandboxPolicy; p != nil {
 		if _, err := workflowBound(FileBinding{Locator: p.Locator, SHA256: p.SHA256}, 1<<20); err != nil {
 			return err
 		}
-	}
-	if err := workerValidateReview(s, r.Review, r.CandidateOID, r.CandidateTree); err != nil {
-		return err
 	}
 	if hasBinary {
 		if _, err := workflowBound(FileBinding{Locator: r.Automatic.CandidateBinarySnapshot.Locator, SHA256: r.Automatic.CandidateBinarySnapshot.SHA256}, workflowhandoff.AutomaticCandidateBinaryLimit); err != nil {
@@ -220,9 +203,6 @@ func validateAutomaticReceipt(s workflowState, r deliveryVerificationReceipt, li
 	}
 	if live {
 		if _, err := inputBound(r.Acceptance, inputAcceptance, 256<<20); err != nil {
-			return fmt.Errorf("automatic acceptance input changed: %w", err)
-		}
-		if _, err := inputBound(r.Review, inputCandidateReview, 256<<20); err != nil {
 			return fmt.Errorf("automatic acceptance input changed: %w", err)
 		}
 		if hasBinary {
@@ -294,7 +274,8 @@ func runDeliveryVerification(d Dependencies, r *deliveryVerificationReceipt) (wo
 	if command.ProcessState != nil && command.ProcessState.Exited() && command.ProcessState.ExitCode() >= 0 {
 		r.Exit = ptr(command.ProcessState.ExitCode())
 	}
-	if err != nil {
+	var exitError *exec.ExitError
+	if err != nil && !(r.Exit != nil && errors.As(err, &exitError) && exitError.ExitCode() == *r.Exit) {
 		r.Error = err.Error()
 	}
 	if ctx.Err() != nil {

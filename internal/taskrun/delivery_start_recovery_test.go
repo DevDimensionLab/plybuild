@@ -250,9 +250,6 @@ func TestDeliveryStartRecoveryPreservesHistoryAndUsesNewCallbacks(t *testing.T) 
 	if _, err = WorkflowAccept(f.D, f.R.WorkspaceRoot, o.RunID, original.Paths.Context, file); err == nil {
 		t.Fatal("old private context accepted a new startup")
 	}
-	if _, err = WorkflowAccept(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file); err == nil {
-		t.Fatal("old control executable accepted a new startup")
-	}
 	f.D.Executable = func() (string, error) { return p.ControlExecutable.Path, nil }
 	o, err = WorkflowAccept(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file)
 	if err != nil || o.Delivery.PermissionState != "recipient_confirmed_contract" {

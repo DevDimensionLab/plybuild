@@ -112,7 +112,6 @@ func TestParallelActivationReadOnlyCASAndPreservedFormatFour(t *testing.T) {
 	if before != queueStateBytes(t, f) {
 		t.Fatal("activation preview wrote state")
 	}
-	original := mustQueueRegistry(t, f)
 	queueSetFixture(t, f, "planner-change", []QueueEntry{})
 	if _, err = ActivateParallelRegistry(f.dependencies, preview.Confirmation, true, observe); err == nil {
 		t.Fatal("stale activation digest wrote format8")
@@ -130,7 +129,7 @@ func TestParallelActivationReadOnlyCASAndPreservedFormatFour(t *testing.T) {
 		t.Fatalf("exact qualified activation: %+v %v", result, err)
 	}
 	r := mustQueueRegistry(t, f)
-	if r.FormatVersion != 8 || r.ParallelBoundary.FromVersion != 4 || r.FormatBoundary != nil || r.AdoptionBoundary != nil || !contentTypedEqual(current.TaskQueueEvents, r.TaskQueueEvents) || !contentTypedEqual(original.TaskSpecPolicies, r.TaskSpecPolicies) {
+	if r.FormatVersion != 8 || r.ParallelBoundary.FromVersion != 4 || r.FormatBoundary != nil || r.AdoptionBoundary != nil || !contentTypedEqual(current.TaskQueueEvents, r.TaskQueueEvents) {
 		t.Fatal("activation rewrote old history or fabricated intermediate upgrades")
 	}
 	backup, err := os.ReadFile(result.Backup)

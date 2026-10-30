@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/devdimensionlab/plybuild/internal/agentwork"
-	"github.com/devdimensionlab/plybuild/internal/delivery"
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/planningrepo"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
@@ -16,19 +15,12 @@ func newWorkflowCommand(dependencies workflowhandoff.Dependencies) *cobra.Comman
 	command := &cobra.Command{
 		Use:               "workflow",
 		Short:             "Manage agent workflows",
-		Long:              "Read registered workspace workflow status, trace one Task's recorded process across its runs, create local planning repositories, execute queued goals with an assigned agent, and manage workflow transitions and notifications.",
-		Example:           "  ply workflow status\n  ply workflow status --all --json\n  ply workflow trace task-id --format json\n  ply workflow execute --check\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
+		Long:              "Read registered workspace workflow status, trace one Task's recorded process across its runs, create local planning repositories, start an explicitly assigned agent, and manage recorded results and notifications.",
+		Example:           "  ply workflow status\n  ply workflow status --all --json\n  ply workflow trace task-id --format json\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	}
 	command.AddCommand(newWorkflowHandoffCommand(dependencies))
 	command.AddCommand(newWorkflowRunCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
-	command.AddCommand(newWorkflowExecuteCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
-	command.AddCommand(newWorkflowWorkerCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
-	command.AddCommand(newWorkflowWeekCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
-	command.AddCommand(newWorkflowControlCommand(taskrun.SystemDependencies(workspace.SystemDependencies())))
-	command.AddCommand(newWorkflowDeliveryCommandWithFactory(func(preferencesPath string) workflowDeliveryService {
-		return delivery.NewService(taskrun.SystemDependencies(workspace.SystemDependencies()), delivery.Options{PreferencesPath: preferencesPath})
-	}))
 	command.AddCommand(newWorkflowEpicCommand(planningrepo.SystemDependencies()))
 	setHandoffFlagErrors(command)
 	command.AddCommand(newAgentWorkCommand(agentwork.System))

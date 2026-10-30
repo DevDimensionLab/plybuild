@@ -36,45 +36,6 @@ func TestParallelHistoricalHumanVetoIsNotReattributed(t *testing.T) {
 	}
 }
 
-func TestParallelEpicBasePlanNamesAllActiveMembers(t *testing.T) {
-	f := parallelFixture(t)
-	g := parallelGoalFixture(t, f, "task", "base-plan")
-	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &g}})
-	in := TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: g.SpecID, Parallel: true}
-	p, err := PreviewTaskGoalExecution(f.dependencies, in)
-	if err != nil {
-		t.Fatal(err)
-	}
-	prepared, err := PrepareTaskGoalExecution(f.dependencies, in, p.Confirmation, goalHumanFixture())
-	if err != nil {
-		t.Fatal(err)
-	}
-	parent := prepared.Preparation.Plan.Target.ParentLocator
-	runLocalGit(t, parent, "commit", "--allow-empty", "-m", "external parent advance")
-	out, err := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw, err := json.Marshal(out.Plan)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var got struct {
-		SchemaVersion int      `json:"schema_version"`
-		Active        []string `json:"active_preparation_ids"`
-	}
-	if err = json.Unmarshal(raw, &got); err != nil {
-		t.Fatal(err)
-	}
-	if got.SchemaVersion != 2 || len(got.Active) != 1 || got.Active[0] != prepared.Preparation.Preparation.ID {
-		t.Fatalf("format8 base plan omitted authoritative membership: %s", raw)
-	}
-	_, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *out.Confirmation})
-	if err != nil {
-		t.Fatal(err)
-	}
-}
-
 func TestParallelEmptyActiveReadbackIsExplicitArray(t *testing.T) {
 	f := parallelFixture(t)
 	q, e := ListTaskQueueVersion(f.dependencies, queueTargetFixture(), false, 2)

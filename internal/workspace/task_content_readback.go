@@ -276,7 +276,7 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 		if !contentTypedEqual(taskContentState(r, q.TaskID).ProblemHead, &goal.Problem) {
 			reasons = append(reasons, "task_goal_problem_changed")
 		}
-		return contentReadEnvelope("WorkspaceTaskSpecReadback@2", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": o, "goal": contentRefValue(goal), "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": "not_selected", "target_freshness": "late_bound", "required_inputs": contentRefValue(goal.RequiredInputs), "task_spec_binding": nil, "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(TaskNextAction{Kind: "inspect", Reason: "Choose the queued goal with ply workflow execute --spec " + q.SpecID, Argv: []string{"ply", "workflow", "execute", "--spec", q.SpecID}})}), nil
+		return contentReadEnvelope("WorkspaceTaskSpecReadback@2", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": o, "goal": contentRefValue(goal), "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": "not_selected", "target_freshness": "late_bound", "required_inputs": contentRefValue(goal.RequiredInputs), "task_spec_binding": nil, "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(TaskNextAction{Kind: "inspect", Reason: "Goal documents are available as input to an explicitly chosen operation.", Argv: []string{}})}), nil
 	}
 	_, selectionFresh := selectionReadback(d, root, r, q.TaskID)
 	targetFresh := "unknown"
@@ -491,11 +491,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 			integration, _ = canonicaljson.DecodeStrict(bytes)
 		}
 	}
-	mode := "legacy"
-	if taskRequiresSpec(r, t.ID) {
-		mode = "spec_required"
-	}
-	m := map[string]canonicaljson.Value{"workspace": root, "registry_sha256": nullableDigest(r.RawSHA256), "observed_at_utc": d.WorkClock.Now().UTC().Format(time.RFC3339Nano), "mode": mode, "resource": rv, "integration": integration, "problem": contentObject(problem), "solution": contentObject(map[string]canonicaljson.Value{"spec_id": specID, "head": contentRefValue(state.SpecHead), "selected_revision": contentRefValue(selected), "newer_draft_available": newer}), "selection": sel, "results": results, "ready_for_spec_handoff": ready, "freshness": contentObject(map[string]canonicaljson.Value{"registry": fresh, "content": eval.ContentIntegrity, "selection": sfresh, "target": eval.TargetFreshness}), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(action), "next_transition_authorized": false}
+	m := map[string]canonicaljson.Value{"workspace": root, "registry_sha256": nullableDigest(r.RawSHA256), "observed_at_utc": d.WorkClock.Now().UTC().Format(time.RFC3339Nano), "resource": rv, "integration": integration, "problem": contentObject(problem), "solution": contentObject(map[string]canonicaljson.Value{"spec_id": specID, "head": contentRefValue(state.SpecHead), "selected_revision": contentRefValue(selected), "newer_draft_available": newer}), "selection": sel, "results": results, "ready_for_spec_handoff": ready, "freshness": contentObject(map[string]canonicaljson.Value{"registry": fresh, "content": eval.ContentIntegrity, "selection": sfresh, "target": eval.TargetFreshness}), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(action), "next_transition_authorized": false}
 	if result.Closeout != nil {
 		m["closeout"] = structCanonical(*result.Closeout)
 	}

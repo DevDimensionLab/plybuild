@@ -1,7 +1,6 @@
 package taskrun
 
 import (
-	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
@@ -41,19 +40,7 @@ func parallelSessionAvailable(d Dependencies, s workflowState, provider, session
 		if !(excludeOwner && id == s.Result.RunID) && other.Request.Runtime.Provider == provider && other.Result.Transport.AgentSessionID == session {
 			return workflowError(4, "native session already belongs to active Run "+id+"; no Task prompt or reviewer authority may be shared")
 		}
-		rounds, err := deliveryReviewRounds(other)
-		if err != nil {
-			return err
-		}
-		for _, round := range rounds {
-			if len(ownReview) > 0 && id == s.Result.RunID && round.Dir == ownReview[0] {
-				continue
-			}
-			start := deliveryReviewStartState(round.Dir)
-			if start.Agent != nil && start.Agent.Provider == provider && start.Agent.SessionID == session {
-				return workflowError(4, "native session already belongs to active member's reviewer in Run "+id)
-			}
-		}
+
 	}
 	return nil
 }
@@ -69,7 +56,7 @@ func validateParallelRequest(r WorkflowRequest) error {
 		}
 		return nil
 	}
-	if r.Delivery == nil || r.Delivery.AdmissionMode != workspace.AdmissionParallel || r.Delivery.SourceReconciliation != workspace.SourceReconciliationMergeParent || id != r.PreparationID || r.Worker != nil || r.ControlContract != nil || r.Delivery.Agreement == nil || r.Delivery.Agreement.Mode != workspace.DeliveryLocalEpic {
+	if r.Delivery == nil || r.Delivery.AdmissionMode != workspace.AdmissionParallel || r.Delivery.SourceReconciliation != workspace.SourceReconciliationMergeParent || id != r.PreparationID || r.Delivery.Agreement == nil || r.Delivery.Agreement.Mode != workspace.DeliveryLocalEpic {
 		return workflowError(2, "parallel request requires exact explicit interactive local Epic authority")
 	}
 	return nil
@@ -149,20 +136,10 @@ func WorkflowDeliveryReconcileSource(d Dependencies, root, id, context string, i
 		if a := s.Result.Delivery.Attempt; a != nil && a.State != "recorded" {
 			return workflowError(4, "resolve the previous native effect before reconciliation")
 		}
-		rounds, err := deliveryReviewRounds(s)
-		if err != nil {
-			return err
-		}
-		for _, r := range rounds {
-			if r.Result == nil && !r.Superseded {
-				return workflowError(4, fmt.Sprintf("seal or close review round %d before reconciliation", r.Request.Round))
-			}
-		}
 		in.PreparationID = s.Request.PreparationID
 		in.RunID = id
 		in.RequestSHA256 = s.Result.RequestSHA256
 		in.MandateSHA256 = s.Result.Handoff.SHA256
-		in.ReviewSHA256 = digest(rounds)
 		out, err = workspace.ReconcileTaskSource(d.Workspace, in)
 		return err
 	})

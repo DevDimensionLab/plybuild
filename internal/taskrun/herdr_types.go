@@ -13,17 +13,15 @@ import (
 type WorkflowRequest struct {
 	StartupProtocol string `json:"startup_protocol,omitempty"`
 	Envelope
-	RequestKey         string              `json:"request_key"`
-	WorkspaceRoot      string              `json:"workspace_root"`
-	PreparationID      string              `json:"preparation_id"`
-	PreparationSHA256  string              `json:"preparation_sha256"`
-	HandoffDraft       json.RawMessage     `json:"handoff_draft"`
-	Runtime            Runtime             `json:"runtime"`
-	CodexProjectTrust  *CodexProjectTrust  `json:"codex_project_trust,omitempty"`
-	ClaudeProjectTrust *ClaudeProjectTrust `json:"claude_project_trust,omitempty"`
-	Agreement          Agreement           `json:"agreement"`
-	HumanAuthority     HumanAuthority      `json:"human_authority"`
-	Herdr              struct {
+	RequestKey        string          `json:"request_key"`
+	WorkspaceRoot     string          `json:"workspace_root"`
+	PreparationID     string          `json:"preparation_id"`
+	PreparationSHA256 string          `json:"preparation_sha256"`
+	HandoffDraft      json.RawMessage `json:"handoff_draft"`
+	Runtime           Runtime         `json:"runtime"`
+	Agreement         Agreement       `json:"agreement"`
+	HumanAuthority    HumanAuthority  `json:"human_authority"`
+	Herdr             struct {
 		Executable  Executable `json:"executable"`
 		WorkspaceID string     `json:"workspace_id"`
 		TabLabel    string     `json:"tab_label"`
@@ -34,8 +32,6 @@ type WorkflowRequest struct {
 	} `json:"coordinator"`
 	ReturnMode           string                `json:"return_mode"`
 	Delivery             *DeliveryContract     `json:"delivery,omitempty"`
-	Worker               *WorkerContract       `json:"worker,omitempty"`
-	ControlContract      *ControlContract      `json:"control_contract,omitempty"`
 	GoalStartEnvironment *GoalStartEnvironment `json:"goal_start_environment,omitempty"`
 }
 
@@ -111,12 +107,9 @@ type WorkflowRun struct {
 	NextAction      WorkflowAction                 `json:"next_action"`
 	Delivery        *DeliveryState                 `json:"delivery,omitempty"`
 	DeliveryStatus  *DeliveryStatus                `json:"delivery_status,omitempty"`
-	ClaudeTrust     *ClaudeTrustEffect             `json:"claude_project_trust,omitempty"`
-	CodexTrust      *CodexTrustEffect              `json:"codex_project_trust,omitempty"`
 	StartupRecovery *DeliveryStartRecoveryReadback `json:"startup_recovery,omitempty"`
 	OwnerResume     *DeliveryOwnerResumeReadback   `json:"owner_resume,omitempty"`
 	Closeout        *workspace.TaskCloseoutReceipt `json:"closeout,omitempty"`
-	Worker          *WorkerStatus                  `json:"worker,omitempty"`
 }
 type WorkflowPreview struct {
 	Envelope
@@ -128,8 +121,6 @@ type WorkflowPreview struct {
 	Effects                []string                     `json:"effects"`
 	Observed               Observed                     `json:"observed"`
 	Paths                  WorkflowPaths                `json:"paths"`
-	CodexTrust             *workflowTrustFacts          `json:"codex_project_trust,omitempty"`
-	ClaudeTrust            *ClaudeTrustPreview          `json:"claude_project_trust,omitempty"`
 	DeliveryAgreement      *workspace.DeliveryAgreement `json:"delivery_agreement,omitempty"`
 	DeliveryAllowedEffects []string                     `json:"delivery_allowed_effects,omitempty"`
 }
@@ -175,34 +166,24 @@ type workflowRecord struct {
 	Review       *FileBinding `json:"review"`
 }
 type workflowState struct {
-	ProductContinuationGeneration int                 `json:"product_continuation_generation,omitempty"`
-	ProductLaunch                 *FileBinding        `json:"product_launch,omitempty"`
-	ProductContinuation           *WorkerJob          `json:"product_continuation,omitempty"`
-	ProductQuestion               *FileBinding        `json:"product_question,omitempty"`
-	ControlRevision               uint64              `json:"control_revision,omitempty"`
-	ControlReceipt                *ControlReceipt     `json:"control_receipt,omitempty"`
-	ControlWake                   *workerControlWake  `json:"control_wake,omitempty"`
-	ControlSuccessor              *workerControlWake  `json:"control_successor,omitempty"`
-	ReportProviderStop            *FileBinding        `json:"report_provider_stop,omitempty"`
-	ReportStop                    *FileBinding        `json:"report_stop,omitempty"`
-	ReportRetirement              *FileBinding        `json:"report_retirement,omitempty"`
-	Request                       WorkflowRequest     `json:"request"`
-	Observed                      Observed            `json:"observed"`
-	Result                        WorkflowRun         `json:"result"`
-	Phase                         string              `json:"phase"`
-	ContextSHA256                 string              `json:"context_sha256"`
-	Acceptance                    *FileBinding        `json:"acceptance"`
-	StartDraft                    *FileBinding        `json:"start_draft"`
-	StartSHA256                   *string             `json:"start_sha256"`
-	Records                       []workflowRecord    `json:"records"`
-	CodexTrust                    *workflowTrustFacts `json:"codex_project_trust,omitempty"`
-	ClaudeTrust                   *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
-	Recovery                      *FileBinding        `json:"startup_recovery,omitempty"`
-	RecoveryTransport             *FileBinding        `json:"startup_recovery_transport,omitempty"`
-	Continuation                  *FileBinding        `json:"delivery_continuation,omitempty"`
-	OwnerResume                   *FileBinding        `json:"owner_resume,omitempty"`
-	OwnerResumeStep               string              `json:"owner_resume_step,omitempty"`
-	OwnerResumeCallback           string              `json:"owner_resume_callback,omitempty"`
+	ReportProviderStop  *FileBinding     `json:"report_provider_stop,omitempty"`
+	ReportStop          *FileBinding     `json:"report_stop,omitempty"`
+	ReportRetirement    *FileBinding     `json:"report_retirement,omitempty"`
+	Request             WorkflowRequest  `json:"request"`
+	Observed            Observed         `json:"observed"`
+	Result              WorkflowRun      `json:"result"`
+	Phase               string           `json:"phase"`
+	ContextSHA256       string           `json:"context_sha256"`
+	Acceptance          *FileBinding     `json:"acceptance"`
+	StartDraft          *FileBinding     `json:"start_draft"`
+	StartSHA256         *string          `json:"start_sha256"`
+	Records             []workflowRecord `json:"records"`
+	Recovery            *FileBinding     `json:"startup_recovery,omitempty"`
+	RecoveryTransport   *FileBinding     `json:"startup_recovery_transport,omitempty"`
+	Continuation        *FileBinding     `json:"delivery_continuation,omitempty"`
+	OwnerResume         *FileBinding     `json:"owner_resume,omitempty"`
+	OwnerResumeStep     string           `json:"owner_resume_step,omitempty"`
+	OwnerResumeCallback string           `json:"owner_resume_callback,omitempty"`
 	// Derived only after validating the immutable acceptance selection. These
 	// never replace the frozen request or become additional persisted authority.
 	EffectiveDeliveryAgreement   *workspace.DeliveryAgreement           `json:"-"`

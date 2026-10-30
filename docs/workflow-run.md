@@ -40,7 +40,7 @@ The request is strict JSON with kind `ply.workflow.herdr-run-request` and
 | `preparation_id`, `preparation_sha256` | Exact current native Task preparation |
 | `handoff_draft` | Native Handoff@2 bound to that preparation and frozen Task Spec, four total rounds |
 | `runtime` | Interactive runtime: selected provider, requested model, nullable config profile, physical hash-bound agent/Ply executables and the selected launch permission profile |
-| `agreement` | Native A: 3 corrections, 5400 active seconds, 2 environment measures |
+| `agreement` | Explicit request limits for corrections, active time and environment measures |
 | `human_authority` | Nonempty `actor_claim`, `start_surface: "human_authorized_herdr"`, `authorized: true` |
 | `herdr` | Physical hash-bound `executable`, `workspace_id`, and `tab_label` of 1–80 characters |
 | `coordinator` | Named `actor_claim` and `may_request_changes: true` |
@@ -86,8 +86,8 @@ bindings and is checked for changes. A nonempty optional policy hash must match
 supplied evidence. These are launch inputs, not observed runtime policy.
 Unknown model, profile, policy and sandbox facts remain unknown at check-in;
 receipt grants no blanket permission. Frozen legacy positive-acceptance report
-contracts still require their effective-policy evidence. Native terminal,
-factory and Delivery contracts retain their own requirements.
+contracts still require their effective-policy evidence. The separate terminal
+request remains available; factory and execute-owned Delivery starts have been removed.
 
 Claude's `manual`
 mode retains its normal approval prompts. In `auto` mode Claude's own runtime
@@ -95,8 +95,7 @@ still evaluates each action; an actual refusal stays preserved and a later
 receipt, label or actor cannot clear it. Preview, launch argv and readback show
 the same frozen selection. Any other Claude permission mode is rejected before
 reservation or launch; select `manual` or `auto` in a new request. Existing
-report Runs keep their frozen mode. The separate native terminal and factory starts remain
-Codex-only.
+report Runs keep their frozen mode. The separate native terminal start remains Codex-only.
 
 Digests use `sha256:` plus 64 lowercase hexadecimal characters. Apply requires
 `HERDR_ENV=1`, the exact fresh preview confirmation, and the selected local
@@ -105,12 +104,11 @@ binary stops before reservation or tab creation. The new tab receives the caller
 PATH and exact physical Task worktree. The recipient reports its actual runtime
 before making Task writes.
 
-Codex retains the requested model, optional config profile, managed permission
-profile, `on-request`, and `approvals_reviewer="auto_review"`. Claude receives
+Codex retains the explicitly requested model, optional config profile and permission
+profile. Native approval policy and reviewer come from Codex configuration. Claude receives
 `--model MODEL --permission-mode MODE` with the selected `manual` or `auto` and inherits the tab's cwd; fresh Herdr
-observations must also report that exact foreground cwd. Codex flags and trust
-grants are never sent to Claude. Ply never answers native login or permission dialogs.
-Persistent Claude folder trust requires the separate grant below.
+observations must also report that exact foreground cwd. Ply does not grant project
+trust, write provider configuration or answer native login or permission dialogs.
 
 ### Claude auto report pilot
 
@@ -143,55 +141,6 @@ remains stopped with source/history preserved, not accepted or retired. See the
 [reconciled audit](approval-requirements-audit.md#p3-outcome-al06b-and-al06c2)
 for the distinct native outcomes and evidence limits.
 
-### Optional Claude folder trust
-
-The Claude-only top-level `claude_project_trust` field has this shape:
-
-```json
-{"mode":"configuration","worktree_root":"/absolute/physical/task-worktree"}
-```
-
-Omission preserves existing requests and runs. Null, unknown modes, a different
-provider or a path other than the prepared physical Task worktree are rejected.
-The read-only preview shows the exact project key and configuration location.
-After reserving the single start, immediately before launching Claude, Ply merges
-only `projects[project_key].hasTrustDialogAccepted=true`. The key is the physical
-Task worktree in Unicode NFC, supported by Claude Code 2.1.285's cwd trust fallback.
-No main-checkout or other-worktree entry is added. The trust persists and allows
-that folder's native project settings/hooks to become active; it is separate from
-tool permissions, model selection and runtime acceptance.
-
-The usual location is `~/.claude.json`, or `CLAUDE_CONFIG_DIR/.claude.json` with an
-explicit absolute override. An existing `.config.json` inside the Claude config
-directory has native legacy priority. Empty/relative overrides and custom OAuth
-configuration are skipped with a reason. The tab receives the current home and
-any explicit supported config directory. Before writing trust, Ply sends one
-reserved shell setup in the new pane, using Bash/zsh builtins to remove inherited
-overrides and confirm the intended environment. A private nonce acknowledgement
-binds completion; terminal echo alone is insufficient. Unsupported shells, readonly
-variables or an unconfirmed setup leave the same tab preserved without a trust
-write or provider start. Ply never retries uncertain shell input. Shell hooks that
-change environment again after this acknowledgement remain outside this binding.
-
-The configuration writer preserves other JSON values and file permissions, keeps
-a private unique backup, and atomically replaces the file in its own directory.
-An already-true entry is a file no-op. A missing file is left to native onboarding.
-Invalid JSON, duplicate keys, unexpected structures and unsafe paths are not repaired.
-The normal native `.lock` directory coordinates concurrent writers; Ply never
-steals an existing lock. Native fallback/exit writers can ignore it, so complete
-exclusion from another Claude process is not guaranteed.
-
-Run readback reports `claude_project_trust.state` as `written`, `already`, `skipped`,
-`failed` or `unknown`, with paths, available hashes and a reason. It never returns
-configuration contents or claims native readiness. A failed or uncertain trust
-write produces a warning and continues the same ordinary Claude start. Any remaining
-native dialog must be inspected in that tab. There is no automatic restart, rollback
-or trust retry; check, show, follow and repeated start never write trust. Later normal
-config changes do not invalidate the preserved run or its callbacks.
-
-New Claude goals launched through [`workflow execute`](workflow-execute.md) bind
-this grant in their launch intent. Previously saved intents are never upgraded.
-
 ### Launch facts after launch
 
 Once the report owner's native session is bound, its launch has used the provider
@@ -206,55 +155,8 @@ These checks still apply after launch: the callback runs in the exact Task
 worktree, with the exact context, run, request and native
 session; frozen inputs, policy evidence, receipts, reports and the Herdr
 executable keep their bytes; preserved stops, negative acceptance and retirement
-stay in force. A saved trust binding that contradicts the request is an integrity
-error, not drift. Before the session is bound, provider and trust facts are
-checked as before. Ordinary installed Ply also handles Delivery and headless
-Runs with historical control paths or hashes. A Ply upgrade needs no
-`workflow execute continue`, old binary copy or new approval. Provider-specific
-continuation and actual authority checks remain in force.
-
-### Optional Codex process trust
-
-The optional, Codex-only top-level `codex_project_trust` field has exactly this shape:
-
-```json
-{"mode":"process-local","repository_root":"/absolute/physical/repository"}
-```
-
-Omit it to preserve existing request bytes, digests and launch behavior. A supplied
-null, another mode, a Claude provider or extra field is rejected. For a linked worktree, the trust
-root is the main repository owning the shared `.git` directory, which may differ
-from the Task worktree and its cwd. Preview verifies both Git links and the physical
-identities before offering a confirmation. The same confirmation covers this one
-root and the process lifetime; apply rechecks the repository, executable and policy
-bindings before effects. Changing trust under an existing request key conflicts.
-
-The grant uses Codex CLI configuration before startup and makes no persistent trust
-change. It preserves the requested model, configuration and permission profiles,
-sandbox, `on-request` and `auto_review`. Explicit distrust, incompatible managed
-policy, unknown search roots, symlinks or project config/hooks/rules/instructions
-that could become active prevent the grant. They do not stop the start.
-
-The grant is optional, so only a malformed grant (exit 2) rejects the request.
-Preview and run readback keep the requested grant separate from its effective
-outcome, `codex_project_trust.effect` in preview and `codex_project_trust.state`
-in the run:
-
-- `redundant`: the observed native configuration already trusts this
-  repository. The grant is a no-op.
-- `withheld`: Ply cannot confirm the grant. The reason names the path and the
-  fact, the start continues without the override, and Ply logs a `warn` to
-  stderr. JSON on stdout is unchanged.
-- `applied` (run state; empty preview effect): the process-local override is
-  passed to Codex as before.
-
-In the first two cases native Codex trust, sandbox and approval policy decide
-as they would without the grant. Explicit `untrusted` or an unknown trust level
-never becomes trusted. If the trust facts change between preview and apply, the
-confirmation no longer matches and a fresh preview is needed. If they change
-after the reservation but before the provider starts, Ply withholds the grant
-and continues the same reserved start without a second tab, provider start or
-prompt. A recorded `withheld` outcome is final for that Run.
+stay in force. Before the session is bound, provider executable identity is checked.
+The native runtime continues to enforce its own permissions.
 
 Ply reserves the target before creating a background tab, binds its pane and
 terminal, starts the selected agent once, then binds the actual native session before sending
@@ -325,7 +227,7 @@ acceptance or a native start receipt, including after negative acceptance. It
 must report unknown technical qualification and no work effects, tests or managed
 artifacts. The report is an immutable stop observation, not a completed round or
 native terminal. The coordinator can also preserve refused callback transport
-with `workflow execute observe-stop`, naming the actual provider/session, action,
+with `workflow run observe-stop`, naming the actual provider/session, action,
 evidence and known effect status. A preserved stop blocks work; receipt cannot
 clear it or replay the refused action. `follow` returns that stop immediately,
 even if the owner has exited, without polling transport or turning the

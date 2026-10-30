@@ -40,15 +40,12 @@ func workflowCloseoutAction(s workflowState, r workspace.TaskCloseoutReceipt) Wo
 	if r.State == "complete" {
 		return WorkflowAction{"none", "The exact Task delivery is closed; its source resource is " + r.ResourceState + ". No action is required; retained evidence remains available."}
 	}
-	_, kind, detail := workspace.TaskCloseoutPendingAction(r)
+	_, _, detail := workspace.TaskCloseoutPendingAction(r)
 	actor := "coordinator"
 	if a := deliveryEffectiveAgreement(s); a != nil && a.HumanOwnedIntegration() || s.Result.Delivery != nil && s.Result.Delivery.HumanIntegration != nil && s.Result.Delivery.HumanIntegration.Accepted {
 		actor = "user"
-	} else if headlessRun(s.Request) {
+	} else if false {
 		actor = "recipient"
-	}
-	if kind == "resume_closeout" && automaticCleanupPending(s) {
-		return automaticCloseoutPendingAction(s, detail)
 	}
 	return WorkflowAction{actor, detail}
 }

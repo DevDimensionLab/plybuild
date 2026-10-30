@@ -2,8 +2,7 @@ package taskrun
 
 import (
 	"bytes"
-	"encoding/json"
-	"os/exec"
+
 	"strings"
 	"testing"
 	"time"
@@ -11,27 +10,24 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// A request that would succeed in 400ms is killed by the observer's 200ms
-// window, despite the independent 2s request budget. This measures the causal
-// distinction before introducing any read continuation.
 func TestAL09FollowWindowClipsHealthyRequest(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")
 	o := workflowTestStart(t, f.workflowFixture)
-	f.D.HerdrTimeout = 2 * time.Second
-	workflowTestModel(t, f.workflowFixture, map[string]any{"delay_command": "agent get", "delay_millis": 400})
+	f.D.HerdrTimeout = 5 * time.Second
+	workflowTestModel(t, f.workflowFixture, map[string]any{"delay_command": "agent get", "delay_millis": 3000})
 	before := workflowTestCalls(t, f.workflowFixture, "agent get")
 	start := time.Now()
-	got, err := WorkflowFollow(f.D, f.R.WorkspaceRoot, o.RunID, 200*time.Millisecond)
+	got, err := WorkflowFollow(f.D, f.R.WorkspaceRoot, o.RunID, 2*time.Second)
 	elapsed := time.Since(start)
 	reads := workflowTestCalls(t, f.workflowFixture, "agent get") - before
-	t.Logf("observer_budget=200ms request_budget=2s response_delay=400ms elapsed=%s reads=%d error=%v", elapsed, reads, err)
+	t.Logf("observer_budget=2s request_budget=5s response_delay=3s elapsed=%s reads=%d error=%v", elapsed, reads, err)
 	if err == nil || !strings.Contains(err.Error(), "observation timed out without stopping or restarting") || strings.Contains(err.Error(), "Herdr agent get failed") {
 		t.Fatalf("observer deadline misclassified as transport failure: %v", err)
 	}
-	if reads != 1 || elapsed > time.Second || got.Transport.AgentSessionID != o.Transport.AgentSessionID || got.Delivery.Phase != o.Delivery.Phase {
+	if reads != 1 || elapsed > 4*time.Second || got.Transport.AgentSessionID != o.Transport.AgentSessionID || got.Delivery.Phase != o.Delivery.Phase {
 		t.Fatalf("window escaped or identity/delivery changed: elapsed=%s reads=%d got=%+v", elapsed, reads, got)
 	}
-	if !strings.Contains(got.NextAction.Message, "workflow execute follow "+o.RunID) {
+	if !strings.Contains(got.NextAction.Message, "workflow run follow "+o.RunID) {
 		t.Fatalf("missing supported observation continuation: %+v", got.NextAction)
 	}
 }
@@ -73,7 +69,7 @@ func TestAL09FollowRequestTimeoutContinuation(t *testing.T) {
 			t.Logf("case=%s observer_budget=3s request_budget=300ms first_delay=700ms elapsed=%s reads=%d error=%v", kind, time.Since(start), reads, err)
 			switch kind {
 			case "persistent":
-				if err == nil || got.Transport.State != "unknown" || reads != 2 || !strings.Contains(got.NextAction.Message, "workflow execute follow "+o.RunID) {
+				if err == nil || got.Transport.State != "unknown" || reads != 2 || !strings.Contains(got.NextAction.Message, "workflow run follow "+o.RunID) {
 					t.Fatalf("persistent read failure claimed liveness or exceeded bound: %+v %v reads=%d", got, err, reads)
 				}
 			case "changed_session":
@@ -95,37 +91,6 @@ func TestAL09FollowRequestTimeoutContinuation(t *testing.T) {
 	}
 }
 
-func TestAL09FollowCandidateCLI(t *testing.T) {
-	f := newDeliveryFixture(t, "codex")
-	o := workflowTestStart(t, f.workflowFixture)
-	binary := deliveryCLIBinary(t)
-	workflowTestModel(t, f.workflowFixture, map[string]any{"delay_command": "agent get", "delay_millis": 1500})
-	c := exec.Command(binary, "workflow", "execute", "follow", o.RunID, "--timeout", "1", "--format", "json")
-	c.Dir = f.Parent
-	var stdout, stderr bytes.Buffer
-	c.Stdout, c.Stderr = &stdout, &stderr
-	start := time.Now()
-	err := c.Run()
-	exit := c.ProcessState.ExitCode()
-	t.Logf("candidate=%s observer_budget=1s delay=1500ms elapsed=%s exit=%d stdout=%s stderr=%s", binary, time.Since(start), exit, stdout.String(), stderr.String())
-	if err == nil || exit != 5 || !strings.Contains(stderr.String(), "observation timed out without stopping or restarting") {
-		t.Fatalf("CLI deadline classification: %v %s", err, stderr.String())
-	}
-	if !json.Valid(stdout.Bytes()) {
-		t.Fatalf("stdout is not JSON: %s", stdout.String())
-	}
-	var observed WorkflowRun
-	if err := json.Unmarshal(stdout.Bytes(), &observed); err != nil || observed.DeliveryStatus == nil || observed.DeliveryStatus.FinalDelivery.State == "delivered" || strings.Contains(stderr.String(), "owner_handoff:") {
-		t.Fatalf("follow timeout exit 5 claimed delivered owner handoff: %v %s", err, stdout.String())
-	}
-	if !strings.Contains(stdout.String(), o.Transport.AgentSessionID) || !strings.Contains(stdout.String(), "workflow execute follow "+o.RunID) {
-		t.Fatal("CLI lost identity or continuation")
-	}
-	if workflowTestCalls(t, f.workflowFixture, "agent start") != 1 || workflowTestCalls(t, f.workflowFixture, "agent prompt") != 1 {
-		t.Fatal("CLI replayed provider action")
-	}
-}
-
 func TestAL09ReportFollowObservation(t *testing.T) {
 	for _, kind := range []string{"short_remaining", "window", "transient", "persistent", "changed_session"} {
 		t.Run(kind, func(t *testing.T) {
@@ -137,8 +102,9 @@ func TestAL09ReportFollowObservation(t *testing.T) {
 			window := 3 * time.Second
 			f.D.HerdrTimeout = 300 * time.Millisecond
 			if kind == "window" {
-				window = 200 * time.Millisecond
-				f.D.HerdrTimeout = 2 * time.Second
+				window = 2 * time.Second
+				first["delay_millis"] = 3000
+				f.D.HerdrTimeout = 5 * time.Second
 			}
 			if kind == "short_remaining" {
 				window = time.Nanosecond

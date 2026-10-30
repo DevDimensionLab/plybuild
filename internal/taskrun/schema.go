@@ -286,20 +286,14 @@ func parseRequest(b []byte) (Request, error) {
 }
 
 // Herdr shares the native Task contract, but owns its provider-specific launch.
-// Ordinary terminal and factory requests must remain Codex-only.
+// Ordinary terminal requests must remain Codex-only.
 func parseRequestForSurface(b []byte, herdr, receipt bool) (Request, error) {
 	var r Request
 	if e := decode(b, 1<<20, &r); e != nil {
 		return r, e
 	}
-	if r.Kind != env("request").Kind || (r.SchemaVersion != 1 && r.SchemaVersion != 2) {
+	if r.Kind != env("request").Kind || r.SchemaVersion != 1 {
 		return r, invalid("unsupported request version")
-	}
-	var fields map[string]json.RawMessage
-	_ = json.Unmarshal(b, &fields)
-	_, hasFactory := fields["factory_test"]
-	if (r.SchemaVersion == 1 && hasFactory) || (r.SchemaVersion == 2 && r.FactoryTest == nil) {
-		return r, invalid("factory_test is required only for request schema 2")
 	}
 	if !key(r.RequestKey) || !regexp.MustCompile(`^pre_[0-9a-f]{64}$`).MatchString(r.PreparationID) || !digestPattern.MatchString(r.PreparationSHA256) {
 		return r, invalid("invalid request key or preparation binding")
@@ -314,7 +308,7 @@ func parseRequestForSurface(b []byte, herdr, receipt bool) (Request, error) {
 		return r, invalid(fmt.Sprintf("unsupported Claude permission mode %q; select permission_binding.profile_id manual or auto in a new request", p.ProfileID))
 	}
 	providerOK := rt.Provider == "codex" || claude
-	if !providerOK || (r.SchemaVersion == 1 && rt.Mode != "interactive" || r.SchemaVersion == 2 && (rt.Mode != "exec" || rt.ConfigProfile != nil)) || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
+	if !providerOK || rt.Mode != "interactive" || !plain(rt.Model, 1, 256) || rt.ConfigProfile != nil && !plain(*rt.ConfigProfile, 1, 256) {
 		return r, invalid("invalid provider runtime; Herdr supports codex or claude (null config_profile, manual or auto permission mode); native starts require Codex")
 	}
 	// Only receipt report handoffs may bind the requested launch without a
@@ -345,18 +339,10 @@ func parseRequestForSurface(b []byte, herdr, receipt bool) (Request, error) {
 		}
 		last = x.Locator
 	}
-	if r.Agreement != (Agreement{"A", 3, 5400, 2}) || r.ReturnPolicy != (ReturnPolicy{true, true, "separate", "separate"}) || !r.HumanAuthority.Authorized || (r.SchemaVersion == 1 && r.HumanAuthority.StartSurface != "human_ordinary_terminal" || r.SchemaVersion == 2 && r.HumanAuthority.StartSurface != "human_started_factory_test") || !plain(r.HumanAuthority.ActorClaim, 1, 256) {
-		return r, invalid("agreement A, separate human gates and human start authority are required")
+	if !plain(r.Agreement.Name, 1, 256) || r.Agreement.MaxCorrectionRounds < 0 || r.Agreement.MaxActiveSeconds < 0 || r.Agreement.MaxEnvironmentMeasures < 0 || r.ReturnPolicy != (ReturnPolicy{true, true, "separate", "separate"}) || !r.HumanAuthority.Authorized || r.HumanAuthority.StartSurface != "human_ordinary_terminal" || !plain(r.HumanAuthority.ActorClaim, 1, 256) {
+		return r, invalid("non-negative explicit agreement limits, separate human gates and human start authority are required")
 	}
-	if r.SchemaVersion == 2 {
-		if p.ProfileID != "factory-test" {
-			return r, invalid("exec requires the factory-test managed profile")
-		}
-		f := r.FactoryTest
-		if !digestPattern.MatchString(f.AuthorizationSHA256) || !filepath.IsAbs(f.AuthorizationPath) || f.Iteration < 1 || f.Iteration > 2 || f.TaskSlot < 1 || f.TaskSlot > 2 || f.ReasoningEffort != "low" || f.TimeoutSeconds < 1 || f.TimeoutSeconds > 240 {
-			return r, invalid("invalid factory slot or budget")
-		}
-	}
+
 	for _, x := range []Executable{rt.Executable, rt.PlyExecutable} {
 		if !digestPattern.MatchString(x.SHA256) || !filepath.IsAbs(x.Path) || filepath.Clean(x.Path) != x.Path {
 			return r, invalid("invalid executable binding")
@@ -368,7 +354,7 @@ func parseRequestForSurface(b []byte, herdr, receipt bool) (Request, error) {
 			return r, invalid(e.Error())
 		}
 		if _, present := draft["report_startup_protocol"]; present {
-			return r, invalid("report mandate receipts require the Herdr report contract; native terminal/factory semantics are unchanged")
+			return r, invalid("report mandate receipts require the Herdr report contract; native terminal semantics are unchanged")
 		}
 	}
 	if _, e := workflowhandoff.ValidateTaskRunDraft(r.HandoffDraft); e != nil {
@@ -475,11 +461,11 @@ func sortedReasons(r []Reason) []Reason {
 	}
 	return out
 }
-func budgetValid(b *BudgetUsage) *bool {
+func budgetValid(b *BudgetUsage, agreement Agreement) *bool {
 	if b == nil {
 		return nil
 	}
-	ok := b.InitialExecutionStarted && b.CorrectionRounds <= 3 && b.ActiveSeconds <= 5400 && b.EnvironmentMeasures <= 2
+	ok := b.InitialExecutionStarted && b.CorrectionRounds <= agreement.MaxCorrectionRounds && b.ActiveSeconds <= agreement.MaxActiveSeconds && b.EnvironmentMeasures <= agreement.MaxEnvironmentMeasures
 	return &ok
 }
 func validateReport(b []byte) (Report, error) {
@@ -495,7 +481,7 @@ func validateReport(b []byte) (Report, error) {
 	}
 	if r.BudgetUsage != nil {
 		x := r.BudgetUsage
-		if x.CorrectionRounds < 0 || x.CorrectionRounds > 99 || x.ActiveSeconds < 0 || x.ActiveSeconds > 86400 || x.EnvironmentMeasures < 0 || x.EnvironmentMeasures > 99 || !x.InitialExecutionStarted && (x.CorrectionRounds > 0 || x.EnvironmentMeasures > 0) || r.Outcome == "complete" && !x.InitialExecutionStarted {
+		if x.CorrectionRounds < 0 || x.ActiveSeconds < 0 || x.EnvironmentMeasures < 0 || !x.InitialExecutionStarted && (x.CorrectionRounds > 0 || x.EnvironmentMeasures > 0) || r.Outcome == "complete" && !x.InitialExecutionStarted {
 			return r, invalid("contradictory or invalid budget usage")
 		}
 	}

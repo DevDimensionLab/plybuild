@@ -2,7 +2,7 @@ package taskrun
 
 import (
 	"bytes"
-	"encoding/json"
+
 	"os"
 	"path/filepath"
 	"testing"
@@ -74,7 +74,7 @@ func TestPlyUpgradeExistingOwnerCallbacks(t *testing.T) {
 				t.Fatalf("upgraded owner callback: %v", err)
 			}
 			candidate := deliveryTestCandidate(t, f, "Ply upgrade candidate")
-			o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "ply-upgrade"))
+			o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
 			if err != nil || len(o.Delivery.Candidates) != 1 || o.Delivery.Candidates[0].OID != candidate {
 				t.Fatalf("upgraded verification: %v", err)
 			}
@@ -112,29 +112,6 @@ func TestPlyUpgradeStoredContinuation(t *testing.T) {
 	r := DeliveryReport{Envelope: deliveryEnv("delivery-report"), RunID: o.RunID, RequestSHA256: o.RequestSHA256, SessionID: o.SessionID, EventID: "stored-ply-upgrade", Phase: "working", Summary: "TC0E6E1FE old continuation remains readable.", Meaning: "Removed historical controllers are evidence only.", Evidence: []FileBinding{}, VerifierResults: []DeliveryVerifierResult{}}
 	if _, err = WorkflowDeliveryReport(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "stored-ply-upgrade-report.json", r)); err != nil {
 		t.Fatal(err)
-	}
-}
-
-func TestPlyUpgradeReviewReturnThroughCandidateCLI(t *testing.T) {
-	f, o, _ := reviewRoundFixture(t)
-	reviewRoundCandidate(t, f, "Ply upgrade review")
-	binary := deliveryCLIBinary(t)
-	out, err := reviewRoundCLI(t, binary, f.Parent, "w-fixture:root", "review", o.RunID, "--coordinator", "TC0E6E1FE fixture coordinator", "--format", "json")
-	if err != nil {
-		t.Fatalf("review start: %s %v", out, err)
-	}
-	var run WorkflowRun
-	if err = json.Unmarshal([]byte(out), &run); err != nil {
-		t.Fatal(err)
-	}
-	round := reviewRoundLatest(t, run)
-	if err = os.Remove(f.R.Runtime.PlyExecutable.Path); err != nil {
-		t.Fatal(err)
-	}
-	file := reviewRoundReturnFile(t, f, "ply-upgrade-review.json", `{"reviewer_claim":"TC0E6E1FE independent fixture reviewer","decision":"passed","summary":"Synthetic upgraded CLI return, not live product review","findings":[],"evidence_gaps":[]}`)
-	out, err = reviewRoundCLI(t, binary, f.Parent, round.ReviewerPane, "review-return", o.RunID, "--context", round.Context.Locator, "--file", file)
-	if err != nil {
-		t.Fatalf("review return required historical Ply: %s %v", out, err)
 	}
 }
 

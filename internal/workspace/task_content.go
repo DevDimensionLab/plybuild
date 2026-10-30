@@ -33,12 +33,6 @@ type TaskSpecBasis struct {
 	DeliveryBindingSHA256 string          `yaml:"delivery_binding_sha256" json:"delivery_binding_sha256"`
 	Dependencies          []string        `yaml:"dependencies" json:"dependencies"`
 }
-type TaskSpecPolicy struct {
-	TaskID                   TaskID         `yaml:"task_id" json:"task_id"`
-	Mode                     string         `yaml:"mode" json:"mode"`
-	ActivationPublicationKey *string        `yaml:"activation_publication_key" json:"activation_publication_key"`
-	LegacyResultIDs          []TaskResultID `yaml:"legacy_result_ids" json:"legacy_result_ids"`
-}
 type TaskProblemReference struct {
 	TaskID         TaskID `yaml:"task_id" json:"task_id"`
 	Revision       int    `yaml:"revision" json:"revision"`
@@ -254,14 +248,6 @@ func taskContentState(r WorkItemRegistry, id TaskID) TaskContentState {
 	}
 	return s
 }
-func taskRequiresSpec(r WorkItemRegistry, id TaskID) bool {
-	for _, p := range r.TaskSpecPolicies {
-		if p.TaskID == id {
-			return p.Mode == "spec_required"
-		}
-	}
-	return false
-}
 func taskPublication(r WorkItemRegistry, key string) *TaskContentPublication {
 	for _, p := range r.TaskContentPublications {
 		if p.PublicationKey == key {
@@ -416,7 +402,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 	var backupHash *string
 	if r.FormatVersion < 3 {
 		if !creating && operation != "problem_record" {
-			return contentError("task_spec_required", "record a problem before recording a solution", nil)
+			return contentError("task_problem_reference_missing", "record a problem before recording a solution", nil)
 		}
 		if upgrade == nil {
 			return contentError("task_content_upgrade_required", "acknowledge registry "+r.RawSHA256+" before migrating format 1 or 2", nil)
@@ -462,7 +448,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		previous = m["expected_previous"]
 		origin := contentFields(m["origin"])
 		if contentString(origin, "kind") == "legacy_summary_import" {
-			if state.ProblemHead != nil || taskRequiresSpec(r, task.ID) || contentString(m, "title") != task.Title || contentString(m, "summary") != task.Description {
+			if state.ProblemHead != nil || contentString(m, "title") != task.Title || contentString(m, "summary") != task.Description {
 				return contentError("task_content_invalid_input", "legacy import must match the original Task summary", nil)
 			}
 			b, _ := contentCanonical(map[string]any{"task_id": task.ID, "title": task.Title, "description": task.Description})
@@ -470,16 +456,9 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 				return contentError("task_content_integrity_conflict", "legacy summary digest differs", nil)
 			}
 		}
-		if state.ProblemHead == nil && !creating {
-			for _, a := range r.IntegrationAuthorities {
-				if a.TaskID == task.ID && !taskIntegrationAuthorityComplete(r, a.ID) {
-					return contentError("task_spec_binding_conflict", "cannot activate a Task with an unresolved integration authority", nil)
-				}
-			}
-		}
 	case "spec_record":
-		if !taskRequiresSpec(r, task.ID) || state.ProblemHead == nil {
-			return contentError("task_spec_required", "record a Task problem first", nil)
+		if state.ProblemHead == nil {
+			return contentError("task_problem_reference_missing", "record a Task problem first", nil)
 		}
 		if !contentTypedEqual(state.ProblemHead, valueRevision(m["problem"])) {
 			return contentError("task_spec_basis_stale", "solution must bind the current problem", nil)
@@ -521,9 +500,6 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		}
 		if !isTaskGoalSpec(draft) {
 			if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], r.FormatVersion >= 4); e != nil {
-				return e
-			}
-			if e := validateExecutionGoalOrigin(d, root, r, task.ID, draft); e != nil {
 				return e
 			}
 		}
@@ -685,9 +661,6 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 	}
 	if outcome.Kind == "problem" {
 		r.TaskProblemRevisions = append(r.TaskProblemRevisions, TaskProblemReference{task.ID, revision, outcome.ManifestSHA256})
-		if revision == 1 {
-			activateTaskSpecPolicy(&r, task.ID, key)
-		}
 	}
 	if outcome.Kind == "spec" {
 		r.TaskSpecRevisions = append(r.TaskSpecRevisions, TaskSpecReference{task.ID, specID, revision, outcome.ManifestSHA256})
@@ -811,33 +784,13 @@ func upgradeTaskContentRegistry(r *WorkItemRegistry) {
 		r.IntegrationAttempts = []IntegrationAttempt{}
 		r.IntegrationResults = []IntegrationResult{}
 	}
-	r.TaskSpecPolicies = []TaskSpecPolicy{}
 	r.TaskProblemRevisions = []TaskProblemReference{}
 	r.TaskSpecRevisions = []TaskSpecReference{}
 	r.TaskSpecAssessments = []TaskAssessmentReference{}
 	r.TaskSolutionSelections = []TaskSelectionReference{}
 	r.TaskResultSpecBindings = []TaskResultSpecBinding{}
 	r.TaskContentPublications = []TaskContentPublication{}
-	for _, t := range r.Tasks {
-		r.TaskSpecPolicies = append(r.TaskSpecPolicies, TaskSpecPolicy{TaskID: t.ID, Mode: "legacy", LegacyResultIDs: []TaskResultID{}})
-	}
 }
-func activateTaskSpecPolicy(r *WorkItemRegistry, id TaskID, key string) {
-	p := TaskSpecPolicy{TaskID: id, Mode: "spec_required", ActivationPublicationKey: &key, LegacyResultIDs: []TaskResultID{}}
-	for _, v := range r.TaskResults {
-		if v.TaskID == id {
-			p.LegacyResultIDs = append(p.LegacyResultIDs, v.ID)
-		}
-	}
-	for i, v := range r.TaskSpecPolicies {
-		if v.TaskID == id {
-			r.TaskSpecPolicies[i] = p
-			return
-		}
-	}
-	r.TaskSpecPolicies = append(r.TaskSpecPolicies, p)
-}
-
 func createTaskProblem(d Dependencies, root string, session WorkItemStoreSession, r WorkItemRegistry, projects ProjectSnapshot, task TaskRecord, upgrade *TaskRegistryUpgrade) (TaskContentMutationResult, error) {
 	if d.TaskContent == nil || d.WorkClock == nil {
 		return TaskContentMutationResult{}, contentError("task_content_observation_unknown", "content storage and clock dependencies are required", nil)

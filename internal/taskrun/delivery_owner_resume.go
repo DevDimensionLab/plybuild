@@ -220,11 +220,7 @@ func deliveryProviderSession(s workflowState) (string, error) {
 	switch s.Request.Runtime.Provider {
 	case "claude":
 		dir := os.Getenv("CLAUDE_CONFIG_DIR")
-		if t := s.ClaudeTrust; t != nil && t.ConfigDir != "" {
-			dir = t.ConfigDir
-		} else if t != nil && t.UserHome != "" {
-			dir = filepath.Join(t.UserHome, ".claude")
-		} else if dir == "" {
+		if dir == "" {
 			dir = filepath.Join(home, ".claude")
 		}
 		matches, err := filepath.Glob(filepath.Join(dir, "projects", "*", id+".jsonl"))
@@ -251,9 +247,6 @@ func deliveryProviderSession(s workflowState) (string, error) {
 }
 
 func ownerResumeCodexHome(s workflowState) string {
-	if t := s.CodexTrust; t != nil && t.CodexHome != "" {
-		return t.CodexHome
-	}
 	if home := os.Getenv("CODEX_HOME"); home != "" {
 		return home
 	}
@@ -297,7 +290,7 @@ func ownerResumeBlock(p *DeliveryOwnerResumePreview, reason, detail string, next
 func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput, s workflowState) (DeliveryOwnerResumePreview, error) {
 	p := DeliveryOwnerResumePreview{Kind: "PlyDeliveryOwnerResumePreview@1", SchemaVersion: 1, RunID: s.Result.RunID, Provider: s.Request.Runtime.Provider, State: "blocked", Phase: deliveryResumePhase(s), NativeSessionID: s.Result.Transport.AgentSessionID, PreviousTransport: s.Result.Transport, ProviderExecutable: in.ProviderExecutable}
 	coordinator := func(m string) WorkflowAction { return WorkflowAction{"coordinator", m} }
-	if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil {
+	if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 		return p, ownerResumeBlock(&p, "unsupported_run", "only interactive delivery-owner Runs can resume a provider conversation", coordinator("Use workflow worker show/resume for headless Runs; historical Runs keep their own commands."))
 	}
 	dl := s.Result.Delivery
@@ -314,7 +307,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 		return p, ownerResumeBlock(&p, "owner_released", "candidate ownership was released to human integration", coordinator("Continue the recorded human integration plan; developer callbacks stay closed."))
 	}
 	if !deliveryStarted(s) {
-		return p, ownerResumeBlock(&p, "startup_interrupted", "the owner never accepted its mandate, so no begun work exists", coordinator("Use ply workflow execute --spec SPEC_ID --restart for startup recovery, or execute resume RUN_ID after native onboarding."))
+		return p, ownerResumeBlock(&p, "startup_interrupted", "the owner never accepted its mandate, so no begun work exists", coordinator("Inspect the preserved run with ply workflow run show. Delivery-owner startup is no longer available."))
 	}
 	record, _, err := workflowOwnerResumeRecord(s)
 	if err != nil {
@@ -351,7 +344,7 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 			if a.SessionObservationError != nil {
 				detail += ": " + a.SessionObservationError.Error()
 			}
-			return p, ownerResumeBlock(&p, "session_pending", detail, WorkflowAction{"coordinator", "Repeat ply workflow execute --resume to observe only this same pane. If identity remains unavailable, close no further generations: use workflow execute retire " + s.Result.RunID + " to close its exact pane, prove writer absence and preserve the source and history. Unknown effects must be reconciled first."})
+			return p, ownerResumeBlock(&p, "session_pending", detail, WorkflowAction{"coordinator", "Inspect this same pane and use ply workflow run show. For explicitly requested retirement, use workflow run retire " + s.Result.RunID + " to close its exact pane, prove writer absence and preserve the source and history. Unknown effects must be reconciled first."})
 		case workflowSession(s, a, false) == nil && !pending:
 			p.State, p.NextAction = "live_owner", WorkflowAction{"recipient", "The same owner is live in Herdr pane " + pane + "; continue there. No tab, provider or prompt is started."}
 			return p, nil
@@ -372,9 +365,9 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 			if err != nil {
 				return p, err
 			}
-			return p, ownerResumeBlock(&p, "prompt_unconfirmed", "the continuation prompt to pane "+pane+" was attempted but its arrival is unknown; Ply never resends it", WorkflowAction{"user", "Look at Herdr pane " + pane + ": if the resumed owner received the continuation, its next callback confirms it. Otherwise ask it to run " + "ply" + " workflow execute show " + s.Result.RunID + " and continue."})
+			return p, ownerResumeBlock(&p, "prompt_unconfirmed", "the continuation prompt to pane "+pane+" was attempted but its arrival is unknown; Ply never resends it", WorkflowAction{"user", "Look at Herdr pane " + pane + ": if the resumed owner received the continuation, its next callback confirms it. Otherwise ask it to run " + "ply" + " workflow run show " + s.Result.RunID + " and continue."})
 		case a.Session != nil && pending:
-			return p, ownerResumeBlock(&p, "session_mismatch", "pane "+pane+" runs a different provider session than the bound one", WorkflowAction{"user", "Close Herdr pane " + pane + " (it is not this owner), then repeat ply workflow execute --resume."})
+			return p, ownerResumeBlock(&p, "session_mismatch", "pane "+pane+" runs a different provider session than the bound one", WorkflowAction{"user", "Inspect Herdr pane " + pane + " (it is not this owner); the human must choose the next action."})
 		}
 	}
 	writers, transcript := (taskWriters{d, s}).resume(in.InvokerPaneID)
@@ -430,13 +423,14 @@ func ownerResumePreview(d Dependencies, root string, in DeliveryOwnerResumeInput
 	if _, err = os.Lstat(filepath.Join(p.Directory, "resume.json")); !os.IsNotExist(err) {
 		return p, workflowError(4, "owner resume generation already has preserved artifacts")
 	}
-	p.ResumeArgv = ownerResumeStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, "<new-pane>", p.NativeSessionID)
+	p.ResumeArgv = ownerResumeStartArgv(s.Request, s.Observed.Target.WorktreeLocator, "<new-pane>", p.NativeSessionID)
 	state, err := readFile(filepath.Join(s.Result.Paths.RunRoot, "state.json"), 8<<20, true)
 	if err != nil {
 		return p, err
 	}
 	authority := writers.absence
 	authority.PaneInventorySHA, authority.AgentInventorySHA = "", ""
+	authority.InventoryObservedAt = ""
 	p.Confirmation = digest(struct {
 		State                            string
 		Provider, SourceControl, Control Executable
@@ -572,7 +566,7 @@ func WorkflowResumeOwner(d Dependencies, root string, in DeliveryOwnerResumeInpu
 	if a.WorkspaceID != record.DestinationWorkspaceID || !plain(a.TabID, 1, 128) || !plain(a.PaneID, 1, 128) || !plain(a.TerminalID, 1, 128) || a.PaneID == previous.PaneID || a.TerminalID == previous.TerminalID || cwd != s.Observed.Target.WorktreeLocator {
 		return deliveryReadback(d, root, in.RunID, workflowError(5, "resume tab identity or Task directory is unknown; do not repeat creation"))
 	}
-	startArgv := ownerResumeStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, a.PaneID, record.NativeSessionID)
+	startArgv := ownerResumeStartArgv(s.Request, s.Observed.Target.WorktreeLocator, a.PaneID, record.NativeSessionID)
 	err = ownerResumeAdvance(d, root, in.RunID, generation, ownerResumeTabAttempted, ownerResumeStartAttempted, func(s *workflowState) error {
 		transport, err := workflowKeep(d, filepath.Join(filepath.Dir(s.OwnerResume.Locator), "transport.json"), deliveryRecoveryTransport{WorkspaceID: a.WorkspaceID, TabID: a.TabID, PaneID: a.PaneID, TerminalID: a.TerminalID, CWD: cwd})
 		if err != nil {
@@ -640,7 +634,7 @@ func ownerResumeFinish(d Dependencies, root, id string, generation int, deadline
 	if _, callErr := workflowCallUntil(d, current.Request, deadline, promptArgv...); callErr != nil {
 		_ = workflowUpdate(d, root, id, func(s *workflowState) error {
 			s.Result.Reasons = append(s.Result.Reasons, Reason{"delivery_owner_resume_prompt_response", callErr.Error()})
-			s.Result.NextAction = WorkflowAction{"user", "Look at Herdr pane " + s.Result.Transport.PaneID + ": the continuation prompt may have arrived and is never resent; repeat ply workflow execute --resume --check for the next step."}
+			s.Result.NextAction = WorkflowAction{"user", "Look at Herdr pane " + s.Result.Transport.PaneID + ": the continuation prompt may have arrived and is never resent; inspect the preserved run with ply workflow run show."}
 			return nil
 		})
 		return callErr
@@ -704,19 +698,14 @@ func ownerResumeAwaitSession(d Dependencies, root, id string, deadline time.Time
 			if err == nil {
 				err = workflowError(5, "resumed session did not become idle before the deadline; no input was sent")
 			}
-			return workflowError(5, err.Error()+"; repeat ply workflow execute --resume to continue this same reserved attempt")
+			return workflowError(5, err.Error()+"; inspect the preserved run with ply workflow run show; the previous effect remains unresolved")
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
 }
 
 func ownerResumePrompt(s workflowState) (string, error) {
-	_, err := workflowEffectiveRuntime(s)
-	if err != nil {
-		return "", err
-	}
-	control := "ply"
-	return fmt.Sprintf("Ply resumed this same Task after its previous Herdr tab closed. Your conversation, Task worktree %s, frozen mandate, private context %s, answers, candidates and recorded evidence are unchanged. Use ordinary installed %s for owner callbacks with the same context and session. The updated callback guide is %s. First read the current native state with %s workflow execute show %s and continue from its actual next action and gate (%s). Do not repeat answered questions, valid evidence or completed effects, and never resend uncertain input.", s.Observed.Target.WorktreeLocator, ShellQuote(s.Result.Paths.Context), control, filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), control, s.Result.RunID, deliveryResumePhase(s)), nil
+	return "Inspect the preserved run with ply workflow run show " + s.Result.RunID + ". The human chooses further work. Preserve completed and unresolved effects.", nil
 }
 
 // ownerResumeNoteCallback is called only at owner callbacks that passed
@@ -815,7 +804,7 @@ func WorkflowOwnerRunCandidates(d Dependencies, root string) (OwnerRunCandidates
 			out.Unreadable = append(out.Unreadable, OwnerRunUnreadable{RunID: id, Error: err.Error()})
 			continue
 		}
-		if !deliveryRun(s.Request) || headlessRun(s.Request) {
+		if !deliveryRun(s.Request) {
 			continue
 		}
 		var draft struct {

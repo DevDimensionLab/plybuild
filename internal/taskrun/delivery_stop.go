@@ -59,7 +59,7 @@ func WorkflowObserveDeliveryStop(d Dependencies, root, id string, in DeliverySto
 		if !deliveryRun(s.Request) {
 			return workflowObserveReportStop(d, s, in, evidence, raw)
 		}
-		if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil {
+		if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "stop observation requires an interactive delivery")
 		}
 		if in.Provider != s.Request.Runtime.Provider || in.NativeSession != s.Result.Transport.AgentSessionID || in.Stage != "startup" && in.NativeSession == "" {
@@ -141,7 +141,7 @@ func WorkflowResolveDeliveryStop(d Dependencies, root, id, contextPath, stopSHA,
 		return WorkflowRun{}, workflowError(4, "resolution requires the actual clarified cause and the changed action to continue; do not repeat a denied action")
 	}
 	err := workflowUpdate(d, root, id, func(s *workflowState) error {
-		if !deliveryRun(s.Request) || s.Result.Delivery == nil || headlessRun(s.Request) {
+		if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "resolution requires the same interactive owner")
 		}
 		if err := workflowCallback(d, *s, contextPath); err != nil {

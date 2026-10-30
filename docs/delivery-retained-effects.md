@@ -1,5 +1,10 @@
 # Retire resources while retaining delivery effects
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 From the containing workspace outside the Task source, use:
 
 ```sh

@@ -200,12 +200,13 @@ ply workspace task qa record workspace-work-item-bootstrap \
   --file /absolute/human-qa.json
 ```
 
-Human QA is a separate, locally claimed product judgment. Recording `pass` does not start
-integration. First run a read-only check with the selected TaskResult, QA record, result commit,
-and current Epic-parent commit. The check returns a canonical confirmation digest; a human starts
-a separate `--apply --confirm <digest>` invocation. Apply permits exactly one local `ff-only`
-move of the registered Epic parent. It never fetches, pushes, targets `main` or `master`, or cleans
-worktrees.
+Human QA is an optional, separately recorded product judgment. An explicit integration
+selects the TaskResult, result commit and current Epic-parent commit; QA and technical-pass
+records are not prerequisites. Run `ply workspace task integrate TASK --result RESULT
+--expected-result-oid RESULT_OID --expected-parent-oid PARENT_OID --check`, then use the
+returned digest with `--apply --confirm <digest>`. Apply permits one local `ff-only` move
+of the exact registered parent, including an explicitly selected `main` or `master`.
+It does not fetch, push or clean worktrees.
 
 A newly created Epic may have only its creation reflog entry before integration.
 A confirmed effect still requires the real result and preceding parent entries,
@@ -291,37 +292,18 @@ set the queue entry to that new selection. Historical Specs, results, QA and int
 retries retain their original digests. No command rebases worktrees, integrates code,
 starts an agent, installs the CLI or selects a human QA outcome.
 
-### Deliver a goal with its assigned implementor
+### Human-owned process
 
-From a registered Epic worktree, `ply workflow execute` selects the next queued
-goal or an explicit `--spec`, creates a feature worktree and starts the assigned
-interactive Claude/Codex owner. The owner defines the detailed solution and tests,
-handles review and corrections, and follows an actual human pass through local
-return. Planners can continue publishing independent goals. See the
-[goal registration, execution and recovery guide](docs/workflow-execute.md).
+Ply provides explicit workspace, Task, Git and agent-start operations. The compiled
+`workflow execute`, `workflow worker`, `workflow week`, `workflow control`,
+`workflow delivery`, `integration` and factory runners have been removed.
+Choose and invoke the individual operations yourself. Task integration no longer
+requires a selected Spec, a technical pass or a human QA record. Source, target,
+expected commit, concurrency and uncertain-effect checks still protect Git changes.
 
-```shell
-ply workflow execute --check
-ply workflow execute
-ply workflow execute --spec explain-start-errors
-```
-
-### Deliver an exact candidate
-
-`ply workflow delivery` preserves the Task's frozen agreement, technical evidence
-and candidate-bound human QA. It supports a PR that stops before merge, local
-Epic integration, or an explicit local branch return including main/master
-without a remote. Registration is separate from execution and completion.
-
-```shell
-ply workflow delivery register --file /absolute/private/delivery.json --format json
-ply workflow delivery check dlv_<returned-id>
-ply workflow delivery execute dlv_<returned-id>
-ply workflow delivery show dlv_<returned-id> --format json
-```
-
-See [agreements, receipts and recovery](docs/workflow-delivery.md) and the
-[agent skill](skills/ply-delivery/SKILL.md).
+Ply does not set Codex approval policy/reviewer or grant native project trust.
+Process configuration at project/repository level is a future design direction;
+no replacement process engine or configuration layer is included here.
 
 ### Run a prepared Task in Herdr
 
@@ -338,62 +320,6 @@ ply workflow run follow wfr_<digest> --timeout 60
 ply workflow run review wfr_<digest> --file /absolute/review.json
 ```
 
-### Run the local factory scenario with Codex exec
-
-The separate `ply-factory-tests` repository owns the Python standard library rig,
-scenario and independent oracle. Supply an explicitly built Ply binary; no installation
-is required. `make build PLY_BUILD_OUTPUT=/absolute/private/ply` writes that binary.
-The rig's `run --check` is read-only. Its later `run --human-start` is a separate human
-authorization; development tests never prove native isolation or real provider behavior.
-
-The same `workspace task run start --file` command supports request schema **2** with
-`runtime.provider=codex`, `runtime.mode=exec`, `config_profile=null` and
-`human_authority.start_surface=human_started_factory_test`. Its required `factory_test`
-object contains `authorization_path`, `authorization_sha256`, `iteration` (1–2),
-`task_slot` (1–2), `reasoning_effort=low` and `timeout_seconds` (1–240). The private
-`PlyFactoryTestAuthorization@1` binds the output/work roots, actor, activity, scenario,
-model, four executable hashes, effective policy hash and a deadline no more than 1200
-seconds after first effect. Per-slot authorization files share one immutable root
-budget ledger; changing a request key or authorization cannot reuse a spent slot.
-Requests, preparations and independent fixture Git metadata must be inside the exact
-iteration root. Symlinks, alternates, remotes and broader write policies are rejected.
-
-```shell
-ply workspace task run start --file /absolute/exec-request.json --check --format json
-ply workspace task run start --file /absolute/exec-request.json --apply --confirm sha256:<preview-digest> --format json
-```
-
-Exec uses pipes, fresh `exec --json --ephemeral --ignore-user-config`, `--no-daemon`,
-an explicit model, low reasoning and a private managed permission profile. Provider
-JSONL and stderr are stored outside the recipient's write scope; each stream is limited
-to 10 MiB and each JSONL line to 1 MiB. Stdout contains one Ply result. No resume,
-interactive fallback, model upgrade or permission bypass is available.
-
-Exec result and collect-preview use schema **3**, including a hash-bound reference to
-runner-owned `ProviderCompletion@1` and runtime facts. `provider_terminal_event` can mark
-the task inactive only after exactly one consistent native thread/turn completes with
-all started items finished, complete valid JSONL, reaped exit 0 and an empty owned
-process group. A completed command with status `failed` is closed and its failure stays
-in the bound stream; a later correction and terminal turn can establish inactivity.
-Verifier and report gates still decide whether the product result qualifies. Existing
-negative completion projections remain unknown and byte-identical on readback.
-Timeout, truncation, contradiction or unobservable lifetime stays
-unknown. Timeout sends TERM to the still-owned group, waits five seconds, then sends
-KILL only while ownership remains valid. Manual `--task-status` is rejected for exec.
-An unknown run is preserved without restart or teardown.
-
-Both modes require typed acceptance, a report with the mandatory `task-requirements`
-artifact, real verifiers, correct clean Git state and agreement A. The explicit callback
-`--context` works without inherited environment, and an unknown reported model is valid.
-New reports undergo the existing workflow authority, verifier-binding and artifact
-validation before the immutable report slot is reserved. Unknown budget or invalid
-terminal input returns a concrete error that can be corrected in the same run. Accepted
-reports retain their original bytes, including older unrepresentable reports. A terminal
-rejection is reported with its workflow reason; clients must check `delivery.state` and
-`terminal_sha256`, then the parent's collection result.
-Exit codes remain 2/3/4/5. Existing schema 1 requests, interactive schema 2 results,
-receipts, historical hashes and human task observations keep their original format.
-Plan result control precedes separately authorized product QA or Ply integration.
 
 ### Start one interactive Codex run and preserve its return
 
@@ -862,11 +788,10 @@ document, with at most 96 unique documents and 64 MiB of document bytes. Additio
 inputs cannot replace the selected solution. Declare every requirement's verification ID and
 explicitly require a managed application/json `task-requirements` artifact in the procedure.
 
-The version-2 start repeats the exact basis; Ply adds and signs its own observation under the
-existing Project/work-item locks. Version-1 handoffs remain supported for general or legacy
-work, and version-2 null bindings only for those targets. Required Tasks cannot bypass the
-choice through version 1 or null. A version-1 terminal works with either matching handoff/start
-pair. Accepted start retries preserve the original slot after a later choice change.
+An explicitly supplied version-2 document basis is checked against its exact preserved
+inputs under the Project/work-item locks. A Task target can also be used without a Spec
+binding; its physical path, ref and Git identity are still checked. A later selection change
+does not replace a supplied historical basis. Accepted start retries preserve the original slot.
 
 A bound terminal's `task-requirements` artifact uses `WorkspaceTaskRequirementEvidence@1` with
 `task_id`, `spec_id`, the exact `spec` revision reference, `result_oid`, `result_tree`, and one
@@ -875,11 +800,10 @@ not_run or unknown), sorted `verifier_ids`, sorted `artifact_ids`, and `reason`.
 resolve in the same terminal and cannot refer to the requirement artifact itself. Missing or
 non-passing functional coverage cannot produce a green Task result. Report failures honestly.
 
-Result records bind the immutable accepted start, even after P2. Historical inspection does
-not change merely because a later problem or choice exists. Spec-aware integration plans hash
-the current relevance guard; a stale basis blocks a new attempt. Recovery of an already
-attempted integration observes Git first and reports later relevance separately. Legacy plans
-retain their original bytes and digests. Technical pass never means human QA or integration.
+Handoff-based results retain their immutable start and supplied input basis. Direct command
+receipts retain the observed command, exit, source commit and output hashes without inventing
+review or QA. A later Problem or selection does not veto an explicitly chosen integration.
+Recovery observes the preserved Git attempt before deciding whether any effect remains unknown.
 
 ## Task process journal
 

@@ -217,11 +217,6 @@ sys.stdout.write(out); sys.stderr.write(err); sys.exit(code)
                     assert json.dumps(response.removesuffix('\n')) in value['reasons'][0]['message']
                 else:
                     assert '--apply' not in out and 'Freshness: unknown' in out
-        # Only the invalid goal preview is invoked: it fails before runtime/provider observation.
-        out = ply('workflow', 'execute', '--spec', 'fixture-goal', *target, '--check',
-                  '--format', 'json', expected=1, child_env=fixture_env,
-                  required_error='task_queue_git_capability_unsupported')
-        assert json.loads(out).get('goal') is None
         # Apply an earlier supported digest after only the observed format changed.
         out = ply('workspace', 'task', 'prepare', 'task', *target, '--apply',
                   '--confirm', fresh['confirmation'], '--format', 'json', expected=1, child_env=fixture_env)

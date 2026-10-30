@@ -99,7 +99,7 @@ func workflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		if !deliveryRun(s.Request) {
 			return workflowRetireReport(d, s, in)
 		}
-		if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil {
+		if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "retirement requires an interactive delivery owner; use workflow worker for headless Runs")
 		}
 		prior, err := deliveryRetirement(*s)
@@ -150,9 +150,6 @@ func workflowRetireDelivery(d Dependencies, root, id string, in DeliveryRetireIn
 		}
 		closed, err := deliveryRetireClosePane(d, *s)
 		if err != nil {
-			if beforeClose != nil && backupRetirementMustPreserve(err) {
-				return &backupRetirementEffectError{Action: "inspect/close bound retirement pane", Err: err}
-			}
 			return err
 		}
 		absence, liveness, err := deliveryRetireAbsenceSelected(d, *s, beforeClose != nil)
@@ -258,9 +255,6 @@ func deliveryRetireAbsenceSelected(d Dependencies, s workflowState, selected boo
 			return observed.absence, observed.liveness, nil
 		}
 		if observed.state == taskWritersUnknown {
-			if selected && backupRetirementMustPreserve(observed.inspectionError) {
-				return observed.absence, observed.liveness, &backupRetirementEffectError{Action: "inspect known writers after retirement close", Err: observed.inspectionError}
-			}
 			return observed.absence, observed.liveness, observed.err
 		}
 		if !time.Now().Before(deadline) {

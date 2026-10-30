@@ -38,13 +38,12 @@ type TaskSourceReconciliationPlan struct {
 	BeforeTree     string          `yaml:"before_tree" json:"before_tree"`
 	PreviousBase   EpicBaseVersion `yaml:"previous_base" json:"previous_base"`
 	Parent         EpicBaseVersion `yaml:"parent" json:"parent"`
-	ReviewSHA256   string          `yaml:"review_sha256" json:"review_sha256"`
 }
 
 type TaskSourceReconciliationInput struct {
-	PreparationID, RunID, RequestSHA256, MandateSHA256, ReviewSHA256 string
-	Apply                                                            bool
-	Confirmation, OperationID, Action                                string
+	PreparationID, RunID, RequestSHA256, MandateSHA256 string
+	Apply                                              bool
+	Confirmation, OperationID, Action                  string
 }
 
 type TaskSourceReconciliationReadback struct {
@@ -111,7 +110,7 @@ func validateReconciledSourceAncestry(d Dependencies, r WorkItemRegistry, repo R
 
 func reconciliationMember(r WorkItemRegistry, in TaskSourceReconciliationInput) (*TaskPreparation, error) {
 	p := findPreparation(r, in.PreparationID)
-	if r.FormatVersion != ParallelRegistryFormat || p == nil || p.Plan.SchemaVersion != 2 || p.Outcome == nil || !foldQueue(r, p.Plan.QueueID).contains(p.ID) || in.RunID == "" || !digestPattern.MatchString(in.RequestSHA256) || !digestPattern.MatchString(in.MandateSHA256) || !digestPattern.MatchString(in.ReviewSHA256) {
+	if r.FormatVersion != ParallelRegistryFormat || p == nil || p.Plan.SchemaVersion != 2 || p.Outcome == nil || !foldQueue(r, p.Plan.QueueID).contains(p.ID) || in.RunID == "" || !digestPattern.MatchString(in.RequestSHA256) || !digestPattern.MatchString(in.MandateSHA256) {
 		return nil, queueError("source_reconciliation_authority", "exact active parallel preparation and accepted Run authority required")
 	}
 	return p, nil
@@ -170,7 +169,7 @@ func sourceReconciliationPlan(d Dependencies, root string, r WorkItemRegistry, p
 			ordinal++
 		}
 	}
-	plan = TaskSourceReconciliationPlan{AttemptOrdinal: ordinal, TaskID: p.Plan.TaskID, PreparationID: p.ID, RunID: in.RunID, RequestSHA256: in.RequestSHA256, MandateSHA256: in.MandateSHA256, Generation: basis.Generation + 1, PreviousSHA256: basis.ReconciliationSHA256, BeforeOID: source.OID, BeforeTree: source.Tree, PreviousBase: basis.Parent, Parent: base, ReviewSHA256: in.ReviewSHA256}
+	plan = TaskSourceReconciliationPlan{AttemptOrdinal: ordinal, TaskID: p.Plan.TaskID, PreparationID: p.ID, RunID: in.RunID, RequestSHA256: in.RequestSHA256, MandateSHA256: in.MandateSHA256, Generation: basis.Generation + 1, PreviousSHA256: basis.ReconciliationSHA256, BeforeOID: source.OID, BeforeTree: source.Tree, PreviousBase: basis.Parent, Parent: base}
 	return plan, nil
 }
 
@@ -363,7 +362,7 @@ func validateSourceReconciliations(r WorkItemRegistry) error {
 	for _, op := range r.SourceReconciliations {
 		p := findPreparation(r, op.Plan.PreparationID)
 		plan := op.Plan
-		if p == nil || p.Plan.SchemaVersion != 2 || p.Plan.TaskID != plan.TaskID || seen[op.ID] || op.ID != "src_"+strings.TrimPrefix(op.PlanSHA256, "sha256:") || op.PlanSHA256 != queueDigest(plan) || contentUTC(op.RecordedAtUTC) != nil || op.ConflictPaths == nil || !sort.StringsAreSorted(op.ConflictPaths) || plan.RunID == "" || !digestPattern.MatchString(plan.RequestSHA256) || !digestPattern.MatchString(plan.MandateSHA256) || !digestPattern.MatchString(plan.ReviewSHA256) || !validOIDText(plan.BeforeOID) || !validOIDText(plan.BeforeTree) {
+		if p == nil || p.Plan.SchemaVersion != 2 || p.Plan.TaskID != plan.TaskID || seen[op.ID] || op.ID != "src_"+strings.TrimPrefix(op.PlanSHA256, "sha256:") || op.PlanSHA256 != queueDigest(plan) || contentUTC(op.RecordedAtUTC) != nil || op.ConflictPaths == nil || !sort.StringsAreSorted(op.ConflictPaths) || plan.RunID == "" || !digestPattern.MatchString(plan.RequestSHA256) || !digestPattern.MatchString(plan.MandateSHA256) || !validOIDText(plan.BeforeOID) || !validOIDText(plan.BeforeTree) {
 			return fmt.Errorf("invalid source reconciliation binding")
 		}
 		seen[op.ID] = true

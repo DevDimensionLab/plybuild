@@ -43,10 +43,6 @@ func workflowFollowReadback(d Dependencies, root, id string, err error) (Workflo
 	if showErr != nil {
 		return o, showErr
 	}
-	mode := "run"
-	if o.Delivery != nil {
-		mode = "execute"
-	}
-	o.NextAction = WorkflowAction{"coordinator", "Continue observation with ply workflow " + mode + " follow " + id + " --timeout 45 --format json; this reads the same Run/session without sending provider input."}
+	o.NextAction = WorkflowAction{"coordinator", "Continue observation with ply workflow run follow " + id + " --timeout 45 --format json; this reads the same Run/session without sending provider input."}
 	return o, err
 }

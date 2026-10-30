@@ -1,5 +1,10 @@
 # NF05A early required Git-capability diagnosis v1 — TB48F9D18
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 Decision: **a small current diagnostic gap remains**. Commission the next
 separate developer to validate the formats already observed by the parent
 preview path and retain its diagnostic before confirmation. No new capability
@@ -36,7 +41,7 @@ The terminal dash/encoding observation is separate and outside this Spec.
 | [epic_base.go](../../internal/workspace/epic_base.go), `queueParentObservation` | Combines `WorkGit.ObserveWorktree` with `IntegrationGit.ObserveIntegrationWorktree`; checks clean/symbolic/no operation and matching OID/tree, then returns `planObservation(full)` without checking formats. Base update planning also consumes this function. |
 | [task_queue.go](../../internal/workspace/task_queue.go), `queueMixedEntryEvaluation` / `queueErrorReasons` | Calls `queueParentObservation` before returning a ready row and preparation plan. Errors become blocked/unknown reasons, but a successful option echo currently reaches ready. Base-free goal rows use `queueGoalEvaluation`, which is not an execution confirmation. |
 | [task_preparation.go](../../internal/workspace/task_preparation.go), `buildPreparePlan` / `PrepareTask` | Builds the above plan, initializes freshness to fresh, and issues its digest. A named blocked row retains reasons; `--next` can discard them for generic `task_queue_no_ready`. Apply rebuilds a new plan before reservation. Existing active preparation recovery is a separate historical-request path. |
-| [task_goal_execution.go](../../internal/workspace/task_goal_execution.go), `buildGoalExecutionPreview` / `buildGoalExecutionPreviewInTarget` / `PreviewTaskGoalExecution` / `PrepareTaskGoalExecution` | Fresh execution calls `queueParentObservation` before `goalExecutionDigest`. Apply rebuilds/revalidates before materializing execution content. The shared parent check can prevent both new confirmation paths. |
+| task_goal_execution.go (`internal/workspace/task_goal_execution.go`, historisk kilde), `buildGoalExecutionPreview` / `buildGoalExecutionPreviewInTarget` / `PreviewTaskGoalExecution` / `PrepareTaskGoalExecution` | Fresh execution calls `queueParentObservation` before `goalExecutionDigest`. Apply rebuilds/revalidates before materializing execution content. The shared parent check can prevent both new confirmation paths. |
 | [task_queue_store.go](../../internal/workspace/task_queue_store.go), `validateQueuePlanObservation` | Persistence already permits object format sha1 or sha256 and ref storage files only. Echo/empty/unknown/reftable are rejected; do not relax this safeguard. |
 | [task_integration.go](../../internal/workspace/task_integration.go), `buildIntegrationPlan`; `work_item_git.go`, `ObserveIntegrationRepository` | Repository observation already requires Git 2.45+ using `supportedGitVersion`. Integration subsequently blocks unsupported object/ref formats, including reftable, and enforces OID lengths. That version gate is bypassed by parent preview, not absent globally. Leave that existing integration policy and structured reasons unchanged. |
 

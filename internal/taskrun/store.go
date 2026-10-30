@@ -173,9 +173,7 @@ type journal struct {
 
 func initial(r Request) Result {
 	envelope := env("result")
-	if r.SchemaVersion == 2 {
-		envelope.SchemaVersion = 3
-	}
+
 	return Result{Envelope: envelope, RunID: RunID(r.RequestKey), RequestSHA256: digest(r), RuntimeFacts: RuntimeFacts{RequestedModel: r.Runtime.Model, ModelState: "missing"}, TaskExecution: TaskExecution{State: "unknown", Source: "none"}, Launch: Launch{State: "reserved"}, Acceptance: AcceptanceState{State: "missing"}, Process: Process{State: "not_started"}, Delivery: Delivery{State: "missing"}, Collection: Collection{State: "pending"}, Reasons: []Reason{}, NextAction: "Start plan result control before separate human QA or integration."}
 }
 func readJournal(root, id string) (journal, error) {
@@ -416,13 +414,9 @@ func fold(j *journal, e Event) error {
 		j.LatestReportSequence = e.Sequence
 		r.Delivery = Delivery{p.State, &p.ReportSHA256, p.TerminalSHA256, &report.Outcome}
 		r.Budget.Reported = report.BudgetUsage
-		r.Budget.WithinAgreement = budgetValid(report.BudgetUsage)
-	case "provider_completion":
-		return foldProviderCompletion(j, e)
+		r.Budget.WithinAgreement = budgetValid(report.BudgetUsage, j.Request.Agreement)
 	case "task_status_observed":
-		if j.Request.SchemaVersion == 2 {
-			return integrity("exec does not accept manual task status")
-		}
+
 		var p struct {
 			StatusSHA256 string `json:"status_sha256"`
 		}
@@ -466,9 +460,7 @@ func fold(j *journal, e Event) error {
 		if p.Collection.State == "qualified" && (p.Collection.TaskResultID == nil || p.Collection.TaskResultDraftSHA256 == nil || !digestPattern.MatchString(*p.Collection.TaskResultDraftSHA256) || !quiescent(r.Process) || r.Process.State != "exited" || r.Process.ExitCode == nil || *r.Process.ExitCode != 0 || r.Process.Signal != nil || r.Acceptance.State != "started" || r.Delivery.State != "received" || r.Delivery.ReportedOutcome == nil || *r.Delivery.ReportedOutcome != "complete" || r.Budget.WithinAgreement == nil || !*r.Budget.WithinAgreement) {
 			return integrity("collection contradicts qualifying facts")
 		}
-		if p.Collection.State == "qualified" && j.Request.SchemaVersion == 2 && !taskInactive(*j) {
-			return integrity("exec collection lacks provider completion")
-		}
+
 		if p.Collection.State == "qualified" && r.TaskExecution.StatusSHA256 == nil && j.Request.SchemaVersion == 1 {
 			r.TaskExecution.HistoricalQualification = true
 		}

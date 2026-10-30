@@ -81,7 +81,7 @@ func (w taskWriters) retirement() taskWriterEvidence {
 
 func (w taskWriters) cleanup() taskWriterEvidence {
 	o := taskWriterEvidence{state: taskWritersAbsent}
-	if !headlessRun(w.s.Request) {
+	{
 		o = w.herdr("")
 		if o.state != taskWritersAbsent {
 			return o

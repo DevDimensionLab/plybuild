@@ -256,11 +256,28 @@ func TestTraceSourceRecheckRejectsChangedAndSymlinkedEvidence(t *testing.T) {
 
 func TestTraceCurrentGoalRemainsSeparateFromFrozenRun(t *testing.T) {
 	d, root := readFixture(t)
-	registry, err := d.WorkItems.Snapshot(root)
+	problemDoc := filepath.Join(root, "problem.md")
+	problemBody := []byte("# Trace fixture problem\n\nKeep current and frozen goals distinct.\n")
+	if err := os.WriteFile(problemDoc, problemBody, 0600); err != nil {
+		t.Fatal(err)
+	}
+	problemDraft := map[string]any{
+		"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785",
+		"publication_key": "trace/problem", "task_id": "task", "registry_upgrade": nil,
+		"recorder":          map[string]any{"actor_claim": "Synthetic planner", "control_surface": "fixture", "recorded_at_utc": "2026-10-07T10:00:00Z"},
+		"expected_previous": nil, "origin": map[string]any{"kind": "authored"}, "title": "Trace fixture problem", "summary": "Keep current and frozen goals distinct.", "problem_document_id": "problem",
+		"documents": []map[string]any{{"id": "problem", "source": map[string]any{"kind": "file", "locator": problemDoc, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(problemBody)), "size_bytes": len(problemBody), "media_type": "text/markdown", "git_provenance": nil}}},
+		"sources":   []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Explicit fixture setup.",
+	}
+	problemFile := filepath.Join(root, "problem.json")
+	if err := os.WriteFile(problemFile, raw(problemDraft), 0600); err != nil {
+		t.Fatal(err)
+	}
+	recorded, err := workspace.RecordTaskProblem(d, workspace.TaskContentInput{TaskID: "task", File: problemFile})
 	if err != nil {
 		t.Fatal(err)
 	}
-	problem := registry.TaskProblemRevisions[0]
+	problem := workspace.TaskRevisionRef{Revision: *recorded.OutcomeRef.Revision, ManifestSHA256: recorded.OutcomeRef.ManifestSHA256}
 	doc := filepath.Join(root, "design.md")
 	body := []byte("# Trace\nRecorded facts only.\n")
 	if err = os.WriteFile(doc, body, 0600); err != nil {

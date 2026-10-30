@@ -1,5 +1,10 @@
 # TB2546BF5: deterministic regression acceptance
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 Task `ply-coverage-regressions-20261023` restores focused acceptance on execution
 base `d58dbd4def24bee385307db7dc18fe1583958533`. It does not qualify a full
 coverage profile or change provider permissions, retained history, retirement,

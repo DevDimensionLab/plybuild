@@ -84,7 +84,7 @@ Do not ask for:
 
    Immediately before notifying, read the same Q:
    `ply workflow input show QUESTION_ID --workspace WS --format json`.
-   If `state` is `answered`, continue to Acknowledge. If `state` is `withdrawn`,
+   If `state` is `answered`, continue to Use and report. If `state` is `withdrawn`,
    stop asking. Only for `state=waiting_for_answer`, preserve one private event
    file in the job's existing return directory, named `human-input-QUESTION_ID.json`. Record that
    path with the QID/activity/publication key in your progress notes. On restart,
@@ -146,7 +146,7 @@ Do not ask for:
    while `outcome` is `still_waiting`. A timeout only means keep waiting: it
    is not a deadline and not a reason to stop, guess or ask again. If the
    outcome is `withdrawn`, stop asking.
-7. **Acknowledge.** When `outcome` is `answered` (or `show` has `state=answered`), run:
+7. **Optional receipt.** When `outcome` is `answered` (or `show` has `state=answered`), you may record receipt. It is not a prerequisite for using or reporting the answer:
 
    ```
    ply workflow input acknowledge QUESTION_ID --workspace WS \
@@ -175,8 +175,8 @@ If the question becomes unnecessary before it is answered, run
 An answer is stored and stays stored. Nothing wakes a stopped conversation. When
 you resume, the same `ask` with the same key, or
 `ply workflow input show QUESTION_ID --workspace WS --format json`, returns the
-question and its answer; continue from Acknowledge, or Use and report when already
-acknowledged. Reuse the preserved notification binding/event and its receipt,
+question and its answer; continue from Use and report, recording an optional
+receipt when useful. Reuse the preserved notification binding/event and its receipt,
 without a new send for the same waiting Q. Say this plainly if the human asks
 what happens when you are interrupted.
 

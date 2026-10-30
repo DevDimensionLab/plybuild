@@ -139,6 +139,7 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 		t.Fatal(err)
 	}
 	dependencies := SystemDependencies()
+	dependencies.ProjectDataRoot = func(string) (string, error) { return "", nil }
 	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: root}
 	dependencies.ProjectLocks = projects
 	dependencies.Projects = projects
@@ -154,7 +155,6 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 				return err
 			}
 			r.FormatVersion = 1
-			r.TaskSpecPolicies = nil
 			r.TaskProblemRevisions = nil
 			r.TaskSpecRevisions = nil
 			r.TaskSpecAssessments = nil
@@ -180,7 +180,7 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 		}
 	} else {
 		task, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
-		if _, err := CreateTask(dependencies, task); err != nil {
+		if err := fixtureCreateTaskWithProblem(dependencies, root, task); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -190,4 +190,22 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 func hasWorkErrorClass(err error, class WorkItemErrorClass) bool {
 	typed, ok := err.(*WorkItemError)
 	return ok && typed.Class == class
+}
+
+func fixtureCreateTaskWithProblem(d Dependencies, root string, in TaskCreateInput) error {
+	return d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
+		_, repo, err := projectAndRepo(projects, in.ProjectID, in.RepoID)
+		if err != nil {
+			return err
+		}
+		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+			registry, err := session.Snapshot()
+			if err != nil {
+				return err
+			}
+			task := TaskRecord{ID: in.TaskID, Title: in.Title, Description: in.Description, ParentEpicID: in.ParentEpicID, ProjectID: in.ProjectID, RepoID: in.RepoID, GitCommonDir: repo.GitCommonDir, WorktreeState: WorkItemUnbound}
+			_, err = createTaskProblem(d, root, session, registry, projects, task, nil)
+			return err
+		})
+	})
 }

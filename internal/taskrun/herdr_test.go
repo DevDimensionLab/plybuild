@@ -427,8 +427,13 @@ func TestWorkflowStrictJSONAndBoundedCounters(t *testing.T) {
 	r := f.Report
 	r.BudgetUsage = &BudgetUsage{true, 100, 1, 0}
 	b, _ := Canonical(r)
+	if _, e := workflowParseReport(b); e != nil {
+		t.Fatalf("report counter was constrained by a compiled process budget: %v", e)
+	}
+	r.BudgetUsage.CorrectionRounds = -1
+	b, _ = Canonical(r)
 	if _, e := workflowParseReport(b); e == nil {
-		t.Fatal("large native counter accepted")
+		t.Fatal("negative native counter accepted")
 	}
 	if workflowTestCalls(t, f, "tab create") != 0 {
 		t.Fatal("invalid JSON had effects")

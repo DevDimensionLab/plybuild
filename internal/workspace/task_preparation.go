@@ -85,13 +85,6 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 			return preparationReadback(d, root, r, *p), nil
 		}
 	}
-	mode := ""
-	if in.parallel {
-		mode = AdmissionParallel
-	}
-	if !admissionAllowed(r, fold, mode) {
-		return out, queueError("task_queue_current_conflict", "handle active preparations before exclusive preparation")
-	}
 
 	found := false
 	readyGoal := false
@@ -117,7 +110,7 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 			if entry.Goal != nil && row.State == "ready" {
 				readyGoal = true
 				row.State = "blocked"
-				row.Reasons = queueReasons("task_goal_requires_execute", "choose this base-free goal with ply workflow execute; prepare requires a selected execution solution")
+				row.Reasons = queueReasons("task_goal_is_document", "Goal is a document; use explicit worktree creation for its Task")
 			}
 			if in.Selector.Kind == "task" {
 				out.State = row.State
@@ -151,7 +144,7 @@ func buildPreparePlan(d Dependencies, root string, r WorkItemRegistry, projects 
 	}
 	if readyGoal {
 		out.State = "blocked"
-		out.Reasons = queueReasons("task_goal_requires_execute", "choose the next base-free goal with ply workflow execute; prepare requires a selected execution solution")
+		out.Reasons = queueReasons("task_goal_is_document", "Goal is a document; choose a Task and create its worktree explicitly")
 		return out, nil
 	}
 	out.Reasons = queueReasons("task_queue_no_ready", "no eligible pending Task; inspect the queue reasons")
@@ -239,7 +232,7 @@ func PrepareTask(d Dependencies, in TaskPrepareInput) (TaskPreparationReadback, 
 					return nil
 				}
 				q := foldQueue(*reg, plan.QueueID)
-				if !admissionAllowed(*reg, q, plan.AdmissionMode) || q.Revision != plan.QueueRevision || q.Revision >= 2147483647 {
+				if q.Revision != plan.QueueRevision || q.Revision >= 2147483647 {
 					return queueError("task_queue_revision_conflict", "queue changed before reservation")
 				}
 				p.OperationID = op.ID

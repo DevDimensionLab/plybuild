@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
+
 	"testing"
 )
 
@@ -491,47 +491,3 @@ func TestQuotaReconcileSourceChangeDuringPaneClose(t *testing.T) {
 
 // SP01: the correction must cross the public CLI and leave the old refusal
 // active until ordinary retirement establishes actual writer absence.
-func TestQuotaReconcileCLIJourney(t *testing.T) {
-	binary := automaticCLIBinary(t)
-	t.Setenv("HOME", quotaFixtureHome(t))
-	t.Setenv("CLAUDE_CONFIG_DIR", "")
-	f, o := retireFixture(t)
-	o = retireStopFixture(t, f, o, DeliveryEffectPartial)
-	stop := *o.Delivery.ActiveStop
-	original, err := os.ReadFile(stop.Locator)
-	if err != nil {
-		t.Fatal(err)
-	}
-	path := quotaTranscript(t, f, o)
-	if _, _, err = automaticCLI(binary, f, "execute", "retire", o.RunID, "--observer", "fixture root", "--reason", "replace quota stopped owner"); err == nil {
-		t.Fatal("false partial did not block retirement before correction")
-	}
-	args := []string{"execute", "reconcile-quota-stop", o.RunID, "--event-id", "quota-correction", "--stop", stop.SHA256,
-		"--provider", "claude", "--native-session", o.Transport.AgentSessionID, "--action", "synthetic refused action",
-		"--quota-event", "quota-rejected", "--last-tool-result", "tool-completed", "--source-sha256", hashFileTest(t, path),
-		"--observer", "fixture root", "--reason", "Partial described unfinished work; this continuation never started after quota"}
-	out := automaticCLIOK(t, binary, f, args...)
-	out = automaticCLIOK(t, binary, f, args...)
-	if len(out.Delivery.Events) != 2 || out.Delivery.ActiveStop == nil || *out.Delivery.ActiveStop != stop || out.Delivery.Phase != "stopped" || !strings.Contains(out.NextAction.Message, "retire") {
-		t.Fatalf("correction cleared stop, duplicated history or hid retirement: %+v", out.Delivery)
-	}
-	after, err := os.ReadFile(stop.Locator)
-	if err != nil || !bytes.Equal(original, after) {
-		t.Fatal("correction rewrote original stop")
-	}
-	if workflowTestCalls(t, f.workflowFixture, "pane close") != 0 || retireQueueCurrent(t, f) == nil {
-		t.Fatal("correction released owner")
-	}
-	args[len(args)-1] = "conflicting correction"
-	if _, _, err = automaticCLI(binary, f, args...); err == nil {
-		t.Fatal("conflicting retry accepted")
-	}
-	retireAsCoordinator(&f)
-	out = automaticCLIOK(t, binary, f, "execute", "retire", o.RunID, "--observer", "fixture root", "--reason", "replace quota stopped owner")
-	if len(out.Delivery.Events) != 3 || retireQueueCurrent(t, f) != nil || workflowTestCalls(t, f.workflowFixture, "pane close") != 1 {
-		t.Fatal("ordinary retirement failed after audited correction")
-	}
-	if _, err := os.Stat(filepath.Dir(path)); err != nil {
-		t.Fatal(err)
-	}
-}

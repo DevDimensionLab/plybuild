@@ -135,7 +135,7 @@ version.
 ## Observation limits and verification
 
 The reader captures and reuses registered sources in one request and projects
-Tasks in batches. It does not call detailed `task show` or `workflow execute show`
+Tasks in batches. It does not call detailed `task show`
 for each row. It performs no Git status or fetch, provider/Herdr calls, installation,
 locks, journal writes, repair or restart. An unreadable optional source preserves
 valid siblings and adds diagnostics. A detected source change produces bounded

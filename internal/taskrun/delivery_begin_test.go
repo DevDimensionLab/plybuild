@@ -4,23 +4,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
-
-func TestDeliveryStartupReusesFrozenNotificationContext(t *testing.T) {
-	f := newDeliveryFixture(t, "codex")
-	o := workflowTestStart(t, f.workflowFixture)
-	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	path := writeAny(t, f.R.WorkspaceRoot, "existing-notification.json", map[string]string{"kind": "fixture binding"})
-	s.Request.Delivery.NotificationContext = &FileBinding{path, hashFileTest(t, path)}
-	if !strings.Contains(deliveryInstructions(s), path) {
-		t.Fatal("new Task prompt lost the already-authorized notification identity")
-	}
-}
 
 func TestDeliveryBeginCannotCreateSecondFrozenNotificationBinding(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")

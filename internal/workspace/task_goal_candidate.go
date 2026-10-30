@@ -2,131 +2,85 @@ package workspace
 
 import "path/filepath"
 
-// CurrentDeliveryTaskSpec is for building the initial delivery handoff. Ordinary
-// legacy validation is unchanged; only an execution contract qualifies here.
 func (s *TaskSpecSession) CurrentDeliveryTaskSpec(id TaskID) (TaskSpecEvaluation, error) {
 	task, _ := findTask(s.Registry, id)
 	if task == nil || task.Worktree == nil {
-		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "delivery Task has no worktree", nil)
+		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "Task has no worktree", nil)
 	}
-	out, e := currentTaskSpec(s.Dependencies, s.Root, s.Registry, s.Projects, *task, true)
-	if e != nil {
-		return out, e
-	}
-	if contentString(contentFields(out.Spec), "contract_kind") != "execution" || out.Basis == nil || out.SelectionFreshness != "current" || out.ContentIntegrity != "valid" || out.TargetFreshness != "fresh" {
-		return out, contentError("task_spec_selection_stale", "a current, intact execution Spec and clean start are required", nil)
-	}
-	return out, nil
+	return currentTaskSpec(s.Dependencies, s.Root, s.Registry, s.Projects, *task, false)
 }
 
-// ValidateDeliveryCandidateTarget validates a later candidate in the same owned
-// execution. It never changes the frozen start basis or grants an initial start
-// for changed code. The caller must separately bind an already accepted owner.
 func (s *TaskSpecSession) ValidateDeliveryCandidateTarget(locator, ref, common string, basis *TaskSpecBasis) (TaskSpecEvaluation, error) {
 	return s.ValidateDeliveryCandidateTargetBasis(locator, ref, common, basis, nil)
 }
+
 func (s *TaskSpecSession) ValidateDeliveryCandidateTargetBasis(locator, ref, common string, basis *TaskSpecBasis, effective *EffectiveDeliveryBasis) (TaskSpecEvaluation, error) {
-	var out TaskSpecEvaluation
-	if basis == nil {
-		return out, contentError("task_spec_required", "exact delivery Spec basis is required", nil)
+	out, err := s.ValidateTarget(locator, ref, common, basis)
+	if err != nil {
+		return out, err
 	}
-	task, _ := findTask(s.Registry, basis.TaskID)
-	physical, e := filepath.EvalSymlinks(locator)
-	if e != nil {
-		return out, e
+	physical, err := filepath.EvalSymlinks(locator)
+	if err != nil {
+		return out, err
 	}
-	if task == nil || task.Worktree == nil || locator != physical || task.Worktree.Locator != physical || task.Worktree.Ref != ref || task.GitCommonDir != common {
-		return out, contentError("task_spec_binding_conflict", "candidate differs from its registered delivery worktree", nil)
+	var task *TaskRecord
+	for _, candidate := range s.Registry.Tasks {
+		if candidate.Worktree != nil && candidate.Worktree.Locator == physical && candidate.Worktree.Ref == ref && candidate.GitCommonDir == common {
+			copy := candidate
+			task = &copy
+			break
+		}
 	}
-	out, e = currentTaskSpec(s.Dependencies, s.Root, s.Registry, s.Projects, *task, false)
-	if e != nil {
-		return out, e
+	if task == nil || locator != physical {
+		return out, contentError("task_spec_binding_conflict", "candidate has no exact registered Task source", nil)
 	}
-	agreement, e := DeliveryAgreementFromSpec(out.Spec)
-	if e != nil {
-		return out, e
+	candidate, err := s.Dependencies.WorkGit.ObserveWorktree(locator)
+	if err != nil {
+		return out, err
 	}
-	pr := agreement != nil && agreement.Mode == DeliveryPullRequest
+	if !candidate.Clean || !candidate.InventoryMatch || candidate.Locator != locator || candidate.Ref != ref || candidate.GitCommonDir != common {
+		return out, contentError("task_spec_basis_stale", "candidate must be the exact clean registered worktree", nil)
+	}
+	_, repo, err := projectAndRepo(s.Projects, task.ProjectID, task.RepoID)
+	if err != nil {
+		return out, err
+	}
+	start := task.Worktree.OID
+	if operation, _ := findOperation(s.Registry, task.ID); operation != nil {
+		start = operationStartOID(*operation)
+	}
+	ancestor, err := s.Dependencies.IntegrationGit.CheckAncestor(repo, start, candidate.OID)
+	if err != nil {
+		return out, err
+	}
+	if !ancestor {
+		return out, contentError("task_spec_binding_conflict", "candidate is not descended from its registered source start", nil)
+	}
 	if effective != nil {
 		if err := ValidateEffectiveDeliveryBasis(s.Registry, *effective); err != nil {
 			return out, err
 		}
-		p := findPreparation(s.Registry, effective.PreparationID)
-		current, err := EffectiveTaskDeliveryBasis(s.Registry, p.ID)
+		preparation := findPreparation(s.Registry, effective.PreparationID)
+		if preparation == nil || preparation.Plan.TaskID != task.ID {
+			return out, contentError("task_spec_binding_conflict", "source reconciliation belongs to another Task", nil)
+		}
+		current, err := EffectiveTaskDeliveryBasis(s.Registry, preparation.ID)
 		if err != nil {
 			return out, err
 		}
-		if p.Plan.TaskID != task.ID || !foldQueue(s.Registry, p.Plan.QueueID).contains(p.ID) || !contentTypedEqual(current, *effective) {
-			return out, contentError("reconciliation_required", "candidate effective generation changed; use native reconcile-source", nil)
+		if !contentTypedEqual(current, *effective) {
+			return out, contentError("reconciliation_required", "candidate reconciliation generation differs", nil)
 		}
-		ep, b := queueTargetBinding(s.Registry, p.Plan.Target)
-		base := currentEpicBase(s.Registry, ep, b)
-		if base.OID != effective.Parent.OID || base.Tree != effective.Parent.Tree {
-			return out, contentError("reconciliation_required", "parent moved; use native reconcile-source before fresh review and verification", nil)
-		}
-		out.TargetFreshness = "fresh"
-	}
-
-	if contentString(contentFields(out.Spec), "contract_kind") != "execution" || !contentTypedEqual(out.Basis, basis) || out.SelectionFreshness != "current" || out.ContentIntegrity != "valid" || (!pr && out.TargetFreshness != "fresh") {
-		return out, contentError("task_spec_selection_stale", "candidate requires the current unchanged delivery contract", nil)
-	}
-	bm := contentFields(contentFields(out.Spec)["implementation_basis"])
-	if e = validateSpecImplementationBasis(s.Dependencies, s.Projects, s.Registry, *task, contentFields(out.Spec)["implementation_basis"], false); e != nil {
-		return out, e
-	}
-	epic, binding := queueTargetBinding(s.Registry, QueueTarget{EpicID: task.ParentEpicID, RepoID: task.RepoID})
-	base := currentEpicBase(s.Registry, epic, binding)
-	expectedOID, expectedTree := contentString(bm, "parent_oid"), contentString(bm, "parent_tree")
-	if effective != nil {
-		expectedOID, expectedTree = effective.Parent.OID, effective.Parent.Tree
-	}
-	if !pr && (base.OID != expectedOID || base.Tree != expectedTree || pendingBaseUpdate(s.Registry, task.ParentEpicID, task.RepoID)) {
-		return out, contentError("epic_base_changed", "delivery parent changed before candidate control", nil)
-	}
-	target := QueueTarget{ProjectID: task.ProjectID, RepoID: task.RepoID, EpicID: task.ParentEpicID, GitCommonDir: common, ParentWorktreeID: binding.Worktree.ID, ParentLocator: binding.Worktree.Locator, ParentRef: binding.Worktree.Ref}
-	if agreement != nil {
-		if _, e = BindDeliveryAgreement(*agreement, target, ref); e != nil {
-			return out, e
-		}
-	}
-	if !pr {
-		parent, e := queueParentObservation(s.Dependencies, target)
-		if e != nil {
-			return out, e
-		}
-		if parent.OID != base.OID || parent.Tree != base.Tree {
-			return out, contentError("task_spec_basis_stale", "live parent differs from the frozen execution parent", nil)
-		}
-	}
-	candidate, e := s.Dependencies.WorkGit.ObserveWorktree(locator)
-	if e != nil {
-		return out, e
-	}
-	if !candidate.Clean || !candidate.InventoryMatch || candidate.Locator != locator || candidate.Ref != ref || candidate.GitCommonDir != common {
-		return out, contentError("task_spec_basis_stale", "candidate must be the exact clean owned worktree", nil)
-	}
-	_, repo, e := projectAndRepo(s.Projects, task.ProjectID, task.RepoID)
-	if e != nil {
-		return out, e
-	}
-	ancestor, e := s.Dependencies.IntegrationGit.CheckAncestor(repo, contentString(bm, "start_oid"), candidate.OID)
-	if e != nil {
-		return out, e
-	}
-	if effective != nil {
 		if err := validateReconciledSourceAncestry(s.Dependencies, s.Registry, repo, *effective, candidate.OID); err != nil {
 			return out, err
 		}
-		parentAncestor, err := s.Dependencies.IntegrationGit.CheckAncestor(repo, effective.Parent.OID, candidate.OID)
+		ancestor, err := s.Dependencies.IntegrationGit.CheckAncestor(repo, effective.Parent.OID, candidate.OID)
 		if err != nil {
 			return out, err
 		}
-		if !parentAncestor {
-			return out, contentError("reconciliation_required", "source does not contain effective parent", nil)
+		if !ancestor {
+			return out, contentError("reconciliation_required", "source does not contain its recorded reconciled parent", nil)
 		}
-	}
-	if !ancestor {
-		return out, contentError("task_spec_binding_conflict", "candidate is not descended from the frozen execution start", nil)
 	}
 	return out, nil
 }

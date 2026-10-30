@@ -84,6 +84,7 @@ func TestTaskScopedContentRequiresItsArtifactsAndPreservesOutsideRecords(t *test
 				t.Fatal(err)
 			}
 			goalQueueFixture(t, f, []TaskGoalQueueEntry{})
+			next := contentFixtureProblem(t, f, "task/scoped-revision")
 			root := filepath.Dir(f.wrapper)
 			d := WithTaskContentScope(f.dependencies, "task")
 			r, err := d.WorkItems.Snapshot(root)
@@ -139,7 +140,7 @@ func TestTaskScopedContentRequiresItsArtifactsAndPreservesOutsideRecords(t *test
 					return s.Publish(r)
 				})
 			} else {
-				_, err = ShowTask(d, "task")
+				_, err = RecordTaskProblem(d, next)
 			}
 			var contentErr *TaskContentError
 			if !errors.As(err, &contentErr) || contentErr.Code != want {
@@ -210,15 +211,22 @@ func TestTaskScopedConcurrentPublicationsPreserveBothWritersAndUnknownSibling(t 
 		t.Fatal(err)
 	}
 	for _, id := range []TaskID{"task", "sibling"} {
-		if taskContentState(after, id).ProblemHead.Revision != 2 {
+		previous := 0
+		if head := taskContentState(r, id).ProblemHead; head != nil {
+			previous = head.Revision
+		}
+		if taskContentState(after, id).ProblemHead.Revision != previous+1 {
 			t.Fatalf("lost %s publication", id)
 		}
 	}
 	if got := taskContentState(after, "future").SpecHead; got == nil || got.ManifestSHA256 != future {
 		t.Fatal("rewrote unknown sibling")
 	}
-	if _, err = f.dependencies.WorkItems.Snapshot(root); err == nil || !strings.Contains(err.Error(), "future_review_policy") {
-		t.Fatalf("global audit must still reject unsupported semantics: %v", err)
+	if _, err = f.dependencies.WorkItems.Snapshot(root); err != nil {
+		t.Fatalf("registry observation required unrelated document semantics: %v", err)
+	}
+	if _, err = readRegisteredTaskManifest(f.dependencies.TaskContent, root, after, future); err == nil || !strings.Contains(err.Error(), "future_review_policy") {
+		t.Fatalf("explicit document read accepted unsupported semantics: %v", err)
 	}
 }
 
@@ -258,7 +266,10 @@ func TestTaskScopedContentPreservesUnrelatedNewerPublications(t *testing.T) {
 	if _, err = f.dependencies.TaskContent.Read(root, "manifests", digest); err != nil {
 		t.Fatal("sibling bytes changed", err)
 	}
-	_, err = ShowTask(f.dependencies, "sibling")
+	if _, err = ShowTask(f.dependencies, "sibling"); err != nil {
+		t.Fatalf("Task observation required document semantics: %v", err)
+	}
+	_, err = readRegisteredTaskManifest(f.dependencies.TaskContent, root, after, digest)
 	var incompatible *TaskContentError
 	if !errors.As(err, &incompatible) || incompatible.Code != "task_content_reader_incompatible" {
 		t.Fatalf("required unknown semantics must be incompatible, got %v", err)

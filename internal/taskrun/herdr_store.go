@@ -50,13 +50,7 @@ func workflowRead(root, id string) (workflowState, error) {
 		return s, e
 	}
 	var saved workflowState
-	if headlessRun(s.Request) {
-		if e = workerValidateIdentity(s); e != nil {
-			return s, e
-		}
-	} else if s.Request.Worker != nil || s.Result.Worker != nil {
-		return s, workflowError(4, "interactive reservation cannot acquire a worker")
-	}
+
 	e = readPrivateValue(filepath.Join(s.Result.Paths.RunRoot, "state.json"), privateRunState, 8<<20, &saved)
 	if os.IsNotExist(e) {
 		s.Result.Round.State = "unknown"
@@ -65,7 +59,7 @@ func workflowRead(root, id string) (workflowState, error) {
 	if e != nil {
 		return s, e
 	}
-	if !equal(s.Request, saved.Request) || !equal(s.CodexTrust, saved.CodexTrust) || !equal(s.ClaudeTrust, saved.ClaudeTrust) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
+	if !equal(s.Request, saved.Request) || saved.Result.RunID != id || !equal(s.Observed, saved.Observed) || saved.Result.Paths.RunRoot != s.Result.Paths.RunRoot || saved.Result.RequestSHA256 != digest(s.Request) || saved.Result.SessionID != "ply:"+id {
 		return s, workflowError(4, "preserved state differs from reservation")
 	}
 	if _, e = workflowRecoveryRecord(saved); e != nil {
@@ -74,19 +68,10 @@ func workflowRead(root, id string) (workflowState, error) {
 	if _, _, e = workflowOwnerResumeRecord(saved); e != nil {
 		return saved, e
 	}
-	if e = workflowLoadAcceptanceSelection(&saved); e != nil {
-		return saved, e
-	}
 	if e = deliveryLoadObservedStop(&saved); e != nil {
 		return saved, e
 	}
-	if headlessRun(saved.Request) {
-		if e = workerValidateIdentity(saved); e != nil {
-			return saved, e
-		}
-	} else if saved.Result.Worker != nil {
-		return saved, workflowError(4, "interactive state cannot acquire a worker")
-	}
+
 	if !deliveryRun(saved.Request) {
 		if e = workflowLoadReportObservations(&saved); e != nil {
 			return saved, e
@@ -117,13 +102,10 @@ func workflowUpdate(d Dependencies, root, id string, fn func(*workflowState) err
 		if e != nil {
 			return e
 		}
-		before := controlSemanticState(s)
 		if e = fn(&s); e != nil {
 			return e
 		}
-		if s.Request.ControlContract != nil && before != controlSemanticState(s) {
-			s.ControlRevision++
-		}
+
 		return workflowSave(d, s)
 	})
 }
@@ -252,7 +234,7 @@ func workflowFreshRuntime(d Dependencies, s workflowState, target bool, runtime 
 // callbacks and observations never launch again; Delivery keeps its own
 // continuation checks and headless workers use the current Ply invocation.
 func workflowReportLaunched(s workflowState) bool {
-	return !deliveryRun(s.Request) && !headlessRun(s.Request) && s.Result.Transport.AgentSessionID != ""
+	return !deliveryRun(s.Request) && s.Result.Transport.AgentSessionID != ""
 }
 
 // Launch facts are history after workflowReportLaunched. Observed drift is
@@ -263,15 +245,6 @@ func workflowReportLaunchDrift(s workflowState, fact, bound string, err error) {
 
 func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool, runtime Runtime, historicalLauncher bool) error {
 	if workflowReportLaunched(s) {
-		// Only a confirmed grant's observation can become history. A missing or
-		// contradictory saved binding stays an integrity error.
-		if s.Request.CodexProjectTrust == nil || s.CodexTrust == nil {
-			if e := workflowTrustFresh(s); e != nil {
-				return e
-			}
-		} else if e := workflowTrustFresh(s); e != nil {
-			workflowReportLaunchDrift(s, "codex_project_trust", s.Request.CodexProjectTrust.RepositoryRoot, e)
-		}
 		for i, x := range []Executable{runtime.Executable, runtime.PlyExecutable} {
 			if e := verifyExecutable(x); e != nil {
 				workflowReportLaunchDrift(s, []string{"provider_executable", "ply_executable"}[i], x.Path+" "+x.SHA256, e)
@@ -286,9 +259,6 @@ func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool,
 		}
 		return workflowFreshArtifacts(d, s, target, true)
 	}
-	if e := workflowTrustFresh(s); e != nil {
-		return e
-	}
 	if historicalLauncher {
 		if e := deliveryAcceptedAuthority(s); e != nil {
 			return e
@@ -302,15 +272,13 @@ func workflowFreshRuntimeOperation(d Dependencies, s workflowState, target bool,
 		}
 		if providerErr := verifyExecutable(runtime.Executable); providerErr != nil {
 			if deliveryRun(s.Request) && deliveryStarted(s) {
-				return deliveryContinuityError("runtime_observation_required", "accepted delivery's historical provider launcher is missing or changed at "+runtime.Executable.Path+"; use installed workflow execute continue with the original owner's current --runtime-evidence; the new installed provider is not authority")
+				return deliveryContinuityError("runtime_observation_required", "accepted delivery's historical provider launcher is missing or changed at "+runtime.Executable.Path+"; inspect the preserved run with ply workflow run show; the new installed provider is not authority")
 			}
 			return deliveryContinuityError("launch_dependency", "unaccepted runtime requires its original provider launcher: "+providerErr.Error())
 		}
 		return e
 	}
-	if headlessRun(s.Request) {
-		return workflowFreshArtifacts(d, s, target, true)
-	}
+
 	if e := verifyExecutable(s.Request.Herdr.Executable); e != nil {
 		if !deliveryRun(s.Request) {
 			return e
@@ -507,16 +475,12 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// older control binary, without rewriting their frozen startup history.
 		o.NextAction = deliveryStartupAction(s)
 	}
-	if !headlessRun(s.Request) && o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
+	if o.Transport.AgentSessionID == "" && o.NextAction.Actor == "recipient" {
 		// Older saved attempts may still advise acceptance before session binding.
 		// Correct the readback without rewriting those historical artifacts.
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved startup and any native onboarding in the same tab; no native session is bound. Do not restart or resend input."}
 	}
-	if headlessRun(s.Request) {
-		if e = workerReadControl(s, &o); e != nil {
-			return o, e
-		}
-	}
+
 	if closeout, closeoutErr := workflowTaskCloseout(root, s); closeoutErr != nil {
 		o.Reasons = append(o.Reasons, Reason{"task_closeout_unavailable", closeoutErr.Error()})
 	} else if closeout != nil {
@@ -562,16 +526,9 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 			o.FinalReturn.State = "blocked"
 		}
 		o.NextAction = WorkflowAction{"coordinator", "Inspect the preserved binding drift; do not restart or delete run state."}
-		if automaticCleanupPending(s) {
-			// Integration is observed; the recorded cleanup cause stays current.
-			o.NextAction = s.Result.NextAction
-			if o.Closeout != nil {
-				o.NextAction = workflowCloseoutAction(s, *o.Closeout)
-			}
-		}
 		var dependency *Error
 		if errors.As(e, &dependency) && dependency.Code == "delivery_runtime_observation_required" {
-			o.NextAction = WorkflowAction{"recipient", "Use the installed Ply's workflow execute continue with this run, its unchanged --context and the original owner's actual current --runtime-evidence. Keep the same session and original controls."}
+			o.NextAction = WorkflowAction{"recipient", "Inspect the preserved run with ply workflow run show. Delivery-owner continuation has been removed; the human chooses further work."}
 		}
 		if action, ok := deliveryIncompleteReadback(s); ok {
 			// The report was durably recorded even when runtime authority is
@@ -582,13 +539,9 @@ func WorkflowShow(d Dependencies, root, id string) (WorkflowRun, error) {
 		// Older controls preserved successful checks but advised rerunning them
 		// after qualification failed. Explain the supported continuation without
 		// replacing a human question or recommending replay of an unknown check.
-		o.NextAction = WorkflowAction{"recipient", "Acceptance succeeded; inspect the separate qualification failure. For a control compatibility update use the installed Ply's workflow execute continue with this run and its original context. Reuse unchanged successful evidence with verify --reuse " + status.Verification.AttemptID + "; changed source, review, script or authority requires new verification."}
+		o.NextAction = WorkflowAction{"recipient", "The command completed; inspect its preserved evidence with ply workflow run show. The unresolved attempt is " + status.Verification.AttemptID + "; do not repeat an unresolved effect."}
 	}
-	if headlessRun(s.Request) {
-		// Resolve current evidence first, so unavailable closeout or binding
-		// diagnostics cannot be replaced with ordinary worker observation advice.
-		o.NextAction = currentRunAction(d, s, o)
-	}
+
 	deliveryProjectStop(s, &o)
 	if r, e := deliveryRetirement(s); e != nil {
 		return o, e

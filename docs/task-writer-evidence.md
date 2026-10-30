@@ -1,5 +1,10 @@
 # Task writer evidence
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 `internal/taskrun/delivery_task_writers.go` is the shared module for composing
 Herdr identity and inventory observations with local Task/session process
 evidence. Its action entrypoints return present, positively absent, or unknown

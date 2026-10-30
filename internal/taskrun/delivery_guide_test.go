@@ -47,38 +47,18 @@ func TestDeliveryGuideManagedRequirements(t *testing.T) {
 				t.Fatal(err)
 			}
 			guide := string(b)
-			for _, want := range []string{
-				"Native verification assembles and preserves task-requirements",
-				"from the frozen Spec requirements and this exact candidate's acceptance and review",
-				"Do not hand-author a second requirements/status artifact",
-				"Managed artifacts become available during successful candidate verification",
-				"Keep actual evidence and truthful requirement outcomes",
-				"a progress report or this guide does not qualify a candidate",
-				"For an observation preserved in this review, cite candidate-review",
-				"--review <copied-review.json>",
-				"an empty template is not a review",
-				"The callback itself executes /bin/sh",
-				"For a clean review-ready candidate, return to the existing coordinator",
-				"phase=working and question=null",
-				"candidate OID/tree, test evidence and private binary path",
-				"Keep the candidate unchanged until the separate review returns",
-				"Do not use an interactive human question for this routine coordinator transition",
-				"Real human QA, access dialogs and new product or scope decisions",
-			} {
+			for _, want := range []string{"Preserve actual command results", "Choose reviews, testing, integration, installation and cleanup explicitly", "Observing a Run never closes a pane or removes a worktree"} {
 				if !strings.Contains(guide, want) {
-					t.Errorf("generated guide lacks %q", want)
+					t.Errorf("guide lacks %q", want)
 				}
 			}
-			if mode == "automatic" {
-				if !strings.Contains(guide, "--candidate-binary <absolute-private-executable>") || !strings.Contains(guide, "## Automatic local Epic delivery") {
-					t.Fatal("automatic candidate instructions lost")
-				}
-			} else if strings.Contains(guide, "--candidate-binary") || !strings.Contains(guide, "## Actual human QA and local integration") {
-				t.Fatal("explicit-review path acquired automatic delivery")
+			if strings.Contains(guide, "workflow execute") {
+				t.Fatal("guide recommends a removed process command")
 			}
+
 			_, acceptanceErr := os.Stat(filepath.Join(root, "delivery", "templates", "acceptance.json"))
 			if mode == "legacy-explicit-review" {
-				if acceptanceErr != nil || !strings.Contains(guide, "--permission-confirmed") {
+				if acceptanceErr != nil {
 					t.Fatal("legacy acceptance contract lost")
 				}
 			} else if !os.IsNotExist(acceptanceErr) || strings.Contains(guide, "--permission-confirmed") {

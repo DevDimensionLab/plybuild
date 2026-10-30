@@ -1,5 +1,10 @@
 # Bounded native consumer compatibility corrections — v1
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 T4A5CC805 · Task `ply-nf01a-compatibility-spec-20261024` · NF01A.
 English implementation Spec, source-checked on `7404cc7dec9af9ff1afd822f24dc00214c798b36`.
 This Task authors this file only; root w9:pE owns the later implementation Task.
@@ -25,11 +30,11 @@ facts, global control change or upgrade/install authority follows from this Spec
 
 | Seam, verified on this base | Existing behavior and bounded change |
 | --- | --- |
-| [registry_parallel_activation.go](../../internal/taskrun/registry_parallel_activation.go): `parallelActivationConsumers`, `parallelConsumerClass` | Inventory freshness is checked first, then non-Herdr transport is rejected before `workflowRead` and `owned[PreparationID]`. The class function rejects report-only contracts before retirement and uses only `automaticIntegratedResult` for completed local integration. Move terminal fact evaluation and validated preparation binding ahead of transport rejection; retain the fallback gates. |
+| registry_parallel_activation.go (`internal/taskrun/registry_parallel_activation.go`, historisk kilde): `parallelActivationConsumers`, `parallelConsumerClass` | Inventory freshness is checked first, then non-Herdr transport is rejected before `workflowRead` and `owned[PreparationID]`. The class function rejects report-only contracts before retirement and uses only `automaticIntegratedResult` for completed local integration. Move terminal fact evaluation and validated preparation binding ahead of transport rejection; retain the fallback gates. |
 | [read_inventory.go](../../internal/taskrun/read_inventory.go): `ReadInventory`, `workflowInventoryReturn`; [herdr_store.go](../../internal/taskrun/herdr_store.go): `workflowRead`, `workflowBound`, `workflowReservations` | Freshness verifies preserved request/state and report-slot hashes, report identity and completion review/terminal binding; it is not liveness. `workflowRead` also validates request/root/Run/session and headless identity. Reservations distinguish retired-report release and exact TaskResult qualification from a bare reviewed return. Keep damaged bindings blocking. |
 | [report_startup.go](../../internal/taskrun/report_startup.go): `workflowReportRetirement`, `workflowReportQueueReleased` | Typed retirement verifies kind/version, Run, request SHA and native session; bound files pass `workflowBound`. Queue validation resolves the preparation's actual queue in a validated snapshot and requires release/advance naming that exact preparation. Retirement alone does not discharge its queue reservation. Reuse both. |
 | [delivery_retire.go](../../internal/taskrun/delivery_retire.go): `deliveryRetirement`; [human_integration.go](../../internal/taskrun/human_integration.go): `deliveryRelease`, `preservedHumanIntegration`, `validateHumanIntegrationDecision` | Delivery retirement and ownership release validate native event/binding identity. Release binds Task/result, OID/tree, source ref/locator, owner/session and provenance. Human authorization additionally binds the actual pass/QA, plan/decision digest, exact release and native decision history. Reuse these readers; call no retirement/release/decision writers. |
-| [delivery_automatic_closeout.go](../../internal/taskrun/delivery_automatic_closeout.go): `automaticIntegratedResult`; [read_closeout.go](../../internal/taskrun/read_closeout.go): `workflowTaskCloseout`; [task_closeout.go](../../internal/workspace/task_closeout.go): `ReadTaskCloseoutAt` | Automatic integration validates envelope, event, exact candidate/TaskResult, completion/recovery and parent or historical completion; deliberately excludes human takeover. Closeout validates candidate/result/source identity and store receipt integrity. Preserve these semantics. |
+| delivery_automatic_closeout.go (`internal/taskrun/delivery_automatic_closeout.go`, historisk kilde): `automaticIntegratedResult`; [read_closeout.go](../../internal/taskrun/read_closeout.go): `workflowTaskCloseout`; [task_closeout.go](../../internal/workspace/task_closeout.go): `ReadTaskCloseoutAt` | Automatic integration validates envelope, event, exact candidate/TaskResult, completion/recovery and parent or historical completion; deliberately excludes human takeover. Closeout validates candidate/result/source identity and store receipt integrity. Preserve these semantics. |
 | [delivery_authority.go](../../internal/taskrun/delivery_authority.go): `completeLocalDelivery`; [read_trace_delivery.go](../../internal/taskrun/read_trace_delivery.go): `deliveryIntegration`, `traceWireObject`, `traceWireJSON`; [task_integration.go](../../internal/workspace/task_integration.go) | Human and automatic local delivery write the same `PlyDeliveryIntegration@1` envelope. Trace already binds its native result to registered IntegrationResult/authority/QA. Nested `Result.Integration.Readback.Value` embeds `canonicaljson.Object` as Go members; it is not a flat `integration_result` JSON property. Reuse that decoding/binding pattern for a small read-only human terminal helper, not the automatic-policy predicate or an effectful integration check. |
 | [registry_parallel_activation.go](../../internal/workspace/registry_parallel_activation.go): `ParallelConsumerCompatibility`, `ActivateParallelRegistry`; [workspace_registry.go](../../cmd/workspace_registry.go) | Existing ID/class/effects/reasons/digest wire shape and public read-only `--check` are sufficient. No schema or new command is required. |
 
@@ -123,9 +128,9 @@ negative controls. Fixture records must be generated by native paths or existing
 controlled seams, not fabricated historical success/accepted flags. Tampering is
 only a negative test, with the expected hashes/slots deliberately controlled.
 
-Reuse [registry_parallel_activation_test.go](../../internal/taskrun/registry_parallel_activation_test.go)
+Reuse registry_parallel_activation_test.go (`internal/taskrun/registry_parallel_activation_test.go`, historisk kilde)
 (`TestParallelActivationLegacyCloseoutClasses`),
-[registry_parallel_retained_test.go](../../internal/taskrun/registry_parallel_retained_test.go)
+registry_parallel_retained_test.go (`internal/taskrun/registry_parallel_retained_test.go`, historisk kilde)
 (`retainedActivationFixture`, `activationNativeState`, no-lock/write wrappers),
 [parallel_epic_return_test.go](../../internal/taskrun/parallel_epic_return_test.go)
 (`parallelRuntime`, `parallelQualify`),
@@ -134,7 +139,7 @@ Reuse [registry_parallel_activation_test.go](../../internal/taskrun/registry_par
 [report_retirement_poststart_test.go](../../internal/taskrun/report_retirement_poststart_test.go),
 [human_integration_test.go](../../internal/taskrun/human_integration_test.go)
 (`humanIntegrationCandidate`, preserved decision/release/closeout tests), and
-[worker_delivery_test.go](../../internal/taskrun/worker_delivery_test.go)
+worker_delivery_test.go (`internal/taskrun/worker_delivery_test.go`, historisk kilde)
 (`newWorkerDeliveryFixture`, native review/receipt fixtures). Inject simulated
 Herdr/provider, LocalProcesses, StartupProcessTree and SourceWriters at fixture
 construction; forbid fallback to actual OS/provider inspection. Existing helper

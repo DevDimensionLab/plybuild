@@ -100,19 +100,16 @@ func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, 
 			row.BaseRevision = &n
 		}
 	}
-	adopted := false
-	var source TaskGoalExecutePreview
-	if op, _ := findOperation(r, t.ID); op != nil && op.Adoption != nil && op.State == "ready" {
-		if contentString(contentFields(spec), "contract_kind") != "execution" {
-			return block(queueError("task_goal_requires_execute", "adopted sources require native Goal execution"))
+	source, _ := findOperation(r, t.ID)
+	adopted := source != nil && source.Adoption != nil && source.State == "ready" && source.Release == nil
+	if adopted {
+		observed, err := observeAdoptionSource(d, source.TargetLocator, source.SourceRef)
+		if err != nil {
+			return block(err)
 		}
-		if e = contentDecode(contentFields(spec)["execution_request"], &source); e != nil {
-			return block(e)
+		if observed.OID != operationStartOID(*source) || observed.Tree != operationStartTree(*source) {
+			return block(queueError("adoption_source_changed", "adopted source changed"))
 		}
-		if e = validateAdoptedExecution(d, root, r, projects, source); e != nil {
-			return block(e)
-		}
-		adopted = true
 	}
 	if !adopted && adoptionReleased(r, t.ID) {
 		row.State = "adoption_released"
@@ -154,7 +151,7 @@ func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, 
 		return block(e)
 	}
 	if adopted {
-		branch, path = source.Branch, source.WorktreePath
+		branch, path = strings.TrimPrefix(source.SourceRef, "refs/heads/"), source.TargetLocator
 	}
 	if !adopted {
 		if _, exists, e := canonicalTaskTarget(d.Files, root, path); e != nil {
@@ -184,9 +181,9 @@ func queueMixedEntryEvaluation(d Dependencies, root string, r WorkItemRegistry, 
 	p := WorkspaceTaskPreparePlan{Kind: "WorkspaceTaskPreparePlan@1", SchemaVersion: 1, Workspace: workspace, Target: tgt, RegistryUpgrade: queueUpgrade(r), RegistryFormatVersion: r.FormatVersion, QueueID: qid, TaskID: t.ID, Selection: *entry.Selection, Problem: *valueRevision(sol["problem"]), SpecID: sid, Spec: *sr, Assessment: *valueDecision(sol["assessment"]), RequiredInputs: eval.RequiredInputs, BaseRevision: base.Revision, ParentOID: base.OID, ParentTree: base.Tree, Branch: branch, WorktreePath: path, ObservedParent: obs}
 	if adopted {
 		p.SourceMode = "adopted"
-		p.AdoptionID = source.AdoptionID
-		p.StartOID = source.StartOID
-		p.StartTree = source.StartTree
+		p.AdoptionID = source.ID
+		p.StartOID = operationStartOID(*source)
+		p.StartTree = operationStartTree(*source)
 	}
 	row.State = "ready"
 	row.Reasons = []QueueReason{}
@@ -268,14 +265,6 @@ func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, project
 		if r.FormatVersion == ParallelRegistryFormat {
 			row.SerialReadiness = row.State
 			row.ParallelReadiness = row.State
-			if row.State == "ready" {
-				if !admissionAllowed(r, q, "") {
-					row.SerialReadiness = "blocked"
-				}
-				if !admissionAllowed(r, q, AdmissionParallel) {
-					row.ParallelReadiness = "blocked"
-				}
-			}
 		}
 		if !ready || row.State == "ready" {
 			out.Pending = append(out.Pending, row)

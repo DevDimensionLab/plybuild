@@ -282,86 +282,30 @@ func TestParallelSourceCannotDiscardCommittedReconciliationHistory(t *testing.T)
 	}
 }
 
-func TestParallelSourceReconciliationRealMerge(t *testing.T) {
-	f := parallelFixture(t)
-	g := parallelGoalFixture(t, f, "task", "parallel-source")
-	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &g}})
-	in := TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: g.SpecID, Parallel: true}
-	p, err := PreviewTaskGoalExecution(f.dependencies, in)
-	if err != nil {
-		t.Fatal(err)
-	}
-	prepared, err := PrepareTaskGoalExecution(f.dependencies, in, p.Confirmation, goalHumanFixture())
-	if err != nil {
-		t.Fatal(err)
-	}
-	source := prepared.Preparation.Plan.WorktreePath
-	if err = os.WriteFile(filepath.Join(source, "b.txt"), []byte("B\n"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	runLocalGit(t, source, "add", "b.txt")
-	runLocalGit(t, source, "commit", "-m", "B")
-	before := runLocalGit(t, source, "rev-parse", "HEAD")
-	parent := filepath.Join(f.wrapper, "epic")
-	if err = os.WriteFile(filepath.Join(parent, "a.txt"), []byte("A\n"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	runLocalGit(t, parent, "add", "a.txt")
-	runLocalGit(t, parent, "commit", "-m", "A native parent fixture")
-	base, err := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *base.Confirmation}); err != nil {
-		t.Fatal(err)
-	}
-	input := TaskSourceReconciliationInput{PreparationID: prepared.Preparation.Preparation.ID, RunID: "synthetic-native-run", RequestSHA256: "sha256:" + strings.Repeat("c", 64), MandateSHA256: "sha256:" + strings.Repeat("d", 64), ReviewSHA256: "sha256:" + strings.Repeat("e", 64)}
-	preview, err := ReconcileTaskSource(f.dependencies, input)
-	if err != nil {
-		t.Fatalf("native reconcile preview: %v", err)
-	}
-	if runLocalGit(t, source, "rev-parse", "HEAD") != before {
-		t.Fatal("preview changed source")
-	}
-	input.Apply = true
-	input.Confirmation = preview.Confirmation
-	result, err := ReconcileTaskSource(f.dependencies, input)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.State != "committed" || result.Operation == nil || result.Operation.Plan.Generation != 1 {
-		t.Fatalf("no committed exact effective basis: %+v", result)
-	}
-	after := runLocalGit(t, source, "rev-parse", "HEAD")
-	runLocalGit(t, source, "merge-base", "--is-ancestor", before, after)
-	runLocalGit(t, source, "merge-base", "--is-ancestor", runLocalGit(t, parent, "rev-parse", "HEAD"), after)
-	if raw, err := os.ReadFile(filepath.Join(source, "a.txt")); err != nil || string(raw) != "A\n" {
-		t.Fatal("parent composition missing")
-	}
-	again, err := ReconcileTaskSource(f.dependencies, input)
-	if err != nil || again.Operation.ID != result.Operation.ID || runLocalGit(t, source, "rev-parse", "HEAD") != after {
-		t.Fatalf("reconciliation retry repeated effect: %v", err)
-	}
-	r := mustQueueRegistry(t, f)
-	if r.TaskPreparations[0].Plan.ParentOID != p.ParentOID || len(r.SourceReconciliations) != 1 {
-		t.Fatal("reconciliation replaced original history")
-	}
-}
-
-func sourceReconcileFixture(t *testing.T, conflict bool) (workItemJourneyFixture, TaskGoalPreparedExecution, TaskSourceReconciliationInput) {
+func sourceReconcileFixture(t *testing.T, conflict bool) (workItemJourneyFixture, sourcePreparedFixture, TaskSourceReconciliationInput) {
 	t.Helper()
 	f := parallelFixture(t)
-	g := parallelGoalFixture(t, f, "task", "source-operation")
-	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &g}})
-	gi := TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: g.SpecID, Parallel: true}
-	preview, e := PreviewTaskGoalExecution(f.dependencies, gi)
+	selection := queueSelect(t, f, "task", "source-operation", nil)
+	queueSetFixture(t, f, "source/queue", []QueueEntry{{TaskID: "task", Selection: &selection}})
+	id := TaskID("task")
+	in := TaskPrepareInput{parallel: true, Target: queueTargetFixture(), Selector: QueueSelector{Kind: "task", TaskID: &id}}
+	preview, e := PrepareTask(f.dependencies, in)
 	if e != nil {
 		t.Fatal(e)
 	}
-	prepared, e := PrepareTaskGoalExecution(f.dependencies, gi, preview.Confirmation, goalHumanFixture())
+	in.Apply, in.Confirmation = true, *preview.Confirmation
+	ready, e := PrepareTask(f.dependencies, in)
 	if e != nil {
 		t.Fatal(e)
 	}
+	r := mustQueueRegistry(t, f)
+	task, _ := findTask(r, "task")
+	digest, e := taskDeliveryDigest(*task)
+	if e != nil {
+		t.Fatal(e)
+	}
+	p := ready.Plan
+	prepared := sourcePreparedFixture{Preparation: ready, Basis: TaskSpecBasis{TaskID: "task", Problem: p.Problem, SpecID: p.SpecID, Spec: p.Spec, Assessment: p.Assessment, Selection: p.Selection, TaskWorktreeID: task.Worktree.ID, DeliveryBindingSHA256: digest, Dependencies: []string{}}}
 	source, parent := prepared.Preparation.Plan.WorktreePath, filepath.Join(f.wrapper, "epic")
 	file := "b.txt"
 	if conflict {
@@ -388,7 +332,7 @@ func sourceReconcileFixture(t *testing.T, conflict bool) (workItemJourneyFixture
 	if _, e = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *base.Confirmation}); e != nil {
 		t.Fatal(e)
 	}
-	return f, prepared, TaskSourceReconciliationInput{PreparationID: prepared.Preparation.Preparation.ID, RunID: "simulated-run", RequestSHA256: "sha256:" + strings.Repeat("c", 64), MandateSHA256: "sha256:" + strings.Repeat("d", 64), ReviewSHA256: "sha256:" + strings.Repeat("e", 64)}
+	return f, prepared, TaskSourceReconciliationInput{PreparationID: prepared.Preparation.Preparation.ID, RunID: "simulated-run", RequestSHA256: "sha256:" + strings.Repeat("c", 64), MandateSHA256: "sha256:" + strings.Repeat("d", 64)}
 }
 func TestParallelSourceConflictContinueAbortAndPreserveEdits(t *testing.T) {
 	for _, action := range []string{"continue", "abort", "abort-edited"} {
@@ -507,4 +451,9 @@ func TestParallelSourceReconciliationCrashRecovery(t *testing.T) {
 			}
 		})
 	}
+}
+
+type sourcePreparedFixture struct {
+	Preparation TaskPreparationReadback
+	Basis       TaskSpecBasis
 }

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -23,7 +22,6 @@ func TestRegistryFailureProducesExactlyOneJSONDiagnostic(t *testing.T) {
 		{"null epics", strings.Replace(valid, "epics: []", "epics: null", 1), "registry_invalid_content"},
 	} {
 		for _, args := range [][]string{
-			{"workflow", "execute", "--check", "--format", "json"},
 			{"workspace", "task", "prepare", "--next", "--format", "json"},
 			{"workspace", "epic", "list", "--format", "json"},
 		} {
@@ -40,9 +38,7 @@ func TestRegistryFailureProducesExactlyOneJSONDiagnostic(t *testing.T) {
 					t.Fatal(err)
 				}
 				r := &cobra.Command{Use: "ply"}
-				w := &cobra.Command{Use: "workflow"}
-				w.AddCommand(newWorkflowExecuteCommand(taskrun.SystemDependencies(d)))
-				r.AddCommand(w, newWorkspaceCommand(d))
+				r.AddCommand(newWorkspaceCommand(d))
 				original := RootCmd
 				RootCmd = r
 				defer func() { RootCmd = original }()

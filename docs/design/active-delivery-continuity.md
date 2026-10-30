@@ -1,5 +1,10 @@
 # Active delivery continuity
 
+> Historical design before removal of compiled process on 2026-10-30.
+> The execute CLI, QA/integration callback chain and continuity journey were removed.
+> This document records the earlier rationale; it is not a runnable procedure.
+> See [the current command overview](../../README.md).
+
 ## Decision and contract boundary
 
 An active delivery is bound to its immutable request, mandate, native session,
@@ -227,7 +232,6 @@ Human QA and integration still use their original separate callback gates.
 | ac-06 | Missing-current-observation, changed policy, missing/wrong live session and required-artifact guards produce distinct native diagnostic codes and causes. |
 | ac-07 | Concurrent continuation/report/requalification tests and recovery after expired evidence, intervening reports and partial proof publication preserve one transition and unrelated records. |
 | ac-08 | `TestContinuityNativeProviderUpgradePreservesAcceptedOwner` preserves actual failures from pinned historical binaries, then verifies the new native commands with removed/replaced/relocated provider fixtures. |
-| ac-09 | `scripts/continuity-journey`, its native driver/retry regressions and [the installed acceptance journey](../continuity-acceptance.md) exercise short commands without manual state edits. |
 
 Automated fixture verdicts are labeled synthetic. This implementation's actual
 human pass remains an external, exact-candidate gate after technical qualification.

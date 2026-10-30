@@ -2,17 +2,15 @@ package taskrun
 
 import (
 	"fmt"
-
-	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 )
 
 // WorkflowDeliveryRequalify controls preserved command evidence for one exact
 // attempt. It never grants a new acceptance invocation.
-func WorkflowDeliveryRequalify(d Dependencies, root, id, contextPath, reviewPath, attemptID string) (WorkflowRun, error) {
+func WorkflowDeliveryRequalify(d Dependencies, root, id, contextPath, attemptID string) (WorkflowRun, error) {
 	if !key(attemptID) {
 		return WorkflowRun{}, workflowError(2, "--reuse requires one exact verification attempt ID")
 	}
-	return workflowDeliveryVerify(d, root, id, contextPath, reviewPath, attemptID)
+	return workflowDeliveryVerify(d, root, id, contextPath, attemptID)
 }
 
 func deliveryReusableVerification(d Dependencies, s workflowState, receipt deliveryVerificationReceipt) error {
@@ -22,17 +20,14 @@ func deliveryReusableVerification(d Dependencies, s workflowState, receipt deliv
 	requireNew := func(reason string) error {
 		return deliveryContinuityError("receipt_mismatch", reason+"; preserve this receipt and use ordinary verify to execute acceptance for the changed inputs")
 	}
-	if receipt.Exit == nil || *receipt.Exit != 0 || receipt.Error != "" {
-		return requireNew("the preserved attempt has no successful observed command completion")
+	if receipt.Exit == nil || receipt.Error != "" {
+		return requireNew("the preserved attempt has no observed command completion")
 	}
 	if receipt.Acceptance.Locator != s.Request.Delivery.AcceptancePath || receipt.CWD != s.Observed.Target.WorktreeLocator || receipt.Acceptance.SHA256 != receipt.AcceptanceSnapshot.SHA256 {
 		return requireNew("the preserved acceptance entrypoint differs from the frozen delivery")
 	}
 	if err := deliveryContinuationAuthority(s); err != nil {
 		return err
-	}
-	if err := workflowhandoff.ValidateDeliveryOwnerContinuity(d.Workflow, s.Result.Handoff.Locator); err != nil {
-		return fmt.Errorf("requalify required Task publications: %w", err)
 	}
 	if err := deliveryVerificationInputs(receipt); err != nil {
 		return requireNew(err.Error())
@@ -53,9 +48,10 @@ func deliveryVerificationInputs(receipt deliveryVerificationReceipt) error {
 	if _, err := inputBound(receipt.Acceptance, inputAcceptance, 4<<20); err != nil {
 		return fmt.Errorf("receipt input %s no longer matches: %w", receipt.Acceptance.Locator, err)
 	}
-	if _, err := inputBound(receipt.Review, inputCandidateReview, 4<<20); err != nil {
-		return fmt.Errorf("receipt input %s no longer matches: %w", receipt.Review.Locator, err)
-	}
+	return deliveryPreservedVerificationInputs(receipt)
+}
+
+func deliveryPreservedVerificationInputs(receipt deliveryVerificationReceipt) error {
 	for _, b := range []FileBinding{receipt.AcceptanceSnapshot, receipt.Stdout, receipt.Stderr} {
 		if _, err := workflowBound(b, 4<<20); err != nil {
 			return fmt.Errorf("receipt input %s no longer matches: %w", b.Locator, err)

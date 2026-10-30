@@ -3,10 +3,8 @@
 The public contract of `ply workflow input`: an ordinary Claude or Codex agent
 publishes one necessary human question; a configured consumer (the app)
 discovers it, records one immutable answer and reads the agent's reported
-receipt and use. Mode `cooperative_agent_v1`, `schema_version: 1`. It is
-additive and separate from the schema 2 `week_codex_same_owner_turn_v1`
-answer contract (`ply workflow execute question|answer`), whose behavior and
-journals are unchanged.
+receipt and use. Mode `cooperative_agent_v1`, `schema_version: 1`.
+The former week/worker product-answer orchestration has been removed.
 
 - [Schema](workflow-human-input-v1.schema.json) (JSON Schema 2020-12) has eight
   closed roots under `$defs`: `question_draft`, `question`, `list`, `preview`,
@@ -59,6 +57,9 @@ Reads (`list`, `show`, `answer preview`, `answer status`, `wait`) create no
 file, directory or lock. Writes hold one store lock only while deciding, never
 while waiting.
 
+An agent may report use of the recorded answer without first writing a receipt.
+Receipt and continuation remain separate observations; no receipt is fabricated.
+
 ## Identity and digests
 
 - `question_id` is `hiq_` plus 32 hex characters. It is derived from
@@ -107,7 +108,8 @@ have an empty `options` array.
 
 ## States and next actor
 
-`waiting_for_answer -> answered -> agent_received -> agent_reported_continued`.
+`waiting_for_answer -> answered -> agent_reported_continued`.
+An optional receipt records `agent_received` between answer and reported use.
 `withdrawn` is terminal for an unanswered question. `next_action` concerns this
 question only:
 
@@ -188,5 +190,5 @@ All codes start with `human_input_`:
 `invalid_arguments`, `invalid_draft`, `invalid_request`, `invalid_answer`,
 `scope_invalid`, `scope_unavailable`, `publication_conflict`, `not_found`,
 `request_mismatch`, `request_conflict`, `already_answered`, `withdrawn`,
-`not_answered`, `answer_mismatch`, `not_acknowledged`, `report_conflict`,
+`not_answered`, `answer_mismatch`, `report_conflict`,
 `state_invalid` and `outcome_unknown`.

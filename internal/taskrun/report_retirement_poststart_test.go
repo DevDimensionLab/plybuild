@@ -94,7 +94,7 @@ func al14Stop(t *testing.T, binary string, f workflowFixture, o WorkflowRun, eff
 	t.Helper()
 	proof := writeAny(t, f.R.WorkspaceRoot, "al14-denial.json", map[string]any{"modeled_provider": true, "action": "report transport", "effect_status": effect})
 	f.D.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
-	return al14CLIOK(t, binary, f, "execute", "observe-stop", o.RunID, "--event-id", "al14-stop", "--provider", "codex", "--native-session", o.Transport.AgentSessionID, "--stage", "report", "--observer", "modeled coordinator", "--reason", "Provider stopped after actual local work", "--action", "report transport", "--effect-status", effect, "--evidence", proof)
+	return al14CLIOK(t, binary, f, "run", "observe-stop", o.RunID, "--event-id", "al14-stop", "--provider", "codex", "--native-session", o.Transport.AgentSessionID, "--stage", "report", "--observer", "modeled coordinator", "--reason", "Provider stopped after actual local work", "--action", "report transport", "--effect-status", effect, "--evidence", proof)
 }
 func al14Retire(t *testing.T, binary string, f workflowFixture, o WorkflowRun) WorkflowRun {
 	t.Helper()
@@ -104,7 +104,6 @@ func al14Retire(t *testing.T, binary string, f workflowFixture, o WorkflowRun) W
 
 func TestAL14CLIPostStartRetainsWorkAndHistory(t *testing.T) {
 	binary := automaticCLIBinary(t)
-	old := continuitySourceBinary(t, "2a2fa2c0070d4084ffc000caaaa318dfe6a9ab4d", "PLY_AL14_OLD_BINARY")
 	for _, legacy := range []bool{false, true} {
 		t.Run(fmt.Sprint("legacy=", legacy), func(t *testing.T) {
 			f, o := al14Started(t, binary, legacy)
@@ -131,19 +130,6 @@ func TestAL14CLIPostStartRetainsWorkAndHistory(t *testing.T) {
 			preserved := map[string]string{}
 			for _, p := range []string{s.Acceptance.Locator, s.StartDraft.Locator, s.ReportProviderStop.Locator, o.Paths.Context, s.Result.Handoff.Locator, s.Records[0].Report.Locator, s.Records[0].Terminal.Locator} {
 				preserved[p] = hashFileTest(t, p)
-			}
-			if !legacy {
-				stateHash := hashFileTest(t, filepath.Join(o.Paths.RunRoot, "state.json"))
-				c := exec.Command(old, "workflow", "run", "retire", o.RunID, "--observer", "modeled coordinator", "--reason", "Retain stopped report source")
-				c.Dir = f.R.WorkspaceRoot
-				out, err := al14Combined(t, c)
-				if err == nil || !strings.Contains(string(out), "native start/terminal exists") {
-					t.Fatalf("historical refusal missing: %v %s", err, out)
-				}
-				if hashFileTest(t, filepath.Join(o.Paths.RunRoot, "state.json")) != stateHash {
-					t.Fatal("old refusal changed history")
-				}
-				t.Logf("historical post-start refusal (modeled provider, actual CLI): %s", out)
 			}
 			// Freeze launcher bytes as history: upgrading the consumed provider must not
 			// force a new owner callback or launch for coordinator retirement.
@@ -185,144 +171,6 @@ func TestAL14CLIPostStartRetainsWorkAndHistory(t *testing.T) {
 			al14Retire(t, binary, f, o) // identical lost reply reads the immutable retirement
 			if hashFileTest(t, r.ReportRetirement.Locator) != digest {
 				t.Fatal("retirement replayed")
-			}
-		})
-	}
-}
-
-func TestAL14PostStartGuardsAndRecovery(t *testing.T) {
-	binary := automaticCLIBinary(t)
-	for _, which := range []string{"live", "inventory_unknown", "writer", "wrong_ref", "wrong_session", "unknown", "partial", "source_after_resolution", "lost_reply", "accepted"} {
-		t.Run(which, func(t *testing.T) {
-			f, o := al14Started(t, binary, false)
-			source := mustReportWorktree(t, f, o)
-			effect := DeliveryEffectNotStarted
-			if which == "unknown" || which == "source_after_resolution" {
-				effect = DeliveryEffectUnknown
-			}
-			if which == "partial" {
-				effect = DeliveryEffectPartial
-			}
-			if which == "accepted" {
-				o = workflowTestSettle(t, f, workflowTestReport(t, f, o))
-				decision := workflowTestReview(t, f, o, "accepted")
-				var err error
-				o, err = WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, decision)
-				if err != nil {
-					t.Fatal(err)
-				}
-			} else {
-				o = al14Stop(t, binary, f, o, effect)
-			}
-			workflowTestModel(t, f, map[string]any{"closed_transport": true})
-			f.D.CWD = func() (string, error) { return f.R.WorkspaceRoot, nil }
-			f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) {
-				return []LocalProcess{{PID: os.Getpid(), CWD: f.R.WorkspaceRoot}}, nil
-			}
-			switch which {
-			case "wrong_session":
-				proof := writeAny(t, f.R.WorkspaceRoot, "wrong-session-proof.json", map[string]any{"modeled": true})
-				c := exec.Command(binary, "workflow", "execute", "observe-stop", o.RunID, "--event-id", "wrong-session", "--provider", "codex", "--native-session", "wrong-owner", "--stage", "report", "--observer", "modeled coordinator", "--reason", "Wrong identity guard", "--action", "report transport", "--effect-status", DeliveryEffectUnknown, "--evidence", proof)
-				c.Dir = f.R.WorkspaceRoot
-				out, err := al14Combined(t, c)
-				if err == nil || !strings.Contains(string(out), "provider/session differs") {
-					t.Fatalf("wrong identity accepted: %v %s", err, out)
-				}
-				return
-			case "live":
-				workflowTestModel(t, f, map[string]any{"closed_transport": false})
-			case "inventory_unknown":
-				workflowTestModel(t, f, map[string]any{"retire_inventory_denied": true})
-			case "writer":
-				f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) {
-					return []LocalProcess{{PID: os.Getpid(), CWD: f.R.WorkspaceRoot}, {PID: 999999, CWD: source}}, nil
-				}
-			case "wrong_ref":
-				if out, err := exec.Command("git", "-C", source, "checkout", "-b", "wrong-source").CombinedOutput(); err != nil {
-					t.Fatalf("%v %s", err, out)
-				}
-			case "source_after_resolution":
-				s, _ := workflowRead(f.R.WorkspaceRoot, o.RunID)
-				sha, _ := workflowTarget(f.D, s)
-				proof := writeAny(t, f.R.WorkspaceRoot, "effect-result.json", map[string]any{"modeled_action_result": "not started"})
-				_, err := WorkflowResolveReportStop(f.D, f.R.WorkspaceRoot, o.RunID, ReportStopResolutionInput{StopSHA256: s.ReportProviderStop.SHA256, SourceSHA256: sha, EffectStatus: DeliveryEffectNotStarted, Basis: "action_result", Observer: "modeled coordinator", Reason: "Observed callback rejection", EvidencePath: proof})
-				if err != nil {
-					t.Fatal(err)
-				}
-				os.WriteFile(filepath.Join(source, "later"), []byte("unreconciled"), 0600)
-			case "lost_reply":
-				f.D.Fault = func(at string) error {
-					if at == "report_after_retirement" {
-						return fmt.Errorf("modeled lost reply")
-					}
-					return nil
-				}
-			}
-			in := DeliveryRetireInput{Observer: "modeled coordinator", Reason: "Retain stopped report source"}
-			var err error
-			var cliOutput []byte
-			if which == "writer" || which == "lost_reply" {
-				_, err = WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, in)
-			} else {
-				c := exec.Command(binary, "workflow", "run", "retire", o.RunID, "--observer", in.Observer, "--reason", in.Reason)
-				c.Dir = f.R.WorkspaceRoot
-				out, e := al14Combined(t, c)
-				cliOutput = out
-				err = e
-				if e != nil {
-					t.Logf("actual CLI guard: %s", out)
-				}
-			}
-			if which == "unknown" || which == "partial" || which == "source_after_resolution" {
-				if err != nil {
-					t.Fatal(err)
-				}
-				s, _ := workflowRead(f.R.WorkspaceRoot, o.RunID)
-				r, err := workflowReportRetirement(s)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if bytes.Count(cliOutput, []byte("no replay or qualification")) != 1 || !bytes.Contains(cliOutput, []byte("original_effect="+effect)) || !bytes.Contains(cliOutput, []byte("retained_record=")) {
-					t.Fatalf("missing sourced warning: %s", cliOutput)
-				}
-				c := exec.Command(binary, "workflow", "run", "retire", o.RunID, "--observer", in.Observer, "--reason", in.Reason, "--format", "json")
-				c.Dir = f.R.WorkspaceRoot
-				stdout, stderr, err := al14Command(t, c)
-				if err != nil {
-					t.Fatalf("retry: %v %s", err, stderr)
-				}
-				if bytes.Contains(stderr, []byte("no replay or qualification")) {
-					t.Fatal("retry repeated warning")
-				}
-				var readback WorkflowRun
-				if err := json.Unmarshal(stdout, &readback); err != nil {
-					t.Fatalf("JSON stdout contaminated: %v", err)
-				}
-				if len(r.ReportEffects) != 1 || r.ReportEffects[0].OriginalEffect != effect {
-					t.Fatal("uncertainty erased")
-				}
-				if s.Result.FinalReturn.TerminalSHA256 != nil || s.Result.TaskResultState != "not_published" {
-					t.Fatal("uncertainty qualified")
-				}
-				return
-			}
-			if err == nil {
-				t.Fatal("guard did not block retirement")
-			}
-			if which == "lost_reply" {
-				f.D.Fault = nil
-				if _, err = WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, in); err != nil {
-					t.Fatal(err)
-				}
-				return
-			}
-			s, _ := workflowRead(f.R.WorkspaceRoot, o.RunID)
-			if s.ReportRetirement != nil {
-				t.Fatal("guard recorded retirement")
-			}
-			p, err := workspace.ShowTaskPreparation(f.D.Workspace, s.Request.PreparationID)
-			if err != nil || p.Disposition != "current" {
-				t.Fatalf("guard released queue: %s %v", p.Disposition, err)
 			}
 		})
 	}

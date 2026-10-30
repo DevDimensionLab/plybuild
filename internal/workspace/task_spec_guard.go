@@ -441,11 +441,6 @@ func withTaskSpecSnapshot(d Dependencies, root string, registrations bool, opera
 	if e != nil {
 		return e
 	}
-	if guarded, ok := d.WorkItems.(guardedTaskStartStore); ok {
-		if e := guarded.guard.Check(root, registry); e != nil {
-			return e
-		}
-	}
 	return operation(&TaskSpecSession{d, root, registry, ProjectSnapshot{Projects: projects, Repos: repos}})
 }
 func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *TaskSpecBasis) (TaskSpecEvaluation, error) {
@@ -486,46 +481,25 @@ func (s *TaskSpecSession) ValidateTarget(locator, ref, common string, basis *Tas
 		}
 		return TaskSpecEvaluation{}, nil
 	}
-	if taskRequiresSpec(s.Registry, owner.ID) && basis == nil {
-		return TaskSpecEvaluation{}, contentError("task_spec_required", "target requires an exact selected Task Spec basis", nil)
+	if owner.Worktree.Locator != physical || owner.Worktree.Ref != ref || owner.GitCommonDir != common {
+		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "target differs from the registered Task binding", nil)
 	}
 	if basis == nil {
 		return TaskSpecEvaluation{}, nil
 	}
-	if owner.ID != basis.TaskID || owner.Worktree.Locator != physical || owner.Worktree.Ref != ref || owner.GitCommonDir != common {
-		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "target differs from the registered delivery binding", nil)
+	if owner.ID != basis.TaskID {
+		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "document belongs to another Task", nil)
 	}
-	d := WithTaskContentScope(s.Dependencies, owner.ID)
-	if e := validateTaskContentClosure(d.TaskContent, s.Root, s.Registry, false); e != nil {
-		return TaskSpecEvaluation{}, e
+	digest, err := taskDeliveryDigest(*owner)
+	if err != nil {
+		return TaskSpecEvaluation{}, err
 	}
-	if e := validateQueueClosure(d, s.Root, s.Registry); e != nil {
-		return TaskSpecEvaluation{}, e
+	if basis.TaskWorktreeID != owner.Worktree.ID || basis.DeliveryBindingSHA256 != digest {
+		return TaskSpecEvaluation{}, contentError("task_spec_binding_conflict", "document target binding differs", nil)
 	}
-	out, e := currentTaskSpec(d, s.Root, s.Registry, s.Projects, *owner, true)
-	if e != nil {
-		return out, e
-	}
-	if out.SelectionFreshness == "unknown" || out.TargetFreshness == "unknown" && out.SelectionFreshness == "current" {
-		return out, contentError("task_content_observation_unknown", "selected Task basis could not be observed", nil)
-	}
-	if out.SelectionFreshness == "withdrawn" {
-		return out, contentError("task_spec_selection_withdrawn", "Task selection has been withdrawn", nil)
-	}
-	if out.SelectionFreshness == "none" {
-		return out, contentError("task_spec_selection_missing", "Task has no selected solution", nil)
-	}
-	if out.ContentIntegrity != "valid" {
-		return out, contentError(contentIntegrityReason(out.ContentIntegrity), "selected Task content could not be verified", nil)
-	}
-	if out.TargetFreshness == "stale" {
-		return out, contentError("task_spec_basis_stale", "Task target differs from the selected implementation basis", nil)
-	}
-	if !contentTypedEqual(out.Basis, basis) || out.SelectionFreshness != "current" || out.ContentIntegrity != "valid" || out.TargetFreshness != "fresh" {
-		return out, contentError("task_spec_selection_stale", "selected Task basis is not current, intact and ready", nil)
-	}
-	return out, nil
+	return historicalTaskSpec(WithTaskContentScope(s.Dependencies, owner.ID), s.Root, s.Registry, *basis)
 }
+
 func ReadHistoricalTaskSpec(d Dependencies, root string, b TaskSpecBasis) (TaskSpecEvaluation, error) {
 	d = WithTaskContentScope(d, b.TaskID)
 	r, e := d.WorkItems.Snapshot(root)
@@ -598,7 +572,7 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 	if original, _ := findTask(r, t.ID); original != nil {
 		t = *original
 	}
-	if !taskRequiresSpec(r, t.ID) {
+	if taskResultSpecLink(r, result) == nil {
 		return nil
 	}
 	out := &TaskSpecRelevance{Relevance: "stale", Reasons: []string{}}
@@ -669,37 +643,14 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 	}
 	return out
 }
-func validateStoredTaskSpecGuard(r WorkItemRegistry, p WorkspaceTaskIntegrationPlan) error {
-	if p.SchemaVersion == 1 {
-		if p.Kind != "WorkspaceTaskIntegrationPlan@1" || p.TaskSpecGuard != nil || p.DeliveryAuthorization != nil || p.Acceptance != nil {
-			return fmt.Errorf("invalid legacy integration plan")
-		}
-		return nil
-	}
-	validVersion := p.SchemaVersion == 2 && p.Kind == "WorkspaceTaskIntegrationPlan@2" && p.DeliveryAuthorization == nil && p.Acceptance == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil && p.Acceptance == nil || p.SchemaVersion == 4 && p.Kind == "WorkspaceTaskIntegrationPlan@4" && automaticIntegrationAuthorization(p.DeliveryAuthorization) && p.Acceptance != nil
-	if !validVersion || p.TaskSpecGuard == nil {
+func validateIntegrationPlanVersion(p WorkspaceTaskIntegrationPlan) error {
+	valid := p.SchemaVersion == 1 && p.Kind == "WorkspaceTaskIntegrationPlan@1" && p.DeliveryAuthorization == nil && p.Acceptance == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil && p.Acceptance == nil || p.SchemaVersion == 4 && p.Kind == "WorkspaceTaskIntegrationPlan@4" && automaticIntegrationAuthorization(p.DeliveryAuthorization) && p.Acceptance != nil
+	if !valid {
 		return fmt.Errorf("unsupported integration plan version")
-	}
-	g := p.TaskSpecGuard
-	if g.Basis == nil || g.BasisSHA256 == nil || g.Relevance != "current" || g.Reasons == nil || len(g.Reasons) != 0 {
-		return fmt.Errorf("persisted integration authority requires a current exact Task Spec basis")
-	}
-	if e := validateTaskSpecBasisRegistry(r, *g.Basis); e != nil {
-		return e
-	}
-	bytes, e := contentCanonical(g.Basis)
-	if e != nil || *g.BasisSHA256 != digestTaskBytes(bytes) || !contentTypedEqual(g.Selection, &g.Basis.Selection) || !contentTypedEqual(g.Problem, &g.Basis.Problem) || !contentTypedEqual(g.Assessment, &g.Basis.Assessment) {
-		return fmt.Errorf("persisted Task Spec guard is inconsistent")
-	}
-	link := taskResultSpecLink(r, p.TaskResult.ID)
-	if link == nil || !contentTypedEqual(link.Basis, *g.Basis) {
-		return fmt.Errorf("plan basis differs from Task result link")
 	}
 	return nil
 }
 
-// ValidateTaskRequirementEvidence is the complete/passed boundary: every frozen
-// requirement must be passed.
 func ValidateTaskRequirementEvidence(raw []byte, b TaskSpecBasis, spec canonicaljson.Object, oid, tree string, verifiers []TaskVerifierResultRecord, artifacts []TaskArtifactRecord) error {
 	return validateTaskRequirementEvidence(raw, b, spec, oid, tree, verifiers, artifacts, true)
 }

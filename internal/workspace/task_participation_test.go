@@ -11,25 +11,6 @@ import (
 )
 
 // Runtime-free tests: real isolated registry/Git; no OS/provider inspection.
-func TestParallelRequiresExplicitFormatActivation(t *testing.T) {
-	f := newWorkItemJourneyFixture(t)
-	g := goalFixture(t, f, "task", "goal")
-	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &g}})
-	before := queueStateBytes(t, f)
-	var in TaskGoalExecuteInput
-	if err := json.Unmarshal([]byte(`{"target":{"project_id":"ply","repo_id":"ply","epic_id":"epic"},"spec_id":"solution","parallel":true}`), &in); err != nil {
-		t.Fatal(err)
-	}
-	in.SpecID = g.SpecID
-	_, err := PreviewTaskGoalExecution(f.dependencies, in)
-	if err == nil || !strings.Contains(err.Error(), "parallel_activation_required") {
-		t.Fatalf("parallel must require explicit format activation: %v", err)
-	}
-	if before != queueStateBytes(t, f) {
-		t.Fatal("preview changed registry or Git")
-	}
-}
-
 func TestParallelFormatEightDirectPredecessorPreservesSerialHistory(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	g := goalFixture(t, f, "task", "goal")
@@ -150,91 +131,6 @@ func parallelFixture(t *testing.T) workItemJourneyFixture {
 	return f
 }
 
-func TestParallelNamedGoalPreparationsAndCAS(t *testing.T) {
-	f := parallelFixture(t)
-	if _, err := CreateTask(f.dependencies, TaskCreateInput{TaskID: "task-b", Title: "B", Description: "Independent B", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
-		t.Fatal(err)
-	}
-	a := parallelGoalFixture(t, f, "task", "parallel-a")
-	b := parallelGoalFixture(t, f, "task-b", "parallel-b")
-	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &a}, {TaskID: "task-b", Goal: &b}})
-	ai := TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: a.SpecID, Parallel: true}
-	bi := TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: b.SpecID, Parallel: true}
-	ap, err := PreviewTaskGoalExecution(f.dependencies, ai)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bp, err := PreviewTaskGoalExecution(f.dependencies, bi)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ap.SchemaVersion != 2 {
-		t.Fatalf("parallel plan did not freeze versioned authority: %#v", ap)
-	}
-	ar, err := PrepareTaskGoalExecution(f.dependencies, ai, ap.Confirmation, goalHumanFixture())
-	if err != nil {
-		t.Fatal(err)
-	}
-	before := queueStateBytes(t, f)
-	if _, err = PrepareTaskGoalExecution(f.dependencies, bi, bp.Confirmation, goalHumanFixture()); err == nil {
-		t.Fatal("unused stale B preview admitted")
-	}
-	if before != queueStateBytes(t, f) {
-		t.Fatal("stale preview caused effects")
-	}
-	bp, err = PreviewTaskGoalExecution(f.dependencies, bi)
-	if err != nil {
-		t.Fatal(err)
-	}
-	br, err := PrepareTaskGoalExecution(f.dependencies, bi, bp.Confirmation, goalHumanFixture())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if ar.Preparation.Preparation.ID == br.Preparation.Preparation.ID || ar.Preparation.Plan.WorktreePath == br.Preparation.Plan.WorktreePath || ar.Preparation.Plan.Branch == br.Preparation.Plan.Branch {
-		t.Fatal("owners share source identity")
-	}
-	r := mustQueueRegistry(t, f)
-	q := foldQueue(r, ap.QueueID)
-	if len(q.Active) != 2 || q.Current != nil || len(q.Pending) != 0 {
-		t.Fatalf("membership: %#v", q)
-	}
-	ws, err := ObserveRoot(f.dependencies, filepath.Dir(f.wrapper))
-	if err != nil {
-		t.Fatal(err)
-	}
-	projects, repos, err := f.dependencies.Projects.Snapshot(filepath.Dir(f.wrapper))
-	if err != nil {
-		t.Fatal(err)
-	}
-	registered := ReadRegisteredTaskQueues(f.dependencies, ws, ProjectSnapshot{Projects: projects, Repos: repos}, r)
-	raw, err := json.Marshal(registered)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var public struct {
-		Queues []struct {
-			Active []struct {
-				TaskID TaskID `json:"task_id"`
-			}
-		}
-	}
-	if err = json.Unmarshal(raw, &public); err != nil {
-		t.Fatal(err)
-	}
-	if len(public.Queues) != 1 || len(public.Queues[0].Active) != 2 {
-		t.Fatalf("registered projection hid parallel members: %s", raw)
-	}
-
-	again, err := PrepareTaskGoalExecution(f.dependencies, ai, ap.Confirmation, goalHumanFixture())
-	if err != nil || again.Preparation.Preparation.ID != ar.Preparation.Preparation.ID {
-		t.Fatalf("A retry lost identity: %v", err)
-	}
-	if len(mustQueueRegistry(t, f).TaskPreparations) != 2 {
-		t.Fatal("retry duplicated preparation")
-	}
-}
-
-// PAR-T01/T16: maximum parallel capability must preserve serial --next retries.
 func TestParallelSerialPrepareNextKeepsCurrent(t *testing.T) {
 	for _, version := range []int{0, 1, 2} {
 		name := "format4"

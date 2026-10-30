@@ -31,14 +31,14 @@ print('TB2546BF5 packaged candidate:', version)
 PY
 "$PLY_REGRESSION_GO" version -m "$PLY_CANDIDATE_BINARY"
 "$PLY_MR05_SCHEMA_PYTHON" -I -B test/read_contract_schema_test.py
-"$PLY_REGRESSION_GO" test ./cmd -run '^(TestRegistryFailureProducesExactlyOneJSONDiagnostic|TestMR05.*|TestSL01AnswerCLI.*|TestHI07.*)$' -count=1 -timeout=180s
-"$PLY_REGRESSION_GO" test ./internal/workspace -run '^TestRegistry(DiagnosticsUseDeclaredFormatAndValidation|RoundtripPreservesAutomaticAuthorizationAndHistory|FormatChangeRequiresNativePermit)$' -count=1 -timeout=180s
-"$PLY_REGRESSION_GO" test ./internal/taskexecute -run '^(TestExecuteKeepsEarlierManualLaunchWhenAutoBecomesDefault|TestSharedEpicUniqueSpecPublicCLIPreparesAndPreservesRetry|TestBackupStartRejectsChangedRuntimeBeforeRunPublication|TestBackupStartPreRunReadbackShowsPreservedEffectiveProfile|TestExecuteRejectsChangedPreservedIntent|TestMR05ProjectionCandidateCLI)$' -count=1 -timeout=180s
-"$PLY_REGRESSION_GO" test ./internal/taskrun -run '^(TestAL09.*|TestDeliveryCLIBinaryBuildIgnoresFixtureCWD)$' -count=1 -timeout=180s
-"$PLY_REGRESSION_GO" vet ./cmd ./internal/taskexecute ./internal/taskrun
+"$PLY_REGRESSION_GO" test ./cmd -run '^(TestHI07ArgumentErrorsPrintNoResult|TestHI07ContractBundleIsLockedAndMatchesActualOutput|TestHI07InputCapabilitiesMatchActualCommands|TestHI07ValidRequestExamplesCarryNativeDigests|TestHI07WriteContractExamples|TestRegistryFailureProducesExactlyOneJSONDiagnostic)$' -count=1 -timeout=180s
+"$PLY_REGRESSION_GO" test ./internal/workspace -run '^(TestRegistryDiagnosticsUseDeclaredFormatAndValidation|TestRegistryFormatChangeRequiresNativePermit|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory)$' -count=1 -timeout=180s
+"$PLY_REGRESSION_GO" test ./internal/taskrun -run '^(TestAL09FollowRequestTimeoutContinuation|TestAL09FollowWindowClipsHealthyRequest|TestAL09ReportFollowObservation)$' -count=1 -timeout=180s
+"$PLY_REGRESSION_GO" vet ./cmd ./internal/taskrun
 git diff --check
 test -z "$(git status --porcelain)"
 test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 test "$(shasum -a 256 "$PLY_CANDIDATE_BINARY")" = "$binary_before"
 printf 'TB2546BF5 focused acceptance passed; full package timeout remains separate. Evidence scratch: %s\n' "$scratch"
+printf 'Retained concrete regression tests passed; removed process journeys are excluded.\n'

@@ -1,5 +1,9 @@
 # AW-01 current resume guidance: developer verification
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Den beskrevne current-state-/resume-oppskriften og dens testwrapper er fjernet.
+> Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 This record covers the developer attempt on 2026-10-10 for Goal
 `ply-aw01-current-resume-guidance-v1`, immutable manifest
 `2d802d8a5503fb873f210b0f4e56c4dc1b688406e65ab987e38147da392764eb`.

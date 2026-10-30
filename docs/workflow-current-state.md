@@ -1,5 +1,9 @@
 # Current Run, Worker and Week interpretation
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Den beskrevne current-state-/resume-oppskriften og dens testwrapper er fjernet.
+> Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 `internal/currentstate` owns the interpretation of current worker, product-answer
 and Week facts. Its `RunAction`, `WeekEntry` and `WeekQueue` functions are pure:
 they cannot launch, consume controls or answers, repair stores, take ownership,

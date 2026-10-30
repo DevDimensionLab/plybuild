@@ -107,9 +107,6 @@ func deliveryContinuationConfirmation(s workflowState, source, control Executabl
 }
 
 func deliveryLiveOwner(d Dependencies, s workflowState) error {
-	if headlessRun(s.Request) {
-		return workerLiveOwner(d, s)
-	}
 	a, err := workflowAgentGet(d, s, false)
 	if err != nil {
 		return deliveryContinuityError("continuation_session", "observe the original provider/session without restarting: "+err.Error())

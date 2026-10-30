@@ -1,5 +1,10 @@
 # Safe agent startup across Codex update menus — v1
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 T2F4406D3 · Task `ply-startup-update-spec-20261023` · US01 authoring deliverable.
 This is an English implementation Spec, not implementation authorization.
 

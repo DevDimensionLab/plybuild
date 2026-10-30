@@ -52,9 +52,9 @@ type TaskReviewEntry struct {
 }
 
 type TaskReviewRecord struct {
-	Findings               []TaskReviewEntry `yaml:"findings" json:"findings"`
-	Fixes                  []TaskReviewEntry `yaml:"fixes" json:"fixes"`
-	OpenActionableFindings []TaskReviewEntry `yaml:"open_actionable_findings" json:"open_actionable_findings"`
+	Findings               []TaskReviewEntry `yaml:"findings" json:"findings,omitempty"`
+	Fixes                  []TaskReviewEntry `yaml:"fixes" json:"fixes,omitempty"`
+	OpenActionableFindings []TaskReviewEntry `yaml:"open_actionable_findings" json:"open_actionable_findings,omitempty"`
 }
 
 type TaskAcceptedDebtRecord struct {
@@ -73,6 +73,7 @@ type TaskRecorderRecord struct {
 }
 
 type TaskResultRecord struct {
+	VerificationReceipt   *TaskArtifactRecord        `yaml:"verification_receipt,omitempty" json:"verification_receipt,omitempty"`
 	ID                    TaskResultID               `yaml:"id" json:"id"`
 	PublicationKey        string                     `yaml:"publication_key" json:"publication_key"`
 	DraftSHA256           string                     `yaml:"draft_sha256" json:"draft_sha256"`
@@ -102,7 +103,7 @@ type TaskResultRecord struct {
 	TechnicalGate         string                     `yaml:"technical_gate" json:"technical_gate"`
 	VerifierResults       []TaskVerifierResultRecord `yaml:"verifier_results" json:"verifier_results"`
 	Review                TaskReviewRecord           `yaml:"review" json:"review"`
-	AcceptedDebt          []TaskAcceptedDebtRecord   `yaml:"accepted_debt" json:"accepted_debt"`
+	AcceptedDebt          []TaskAcceptedDebtRecord   `yaml:"accepted_debt" json:"accepted_debt,omitempty"`
 	Artifacts             []TaskArtifactRecord       `yaml:"artifacts" json:"artifacts"`
 	Recorder              TaskRecorderRecord         `yaml:"recorder" json:"recorder"`
 }
@@ -368,14 +369,6 @@ func RecordTaskResult(dependencies Dependencies, input TaskResultRecordInput) (T
 			}
 			if err := validateTaskResultBindings(*task, repo, draft, evidence, dependencies); err != nil {
 				return err
-			}
-			if taskRequiresSpec(registry, task.ID) {
-				if evidence.TaskSpecBasis == nil || !evidence.TaskSpecValid || evidence.AcceptedStartOutcome != "started" || evidence.TaskSpecBasis.TaskID != task.ID {
-					return contentError("task_spec_result_basis_missing", "a controlled started Task Spec basis is required", nil)
-				}
-				if _, err := historicalTaskSpec(dependencies, root, registry, *evidence.TaskSpecBasis); err != nil {
-					return err
-				}
 			}
 			id, err := dependencies.TaskLifecycleIDs.NewTaskResultID()
 			if err != nil {
@@ -1081,16 +1074,10 @@ func MarshalTaskHumanQAReadback(result TaskHumanQAMutationResult) ([]byte, error
 	return canonicaljson.Marshal(canonicaljson.Object{{Name: "kind", Value: "WorkspaceTaskHumanQARecordReadback@1"}, {Name: "schema_version", Value: int64(1)}, {Name: "format", Value: "json"}, {Name: "format_version", Value: int64(1)}, {Name: "canonicalization", Value: "RFC8785"}, {Name: "workspace", Value: result.Workspace}, {Name: "record", Value: taskHumanQACanonical(result.Record)}, {Name: "created", Value: result.Created}, {Name: "next_action", Value: taskQANextAction(result.Record)}})
 }
 func taskResultNextAction(r TaskResultRecord) string {
-	if r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt" {
-		return fmt.Sprintf("Record human QA with `ply workspace task qa record %s --file <absolute-human-qa.json>`.", r.TaskID)
-	}
-	return "Start a separate result control before recording human QA."
+	return "Result recorded; choose any next operation explicitly."
 }
 func taskQANextAction(r TaskHumanQARecord) string {
-	if r.Outcome == "pass" {
-		return fmt.Sprintf("Run `ply workspace task integrate %s --result %s --qa %s --expected-result-oid %s --expected-parent-oid <oid> --check`.", r.TaskID, r.TaskResultID, r.ID, r.ResultOID)
-	}
-	return "Start a separate delivery or QA clarification before integration."
+	return "Observation recorded; choose any next operation explicitly."
 }
 func taskResultCanonical(r TaskResultRecord) canonicaljson.Value {
 	b, _ := canonicaljson.DecodeStrict(mustJSON(r))
@@ -1124,7 +1111,7 @@ func recordCanonicalValue(v any) canonicaljson.Value {
 		for _, z := range x.Artifacts {
 			artifacts = append(artifacts, recordCanonicalValue(z))
 		}
-		return canonicaljson.Object{{Name: "id", Value: string(x.ID)}, {Name: "publication_key", Value: x.PublicationKey}, {Name: "draft_sha256", Value: x.DraftSHA256}, {Name: "store_transition", Value: x.StoreTransition}, {Name: "task_id", Value: string(x.TaskID)}, {Name: "task_worktree_id", Value: string(x.TaskWorktreeID)}, {Name: "project_id", Value: string(x.ProjectID)}, {Name: "repo_id", Value: string(x.RepoID)}, {Name: "git_common_dir", Value: x.GitCommonDir}, {Name: "source_locator", Value: x.SourceLocator}, {Name: "source_ref", Value: x.SourceRef}, {Name: "result_oid", Value: x.ResultOID}, {Name: "result_tree", Value: x.ResultTree}, {Name: "activity_id", Value: x.ActivityID}, {Name: "run_id", Value: x.RunID}, {Name: "handoff_id", Value: x.HandoffID}, {Name: "handoff_locator", Value: x.HandoffLocator}, {Name: "handoff_sha256", Value: x.HandoffSHA256}, {Name: "start_receipt_id", Value: x.StartReceiptID}, {Name: "start_receipt_locator", Value: x.StartReceiptLocator}, {Name: "start_receipt_sha256", Value: x.StartReceiptSHA256}, {Name: "terminal_result_id", Value: x.TerminalResultID}, {Name: "terminal_result_locator", Value: x.TerminalResultLocator}, {Name: "terminal_result_sha256", Value: x.TerminalResultSHA256}, {Name: "inspection_sha256", Value: x.InspectionSHA256}, {Name: "reported_outcome", Value: x.ReportedOutcome}, {Name: "technical_gate", Value: x.TechnicalGate}, {Name: "verifier_results", Value: verifiers}, {Name: "review", Value: recordCanonicalValue(x.Review)}, {Name: "accepted_debt", Value: debts}, {Name: "artifacts", Value: artifacts}, {Name: "recorder", Value: canonicaljson.Object{{Name: "actor_claim", Value: x.Recorder.ActorClaim}, {Name: "control_surface", Value: x.Recorder.ControlSurface}, {Name: "recorded_at_utc", Value: x.Recorder.RecordedAtUTC}}}}
+		return canonicaljson.Object{{Name: "verification_receipt", Value: contentRefValue(x.VerificationReceipt)}, {Name: "id", Value: string(x.ID)}, {Name: "publication_key", Value: x.PublicationKey}, {Name: "draft_sha256", Value: x.DraftSHA256}, {Name: "store_transition", Value: x.StoreTransition}, {Name: "task_id", Value: string(x.TaskID)}, {Name: "task_worktree_id", Value: string(x.TaskWorktreeID)}, {Name: "project_id", Value: string(x.ProjectID)}, {Name: "repo_id", Value: string(x.RepoID)}, {Name: "git_common_dir", Value: x.GitCommonDir}, {Name: "source_locator", Value: x.SourceLocator}, {Name: "source_ref", Value: x.SourceRef}, {Name: "result_oid", Value: x.ResultOID}, {Name: "result_tree", Value: x.ResultTree}, {Name: "activity_id", Value: x.ActivityID}, {Name: "run_id", Value: x.RunID}, {Name: "handoff_id", Value: x.HandoffID}, {Name: "handoff_locator", Value: x.HandoffLocator}, {Name: "handoff_sha256", Value: x.HandoffSHA256}, {Name: "start_receipt_id", Value: x.StartReceiptID}, {Name: "start_receipt_locator", Value: x.StartReceiptLocator}, {Name: "start_receipt_sha256", Value: x.StartReceiptSHA256}, {Name: "terminal_result_id", Value: x.TerminalResultID}, {Name: "terminal_result_locator", Value: x.TerminalResultLocator}, {Name: "terminal_result_sha256", Value: x.TerminalResultSHA256}, {Name: "inspection_sha256", Value: x.InspectionSHA256}, {Name: "reported_outcome", Value: x.ReportedOutcome}, {Name: "technical_gate", Value: x.TechnicalGate}, {Name: "verifier_results", Value: verifiers}, {Name: "review", Value: recordCanonicalValue(x.Review)}, {Name: "accepted_debt", Value: debts}, {Name: "artifacts", Value: artifacts}, {Name: "recorder", Value: canonicaljson.Object{{Name: "actor_claim", Value: x.Recorder.ActorClaim}, {Name: "control_surface", Value: x.Recorder.ControlSurface}, {Name: "recorded_at_utc", Value: x.Recorder.RecordedAtUTC}}}}
 	case TaskHumanQARecord:
 		e := []canonicaljson.Value{}
 		for _, z := range x.Evidence {

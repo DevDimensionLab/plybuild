@@ -1,5 +1,10 @@
 # TE4B29D43 — Specify concurrent native Tasks on one Epic with serial exact delivery
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 Implementation specification, 23 October 2026. Native author Task:
 `ply-parallel-epic-spec-20261023`; Spec `ply-parallel-epic-spec-v1`.
 TE4B29D43 is a presentation label only. Source basis:
@@ -259,7 +264,7 @@ Extend rather than discard existing tests inspected in source:
 (`TestTaskQueueRemovedSourceConcurrentReleaseAndStart`);
 [task_integration_repository_lock_test.go](../../internal/workspace/task_integration_repository_lock_test.go)
 (`TestTaskIntegrationSameRepositoryLockFollowsTargetRef`);
-[delivery_review_round_test.go](../../internal/taskrun/delivery_review_round_test.go)
+delivery_review_round_test.go (`internal/taskrun/delivery_review_round_test.go`, historisk kilde)
 (`TestFS01ChangedCandidateCannotInheritPass`). Retain serial expectations and add
 explicit parallel variants; merely changing old assertions would lose coverage.
 

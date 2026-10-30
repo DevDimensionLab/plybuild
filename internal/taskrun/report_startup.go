@@ -152,7 +152,7 @@ func workflowReportRetirement(s workflowState) (*DeliveryRetirement, error) {
 }
 
 func workflowRetireReport(d Dependencies, s *workflowState, in DeliveryRetireInput) error {
-	if s.Request.SchemaVersion != 1 || s.Request.ReturnMode != "reviewed_report_only" || headlessRun(s.Request) {
+	if s.Request.SchemaVersion != 1 || s.Request.ReturnMode != "reviewed_report_only" {
 		return workflowError(4, "retirement requires an interactive report or delivery owner")
 	}
 	if prior, err := workflowReportRetirement(*s); err != nil {

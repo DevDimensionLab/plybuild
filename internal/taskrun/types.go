@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
-	"os"
 	"os/exec"
 	"time"
 )
@@ -64,14 +63,7 @@ type HumanAuthority struct {
 	StartSurface string `json:"start_surface"`
 	Authorized   bool   `json:"authorized"`
 }
-type FactoryTest struct {
-	AuthorizationPath   string `json:"authorization_path"`
-	AuthorizationSHA256 string `json:"authorization_sha256"`
-	Iteration           int    `json:"iteration"`
-	TaskSlot            int    `json:"task_slot"`
-	ReasoningEffort     string `json:"reasoning_effort"`
-	TimeoutSeconds      int    `json:"timeout_seconds"`
-}
+
 type Request struct {
 	Envelope
 	RequestKey        string          `json:"request_key"`
@@ -83,7 +75,6 @@ type Request struct {
 	Agreement         Agreement       `json:"agreement"`
 	ReturnPolicy      ReturnPolicy    `json:"return_policy"`
 	HumanAuthority    HumanAuthority  `json:"human_authority"`
-	FactoryTest       *FactoryTest    `json:"factory_test,omitempty"`
 }
 type Reason struct {
 	Code   string `json:"code"`
@@ -226,22 +217,21 @@ type TaskStatus struct {
 }
 type Result struct {
 	Envelope
-	RunID              string                             `json:"run_id"`
-	RequestSHA256      string                             `json:"request_sha256"`
-	LastEventSHA256    *string                            `json:"last_event_sha256"`
-	Handoff            *Handoff                           `json:"handoff"`
-	Launch             Launch                             `json:"launch"`
-	Acceptance         AcceptanceState                    `json:"acceptance"`
-	Process            Process                            `json:"process"`
-	Delivery           Delivery                           `json:"delivery"`
-	Collection         Collection                         `json:"collection"`
-	Budget             Budget                             `json:"budget"`
-	ObservedTarget     *workspace.PlanWorktreeObservation `json:"observed_target"`
-	Reasons            []Reason                           `json:"reasons"`
-	RuntimeFacts       RuntimeFacts                       `json:"runtime_facts"`
-	TaskExecution      TaskExecution                      `json:"task_execution"`
-	NextAction         string                             `json:"next_action"`
-	ProviderCompletion *FileBinding                       `json:"provider_completion,omitempty"`
+	RunID           string                             `json:"run_id"`
+	RequestSHA256   string                             `json:"request_sha256"`
+	LastEventSHA256 *string                            `json:"last_event_sha256"`
+	Handoff         *Handoff                           `json:"handoff"`
+	Launch          Launch                             `json:"launch"`
+	Acceptance      AcceptanceState                    `json:"acceptance"`
+	Process         Process                            `json:"process"`
+	Delivery        Delivery                           `json:"delivery"`
+	Collection      Collection                         `json:"collection"`
+	Budget          Budget                             `json:"budget"`
+	ObservedTarget  *workspace.PlanWorktreeObservation `json:"observed_target"`
+	Reasons         []Reason                           `json:"reasons"`
+	RuntimeFacts    RuntimeFacts                       `json:"runtime_facts"`
+	TaskExecution   TaskExecution                      `json:"task_execution"`
+	NextAction      string                             `json:"next_action"`
 }
 type RuntimeClaim struct {
 	RuntimeID             *string `json:"runtime_id"`
@@ -287,7 +277,6 @@ type Report struct {
 }
 type CollectPreview struct {
 	Envelope
-	ProviderCompletion       *FileBinding                       `json:"provider_completion,omitempty"`
 	RuntimeFacts             *RuntimeFacts                      `json:"runtime_facts,omitempty"`
 	TaskExecution            TaskExecution                      `json:"task_execution"`
 	BasisEventSHA256         *string                            `json:"basis_event_sha256"`
@@ -325,19 +314,9 @@ func env(kind string) Envelope {
 func ptr[T any](v T) *T { return &v }
 
 type LaunchSpec struct {
-	// StartGuard holds the parent/store gate only around the immediate OS Start.
-	StartGuard       func(func() error) error
 	Executable       Executable
 	Argv             []string
 	CWD, ContextPath string
-	Timeout          time.Duration
-	// Deadline is an immutable absolute cutoff; a resumed reservation cannot
-	// renew it by retaining a previously computed relative timeout.
-	Deadline    time.Time
-	StreamsRoot string
-	Completion  *ProviderCompletion
-	Environment []string
-	Stdin       *os.File
 }
 
 // ProcessRunner must call started only after a successful spawn and release all
@@ -367,23 +346,20 @@ type StartupProcess struct {
 type Dependencies struct {
 	// Borrowed only during synchronous release under Project+WorkItem locks.
 	deliverySnapshot *workspace.TaskSpecSession
-	// Trusted in-process qualification seam for owned adapter stand-ins; never serialized.
-	ProductAnswerQualification func(Runtime, string) (string, error)
-	Executable                 func() (string, error)
-	Files                      FileSystem
-	Workspace                  workspace.Dependencies
-	Workflow                   workflowhandoff.Dependencies
-	Runner                     ProcessRunner
-	ExecRunner                 ProcessRunner
-	Now                        func() time.Time
-	CallbackContext            *string
-	TaskStatusPath             string
-	ContextPath                func() string
-	CWD                        func() (string, error)
-	Fault                      func(string) error
+	Executable       func() (string, error)
+	Files            FileSystem
+	Workspace        workspace.Dependencies
+	Workflow         workflowhandoff.Dependencies
+	Runner           ProcessRunner
+	Now              func() time.Time
+	CallbackContext  *string
+	TaskStatusPath   string
+	ContextPath      func() string
+	CWD              func() (string, error)
+	Fault            func(string) error
 	// RunVerificationCommand is a trusted in-process OS execution seam for
-	// disposable fixtures. Nil executes the original command, including the
-	// headless sandbox. It is never populated from wire, CLI or environment.
+	// disposable fixtures. Nil executes the original command.
+	// It is never populated from wire, CLI or environment.
 	RunVerificationCommand func(*exec.Cmd) error
 	// StartupProcessTree observes the shell and all of its descendants. A nil
 	// observer uses a bounded local process-table read, without command lines.
@@ -397,16 +373,9 @@ type Dependencies struct {
 	// never the provider's task lifetime.
 	// Zero selects the documented adapter timeouts.
 	HerdrTimeout time.Duration
-	// WorkerOwner is an in-process capability held with the native worker lock.
-	// It is never accepted from an agent callback or a serialized CLI argument.
-	WorkerOwner *workerOwner
 	// ApprovedGoalStart exists only in the in-process bound-start composition.
 	// It checks the approved environment before each first transport effect.
 	ApprovedGoalStart func() error
-	// Read-only native ownership and process wake boundaries, injectable by
-	// isolated tests. No serialized request can provide either adapter.
-	ControlQueue func(string, string) (string, error)
-	ControlWake  func(string, string) error
 }
 
 func (d Dependencies) fault(point string) error {

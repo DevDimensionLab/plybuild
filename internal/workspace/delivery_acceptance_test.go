@@ -1,8 +1,6 @@
 package workspace
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -204,46 +202,6 @@ func TestAutomaticNativeIntegrationRecoversAfterGitWithoutHumanQA(t *testing.T) 
 	}
 }
 
-func TestAutomaticNativeIntegrationRechecksLatestHumanVetoAndAuthority(t *testing.T) {
-	for _, defect := range []string{"later fail", "missing native permission", "human-owned integration"} {
-		t.Run(defect, func(t *testing.T) {
-			f, in := newAutomaticIntegrationFixture(t, true)
-			git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
-			f.dependencies.IntegrationGit = git
-			check, err := CheckTaskIntegration(f.dependencies, in)
-			if err != nil {
-				t.Fatal(err)
-			}
-			in.Apply, in.Confirmation = true, integrationDigest(t, check.Readback)
-			switch defect {
-			case "later fail":
-				err = f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
-					r, e := session.Snapshot()
-					if e != nil {
-						return e
-					}
-					q := r.HumanQARecords[0]
-					q.ID, q.PublicationKey, q.Outcome = "hqa_22222222222222222222222222222222", "later/fail", "fail"
-					q.Actor.CompletedAtUTC = "2026-09-28T12:03:00Z"
-					r.HumanQARecords = append(r.HumanQARecords, q)
-					sortWorkRegistry(&r)
-					return session.Publish(r)
-				})
-			case "missing native permission":
-				f.evidence.evidence.DeliveryAuthorization = nil
-			case "human-owned integration":
-				in.DeliveryAuthorization.HumanIntegrationRequired = true
-			}
-			if err != nil {
-				t.Fatal(err)
-			}
-			if _, err = ApplyTaskIntegration(f.dependencies, in); err == nil || git.count() != 0 {
-				t.Fatalf("vetoed automatic integration changed Git: %v merges=%d", err, git.count())
-			}
-		})
-	}
-}
-
 func TestAutomaticNativeRetryPreservesFailuresAndRequiresFreshConfirmation(t *testing.T) {
 	f, in := newAutomaticIntegrationFixture(t, false)
 	base := f.dependencies.IntegrationGit
@@ -333,12 +291,12 @@ func TestAutomaticNativeRetryNeverRepeatsUncertainEffect(t *testing.T) {
 	}
 }
 
-func TestAutomaticNativeGatePreservesHumanVetoAcrossUnchangedResultIDs(t *testing.T) {
+func TestExplicitIntegrationDoesNotTreatHistoricalQAAsPermission(t *testing.T) {
 	f, in := newAutomaticIntegrationFixture(t, true)
 	preserveSameByteHumanJudgment(t, f, "fail")
 	checked, err := CheckTaskIntegration(f.dependencies, in)
-	if err == nil && checked.Readback.Classification == "ready" {
-		t.Fatal("new TaskResult ID erased an actual human fail for unchanged candidate bytes")
+	if err != nil || checked.Readback.Classification != "ready" {
+		t.Fatalf("historical QA became permission for explicit integration: %v", err)
 	}
 }
 
@@ -376,96 +334,6 @@ func preserveSameByteHumanJudgment(t *testing.T, f integrationJourneyFixture, ou
 	}
 }
 
-func TestAutomaticNativeCloseoutRetainsSourceAndRecoversLifecycleReceipt(t *testing.T) {
-	f, in := newAutomaticIntegrationFixture(t, false)
-	bytes := []byte(`{"fixture":"explicit automatic owner release and retained native evidence"}`)
-	sha := digestTaskBytes(bytes)
-	for _, name := range []string{"handoff", "start", "terminal", "owner-release"} {
-		if err := os.WriteFile(filepath.Join(f.root, name), bytes, 0600); err != nil {
-			t.Fatal(err)
-		}
-	}
-	if err := f.dependencies.WorkItems.WithLock(f.root, func(s WorkItemStoreSession) error {
-		r, err := s.Snapshot()
-		if err != nil {
-			return err
-		}
-		tr := findTaskResult(r, f.resultID)
-		tr.HandoffSHA256, tr.StartReceiptSHA256, tr.TerminalResultSHA256 = sha, sha, sha
-		f.evidence.evidence.HandoffSHA256, f.evidence.evidence.StartReceiptSHA256, f.evidence.evidence.TerminalResultSHA256 = sha, sha, sha
-		for i := range r.TaskResultSpecBindings {
-			r.TaskResultSpecBindings[i].HandoffSHA256, r.TaskResultSpecBindings[i].StartReceiptSHA256 = sha, sha
-		}
-		return s.Publish(r)
-	}); err != nil {
-		t.Fatal(err)
-	}
-	git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
-	f.dependencies.IntegrationGit = git
-	check, err := CheckTaskIntegration(f.dependencies, in)
-	if err != nil {
-		t.Fatal(err)
-	}
-	in.Apply, in.Confirmation = true, integrationDigest(t, check.Readback)
-	if _, err = ApplyTaskIntegration(f.dependencies, in); err != nil {
-		t.Fatal(err)
-	}
-	queue, err := ListTaskQueue(f.dependencies, queueTargetFixture(), false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = CloseTaskQueue(f.dependencies, queueTargetFixture(), queue.Current.PreparationID, queue.Revision, "fixture automatic return observed", "advance"); err != nil {
-		t.Fatal(err)
-	}
-	base, err := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *base.Confirmation}); err != nil {
-		t.Fatal(err)
-	}
-	owner := TaskCloseoutOwnership{TaskID: "task", TaskResultID: f.resultID, ResultOID: f.resultOID, ResultTree: f.resultTree, EvidenceLocator: filepath.Join(f.root, "owner-release"), EvidenceSHA256: sha}
-	preview, err := PreviewTaskReconcile(f.dependencies, "task", owner, true)
-	if err != nil || preview.Ready || !strings.Contains(strings.Join(preview.Reasons, ";"), "owner_active") {
-		t.Fatalf("active owner was not preserved: ready=%t reasons=%v err=%v", preview.Ready, preview.Reasons, err)
-	}
-	owner.Released = true
-	preview, err = PreviewTaskReconcile(f.dependencies, "task", owner, true)
-	if err != nil || !preview.Ready || !preview.IntegrationObserved {
-		t.Fatalf("released automatic closeout not ready: ready=%t reasons=%v err=%v", preview.Ready, preview.Reasons, err)
-	}
-	closeIn := TaskCloseoutInput{OperationID: "automatic-closeout-fixture", TaskID: "task", TaskResultID: f.resultID, ExpectedResultOID: f.resultOID, ExpectedResultTree: f.resultTree, TargetRef: "refs/heads/epic", Ownership: owner, Keep: true, RequireIntegration: true}
-	_, err = applyTaskCloseoutGuarded(f.dependencies, closeIn, preview.PlanSHA256, func() error { return nil }, func(stage string) error {
-		if stage == "after-lifecycle" {
-			return errInjected
-		}
-		return nil
-	})
-	if err == nil {
-		t.Fatal("lifecycle receipt interruption was not reached")
-	}
-	state, err := readWorkItemLifecycle(f.root)
-	if err != nil || state.Task("task") != LifecycleCompleted {
-		t.Fatalf("actual lifecycle completion was lost: %+v %v", state, err)
-	}
-	receipt, err := ApplyTaskCloseoutWithOwnershipGuard(f.dependencies, closeIn, preview.PlanSHA256, func() error { return nil })
-	if err != nil || receipt.State != "complete" || receipt.ResourceState != "kept" || receipt.WorktreeRemoved || receipt.BranchRemoved || receipt.Retention == nil || git.count() != 1 {
-		t.Fatalf("closeout did not resume retained lifecycle: %+v %v merges=%d", receipt, err, git.count())
-	}
-	if _, err := os.Stat(f.taskPath); err != nil {
-		t.Fatalf("automatic closeout removed source: %v", err)
-	}
-	if got := runLocalGit(t, f.taskPath, "rev-parse", "HEAD"); got != f.resultOID {
-		t.Fatal("automatic closeout changed source")
-	}
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
-	if err != nil || len(r.HumanQARecords) != 0 || len(r.IntegrationAttempts) != 1 {
-		t.Fatalf("automatic closeout fabricated acceptance or repeated integration: %v", err)
-	}
-}
-
-// PWA-DEP-01: the mode and registered target are explicit; no main/master
-// authority is inferred from a branch name or from an automatic test result.
 func TestAutomaticLocalBranchAgreementAndAcceptance(t *testing.T) {
 	for _, branch := range []string{"main", "master"} {
 		t.Run(branch, func(t *testing.T) {

@@ -376,8 +376,6 @@ func decodeTaskContent(raw []byte, operation string, published, internal bool) (
 	if operation == "spec_record" && contentInt(contentFields(v), "schema_version") == 2 {
 		if isTaskGoalSpec(v) {
 			schema = taskGoalSpecSchema(published)
-		} else {
-			schema = taskExecutionSpecSchema(published)
 		}
 	}
 	if operation == "spec_record" {
@@ -579,7 +577,7 @@ func validateTaskContentSemantics(m map[string]canonicaljson.Value, operation st
 
 func taskSpecStructurallyReady(spec canonicaljson.Object) error {
 	if isTaskGoalSpec(spec) {
-		return contentError("task_goal_requires_execute", "choose this goal with workflow execute; publication is not human solution selection", nil)
+		return contentError("task_goal_is_document", "a Goal document does not declare a selected technical solution", nil)
 	}
 	m := contentFields(spec)
 	p := contentFields(m["parts"])
@@ -623,7 +621,6 @@ func sortedContentStrings(values []string) []canonicaljson.Value {
 }
 
 func sortTaskContentRegistry(r *WorkItemRegistry) {
-	sort.Slice(r.TaskSpecPolicies, func(i, j int) bool { return r.TaskSpecPolicies[i].TaskID < r.TaskSpecPolicies[j].TaskID })
 	sort.Slice(r.TaskProblemRevisions, func(i, j int) bool {
 		a, b := r.TaskProblemRevisions[i], r.TaskProblemRevisions[j]
 		if a.TaskID != b.TaskID {
@@ -670,48 +667,17 @@ func sortTaskContentRegistry(r *WorkItemRegistry) {
 }
 func validateTaskContentRegistry(r WorkItemRegistry) error {
 	if r.FormatVersion < 3 {
-		if r.TaskSpecPolicies != nil || r.TaskProblemRevisions != nil || r.TaskSpecRevisions != nil || r.TaskSpecAssessments != nil || r.TaskSolutionSelections != nil || r.TaskResultSpecBindings != nil || r.TaskContentPublications != nil {
+		if r.TaskProblemRevisions != nil || r.TaskSpecRevisions != nil || r.TaskSpecAssessments != nil || r.TaskSolutionSelections != nil || r.TaskResultSpecBindings != nil || r.TaskContentPublications != nil {
 			return fmt.Errorf("legacy registry cannot contain Task content collections")
 		}
 		return nil
 	}
-	if r.TaskSpecPolicies == nil || r.TaskProblemRevisions == nil || r.TaskSpecRevisions == nil || r.TaskSpecAssessments == nil || r.TaskSolutionSelections == nil || r.TaskResultSpecBindings == nil || r.TaskContentPublications == nil {
+	if r.TaskProblemRevisions == nil || r.TaskSpecRevisions == nil || r.TaskSpecAssessments == nil || r.TaskSolutionSelections == nil || r.TaskResultSpecBindings == nil || r.TaskContentPublications == nil {
 		return fmt.Errorf("format 3 requires explicit Task content arrays")
 	}
 	tasks := map[TaskID]TaskRecord{}
 	for _, t := range r.Tasks {
 		tasks[t.ID] = t
-	}
-	policies := map[TaskID]TaskSpecPolicy{}
-	last := ""
-	for _, p := range r.TaskSpecPolicies {
-		if string(p.TaskID) <= last || tasks[p.TaskID].ID == "" || (p.Mode != "legacy" && p.Mode != "spec_required") || p.LegacyResultIDs == nil {
-			return fmt.Errorf("invalid Task policy")
-		}
-		last = string(p.TaskID)
-		if p.Mode == "legacy" && (p.ActivationPublicationKey != nil || len(p.LegacyResultIDs) != 0) || p.Mode == "spec_required" && p.ActivationPublicationKey == nil {
-			return fmt.Errorf("invalid Task policy activation")
-		}
-		previous := ""
-		for _, id := range p.LegacyResultIDs {
-			if string(id) <= previous {
-				return fmt.Errorf("legacy result IDs must be sorted unique")
-			}
-			found := false
-			for _, v := range r.TaskResults {
-				if v.ID == id && v.TaskID == p.TaskID {
-					found = true
-				}
-			}
-			if !found {
-				return fmt.Errorf("dangling legacy result ID")
-			}
-			previous = string(id)
-		}
-		policies[p.TaskID] = p
-	}
-	if len(policies) != len(tasks) {
-		return fmt.Errorf("format 3 requires one policy per Task")
 	}
 	outcomes := map[string]TaskContentOutcomeRef{}
 	problemHeads := map[TaskID]int{}
@@ -721,7 +687,7 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	selectionHeads := map[TaskID]int{}
 	decisionIDs := map[string]bool{}
 	add := func(o TaskContentOutcomeRef) error {
-		if tasks[o.TaskID].ID == "" || !digestPattern.MatchString(o.ManifestSHA256) || policies[o.TaskID].Mode != "spec_required" {
+		if tasks[o.TaskID].ID == "" || !digestPattern.MatchString(o.ManifestSHA256) {
 			return fmt.Errorf("invalid content reference")
 		}
 		if _, ok := outcomes[o.ManifestSHA256]; ok {
@@ -730,7 +696,7 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 		outcomes[o.ManifestSHA256] = o
 		return nil
 	}
-	last = ""
+	last := ""
 	for _, p := range r.TaskProblemRevisions {
 		key := fmt.Sprintf("%s\x00%010d", p.TaskID, p.Revision)
 		if key <= last || p.Revision != problemHeads[p.TaskID]+1 || p.Revision > 2147483647 {
@@ -818,14 +784,6 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 	if len(seenOutcomes) != len(outcomes) {
 		return fmt.Errorf("content record is missing its publication")
 	}
-	for _, p := range policies {
-		if p.Mode == "spec_required" {
-			pub, ok := pubs[*p.ActivationPublicationKey]
-			if !ok || pub.TaskID != p.TaskID || pub.OutcomeRef.Kind != "problem" || pub.OutcomeRef.Revision == nil || *pub.OutcomeRef.Revision != 1 {
-				return fmt.Errorf("policy does not bind initial problem publication")
-			}
-		}
-	}
 	links := map[TaskResultID]bool{}
 	last = ""
 	for _, link := range r.TaskResultSpecBindings {
@@ -847,21 +805,6 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 			return fmt.Errorf("result Spec link does not match historical basis")
 		}
 		links[link.TaskResultID] = true
-	}
-	for _, v := range r.TaskResults {
-		p := policies[v.TaskID]
-		if p.Mode != "spec_required" || links[v.ID] {
-			continue
-		}
-		legacy := false
-		for _, id := range p.LegacyResultIDs {
-			if id == v.ID {
-				legacy = true
-			}
-		}
-		if !legacy {
-			return fmt.Errorf("required Task result is missing its atomic Spec link")
-		}
 	}
 	return nil
 }

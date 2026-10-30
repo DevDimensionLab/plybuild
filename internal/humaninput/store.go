@@ -179,8 +179,8 @@ func view(root, id string) (Question, error) {
 	if found, e := readFact(continuationPath(root, id), &cont); e != nil {
 		return q, e
 	} else if found {
-		if q.Receipt == nil || cont.RequestID != q.Answer.RequestID || cont.RequestSHA256 != q.Answer.RequestSHA256 || cont.Provenance != ProvenanceAgent || !ValidReport(cont.Summary) {
-			return q, invalidState("the continuation report of " + id + " does not match its receipt")
+		if q.Answer == nil || cont.RequestID != q.Answer.RequestID || cont.RequestSHA256 != q.Answer.RequestSHA256 || cont.Provenance != ProvenanceAgent || !ValidReport(cont.Summary) {
+			return q, invalidState("the continuation report of " + id + " does not match its recorded answer")
 		}
 		q.Continuation, q.State = &cont, StateContinued
 	}
@@ -251,33 +251,6 @@ func questionIDs(root string) ([]string, error) {
 	}
 	sort.Strings(ids)
 	return ids, nil
-}
-
-// ReadQuestionBlockers lists every question once for the agent follow-up veto.
-// blocked holds the sources of open questions and of validated questions whose
-// later facts cannot be read, even when that partial view is already terminal.
-// An unidentifiable question or inventory, or a question to block without a
-// session, could be any agent's, so coverage is unknown. partial reports that
-// some history was invalid. Reads take no lock and create or repair nothing.
-func ReadQuestionBlockers(root string) (blocked []Source, coverageUnknown, partial bool) {
-	ids, e := questionIDs(root)
-	if e != nil {
-		return nil, true, true
-	}
-	for _, id := range ids {
-		q, e := view(root, id)
-		partial = partial || e != nil
-		switch {
-		case q.QuestionID == "":
-			coverageUnknown = true
-		case e == nil && (q.State == StateContinued || q.State == StateWithdrawn):
-		case q.Source.SessionID == nil:
-			coverageUnknown = true
-		default:
-			blocked = append(blocked, q.Source)
-		}
-	}
-	return blocked, coverageUnknown, partial
 }
 
 // publish writes one immutable fact under the held store lock.

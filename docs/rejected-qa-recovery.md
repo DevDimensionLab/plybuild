@@ -1,5 +1,10 @@
 # Recover a rejected human QA reservation
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 `workflow execute recover-qa` repairs one narrowly identified reservation: the
 original human QA attempt rejected the known `+00:00` timestamp form before
 publishing a human QA record. It preserves the rejected attestation, attempt,

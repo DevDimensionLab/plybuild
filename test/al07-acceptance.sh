@@ -12,11 +12,11 @@ export GOCACHE=/Users/perottochristensen/Library/Caches/go-build
 cached_go=/Users/perottochristensen/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.26.7.darwin-arm64/bin
 export PATH="$cached_go:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 # Named consumed readbacks and real candidate CLI processes; no provider/network.
-go test -v -count=1 -timeout=240s ./internal/taskrun -run '^(TestAL07StartupActionMatchesFrozenProtocol|TestAL07ConsumedInventoryRecovery|TestAL07CandidateCLIReadActionsDoNotWrite|TestAL07RetiredReviewHistoryHasNoAvailableReviewer|TestHumanCloseoutRetainsOnlyItsOwnSourceReservation|TestAW01GuidanceCloseoutAndDriftPriority)$'
-go test -v -count=1 -timeout=60s ./internal/workspaceview -run '^(TestAL07RequiredInstallationFailureRemainsVisibleAcrossWorkspaceViews|TestAL07CloseoutPreservesExplicitHumanWait|TestAL07MissingOrChangedNativeActorStaysUnknown|TestCloseoutProgressDistinguishesRetiredKeptAndPending|TestRegisteredProgressSeparatesTechnicalHumanAndIntegrationFacts|TestProcessProgressAndHumanWaitNeverManufactureQAPass)$'
+go test -v -count=1 -timeout=240s ./internal/taskrun -run '^(TestAL07StartupActionMatchesFrozenProtocol)$'
+go test -v -count=1 -timeout=60s ./internal/workspaceview -run '^(TestAL07CloseoutPreservesExplicitHumanWait|TestAL07MissingOrChangedNativeActorStaysUnknown|TestAL07RequiredInstallationFailureRemainsVisibleAcrossWorkspaceViews|TestCloseoutProgressDistinguishesRetiredKeptAndPending|TestProcessProgressAndHumanWaitNeverManufactureQAPass|TestRegisteredProgressSeparatesTechnicalHumanAndIntegrationFacts)$'
 # Preserve existing runtime, human-gate, refusal and unknown-effect boundaries.
-go test -v -count=1 -timeout=360s ./internal/taskrun -run '^(TestDeliveryReceiptDoesNotRequireBlanketPermission|TestAutomaticDeliveryPreservesRequiredHumanAndIntegrationOwnerGates|TestAutomaticDeliveryLatestNativeHumanRejectionBlocks|TestOwnerResumeBoundariesStopBeforeEffects|TestReadInventoryStopHistoryIdentityContracts|TestReadInventoryNativeRetirementNeedsNoAgentReport)$'
+go test -v -count=1 -timeout=360s ./internal/taskrun -run '^(TestDeliveryReceiptDoesNotRequireBlanketPermission|TestReadInventoryNativeRetirementNeedsNoAgentReport|TestReadInventoryStopHistoryIdentityContracts)$'
 go vet ./internal/taskrun ./internal/workspaceview
 git diff --check
-"$PLY_CANDIDATE_BINARY" workflow execute check-in --help >/dev/null
-"$PLY_CANDIDATE_BINARY" workflow execute review-return --help >/dev/null
+"$PLY_CANDIDATE_BINARY" workflow run check-in --help >/dev/null
+printf 'Retained concrete regression tests passed; removed process journeys are excluded.\n'

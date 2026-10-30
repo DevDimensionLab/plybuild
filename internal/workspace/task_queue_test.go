@@ -14,6 +14,7 @@ import (
 
 func queueFixtureDraft(t *testing.T, f workItemJourneyFixture, id TaskID, key string, prev *TaskRevisionRef) TaskContentInput {
 	t.Helper()
+	ensureFixtureTaskProblem(t, f, id)
 	in := contentFixtureSpec(t, f, key, prev)
 	raw, e := os.ReadFile(in.File)
 	if e != nil {

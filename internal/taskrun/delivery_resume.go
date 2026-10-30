@@ -6,9 +6,6 @@ import (
 )
 
 func deliveryStartupPending(s workflowState) bool {
-	if headlessRun(s.Request) {
-		return false
-	}
 	if !deliveryRun(s.Request) || s.Result.Delivery == nil || s.Acceptance != nil || s.StartSHA256 != nil || s.Result.Round.Number != 0 {
 		return false
 	}
@@ -33,11 +30,11 @@ func deliveryStartupAction(s workflowState) WorkflowAction {
 					// A stopped unbound start needs inspection. Neither its cached
 					// transport nor a failed observation establishes provider exit.
 					// Keep live onboarding's same-start continuation conditional.
-					return WorkflowAction{"coordinator", "Inspect the preserved startup phase=" + s.Phase + " and errors in the same tab. Run read-only inspection: ply workflow execute recover-start " + s.Result.RunID + " --check --format json. Recovery requires fresh positive guarded checks; cached transport and failed observations do not establish provider or writer absence. If native onboarding is still active in that tab, complete it there, then run: ply workflow execute resume " + s.Result.RunID + " to follow the same start without replaying input."}
+					return WorkflowAction{"coordinator", "Inspect the preserved startup phase=" + s.Phase + " and errors in the same tab. Run read-only inspection: ply workflow run show " + s.Result.RunID + " --format json. Cached transport and failed observations do not establish provider or writer absence. Inspect the preserved run: ply workflow run show " + s.Result.RunID + " before the human chooses further action."}
 				}
 			}
 		}
-		return WorkflowAction{"user", "Complete any native onboarding in the existing tab, then run: ply workflow execute resume " + s.Result.RunID + ". This follows the same start and sends its first Task prompt only when ready; it creates no new tab or agent."}
+		return WorkflowAction{"user", "Complete any native onboarding in the existing tab, then run: ply workflow run show " + s.Result.RunID + ". Delivery-owner continuation has been removed; the human chooses further work."}
 	}
 	return WorkflowAction{"coordinator", "Inspect the preserved startup and last observation in the same tab. Task input may already have been attempted; do not restart or resend it."}
 }

@@ -2,12 +2,10 @@ package taskrun
 
 import (
 	"encoding/json"
-	"errors"
-	"os"
-	"path/filepath"
-	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"os"
+
+	"testing"
 )
 
 func resolvedHistoryStop(t *testing.T, f deliveryFixture, o WorkflowRun) WorkflowRun {
@@ -26,80 +24,6 @@ func resolvedHistoryStop(t *testing.T, f deliveryFixture, o WorkflowRun) Workflo
 
 // Reproduce PE01's already integrated/released state using native writers in a
 // disposable workspace, then recover only closeout across the public CLI.
-func TestAutomaticDeliveryCLIClosesResolvedStopHistoryWithoutReplay(t *testing.T) {
-	binary := automaticCLIBinary(t)
-	f, o := automaticCLIFixture(t, binary, true, 30)
-	o = resolvedHistoryStop(t, f, o)
-	history := append([]DeliveryEventRecord(nil), o.Delivery.Events...)
-	deliveryTestCandidate(t, f, "resolved stop candidate")
-	marker := filepath.Join(f.R.WorkspaceRoot, "acceptance-count")
-	script := "#!/bin/sh\nset -eu\nprintf 'once\\n' >> " + ShellQuote(marker) + "\n"
-	if err := os.WriteFile(f.AcceptancePath, []byte(script), 0600); err != nil {
-		t.Fatal(err)
-	}
-	o = automaticCLIOK(t, binary, f, automaticCLIVerifyArgs(o, deliveryTestReview(t, f, "resolved-stop"), binary)...)
-	c := o.Delivery.Candidates[0]
-	d := f.D
-	d.Fault = func(point string) error {
-		if point == "automatic_closeout_after_release" {
-			return errors.New("fixture interruption after recorded integration and release")
-		}
-		return nil
-	}
-	interrupted, err := WorkflowDeliveryIntegrate(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
-	if err == nil || interrupted.Delivery.Phase != "closing" || interrupted.Delivery.Candidates[0].Integration == nil || interrupted.Delivery.OwnershipRelease == nil {
-		t.Fatalf("fixture did not reach recorded integration/release: %+v %v", interrupted.Delivery, err)
-	}
-	integration := *interrupted.Delivery.Candidates[0].Integration
-	before := gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic")
-	// The released owner leaves; the coordinator's ordinary follow continues
-	// the same closeout, not a new delivery attempt.
-	cleanupOwnerLeaves(t, f)
-	done, output, err := cleanupCLIAt(binary, f.Parent, "execute", "follow", o.RunID, "--timeout", "30")
-	if err != nil {
-		t.Fatalf("follow did not finish closeout: %v\n%s", err, output)
-	}
-	if done.Delivery.Phase != "completed" || *done.Delivery.Candidates[0].Integration != integration {
-		t.Fatalf("closeout lost original integration: %+v", done.Delivery)
-	}
-	if gitOutput(t, f.Parent, "reflog", "show", "--format=%H", "refs/heads/epic") != before {
-		t.Fatal("closeout replayed integration")
-	}
-	if count, err := os.ReadFile(marker); err != nil || string(count) != "once\n" {
-		t.Fatalf("closeout replayed verification: %q %v", count, err)
-	}
-	for i, event := range history {
-		if done.Delivery.Events[i] != event {
-			t.Fatal("closeout rewrote refusal/resolution")
-		}
-	}
-	closeout, err := workspace.ReadTaskCloseoutAt(f.R.WorkspaceRoot, c.TaskResult.TaskID)
-	if err != nil || closeout == nil || closeout.State != "complete" || closeout.ResourceState != "retired" {
-		t.Fatalf("Task not closed: %+v %v", closeout, err)
-	}
-	registry, err := f.D.Workspace.WorkItems.Snapshot(f.R.WorkspaceRoot)
-	if err != nil || len(registry.HumanQARecords) != 0 || len(registry.IntegrationResults) != 1 {
-		t.Fatalf("closeout added QA or integration: %+v %v", registry, err)
-	}
-	if current := retireQueueCurrent(t, f); current != nil {
-		t.Fatalf("queue not empty: %+v", current)
-	}
-	base, err := workspace.ShowEpicBase(f.D.Workspace, workspace.EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-	if err != nil || deliveryCLILatestBase(base).OID != c.OID {
-		t.Fatalf("base not advanced: %+v %v", base, err)
-	}
-	row := deliveryInventoryRows(t, f)[o.RunID]
-	if row.Freshness != "fresh" || row.State != "completed" {
-		t.Fatalf("completed history unreadable: %+v", row.Reasons)
-	}
-	run := traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID)
-	for i, kind := range []string{"coordinator_stop", "stop_resolution"} {
-		entries := traceKind(run, kind)
-		if len(entries) != 1 || entries[0].Source != history[i].Binding || len(entries[0].Data) == 0 {
-			t.Fatalf("trace lost original stop history: %+v", entries)
-		}
-	}
-}
 
 func TestReadInventoryNativeRetirementNeedsNoAgentReport(t *testing.T) {
 	f, o := retireFixture(t)

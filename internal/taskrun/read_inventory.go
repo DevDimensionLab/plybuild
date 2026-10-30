@@ -233,9 +233,7 @@ func readNativeInventoryRun(d Dependencies, root, id string) InventoryRun {
 	row.Freshness = "fresh"
 	row.Provider = nonempty(j.Request.Runtime.Provider)
 	row.Transport = ptr("terminal")
-	if j.Request.Runtime.Mode == "exec" {
-		row.Transport = ptr("headless")
-	}
+
 	row.TaskID, _ = inventoryTask(j.Request.HandoffDraft)
 	if row.TaskID == nil {
 		inventoryProblem(&row, integrity("run Task identity is unavailable"))
@@ -326,7 +324,7 @@ func readHerdrInventoryRunWithCloseout(d Dependencies, root, id string, closeout
 		var captured inventoryWorkflowState
 		if stateErr = decode(stateBytes, 8<<20, &captured); stateErr == nil {
 			saved := captured.state()
-			if !equal(reserved.Request, saved.Request) || !equal(reserved.CodexTrust, saved.CodexTrust) || !equal(reserved.ClaudeTrust, saved.ClaudeTrust) || saved.Result.RunID != id || !equal(reserved.Observed, saved.Observed) || saved.Result.Paths.RunRoot != expected || saved.Result.RequestSHA256 != digest(reserved.Request) || saved.Result.SessionID != "ply:"+id {
+			if !equal(reserved.Request, saved.Request) || saved.Result.RunID != id || !equal(reserved.Observed, saved.Observed) || saved.Result.Paths.RunRoot != expected || saved.Result.RequestSHA256 != digest(reserved.Request) || saved.Result.SessionID != "ply:"+id {
 				stateErr = integrity("preserved state differs from reservation")
 			} else {
 				var sources []inventoryCapturedSource
@@ -367,17 +365,7 @@ func readHerdrInventoryRunWithCloseout(d Dependencies, root, id string, closeout
 	t := s.Result.Transport
 	row.Herdr = &InventoryHerdr{nonempty(t.WorkspaceID), nonempty(t.TabID), nonempty(t.PaneID), nonempty(t.TerminalID), nonempty(t.AgentSessionID)}
 	row.HistoricalState, row.LastSeenUTC = nonempty(t.State), nonempty(t.ObservedAt)
-	if headlessRun(s.Request) {
-		if err = workerValidateIdentity(s); err != nil {
-			inventoryProblem(&row, err)
-			return row
-		}
-		row.Transport, row.Herdr = ptr("headless"), nil
-		row.HistoricalState, row.LastSeenUTC = nonempty(s.Result.Worker.Phase), nonempty(s.Result.Worker.UpdatedAt)
-	} else if s.Request.Worker != nil || s.Result.Worker != nil {
-		inventoryProblem(&row, integrity("interactive history cannot acquire a worker"))
-		return row
-	}
+
 	if row.LastSeenUTC != nil {
 		if _, err := parseInventoryTime(*row.LastSeenUTC); err != nil {
 			row.LastSeenUTC = nil
@@ -447,12 +435,10 @@ func readHerdrInventoryRunWithCloseout(d Dependencies, root, id string, closeout
 	if row.StatusFollowupVeto == "" {
 		row.StatusFollowupVeto = "unknown"
 	}
-	if row.StatusFollowupVeto == "unknown" && row.Freshness == "fresh" && s.Result.Delivery != nil && row.Delivery != nil && row.Delivery.Freshness == "fresh" && s.Result.Delivery.Phase == "working" && s.Result.Delivery.ActiveStop == nil && s.ReportRetirement == nil {
+	if row.StatusFollowupVeto == "unknown" && row.Freshness == "fresh" && (row.Delivery == nil || row.Delivery.Freshness == "fresh") {
 		row.StatusFollowupVeto = "clear"
-		for _, candidate := range s.Result.Delivery.Candidates {
-			if candidate.HumanQA != nil && candidate.HumanQA.Outcome != "pass" {
-				row.StatusFollowupVeto = "human_qa_veto"
-			}
+		if s.Result.Delivery != nil && s.Result.Delivery.ActiveStop != nil || s.ReportStop != nil || s.ReportProviderStop != nil {
+			row.StatusFollowupVeto = "native_stop_or_refusal"
 		}
 	}
 	row.StatusIdentityKnown = stateErr == nil && row.Herdr != nil && row.Herdr.AgentSessionID != nil && *row.Herdr.AgentSessionID != ""

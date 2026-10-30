@@ -55,53 +55,6 @@ func closedTransportFixture(t *testing.T) (deliveryFixture, WorkflowRun, Deliver
 	return f, o, DeliveryStartRecoveryInput{RunID: o.RunID, ProviderExecutable: f.R.Runtime.Executable, ControlExecutable: f.R.Runtime.PlyExecutable, Timeout: 3 * time.Second}
 }
 
-func TestDeliveryClosedTransportPreservesRunAndStartsOneNewTab(t *testing.T) {
-	f, original, in := closedTransportFixture(t)
-	before := deliveryRecoveryFiles(t, original.Paths.RunRoot)
-	p := deliveryRecoveryTestPreview(t, f, in)
-	if p.TransportMode != deliveryRecoveryReplaceTerminal || p.Generation != 1 || p.ExitEvidence != nil || p.AbsentTransport == nil || p.AbsentTransport.ProcessLiveness != "unknown" || p.AbsentTransport.TaskAuthority != "not_issued" {
-		t.Fatalf("absence was not distinguished from exit: %+v", p)
-	}
-	deliveryRecoveryUnchanged(t, before, "")
-	deliveryRecoveryPreserveControl(t, in, p)
-	o, err := WorkflowRecoverDeliveryStart(f.D, f.R.WorkspaceRoot, in, p.Confirmation)
-	if err != nil || o.Transport.TerminalID == original.Transport.TerminalID || o.StartupRecovery == nil || o.StartupRecovery.ReplacementTransport == nil {
-		t.Fatalf("new transport was not bound: %+v, %v", o.StartupRecovery, err)
-	}
-	if _, err := os.Stat(filepath.Join(p.RecoveryDirectory, "before-state.json")); !os.IsNotExist(err) {
-		t.Fatalf("recovery retained a full before-state: %v", err)
-	}
-	if o.RunID != original.RunID || o.RequestSHA256 != original.RequestSHA256 || o.Handoff != original.Handoff || !equal(o.StartupRecovery.OriginalTransport, &p.AbsentTransport.Transport) {
-		t.Fatal("replacement changed Task ownership or historical transport")
-	}
-	if binary := os.Getenv("PLY_RECOVERY_TEST_BINARY"); binary != "" {
-		shown, output, err := cleanupCLIAt(binary, f.Parent, "execute", "show", o.RunID)
-		if err != nil || shown.RunID != o.RunID || !equal(shown.StartupRecovery, o.StartupRecovery) {
-			t.Fatalf("binary recovery readback: %v\n%s", err, output)
-		}
-	}
-	if row := readHerdrInventoryRun(f.D, f.R.WorkspaceRoot, o.RunID); row.StartupRecovery == nil || hasInventoryReason(row, "delivery_state_unavailable") || traceReason(traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID), "trace_recovery_unavailable") {
-		t.Fatalf("recovery history unavailable: %+v", row)
-	}
-	files, size := 0, 0
-	for path, raw := range deliveryRecoveryFiles(t, p.RecoveryDirectory) {
-		if filepath.Ext(path) == ".json" {
-			files, size = files+1, size+len(raw)
-		}
-	}
-	t.Logf("startup recovery JSON: files=%d bytes=%d", files, size)
-	deliveryRecoveryUnchanged(t, before, filepath.Join(original.Paths.RunRoot, "state.json"))
-	if workflowTestCalls(t, f.workflowFixture, "tab create") != 2 || workflowTestCalls(t, f.workflowFixture, "agent start") != 2 {
-		t.Fatal("replacement did not create exactly one new tab and agent")
-	}
-	if _, err = WorkflowRecoverDeliveryStart(f.D, f.R.WorkspaceRoot, in, p.Confirmation); err != nil {
-		t.Fatal(err)
-	}
-	if workflowTestCalls(t, f.workflowFixture, "tab create") != 2 || workflowTestCalls(t, f.workflowFixture, "agent start") != 2 {
-		t.Fatal("same confirmation repeated a native effect")
-	}
-}
-
 func TestDeliveryClosedTransportRequiresCompleteGlobalAbsence(t *testing.T) {
 	for _, tc := range []struct {
 		name      string

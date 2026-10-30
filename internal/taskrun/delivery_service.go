@@ -3,32 +3,24 @@ package taskrun
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
-	"github.com/sirupsen/logrus"
 )
 
 func BuildDeliveryWorkflowRequest(in DeliveryRequestInput) (WorkflowRequest, error) {
 	if err := validateNewDeliveryInstall(in); err != nil {
 		return WorkflowRequest{}, err
 	}
-	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, CodexProjectTrust: in.CodexProjectTrust, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
+	r := WorkflowRequest{Envelope: deliveryEnv("herdr-run-request"), RequestKey: in.RequestKey, WorkspaceRoot: in.WorkspaceRoot, PreparationID: in.PreparationID, PreparationSHA256: in.PreparationSHA256, HandoffDraft: in.HandoffDraft, Runtime: in.Runtime, HumanAuthority: in.HumanAuthority, ReturnMode: "delivery_owner", Delivery: &in.Delivery}
 	if in.Delivery.AdmissionMode == workspace.AdmissionParallel {
 		r.SchemaVersion = 3
 	}
 	r.Herdr.Executable, r.Herdr.WorkspaceID, r.Herdr.TabLabel = in.HerdrExecutable, in.HerdrWorkspaceID, in.TabLabel
-	r.ClaudeProjectTrust = in.ClaudeProjectTrust
 	r.GoalStartEnvironment = in.GoalStartEnvironment
-	if in.Worker != nil {
-		r.Envelope = deliveryEnv("headless-run-request")
-		r.Worker = in.Worker
-		r.ControlContract = in.ControlContract
-	}
 	return r, validateDeliveryWorkflowRequest(r)
 }
 
@@ -93,19 +85,10 @@ func validateNewDeliveryInstall(in DeliveryRequestInput) error {
 }
 
 func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
-	if r.ControlContract != nil && !headlessRun(r) {
-		return workflowError(2, "bound control requires headless runtime")
-	}
 	if env := r.GoalStartEnvironment; env != nil {
-		if r.Worker != nil || r.Runtime.Provider != "codex" || !filepath.IsAbs(env.Home) || !filepath.IsAbs(env.CodexHome) || filepath.Clean(env.Home) != env.Home || filepath.Clean(env.CodexHome) != env.CodexHome || env.Path == "" || strings.ContainsAny(env.Path, "\x00\r\n") {
+		if r.Runtime.Provider != "codex" || !filepath.IsAbs(env.Home) || !filepath.IsAbs(env.CodexHome) || filepath.Clean(env.Home) != env.Home || filepath.Clean(env.CodexHome) != env.CodexHome || env.Path == "" || strings.ContainsAny(env.Path, "\x00\r\n") {
 			return workflowError(2, "bound start requires the exact Codex HOME, CODEX_HOME and PATH")
 		}
-	}
-	if headlessRun(r) {
-		return validateWorkerRequest(r)
-	}
-	if r.Worker != nil {
-		return workflowError(2, "worker authority requires an explicit headless request")
 	}
 	expected := deliveryEnv("herdr-run-request")
 	if r.SchemaVersion == 3 {
@@ -147,7 +130,7 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 		}
 	}
 	c := r.Delivery
-	if c.StartupProtocol != "" && (c.StartupProtocol != MandateReceiptV1 || headlessRun(r)) {
+	if c.StartupProtocol != "" && (c.StartupProtocol != MandateReceiptV1) {
 		return workflowError(2, "unsupported startup protocol")
 	}
 	protocol, protocolErr := workflowhandoff.DeliveryStartupProtocol(r.HandoffDraft)
@@ -177,9 +160,6 @@ func validateDeliveryWorkflowRequest(r WorkflowRequest) error {
 			return e
 		}
 	}
-	if e := workflowValidateTrust(r); e != nil {
-		return e
-	}
 	_, e := workflowhandoff.ValidateDeliveryTaskRunDraft(r.HandoffDraft)
 	if e == nil {
 		e = workflowhandoff.ValidateDeliveryMandate(r.HandoffDraft, c.Agreement)
@@ -208,24 +188,6 @@ func deliveryReadback(d Dependencies, root, id string, operationErr error) (Work
 		return out, operationErr
 	}
 	return out, readErr
-}
-
-const deliveryDelegationGuidance = "Delegation allowed describes a technical capability within the frozen Goal/Spec, not an instruction to delegate. Follow the selected delegation route and owner/coordinator roles; this capability does not authorize replacing the selected Ply/Herdr route with internal agents. Internal delegation remains available when explicitly authorized by the frozen Goal/Spec and the capability is enabled."
-
-func deliveryInstructions(s workflowState) string {
-	runtime, err := workflowEffectiveRuntime(s)
-	if err != nil {
-		return "Startup binding is unavailable; preserve the stop and do not write the Task."
-	}
-	c := s.Request.Delivery
-	if mandateReceipt(s.Request) {
-		return deliveryReceiptInstructions(s, runtime)
-	}
-	notification := "Use the authorized ply-agent-notify route unless the goal assigns notifications to a parent; internal delegates stay quiet."
-	if c.NotificationContext != nil {
-		notification = "Reuse the existing notification identity at " + c.NotificationContext.Locator + "; do not create a second binding. Internal delegates stay quiet."
-	}
-	return fmt.Sprintf("You own the selected delivery through its frozen completion boundary. Work in %s. Read the frozen goal %s and native mandate %s for scope and existing human authority. Next, read %s for the bound provider/session and run %s workflow execute begin %s --context %s --help; submit only your actual runtime observations through begin before Task writes. Ply handles identities, private evidence and hashes. Unknown permission stops dependent work; never change provider policy to make acceptance pass. The installed ply-delivery skill describes the normal workflow. Use the callback guide for verification, reporting and the exact delivery gates. Own meaningful tests, review and corrections; implement the acceptance entrypoint %s. Keep this session and use ordinary installed ply for callbacks; do not restart or resend uncertain input. Local installation allowed: %t. Delegation allowed: %t. %s %s A launch, candidate, human judgment and final delivery are separate facts.", s.Observed.Target.WorktreeLocator, c.Goal.Locator, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), "ply", s.Result.RunID, ShellQuote(s.Result.Paths.Context), c.AcceptancePath, c.AllowLocalInstall, c.AllowSubagents, deliveryDelegationGuidance, notification)
 }
 
 func workflowDeliveryFresh(d Dependencies, s workflowState, target bool) error {
@@ -298,11 +260,6 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 	for {
 		if !time.Now().Before(deadline) {
 			return observationReadback(workflowObservationWindowExpired)
-		}
-		// The owner's integrate may release the source while this follow is
-		// already observing; the same follow then finishes source cleanup.
-		if o, handled, e := deliveryFollowCleanup(d, root, id, deadline, &observation); handled {
-			return o, e
 		}
 		ready := false
 		var observationErr error
@@ -381,22 +338,6 @@ func workflowDeliveryFollow(d Dependencies, root, id string, timeout time.Durati
 	}
 }
 
-func deliveryReceiptInstructions(s workflowState, runtime Runtime) string {
-	goal, err := readDeliveryReceiptGoal(s.Request.Delivery.Goal)
-	if err != nil {
-		return "Frozen goal unavailable; preserve the stop."
-	}
-	scope := ""
-	if a := s.Request.Delivery.Agreement; a != nil {
-		scope = fmt.Sprintf(" Authorized delivery: %s from %s to %s at %s. No other delivery target is authorized.", a.Mode, a.SourceRef, a.TargetRef, a.TargetWorktree)
-	}
-	prefix := ""
-	if _, ok := deliveryTaskPresentation(s); ok {
-		prefix = deliveryTaskCodeInstructions(goal)
-	}
-	return prefix + fmt.Sprintf("Your authorized assignment is %s: %s Work in %s. Receive this frozen mandate with %s workflow execute check-in %s --context %s --provider %s --native-session %s. This idempotent receipt records identity and mandate receipt; runtime reviews each action when it happens. A known refusal or unknown previous effect stops dependent work. Preserve provider controls and the same session. Edit and test this Task, make controlled commits on its source branch, and own separate review and the exact delivery.%s Local installation allowed: %t. Delegation allowed: %t. %s Read %s for complete scope and %s for callbacks, verification and gates. Implement acceptance at %s. The frozen goal is %s. Parent-owned notifications stay with the parent; otherwise use the existing authorized route. Receipt, actual work, technical acceptance, human judgment and delivery are separate facts.", goal.Title, goal.Objective, s.Observed.Target.WorktreeLocator, "ply", s.Result.RunID, ShellQuote(s.Result.Paths.Context), s.Request.Runtime.Provider, ShellQuote(s.Result.Transport.AgentSessionID), scope, s.Request.Delivery.AllowLocalInstall, s.Request.Delivery.AllowSubagents, deliveryDelegationGuidance, filepath.Join(s.Result.Paths.RunRoot, "mandate.json"), filepath.Join(workflowDeliveryGuideDirectory(s), "callback-guide.md"), s.Request.Delivery.AcceptancePath, s.Request.Delivery.Goal.Locator)
-}
-
 type deliveryReceiptGoal struct {
 	TaskID    string `json:"task_id"`
 	Title     string `json:"title"`
@@ -416,103 +357,4 @@ func readDeliveryReceiptGoal(binding FileBinding) (deliveryReceiptGoal, error) {
 		return goal, workflowError(2, "mandate receipt requires the frozen goal title and objective")
 	}
 	return goal, nil
-}
-
-// deliveryFollowCleanup finishes a released automatic delivery's source
-// cleanup from the coordinator's checkout. After two settled observations the
-// released owner's exact pane is closed, every Task writer must be absent, and
-// the same recorded closeout continues. A working owner is only observed.
-func deliveryFollowCleanup(d Dependencies, root, id string, deadline time.Time, observation *followObservation) (WorkflowRun, bool, error) {
-	s, e := workflowRead(root, id)
-	if e != nil {
-		return WorkflowRun{}, false, nil
-	}
-	if s.Result.Delivery != nil && s.Result.Delivery.Phase == "completed" && s.Result.Delivery.OwnershipRelease != nil {
-		if closeout, err := workflowTaskCloseout(root, s); err == nil && closeout != nil && closeout.WorktreeRemoved {
-			o, err := WorkflowShow(d, root, id)
-			return o, true, err
-		}
-	}
-	quiet := 0
-	for automaticCleanupPending(s) {
-		if !time.Now().Before(deadline) {
-			o, err := workflowFollowReadback(d, root, id, workflowObservationWindowExpired)
-			return o, true, err
-		}
-		finish := false
-		observed := (taskWriters{d, s}).herdr("")
-		if observed.state == taskWritersUnknown {
-			return deliveryReadbackHandled(d, root, id, observed.err)
-		}
-		if observed.state == taskWritersAbsent {
-			finish = true
-		} else {
-			a, e := workflowAgentRead(d, s, deadline)
-			if e == nil {
-				if e = workflowPlace(s, a); e == nil {
-					e = workflowSession(s, a, false)
-				}
-			}
-			if e != nil {
-				// A read failure cannot establish liveness or absence. In
-				// particular, agent_not_found may race the preceding pane get.
-				if err := workflowUpdate(d, root, id, func(current *workflowState) error {
-					current.Result.Transport.State = "unknown"
-					current.Result.Transport.Observation = "cached"
-					return nil
-				}); err != nil {
-					return deliveryReadbackHandled(d, root, id, err)
-				}
-				quiet = 0
-				var call *HerdrCallError
-				if errors.As(e, &call) && call.ReadOnly && call.Phase == "agent get" && call.ProviderCode == "agent_not_found" {
-					logrus.WithFields(logrus.Fields{"run_id": id, "source": "Herdr agent get", "read_error": e.Error(), "handling": "reconcile fresh writer evidence for the same closeout"}).Warn("Released owner observation unavailable; continuing writer inspection")
-					fresh := (taskWriters{d, s}).herdr("")
-					if fresh.state != taskWritersAbsent {
-						return deliveryReadbackHandled(d, root, id, fresh.err)
-					}
-					// Resume rechecks local writers, authority and exact source
-					// before any removal; this inventory alone grants no cleanup.
-					finish = true
-				} else {
-					failure, resume := observation.failure(d, id, deadline, e)
-					if !resume {
-						o, err := workflowFollowReadback(d, root, id, failure)
-						return o, true, err
-					}
-				}
-			} else if workflowSettled(a) {
-				quiet++
-			} else {
-				quiet = 0
-			}
-			if quiet >= 2 {
-				if _, e = deliveryRetireClosePane(d, s); e == nil {
-					_, _, e = deliveryRetireAbsence(d, s)
-				}
-				if e != nil {
-					return deliveryReadbackHandled(d, root, id, e)
-				}
-				finish = true
-			}
-		}
-		if finish {
-			c := s.Result.Delivery.Candidates[len(s.Result.Delivery.Candidates)-1]
-			_, _, e = ResumeAutomaticLocalDelivery(d, root, id, c.TaskResult.ID)
-			return deliveryReadbackHandled(d, root, id, e)
-		}
-		if !time.Now().Add(250 * time.Millisecond).Before(deadline) {
-			return deliveryReadbackHandled(d, root, id, workflowError(5, "The released owner is still active; source cleanup waits until it settles. Observation timed out without stopping it"))
-		}
-		time.Sleep(250 * time.Millisecond)
-		if s, e = workflowRead(root, id); e != nil {
-			return deliveryReadbackHandled(d, root, id, e)
-		}
-	}
-	return WorkflowRun{}, false, nil
-}
-
-func deliveryReadbackHandled(d Dependencies, root, id string, err error) (WorkflowRun, bool, error) {
-	o, e := deliveryReadback(d, root, id, err)
-	return o, true, e
 }

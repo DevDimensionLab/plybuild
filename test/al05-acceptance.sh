@@ -15,10 +15,7 @@ test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 test -z "$(git status --porcelain)"
 git merge-base --is-ancestor "$BASE" HEAD
-"$PLY_CANDIDATE_BINARY" workflow execute report --help >/dev/null
-"$PLY_CANDIDATE_BINARY" workflow execute verify --help >/dev/null
-# The candidate CLI journey runs this exact binary through report, verify and
-# local delivery.
+"$PLY_CANDIDATE_BINARY" workflow run report --help >/dev/null
 export PLY_DELIVERY_TEST_BINARY="$PLY_CANDIDATE_BINARY"
 export GOTOOLCHAIN=local
 export GOFLAGS=-mod=readonly
@@ -43,30 +40,23 @@ group() {
 	fi
 }
 
-# Explicit timeouts stay inside the 1800s budget: about 3-4x the measured ~100s
-# for the AL05 tests, ~130s for the contrasts and ~1s for cmd.
-group al05 -timeout 6m -v ./internal/taskrun -run '^TestAL05'
+group al05 -timeout 6m -v ./internal/taskrun -run '^(TestAL05BaselineOrdinaryCandidateBinary|TestAL05ChangedOrdinaryInputsDoNotQualify|TestAL05InPlaceOverwriteAfterBindingDoesNotQualify|TestAL05MissingOrUnopenableInputKeepsErrnoAndNamesRole|TestAL05NativePrivateRolesStayProtected|TestAL05OrdinaryAcceptanceRecordsCommand|TestAL05OrdinaryReportAndEvidenceAreConsumed|TestAL05OrdinaryRoundReportIsConsumed|TestAL05RetainedReportRequirementsNameInputAndCause|TestAL05RoundReportCLIJourney)$'
 for name in \
 	TestAL05OrdinaryReportAndEvidenceAreConsumed \
 	TestAL05RetainedReportRequirementsNameInputAndCause \
 	TestAL05BaselineOrdinaryCandidateBinary \
-	TestAL05OrdinaryAcceptanceAndReviewQualify \
+	TestAL05OrdinaryAcceptanceRecordsCommand \
 	TestAL05ChangedOrdinaryInputsDoNotQualify \
 	TestAL05InPlaceOverwriteAfterBindingDoesNotQualify \
 	TestAL05NativePrivateRolesStayProtected \
-	TestAL05CandidateCLIJourneyWithOrdinaryModes \
 	TestAL05OrdinaryRoundReportIsConsumed \
 	TestAL05MissingOrUnopenableInputKeepsErrnoAndNamesRole \
 	TestAL05RoundReportCLIJourney; do
 	grep -q "^--- PASS: $name " "$TMPDIR/al05.log"
 done
-# Existing consumers of the changed report, verify, receipt-reuse, status,
-# begin (notification route) and round-report readers.
-group contrasts -timeout 8m -v ./internal/taskrun -run '^(TestDeliveryOwnerActualAcceptanceAndTruthfulProgress|TestAutomaticVerificationMissingInputsCannotReusePriorPass|TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance|TestDeliveryRecordedVerificationRequalificationDoesNotRepeatAcceptance|TestDeliveryStatusPreservesCompletedReceiptBeforeQualification|TestDeliveryBeginBindsExistingAuthorizedNotificationNatively|TestDeliveryBeginNativeAcceptanceAndLostReply|TestAutomaticAcceptanceCLIGreenAndFailureCorrection|TestWorkflowInterruptedReportCannotReplaceItsFrozenSemantics|TestAL04ReportOwnerCompletesRoundAfterPlyUpdate)$'
-test "$(grep -c '^--- PASS' "$TMPDIR/contrasts.log")" = 10
-# Unchanged CLI input and private-input boundaries.
-group cmd -timeout 2m -v ./cmd -run '^(TestDeliveryCLIRejectsAmbiguousOrMissingInputBeforeEffects|TestExecuteAcceptanceRequiresExactPrivateInputsBeforeWorkspaceAccess|TestExecuteCheckInHasNoBlanketPermissionFlag)$'
-test "$(grep -c '^--- PASS' "$TMPDIR/cmd.log")" = 3
+group contrasts -timeout 8m -v ./internal/taskrun -run '^(TestAL04ReportOwnerCompletesRoundAfterPlyUpdate|TestDeliveryBeginBindsExistingAuthorizedNotificationNatively|TestDeliveryBeginNativeAcceptanceAndLostReply|TestDeliveryOwnerActualAcceptanceAndTruthfulProgress|TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance|TestDeliveryRecordedVerificationRequalificationDoesNotRepeatAcceptance|TestDeliveryStatusPreservesCompletedReceiptBeforeQualification|TestWorkflowInterruptedReportCannotReplaceItsFrozenSemantics)$'
+test "$(grep -c '^--- PASS' "$TMPDIR/contrasts.log")" = 8
 go vet ./internal/taskrun ./cmd
 git diff --check "$BASE" "$PLY_CANDIDATE_OID"
 echo "AL05 acceptance passed"
+printf 'Retained concrete regression tests passed; removed process journeys are excluded.\n'

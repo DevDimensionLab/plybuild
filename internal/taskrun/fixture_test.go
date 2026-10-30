@@ -170,12 +170,14 @@ func fixtureSeed(t *testing.T, seedSource, seedOID string, roots ...string) (Dep
 	t.Helper()
 	root, epic, ref, oid := prepareServiceWorkspaceSeed(t, seedSource, seedOID, roots...)
 	w := workspace.SystemDependencies()
+	w.ProjectDataRoot = func(string) (string, error) { return "", nil }
 	if _, err := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "ply", RepoID: "ply", Worktree: epic, Ref: ref, ExpectedOID: oid}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "task", Title: "Fixture Task", Description: "Fixture need", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
+	recordFixtureProblem(t, w, root, "task")
 	r, err := w.WorkItems.Snapshot(root)
 	if err != nil {
 		t.Fatal(err)
@@ -429,4 +431,25 @@ func syntheticEffects(t *testing.T, authority json.RawMessage) json.RawMessage {
 	}
 	b, _ := Canonical(out)
 	return b
+}
+
+func recordFixtureProblem(t *testing.T, d workspace.Dependencies, root string, id workspace.TaskID) {
+	t.Helper()
+	document := filepath.Join(root, string(id)+"-problem.md")
+	contents := []byte("# Fixture problem\n\nExercise the explicit prepared Task.\n")
+	if err := os.WriteFile(document, contents, 0600); err != nil {
+		t.Fatal(err)
+	}
+	fields := map[string]any{
+		"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785",
+		"publication_key": "fixture/problem/" + string(id), "task_id": string(id), "registry_upgrade": nil,
+		"recorder":          map[string]any{"actor_claim": "fixture agent", "control_surface": "isolated service test", "recorded_at_utc": "2026-09-29T12:00:00Z"},
+		"expected_previous": nil, "origin": map[string]any{"kind": "authored"}, "title": "Fixture problem", "summary": "Exercise the explicit prepared Task.", "problem_document_id": "problem",
+		"documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": document, "sha256": hash(contents), "size_bytes": len(contents), "media_type": "text/markdown", "git_provenance": nil}}},
+		"sources":   []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Explicit fixture setup.",
+	}
+	path := writeCanonicalTestFile(t, root, string(id)+"-problem.json", taskSpecFixtureValue(t, fields).(canonicaljson.Object))
+	if _, err := workspace.RecordTaskProblem(d, workspace.TaskContentInput{TaskID: id, File: path}); err != nil {
+		t.Fatal(err)
+	}
 }

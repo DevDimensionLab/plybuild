@@ -57,6 +57,7 @@ func contentFixtureSpec(t *testing.T, f workItemJourneyFixture, key string, prev
 
 func contentFixtureSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID, key string, previous *TaskRevisionRef) TaskContentInput {
 	t.Helper()
+	ensureFixtureTaskProblem(t, f, id)
 	root := filepath.Dir(f.wrapper)
 	r, e := f.dependencies.WorkItems.Snapshot(root)
 	if e != nil {
@@ -128,7 +129,7 @@ func TestTaskContentCreatePreservesAtomicProblemAndIdenticalRetry(t *testing.T) 
 	if e != nil {
 		t.Fatal(e)
 	}
-	if r.FormatVersion != 3 || len(r.TaskProblemRevisions) != 1 || !taskRequiresSpec(r, "task") || len(r.TaskContentPublications) != 1 {
+	if r.FormatVersion != 3 || len(r.TaskProblemRevisions) != 1 || len(r.TaskContentPublications) != 1 {
 		t.Fatalf("incomplete initial problem: %#v", r)
 	}
 	before, e := os.ReadFile(workItemsPath(root))
@@ -260,12 +261,12 @@ func TestTaskContentReselectAndWithdrawPreserveHistory(t *testing.T) {
 	if err = WithTaskSpecSnapshot(f.dependencies, root, func(s *TaskSpecSession) error {
 		_, e := s.ValidateTarget(r.Tasks[0].Worktree.Locator, r.Tasks[0].Worktree.Ref, r.Tasks[0].GitCommonDir, &basis)
 		return e
-	}); err == nil {
-		t.Fatal("withdrawn selection still authorizes start")
+	}); err != nil {
+		t.Fatalf("withdrawal revoked intact historical document input: %v", err)
 	}
 }
 
-func TestTaskContentNegativeAssessmentBlocksPreviousChoice(t *testing.T) {
+func TestTaskContentNegativeAssessmentIsRecordedWithoutTargetVeto(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
 	if _, err := CreateTaskWorktree(f.dependencies, TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: filepath.Join(f.wrapper, "task"), ExpectedParentOID: f.oid}); err != nil {
@@ -295,8 +296,8 @@ func TestTaskContentNegativeAssessmentBlocksPreviousChoice(t *testing.T) {
 	if err = WithTaskSpecSnapshot(f.dependencies, root, func(s *TaskSpecSession) error {
 		_, e := s.ValidateTarget(task.Worktree.Locator, task.Worktree.Ref, task.GitCommonDir, &basis)
 		return e
-	}); err == nil {
-		t.Fatal("later negative assessment did not block start")
+	}); err != nil {
+		t.Fatalf("later assessment revoked explicit target: %v", err)
 	}
 	raw, _ = os.ReadFile(filepath.Join(root, "selection-draft.json"))
 	v, _ = canonicaljson.DecodeStrict(raw)
@@ -312,5 +313,40 @@ func TestTaskContentNegativeAssessmentBlocksPreviousChoice(t *testing.T) {
 	}
 	if _, err = SelectTaskSolution(f.dependencies, TaskContentInput{TaskID: "task", File: path}); err == nil {
 		t.Fatal("negative assessment was selected")
+	}
+}
+
+func ensureFixtureTaskProblem(t *testing.T, f workItemJourneyFixture, id TaskID) {
+	t.Helper()
+	root := filepath.Dir(f.wrapper)
+	registry, err := f.dependencies.WorkItems.SnapshotRegistrations(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if taskContentState(registry, id).ProblemHead != nil {
+		return
+	}
+	in := contentFixtureProblem(t, f, "fixture/problem-"+string(id))
+	raw, err := os.ReadFile(in.File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, err := canonicaljson.DecodeStrict(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := contentFields(v)
+	m["task_id"] = string(id)
+	m["expected_previous"] = nil
+	raw, err = canonicaljson.Marshal(contentObject(m))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(in.File, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	in.TaskID = id
+	if _, err = RecordTaskProblem(f.dependencies, in); err != nil {
+		t.Fatal(err)
 	}
 }

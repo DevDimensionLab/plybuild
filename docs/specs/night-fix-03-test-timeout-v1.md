@@ -1,5 +1,10 @@
 # NF03A test-timeout evidence boundary v1 — T6C88FCE3
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 Decision: **(c) no justified small implementation**. The historical coverage-run
 timeout has no established cause in the inspected evidence. Do not start a timeout
 fix developer from this Spec. Root w9:pE decides whether to close this backlog
@@ -61,11 +66,11 @@ foreign Run or provider transcript was searched.
 | --- | --- |
 | [Makefile](../../Makefile) `test` runs shell prerequisites, then `go test -v -cover ./...`; it declares no explicit Go timeout or test shards. `acceptance` invokes install/status/upgrade/build scripts. | Both are broader than this diagnosis. Neither proves the original argv; install acceptance is outside this docs role. |
 | [Scoped acceptance](../../scripts/accept-scoped-continuation.sh) already selects a package and anchored test names with `-count=1`. | Existing selection is sufficient machinery for a later bounded check. Its DEP02 prefix is not a validated timeout-fix selection; do not copy it blindly. No new scheduler is justified. |
-| [deliveryCLIBinary](../../internal/taskrun/delivery_cli_test.go) uses absolute `PLY_DELIVERY_TEST_BINARY`, otherwise builds a fresh binary in `t.TempDir()` on each helper call. | Repeated builds are a plausible cost when the variable is absent. Original variable value, call count and cost are unknown; this is no measured bottleneck. |
-| [automaticCLI](../../internal/taskrun/delivery_automatic_cli_test.go) and [cleanupCLIAt](../../internal/taskrun/delivery_default_cleanup_test.go) synchronously run CLI children without a command context deadline. [observePathWriterLiveness](../../internal/taskrun/delivery_writer_liveness.go) falls back to real `lsof`/`ps` when `LocalProcesses` is nil. | Parent dependency closures do not cross CLI process boundaries. A later selection needs a pre-start launch/observer audit; these paths alone establish neither an actual hang nor a new bug. |
+| deliveryCLIBinary (`internal/taskrun/delivery_cli_test.go`, historisk kilde) uses absolute `PLY_DELIVERY_TEST_BINARY`, otherwise builds a fresh binary in `t.TempDir()` on each helper call. | Repeated builds are a plausible cost when the variable is absent. Original variable value, call count and cost are unknown; this is no measured bottleneck. |
+| automaticCLI (`internal/taskrun/delivery_automatic_cli_test.go`, historisk kilde) and cleanupCLIAt (`internal/taskrun/delivery_default_cleanup_test.go`, historisk kilde) synchronously run CLI children without a command context deadline. [observePathWriterLiveness](../../internal/taskrun/delivery_writer_liveness.go) falls back to real `lsof`/`ps` when `LocalProcesses` is nil. | Parent dependency closures do not cross CLI process boundaries. A later selection needs a pre-start launch/observer audit; these paths alone establish neither an actual hang nor a new bug. |
 | NF02's [receiptCLIQualified/receiptControlledRuntime/receiptCLICall](../../internal/taskrun/delivery_receipt_test.go) install adapters and a pre-exec closeout tripwire before startup, use a 45s child context plus 1s WaitDelay, and call modeled closeout in process. | Delivered receipt isolation is already present. Defensive SourceWriters and StartupProcessTree have asserted zero calls in this ordinary non-adopted path; only reached branches count as evidence. Do not commission NF02 again. |
-| NF01's [nf01ReserveOnly](../../internal/taskrun/registry_nf01_test.go) interrupts at the Files seam after reservation and before StartWorker. | Preserve the delivered reservation boundary; old detached-supervisor uncertainty is not a new timeout diagnosis or permission to replay it. |
-| [TestSystemLocalProcessesObservesRealWriters](../../internal/taskrun/delivery_writer_liveness_test.go) starts real shell children and invokes the system observer; [automatic interruption tests](../../internal/taskrun/delivery_automatic_execution_unix_test.go) signal their own process. | Full-package execution includes actual OS/signal behavior. An apparently focused prefix is not an isolation guarantee. No such tests ran here. |
+| NF01's nf01ReserveOnly (`internal/taskrun/registry_nf01_test.go`, historisk kilde) interrupts at the Files seam after reservation and before StartWorker. | Preserve the delivered reservation boundary; old detached-supervisor uncertainty is not a new timeout diagnosis or permission to replay it. |
+| [TestSystemLocalProcessesObservesRealWriters](../../internal/taskrun/delivery_writer_liveness_test.go) starts real shell children and invokes the system observer; automatic interruption tests (`internal/taskrun/delivery_automatic_execution_unix_test.go`, historisk kilde) signal their own process. | Full-package execution includes actual OS/signal behavior. An apparently focused prefix is not an isolation guarantee. No such tests ran here. |
 
 Aggregate suite size, repeated CLI builds and subprocess waits remain separate
 current hypotheses. None identifies the historical failing test. No source-proven

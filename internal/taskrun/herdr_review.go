@@ -148,15 +148,15 @@ func WorkflowReviewRun(d Dependencies, root, id, file string) (WorkflowRun, erro
 			if e != nil {
 				return e
 			}
-			valid := budgetValid(report.BudgetUsage)
+			valid := budgetValid(report.BudgetUsage, s.Request.Agreement)
 			if report.Outcome != "complete" || report.TechnicalAssessment.Gate != "passed" || valid == nil || !*valid || !workflowNoBlockers(report) || !x.Clean || x.Ref != s.Observed.Target.Ref || x.GitCommonDir != s.Observed.Target.GitCommonDir {
-				return workflowError(4, "acceptance requires complete native technical evidence, known usage within A and a clean bound candidate without blockers")
+				return workflowError(4, "acceptance requires complete native technical evidence, known usage within the human-supplied agreement and a clean bound candidate without blockers")
 			}
 		}
 		if r.Decision == "changes_requested" {
 			u := report.BudgetUsage
-			if !workflowUsageAtLeast(u, s.Result.Budget.Floor) || u == nil || !u.InitialExecutionStarted || u.CorrectionRounds >= 3 || u.ActiveSeconds >= 5400 || u.EnvironmentMeasures >= 2 {
-				return workflowError(4, "agreement A is unknown or exhausted; no correction is authorized")
+			if !workflowUsageAtLeast(u, s.Result.Budget.Floor) || u == nil || !u.InitialExecutionStarted || u.CorrectionRounds >= s.Request.Agreement.MaxCorrectionRounds || u.ActiveSeconds >= s.Request.Agreement.MaxActiveSeconds || u.EnvironmentMeasures >= s.Request.Agreement.MaxEnvironmentMeasures {
+				return workflowError(4, "the human-supplied agreement is unknown or exhausted; no correction is authorized")
 			}
 		}
 		binding, e := workflowKeep(d, filepathForRound(*s, "review.json"), r)

@@ -602,9 +602,6 @@ func Continue(d Dependencies, root, id, requestID, sha, summary string) (Questio
 		if e := matchesWinner(q, requestID, sha); e != nil {
 			return nil, "", e
 		}
-		if q.Receipt == nil {
-			return nil, "", failOn(q, CodeNotAcknowledged, "acknowledge the answer before reporting its use")
-		}
 		if q.Continuation != nil {
 			if q.Continuation.Summary != summary {
 				return nil, "", failOn(q, CodeReportConflict, "a different continuation summary is already recorded")

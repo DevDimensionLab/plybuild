@@ -43,7 +43,7 @@ type RetainedDeliveryObservation struct {
 // These checks deliberately treat launchers as historical. This coordinator
 // neither invokes a provider nor authenticates on behalf of the absent owner.
 func deliveryRetentionGuard(d Dependencies, s workflowState) error {
-	if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil || s.Request.Delivery.Agreement == nil || s.Request.Delivery.Agreement.Mode != workspace.DeliveryLocalEpic {
+	if !deliveryRun(s.Request) || s.Result.Delivery == nil || s.Request.Delivery.Agreement == nil || s.Request.Delivery.Agreement.Mode != workspace.DeliveryLocalEpic {
 		return workflowError(4, "retain-effects requires a started stopped interactive local Epic delivery")
 	}
 	cwd, err := d.CWD()

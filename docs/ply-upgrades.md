@@ -1,5 +1,10 @@
 # PV-01: Ply upgrades without binary locking (TC0E6E1FE)
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 Ordinary installed `ply` handles prepared startup and existing Run callbacks.
 Historical Ply path/hash fields remain serialized observations; replacing or
 removing those files does not grant or revoke authority. No version, build,

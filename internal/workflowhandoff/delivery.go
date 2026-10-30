@@ -1,9 +1,7 @@
 package workflowhandoff
 
 import (
-	"encoding/json"
 	"fmt"
-	"path/filepath"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -86,11 +84,8 @@ func validateDeliveryBinding(o canonicaljson.Object) error {
 	if _, e = effectiveDeliveryAgreement(o); e != nil {
 		return e
 	}
-	b, e := taskSpecBasis(o)
-	if e != nil || b == nil {
-		return fmt.Errorf("delivery requires an exact execution Spec basis")
-	}
-	return nil
+	_, e = taskSpecBasis(o)
+	return e
 }
 
 func unlimitedDeliveryBudget(o canonicaljson.Object) bool {
@@ -108,11 +103,7 @@ func deliveryMode(o canonicaljson.Object) string {
 
 func validateDeliveryOrTaskTarget(d Dependencies, contract canonicaljson.Object, target TargetObservation, basis *workspace.TaskSpecBasis) (workspace.TaskSpecEvaluation, error) {
 	if !deliveryHandoff(contract) || deliveryMode(contract) != "candidate" {
-		eval, err := d.taskSpecSession.ValidateTarget(target.Worktree, target.Ref, target.GitCommonDir, basis)
-		if err == nil && deliveryHandoff(contract) {
-			err = validateDeliverySpecAgreement(contract, eval.Spec)
-		}
-		return eval, err
+		return d.taskSpecSession.ValidateTarget(target.Worktree, target.Ref, target.GitCommonDir, basis)
 	}
 	binding, _ := objectMember(contract, "delivery_binding")
 	b := binding.(canonicaljson.Object)
@@ -243,171 +234,6 @@ func DeliveryCleanupAllowed(raw []byte) (bool, error) {
 		}
 	}
 	return false, nil
-}
-
-func BuildDeliveryHandoffDraft(d Dependencies, preparationID, humanActor, ownerClaim, publicationKey, acceptancePath string, options ...DeliveryDraftAuthority) ([]byte, error) {
-	if len(options) > 1 {
-		return nil, fmt.Errorf("at most one delivery authority scope is supported")
-	}
-	allowInstall := len(options) == 1 && options[0].AllowLocalInstall
-	protocol := ""
-	if len(options) == 1 {
-		protocol = options[0].StartupProtocol
-	}
-	if protocol != "" && protocol != workspace.DeliveryMandateReceiptV1 {
-		return nil, fmt.Errorf("unsupported startup protocol")
-	}
-	ws, e := d.Workspace.ObserveContaining()
-	if e != nil {
-		return nil, e
-	}
-	var raw []byte
-	e = WithTaskRunSnapshot(d, ws.Observation.Root, func(locked Dependencies) error {
-		s := locked.taskSpecSession
-		p, e := s.TaskRunPreparation(preparationID)
-		if e != nil {
-			return e
-		}
-		if p.Preparation == nil || p.State != "prepared" || (p.Disposition != "current" && p.Disposition != "active") || p.Freshness != "fresh" || len(p.Reasons) != 0 {
-			return fmt.Errorf("delivery preparation is not current and fresh")
-		}
-		plan := p.Preparation.Plan
-		eval, e := s.CurrentDeliveryTaskSpec(plan.TaskID)
-		if e != nil {
-			return e
-		}
-		if eval.Basis == nil {
-			return fmt.Errorf("execution Spec basis missing")
-		}
-		// A caller's draft option may restrict, but cannot widen, installation
-		// selected by the frozen Goal. Legacy non-Goal Specs keep their contract.
-		if objectString(eval.Spec, "contract_kind") == "execution" && allowInstall {
-			request, _ := objectMember(eval.Spec, "execution_request")
-			raw, e := canonicaljson.Marshal(request)
-			if e != nil {
-				return e
-			}
-			var execution workspace.TaskGoalExecutePreview
-			if e = json.Unmarshal(raw, &execution); e != nil {
-				return e
-			}
-			if !execution.Goal.Executor.LocalInstallAllowed() {
-				return fmt.Errorf("local installation was not selected by the frozen Goal executor")
-			}
-		}
-		agreement, e := workspace.DeliveryAgreementFromSpec(eval.Spec)
-		if e != nil {
-			return e
-		}
-		if len(options) == 1 && options[0].Agreement != nil && !canonicalEqual(bridgeValue(agreement), bridgeValue(options[0].Agreement)) {
-			return fmt.Errorf("selected delivery agreement differs from the prepared execution Spec")
-		}
-		if !filepath.IsAbs(acceptancePath) || filepath.Clean(acceptancePath) != acceptancePath {
-			return fmt.Errorf("acceptance path must be absolute and clean")
-		}
-		if objectString(eval.Spec, "acceptance_path") != acceptancePath {
-			return fmt.Errorf("acceptance path differs from execution Spec")
-		}
-		inputs, e := taskSpecJSONValue(plan.RequiredInputs)
-		if e != nil {
-			return e
-		}
-		basis, _ := taskSpecJSONValue(eval.Basis)
-		goal := deliveryObject(map[string]any{"title": string(plan.TaskID), "recipient_role": "Responsible feature implementor", "objective": "Deliver the selected goal and its exact execution Spec within the authorized local Task and Epic.", "done_when": "The actual human has passed the exact verified candidate and its authorized local integration is observed."})
-		if agreement != nil && agreement.Mode == workspace.DeliveryPullRequest {
-			goal = replaceObjectMember(goal, "done_when", "The exact verified candidate has actual human pass and a verified PR to the agreed repository/base; stop before merge.")
-		} else if agreement != nil && agreement.HumanOwnedIntegration() {
-			goal = replaceObjectMember(goal, "done_when", "Qualify the exact candidate, register Delivery and explicitly release source ownership to the human-started integration command. Stop before integration.")
-		}
-		if agreement != nil && agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA && !agreement.HumanOwnedIntegration() {
-			goal = replaceObjectMember(goal, "done_when", "The exact candidate passed its automatic acceptance and review, and authorized native local Epic integration and closure are observed.")
-			if agreement.Mode == workspace.DeliveryLocalBranch {
-				goal = replaceObjectMember(goal, "done_when", "The exact candidate passed its automatic acceptance and review, and authorized native local branch integration and closure are observed.")
-			}
-		}
-		procedure := []canonicaljson.Value{deliveryObject(map[string]any{"id": "implement", "instruction": "Own design, tests, permitted delegation, review and local delivery. Preserve actual results and report task-requirements for each verified candidate. Human QA and integration are separate facts; never fabricate them.", "required_before": []string{}})}
-		if agreement != nil {
-			goal = replaceObjectMember(goal, "objective", "Deliver the selected goal and exact execution Spec within the frozen single Task delivery agreement.")
-			procedure[0] = replaceObjectMember(procedure[0].(canonicaljson.Object), "instruction", "Own design, tests, permitted delegation, review and the selected delivery. Preserve actual results and report the task-requirements artifact for each verified candidate. Technical qualification, actual human QA and observed delivery are separate facts.")
-		}
-		verifier := deliveryVerifier(acceptancePath, plan.WorktreePath)
-		effects := []canonicaljson.Value{}
-		add := func(id, kind string, scope canonicaljson.Object, max any) {
-			effects = append(effects, deliveryObject(map[string]any{"id": id, "type": kind, "scope": scope, "max_occurrences": max, "sequence": len(effects) + 1}))
-		}
-		add("task-write", "filesystem_write", deliveryObject(map[string]any{"kind": "task_worktree"}), nil)
-		for _, v := range []struct{ kind, op string }{{"git_index_write", "update_index"}, {"git_commit", "create_commit"}, {"git_ref_write", "update_ref"}} {
-			add(v.kind, v.kind, deliveryObject(map[string]any{"kind": "git", "ref": "refs/heads/" + plan.Branch, "expected_before_oid": plan.SourceStartOID(), "operation": v.op}), nil)
-		}
-		add("local-commands", "command_execute", deliveryObject(map[string]any{"kind": "command", "procedure_ids": []string{"implement"}, "verifier_ids": []string{"goal-acceptance"}}), nil)
-		for _, kind := range []string{"process_start"} {
-			add(kind, kind, deliveryObject(map[string]any{"kind": "boolean", "allowed": true}), nil)
-		}
-		if allowInstall {
-			add("install", "install", deliveryObject(map[string]any{"kind": "boolean", "allowed": true}), nil)
-		}
-		if agreement != nil {
-			scope := deliveryObject(map[string]any{"kind": "delivery", "agreement": agreement})
-			if agreement.Mode == workspace.DeliveryPullRequest {
-				add("delivery-push", "push", scope, 1)
-				add("delivery-pr", "pull_request", scope, 1)
-			} else if !agreement.HumanOwnedIntegration() {
-				add("delivery-integration", "integration", scope, 1)
-				if agreement.AutomaticAcceptance() {
-					// Native closeout removes the released source of this exact delivery.
-					add("delivery-cleanup", "cleanup", scope, 1)
-				}
-			}
-		}
-		forbidden := []canonicaljson.Value{}
-		for _, kind := range []string{"cleanup", "deploy", "merge", "pull_request", "push", "release"} {
-			if agreement != nil && agreement.Mode == workspace.DeliveryPullRequest && (kind == "pull_request" || kind == "push") {
-				continue
-			}
-			if kind == "cleanup" && deliveryCleanupAgreement(agreement) {
-				continue
-			}
-			forbidden = append(forbidden, deliveryObject(map[string]any{"type": kind, "reason": "Outside the selected local delivery contract."}))
-		}
-		if agreement != nil && (agreement.Mode == workspace.DeliveryPullRequest || agreement.HumanOwnedIntegration()) {
-			forbidden = append(forbidden, deliveryObject(map[string]any{"type": "integration", "reason": "This developer delivery stops before human-started integration."}))
-		}
-		if !allowInstall {
-			forbidden = append(forbidden, deliveryObject(map[string]any{"type": "install", "reason": "Local installation was not selected."}))
-		}
-		value := bridgeEnvelope("ply.workflow.handoff-draft")
-		value = replaceObjectMember(value, "schema_version", int64(3))
-		if plan.SchemaVersion == 2 {
-			value = replaceObjectMember(value, "schema_version", int64(4))
-		}
-
-		fields := map[string]any{"publication_key": publicationKey, "activity_key": publicationKey, "goal": goal, "recipient": map[string]any{"principal_id": "delivery-owner", "principal_kind": "human_started_agent", "runtime_constraints": []string{"actual-runtime-authority-required"}}, "binding_request": map[string]any{"project_id": plan.Target.ProjectID, "repo_id": plan.Target.RepoID, "target_worktree": plan.WorktreePath, "target_ref": "refs/heads/" + plan.Branch, "expected_oid": plan.SourceStartOID(), "status_policy": map[string]any{"mode": "clean"}}, "inputs": inputs, "authority": map[string]any{"allowed_effects": effects, "forbidden_effects": forbidden, "human_gates": []string{"human_task_qa"}}, "budget": deliveryBudget(nil), "procedure": procedure, "verifiers": []canonicaljson.Value{verifier}, "stop_conditions": deliveryStops(), "reporting": deliveryReporting(), "task_spec_binding": basis, "delivery_binding": map[string]any{"mode": "owner", "human_actor": humanActor, "owner_claim": ownerClaim, "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}}
-		if plan.SchemaVersion == 2 {
-			fields["parallel_binding"] = map[string]any{"preparation_id": p.Preparation.ID, "admission_mode": plan.AdmissionMode, "source_reconciliation": plan.SourceReconciliation}
-		}
-		if protocol != "" {
-			fields["delivery_binding"].(map[string]any)["startup_protocol"] = protocol
-		}
-		if agreement != nil {
-			fields["delivery_binding"].(map[string]any)["agreement"] = agreement
-			if agreement.AutomaticAcceptance() && !agreement.Acceptance.RequireHumanQA {
-				fields["authority"].(map[string]any)["human_gates"] = []string{}
-			}
-		}
-		for k, v := range fields {
-			value = append(value, canonicaljson.Member{Name: k, Value: bridgeValue(v)})
-		}
-		raw, e = canonicaljson.Marshal(value)
-		if e != nil {
-			return e
-		}
-		_, e = ValidateDeliveryTaskRunDraft(raw)
-		if e != nil {
-			return fmt.Errorf("validate delivery owner draft: %w", e)
-		}
-		return e
-	})
-	return raw, e
 }
 
 func bridgeValue(v any) canonicaljson.Value {

@@ -26,7 +26,7 @@ func (f traceNoWrites) Replace(string, []byte) error   { f.t.Fatal("trace replac
 func traceRead(t *testing.T, d Dependencies, root string) TraceHistory {
 	t.Helper()
 	d.Executable = func() (string, error) { t.Fatal("trace inspected current executable"); return "", nil }
-	d.Runner, d.ExecRunner = nil, nil
+	d.Runner = nil
 	d.Files = traceNoWrites{t}
 	d.Workspace.WorkGit, d.Workspace.IntegrationGit, d.Workflow.Git = nil, nil, nil
 	d.StartupProcessTree = func(int) ([]StartupProcess, error) { t.Fatal("trace probed processes"); return nil, nil }
@@ -154,175 +154,6 @@ func TestReadTraceLegacyRoundsAndIndependentDamagedSibling(t *testing.T) {
 	after := traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID)
 	if len(traceKind(after, "round_report")) != 1 || len(traceKind(after, "round_review")) != 2 || !traceReason(after, "trace_round_report_unavailable") {
 		t.Fatalf("damaged first round hid valid later records: %+v", after)
-	}
-}
-
-func TestReadTraceDeliveryLoopsExactBindingsAndNoProbes(t *testing.T) {
-	f := newDeliveryFixture(t, "codex")
-	publishOlder := traceLegacyFixture(t, f)
-	// Use the production frozen goal binding instead of the old fixture's
-	// intentionally permissive human design-document shortcut.
-	f.R.Delivery.Goal = FileBinding{filepath.Join(f.R.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(f.Prepared.Goal.Spec.ManifestSHA256, "sha256:")+".json"), f.Prepared.Goal.Spec.ManifestSHA256}
-	f.File = writeAny(t, f.R.WorkspaceRoot, "trace-delivery-request.json", f.R)
-	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
-	var err error
-	report := func(id, phase string) {
-		t.Helper()
-		r := DeliveryReport{Envelope: deliveryEnv("delivery-report"), RunID: o.RunID, RequestSHA256: o.RequestSHA256, SessionID: o.SessionID, EventID: id, PreviousEventSHA256: o.Delivery.LastEventSHA256, Phase: phase, Summary: "Explicit fixture progress", Meaning: "A report, not a native result.", Evidence: []FileBinding{}, VerifierResults: []DeliveryVerifierResult{}}
-		if phase == "needs_input" {
-			r.Question = ptr("Which exact behavior should the fixture implement?")
-		}
-		o, err = WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, id+".json", r))
-		if err != nil {
-			t.Fatal(err)
-		}
-	}
-	deliveryTestCandidate(t, f, "first rejected behavior")
-	if err = os.WriteFile(f.AcceptancePath, []byte("printf 'actual failed check\\n'\nexit 7\n"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "failed"))
-	if err == nil {
-		t.Fatal("fixture verifier should actually fail")
-	}
-	report("question", "needs_input")
-	report("correction", "working")
-	deliveryTestCandidate(t, f, "second behavior")
-	o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "second"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	o, err = WorkflowDeliveryQA(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "fail", deliveryTestHuman(t, f, o, "fail"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	deliveryTestCandidate(t, f, "third behavior")
-	o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "third"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	o, err = WorkflowDeliveryQA(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "pass", deliveryTestHuman(t, f, o, "pass"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	o, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
-	if err != nil {
-		t.Fatal(err)
-	}
-	oldWorkflowID, oldNativeID := publishOlder()
-	state, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	state.Result.Reasons = append(state.Result.Reasons, Reason{"herdr_bootstrap_response", "A historical startup response was unavailable."}, Reason{"herdr_start_stopped", "Historical startup stopped before a later successful observation."})
-	if err = workflowSave(f.D, state); err != nil {
-		t.Fatal(err)
-	}
-	// A later declared goal is independent of the execution's frozen text.
-	goalDraftRaw, err := os.ReadFile(filepath.Join(f.R.WorkspaceRoot, "goal-draft.json"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	var goalDraft map[string]any
-	if err = json.Unmarshal(goalDraftRaw, &goalDraft); err != nil {
-		t.Fatal(err)
-	}
-	goalDraft["publication_key"], goalDraft["expected_previous"] = "fixture/goal-revision-two", f.Prepared.Preparation.Preparation.Plan.Spec
-	goalDraft["objective"], goalDraft["change_reason"] = "New current goal objective after execution.", "Exercise current versus frozen declarations."
-	goalDraft["requirements"] = []any{map[string]any{"id": "behavior", "acceptance": "The new goal has different acceptance text."}}
-	if _, err = workspace.RecordTaskSpec(f.D.Workspace, workspace.TaskContentInput{TaskID: "task", File: writeAny(t, f.R.WorkspaceRoot, "goal-revision-two.json", goalDraft)}); err != nil {
-		t.Fatal(err)
-	}
-	// Deliberately remove binaries. Historical reading cannot call or qualify
-	// Git, provider/Herdr, an acceptance program, or the installed CLI.
-	for _, path := range []string{f.R.Runtime.Executable.Path, f.R.Runtime.PlyExecutable.Path, f.R.Herdr.Executable.Path} {
-		if err = os.Remove(path); err != nil {
-			t.Fatal(err)
-		}
-	}
-	h := traceRead(t, f.D, f.R.WorkspaceRoot)
-	if len(h.Runs) != 3 {
-		t.Fatalf("mixed-family history has %d runs: %+v", len(h.Runs), h.Reasons)
-	}
-	older := traceRun(t, h, oldWorkflowID)
-	if older.Family != "workflow_run_v1" || len(traceKind(older, "round_report")) != 2 || len(traceKind(older, "round_review")) != 2 || !strings.Contains(string(older.Contract), `"name":"A"`) {
-		t.Fatalf("older semantics lost: %+v", older)
-	}
-	if native := traceRun(t, h, oldNativeID); native.Family != "legacy_task_run" || len(traceKind(native, "run_request")) != 1 {
-		t.Fatalf("native legacy history lost: %+v", native)
-	}
-	run := traceRun(t, h, o.RunID)
-	if run.Coverage != "complete" {
-		t.Fatalf("complete run became partial: %+v", run.Reasons)
-	}
-	if len(run.HistoricalReasons) != 2 || len(run.NativeRunIDs) != 3 {
-		t.Fatalf("historical diagnostics/owner+candidate aliases lost: %+v / %+v", run.HistoricalReasons, run.NativeRunIDs)
-	}
-	if run.Family != "goal_execute_v2" || run.FrozenGoal == nil || *run.FrozenGoal != f.Prepared.Goal {
-		t.Fatalf("frozen goal lost: %+v", run)
-	}
-	var frozen struct {
-		Goal struct {
-			Objective    string `json:"objective"`
-			Requirements []struct {
-				Acceptance string `json:"acceptance"`
-			} `json:"requirements"`
-		} `json:"frozen_goal_declaration"`
-		Execution struct {
-			ContractKind string `json:"contract_kind"`
-		} `json:"frozen_execution_declaration"`
-	}
-	if json.Unmarshal(run.Contract, &frozen) != nil || frozen.Goal.Objective != "Observe a complete delivery without attributing synthetic evidence to a real human." || len(frozen.Goal.Requirements) != 1 || frozen.Goal.Requirements[0].Acceptance != "The actual acceptance entrypoint observes the fixture behavior." || frozen.Execution.ContractKind != "execution" {
-		t.Fatalf("current goal replaced frozen declarations: %s", run.Contract)
-	}
-	deliveryTestSingleReceipt(t, o)
-	verifications, results, qa, integration := traceKind(run, "verification"), traceKind(run, "task_result_technical"), traceKind(run, "human_qa"), traceKind(run, "integration")
-	if len(verifications) != 3 || len(results) != 2 || len(qa) != 2 || len(integration) != 1 {
-		t.Fatalf("attempt/candidate/QA counts=%d/%d/%d/%d; reasons=%+v", len(verifications), len(results), len(qa), len(integration), run.Reasons)
-	}
-	if *verifications[0].Verification.Exit != 7 || verifications[0].Candidate.TaskResultID != nil || *qa[0].Outcome != "fail" || *qa[1].Outcome != "pass" {
-		t.Fatal("failed attempts or exact verdict history lost")
-	}
-	for _, e := range verifications {
-		if !e.Verification.InputsBound || e.Verification.StartedAtUTC == nil || e.Verification.FinishedAtUTC == nil {
-			t.Fatalf("exact verification inputs/time lost: %+v", e)
-		}
-	}
-	for _, e := range append(append(results, qa...), integration...) {
-		if e.NativeID == nil || e.NativeEventID == nil || e.Candidate == nil || e.Candidate.TaskResultID == nil {
-			t.Fatalf("native identity missing: %+v", e)
-		}
-	}
-	if *qa[0].Candidate.TaskResultID == *qa[1].Candidate.TaskResultID || *integration[0].Candidate.TaskResultID != *qa[1].Candidate.TaskResultID {
-		t.Fatal("QA transferred between candidates")
-	}
-	reports := traceKind(run, "delivery_report")
-	if len(reports) != 2 || reports[0].RegisteredAtUTC != nil || reports[0].OccurredAtUTC != nil || reports[0].ReportedAtUTC != nil || reports[1].RegisteredAtUTC != nil {
-		t.Fatal("untimed reports gained timestamps")
-	}
-	var question DeliveryReport
-	if json.Unmarshal(reports[0].Data, &question) != nil || question.Question == nil || *question.Question != "Which exact behavior should the fixture implement?" {
-		t.Fatal("exact question lost")
-	}
-	if strings.Contains(string(traceJSON(h)), `"reply_capability"`) || strings.Contains(string(traceJSON(h)), `"secret"`) {
-		t.Fatal("private reply capability escaped")
-	}
-	traceMixedCLI(t, f.R.WorkspaceRoot)
-	// Corrupt one verifier source; native sibling QA/integration records and
-	// the other verifier attempts remain visible with bounded degradation.
-	if err = os.WriteFile(verifications[0].Source.Locator, []byte("broken verification"), 0600); err != nil {
-		t.Fatal(err)
-	}
-	degraded := traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID)
-	if len(traceKind(degraded, "verification")) != 2 || len(traceKind(degraded, "human_qa")) != 2 || len(traceKind(degraded, "integration")) != 1 || degraded.Coverage != "partial" {
-		t.Fatalf("source damage hid valid siblings: %+v", degraded)
-	}
-	if err = os.Remove(f.R.Delivery.Goal.Locator); err != nil {
-		t.Fatal(err)
-	}
-	missing := traceRun(t, traceRead(t, f.D, f.R.WorkspaceRoot), o.RunID)
-	if missing.FrozenGoal != nil || missing.FrozenBasis == nil || len(traceKind(missing, "human_qa")) != 2 || !traceReason(missing, "trace_frozen_goal_unavailable") {
-		t.Fatalf("missing declaration hid independent native facts: %+v", missing)
 	}
 }
 
@@ -537,10 +368,10 @@ func TestReadTraceRejectsForeignGenerationResultForSameCommit(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")
 	o := deliveryTestAccept(t, f, workflowTestStart(t, f.workflowFixture))
 	deliveryTestCandidate(t, f, "same candidate bytes")
-	review := deliveryTestReview(t, f, "same-candidate")
+
 	var err error
 	for i := 0; i < 2; i++ {
-		o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review)
+		o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -567,8 +398,18 @@ func TestReadTraceRejectsForeignGenerationResultForSameCommit(t *testing.T) {
 	if len(traceKind(run, "verification")) != 2 {
 		t.Fatal("independent native verifier receipts disappeared")
 	}
-	if got := len(traceKind(run, "task_result_technical")); got != 1 || !traceReason(run, "trace_candidate_unbound") {
-		t.Fatalf("foreign generation TaskResult accepted: qualified=%d reasons=%+v", got, run.Reasons)
+	bound := 0
+	for _, entry := range traceKind(run, "verification") {
+		if entry.Candidate == nil {
+			continue
+		}
+		bound++
+		if entry.Candidate.Key != first.Key || entry.Candidate.TaskResultID == nil || *entry.Candidate.TaskResultID != string(first.TaskResult.ID) {
+			t.Fatal("verification acquired another generation's candidate")
+		}
+	}
+	if bound != 1 || !traceReason(run, "trace_candidate_unbound") {
+		t.Fatalf("foreign generation TaskResult accepted: bound=%d reasons=%+v", bound, run.Reasons)
 	}
 }
 

@@ -16,9 +16,6 @@ func goalOperationContentScope(d Dependencies, scope *taskContentScope) Dependen
 			copy := *s
 			copy.contentScope = scope
 			return &copy
-		case guardedTaskStartStore:
-			s.WorkItemStore = narrow(s.WorkItemStore)
-			return s
 		default:
 			return store // Alternate stores retain their stronger validation.
 		}
@@ -59,37 +56,12 @@ func validateGoalOperationContent(d Dependencies, root string, r WorkItemRegistr
 // Recovery candidates come from authoritative target/queue relationships before
 // external reads. All pending entries are retained for interrupted --next
 // recovery, even entries after the newly eligible first Goal.
-func goalExecutionCandidates(root string, r WorkItemRegistry, in TaskGoalExecuteInput, target QueueTarget) map[TaskID]bool {
-	qid := queueID(root, target)
-	q := foldQueue(r, qid)
-	tasks := map[TaskID]bool{}
-	for _, entry := range q.Pending {
-		tasks[entry.TaskID] = true
-	}
-	for _, id := range q.Active {
-		if p := findPreparation(r, id); p != nil {
-			tasks[p.Plan.TaskID] = true
-		}
-	}
-	if in.AcceptancePath != "" {
-		for _, p := range r.TaskPreparations {
-			if p.Plan.QueueID == qid {
-				tasks[p.Plan.TaskID] = true
-			}
-		}
-	}
-	return tasks
-}
-
-// TaskStartupDependencySHA256 binds startup's registry dependencies separately
-// from the physical registry digest retained in readback.
 func TaskStartupDependencySHA256(r WorkItemRegistry, task TaskID) string {
 	r.RawSHA256 = ""
 	// Keep all shared ownership, lifecycle, queue, preparation, integration and
 	// base records. Only external content registrations owned by another Task
 	// are omitted. This deliberately retains conservative conflicts for shared
 	// records; it is not a general task-only view of the registry.
-	r.TaskSpecPolicies = outsideScope(r.TaskSpecPolicies, func(v TaskSpecPolicy) bool { return v.TaskID != task })
 	r.TaskProblemRevisions = outsideScope(r.TaskProblemRevisions, func(v TaskProblemReference) bool { return v.TaskID != task })
 	r.TaskSpecRevisions = outsideScope(r.TaskSpecRevisions, func(v TaskSpecReference) bool { return v.TaskID != task })
 	r.TaskSpecAssessments = outsideScope(r.TaskSpecAssessments, func(v TaskAssessmentReference) bool { return v.TaskID != task })

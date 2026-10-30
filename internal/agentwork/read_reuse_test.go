@@ -140,7 +140,7 @@ func TestOverviewBasisDoesNotCrossOperationBoundary(t *testing.T) {
 			case "unavailable":
 				basis.Available, basis.Bindings = false, nil
 			case "same_session_veto":
-				basis.Vetoes = map[string]string{s.Runtime.(*fakeRuntime).agents[0].Identity.sessionKey(): "native_question"}
+				basis.Vetoes = map[string]string{s.Runtime.(*fakeRuntime).agents[0].Identity.sessionKey(): "native_refusal"}
 			}
 			out, err := s.Overview()
 			if err != nil {

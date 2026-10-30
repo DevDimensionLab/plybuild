@@ -3,77 +3,11 @@ package taskrun
 import (
 	"bytes"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
-	"github.com/sirupsen/logrus"
+
 	"os"
 	"strings"
 	"testing"
 )
-
-func TestAL40RetainsUncertainEffects(t *testing.T) {
-	for _, effect := range []string{DeliveryEffectPartial, DeliveryEffectUnknown} {
-		t.Run(effect, func(t *testing.T) {
-			f, o := retireFixture(t)
-			o = retireStopFixture(t, f, o, effect)
-			owner := f.D
-			var warnings bytes.Buffer
-			oldOutput := logrus.StandardLogger().Out
-			logrus.SetOutput(&warnings)
-			defer logrus.SetOutput(oldOutput)
-			sourceFile := f.Prepared.Preparation.Preparation.Plan.WorktreePath + "/unique-source"
-			if err := os.WriteFile(sourceFile, []byte("unique retained bytes"), 0600); err != nil {
-				t.Fatal(err)
-			}
-			workflowTestModel(t, f.workflowFixture, map[string]any{"closed_transport": true})
-			f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) { return []LocalProcess{{PID: os.Getpid()}}, nil }
-			retireAsCoordinator(&f)
-			out, err := WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, DeliveryRetireInput{Observer: "AL40 modeled coordinator", Reason: "Resource ownership only", RetainEffects: true})
-			if err != nil {
-				t.Fatal(err)
-			}
-			if out.Delivery.Phase != "stopped" || out.Delivery.ActiveStop == nil {
-				t.Fatal("stop lost")
-			}
-			if retireQueueCurrent(t, f) != nil {
-				t.Fatal("owned queue not released")
-			}
-			if workflowTestCalls(t, f.workflowFixture, "pane close") != 0 {
-				t.Fatal("closed pane")
-			}
-			if !strings.Contains(warnings.String(), "original_effect="+effect) || !strings.Contains(warnings.String(), "retained_record=") || !strings.Contains(warnings.String(), "source=") {
-				t.Fatal("uncertain effects warning missing", warnings.String())
-			}
-			status := out.DeliveryStatus.ResourceRetirement
-			if status.State != "retired" || status.Source.Clean || status.RetainedEffects[0].OriginalEffect != effect || out.DeliveryStatus.FinalDelivery.State != "not_delivered" {
-				t.Fatalf("retention readback: %+v", status)
-			}
-			if bytes, err := os.ReadFile(sourceFile); err != nil || string(bytes) != "unique retained bytes" {
-				t.Fatal("source changed", err)
-			}
-			for _, callback := range []func() (WorkflowRun, error){
-				func() (WorkflowRun, error) {
-					return WorkflowDeliveryVerify(owner, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, "/never-read-review")
-				},
-				func() (WorkflowRun, error) {
-					return WorkflowDeliveryIntegrate(owner, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
-				},
-				func() (WorkflowRun, error) {
-					return WorkflowDeliveryReceipt(owner, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, DeliveryBeginInput{Provider: f.R.Runtime.Provider, NativeSession: o.Transport.AgentSessionID}, true)
-				},
-			} {
-				if _, err := callback(); err == nil || !strings.Contains(err.Error(), "owner_retired") {
-					t.Fatalf("late callback not rejected: %v", err)
-				}
-			}
-			s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if _, err = ownerResumePreview(f.D, f.R.WorkspaceRoot, DeliveryOwnerResumeInput{}, s); err == nil || !strings.Contains(err.Error(), "owner_retired") {
-				t.Fatal("resume not rejected", err)
-			}
-		})
-	}
-}
 
 func TestAL40BlockedBeforeResourceEffects(t *testing.T) {
 	for _, tc := range []string{"live_pane", "local_writer", "process_unknown", "native_attempt", "resume_attempt", "released_owner", "completed", "evidence_corrupt", "source_drift", "foreign_stop", "source_ref", "empty_process_table"} {
@@ -290,79 +224,6 @@ func TestAL40PendingReleaseSettledSourceAndDurableRecovery(t *testing.T) {
 	in.Reason = "different"
 	if _, err = WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, in); err == nil {
 		t.Fatal("changed reason accepted")
-	}
-}
-
-func TestAL40ClosedPreparationAndLostReleaseReply(t *testing.T) {
-	for _, closedFirst := range []bool{false, true} {
-		t.Run(map[bool]string{true: "already_released", false: "lost_release_reply"}[closedFirst], func(t *testing.T) {
-			f, o := retireFixture(t)
-			o = retireStopFixture(t, f, o, DeliveryEffectPartial)
-			workflowTestModel(t, f.workflowFixture, map[string]any{"closed_transport": true})
-			f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) { return []LocalProcess{{PID: os.Getpid()}}, nil }
-			retireAsCoordinator(&f)
-			s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-			if err != nil {
-				t.Fatal(err)
-			}
-			p, err := workflowReportPreparation(f.D, s)
-			if err != nil {
-				t.Fatal(err)
-			}
-			target := p.Plan.Target
-			qt := workspace.QueueTargetInput{ProjectID: target.ProjectID, RepoID: target.RepoID, EpicID: target.EpicID}
-			if closedFirst {
-				q, err := workspace.ListTaskQueue(f.D.Workspace, qt, false)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if _, err = workspace.CloseTaskQueue(f.D.Workspace, qt, f.R.PreparationID, q.Revision, "fixture preclosed exact owner", "release"); err != nil {
-					t.Fatal(err)
-				}
-			}
-			if closedFirst {
-				integrationCLIPrepareSuccessor(t, f)
-			}
-			before, err := workspace.ListTaskQueue(f.D.Workspace, qt, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			in := DeliveryRetireInput{Observer: "AL40 root", Reason: "Retain all effects", RetainEffects: true}
-			d := f.D
-			if !closedFirst {
-				d.Fault = func(stage string) error {
-					if stage == "retain_effects_after_release" {
-						return os.ErrInvalid
-					}
-					return nil
-				}
-			}
-			_, err = WorkflowRetireDelivery(d, f.R.WorkspaceRoot, o.RunID, in)
-			if closedFirst && err != nil {
-				t.Fatal(err)
-			}
-			if !closedFirst && err == nil {
-				t.Fatal("lost-reply fault absent")
-			}
-			after, err := workspace.ListTaskQueue(f.D.Workspace, qt, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			f.D.LocalProcesses = func(string, string) ([]LocalProcess, error) {
-				t.Fatal("closed preparation triggered new observation")
-				return nil, nil
-			}
-			if _, err = WorkflowRetireDelivery(f.D, f.R.WorkspaceRoot, o.RunID, in); err != nil {
-				t.Fatal(err)
-			}
-			again, err := workspace.ListTaskQueue(f.D.Workspace, qt, false)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !equal(after, again) || closedFirst && !equal(before, after) {
-				t.Fatal("historical queue changed")
-			}
-		})
 	}
 }
 

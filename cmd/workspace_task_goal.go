@@ -15,7 +15,7 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 	var project, repo, epic, task, document, format, confirmation, provider, model, effort string
 	var additional []string
 	var apply bool
-	c := &cobra.Command{Use: "register TASK_ID", Short: "Preview or publish a supplied first Goal and append its exact queue reference", Long: "Supply a UTF-8 Spec document, explicit title, objective, observable criteria, registered target and delivery policy. Preview is read-only. Apply with its confirmation publishes the first Goal and appends its exact queue reference. A new Task gets an initial Problem; an existing unused Task retains its current Problem and identity. Unrelated queue entries are preserved. Identical retries recover native publications; changed real inputs conflict. Registration never starts an agent, creates a worktree or claims human acceptance. Run the returned next_argv from check_cwd for separate read-only execution readiness; registration success is independent of readiness.", Example: "  ply workspace task goal register explain-errors --spec explain-errors-v1 --document /absolute/spec.md --title 'Explain errors' --objective 'Make failures actionable' --criterion 'Invalid input names the missing choice' --project ply --repo ply --epic workflow --delivery local_epic_integration --acceptance human --format json\n  # Repeat the same flags with --apply --confirmation <preview confirmation>", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	c := &cobra.Command{Use: "register TASK_ID", Short: "Preview or publish a supplied first Goal and append its exact queue reference", Long: "Supply a UTF-8 Spec document, explicit title, objective, observable criteria, registered target and delivery policy. Preview is read-only. Apply with its confirmation publishes the first Goal and appends its exact queue reference. A new Task gets an initial Problem; an existing unused Task retains its current Problem and identity. Unrelated queue entries are preserved. Identical retries recover native publications; changed real inputs conflict. Registration never starts an agent, creates a worktree or claims human acceptance. Choose subsequent operations explicitly.", Example: "  ply workspace task goal register explain-errors --spec explain-errors-v1 --document /absolute/spec.md --title 'Explain errors' --objective 'Make failures actionable' --criterion 'Invalid input names the missing choice' --project ply --repo ply --epic workflow --delivery local_epic_integration --acceptance human --format json\n  # Repeat the same flags with --apply --confirmation <preview confirmation>", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if e := validateWorkFormat(format); e != nil {
 			return e
 		}
@@ -30,7 +30,6 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 			}
 			in.Documents = append(in.Documents, workspace.GoalDocumentInput{ID: id, Locator: path})
 		}
-		// Omitted executor choices retain native execute-time provider defaults.
 		if provider != "" {
 			in.Executor.Provider = &provider
 		}
@@ -46,7 +45,7 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 				return e
 			}
 		} else if out.Kind != "" {
-			fmt.Fprintf(c.OutOrStdout(), "Task: %s; Goal: %s@%d %s\nPhase: %s; registered: %t; queue revision: %d\nReturn: %s at %s\nDelivery: %s; acceptance: %s\nConfirmation: %s\nNo execution started; readiness: %s.\nFrom %s, run: %s\n", out.TaskID, out.Goal.SpecID, out.Goal.Spec.Revision, out.Goal.Spec.ManifestSHA256, out.Phase, out.Applied, out.Queue.Revision, out.Target.ParentRef, out.Target.ParentLocator, out.Delivery.Mode, in.Delivery.Acceptance, out.Confirmation, out.Readiness, out.CheckCwd, strings.Join(out.NextArgv, " "))
+			fmt.Fprintf(c.OutOrStdout(), "Task: %s; Goal: %s@%d %s\nPhase: %s; registered: %t; queue revision: %d\nReturn: %s at %s\nDelivery: %s; acceptance: %s\nConfirmation: %s\nNo execution started.\n", out.TaskID, out.Goal.SpecID, out.Goal.Spec.Revision, out.Goal.Spec.ManifestSHA256, out.Phase, out.Applied, out.Queue.Revision, out.Target.ParentRef, out.Target.ParentLocator, out.Delivery.Mode, in.Delivery.Acceptance, out.Confirmation)
 			if out.Problem != nil {
 				fmt.Fprintf(c.OutOrStdout(), "Problem: revision %d %s\n", out.Problem.Revision, out.Problem.ManifestSHA256)
 			}

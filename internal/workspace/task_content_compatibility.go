@@ -29,8 +29,6 @@ func decodeStoredTaskContent(raw []byte, operation string, published, internal b
 	if operation == "spec_record" && version == 2 {
 		if isTaskGoalSpec(v) {
 			schema = taskGoalSpecSchema(published)
-		} else {
-			schema = taskExecutionSpecSchema(published)
 		}
 	}
 	if operation == "spec_record" {

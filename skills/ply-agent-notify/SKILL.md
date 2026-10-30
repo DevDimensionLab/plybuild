@@ -12,16 +12,12 @@ Reuse it across continuations; skill discovery alone grants no sending permissio
 notification for a human-requested task. Internal delegates return to root without separate sends
 unless the user agreed to a separate delivery boundary.
 
-For an assigned native delivery with an existing authorized route, use the bound
-control's contract-selected startup command (`check-in` or legacy `begin`) with `--notification-route`,
-`--notification-authority` and `--notification-timezone`. Ply creates the private
-Task@2 binding with the actual provider, Task cwd and native activity/run identity.
-Reuse the returned `delivery/notification-task.json`; do not create a second
-binding. This prepares no transport and changes no global configuration.
-If the frozen request already supplies a notification context, reuse that context.
-Internal delegates whose goal gives notifications to a parent omit these flags.
+If the assignment already supplies a notification context, reuse that binding,
+including an existing `delivery/notification-task.json`. Internal delegates return
+their result to the notification owner. The removed execute startup commands do
+not create bindings in this version.
 
-For other new jobs, copy [the task context template](references/task-template.json) into the task's
+For new jobs, copy [the task context template](references/task-template.json) into the task's
 return directory. Bind the activity/run, target worktree, mandate, route, fixed event root, actual
 provider, physical origin/context root, and recipient timezone. Use `codex` or `claude` from the
 actual agent runtime, not a model name or executable lookup. Record ownership and the authority

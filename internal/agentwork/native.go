@@ -1,7 +1,6 @@
 package agentwork
 
 import (
-	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
@@ -49,19 +48,6 @@ func readNative(d workspace.Dependencies, root string) NativeSnapshot {
 	}
 	out.Available = true
 	out.Partial = v.Freshness != "fresh" || len(v.Diagnostics) > 0
-	// Human-input questions are a separate native veto source. Damaged history
-	// of a validated question vetoes its own session; unidentifiable questions
-	// fail closed for all while status remains readable.
-	blocked, unknown, partial := humaninput.ReadQuestionBlockers(root)
-	out.CoverageUnknown = out.CoverageUnknown || unknown
-	out.Partial = out.Partial || partial
-	pending := map[string]bool{}
-	for _, source := range blocked {
-		pending[source.Provider+":"+*source.SessionID] = true
-	}
-	for key := range pending {
-		out.Vetoes[key] = "native_question"
-	}
 	scopeInventory(&out, inventory, nil)
 
 	byID := map[string]taskrun.InventoryRun{}
@@ -85,35 +71,15 @@ func readNative(d workspace.Dependencies, root string) NativeSnapshot {
 				continue
 			}
 			w := Work{ProjectID: string(row.ProjectID), RepoID: string(row.RepoID), EpicID: string(row.EpicID), TaskID: string(row.TaskID), RunID: run.RunID, AttemptRef: run.RunID, Phase: row.Progress.State, NextActor: "unknown", Source: "registered", Freshness: run.Freshness, SourceObservedAtUTC: row.LastActivityUTC}
-			veto := "native_veto_unknown"
+			veto := run.StatusFollowupVeto
+			if run.Freshness != "fresh" {
+				veto = "native_sources_unknown"
+			}
 			if run.Delivery != nil {
 				w.Phase = run.Delivery.Phase
 				w.NextActor = run.Delivery.NextAction.Actor
 				w.NextAction = run.Delivery.NextAction.Kind
 				w.SourceObservedAtUTC = run.Delivery.LastActivityUTC
-				if run.Freshness == "fresh" && run.Delivery.Freshness == "fresh" && run.Delivery.Phase == "working" {
-					veto = run.StatusFollowupVeto
-				}
-				if run.Delivery.Phase == "needs_input" {
-					veto = "native_question"
-				}
-				if run.Delivery.Phase == "stopped" {
-					veto = "native_stop_or_refusal"
-				}
-			}
-			if row.Category == "inactive" || row.Category == "completed" {
-				veto = "native_inactive_or_completed"
-			}
-			if pending[i.Provider+":"+i.Session] {
-				veto = "native_question"
-			}
-			for _, a := range row.NextActions {
-				if a.RunID != nil && *a.RunID != run.RunID {
-					continue
-				}
-				if a.Current && (a.Actor == "human" || a.Actor == "unknown") {
-					veto = "native_action_veto"
-				}
 			}
 			w.Reason = "Read the registered native action before continuing."
 			w.DetailRef = "workflow.trace:" + w.TaskID
@@ -135,9 +101,6 @@ func scopeInventory(out *NativeSnapshot, inventory taskrun.Inventory, err error)
 		out.Partial = true
 	}
 	for _, run := range inventory.Runs {
-		if run.Transport != nil && *run.Transport == "headless" && run.Freshness == "fresh" {
-			continue
-		}
 		if !run.StatusIdentityKnown || run.Freshness == "stale" || run.Provider == nil || run.Herdr == nil || run.Herdr.AgentSessionID == nil {
 			out.CoverageUnknown = true
 			out.Partial = true

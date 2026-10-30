@@ -309,21 +309,6 @@ func TestCapacityReconcileNativeSafetyGates(t *testing.T) {
 	}
 }
 
-func TestCapacityReconcileCLIJourney(t *testing.T) {
-	binary := automaticCLIBinary(t)
-	f, o, path, in := capacityFixture(t)
-	args := []string{"execute", "reconcile-capacity-stop", o.RunID, "--event-id", in.EventID, "--stop", in.StopSHA256, "--provider", "codex", "--native-session", in.NativeSession, "--action", in.Action, "--capacity-event", in.QuotaEvent, "--command-id", in.LastToolResult, "--process-id", in.ProcessID, "--command-sha256", in.CommandSHA256, "--source-sha256", hashFileTest(t, path), "--observer", in.Observer, "--reason", in.Reason}
-	out := automaticCLIOK(t, binary, f, args...)
-	out = automaticCLIOK(t, binary, f, args...)
-	if len(out.Delivery.Events) != 2 || out.Delivery.ActiveStop == nil || !strings.Contains(out.NextAction.Message, "retire") || retireQueueCurrent(t, f) == nil {
-		t.Fatal("CLI audit released ownership or changed stop")
-	}
-	automaticCLIOK(t, binary, f, "execute", "retire", o.RunID, "--observer", in.Observer, "--reason", in.Reason)
-	if retireQueueCurrent(t, f) != nil {
-		t.Fatal("CLI ordinary retirement failed")
-	}
-}
-
 func TestCapacityReconcileRejectedResolutionOnly(t *testing.T) {
 	var s workflowState
 	s.Result.RunID = "synthetic-run"

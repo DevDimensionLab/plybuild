@@ -62,8 +62,19 @@ func TestQueueReviewReadRejectsCorruptPreparationInput(t *testing.T) {
 	if e := os.WriteFile(path, []byte("corrupt"), 0600); e != nil {
 		t.Fatal(e)
 	}
-	if _, e := f.dependencies.WorkItems.Snapshot(filepath.Dir(f.wrapper)); e == nil {
-		t.Fatal("format 4 registry read skipped content closure")
+	root := filepath.Dir(f.wrapper)
+	if _, e := f.dependencies.WorkItems.Snapshot(root); e != nil {
+		t.Fatalf("registration observation required preparation input bytes: %v", e)
+	}
+	if _, e := ShowTaskPreparation(f.dependencies, out.Preparation.ID); e == nil || contentIntegrity(e) != "conflict" {
+		t.Fatalf("explicit preparation read accepted corrupt required input: %v", e)
+	}
+	e := WithTaskSpecSnapshot(f.dependencies, root, func(s *TaskSpecSession) error {
+		_, err := s.TaskRunPreparation(out.Preparation.ID)
+		return err
+	})
+	if e == nil || contentIntegrity(e) != "conflict" {
+		t.Fatalf("Task run accepted corrupt selected preparation input: %v", e)
 	}
 }
 func TestQueueReviewNestedTaskCwdDoesNotSelectEpic(t *testing.T) {

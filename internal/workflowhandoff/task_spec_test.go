@@ -117,6 +117,18 @@ func prepareBoundTaskStart(t *testing.T) (Dependencies, workspace.Dependencies, 
 	if _, err := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "task", Title: "Fixture Task", Description: "Fixture need", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
+	problemDocument := filepath.Join(root, "problem.md")
+	problemBytes := []byte("# Fixture problem\n\nExercise the explicit prepared Task.\n")
+	if err := os.WriteFile(problemDocument, problemBytes, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := workspace.RecordTaskProblem(w, taskSpecFixtureDraft(t, root, "WorkspaceTaskProblemDraft@1", "fixture/problem", map[string]any{
+		"expected_previous": nil, "origin": map[string]any{"kind": "authored"}, "title": "Fixture problem", "summary": "Exercise the explicit prepared Task.", "problem_document_id": "problem",
+		"documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": problemDocument, "sha256": digestBytes(problemBytes), "size_bytes": len(problemBytes), "media_type": "text/markdown", "git_provenance": nil}}},
+		"sources":   []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Explicit fixture setup.",
+	})); err != nil {
+		t.Fatal(err)
+	}
 	r, err := w.WorkItems.Snapshot(root)
 	if err != nil {
 		t.Fatal(err)
@@ -265,21 +277,12 @@ func TestTaskSpecServiceSelectAndAcceptedStartUseExistingLocks(t *testing.T) {
 				t.Fatal(err)
 			}
 			err := <-second
-			if selectFirst && err == nil {
-				t.Fatal("old tuple started after a newer choice")
-			}
-			if !selectFirst && err != nil {
+			if err != nil {
 				t.Fatal(err)
 			}
 			snapshot, err := originalStore.ReadByLocator(input.HandoffLocator)
 			if err != nil {
 				t.Fatal(err)
-			}
-			if selectFirst {
-				if snapshot.Start != nil {
-					t.Fatal("rejected start occupied accepted slot")
-				}
-				return
 			}
 			if snapshot.Start == nil || taskSpecVersion(snapshot.Start.Value) != 2 {
 				t.Fatal("missing accepted @2 start")

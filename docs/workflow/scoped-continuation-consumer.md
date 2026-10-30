@@ -1,5 +1,10 @@
 # PWA consumer binding and executable demo (TABBB0A4A)
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 This completes the [early six-step contract](scoped-continuation.md) with
 consumer-01–03. It supplies no actual PWA disposition or installed qualification.
 The producer's tests use disposable Runs, fake Herdr/provider identities and

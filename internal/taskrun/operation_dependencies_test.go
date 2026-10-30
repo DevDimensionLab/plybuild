@@ -3,7 +3,6 @@ package taskrun
 import (
 	"encoding/json"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -43,36 +42,14 @@ func startupPublishSiblingProblem(t *testing.T, d Dependencies, root string) {
 
 func TestWorkflowStartupConfirmationUsesRelevantContentDependencies(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")
-	binary := os.Getenv("PLY_DELIVERY_TEST_BINARY")
-	if binary != "" {
-		f.R.Runtime.PlyExecutable = Executable{Path: binary, SHA256: hashFileTest(t, binary)}
-		f.D.Executable = func() (string, error) { return binary, nil }
-		f.File = writeAny(t, f.R.WorkspaceRoot, "delivery-request.json", f.R)
-	}
-	cliPreview := func() *string {
-		if binary == "" {
-			return nil
-		}
-		c := exec.Command(binary, "workflow", "run", "start", "--file", f.File, "--check", "--format", "json")
-		c.Dir = f.R.WorkspaceRoot
-		b, err := c.CombinedOutput()
-		if err != nil {
-			t.Fatalf("candidate CLI preview: %v %s", err, b)
-		}
-		var p WorkflowPreview
-		if err = json.Unmarshal(b, &p); err != nil || p.Confirmation == nil {
-			t.Fatalf("candidate preview: %v %s", err, b)
-		}
-		return p.Confirmation
-	}
 	if _, err := workspace.CreateTask(f.D.Workspace, workspace.TaskCreateInput{TaskID: "sibling", Title: "Sibling", Description: "Independent content", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
+	recordFixtureProblem(t, f.D.Workspace, f.R.WorkspaceRoot, "sibling")
 	before, err := workflowPreview(f.D, f.R, f.File, WorkflowPaths{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	beforeCLI := cliPreview()
 	startupPublishSiblingProblem(t, f.D, f.R.WorkspaceRoot)
 	after, err := workflowPreview(f.D, f.R, f.File, WorkflowPaths{})
 	if err != nil {
@@ -83,9 +60,6 @@ func TestWorkflowStartupConfirmationUsesRelevantContentDependencies(t *testing.T
 	}
 	if before.Confirmation == nil || after.Confirmation == nil || *before.Confirmation != *after.Confirmation {
 		t.Fatal("unrelated content invalidated startup confirmation")
-	}
-	if afterCLI := cliPreview(); binary != "" && (*beforeCLI != *afterCLI || *beforeCLI != *before.Confirmation) {
-		t.Fatal("candidate CLI confirmation differs from consumed operation")
 	}
 	if _, err = WorkflowStart(f.D, f.File, *before.Confirmation); err != nil {
 		t.Fatal(err)

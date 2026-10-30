@@ -16,6 +16,9 @@ import (
 var jsonUnmarshal = json.Unmarshal
 
 func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
+	return readWorkflowRequest(file, false)
+}
+func readWorkflowRequest(file string, reportOnly bool) (WorkflowRequest, error) {
 	var r WorkflowRequest
 	b, e := readFile(file, 1<<20, false)
 	if e != nil {
@@ -31,6 +34,9 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if e = json.Unmarshal(b, &fields); e != nil {
 		return r, invalid(e.Error())
 	}
+	if reportOnly && (string(fields["schema_version"]) == "2" || string(fields["schema_version"]) == "3") {
+		return r, workflowError(2, "delivery-owner start has been removed; use an explicit report-run request")
+	}
 	var runtime map[string]json.RawMessage
 	if json.Unmarshal(fields["runtime"], &runtime) == nil && runtime != nil {
 		if _, present := runtime["provider"]; !present && string(fields["schema_version"]) == "1" {
@@ -45,15 +51,6 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if e = decode(b, 1<<20, &r); e != nil {
 		return r, e
 	}
-	if _, present := fields["codex_project_trust"]; present && r.CodexProjectTrust == nil {
-		return r, workflowError(2, "codex_project_trust must be an object, not null")
-	}
-	if _, present := fields["claude_project_trust"]; present && r.ClaudeProjectTrust == nil {
-		return r, workflowError(2, "claude_project_trust must be an object, not null")
-	}
-	if e = workflowValidateTrust(r); e != nil {
-		return r, e
-	}
 	if r.SchemaVersion == 2 || r.SchemaVersion == 3 {
 		if r.StartupProtocol != "" {
 			return r, workflowError(2, "report startup protocol cannot grant delivery authority")
@@ -63,7 +60,7 @@ func ReadWorkflowRequest(file string) (WorkflowRequest, error) {
 	if r.GoalStartEnvironment != nil {
 		return r, workflowError(2, "legacy workflow requests cannot acquire a bound Goal launch environment")
 	}
-	if r.Delivery != nil || r.Worker != nil {
+	if r.Delivery != nil {
 		return r, workflowError(2, "legacy workflow requests cannot acquire delivery-owner authority")
 	}
 	if r.Envelope != workflowEnv("herdr-run-request") || r.ReturnMode != "reviewed_report_only" || r.HumanAuthority.StartSurface != "human_authorized_herdr" || !r.Coordinator.MayRequestChanges || !plain(r.Coordinator.ActorClaim, 1, 256) || !plain(r.Herdr.TabLabel, 1, 80) || !plain(r.Herdr.WorkspaceID, 1, 128) {
@@ -137,10 +134,7 @@ func workflowInitial(r WorkflowRequest, paths WorkflowPaths, observed Observed) 
 			o.NextAction = WorkflowAction{"recipient", "Receive the frozen mandate with check-in in this same session; runtime evaluates each action."}
 		}
 	}
-	if headlessRun(r) {
-		o.Worker = &WorkerStatus{SessionID: "ply-worker:" + id, Phase: "pending", DeveloperSessions: []string{}}
-		o.NextAction = WorkflowAction{"worker", "Start the reserved worker; no provider session has been started."}
-	}
+
 	return workflowState{Request: r, Observed: observed, Result: o, Phase: "reserved", Records: []workflowRecord{}}
 }
 func workflowExisting(r WorkflowRequest) (*WorkflowRun, error) {
@@ -200,27 +194,9 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string, paths Workf
 	if e == nil {
 		e = workflowRunPath(p.Paths, p.RunID)
 	}
-	if headlessRun(r) {
-		p.Effects = []string{"Reserve exactly one selected Goal, Task and native Run", "Start a detached supervisor and one bounded Codex developer at a time", "Enforce Task-file writes and a separate read-only reviewer session; preserve actual test and review evidence", "Qualify automatic acceptance and integrate only into the frozen local Epic", "Retain Task resources on completion; pause, stop and resume preserve this same Run"}
-	}
-	if e == nil && !headlessRun(r) {
+
+	if e == nil {
 		e = verifyExecutable(r.Herdr.Executable)
-	}
-	if e == nil && r.CodexProjectTrust != nil {
-		p.CodexTrust, e = workflowDecideTrust(r, p.Observed.Target.WorktreeLocator)
-		if e == nil {
-			p.Effects = append(p.Effects, workflowCodexTrustEffectText(p.CodexTrust))
-		}
-	}
-	if e == nil && r.ClaudeProjectTrust != nil {
-		p.ClaudeTrust, e = workflowObserveClaudeTrust(r, p.Observed.Target.WorktreeLocator)
-		if e == nil {
-			if p.ClaudeTrust.Reason != "" {
-				p.Effects = append(p.Effects, "Skip automatic Claude folder trust: "+p.ClaudeTrust.Reason)
-			} else {
-				p.Effects = append(p.Effects, "Bind the new tab's Claude configuration environment with one acknowledged shell setup. Before starting Claude, persist folder trust for only "+p.ClaudeTrust.ProjectKey+" in "+p.ClaudeTrust.ConfigPath+". Preserve all other configuration and native permissions. If trust cannot be saved, report the outcome and continue the single normal start; inspect any native dialog in the same tab.")
-			}
-		}
 	}
 	if e != nil {
 		p.Reasons = append(p.Reasons, Reason{"workflow_start_blocked", e.Error()})
@@ -231,17 +207,21 @@ func workflowPreview(d Dependencies, r WorkflowRequest, file string, paths Workf
 		confirmationObserved.RegistrySHA256 = n.dependencySHA256
 	}
 	p.Confirmation = ptr(digest(struct {
-		Request     WorkflowRequest
-		Observed    Observed
-		Paths       WorkflowPaths
-		Effects     []string
-		Trust       *workflowTrustFacts `json:"codex_project_trust,omitempty"`
-		ClaudeTrust *ClaudeTrustPreview `json:"claude_project_trust,omitempty"`
-	}{r, confirmationObserved, p.Paths, p.Effects, p.CodexTrust, p.ClaudeTrust}))
+		Request  WorkflowRequest
+		Observed Observed
+		Paths    WorkflowPaths
+		Effects  []string
+	}{r, confirmationObserved, p.Paths, p.Effects}))
 	return p, nil
 }
 func WorkflowPreviewStart(d Dependencies, file string) (any, error) {
-	r, e := ReadWorkflowRequest(file)
+	return workflowPreviewStart(d, file, false)
+}
+func WorkflowPreviewReportStart(d Dependencies, file string) (any, error) {
+	return workflowPreviewStart(d, file, true)
+}
+func workflowPreviewStart(d Dependencies, file string, reportOnly bool) (any, error) {
+	r, e := readWorkflowRequest(file, reportOnly)
 	if e != nil {
 		return nil, e
 	}
@@ -255,13 +235,16 @@ func WorkflowPreviewStart(d Dependencies, file string) (any, error) {
 		return nil, e
 	}
 	p, e := workflowPreview(d, r, file, WorkflowPaths{})
-	if e == nil && p.CodexTrust != nil && p.CodexTrust.Effect != "" {
-		workflowLogCodexTrust(r, "preview", p.CodexTrust.Effect, p.CodexTrust.Reason)
-	}
 	return p, e
 }
 func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
-	r, e := ReadWorkflowRequest(file)
+	return workflowStart(d, file, confirm, false)
+}
+func WorkflowReportStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
+	return workflowStart(d, file, confirm, true)
+}
+func workflowStart(d Dependencies, file, confirm string, reportOnly bool) (WorkflowRun, error) {
+	r, e := readWorkflowRequest(file, reportOnly)
 	if e != nil {
 		return WorkflowRun{}, e
 	}
@@ -281,7 +264,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 	if p.Confirmation == nil || confirm != *p.Confirmation {
 		return WorkflowRun{}, workflowError(4, "confirmation differs from current preview")
 	}
-	if !headlessRun(r) && os.Getenv("HERDR_ENV") != "1" && d.ApprovedGoalStart == nil {
+	if os.Getenv("HERDR_ENV") != "1" && d.ApprovedGoalStart == nil {
 		return WorkflowRun{}, workflowError(4, "apply requires the local Herdr context (HERDR_ENV=1)")
 	}
 	resolved, e := exec.LookPath(r.Runtime.Provider)
@@ -310,8 +293,6 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 				return &Error{Code: WorkflowStartBindingConflict, Exit: 4, Detail: "start bindings changed before reservation"}
 			}
 			s := workflowInitial(r, fresh.Paths, fresh.Observed)
-			s.CodexTrust = fresh.CodexTrust
-			s.ClaudeTrust = fresh.ClaudeTrust
 			if e = d.writeValue(workflowIndex(r.WorkspaceRoot, s.Result.RunID), s); e != nil {
 				return e
 			}
@@ -345,9 +326,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 				return e
 			}
 			s.Phase = "tab_create_attempted"
-			if headlessRun(r) {
-				s.Phase = "worker_reserved"
-			}
+
 			if e = workflowSave(d, s); e != nil {
 				return e
 			}
@@ -356,9 +335,7 @@ func WorkflowStart(d Dependencies, file, confirm string) (WorkflowRun, error) {
 		})
 	})
 	if e == nil && owned {
-		if headlessRun(r) {
-			return StartWorker(d, r.WorkspaceRoot, workflowID(r), false)
-		}
+
 		e = workflowLaunch(d, r)
 		if e != nil {
 			launchErr := e
@@ -412,14 +389,14 @@ func workflowNewContext(d Dependencies, s *workflowState) error {
 }
 func workflowInstructions(s workflowState, findings []WorkflowFinding) string {
 	if deliveryRun(s.Request) {
-		return deliveryInstructions(s)
+		return "Delivery-owner execution has been removed. Inspect the preserved run with ply workflow run show " + s.Result.RunID + ". The human chooses further work."
 	}
 	o := s.Result
 	startup := fmt.Sprintf("Your first action before target writes is: %s workflow run accept %s --context %s --file <private-acceptance.json>. Acceptance kind ply.workflow.run-acceptance schema_version 1 uses native Acceptance@2 fields. Report actual runtime, policy and native session %s; unknown model is null, never infer it. Negative authority stops work. ", "ply", o.RunID, ShellQuote(o.Paths.Context), o.Transport.AgentSessionID)
 	if reportReceipt(s.Request) {
 		startup = fmt.Sprintf("Before Task writes acknowledge the exact mandate and native session: %s workflow run check-in %s --context %s --provider %s --native-session %s. Unknown model, profile, policy and sandbox coverage stay unknown. Launch configuration is not observed runtime policy; runtime reviews concrete actions. Preserve real refusals and unresolved effects; a blocked/stopped pre-start report grants no work acceptance. ", "ply", o.RunID, ShellQuote(o.Paths.Context), s.Request.Runtime.Provider, ShellQuote(o.Transport.AgentSessionID))
 	}
-	prompt := fmt.Sprintf("Execute only the frozen prepared Task mandate at %s and its exact Spec inputs. The private context is %s. Read the immutable request reservation at %s. Keep its scope, human gates and agreement unchanged. %sAfter your last write in each round submit kind ply.workflow.round-report schema_version 1 with all native TaskRun Report fields, the task-requirements artifact and this binding: run_id=%s request_sha256=%s session_id=%s round=%d control_id=%s previous_report_sha256=%s. Run: %s workflow run report %s --context %s --file <private-round-report.json>. Agreement A: initial execution, at most 3 corrections, 5400 active seconds, 2 environment measures; cumulative usage includes internal corrections. Budget floor: %s. Remaining budget: %s. Stop at the first reached limit. No new agents, scope expansion, TaskResult publication, installation, human QA or integration. After reporting, wait for coordinator review in this same session. Findings: %s", filepath.Join(o.Paths.RunRoot, "mandate.json"), o.Paths.Context, workflowIndex(s.Request.WorkspaceRoot, o.RunID), startup, o.RunID, o.RequestSHA256, o.SessionID, o.Round.Number, workflowJSON(o.Round.ControlID), workflowJSON(o.Round.PreviousReportSHA256), "ply", o.RunID, ShellQuote(o.Paths.Context), workflowJSON(o.Budget.Floor), workflowJSON(map[string]int{"correction_rounds": 3 - o.Budget.Floor.CorrectionRounds, "active_seconds": 5400 - o.Budget.Floor.ActiveSeconds, "environment_measures": 2 - o.Budget.Floor.EnvironmentMeasures}), workflowJSON(findings))
+	prompt := fmt.Sprintf("Execute only the frozen prepared Task mandate at %s and its exact Spec inputs. The private context is %s. Read the immutable request reservation at %s. Keep its scope, human gates and agreement unchanged. %sAfter your last write in each round submit kind ply.workflow.round-report schema_version 1 with all native TaskRun Report fields, the task-requirements artifact and this binding: run_id=%s request_sha256=%s session_id=%s round=%d control_id=%s previous_report_sha256=%s. Run: %s workflow run report %s --context %s --file <private-round-report.json>. Recorded usage: %s. Human-supplied agreement: %s. Findings: %s", filepath.Join(o.Paths.RunRoot, "mandate.json"), o.Paths.Context, workflowIndex(s.Request.WorkspaceRoot, o.RunID), startup, o.RunID, o.RequestSHA256, o.SessionID, o.Round.Number, workflowJSON(o.Round.ControlID), workflowJSON(o.Round.PreviousReportSHA256), "ply", o.RunID, ShellQuote(o.Paths.Context), workflowJSON(o.Budget.Floor), workflowJSON(s.Request.Agreement), workflowJSON(findings))
 	return prompt
 }
 func workflowJSON(v any) string { b, _ := Canonical(v); return string(b) }

@@ -1,5 +1,10 @@
 # AL48: Delivered work with retained source
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../README.md#human-owned-process).
+
 Decision-ready implementation Spec. This documentation deliverable implements no
 product transition and performs no MP-01 action. The primary preserved AL48 Spec
 is normative; the consumer finding supplies evidence, not producer authority.
@@ -61,7 +66,7 @@ references; tests listed here were read, not executed as live cleanup proof.
 
 | Existing support | Inspected path / symbol | Consequence |
 | --- | --- | --- |
-| CL02 default cleanup and frozen keep | [delivery_automatic_closeout.go](../internal/taskrun/delivery_automatic_closeout.go): `automaticCloseoutKeeps`, `ResumeAutomaticLocalDelivery`, `automaticIntegratedResult` | Exact observed automatic integration releases ownership. Cleanup-enabled Runs wait for writer absence and complete only with retired source. Older mandates without cleanup intentionally keep it. No operator-selected retained cleanup obligation exists here. |
+| CL02 default cleanup and frozen keep | delivery_automatic_closeout.go (`internal/taskrun/delivery_automatic_closeout.go`, historisk kilde): `automaticCloseoutKeeps`, `ResumeAutomaticLocalDelivery`, `automaticIntegratedResult` | Exact observed automatic integration releases ownership. Cleanup-enabled Runs wait for writer absence and complete only with retired source. Older mandates without cleanup intentionally keep it. No operator-selected retained cleanup obligation exists here. |
 | Positive writer evidence | [delivery_task_writers.go](../internal/taskrun/delivery_task_writers.go): `taskWriters.cleanup`, `taskWriters.herdr`, `taskWriters.local`; [delivery_writer_liveness.go](../internal/taskrun/delivery_writer_liveness.go): `observeWriterLiveness`, `systemLocalProcesses` | Herdr inventory and local process observation compose. Inspection failure is unknown, never absence. Production uses lsof and /bin/ps; its bounded scope cannot prove arbitrary external writer absence. |
 | AL21 bounded observation | [al21_closeout_observation_test.go](../internal/taskrun/al21_closeout_observation_test.go): `TestAL21CloseoutObservation` | Modeled disappearance/transient recovery can finish the same closeout. Persistent/unknown inventory, local writers and unknown processes preserve closing plus delivered. This does not remove deletion guards or cure a real denial. |
 | AL40 retain effects | [delivery_retain_effects.go](../internal/taskrun/delivery_retain_effects.go): `deliveryRetentionGuard`, `deliveryRetentionObserve`, `deliveryRetainedEffects`; [delivery_resource_status.go](../internal/taskrun/delivery_resource_status.go): `deliveryResourceStatus` | Requires active stop and rejects completed delivery, ownership release or human integration. Observation still calls cleanup writer checks. Retires stopped resources with retained effects, not already delivered work; no supported overlap for MP-01. |

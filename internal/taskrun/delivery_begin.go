@@ -36,7 +36,7 @@ func WorkflowDeliveryBegin(d Dependencies, root, id, contextPath string, in Deli
 	if err != nil {
 		return WorkflowRun{}, err
 	}
-	if !deliveryRun(s.Request) || headlessRun(s.Request) {
+	if !deliveryRun(s.Request) {
 		return WorkflowRun{}, workflowError(4, "begin requires an interactive delivery owner")
 	}
 	if retired, e := deliveryRetirement(s); e != nil {

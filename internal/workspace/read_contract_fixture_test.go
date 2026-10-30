@@ -205,7 +205,6 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 		if seed.TitleSource == "registration" {
 			readContractPublish(t, d, f.Root, func(r *WorkItemRegistry) {
 				r.Tasks = append(r.Tasks, TaskRecord{ID: TaskID(seed.TaskID), Title: title, Description: "Legacy fixture registration", ParentEpicID: EpicID(seed.ParentEpicID), ProjectID: ProjectID(seed.ProjectID), RepoID: RepoID(seed.RepoID), GitCommonDir: alphaRepo.GitCommonDir, WorktreeState: WorkItemUnbound})
-				r.TaskSpecPolicies = append(r.TaskSpecPolicies, TaskSpecPolicy{TaskID: TaskID(seed.TaskID), Mode: "legacy", LegacyResultIDs: []TaskResultID{}})
 			})
 			continue
 		}

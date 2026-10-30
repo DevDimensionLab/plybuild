@@ -162,7 +162,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 					return queueError("first_goal_identity_conflict", "Task ID already belongs to different first-registration input")
 				}
 			} else {
-				if basis == nil || !taskRequiresSpec(r, in.TaskID) {
+				if basis == nil {
 					return queueError("first_goal_identity_conflict", "existing Task needs a native current Problem; inspect Task content before registration")
 				}
 				token = queueDigest(struct {
@@ -177,7 +177,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 				return queueError("first_goal_identity_conflict", "Spec ID belongs to another Task")
 			}
 		}
-		out = FirstGoalResult{Title: in.Title, Objective: in.Objective, Criteria: in.Criteria, Constraints: in.Constraints, Executor: in.Executor, Kind: "ply.workspace.first-goal", TaskID: in.TaskID, Goal: TaskGoalRef{SpecID: in.SpecID, Spec: TaskRevisionRef{Revision: 1}}, Target: target, Delivery: delivery, Sources: []GoalSourceBinding{}, CheckCwd: target.ParentLocator, Readiness: "not_checked", Effects: []string{"publish Task and initial Problem", "preserve supplied documents and publish first Goal", "append exact Goal to queue"}, Confirmation: token, Phase: "preview", NextArgv: []string{"ply", "workflow", "execute", "--project", string(target.ProjectID), "--repo", string(target.RepoID), "--epic", string(target.EpicID), "--spec", in.SpecID, "--check"}}
+		out = FirstGoalResult{Title: in.Title, Objective: in.Objective, Criteria: in.Criteria, Constraints: in.Constraints, Executor: in.Executor, Kind: "ply.workspace.first-goal", TaskID: in.TaskID, Goal: TaskGoalRef{SpecID: in.SpecID, Spec: TaskRevisionRef{Revision: 1}}, Target: target, Delivery: delivery, Sources: []GoalSourceBinding{}, CheckCwd: target.ParentLocator, Readiness: "not_checked", Effects: []string{"publish Task and initial Problem", "preserve supplied documents and publish first Goal", "append exact Goal to queue"}, Confirmation: token, Phase: "preview", NextArgv: []string{}}
 		if !createdHere {
 			out.Problem = basis
 			out.Effects = []string{"preserve supplied documents and publish first Goal", "append exact Goal to queue"}

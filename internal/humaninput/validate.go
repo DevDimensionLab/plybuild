@@ -28,7 +28,6 @@ const (
 	CodeWithdrawn           = "human_input_withdrawn"
 	CodeNotAnswered         = "human_input_not_answered"
 	CodeAnswerMismatch      = "human_input_answer_mismatch"
-	CodeNotAcknowledged     = "human_input_not_acknowledged"
 	CodeReportConflict      = "human_input_report_conflict"
 	CodeStateInvalid        = "human_input_state_invalid"
 	CodeOutcomeUnknown      = "human_input_outcome_unknown"

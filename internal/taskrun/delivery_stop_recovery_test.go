@@ -37,7 +37,7 @@ func TestDeliveryObservedStopInterruptedPublicationRetainsBlock(t *testing.T) {
 			}
 			if name == "after_verification" {
 				deliveryTestCandidate(t, f, "stop after verification")
-				o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "stop"))
+				o, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
 				if err != nil {
 					t.Fatal(err)
 				}

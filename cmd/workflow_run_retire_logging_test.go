@@ -26,7 +26,7 @@ func (w al14WarningWorkspace) ObserveContaining() (workflowhandoff.WorkspaceSnap
 // retirement whose warning corrupted JSON. This narrow command regression
 // isolates output routing before any workspace mutation or process inspection.
 func TestAL14ReportRetirementWarningsStayOnStderr(t *testing.T) {
-	for _, surface := range []string{"run", "execute"} {
+	for _, surface := range []string{"run"} {
 		t.Run(surface, func(t *testing.T) {
 			observed := errors.New("modeled observation ends before any effect")
 			d := taskrun.Dependencies{Workflow: workflowhandoff.Dependencies{Workspace: al14WarningWorkspace{err: observed}}}
@@ -36,11 +36,7 @@ func TestAL14ReportRetirementWarningsStayOnStderr(t *testing.T) {
 			t.Cleanup(func() { logrus.SetOutput(previous) })
 			root := &cobra.Command{Use: "ply", SilenceErrors: true, SilenceUsage: true}
 			workflow := &cobra.Command{Use: "workflow"}
-			if surface == "run" {
-				workflow.AddCommand(newWorkflowRunCommand(d))
-			} else {
-				workflow.AddCommand(newWorkflowExecuteCommand(d))
-			}
+			workflow.AddCommand(newWorkflowRunCommand(d))
 			root.AddCommand(workflow)
 			root.SetOut(&stdout)
 			root.SetErr(&stderr)

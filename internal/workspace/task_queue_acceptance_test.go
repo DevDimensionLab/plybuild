@@ -148,8 +148,8 @@ func TestPreparationP2TitleAfterReservationP4NamedConflictP6CAS(t *testing.T) {
 	}
 	id := TaskID("task-b")
 	before := queueStateBytes(t, f)
-	if _, e = PrepareTask(f.dependencies, TaskPrepareInput{Target: queueTargetFixture(), Selector: QueueSelector{Kind: "task", TaskID: &id}}); e == nil {
-		t.Fatal("different named task bypassed current")
+	if preview, err := PrepareTask(f.dependencies, TaskPrepareInput{Target: queueTargetFixture(), Selector: QueueSelector{Kind: "task", TaskID: &id}}); err != nil || preview.State != "preview" {
+		t.Fatalf("another Task blocked explicit preparation: %v", err)
 	}
 	if _, e = CloseTaskQueue(f.dependencies, queueTargetFixture(), p.Preparation.ID, 1, "wrong revision", "advance"); e == nil {
 		t.Fatal("wrong revision accepted")

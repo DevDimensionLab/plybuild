@@ -153,9 +153,6 @@ func deliveryRecoveryCreateTab(d Dependencies, owned workflowState, deadline tim
 	if err = d.fault("delivery_recovery_before_tab_send"); err != nil {
 		return owned, err
 	}
-	if err = workflowTrustFresh(owned); err != nil {
-		return owned, err
-	}
 	b, err := workflowStartupCall(d, owned, deadline, workflowTabCreateArgv(owned, recovery.DestinationWorkspaceID)...)
 	if err != nil {
 		return owned, err
@@ -187,7 +184,7 @@ func deliveryRecoveryCreateTab(d Dependencies, owned workflowState, deadline tim
 		s.RecoveryTransport = &binding
 		s.Result.StartupRecovery.ReplacementTransport = &binding
 		s.Result.Transport = WorkflowTransport{WorkspaceID: transport.WorkspaceID, TabID: transport.TabID, PaneID: transport.PaneID, TerminalID: transport.TerminalID, State: "unknown", Observation: "fresh", ObservedAt: d.Now().UTC().Format(time.RFC3339Nano)}
-		if err = d.writeValue(workflowStartupPath(*s, "agent-start-attempt.json"), map[string]any{"recovery_sha256": s.Recovery.SHA256, "transport_sha256": binding.SHA256, "argv": workflowStartArgv(workflowEffectiveRequest(*s), s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)}); err != nil {
+		if err = d.writeValue(workflowStartupPath(*s, "agent-start-attempt.json"), map[string]any{"recovery_sha256": s.Recovery.SHA256, "transport_sha256": binding.SHA256, "argv": workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, s.Result.Transport.PaneID)}); err != nil {
 			return err
 		}
 		s.Phase = "agent_start_attempted"

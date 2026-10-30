@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func TestTaskCommandDiagnosesRequiredNewerPublicationWithoutContentValues(t *testing.T) {
+func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T) {
 	d, root := viewFixture(t)
 	repo := filepath.Join(root, "repository")
 	if err := os.Mkdir(repo, 0700); err != nil {
@@ -38,6 +40,31 @@ func TestTaskCommandDiagnosesRequiredNewerPublicationWithoutContentValues(t *tes
 		t.Fatal(err)
 	}
 	if _, err := workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: "task", Title: "Task", Description: "Synthetic diagnostic fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
+		t.Fatal(err)
+	}
+
+	document := filepath.Join(root, "problem.md")
+	contents := []byte("# Explicit fixture problem\n")
+	if err := os.WriteFile(document, contents, 0600); err != nil {
+		t.Fatal(err)
+	}
+	fields := map[string]any{
+		"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785",
+		"publication_key": "fixture/problem", "task_id": "task", "registry_upgrade": nil,
+		"recorder":          map[string]any{"actor_claim": "fixture", "control_surface": "isolated test", "recorded_at_utc": "2026-10-30T00:00:00Z"},
+		"expected_previous": nil, "origin": map[string]any{"kind": "authored"}, "title": "Fixture problem", "summary": "Test content diagnostics.", "problem_document_id": "problem",
+		"documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": document, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(contents)), "size_bytes": len(contents), "media_type": "text/markdown", "git_provenance": nil}}},
+		"sources":   []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Explicit fixture setup.",
+	}
+	problemRaw, err := json.Marshal(fields)
+	if err != nil {
+		t.Fatal(err)
+	}
+	problemPath := filepath.Join(root, "problem.json")
+	if err := os.WriteFile(problemPath, problemRaw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := workspace.RecordTaskProblem(d, workspace.TaskContentInput{TaskID: "task", File: problemPath}); err != nil {
 		t.Fatal(err)
 	}
 	r, err := d.WorkItems.Snapshot(root)
@@ -96,23 +123,19 @@ func TestTaskCommandDiagnosesRequiredNewerPublicationWithoutContentValues(t *tes
 		t.Fatal(err)
 	}
 	out, err := runWorkspaceView(t, d, "task", "show", "task", "--format", "json")
-	if err == nil {
-		t.Fatal("required newer semantics were accepted")
+	if err != nil {
+		t.Fatalf("document semantics blocked Task observation: %v", err)
 	}
-	var diagnostic map[string]any
-	if decodeErr := json.Unmarshal([]byte(out), &diagnostic); decodeErr != nil {
-		t.Fatalf("failure must have machine diagnostic: %v; %q; %v", decodeErr, out, err)
+	var observed map[string]any
+	if err := json.Unmarshal([]byte(out), &observed); err != nil {
+		t.Fatal(err)
 	}
-	if diagnostic["code"] != "task_content_reader_incompatible" || diagnostic["artifact_schema"] != "WorkspaceTaskProblemRevision@1" {
-		t.Fatalf("wrong compatibility diagnostic: %s", out)
+	problem, ok := observed["problem"].(map[string]any)
+	if !ok || problem["integrity"] != "incompatible" {
+		t.Fatalf("document incompatibility was hidden: %s", out)
 	}
-	for _, key := range []string{"operation", "artifact", "reader_capability", "cause", "next_action"} {
-		if value, ok := diagnostic[key].(string); !ok || value == "" {
-			t.Fatalf("missing %s: %s", key, out)
-		}
-	}
-	if !strings.Contains(out, "future_policy") || strings.Contains(out+err.Error(), "SECRET_FIXTURE_VALUE_NEVER_DISPLAY") {
-		t.Fatalf("diagnostic lost field cause or leaked content: %s %v", out, err)
+	if !strings.Contains(out, "task_content_reader_incompatible") || strings.Contains(out, "SECRET_FIXTURE_VALUE_NEVER_DISPLAY") {
+		t.Fatalf("diagnostic missing or content leaked: %s", out)
 	}
 	after, err := os.ReadFile(filepath.Join(root, ".ply", "work-items.yaml"))
 	if err != nil || string(before) != string(after) {

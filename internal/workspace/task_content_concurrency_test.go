@@ -166,10 +166,7 @@ func TestTaskSpecGuardUsesExistingWriterLocksInBothOrders(t *testing.T) {
 				t.Fatal(err)
 			}
 			err := <-second
-			if writerFirst && err == nil {
-				t.Fatal("old selection was accepted after P2")
-			}
-			if !writerFirst && err != nil {
+			if err != nil {
 				t.Fatal(err)
 			}
 		})

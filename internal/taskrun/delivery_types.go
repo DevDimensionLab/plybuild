@@ -46,11 +46,7 @@ type DeliveryRequestInput struct {
 	HumanAuthority                                              HumanAuthority
 	HerdrExecutable                                             Executable
 	HerdrWorkspaceID, TabLabel                                  string
-	CodexProjectTrust                                           *CodexProjectTrust
-	ClaudeProjectTrust                                          *ClaudeProjectTrust
 	Delivery                                                    DeliveryContract
-	Worker                                                      *WorkerContract
-	ControlContract                                             *ControlContract
 	GoalStartEnvironment                                        *GoalStartEnvironment
 }
 
@@ -157,3 +153,5 @@ func DeliveryLocalIntegrationBoundary(a *workspace.DeliveryAgreement) string {
 	}
 	return "after_human_pass"
 }
+
+func deliveryOwnerSession(s workflowState) string { return s.Result.Transport.AgentSessionID }

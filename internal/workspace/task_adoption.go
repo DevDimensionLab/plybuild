@@ -106,12 +106,6 @@ func validateStoredAdoption(r WorkItemRegistry, o WorktreeOperationRecord) error
 	if a.Kind != "WorkspaceTaskAdoptionIntent@1" || a.Confirmation != queueDigest(p) || p.Input.TaskID != o.TaskID || p.Input.Path != o.TargetLocator || p.Input.Ref != o.SourceRef || p.Source.OID != p.Input.ExpectedOID || p.Source.Locator != o.TargetLocator || p.Source.Ref != o.SourceRef || p.Source.GitCommonDir != o.GitCommonDir || !p.Source.Clean || !p.Source.InventoryMatch || p.Parent.OID != o.ParentOID || p.Parent.Tree != o.ParentTree || p.Source.OID == o.ParentOID || p.Source.Tree == o.ParentTree || a.Writers.State != "absent" || contentUTC(a.RecordedAtUTC) != nil {
 		return fmt.Errorf("invalid adopted operation %s", o.ID)
 	}
-	if o.Execution != nil {
-		p := o.Execution
-		if o.Release != nil || p.SourceMode != "adopted" || p.AdoptionID != o.ID || p.Confirmation != goalExecutionDigest(*p) || p.Goal.Goal != o.Adoption.Plan.Goal || p.StartOID != operationStartOID(o) || p.StartTree != operationStartTree(o) {
-			return fmt.Errorf("invalid adopted execution fence")
-		}
-	}
 	if o.Release != nil {
 		v := o.Release
 		if v.Kind != "WorkspaceTaskAdoptionRelease@1" || v.OperationID != o.ID || v.IntentDigest != o.IntentDigest || !digestPattern.MatchString(v.ExpectedHead) || v.ExecutionFence != "unstarted" || contentText(2000)(v.Reason) != nil || contentUTC(v.RecordedAtUTC) != nil || v.Confirmation != adoptionReleaseDigest(*v) {
@@ -294,7 +288,7 @@ func adoptionReleased(r WorkItemRegistry, task TaskID) bool {
 	return op == nil && adoptionPredecessor(r, task) != ""
 }
 func adoptionReadback(p TaskAdoptionPlan, o *WorktreeOperationRecord) TaskAdoptionReadback {
-	out := TaskAdoptionReadback{Origin: "adopted", Kind: "ply.workspace.task-worktree-adoption", SchemaVersion: 1, Phase: "preview", Plan: p, Confirmation: queueDigest(p), Operation: o, GitEffects: []string{}, Reasons: []string{}, NextArgv: []string{"ply", "workflow", "execute", "--spec", p.Goal.SpecID, "--check"}, CheckCwd: p.Target.ParentLocator}
+	out := TaskAdoptionReadback{Origin: "adopted", Kind: "ply.workspace.task-worktree-adoption", SchemaVersion: 1, Phase: "preview", Plan: p, Confirmation: queueDigest(p), Operation: o, GitEffects: []string{}, Reasons: []string{}, NextArgv: []string{}, CheckCwd: p.Target.ParentLocator}
 	out.NextArgv = adoptionApplyArgv(p, out.Confirmation)
 	if o != nil {
 		out.NextArgv = adoptionApplyArgv(p, o.Adoption.Confirmation)
@@ -305,7 +299,7 @@ func adoptionReadback(p TaskAdoptionPlan, o *WorktreeOperationRecord) TaskAdopti
 		}
 		if o.State == "ready" {
 			out.Phase = "adopted"
-			out.NextArgv = []string{"ply", "workflow", "execute", "--spec", p.Goal.SpecID, "--check"}
+			out.NextArgv = []string{}
 		}
 		if o.Release != nil {
 			out.Phase = "released"
@@ -568,9 +562,6 @@ func ReleaseTaskAdoption(d Dependencies, task TaskID, id WorktreeOperationID, re
 				}
 				return queueError("adoption_release_conflict", "different release already recorded")
 			}
-			if o.Execution != nil {
-				return queueError("adoption_execution_exists", "execution intent exists for this adoption; recover its preserved native execution request")
-			}
 			current, _ := findOperation(r, task)
 			if current == nil || current.ID != id {
 				return queueError("adoption_release_replaced", "adoption no longer owns this Task")
@@ -669,9 +660,6 @@ func adoptionMetadataDependencies(d Dependencies, task TaskID) Dependencies {
 			copy.adoptionMetadataOnly = true
 			copy.adoptionReleaseTask = task
 			return &copy
-		case guardedTaskStartStore:
-			s.WorkItemStore = narrow(s.WorkItemStore)
-			return s
 		default:
 			return store
 		}
@@ -685,7 +673,7 @@ func validateAdoptionMetadataRelease(old, next WorkItemRegistry, task TaskID) er
 	}
 	o, oi := findOperation(old, task)
 	t, ti := findTask(old, task)
-	if o == nil || t == nil || o.Adoption == nil || o.Execution != nil || o.Release != nil || oi >= len(next.WorktreeOperations) || ti >= len(next.Tasks) {
+	if o == nil || t == nil || o.Adoption == nil || o.Release != nil || oi >= len(next.WorktreeOperations) || ti >= len(next.Tasks) {
 		return fmt.Errorf("metadata release lost active unstarted generation")
 	}
 	n := next.WorktreeOperations[oi]
@@ -721,8 +709,8 @@ func (s *TaskSpecSession) ValidateTaskStartWriters(id TaskID) error {
 	if o == nil || o.Adoption == nil {
 		return nil
 	}
-	if o.Release != nil || o.Execution == nil {
-		return queueError("adoption_generation_stale", "start requires this adoption's durable execution intent")
+	if o.Release != nil {
+		return queueError("adoption_generation_stale", "adoption was released")
 	}
 	_, e := adoptionWriters(s.Dependencies, o.TargetLocator)
 	return e

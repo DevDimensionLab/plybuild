@@ -284,28 +284,15 @@ func newIntegrationJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork boo
 		if a.Mode != DeliveryPullRequest {
 			a.TargetWorktree = r.Epics[0].RepoBindings[0].Worktree.Locator
 		}
-		goal := goalFixture(t, base, "task", "goal", a)
-		goalQueueFixture(t, base, []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}})
-		preview, e := PreviewTaskGoalExecution(base.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
-		if e != nil {
-			t.Fatal(e)
-		}
-		prepared, e := PrepareTaskGoalExecution(base.dependencies, preview.Input, preview.Confirmation, goalHumanFixture())
-		if e != nil {
-			t.Fatal(e)
-		}
-		basis, bound = &prepared.Basis, prepared.Delivery
-		taskPath = prepared.Preparation.Plan.WorktreePath
-		r = mustQueueRegistry(t, base)
-		readyTask, _ = findTask(r, "task")
-	} else {
-		input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
-		ready, e := CreateTaskWorktree(base.dependencies, input)
-		if e != nil {
-			t.Fatal(e)
-		}
-		readyTask = &ready.Task
+		a.SourceRef = "refs/heads/task"
+		bound = &a
 	}
+	input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
+	ready, e := CreateTaskWorktree(base.dependencies, input)
+	if e != nil {
+		t.Fatal(e)
+	}
+	readyTask = &ready.Task
 	if !legacy && basis == nil {
 		b := fixtureSelectTaskSpec(t, base)
 		basis = &b
@@ -739,7 +726,7 @@ func TestTaskIntegrationClassifiesAlreadyIntegratedBlockedConflictAndPartial(t *
 		}
 	})
 
-	t.Run("QA pass alone cannot overcome failed technical gate", func(t *testing.T) {
+	t.Run("explicit integration does not require a passed technical gate", func(t *testing.T) {
 		fixture := newIntegrationJourneyFixture(t)
 		if err := fixture.dependencies.WorkItems.WithLock(fixture.root, func(session WorkItemStoreSession) error {
 			registry, err := session.Snapshot()
@@ -753,13 +740,13 @@ func TestTaskIntegrationClassifiesAlreadyIntegratedBlockedConflictAndPartial(t *
 		}
 		input := TaskIntegrationInput{TaskID: "task", TaskResultID: fixture.resultID, HumanQARecordID: fixture.qaID, ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
 		checked, err := CheckTaskIntegration(fixture.dependencies, input)
-		if err != nil || checked.Readback.Classification != "blocked" {
+		if err != nil || checked.Readback.Classification != "ready" {
 			t.Fatalf("check=%#v error=%v", checked, err)
 		}
 		input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
 		applied, err := ApplyTaskIntegration(fixture.dependencies, input)
 		registry, _ := fixture.dependencies.WorkItems.Snapshot(fixture.root)
-		if err != nil || applied.Readback.Classification != "blocked" || len(registry.IntegrationAuthorities) != 0 {
+		if err != nil || applied.Readback.Classification != "exact_effect" || len(registry.IntegrationAuthorities) != 1 {
 			t.Fatalf("apply=%#v error=%v registry=%#v", applied, err, registry)
 		}
 	})

@@ -244,7 +244,7 @@ func TestAL10ProviderStopAfterReceiptIsNotCalledPreStart(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if shown, _ := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID); strings.Contains(shown.NextAction.Message, "pre-start") || strings.Contains(shown.NextAction.Message, "without acceptance") || !strings.Contains(shown.NextAction.Message, "recorded native start") {
+	if shown, _ := WorkflowShow(f.D, f.R.WorkspaceRoot, o.RunID); strings.Contains(shown.NextAction.Message, "pre-start") || strings.Contains(shown.NextAction.Message, "without acceptance") || !strings.Contains(shown.NextAction.Message, "Post-start provider stop preserved") {
 		t.Fatalf("stop after receipt is mislabeled: %q", shown.NextAction.Message)
 	}
 	if _, err = WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, al10Report(t, f, o, "after-stop", "blocked", "not_run", nil, nil)); err == nil || strings.Contains(err.Error(), "pre-start") {
@@ -269,7 +269,7 @@ func TestAL10ProviderStopAfterLegacyAcceptanceNamesRecordedStart(t *testing.T) {
 			t.Fatalf("legacy stop after positive acceptance says %q: %q", wrong, shown.NextAction.Message)
 		}
 	}
-	if !strings.Contains(shown.NextAction.Message, "recorded native start") {
+	if !strings.Contains(shown.NextAction.Message, "Post-start provider stop preserved") {
 		t.Fatalf("stop does not name the recorded native start: %q", shown.NextAction.Message)
 	}
 }

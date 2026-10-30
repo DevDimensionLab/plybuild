@@ -101,17 +101,10 @@ func ValidateDeliveryAgreement(a DeliveryAgreement) error {
 		if contentPath(a.TargetWorktree) != nil || a.GitHubRepository != "" || a.Remote != "" {
 			return fmt.Errorf("local delivery requires an exact absolute target worktree and no remote or GitHub repository")
 		}
-		if a.Mode == DeliveryLocalEpic && ordinaryProductRef(a.TargetRef) {
-			return fmt.Errorf("local_epic_integration cannot target main/master; explicitly choose local_branch_integration")
-		}
 	default:
 		return fmt.Errorf("unknown delivery mode %q", a.Mode)
 	}
 	return nil
-}
-
-func ordinaryProductRef(ref string) bool {
-	return ref == "refs/heads/main" || ref == "refs/heads/master"
 }
 
 // BindDeliveryAgreement only fills an unbound source. It never infers a mode or
@@ -229,61 +222,19 @@ func ValidateDeliveryAuthorization(a DeliveryAuthorization) error {
 	return nil
 }
 
-func deliveryAgreementForResult(d Dependencies, root string, registry WorkItemRegistry, result TaskResultRecord) (*DeliveryAgreement, error) {
-	link := taskResultSpecLink(registry, result.ID)
-	if link == nil {
-		return nil, nil
-	}
-	evaluation, e := historicalTaskSpec(d, root, registry, link.Basis)
-	if e != nil {
-		return nil, e
-	}
-	return DeliveryAgreementFromSpec(evaluation.Spec)
-}
-
 func validateIntegrationDelivery(d Dependencies, root string, r WorkItemRegistry, result TaskResultRecord, qaID HumanQARecordID, auth *DeliveryAuthorization, target QueueTarget) error {
-	agreement, e := deliveryAgreementForResult(d, root, r, result)
-	if e != nil {
-		return e
-	}
-	if agreement == nil && auth == nil {
+	if auth == nil {
 		return nil
 	}
-	if agreement == nil || auth == nil || ValidateDeliveryAuthorization(*auth) != nil || auth.CandidateRunID != result.RunID {
-		return workError(ErrorTaskIntegrationBlocked, "delivery authorization differs from the result-bound immutable agreement and native run", nil)
+	if auth.CandidateRunID != result.RunID {
+		return workError(ErrorTaskIntegrationBlocked, "delivery Run differs from the exact result", nil)
 	}
-	effective, e := deliveryAuthorizedAgreement(*agreement, auth)
-	if e != nil {
-		return workError(ErrorTaskIntegrationBlocked, "delivery authorization differs from the result-bound immutable agreement and native run", e)
+	if auth.Agreement.Mode == DeliveryPullRequest {
+		return workError(ErrorTaskIntegrationBlocked, "pull_request target is not a local integration", nil)
 	}
-	agreement = &effective
-	if agreement.Mode == DeliveryPullRequest {
-		return workError(ErrorTaskIntegrationBlocked, "pull_request authorizes no local integration", nil)
-	}
-	if (agreement.HumanOwnedIntegration() || auth.HumanIntegrationRequired) && auth.HumanIntegration == nil {
-		return workError(ErrorTaskIntegrationBlocked, "human_integration_required: the developer mandate stops before integration; use ply integration", nil)
-	}
-	if h := auth.HumanIntegration; h != nil && (h.TaskResultID != result.ID || h.HumanQARecordID != qaID) {
-		return workError(ErrorTaskIntegrationBlocked, "human integration decision differs from the exact candidate and QA", nil)
-	}
-	latestQA, e := LatestTaskHumanQA(r.HumanQARecords, result.ID, result.ResultOID, result.ResultTree)
-	if agreement.AutomaticAcceptance() {
-		latestQA, e = latestRegistryAcceptanceHumanQA(r, result)
-	}
-	if e != nil {
-		return e
-	}
-	decision, e := EvaluateDeliveryAcceptance(agreement, result, latestQA)
-	if e != nil || decision.Outcome != "pass" || qaID != "" && (latestQA == nil || latestQA.ID != qaID) || qaID == "" && !agreement.AutomaticAcceptance() {
-		return workError(ErrorTaskIntegrationBlocked, "delivery acceptance is not satisfied for this exact candidate: "+decision.Reason, e)
-	}
-	bound, e := BindDeliveryAgreement(*agreement, target, result.SourceRef)
-	if e != nil || !contentTypedEqual(bound, *agreement) {
-		return workError(ErrorTaskIntegrationBlocked, "delivery target differs from the exact registered return context", e)
-	}
-	evidence, e := d.HandoffEvidence.ReadTaskEvidence(TaskHandoffEvidenceRequest{ActivityID: result.ActivityID, RunID: result.RunID, HandoffID: result.HandoffID, HandoffLocator: result.HandoffLocator, HandoffSHA256: result.HandoffSHA256, StartReceiptID: result.StartReceiptID, StartReceiptLocator: result.StartReceiptLocator, StartReceiptSHA256: result.StartReceiptSHA256, TerminalResultID: result.TerminalResultID, TerminalResultLocator: result.TerminalResultLocator, TerminalResultSHA256: result.TerminalResultSHA256, InspectionSHA256: result.InspectionSHA256})
-	if e != nil || !evidence.SchemaValid || !evidence.DigestValid || !evidence.LifecycleValid || !evidence.BindingValid || !evidence.CapabilityValid || !evidence.PrincipalSessionValid || !evidence.PolicyValid || !contentTypedEqual(evidence.DeliveryAuthorization, auth) {
-		return workError(ErrorTaskIntegrationBlocked, "delivery authority is not confirmed by revalidated native run evidence", e)
+	bound, err := BindDeliveryAgreement(auth.Agreement, target, result.SourceRef)
+	if err != nil || !contentTypedEqual(bound, auth.Agreement) {
+		return workError(ErrorTaskIntegrationBlocked, "delivery target differs from the exact registered return context", err)
 	}
 	return nil
 }

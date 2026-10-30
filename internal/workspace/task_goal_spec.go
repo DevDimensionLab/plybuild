@@ -3,7 +3,6 @@ package workspace
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
@@ -89,21 +88,6 @@ func taskGoalSpecSchema(published bool) map[string]contentRule {
 		doc = contentDescriptorRule()
 	}
 	s["documents"] = contentList(31, doc, contentIDKey, false)
-	return s
-}
-
-func taskExecutionSpecSchema(published bool) map[string]contentRule {
-	s := taskContentSchema("spec_record", published, false)
-	s["schema_version"] = contentInteger(2, 2)
-	s["kind"] = contentEnum("WorkspaceTaskSpecDraft@2")
-	if published {
-		s["kind"] = contentEnum("WorkspaceTaskSpecRevision@2")
-	}
-	s["contract_kind"] = contentEnum("execution")
-	s["goal_origin"] = taskGoalRefRule()
-	s["execution_request_sha256"] = contentDigest
-	s["acceptance_path"] = contentPath
-	s["execution_request"] = goalExecutionRequestRule
 	return s
 }
 
@@ -199,108 +183,4 @@ func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, 
 	}
 	sort.Slice(out.RequiredInputs, func(i, j int) bool { return out.RequiredInputs[i].ID < out.RequiredInputs[j].ID })
 	return out, nil
-}
-
-func validateExecutionGoalOrigin(d Dependencies, root string, r WorkItemRegistry, task TaskID, spec canonicaljson.Value) error {
-	m := contentFields(spec)
-	if op, _ := findOperation(r, task); op != nil && op.Adoption != nil && m["implementation_basis"] != nil && !isTaskGoalSpec(spec) && (contentInt(m, "schema_version") != 2 || contentString(m, "contract_kind") != "execution") {
-		return queueError("adoption_requires_goal_execute", "adopted sources require native Goal execute; legacy execution publication is outside this first cut")
-	}
-	if contentInt(m, "schema_version") != 2 || contentString(m, "contract_kind") != "execution" {
-		return nil
-	}
-	var origin TaskGoalRef
-	if e := contentDecode(m["goal_origin"], &origin); e != nil {
-		return e
-	}
-	goal, e := loadTaskGoal(d, root, r, task, origin)
-	if e != nil {
-		return e
-	}
-	var p TaskGoalExecutePreview
-	if e = contentDecode(m["execution_request"], &p); e != nil {
-		return e
-	}
-	if goalExecutionDigest(p) != contentString(m, "execution_request_sha256") || !contentTypedEqual(goal, p.Goal) || contentString(m, "acceptance_path") != p.AcceptancePath {
-		return queueError("task_goal_binding_conflict", "execution request differs from its exact goal or acceptance path")
-	}
-	if e := validateGoalDeliveryBinding(p); e != nil {
-		return e
-	}
-	agreement, e := DeliveryAgreementFromSpec(spec)
-	if e != nil || !contentTypedEqual(agreement, p.Delivery) {
-		return queueError("task_goal_binding_conflict", "execution delivery differs from its preserved goal and request")
-	}
-	t, _ := findTask(r, task)
-	if t == nil || p.Workspace != root {
-		return queueError("task_goal_binding_conflict", "execution request belongs to another workspace or Task")
-	}
-	epic, _ := findEpic(r, t.ParentEpicID)
-	if epic == nil {
-		return queueError("task_goal_binding_conflict", "execution Epic is not registered")
-	}
-	parent, _ := findEpicRepo(*epic, t.RepoID)
-	if parent == nil || p.Target != (QueueTarget{ProjectID: t.ProjectID, RepoID: t.RepoID, EpicID: t.ParentEpicID, GitCommonDir: t.GitCommonDir, ParentWorktreeID: parent.Worktree.ID, ParentLocator: parent.Worktree.Locator, ParentRef: parent.Worktree.Ref}) {
-		return queueError("task_goal_binding_conflict", "execution request differs from the registered return worktree")
-	}
-	previous := m["previous"]
-	if _, draft := m["expected_previous"]; draft {
-		previous = m["expected_previous"]
-	}
-	if !contentTypedEqual(valueRevision(previous), p.PreviousSpec) {
-		return queueError("task_goal_binding_conflict", "execution request differs from its preserved predecessor Spec")
-	}
-	if p.SourceMode == "adopted" {
-		o, _ := adoptionOperation(r, p.AdoptionID)
-		if o == nil || o.Adoption == nil || o.Execution == nil || goalExecutionDigest(*o.Execution) != goalExecutionDigest(p) || o.Release != nil || o.TaskID != task || o.Adoption.Plan.Goal != origin || operationStartOID(*o) != p.StartOID || operationStartTree(*o) != p.StartTree || o.ParentOID != p.ParentOID || o.ParentTree != p.ParentTree || o.TargetLocator != p.WorktreePath || o.SourceRef != "refs/heads/"+p.Branch {
-			return queueError("task_goal_binding_conflict", "execution differs from adoption receipt")
-		}
-	}
-	basis := contentFields(m["implementation_basis"])
-	if contentString(basis, "parent_oid") != p.ParentOID || contentString(basis, "parent_tree") != p.ParentTree || contentString(basis, "start_oid") != goalStartOID(p) || contentString(basis, "start_tree") != goalStartTree(p) || contentString(basis, "project_id") != string(p.Target.ProjectID) || contentString(basis, "repo_id") != string(p.Target.RepoID) || contentString(basis, "epic_id") != string(p.Target.EpicID) || contentString(basis, "git_common_dir") != p.Target.GitCommonDir || contentString(basis, "parent_worktree_id") != string(p.Target.ParentWorktreeID) || contentString(basis, "parent_ref") != p.Target.ParentRef {
-		return queueError("task_goal_binding_conflict", "execution base differs from its frozen request")
-	}
-	if !contentTypedEqual(valueRevision(m["problem"]), &goal.Problem) || contentString(m, "spec_id") != goal.Goal.SpecID {
-		return queueError("task_goal_binding_conflict", "execution must retain the exact goal and problem")
-	}
-	reqs := contentArray(m, "requirements")
-	if len(reqs) != len(goal.Requirements) {
-		return queueError("task_goal_binding_conflict", "execution requirements differ from goal")
-	}
-	for i, req := range reqs {
-		x := contentFields(req)
-		if contentString(x, "id") != goal.Requirements[i].ID || contentString(x, "acceptance") != goal.Requirements[i].Acceptance {
-			return queueError("task_goal_binding_conflict", "execution requirements differ from goal")
-		}
-	}
-	return nil
-}
-
-// ValidateTaskExecutorChoice validates resolved choices, independently of local
-// account, executable and permission settings. Callers resolve defaults first.
-func ValidateTaskExecutorChoice(provider, model, effort string) error {
-	if provider != "codex" && provider != "claude" {
-		return fmt.Errorf("unsupported implementor %q; choose codex or claude", provider)
-	}
-	if model == "" || strings.TrimSpace(model) != model || contentText(256)(model) != nil {
-		return fmt.Errorf("the implementor model is unknown; record a model in the goal or existing provider settings")
-	}
-	if effort != "" && effort != "low" && effort != "medium" && effort != "high" && effort != "xhigh" && effort != "max" && effort != "minimal" && effort != "none" {
-		return fmt.Errorf("unsupported reasoning effort %q", effort)
-	}
-	if provider == "claude" && (effort == "minimal" || effort == "none") {
-		return fmt.Errorf("Claude does not support reasoning effort %q", effort)
-	}
-	return nil
-}
-
-// TaskExecutorDefaults is shared with interactive launch; never use the old
-// Goal's provider-specific model/effort as the new provider's defaults.
-func TaskExecutorDefaults(provider string, settings map[string]any) (string, string) {
-	if provider == "codex" {
-		model, _ := settings["model"].(string)
-		effort, _ := settings["model_reasoning_effort"].(string)
-		return model, effort
-	}
-	return "opus", "medium"
 }

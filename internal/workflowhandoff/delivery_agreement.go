@@ -135,21 +135,6 @@ func validateDeliveryEffectScope(kind string, v canonicaljson.Value) error {
 	return nil
 }
 
-func validateDeliverySpecAgreement(handoff canonicaljson.Object, spec canonicaljson.Value) error {
-	a, err := deliveryAgreement(handoff)
-	if err != nil {
-		return err
-	}
-	want, err := workspace.DeliveryAgreementFromSpec(spec)
-	if err != nil {
-		return err
-	}
-	if !canonicalEqual(bridgeValue(a), bridgeValue(want)) {
-		return fmt.Errorf("delivery mandate differs from its frozen execution Spec")
-	}
-	return validateDeliveryAgreementEffects(handoff, a)
-}
-
 // DeliveryCandidateRuntimeBinding is read only; it binds native candidate
 // evidence to the owning workflow without using a mutable registry lookup.
 func DeliveryCandidateRuntimeBinding(raw []byte) (runID, requestSHA string, err error) {

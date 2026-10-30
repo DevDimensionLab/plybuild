@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -178,107 +177,5 @@ func assertParentFormatDetail(t *testing.T, option string, tc parentFormatCase, 
 		t.Fatalf("lost command error: %q", detail)
 	} else if !tc.err && !strings.Contains(detail, "malformed output") {
 		t.Fatalf("lost parser error: %q", detail)
-	}
-}
-
-func TestParentGitCapabilityGoalPreview(t *testing.T) {
-	f := parentCapabilityFixture(t, true)
-	before := parentCapabilityState(t, f)
-	for _, option := range []string{"--show-object-format=storage", "--show-ref-format"} {
-		for _, tc := range parentFormatCases {
-			t.Run(option+"/"+tc.name, func(t *testing.T) {
-				hits := parentFormatSeam(t, &f, option, tc)
-				out, err := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
-				if *hits == 0 {
-					t.Fatal("fixture did not reach parent format command")
-				}
-				if err == nil || out.Confirmation != "" {
-					t.Fatal("unsupported parent issued goal confirmation")
-				}
-				reason := queueErrorReasons(err)[0]
-				if reason.Code != tc.code {
-					t.Fatalf("lost goal reason: %+v", reason)
-				}
-				assertParentFormatDetail(t, option, tc, reason.Message)
-				if parentCapabilityState(t, f) != before {
-					t.Fatal("goal preview changed registry/content/refs/inventory")
-				}
-			})
-		}
-	}
-}
-
-func TestParentGitCapabilityChangedBeforeApply(t *testing.T) {
-	for _, goal := range []bool{false, true} {
-		for _, option := range []string{"--show-object-format=storage", "--show-ref-format"} {
-			t.Run(fmt.Sprintf("goal=%t/%s", goal, option), func(t *testing.T) {
-				f := parentCapabilityFixture(t, goal)
-				before := parentCapabilityState(t, f)
-				if goal {
-					p, err := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
-					if err != nil || p.Confirmation == "" {
-						t.Fatalf("supported preview: %v", err)
-					}
-					hits := parentFormatSeam(t, &f, option, parentFormatCases[0])
-					if _, err = PrepareTaskGoalExecution(f.dependencies, p.Input, p.Confirmation, goalHumanFixture()); err == nil {
-						t.Fatal("changed format applied")
-					}
-					if *hits == 0 {
-						t.Fatal("apply did not reobserve format")
-					}
-				} else {
-					in := TaskPrepareInput{Target: queueTargetFixture(), Selector: QueueSelector{Kind: "next"}}
-					p, err := PrepareTask(f.dependencies, in)
-					if err != nil || p.Confirmation == nil {
-						t.Fatalf("supported preview: %v", err)
-					}
-					hits := parentFormatSeam(t, &f, option, parentFormatCases[0])
-					in.Apply, in.Confirmation = true, *p.Confirmation
-					out, err := PrepareTask(f.dependencies, in)
-					if err == nil || out.Preparation != nil || out.Confirmation != nil || !strings.Contains(err.Error(), "task_prepare_conflict") {
-						t.Fatalf("changed format apply: %+v %v", out, err)
-					}
-					if *hits == 0 {
-						t.Fatal("apply did not reobserve format")
-					}
-				}
-				if parentCapabilityState(t, f) != before {
-					t.Fatal("refused apply changed registry/content/refs/inventory")
-				}
-			})
-		}
-	}
-}
-
-func TestParentGitCapabilitySupportedFormats(t *testing.T) {
-	for _, object := range []string{"sha1", "sha256"} {
-		t.Run(object, func(t *testing.T) {
-			t.Setenv("GIT_DEFAULT_HASH", object)
-			for _, goal := range []bool{false, true} {
-				f := parentCapabilityFixture(t, goal)
-				before := parentCapabilityState(t, f)
-				hits := parentFormatSeam(t, &f, "--show-object-format=storage", parentFormatCase{output: object + "\n"})
-				var oid, tree string
-				if goal {
-					out, err := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
-					if err != nil || out.Confirmation == "" {
-						t.Fatalf("supported goal: %v", err)
-					}
-					oid, tree = out.ParentOID, out.ParentTree
-				} else {
-					out, err := PrepareTask(f.dependencies, TaskPrepareInput{Target: queueTargetFixture(), Selector: QueueSelector{Kind: "next"}})
-					if err != nil || out.Confirmation == nil {
-						t.Fatalf("supported preparation: %+v %v", out, err)
-					}
-					oid, tree = out.Plan.ParentOID, out.Plan.ParentTree
-				}
-				if *hits == 0 || !objectIDsMatchFormat(object, oid, tree) {
-					t.Fatalf("format/OID mismatch: %s %s %s", object, oid, tree)
-				}
-				if parentCapabilityState(t, f) != before {
-					t.Fatal("supported preview wrote state")
-				}
-			}
-		})
 	}
 }

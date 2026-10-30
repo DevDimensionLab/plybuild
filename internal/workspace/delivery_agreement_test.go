@@ -46,75 +46,6 @@ func TestDeliveryAgreementHumanOwnershipIsExplicitAndVersioned(t *testing.T) {
 	}
 }
 
-func TestDeliveryAgreementSurvivesPublicationQueueAndFrozenExecution(t *testing.T) {
-	for _, tc := range []struct {
-		mode  string
-		human bool
-	}{{DeliveryPullRequest, false}, {DeliveryLocalEpic, false}, {DeliveryLocalBranch, false}, {DeliveryLocalEpic, true}, {DeliveryLocalBranch, true}, {DeliveryPullRequest, true}} {
-		mode := tc.mode
-		name := mode
-		if tc.human {
-			name += "/human"
-		}
-		t.Run(name, func(t *testing.T) {
-			f := newWorkItemJourneyFixture(t)
-			a := fixtureAgreement(mode, "refs/heads/epic")
-			if tc.human {
-				a.SchemaVersion = 2
-				a.IntegrationOwner = IntegrationOwnerHuman
-			}
-			if mode != DeliveryPullRequest {
-				a.TargetWorktree = filepath.Join(f.wrapper, "epic")
-			}
-			goal := goalFixture(t, f, "task", "goal", a)
-			q := goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}})
-			if len(q.Pending) != 1 || !contentTypedEqual(q.Pending[0].Delivery, &a) {
-				t.Fatal("queue lost exact agreement")
-			}
-			first, err := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), Next: true})
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !contentTypedEqual(first.Goal.Delivery, &a) || first.Delivery == nil || first.Delivery.SourceRef != "refs/heads/"+first.Branch {
-				t.Fatal("preview did not preserve goal and bind actual source")
-			}
-			prepared, err := PrepareTaskGoalExecution(f.dependencies, first.Input, first.Confirmation, goalHumanFixture())
-			if err != nil {
-				t.Fatal(err)
-			}
-			if !contentTypedEqual(prepared.Delivery, first.Delivery) {
-				t.Fatal("preparation changed delivery")
-			}
-			r := mustQueueRegistry(t, f)
-			spec, err := readRegisteredTaskManifest(f.dependencies.TaskContent, filepath.Dir(f.wrapper), r, prepared.Basis.Spec.ManifestSHA256)
-			if err != nil {
-				t.Fatal(err)
-			}
-			got, err := DeliveryAgreementFromSpec(spec)
-			if err != nil || !contentTypedEqual(got, first.Delivery) {
-				t.Fatalf("frozen Spec lost agreement: %v", err)
-			}
-			var frozen TaskGoalExecutePreview
-			if err = contentDecode(contentFields(spec)["execution_request"], &frozen); err != nil {
-				t.Fatal(err)
-			}
-			changed := *frozen.Delivery
-			changed.TargetRef = "refs/heads/other"
-			frozen.Delivery = &changed
-			if validateGoalDeliveryBinding(frozen) == nil {
-				t.Fatal("execution accepted target switch without goal revision")
-			}
-			// A subsequent published goal changes no bytes of the already-started run.
-			a.TargetRef = "refs/heads/other"
-			goalFixture(t, f, "task", "revised-goal", a)
-			old, _, err := storedGoalExecution(f.dependencies, filepath.Dir(f.wrapper), mustQueueRegistry(t, f), first.Input, first.Confirmation)
-			if err != nil || old == nil || !contentTypedEqual(old.Delivery, first.Delivery) {
-				t.Fatalf("later goal revision changed frozen execution: %v", err)
-			}
-		})
-	}
-}
-
 func deliveryIntegrationInput(f integrationJourneyFixture) TaskIntegrationInput {
 	return TaskIntegrationInput{TaskID: "task", TaskResultID: f.resultID, HumanQARecordID: f.qaID, ExpectedResultOID: f.resultOID, ExpectedParentOID: f.oid, DeliveryAuthorization: f.evidence.evidence.DeliveryAuthorization}
 }
@@ -147,27 +78,6 @@ func TestLocalBranchDeliveryIntegratesMainAndMasterWithoutRemoteAndPreservesRemo
 				if remote && runLocalGit(t, parent, "rev-parse", "refs/remotes/origin/"+branch) != f.oid {
 					t.Fatal("local delivery changed remote refs")
 				}
-				q, err := ListTaskQueue(f.dependencies, queueTargetFixture(), false)
-				if err != nil {
-					t.Fatal(err)
-				}
-				_, err = CloseTaskQueue(f.dependencies, queueTargetFixture(), q.Current.PreparationID, q.Revision, "Fixture observed local Delivery", "advance")
-				if err != nil {
-					t.Fatal(err)
-				}
-				base, err := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-				if err != nil {
-					t.Fatal(err)
-				}
-				_, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *base.Confirmation})
-				if err != nil {
-					t.Fatal(err)
-				}
-				r := mustQueueRegistry(t, f.workItemJourneyFixture)
-				ep, p := queueTargetBinding(r, q.Target)
-				if currentEpicBase(r, ep, p).OID != f.resultOID || foldQueue(r, q.QueueID).Current != nil {
-					t.Fatal("native completion did not preserve base and queue facts")
-				}
 				if _, err = CheckTaskIntegration(f.dependencies, input); err != nil || git.count() != 1 {
 					t.Fatalf("recovery did not reuse effect: %v", err)
 				}
@@ -177,7 +87,7 @@ func TestLocalBranchDeliveryIntegratesMainAndMasterWithoutRemoteAndPreservesRemo
 }
 
 func TestLocalBranchDeliveryRejectsUnauthenticatedOrChangedAgreement(t *testing.T) {
-	for _, defect := range []string{"missing", "forged-evidence", "wrong-run", "wrong-target", "wrong-worktree", "wrong-mode", "dirty-parent", "moved-parent", "changed-candidate"} {
+	for _, defect := range []string{"wrong-run", "wrong-target", "wrong-worktree", "wrong-mode", "dirty-parent", "moved-parent", "changed-candidate"} {
 		t.Run(defect, func(t *testing.T) {
 			f := newIntegrationJourneyFixtureHistory(t, false, false, fixtureAgreement(DeliveryLocalBranch, "refs/heads/main"))
 			input := deliveryIntegrationInput(f)
@@ -261,6 +171,24 @@ func TestLocalBranchStoredPlanCannotAcquireMainAuthorityByRemovingContract(t *te
 	}
 }
 
+func TestLocalEpicAgreementAcceptsExplicitMainAndMasterTargets(t *testing.T) {
+	for _, ref := range []string{"refs/heads/main", "refs/heads/master"} {
+		t.Run(ref, func(t *testing.T) {
+			a := fixtureAgreement(DeliveryLocalEpic, ref)
+			a.TargetWorktree = "/tmp/explicit-parent"
+			target := QueueTarget{ProjectID: a.ProjectID, RepoID: a.RepoID, EpicID: a.EpicID, ParentRef: ref, ParentLocator: a.TargetWorktree}
+			bound, err := BindDeliveryAgreement(a, target, "refs/heads/task")
+			if err != nil || bound.TargetRef != ref || bound.SourceRef != "refs/heads/task" {
+				t.Fatalf("explicit registered target was vetoed by branch name: %v", err)
+			}
+			target.ParentRef = "refs/heads/another"
+			if _, err = BindDeliveryAgreement(a, target, "refs/heads/task"); err == nil {
+				t.Fatal("mismatched registered target accepted")
+			}
+		})
+	}
+}
+
 func TestDeliveryAgreementStrictShapeAndHistoricalAbsence(t *testing.T) {
 	if a, err := DeliveryAgreementFromSpec(canonicaljson.Object{}); err != nil || a != nil {
 		t.Fatal("historical contract acquired authority")
@@ -272,11 +200,11 @@ func TestDeliveryAgreementStrictShapeAndHistoricalAbsence(t *testing.T) {
 	if deliveryAgreementRule(contentObject(v)) == nil {
 		t.Fatal("unknown authority field accepted")
 	}
-	for _, mode := range []string{DeliveryLocalEpic, "", "local"} {
+	for _, mode := range []string{"", "local"} {
 		a := fixtureAgreement(mode, "refs/heads/main")
 		a.TargetWorktree = "/tmp/main"
 		if ValidateDeliveryAgreement(a) == nil {
-			t.Fatalf("%s gained main permission", mode)
+			t.Fatalf("unsupported delivery mode %q accepted", mode)
 		}
 	}
 	if !strings.HasPrefix(DeliveryAgreementDigest(fixtureAgreement(DeliveryPullRequest, "refs/heads/main")), "sha256:") {

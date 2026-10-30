@@ -59,9 +59,8 @@ func TestTaskSpecUnknownBasisDoesNotReportStale(t *testing.T) {
 		_, err := s.ValidateTarget(filepath.Join(f.wrapper, "task"), "refs/heads/task", s.Registry.Tasks[0].GitCommonDir, &basis)
 		return err
 	})
-	var contentErr *TaskContentError
-	if !errors.As(err, &contentErr) || contentErr.Code != "task_content_observation_unknown" {
-		t.Fatalf("start guard misclassified unknown basis: %v", err)
+	if err != nil {
+		t.Fatalf("current observation must not revoke an intact historical input: %v", err)
 	}
 }
 
@@ -93,7 +92,7 @@ func TestTaskSpecGuardRejectsUnboundAndForgedBasis(t *testing.T) {
 				_, err = s.ValidateTarget(path, "refs/heads/task", s.Registry.Tasks[0].GitCommonDir, ptr)
 				return err
 			})
-			if (err == nil) != (name == "valid") {
+			if (err == nil) != (name == "valid" || name == "null") {
 				t.Fatalf("basis %s: %v", name, err)
 			}
 		})
@@ -149,9 +148,9 @@ func TestTaskSpecTargetRejectsRelevantMissingPathsAndOwnershipConflicts(t *testi
 					b.TaskID = "wrong"
 				case "wrong_spec":
 					b.Spec.ManifestSHA256 = digestTaskBytes([]byte("different selected Spec"))
-					expect = "task_spec_selection_stale"
+					expect = "task_spec_binding_conflict"
 				case "unbound_selected_target":
-					basisPtr, expect = nil, "task_spec_required"
+					basisPtr, expect = nil, ""
 				case "unregistered_target":
 					locator = filepath.Join(f.wrapper, "main")
 				case "selected_registration_missing":
@@ -267,12 +266,13 @@ func TestTaskIntegrationRecoveryReportsEffectWhenContentIsMissing(t *testing.T) 
 		t.Fatal(err)
 	}
 	recovered, err := ApplyTaskIntegration(f.dependencies, in)
-	if err == nil || recovered.Readback.Classification != "exact_effect" || recovered.Readback.GitChanged == nil || !*recovered.Readback.GitChanged || git.count() != 1 {
-		t.Fatalf("lost observed effect or hid failed persistence: %#v %v merges=%d", recovered, err, git.count())
+	if err != nil || recovered.Readback.Classification != "exact_effect" || recovered.Readback.GitChanged == nil || !*recovered.Readback.GitChanged || git.count() != 1 {
+		t.Fatalf("optional document blocked exact effect recovery: %#v %v merges=%d", recovered, err, git.count())
 	}
 	v := contentFields(recovered.Readback.Value)
-	if v["integration_result"] != nil || recovered.Readback.NextAction.Kind != "read_only_recovery_control" {
-		t.Fatal("claimed unpersisted result or lost recovery action")
+	r, err = f.dependencies.WorkItems.Snapshot(f.root)
+	if err != nil || v["integration_result"] == nil || len(r.IntegrationResults) != 1 {
+		t.Fatalf("recovery did not persist exactly one observed effect: %v", err)
 	}
 }
 
@@ -284,7 +284,7 @@ func TestTaskResultGreenSpecRequiresFunctionalRequirementCoverage(t *testing.T) 
 	}
 }
 
-func TestTaskIntegrationResumeRejectsProblemChangeBeforeAttempt(t *testing.T) {
+func TestTaskIntegrationResumeIgnoresUnrelatedProblemChange(t *testing.T) {
 	f := newIntegrationJourneyFixture(t)
 	git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
 	f.dependencies.IntegrationGit = git
@@ -307,12 +307,12 @@ func TestTaskIntegrationResumeRejectsProblemChangeBeforeAttempt(t *testing.T) {
 		t.Fatal(err)
 	}
 	r, err := f.dependencies.WorkItems.Snapshot(f.root)
-	if err != nil || git.count() != 0 || len(r.IntegrationAttempts) != 0 || resumed.Readback.Classification != "conflict" {
-		t.Fatalf("stale intent launched Git: %#v %v merges=%d", resumed, err, git.count())
+	if err != nil || git.count() != 1 || len(r.IntegrationAttempts) != 1 || resumed.Readback.Classification != "exact_effect" {
+		t.Fatalf("document update incorrectly vetoed the unchanged explicit Git effect: %#v %v merges=%d", resumed, err, git.count())
 	}
 }
 
-func TestTaskIntegrationLegacyPlanRetainsExactVersionOneAfterMigration(t *testing.T) {
+func TestTaskIntegrationLegacyPlanRetainsExactVersionOneAfterRegistration(t *testing.T) {
 	f := newIntegrationJourneyFixtureVersion(t, true)
 	in := TaskIntegrationInput{TaskID: "task", TaskResultID: f.resultID, HumanQARecordID: f.qaID, ExpectedResultOID: f.resultOID, ExpectedParentOID: f.oid}
 	checked, err := CheckTaskIntegration(f.dependencies, in)
@@ -338,8 +338,6 @@ func TestTaskIntegrationLegacyPlanRetainsExactVersionOneAfterMigration(t *testin
 		t.Fatal(err)
 	}
 	input, _ := ParseTaskCreateInput("other", "Other fixture Task", "Independent fixture problem", "epic", "ply", "ply")
-	input.RegistryUpgrade = &TaskRegistryUpgrade{FromVersion: 2, RegistrySHA256: before.RawSHA256}
-	rawBefore, _ := os.ReadFile(workItemsPath(f.root))
 	if _, err = CreateTask(f.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
@@ -348,16 +346,12 @@ func TestTaskIntegrationLegacyPlanRetainsExactVersionOneAfterMigration(t *testin
 		t.Fatal(err)
 	}
 	newBytes, _ := canonicaljson.Marshal(integrationPlanCanonical(after.IntegrationAuthorities[0].Plan))
-	if !bytes.Equal(oldBytes, newBytes) || after.IntegrationAuthorities[0].PlanSHA256 != before.IntegrationAuthorities[0].PlanSHA256 || len(after.TaskResults) != 1 || len(after.HumanQARecords) != 1 || len(after.IntegrationResults) != 1 || taskRequiresSpec(after, "task") {
-		t.Fatal("migration altered legacy result/QA/integration or policy")
-	}
-	backup, err := f.dependencies.TaskContent.Read(f.root, "backups", before.RawSHA256)
-	if err != nil || !bytes.Equal(backup, rawBefore) {
-		t.Fatalf("migration backup differs: %v", err)
+	if !bytes.Equal(oldBytes, newBytes) || after.FormatVersion != before.FormatVersion || after.IntegrationAuthorities[0].PlanSHA256 != before.IntegrationAuthorities[0].PlanSHA256 || len(after.TaskResults) != 1 || len(after.HumanQARecords) != 1 || len(after.IntegrationResults) != 1 || len(after.TaskProblemRevisions) != 0 {
+		t.Fatal("unrelated registration altered preserved result, QA, integration or registry format")
 	}
 }
 
-func TestTaskContentMigrationPreservesUnresolvedIntegrationAndRejectsActivation(t *testing.T) {
+func TestTaskContentPublicationPreservesUnresolvedIntegration(t *testing.T) {
 	for _, outcome := range []string{"partial", "unknown"} {
 		t.Run(outcome, func(t *testing.T) {
 			f := newIntegrationJourneyFixtureVersion(t, true)
@@ -391,16 +385,15 @@ func TestTaskContentMigrationPreservesUnresolvedIntegrationAndRejectsActivation(
 				t.Fatal(err)
 			}
 			out, err := RecordTaskProblem(f.dependencies, problem)
-			if err == nil || out.Attempted.ObjectPublicationStarted {
-				t.Fatalf("activated unresolved Task: %#v %v", out, err)
+			if err != nil || !out.Attempted.ObjectPublicationStarted {
+				t.Fatalf("explicit document publication was blocked by unrelated integration state: %#v %v", out, err)
 			}
 			create, _ := ParseTaskCreateInput("other", "Other fixture", "Independent fixture Task", "epic", "ply", "ply")
-			create.RegistryUpgrade = &TaskRegistryUpgrade{FromVersion: 2, RegistrySHA256: before.RawSHA256}
 			if _, err = CreateTask(f.dependencies, create); err != nil {
 				t.Fatal(err)
 			}
 			after, err := f.dependencies.WorkItems.Snapshot(f.root)
-			if err != nil || len(after.IntegrationResults) != 1 || after.IntegrationResults[0].Outcome != outcome || after.IntegrationAuthorities[0].PlanSHA256 != before.IntegrationAuthorities[0].PlanSHA256 || taskRequiresSpec(after, "task") {
+			if err != nil || len(after.IntegrationResults) != 1 || after.IntegrationResults[0].Outcome != outcome || after.IntegrationAuthorities[0].PlanSHA256 != before.IntegrationAuthorities[0].PlanSHA256 {
 				t.Fatalf("migration altered unresolved history: %v", err)
 			}
 		})

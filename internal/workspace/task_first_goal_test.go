@@ -186,55 +186,6 @@ func TestFirstGoalRegistrationRecoversNativePublicationBoundaries(t *testing.T) 
 	}
 }
 
-func TestFirstGoalRegistrationPreservesQueueAndDoesNotRequeuePreparedGoal(t *testing.T) {
-	f := newWorkItemJourneyFixture(t)
-	_, _ = goalPreparedFixture(t, f)
-	if _, e := CreateTask(f.dependencies, TaskCreateInput{TaskID: "other", Title: "Other", Description: "Keep exact Goal", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
-		t.Fatal(e)
-	}
-	old := goalFixture(t, f, "other", "other-goal")
-	before := goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "other", Goal: &old}})
-	in := firstGoalFixture(t, f)
-	provider, model, effort := "codex", "fixture-model", "high"
-	in.Executor = TaskExecutorAssignment{Provider: &provider, Model: &model, Effort: &effort}
-	p, e := RegisterFirstGoal(f.dependencies, in, false, "")
-	if e != nil {
-		t.Fatal(e)
-	}
-	out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
-	if e != nil {
-		t.Fatal(e)
-	}
-	if len(out.Queue.Pending) != 2 || out.Queue.Pending[0].Goal == nil || *out.Queue.Pending[0].Goal != old || out.Queue.Current == nil || before.Current == nil || !reflect.DeepEqual(before.Current, out.Queue.Current) {
-		t.Fatal("append changed unrelated current/pending")
-	}
-	// Independently register and prepare using native services in a fresh fixture;
-	// this exercises historical retry without process/source-release observations.
-	f = newWorkItemJourneyFixture(t)
-	in = firstGoalFixture(t, f)
-	in.Executor = TaskExecutorAssignment{Provider: &provider, Model: &model, Effort: &effort}
-	p, e = RegisterFirstGoal(f.dependencies, in, false, "")
-	if e != nil {
-		t.Fatal(e)
-	}
-	out, e = RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
-	if e != nil {
-		t.Fatal(e)
-	}
-	next, e := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: in.SpecID})
-	if e != nil {
-		t.Fatal(e)
-	}
-	if _, e = PrepareTaskGoalExecution(f.dependencies, next.Input, next.Confirmation, goalHumanFixture()); e != nil {
-		t.Fatal(e)
-	}
-	beforeBytes := queueStateBytes(t, f)
-	again, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
-	if e != nil || !again.Applied || again.Goal != out.Goal || queueStateBytes(t, f) != beforeBytes {
-		t.Fatalf("historical retry rewrote prepared work: %v", e)
-	}
-}
-
 func TestFirstGoalRegistrationRejectsRealInputDriftWithoutDependentWrites(t *testing.T) {
 	for _, name := range []string{"criteria", "policy", "document-bytes", "document-identity", "target", "executor", "foreign-task", "inactive-task", "invalid-source", "invalid-criterion", "invalid-constraint", "invalid-executor", "wrong-ref"} {
 		t.Run(name, func(t *testing.T) {
@@ -249,6 +200,7 @@ func TestFirstGoalRegistrationRejectsRealInputDriftWithoutDependentWrites(t *tes
 				if e != nil {
 					t.Fatal(e)
 				}
+				ensureFixtureTaskProblem(t, f, in.TaskID)
 			} else if name == "inactive-task" {
 				store := &firstGoalLostAckStore{WorkItemStore: f.dependencies.WorkItems, failAt: 1}
 				f.dependencies.WorkItems = store
@@ -316,59 +268,6 @@ func TestFirstGoalRegistrationRejectsRealInputDriftWithoutDependentWrites(t *tes
 				t.Fatal("rejected input changed native state")
 			}
 		})
-	}
-}
-
-func TestFirstGoalRegistrationConcurrentAppendsAndDirtyReturn(t *testing.T) {
-	f := newWorkItemJourneyFixture(t)
-	a := firstGoalFixture(t, f)
-	b := a
-	b.TaskID = "fresh-b"
-	b.SpecID = "fresh-b-v1"
-	pa, e := RegisterFirstGoal(f.dependencies, a, false, "")
-	if e != nil {
-		t.Fatal(e)
-	}
-	pb, e := RegisterFirstGoal(f.dependencies, b, false, "")
-	if e != nil {
-		t.Fatal(e)
-	}
-	if e = os.WriteFile(filepath.Join(f.wrapper, "epic", "dirty.txt"), []byte("unrelated change"), 0600); e != nil {
-		t.Fatal(e)
-	}
-	done := make(chan error, 2)
-	for _, item := range []struct {
-		in    FirstGoalInput
-		token string
-	}{{a, pa.Confirmation}, {b, pb.Confirmation}} {
-		item := item
-		go func() { _, e := RegisterFirstGoal(f.dependencies, item.in, true, item.token); done <- e }()
-	}
-	for i := 0; i < 2; i++ {
-		if e = <-done; e != nil {
-			t.Fatal(e)
-		}
-	}
-	q, e := ListTaskQueue(f.dependencies, queueTargetFixture(), false)
-	if e != nil {
-		t.Fatal(e)
-	}
-	if len(q.Pending) != 2 || q.Pending[0].TaskID == q.Pending[1].TaskID {
-		t.Fatal("concurrent legitimate append lost a Goal")
-	}
-	for _, row := range q.Pending {
-		if row.Goal == nil {
-			t.Fatal("append lost exact reference")
-		}
-	}
-	// Registration remains successful. Existing execute preview owns the separate
-	// dirty-return diagnosis and performs no execution.
-	before := queueStateBytes(t, f)
-	if _, e = PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: a.SpecID}); e == nil {
-		t.Fatal("dirty return was reported ready")
-	}
-	if queueStateBytes(t, f) != before {
-		t.Fatal("read-only readiness changed state")
 	}
 }
 
@@ -467,6 +366,7 @@ func TestExistingFirstGoalAllowsOrdinaryDescriptionPrefix(t *testing.T) {
 	if _, e := CreateTask(f.dependencies, TaskCreateInput{TaskID: "imported", Title: "Imported backlog label", Description: "First Goal registration for the historical backlog item", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
 		t.Fatal(e)
 	}
+	ensureFixtureTaskProblem(t, f, "imported")
 	in := firstGoalFixture(t, f)
 	in.TaskID, in.SpecID = "imported", "imported-v1"
 	p, e := RegisterFirstGoal(f.dependencies, in, false, "")
@@ -476,43 +376,5 @@ func TestExistingFirstGoalAllowsOrdinaryDescriptionPrefix(t *testing.T) {
 	out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
 	if e != nil || !out.Applied || !reflect.DeepEqual(out.Problem, p.Problem) {
 		t.Fatalf("ordinary descriptive prefix rejected: %v", e)
-	}
-}
-
-func TestExistingFirstGoalUsesCurrentEpicBaseAndHistoricalRetry(t *testing.T) {
-	f := newWorkItemJourneyFixture(t)
-	in := existingFirstGoalFixture(t, f)
-	provider := "codex"
-	in.Executor.Provider = &provider
-	p, e := RegisterFirstGoal(f.dependencies, in, false, "")
-	if e != nil {
-		t.Fatal(e)
-	}
-	out, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
-	if e != nil {
-		t.Fatal(e)
-	}
-	runLocalGit(t, filepath.Join(f.wrapper, "epic"), "commit", "--allow-empty", "-m", "advance existing imported parent")
-	update, e := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-	if e != nil {
-		t.Fatal(e)
-	}
-	if _, e = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *update.Confirmation}); e != nil {
-		t.Fatal(e)
-	}
-	next, e := PreviewTaskGoalExecution(f.dependencies, TaskGoalExecuteInput{Target: queueTargetFixture(), SpecID: in.SpecID})
-	if e != nil {
-		t.Fatal(e)
-	}
-	if next.ParentOID == f.oid || next.Goal.Goal != out.Goal {
-		t.Fatal("execution reused imported historical parent")
-	}
-	if _, e = PrepareTaskGoalExecution(f.dependencies, next.Input, next.Confirmation, goalHumanFixture()); e != nil {
-		t.Fatal(e)
-	}
-	before := queueStateBytes(t, f)
-	again, e := RegisterFirstGoal(f.dependencies, in, true, p.Confirmation)
-	if e != nil || !again.Applied || again.Goal != out.Goal || queueStateBytes(t, f) != before {
-		t.Fatalf("historical retry rewrote prepared execution: %v", e)
 	}
 }

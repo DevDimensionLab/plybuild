@@ -16,11 +16,7 @@ func workflowCallback(d Dependencies, s workflowState, contextPath string) error
 	if s.ReportRetirement != nil {
 		return workflowError(4, "owner_retired: report owner callbacks are closed")
 	}
-	if headlessRun(s.Request) {
-		if err := workerLiveOwner(d, s); err != nil {
-			return err
-		}
-	}
+
 	if contextPath == "" {
 		return workflowError(2, "--context is required")
 	}
@@ -106,10 +102,10 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 		if s.StartSHA256 != nil {
 			return nil
 		}
-		if s.Result.Round.Number != 0 || !headlessRun(s.Request) && s.Result.Transport.AgentSessionID == "" {
+		if s.Result.Round.Number != 0 || s.Result.Transport.AgentSessionID == "" {
 			return workflowError(4, "run has no bound initial session")
 		}
-		if !headlessRun(s.Request) && s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" && s.Phase != "following" {
+		if s.Phase != "prompt_attempted" && s.Phase != "prompt_unknown" && s.Phase != "following" {
 			return workflowError(4, "initial prompt has not been attempted; coordinator inspection is required before recipient acceptance")
 		}
 		c := a.RuntimeClaim
@@ -141,16 +137,13 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 					return e
 				}
 			}
-			// The recipient's claim cannot establish that Herdr still hosts the
-			// selected provider/session. Observe it before granting Task writes.
-			// A callback normally runs while the agent is working, not idle.
-			if !headlessRun(s.Request) {
-				fresh, e := workflowAgentGet(d, *s, false)
-				if e != nil {
-					return e
-				}
-				workflowObserve(d, s, fresh)
+
+			fresh, e := workflowAgentGet(d, *s, false)
+			if e != nil {
+				return e
 			}
+			workflowObserve(d, s, fresh)
+
 		}
 		path := filepath.Join(s.Result.Paths.RunRoot, "start-draft.json")
 		draft, err := readFile(path, 1<<20, true)
@@ -235,9 +228,7 @@ func WorkflowAccept(d Dependencies, root, id, contextPath, file string) (Workflo
 				if mandateReceipt(s.Request) {
 					s.Result.NextAction = WorkflowAction{"recipient", "Own implementation, meaningful verification, separate review and the frozen delivery boundary under per-action runtime review."}
 				}
-				if headlessRun(s.Request) {
-					s.Result.NextAction = WorkflowAction{"worker", "Run development, acceptance and separate review through the authorized local Epic return."}
-				}
+
 			}
 		} else {
 			s.Result.Round.State = "unknown"
@@ -285,7 +276,7 @@ type workflowReportSlot struct {
 
 func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (WorkflowRun, error) {
 	if s, e := workflowRead(root, id); e == nil && deliveryRun(s.Request) {
-		return WorkflowRun{}, workflowError(4, "delivery owners report with workflow execute report, not legacy correction rounds")
+		return WorkflowRun{}, workflowError(4, "delivery-owner reporting has been removed; inspect the preserved run with workflow run show")
 	}
 	if e := containing(d, root); e != nil {
 		return WorkflowRun{}, e
@@ -398,7 +389,7 @@ func WorkflowReportRound(d Dependencies, root, id, contextPath, file string) (Wo
 		s.Result.Round.State = "report_received"
 		s.Result.Budget.Used = r.BudgetUsage
 		s.Result.Budget.Floor = *r.BudgetUsage
-		s.Result.Budget.WithinAgreement = budgetValid(r.BudgetUsage)
+		s.Result.Budget.WithinAgreement = budgetValid(r.BudgetUsage, s.Request.Agreement)
 		s.Result.Budget.MeasurementSource = "reported"
 		s.Result.NextAction = WorkflowAction{"coordinator", "Follow the same session, then review this immutable report."}
 		preservedIncomplete = r.Outcome != "complete"

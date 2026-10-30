@@ -1,5 +1,10 @@
 # Concurrent native Tasks and exact serial Epic return
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 T32BD249B implements the interactive native path in the frozen
 [specification](spec.md). Reader support for format 8 does not activate it.
 Ordinary serial work retains its actual persisted format, including format 4.

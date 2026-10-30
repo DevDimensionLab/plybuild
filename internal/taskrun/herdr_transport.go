@@ -230,12 +230,6 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 	if e != nil {
 		return e
 	}
-	if s, e = workflowTrustLaunch(d, s); e != nil {
-		return e
-	}
-	if e = workflowClaudeTrustFresh(d, s); e != nil {
-		return e
-	}
 	var tab struct {
 		RootPane workflowAgent `json:"root_pane"`
 	}
@@ -269,22 +263,7 @@ func workflowLaunch(d Dependencies, r WorkflowRequest) error {
 			return e
 		}
 	}
-	if s, e = workflowTrustLaunch(d, s); e != nil {
-		return e
-	}
-	if e = workflowClaudeTrustFresh(d, s); e != nil {
-		return e
-	}
-	if e = workflowBindClaudeEnvironment(d, s, a.PaneID); e != nil {
-		return e
-	}
-	if e = workflowClaudeTrustFresh(d, s); e != nil {
-		return e
-	}
-	if e = workflowLaunchClaudeTrust(d, s); e != nil {
-		return e
-	}
-	argv := workflowStartArgv(workflowEffectiveRequest(s), s.Observed.Target.WorktreeLocator, a.PaneID)
+	argv := workflowStartArgv(s.Request, s.Observed.Target.WorktreeLocator, a.PaneID)
 	// SessionStart can be deferred until a first, tool-free readiness turn.
 	// Keep launch, that exchange, session binding and Task input in one window.
 	limit := 90 * time.Second
@@ -317,17 +296,6 @@ func workflowTabCreateArgv(s workflowState, workspaceID string) []string {
 	if env := r.GoalStartEnvironment; env != nil {
 		tabArgs = []string{"tab", "create", "--workspace", workspaceID, "--cwd", s.Observed.Target.WorktreeLocator, "--label", workflowTaskOwnerTabLabel(s), "--env", "PATH=" + env.Path, "--env", "HOME=" + env.Home, "--env", "CODEX_HOME=" + env.CodexHome, "--no-focus"}
 	}
-	if workflowCodexGrant(s) {
-		// Use the exact existing user/config locations observed by preview.
-		// No alternate home or persistent configuration is created.
-		tabArgs = append(tabArgs, "--env", "HOME="+s.CodexTrust.UserHome, "--env", "CODEX_HOME="+s.CodexTrust.CodexHome)
-	}
-	if s.ClaudeTrust != nil && s.ClaudeTrust.Reason == "" {
-		tabArgs = append(tabArgs, "--env", "HOME="+s.ClaudeTrust.UserHome)
-		if s.ClaudeTrust.ConfigDir != "" {
-			tabArgs = append(tabArgs, "--env", "CLAUDE_CONFIG_DIR="+s.ClaudeTrust.ConfigDir)
-		}
-	}
 	return tabArgs
 }
 
@@ -342,17 +310,12 @@ func workflowStartArgv(r WorkflowRequest, cwd, pane string) []string {
 		}
 		return argv
 	}
-	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-a", "on-request", "-c", `approvals_reviewer="auto_review"`, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
+	argv := []string{"agent", "start", workflowAgentName(workflowID(r)), "--kind", "codex", "--pane", pane, "--timeout", "30000", "--", "-C", cwd, "--model", r.Runtime.Model, "-c", "default_permissions=" + workflowJSON(r.Runtime.PermissionBinding.ProfileID)}
 	if r.Runtime.ConfigProfile != nil {
 		argv = append(argv, "--profile", *r.Runtime.ConfigProfile)
 	}
 	if deliveryRun(r) && r.Delivery.ReasoningEffort != "" {
 		argv = append(argv, "-c", "model_reasoning_effort="+workflowJSON(r.Delivery.ReasoningEffort))
-	}
-	if r.CodexProjectTrust != nil {
-		// The inline table keeps dots, quotes and backslashes in a path inside
-		// one TOML key, rather than treating them as CLI dotted-path separators.
-		argv = append(argv, "-c", "projects={"+tomlQuote(r.CodexProjectTrust.RepositoryRoot)+`={trust_level="trusted"}}`)
 	}
 	return argv
 }

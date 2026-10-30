@@ -55,7 +55,7 @@ func WorkflowReconcileQuotaStop(d Dependencies, root, id string, in DeliveryQuot
 		return WorkflowRun{}, workflowError(2, "exact stop, action, quota event, last tool result, source digest, observer and reason are required")
 	}
 	err := workflowUpdate(d, root, id, func(s *workflowState) error {
-		if !deliveryRun(s.Request) || headlessRun(s.Request) || s.Result.Delivery == nil {
+		if !deliveryRun(s.Request) || s.Result.Delivery == nil {
 			return workflowError(4, "quota reconciliation requires an interactive delivery")
 		}
 		for _, event := range s.Result.Delivery.Events {

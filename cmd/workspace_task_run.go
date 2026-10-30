@@ -34,7 +34,7 @@ func addWorkspaceTaskRunCommands(task *cobra.Command, w workspace.Dependencies) 
 	task.AddCommand(newTaskRunCommand(taskrun.SystemDependencies(w)))
 }
 func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
-	run := &cobra.Command{Use: "run", Short: "Start one bounded Codex run and preserve its return", Long: "Preview an exact prepared Task, confirm one interactive or factory exec Codex start, and collect its typed return. Callbacks use a bound --context path; reported model may be unknown. Request schema 1 (interactive) keeps client exit and human-observed task inactivity as separate facts. Request schema 2 (factory exec) uses pipes and runner-owned completion evidence. Existing interactive requests and historical results remain compatible. Plan result control, human QA and integration are separate gates.", Example: "  ply workspace task run start --file /absolute/request.json\n  ply workspace task run show trn_<digest>", Args: func(c *cobra.Command, a []string) error {
+	run := &cobra.Command{Use: "run", Short: "Start one bounded Codex run and preserve its return", Long: "Preview an exact prepared Task, confirm one interactive Codex start, and collect its typed return. Callbacks use a bound --context path; reported model may be unknown. Request schema 1 (interactive) keeps client exit and human-observed task inactivity as separate facts. Existing interactive requests and historical results remain compatible. Plan result control, human QA and integration are separate gates.", Example: "  ply workspace task run start --file /absolute/request.json\n  ply workspace task run show trn_<digest>", Args: func(c *cobra.Command, a []string) error {
 		if len(a) != 0 {
 			return runUsage(c, "expected a run subcommand")
 		}
@@ -53,11 +53,11 @@ func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
 		long := short + ". "
 		switch name {
 		case "start":
-			long += "--check is the default and writes nothing. --apply requires --confirm with the exact preview digest. Request schema 1 (interactive) requires text output and a foreground macOS terminal; its child inherits the terminal. In interactive mode, without a human task observation, exit 5 with task_run_task_status_unknown means collection is waiting for that observation. Factory exec request schema 2 uses pipes and permits --format json without a terminal; stdout is one Ply result and provider streams stay in bound private files. Result collection runs after the child exits; exec uses runner-owned completion evidence. A reserved run or factory slot is never relaunched. Exec requires a hash-bound factory authorization and narrow managed policy; one native terminal turn, reaped exit zero and empty owned process group establish inactivity. Unknown completion exits 5 and preserves the environment."
+			long += "--check is the default and writes nothing. --apply requires --confirm with the exact preview digest. Request schema 1 (interactive) requires text output and a foreground macOS terminal; its child inherits the terminal. In interactive mode, without a human task observation, exit 5 with task_run_task_status_unknown means collection is waiting for that observation. A reserved run is never relaunched."
 		case "show":
 			long += "Shows requested and reported model provenance, client process, task execution source, acceptance, delivery and collection separately. Unknown is a successful readback, not completion. No locks or recovery files are created."
 		case "collect":
-			long += "--check is the default. --apply --confirm publishes only an already received return with proven client quiescence and task inactivity. For request schema 1 (interactive), an inactive task observation after the report is required: use --task-status with a private canonical task-run-task-status@1 JSON document built by a return helper from the bound run and an explicit human observation. This interactive source is an attestation, not provider authentication or human QA. Check is read-only; apply confirms the status digest and journal tip. It never starts an agent. For request schema 2 (factory exec), collection uses runner-owned ProviderCompletion@1 and rejects --task-status, including manual overrides. Exec result and collect-preview use schema 3. Historical TaskResults remain immutable."
+			long += "--check is the default. --apply --confirm publishes only an already received return with proven client quiescence and task inactivity. For request schema 1 (interactive), an inactive task observation after the report is required: use --task-status with a private canonical task-run-task-status@1 JSON document built by a return helper from the bound run and an explicit human observation. This interactive source is an attestation, not provider authentication or human QA. Check is read-only; apply confirms the status digest and journal tip. It never starts an agent. Historical TaskResults remain immutable."
 		case "accept":
 			long += "Use --file with a private ply.workspace.task-run-acceptance document. Use --context for the exact private context path; PLY_TASK_RUN_CONTEXT remains supported and must agree when both are set. Acceptance@2 permits a null model; known model mismatch or unknown necessary authority cannot start. Bound cwd, executable, policy and run session are checked. Negative claims are preserved even when missing facts prevent a WF receipt. This is the recipient's first action before target writes."
 		case "report":
@@ -85,13 +85,7 @@ func newTaskRunCommand(d taskrun.Dependencies) *cobra.Command {
 				return runUsage(c, "--apply requires --confirm, and --confirm requires --apply")
 			}
 			if name == "start" && apply && format == "json" {
-				request, err := taskrun.ReadRequest(file)
-				if err != nil {
-					return runUsage(c, "JSON apply requires a valid exec request: "+err.Error())
-				}
-				if request.SchemaVersion != 2 {
-					return runUsage(c, "interactive apply requires text output")
-				}
+				return runUsage(c, "interactive apply requires text output")
 			}
 			if c.Flags().Changed("context") && contextPath == "" {
 				return runUsage(c, "--context must not be empty")
@@ -194,7 +188,7 @@ func renderTaskRun(c *cobra.Command, format string, v any) error {
 			} `json:"goal"`
 		}
 		_ = json.Unmarshal(x.Request.HandoffDraft, &draft)
-		fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nSpec: %s revision %d\nBase: %s\nWorktree: %s\nProvider: %s; Requested model: %s\nBudget: initial execution + 3 correction rounds, 5400 active seconds, 2 environment measures\nEffects: bounded Task work; one run reservation and WF handoff; at most one qualified TaskResult.\nReturn: %s\n", x.Preparation.Plan.TaskID, draft.Goal.Title, x.Preparation.Plan.SpecID, x.Preparation.Plan.Spec.Revision, x.Preparation.Plan.ParentOID, x.Preparation.Plan.WorktreePath, x.Request.Runtime.Provider, x.Request.Runtime.Model, x.Paths.ReportPath)
+		fmt.Fprintf(c.OutOrStdout(), "Task: %s — %s\nSpec: %s revision %d\nBase: %s\nWorktree: %s\nProvider: %s; Requested model: %s\nAgreement: %s; up to %d correction rounds, %d active seconds, %d environment measures\nEffects: bounded Task work; one run reservation and WF handoff; at most one qualified TaskResult.\nReturn: %s\n", x.Preparation.Plan.TaskID, draft.Goal.Title, x.Preparation.Plan.SpecID, x.Preparation.Plan.Spec.Revision, x.Preparation.Plan.ParentOID, x.Preparation.Plan.WorktreePath, x.Request.Runtime.Provider, x.Request.Runtime.Model, x.Request.Agreement.Name, x.Request.Agreement.MaxCorrectionRounds, x.Request.Agreement.MaxActiveSeconds, x.Request.Agreement.MaxEnvironmentMeasures, x.Paths.ReportPath)
 		return renderRunNext(c, x.NextArgv, x.Reasons)
 	case taskrun.Result:
 		if x.Kind == "" {

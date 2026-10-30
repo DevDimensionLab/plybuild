@@ -52,30 +52,3 @@ func TestAL16SelfHostedBuildIdentity(t *testing.T) {
 
 // Actual VCS-free CLI; native provider/review facts in the reused fixture are
 // modeled test observations, not real product acceptance or human judgment.
-func TestAL16UnknownIdentityQualifiedInstall(t *testing.T) {
-	repo, err := filepath.Abs("../..")
-	if err != nil {
-		t.Fatal(err)
-	}
-	directory, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	binary := filepath.Join(directory, "ply-unknown")
-	c := exec.Command("go", "build", "-buildvcs=false", "-o", binary, "./cmd/ply")
-	c.Dir = repo
-	if b, err := c.CombinedOutput(); err != nil {
-		t.Fatalf("VCS-free build: %v %s", err, b)
-	}
-	c = exec.Command(binary, "version", "--format", "json")
-	c.Dir = t.TempDir()
-	b, err := c.Output()
-	if err != nil {
-		t.Fatal(err)
-	}
-	var identity buildinfo.Identity
-	if err = json.Unmarshal(b, &identity); err != nil || identity.SourceCommit != "" {
-		t.Fatalf("unknown identity invented: %s (%v)", b, err)
-	}
-	qualifiedCLIInstallationConsumer(t, binary)
-}

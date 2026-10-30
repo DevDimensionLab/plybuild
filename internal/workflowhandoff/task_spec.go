@@ -249,26 +249,17 @@ func validateTaskSpecObservation(v canonicaljson.Value, b *workspace.TaskSpecBas
 			if _, err := workspace.ValidateTaskSpecBasisValue(replaceObjectMember(bv.(canonicaljson.Object), field, m[k])); err != nil {
 				return fmt.Errorf("invalid observation %s: %w", k, err)
 			}
-			expected := canonicaljson.Value(nil)
-			if k == "current_problem" {
-				expected, _ = taskSpecJSONValue(b.Problem)
-			} else {
-				expected, _ = taskSpecJSONValue(b.Selection)
-			}
-			if acceptance == "started" && !canonicalEqual(expected, m[k]) {
-				return fmt.Errorf("started observation differs from basis")
-			}
 		}
 	}
 	if !setOf("current", "stale", "withdrawn", "none", "unknown")[objectMapString(m, "selection_freshness")] || !setOf("valid", "missing", "conflict", "unknown")[objectMapString(m, "content_integrity")] || !setOf("fresh", "stale", "unknown")[objectMapString(m, "target_freshness")] || !validateUTC(objectMapString(m, "validated_at_utc")) {
 		return fmt.Errorf("invalid Task Spec observation")
 	}
-	reasons, e := sortedStringArray(m["reasons"], "task_spec reasons", true)
+	_, e = sortedStringArray(m["reasons"], "task_spec reasons", true)
 	if e != nil {
 		return e
 	}
-	if acceptance == "started" && (objectMapString(m, "observed_basis_sha256") != objectMapString(m, "expected_basis_sha256") || objectMapString(m, "selection_freshness") != "current" || objectMapString(m, "content_integrity") != "valid" || objectMapString(m, "target_freshness") != "fresh" || m["registry_sha256"] == nil || m["current_problem"] == nil || m["current_selection"] == nil || len(reasons) != 0) {
-		return fmt.Errorf("started requires an exact current Task Spec observation")
+	if acceptance == "started" && (objectMapString(m, "observed_basis_sha256") != objectMapString(m, "expected_basis_sha256") || objectMapString(m, "content_integrity") != "valid" || m["registry_sha256"] == nil) {
+		return fmt.Errorf("started document observation differs from its supplied source bytes or target")
 	}
 	return nil
 }
@@ -427,11 +418,6 @@ func historicalHandoffTaskSpec(d Dependencies, snapshot Snapshot) (*workspace.Ta
 		}
 		if err = validateDeliveryAmendmentEvidence(d, amendment); err != nil {
 			return b, &eval, err
-		}
-		if amendment != nil {
-			if err = validateDeliverySpecAgreement(snapshot.Handoff.Value, eval.Spec); err != nil {
-				return b, &eval, err
-			}
 		}
 	}
 	if snapshot.Start != nil {

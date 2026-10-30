@@ -1,5 +1,10 @@
 # NF02 receipt journey isolation Spec v1 — T2768B475
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 Specify a test-only correction for the receipt journey on source `6a3a4f01de5214f7a0aa799c45d86e4ad6cb136c`
 (`6a3a4f0`). This authoring Task changes only this document. All test changes
 and commands below are requirements for a later developer, not executed results.
@@ -11,18 +16,18 @@ creates a receipt fixture, binds the candidate executable, patches the modeled
 owner pane, then calls `workflowTestStart`. It exercises invalid receipt bindings,
 idempotent check-in, unknown sandbox coverage, rejection of legacy begin, and
 candidate verification through subprocess CLI. It ends in
-[assertAutomaticCLIClosure](../../internal/taskrun/delivery_automatic_cli_test.go).
+assertAutomaticCLIClosure (`internal/taskrun/delivery_automatic_cli_test.go`, historisk kilde).
 
 That shared helper registers/checks/executes public Delivery, verifies exact
 integration and source retention, sets only `agent_status=idle`, then calls
 `cleanupCLIAt(binary, f.Parent, "execute", "follow", ...)`.
-[cleanupCLIAt](../../internal/taskrun/delivery_default_cleanup_test.go) creates a
+cleanupCLIAt (`internal/taskrun/delivery_default_cleanup_test.go`, historisk kilde) creates a
 fresh `exec.Command`; it cannot inherit Go dependency closures. Idle agent status
 also does not establish that the bound pane has left. `ownerPaneStandin` supports
 explicit `cleanupOwnerLeaves`/`closed_transport`, which this path does not use.
 
 The remaining OS fallthrough is statically concrete:
-[ResumeAutomaticLocalDelivery](../../internal/taskrun/delivery_automatic_closeout.go)
+ResumeAutomaticLocalDelivery (`internal/taskrun/delivery_automatic_closeout.go`, historisk kilde)
 calls `automaticOwnerLeft`, then
 [taskWriters.cleanup](../../internal/taskrun/delivery_task_writers.go) composes
 Herdr absence with local liveness. Once Herdr absence is established,
@@ -46,7 +51,7 @@ coverage of their consuming branches.
 
 AL18 already fixed the FS01 pane-get stand-in and modeled the handoff, explicit
 owner exit and in-process follow. Its
-[TestFS01ReviewRoundsFromExistingTaskToDelivery](../../internal/taskrun/delivery_review_round_test.go)
+TestFS01ReviewRoundsFromExistingTaskToDelivery (`internal/taskrun/delivery_review_round_test.go`, historisk kilde)
 uses a coordinator `LocalProcesses` table and the shared unknown-inventory
 assertion. Preserve that fix. AL19's
 [TestDeliveryStartupCLI](../../internal/taskrun/delivery_startup_cli_test.go)
@@ -78,7 +83,7 @@ other callers. Do not silently convert every existing CLI test to simulation.
    [SystemDependencies](../../internal/taskrun/service.go) creates callbacks that
    capture earlier dependency values. Do not assume changing `LocalProcesses`
    changes a captured `SourceWriters` observer. Reuse the initialization pattern
-   in [nf01Runtime](../../internal/taskrun/registry_nf01_test.go), without importing
+   in nf01Runtime (`internal/taskrun/registry_nf01_test.go`, historisk kilde), without importing
    its unrelated registry behavior or relaxing production defaults. Assert zero
    `SourceWriters` calls for this non-adopted journey; do not add adoption merely
    to exercise the adapter or use stale source-writer wiring as its RED oracle.

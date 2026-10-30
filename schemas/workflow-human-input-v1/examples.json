@@ -218,7 +218,7 @@
         "detail": "this publication key already names a different question; publish a changed question under a new key",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:33.361886Z",
+        "observed_at_utc": "2026-10-30T22:21:40.982052Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
@@ -537,7 +537,7 @@
         "detail": "option medium is not one of this question's options",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:34.364361Z",
+        "observed_at_utc": "2026-10-30T22:21:41.984198Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
@@ -1288,7 +1288,7 @@
         "detail": "this question already has its one recorded answer",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:34.384584Z",
+        "observed_at_utc": "2026-10-30T22:21:42.015115Z",
         "question": {
           "answer": {
             "answer_kind": "choice",
@@ -1415,76 +1415,6 @@
         "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
         "schema_version": 1,
         "timeout_seconds": 1,
-        "workspace": "/private/tmp/hi01-example-workspace"
-      }
-    },
-    {
-      "name": "error-not-acknowledged",
-      "definition": "error",
-      "command": "ply workflow input continue hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0001 --request-sha256 sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800 --summary Wrote it. --workspace $WORKSPACE",
-      "exit": 1,
-      "value": {
-        "code": "human_input_not_acknowledged",
-        "detail": "acknowledge the answer before reporting its use",
-        "kind": "ply.workflow.human-input-error",
-        "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:34.385913Z",
-        "question": {
-          "answer": {
-            "answer_kind": "choice",
-            "option_id": "full",
-            "recorded_at_utc": "2026-10-18T18:00:10Z",
-            "request_id": "app-choice-0001",
-            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
-            "text": null
-          },
-          "answer_kind": "choice",
-          "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:01Z",
-          "kind": "ply.workflow.human-input-question",
-          "mode": "cooperative_agent_v1",
-          "next_action": {
-            "actor": "agent",
-            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
-          },
-          "options": [
-            {
-              "consequence": "One paragraph under Usage.",
-              "id": "short",
-              "label": "Short usage note"
-            },
-            {
-              "consequence": "A new section with every flag.",
-              "id": "full",
-              "label": "Full reference"
-            }
-          ],
-          "publication_key": "docs-export/format",
-          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
-          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
-          "reason": "The goal leaves the scope of the README change open.",
-          "receipt": null,
-          "schema_version": 1,
-          "scope": {
-            "activity_id": "conversation/docs-export",
-            "activity_title": "Document the export format",
-            "project_id": "ply",
-            "repo_id": "ply",
-            "task_id": null
-          },
-          "source": {
-            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
-            "provenance": "reported_by_agent",
-            "provider": "claude",
-            "session_id": "3087ad01-0000-4000-8000-000000000001"
-          },
-          "state": "answered",
-          "text": "Which README section should this task write?",
-          "withdrawal": null,
-          "workspace": "/private/tmp/hi01-example-workspace"
-        },
-        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
-        "schema_version": 1,
         "workspace": "/private/tmp/hi01-example-workspace"
       }
     },
@@ -1809,7 +1739,7 @@
         "detail": "text must be non-blank UTF-8 without NUL, at most 4000 codepoints and 16000 bytes",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:34.417056Z",
+        "observed_at_utc": "2026-10-30T22:21:42.05366Z",
         "question": null,
         "question_id": null,
         "schema_version": 1,
@@ -1931,6 +1861,61 @@
       }
     },
     {
+      "name": "continue-without-receipt",
+      "definition": "question",
+      "command": "ply workflow input continue hiq_46320dca9c67033536c4b962ba5dd32a --request-id app-text-0001 --request-sha256 sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232 --summary Used the exact text answer. --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": null,
+          "recorded_at_utc": "2026-10-18T18:00:25Z",
+          "request_id": "app-text-0001",
+          "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+          "text": "Export format\r\n  (v1) \n"
+        },
+        "answer_kind": "text",
+        "continuation": {
+          "provenance": "reported_by_agent",
+          "reported_at_utc": "2026-10-18T18:00:27Z",
+          "request_id": "app-text-0001",
+          "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+          "summary": "Used the exact text answer."
+        },
+        "created_at_utc": "2026-10-18T18:00:02Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "none",
+          "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+        },
+        "options": [],
+        "publication_key": "docs-export/heading",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "codex",
+          "session_id": null
+        },
+        "state": "agent_reported_continued",
+        "text": "What exact heading should the new section use?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
       "name": "ask-to-withdraw",
       "definition": "question",
       "command": "ply workflow input ask --file $WORKSPACE/inputs/gone.json --workspace $WORKSPACE",
@@ -1939,7 +1924,7 @@
         "answer": null,
         "answer_kind": "choice",
         "continuation": null,
-        "created_at_utc": "2026-10-18T18:00:26Z",
+        "created_at_utc": "2026-10-18T18:00:28Z",
         "kind": "ply.workflow.human-input-question",
         "mode": "cooperative_agent_v1",
         "next_action": {
@@ -1991,12 +1976,12 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-preview",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:27Z",
+        "observed_at_utc": "2026-10-18T18:00:29Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
           "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:26Z",
+          "created_at_utc": "2026-10-18T18:00:28Z",
           "kind": "ply.workflow.human-input-question",
           "mode": "cooperative_agent_v1",
           "next_action": {
@@ -2076,7 +2061,7 @@
         "answer": null,
         "answer_kind": "choice",
         "continuation": null,
-        "created_at_utc": "2026-10-18T18:00:26Z",
+        "created_at_utc": "2026-10-18T18:00:28Z",
         "kind": "ply.workflow.human-input-question",
         "mode": "cooperative_agent_v1",
         "next_action": {
@@ -2119,7 +2104,7 @@
         "withdrawal": {
           "provenance": "reported_by_agent",
           "reason": "The goal already answers this.",
-          "withdrawn_at_utc": "2026-10-18T18:00:29Z"
+          "withdrawn_at_utc": "2026-10-18T18:00:31Z"
         },
         "workspace": "/private/tmp/hi01-example-workspace"
       }
@@ -2132,12 +2117,12 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:30Z",
+        "observed_at_utc": "2026-10-18T18:00:32Z",
         "question": {
           "answer": null,
           "answer_kind": "choice",
           "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:26Z",
+          "created_at_utc": "2026-10-18T18:00:28Z",
           "kind": "ply.workflow.human-input-question",
           "mode": "cooperative_agent_v1",
           "next_action": {
@@ -2180,7 +2165,7 @@
           "withdrawal": {
             "provenance": "reported_by_agent",
             "reason": "The goal already answers this.",
-            "withdrawn_at_utc": "2026-10-18T18:00:29Z"
+            "withdrawn_at_utc": "2026-10-18T18:00:31Z"
           },
           "workspace": "/private/tmp/hi01-example-workspace"
         },
@@ -2207,13 +2192,13 @@
       "value": {
         "kind": "ply.workflow.human-input-wait",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:31Z",
+        "observed_at_utc": "2026-10-18T18:00:33Z",
         "outcome": "withdrawn",
         "question": {
           "answer": null,
           "answer_kind": "choice",
           "continuation": null,
-          "created_at_utc": "2026-10-18T18:00:26Z",
+          "created_at_utc": "2026-10-18T18:00:28Z",
           "kind": "ply.workflow.human-input-question",
           "mode": "cooperative_agent_v1",
           "next_action": {
@@ -2256,7 +2241,7 @@
           "withdrawal": {
             "provenance": "reported_by_agent",
             "reason": "The goal already answers this.",
-            "withdrawn_at_utc": "2026-10-18T18:00:29Z"
+            "withdrawn_at_utc": "2026-10-18T18:00:31Z"
           },
           "workspace": "/private/tmp/hi01-example-workspace"
         },
@@ -2279,7 +2264,7 @@
         "limit": 20,
         "mode": "cooperative_agent_v1",
         "next_cursor": null,
-        "observed_at_utc": "2026-10-18T18:00:32Z",
+        "observed_at_utc": "2026-10-18T18:00:34Z",
         "project_id": "ply",
         "questions": [
           {
@@ -2292,13 +2277,19 @@
               "text": "Export format\r\n  (v1) \n"
             },
             "answer_kind": "text",
-            "continuation": null,
+            "continuation": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:27Z",
+              "request_id": "app-text-0001",
+              "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+              "summary": "Used the exact text answer."
+            },
             "created_at_utc": "2026-10-18T18:00:02Z",
             "kind": "ply.workflow.human-input-question",
             "mode": "cooperative_agent_v1",
             "next_action": {
-              "actor": "agent",
-              "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+              "actor": "none",
+              "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
             },
             "options": [],
             "publication_key": "docs-export/heading",
@@ -2320,7 +2311,7 @@
               "provider": "codex",
               "session_id": null
             },
-            "state": "answered",
+            "state": "agent_reported_continued",
             "text": "What exact heading should the new section use?",
             "withdrawal": null,
             "workspace": "/private/tmp/hi01-example-workspace"
@@ -2329,7 +2320,7 @@
             "answer": null,
             "answer_kind": "choice",
             "continuation": null,
-            "created_at_utc": "2026-10-18T18:00:26Z",
+            "created_at_utc": "2026-10-18T18:00:28Z",
             "kind": "ply.workflow.human-input-question",
             "mode": "cooperative_agent_v1",
             "next_action": {
@@ -2372,7 +2363,7 @@
             "withdrawal": {
               "provenance": "reported_by_agent",
               "reason": "The goal already answers this.",
-              "withdrawn_at_utc": "2026-10-18T18:00:29Z"
+              "withdrawn_at_utc": "2026-10-18T18:00:31Z"
             },
             "workspace": "/private/tmp/hi01-example-workspace"
           },
@@ -2455,7 +2446,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:33Z",
+        "observed_at_utc": "2026-10-18T18:00:35Z",
         "question": null,
         "question_id": "hiq_00000000000000000000000000000000",
         "reasons": [
@@ -2482,7 +2473,7 @@
         "detail": "no question hiq_00000000000000000000000000000000 exists in this workspace",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:34.454537Z",
+        "observed_at_utc": "2026-10-30T22:21:42.100632Z",
         "question": null,
         "question_id": null,
         "schema_version": 1,
@@ -2497,7 +2488,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:34Z",
+        "observed_at_utc": "2026-10-18T18:00:36Z",
         "question": null,
         "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
         "reasons": [
@@ -2524,7 +2515,7 @@
         "detail": "malformed human-input file answers/hiq_46320dca9c67033536c4b962ba5dd32a.json; nothing was repaired or changed",
         "kind": "ply.workflow.human-input-error",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T19:32:34.455537Z",
+        "observed_at_utc": "2026-10-30T22:21:42.101355Z",
         "question": null,
         "question_id": null,
         "schema_version": 1,
@@ -2802,7 +2793,7 @@
       "value": {
         "kind": "ply.workflow.human-input-answer-status",
         "mode": "cooperative_agent_v1",
-        "observed_at_utc": "2026-10-18T18:00:34Z",
+        "observed_at_utc": "2026-10-18T18:00:36Z",
         "question": null,
         "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
         "reasons": [
@@ -3010,7 +3001,7 @@
         "limit": 21,
         "mode": "cooperative_agent_v1",
         "next_cursor": null,
-        "observed_at_utc": "2026-10-18T18:00:32Z",
+        "observed_at_utc": "2026-10-18T18:00:34Z",
         "project_id": "ply",
         "questions": [
           {
@@ -3023,13 +3014,19 @@
               "text": "Export format\r\n  (v1) \n"
             },
             "answer_kind": "text",
-            "continuation": null,
+            "continuation": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:27Z",
+              "request_id": "app-text-0001",
+              "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+              "summary": "Used the exact text answer."
+            },
             "created_at_utc": "2026-10-18T18:00:02Z",
             "kind": "ply.workflow.human-input-question",
             "mode": "cooperative_agent_v1",
             "next_action": {
-              "actor": "agent",
-              "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+              "actor": "none",
+              "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
             },
             "options": [],
             "publication_key": "docs-export/heading",
@@ -3051,7 +3048,7 @@
               "provider": "codex",
               "session_id": null
             },
-            "state": "answered",
+            "state": "agent_reported_continued",
             "text": "What exact heading should the new section use?",
             "withdrawal": null,
             "workspace": "/private/tmp/hi01-example-workspace"
@@ -3060,7 +3057,7 @@
             "answer": null,
             "answer_kind": "choice",
             "continuation": null,
-            "created_at_utc": "2026-10-18T18:00:26Z",
+            "created_at_utc": "2026-10-18T18:00:28Z",
             "kind": "ply.workflow.human-input-question",
             "mode": "cooperative_agent_v1",
             "next_action": {
@@ -3103,7 +3100,7 @@
             "withdrawal": {
               "provenance": "reported_by_agent",
               "reason": "The goal already answers this.",
-              "withdrawn_at_utc": "2026-10-18T18:00:29Z"
+              "withdrawn_at_utc": "2026-10-18T18:00:31Z"
             },
             "workspace": "/private/tmp/hi01-example-workspace"
           },

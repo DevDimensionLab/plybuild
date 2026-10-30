@@ -18,9 +18,9 @@ func TestNativeVetoScopePreservesAWhenKnownBSourceFails(t *testing.T) {
 	if _, v := binding(n, a); v != "clear" {
 		t.Fatal(v)
 	}
-	n.Vetoes[a.sessionKey()] = "native_question"
-	if _, v := binding(n, a); v != "native_question" {
-		t.Fatal("own question lost", v)
+	n.Vetoes[a.sessionKey()] = "native_refusal"
+	if _, v := binding(n, a); v != "native_refusal" {
+		t.Fatal("actual refusal lost", v)
 	}
 	n = NativeSnapshot{Available: true, Vetoes: map[string]string{}}
 	b.StatusIdentityKnown = false
@@ -37,8 +37,8 @@ func TestNativeVetoScopePreservesAWhenKnownBSourceFails(t *testing.T) {
 	}
 }
 
-func TestFollowupOwnQuestionAndCoverageUnknownVetoBoundA(t *testing.T) {
-	for _, reason := range []string{"native_question", "native_sources_unknown", "coverage_unknown"} {
+func TestFollowupActualRefusalAndCoverageUnknownVetoBoundA(t *testing.T) {
+	for _, reason := range []string{"native_refusal", "native_sources_unknown", "coverage_unknown"} {
 		t.Run(reason, func(t *testing.T) {
 			s, d, c := fixture(t)
 			d.NextCheckAtUTC = s.now()

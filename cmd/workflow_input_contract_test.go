@@ -181,7 +181,6 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	run("error-already-answered", "error", append([]string{"answer", "preview", cid, "--request-id", "app-choice-0003", "--option-id", "short"}, ws...)...)
 	run("wait-answered", "wait", append([]string{"wait", cid, "--timeout-seconds", "1"}, ws...)...)
 	sha := preview.RequestSHA256
-	run("error-not-acknowledged", "error", append([]string{"continue", cid, "--request-id", "app-choice-0001", "--request-sha256", sha, "--summary", "Wrote it."}, ws...)...)
 	run("acknowledge-received", "question", append([]string{"acknowledge", cid, "--request-id", "app-choice-0001", "--request-sha256", sha}, ws...)...)
 	run("continue-reported", "question", append([]string{"continue", cid, "--request-id", "app-choice-0001", "--request-sha256", sha, "--summary", "Wrote the full reference section into README.md."}, ws...)...)
 	exact := "Export format\r\n  (v1) \n"
@@ -194,6 +193,7 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	run("error-invalid-answer-blank-text", "error", append([]string{"answer", "preview", tid, "--request-id", "app-text-0002", "--text-file", file("blank.txt", []byte(" \n\t"))}, ws...)...)
 	run("apply-text-recorded", "status", "answer", "apply", "--workspace", root, "--file", file("request-text.json", tpreview.Request))
 	run("show-text-answered", "question", append([]string{"show", tid}, ws...)...)
+	run("continue-without-receipt", "question", append([]string{"continue", tid, "--request-id", "app-text-0001", "--request-sha256", tpreview.RequestSHA256, "--summary", "Used the exact text answer."}, ws...)...)
 	gone := choiceDraft
 	gone.PublicationKey = "docs-export/obsolete"
 	gq := run("ask-to-withdraw", "question", append([]string{"ask", "--file", file("gone.json", gone)}, ws...)...)
@@ -361,9 +361,9 @@ print(len(items),'checked')
 // of the same definitions.
 func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	locked := map[string]string{
-		"README.md":                           "6bbde62b5433f2be16ea1b8e60eadef7ec5cb250d9bf0c7110d7350e8f0fa566",
-		"workflow-human-input-v1.schema.json": "5ce06991b547197ace52d777af738adf4bf4254c4a4dba34722686a3c6f5c43c",
-		"examples.json":                       "03802a23a66a1bb7275ddf9c329472be8cad420ec8a43e04fd882da77d81a04d",
+		"README.md":                           "f9711f041f15a348df11e2b11e26a96be9751c2bb2d5e59b14d6a07f491d5216",
+		"workflow-human-input-v1.schema.json": "202fddcbee1af761b890d1a99a6ad8ea1343be826ea11f71a67836a8a2fbb46e",
+		"examples.json":                       "8f21910ae0d5ff7f8311f0e0f79f8f2c53cec55759e90ddb3a8c88835f6944cd",
 	}
 	for name, want := range locked {
 		b, err := os.ReadFile(filepath.Join(hiBundle, name))

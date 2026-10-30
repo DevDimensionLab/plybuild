@@ -88,24 +88,10 @@ func inventoryDeliveryAction(s workflowState) InventoryDeliveryAction {
 		a = deliveryStartupAction(s)
 	}
 	out := InventoryDeliveryAction{Actor: inventoryDeliveryActor(a.Actor), RecordedActor: a.Actor, Kind: "continue_delivery", Reason: a.Message, EvidenceIDs: []string{s.Result.RunID}}
-	if deliveryEffectiveAgreement(s) != nil && deliveryEffectiveAgreement(s).AutomaticAcceptance() && !deliveryEffectiveAgreement(s).HumanOwnedIntegration() && (s.Result.Delivery.Phase == "closing" || s.Result.Delivery.Phase == "completed") {
-		out.Kind = "continue_closeout"
-		if s.Result.Delivery.Phase == "completed" {
-			out.Kind = "delivery_completed"
-		}
-		return out
-	}
-	if s.Result.Delivery.OwnershipRelease != nil {
-		out.Actor, out.Kind = "human", "start_human_integration"
-		if s.Result.Delivery.HumanIntegration != nil && s.Result.Delivery.HumanIntegration.Accepted {
-			out.Kind = "continue_human_integration"
-		}
-		return out
-	}
 	switch s.Result.Delivery.Phase {
 	case "awaiting_acceptance":
 		out.Kind = "delivery_startup"
-	case "working", "verifying":
+	case "working", "verifying", "verified":
 	case "needs_input":
 		out.Kind = "answer_question"
 	case "stopped":
@@ -138,17 +124,11 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 		inventoryDeliveryProblem(row, "delivery_state_unavailable", "The delivery request has no preserved delivery state")
 		return
 	}
-	if err := workflowLoadAcceptanceSelection(&s); err != nil {
-		inventoryDeliveryProblem(row, "delivery_state_unavailable", err.Error())
-		out.Phase = s.Result.Delivery.Phase
-		out.NextAction = inventoryDeliveryUnknownAction(s, "Preserved acceptance selection is damaged; inspect the original choice and its native event.")
-		return
-	}
 	out.Phase, out.NextAction = s.Result.Delivery.Phase, inventoryDeliveryAction(s)
 	if out.NextAction.Kind == "inspect_delivery" {
 		inventoryDeliveryProblem(row, "delivery_phase_unknown", "Unrecognized preserved delivery phase: "+out.Phase)
 	}
-	bindingValid := (s.Request.Envelope == deliveryEnv("herdr-run-request") && s.Request.Worker == nil && s.Result.Worker == nil || headlessRun(s.Request) && workerValidateIdentity(s) == nil) && s.Result.Envelope == deliveryEnv("run") && s.Request.ReturnMode == "delivery_owner"
+	bindingValid := s.Request.Envelope == deliveryEnv("herdr-run-request") && s.Result.Envelope == deliveryEnv("run") && s.Request.ReturnMode == "delivery_owner"
 	if !bindingValid {
 		inventoryDeliveryProblem(row, "delivery_binding_invalid", "Delivery request and state envelopes differ from the delivery-owner contract")
 	}
@@ -171,27 +151,11 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 		}
 		return raw, err
 	}
-	if b := s.Result.Delivery.AcceptanceSelection; b != nil {
-		if _, err := readSource(*b); err != nil {
-			inventoryDeliveryProblem(row, "delivery_state_unavailable", err.Error())
-		}
-		if selection, _, _, err := readAcceptanceSelection(s, *b); err == nil {
-			if _, err = readSource(selection.Choice); err != nil {
-				inventoryDeliveryProblem(row, "delivery_state_unavailable", err.Error())
-			}
-		}
-	}
 	goalBytes, err := readSource(out.GoalSource)
-	if err == nil {
+	if err == nil && basis != nil {
 		out.Goal, err = inventoryDeliveryGoal(goalBytes, *basis, out.GoalSource.SHA256)
 	}
-	if err == nil {
-		specBinding := FileBinding{filepath.Join(s.Request.WorkspaceRoot, ".ply", "task-content", "v1", "manifests", "sha256", strings.TrimPrefix(basis.Spec.ManifestSHA256, "sha256:")+".json"), basis.Spec.ManifestSHA256}
-		var specBytes []byte
-		if specBytes, err = readSource(specBinding); err == nil {
-			err = inventoryDeliveryGoalOrigin(specBytes, *basis, *out.Goal)
-		}
-	}
+
 	if err != nil {
 		out.Goal = nil
 		inventoryDeliveryProblem(row, "delivery_goal_unavailable", "Preserved goal binding could not be read: "+err.Error())
@@ -310,9 +274,6 @@ func readInventoryDelivery(s workflowState, basis *workspace.TaskSpecBasis, row 
 }
 
 func inventoryDeliveryGoal(raw []byte, basis workspace.TaskSpecBasis, sha string) (*workspace.TaskGoalRef, error) {
-	if _, err := canonicaljson.DecodeStrict(raw); err != nil {
-		return nil, err
-	}
 	var manifest struct {
 		Kind          string                    `json:"kind"`
 		SchemaVersion int                       `json:"schema_version"`
@@ -322,37 +283,17 @@ func inventoryDeliveryGoal(raw []byte, basis workspace.TaskSpecBasis, sha string
 		Revision      int                       `json:"revision"`
 		Problem       workspace.TaskRevisionRef `json:"problem"`
 	}
-	if err := json.Unmarshal(raw, &manifest); err != nil {
+	if err := json.Unmarshal(raw, &manifest); err != nil || manifest.Kind != "WorkspaceTaskSpecRevision@2" || manifest.ContractKind != "goal" {
+		return nil, nil
+	}
+	if _, err := canonicaljson.DecodeStrict(raw); err != nil {
 		return nil, err
 	}
 	_, specErr := workspace.ParseTaskID(manifest.SpecID)
-	if manifest.Kind != "WorkspaceTaskSpecRevision@2" || manifest.SchemaVersion != 2 || manifest.ContractKind != "goal" || manifest.TaskID != basis.TaskID || specErr != nil || manifest.Revision < 1 || manifest.Revision > 2147483647 || manifest.Problem != basis.Problem {
-		return nil, integrity("goal manifest identity differs from the delivery Task and Problem binding")
+	if manifest.Kind != "WorkspaceTaskSpecRevision@2" || manifest.SchemaVersion != 2 || manifest.ContractKind != "goal" || manifest.TaskID != basis.TaskID || specErr != nil || manifest.Revision < 1 || manifest.Revision > 2147483647 {
+		return nil, integrity("goal manifest identity differs from its Task binding")
 	}
 	return &workspace.TaskGoalRef{SpecID: manifest.SpecID, Spec: workspace.TaskRevisionRef{Revision: manifest.Revision, ManifestSHA256: sha}}, nil
-}
-
-func inventoryDeliveryGoalOrigin(raw []byte, basis workspace.TaskSpecBasis, goal workspace.TaskGoalRef) error {
-	if _, err := canonicaljson.DecodeStrict(raw); err != nil {
-		return err
-	}
-	var manifest struct {
-		Kind          string                    `json:"kind"`
-		SchemaVersion int                       `json:"schema_version"`
-		ContractKind  string                    `json:"contract_kind"`
-		TaskID        workspace.TaskID          `json:"task_id"`
-		SpecID        string                    `json:"spec_id"`
-		Revision      int                       `json:"revision"`
-		Problem       workspace.TaskRevisionRef `json:"problem"`
-		GoalOrigin    workspace.TaskGoalRef     `json:"goal_origin"`
-	}
-	if err := json.Unmarshal(raw, &manifest); err != nil {
-		return err
-	}
-	if manifest.Kind != "WorkspaceTaskSpecRevision@2" || manifest.SchemaVersion != 2 || manifest.ContractKind != "execution" || manifest.TaskID != basis.TaskID || manifest.SpecID != basis.SpecID || manifest.Revision != basis.Spec.Revision || manifest.Problem != basis.Problem || manifest.GoalOrigin != goal {
-		return integrity("the execution Spec's goal origin differs from the delivery goal")
-	}
-	return nil
 }
 
 // Stop records predate a universal request-digest field. Replay only their

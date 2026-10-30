@@ -5,10 +5,10 @@ import "testing"
 func TestInventoryStatusFollowupVeto(t *testing.T) {
 	f := newDeliveryFixture(t, "codex")
 	s := deliveryInventoryState(t, f, "status-veto")
-	deliveryInventoryReport(t, f, &s, "working", "working")
+	deliveryInventoryReport(t, f, &s, "question", "needs_input")
 	row := deliveryInventoryRows(t, f)[s.Result.RunID]
 	if row.StatusFollowupVeto != "clear" {
-		t.Fatal("working native coverage should be clear", row.StatusFollowupVeto)
+		t.Fatal("a preserved question and human next actor must not veto an explicit follow-up", row.StatusFollowupVeto)
 	}
 	proof := writeAny(t, f.R.WorkspaceRoot, "status-refusal.json", map[string]string{"observed": "synthetic refusal"})
 	evidence, _, err := deliveryReadBinding(proof, 1<<20)

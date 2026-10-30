@@ -10,7 +10,7 @@ import (
 func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependencies) {
 	parents := map[string]*cobra.Command{}
 	for _, name := range []string{"problem", "spec", "publication"} {
-		p := &cobra.Command{Use: name, Short: map[string]string{"problem": "Preserve Task problem revisions", "spec": "Record Task goals and assess or select detailed solutions", "publication": "Inspect Task content publication outcomes"}[name], Long: "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording does not start an agent; use workflow execute from the registered Epic to select and deliver a queued goal.", Example: "  ply workspace task " + name + " --help", RunE: func(cmd *cobra.Command, args []string) error { return cmd.Help() }}
+		p := &cobra.Command{Use: name, Short: map[string]string{"problem": "Preserve Task problem revisions", "spec": "Record Task goals and assess or select detailed solutions", "publication": "Inspect Task content publication outcomes"}[name], Long: "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording preserves metadata without starting an agent. Choose subsequent operations explicitly.", Example: "  ply workspace task " + name + " --help", RunE: func(cmd *cobra.Command, args []string) error { return cmd.Help() }}
 		task.AddCommand(p)
 		parents[name] = p
 	}
@@ -48,7 +48,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 			return mutationErr
 		}}
 		if entry.parent == "spec" && (entry.name == "record" || entry.name == "assess" || entry.name == "select") {
-			c.Long += " Solution Spec@1 uses the current Epic base; after a base update record, assess and select a new solution revision. Goal Spec@2 (contract_kind goal) has no implementation_basis or detailed technical plan: queue its exact revision with QueueDraft@2, then workflow execute binds the current base and preserves a derived execution Spec. Planner goal publication does not claim human selection. Historical revisions remain immutable."
+			c.Long += " Solution Spec@1 records a chosen Epic base. Goal Spec@2 (contract_kind goal) has no implementation_basis or detailed technical plan: an optional queue can reference its exact revision with QueueDraft@2. Planner goal publication does not claim human selection. Historical revisions remain immutable."
 		}
 		c.Flags().StringVar(&file, "file", "", "absolute physical path to a complete JSON draft (maximum 256 KiB)")
 		_ = c.MarkFlagRequired("file")

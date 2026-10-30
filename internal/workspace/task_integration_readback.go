@@ -78,18 +78,6 @@ func newIntegrationReadback(root string, registry WorkItemRegistry, ctx integrat
 		{Name: "persisted_before", Value: persistedBefore}, {Name: "persisted_after", Value: persistedAfter}, {Name: "observed_source", Value: observedSource}, {Name: "observed_parent", Value: observedParent}, {Name: "observed_inventory", Value: canonicaljson.Object{{Name: "entries", Value: structCanonical(observedInventory)}, {Name: "freshness", Value: collectionFreshness(ctx.RepositoryObserved)}}}, {Name: "observed_reflog", Value: canonicaljson.Object{{Name: "entries", Value: structCanonical(observedReflog)}, {Name: "freshness", Value: collectionFreshness(ctx.ReflogObserved)}}},
 		{Name: "classification", Value: classification}, {Name: "git_changed", Value: pointerValue(changed)}, {Name: "recovery_status", Value: recovery}, {Name: "next_action", Value: structCanonical(next)},
 	}
-	if plan.SchemaVersion >= 2 || taskRequiresSpec(registry, ctx.Task.ID) {
-		guard := ctx.TaskSpecRelevance
-		if guard == nil {
-			guard = plan.TaskSpecGuard
-		}
-		if guard == nil {
-			guard = &TaskSpecRelevance{Relevance: "unknown", Reasons: []string{"task_spec_result_basis_missing"}}
-		}
-		replaceReadbackMember(&readback, "kind", "WorkspaceTaskIntegrationReadback@2")
-		replaceReadbackMember(&readback, "schema_version", int64(2))
-		readback = append(readback, canonicaljson.Member{Name: "task_spec_relevance", Value: contentRefValue(guard)})
-	}
 	if plan.Acceptance != nil {
 		replaceReadbackMember(&readback, "kind", "WorkspaceTaskIntegrationReadback@3")
 		replaceReadbackMember(&readback, "schema_version", int64(3))
@@ -119,29 +107,10 @@ func integrationPersistedView(registry WorkItemRegistry, authority *IntegrationA
 }
 
 func buildTaskShowIntegrationReadback(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, task TaskRecord, epic EpicRecord, parent EpicRepoBinding) (out WorkspaceTaskIntegrationReadback) {
-	defer func() {
-		if !taskRequiresSpec(registry, task.ID) || out.Value == nil {
-			return
-		}
-		var id TaskResultID
-		if out.TaskResult != nil {
-			id = out.TaskResult.ID
-		}
-		guard := taskResultSpecRelevance(d, root, projects, registry, task, id)
-		if out.Acceptance == nil {
-			replaceReadbackMember(&out.Value, "kind", "WorkspaceTaskIntegrationReadback@2")
-			replaceReadbackMember(&out.Value, "schema_version", int64(2))
-		}
-		if contentFields(out.Value)["task_spec_relevance"] == nil {
-			out.Value = append(out.Value, canonicaljson.Member{Name: "task_spec_relevance", Value: contentRefValue(guard)})
-		} else {
-			replaceReadbackMember(&out.Value, "task_spec_relevance", contentRefValue(guard))
-		}
-	}()
 
 	tr, qa, authority, ambiguous := selectTaskIntegrationLeaf(registry, task.ID)
 	if ambiguous {
-		return newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "conflict", IntegrationNextAction{Kind: "refresh_or_reverify_parent", Reason: "Select exact Task result and human QA records in a separate check.", Argv: []string{}})
+		return newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "conflict", IntegrationNextAction{Kind: "refresh_or_reverify_parent", Reason: "Select an exact Task result for the integration check.", Argv: []string{}})
 	}
 	if tr == nil {
 		return newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "blocked", IntegrationNextAction{Kind: "record_task_result", Reason: "Record one controlled Task result.", Argv: []string{"ply", "workspace", "task", "result", "record", string(task.ID), "--file", "<absolute-task-result.json>"}})
@@ -153,14 +122,6 @@ func buildTaskShowIntegrationReadback(d Dependencies, root string, projects Proj
 		if evidence, err := d.HandoffEvidence.ReadTaskEvidence(taskResultEvidenceRequest(*tr)); err == nil && automaticIntegrationAuthorization(evidence.DeliveryAuthorization) {
 			automaticAuth = evidence.DeliveryAuthorization
 		}
-	}
-	if qa == nil && automaticAuth == nil {
-		r := newNullableIntegrationReadback(d, root, projects, registry, task, epic, parent, "blocked", IntegrationNextAction{Kind: "record_human_qa", Reason: "Record human QA for the selected Task result.", Argv: []string{"ply", "workspace", "task", "qa", "record", string(task.ID), "--file", "<absolute-human-qa.json>"}})
-		r.TaskResult = tr
-		r.ResultOID = tr.ResultOID
-		r.TechnicalGate = tr.TechnicalGate
-		replaceReadbackMember(&r.Value, "task_result", taskResultCanonical(*tr))
-		return r
 	}
 	var qaID HumanQARecordID
 	if qa != nil {
@@ -285,7 +246,7 @@ func selectTaskIntegrationLeaf(registry WorkItemRegistry, taskID TaskID) (*TaskR
 	green := []*TaskResultRecord{}
 	for i := range registry.TaskResults {
 		r := &registry.TaskResults[i]
-		if r.TaskID == taskID && (r.TechnicalGate == "passed" || r.TechnicalGate == "good_enough_with_known_debt") {
+		if r.TaskID == taskID {
 			green = append(green, r)
 		}
 	}
@@ -298,12 +259,12 @@ func selectTaskIntegrationLeaf(registry WorkItemRegistry, taskID TaskID) (*TaskR
 	passes := []*TaskHumanQARecord{}
 	for i := range registry.HumanQARecords {
 		q := &registry.HumanQARecords[i]
-		if q.TaskID == taskID && q.TaskResultID == green[0].ID && q.ResultOID == green[0].ResultOID && q.ResultTree == green[0].ResultTree && q.Outcome == "pass" {
+		if q.TaskID == taskID && q.TaskResultID == green[0].ID && q.ResultOID == green[0].ResultOID && q.ResultTree == green[0].ResultTree {
 			passes = append(passes, q)
 		}
 	}
 	if len(passes) > 1 {
-		return nil, nil, nil, true
+		return green[0], nil, nil, false
 	}
 	if len(passes) == 0 {
 		return green[0], nil, nil, false
@@ -510,9 +471,6 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 				continue
 			}
 			if t == reflect.TypeOf(IntegrationAuthority{}) && field.Name == "DeliveryOwner" && v.Field(i).IsNil() {
-				continue
-			}
-			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && field.Name == "TaskSpecGuard" && v.FieldByName("SchemaVersion").Int() == 1 {
 				continue
 			}
 			tag := field.Tag.Get("json")

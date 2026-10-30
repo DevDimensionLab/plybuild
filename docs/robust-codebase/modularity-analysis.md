@@ -1,5 +1,10 @@
 # TC9E836AD — Ply module seams for parallel agent work
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 Analysis only, 23 October 2026. Task `ply-modularity-analysis-20261023`. This report recommends future scopes; it authorizes no implementation, new Task/Spec, queue mutation, installation or lifecycle change. The machine-readable companion is [modularity-candidates.json](modularity-candidates.json).
 
 ## Basis and recommendation
@@ -26,7 +31,7 @@ No new Epic/branch, current takeover, private registry patch or direct Herdr lau
 
 The exact source checks precede selecting/preparing a new worktree:
 
-- [internal/workspace/task_goal_execution.go](../../internal/workspace/task_goal_execution.go) — `buildGoalExecutionPreviewInTarget`.
+- internal/workspace/task_goal_execution.go (`internal/workspace/task_goal_execution.go`, historisk kilde) — `buildGoalExecutionPreviewInTarget`.
 - [internal/workspace/task_preparation.go](../../internal/workspace/task_preparation.go) — `buildPreparePlan`.
 - [internal/workspace/task_queue_types.go](../../internal/workspace/task_queue_types.go) — `QueueTarget`.
 
@@ -57,9 +62,9 @@ Priority **1**; risk **high**; relative effort **large**; decision `recommend`. 
 **Current responsibility and dependency direction.** readJournal reads and verifies the chain, replays fold, projects unobserved process state and checks a cached prefix. fold both loads immutable claim/report/status bytes and validates transitions; foldProviderCompletion also loads launch and provider streams. readJournal replays fold again for cache validation, so knowledge of bound storage and historical transitions is interleaved. Show/collection callers -> readJournal -> fold -> bound claim/report/status files and foldProviderCompletion; appendEvent also invokes the same fold. workflowRead is the separate WorkflowRun persisted-state reader, not a caller of fold.
 
 - [internal/taskrun/store.go](../../internal/taskrun/store.go) — `readJournal`, `fold`, `appendEvent`.
-- [internal/taskrun/provider_completion.go](../../internal/taskrun/provider_completion.go) — `foldProviderCompletion`.
+- internal/taskrun/provider_completion.go (`internal/taskrun/provider_completion.go`, historisk kilde) — `foldProviderCompletion`.
 - [internal/taskrun/herdr_store.go](../../internal/taskrun/herdr_store.go) — `workflowRead`.
-- [internal/taskrun/result_cache.go](../../internal/taskrun/result_cache.go) — `resultCacheValue`.
+- internal/taskrun/result_cache.go (`internal/taskrun/result_cache.go`, historisk kilde) — `resultCacheValue`.
 
 **Proposed module/interface.** Keep a package-private function: replayEvent(j *journal, e Event, load func(FileBinding, int) ([]byte, error)) error. The loader owns physical read and digest checks; replay owns event-specific path/identity checks and transition order. This is illustrative, not a final signature.
 
@@ -113,9 +118,9 @@ Priority **2**; risk **very_high**; relative effort **large**; decision `recomme
 
 **Current responsibility and dependency direction.** deliveryQARecovery combines owner/runtime observations, immutable request and staged-draft proof, current candidate checks, registry absence checks, receipt creation, report append and retirement of one attempted reservation. Preview and apply deliberately share that procedure; completed recovery is an early read-only receipt lookup. CLI check/confirm adapter -> WorkflowPreviewDeliveryQARecovery or WorkflowRecoverDeliveryQA -> deliveryQARecovery -> workflowhandoff rejection/evidence validation and workspace locked registry snapshot -> workflowKeep/deliveryAppendEvent/workflowSave.
 
-- [internal/taskrun/delivery_qa_recovery.go](../../internal/taskrun/delivery_qa_recovery.go) — `WorkflowPreviewDeliveryQARecovery`, `WorkflowRecoverDeliveryQA`, `deliveryQARecovery`, `deliveryQARecoveryOwner`.
-- [internal/workflowhandoff/delivery_qa_rejection.go](../../internal/workflowhandoff/delivery_qa_rejection.go) — `ValidateRejectedDeliveryHumanQA`.
-- [cmd/workflow_execute_qa_recovery.go](../../cmd/workflow_execute_qa_recovery.go) — `workflowExecuteQARecoveryCommand`.
+- internal/taskrun/delivery_qa_recovery.go (`internal/taskrun/delivery_qa_recovery.go`, historisk kilde) — `WorkflowPreviewDeliveryQARecovery`, `WorkflowRecoverDeliveryQA`, `deliveryQARecovery`, `deliveryQARecoveryOwner`.
+- internal/workflowhandoff/delivery_qa_rejection.go (`internal/workflowhandoff/delivery_qa_rejection.go`, historisk kilde) — `ValidateRejectedDeliveryHumanQA`.
+- cmd/workflow_execute_qa_recovery.go (`cmd/workflow_execute_qa_recovery.go`, historisk kilde) — `workflowExecuteQARecoveryCommand`.
 - [internal/taskrun/herdr_store.go](../../internal/taskrun/herdr_store.go) — `workflowRead`, `workflowSave`.
 
 **Proposed module/interface.** Prefer a private function proveRejectedQA(existing captured inputs) (deliveryQARejectionReceipt, error), using the existing receipt type. Keep preview/apply orchestration and current locked absence checks together. An abstract generic RecoveryEngine would hide the wrong facts.
@@ -139,7 +144,7 @@ These are responsibility refactors only. Broader retry eligibility, new terminal
 
 **Regression protection (proposed, not run).** Cross the existing preview/recover interface with injected Fault at after_receipt, after_event and after_state; retry concurrently and read workflow state to assert one event, no invented QA, and no retirement of a later attempt. Reuse the existing rejection table for changed owner/evidence/control/candidate and published QA. A pure proof table supplements rather than replaces these effect guards.
 
-- [internal/taskrun/delivery_qa_recovery_test.go](../../internal/taskrun/delivery_qa_recovery_test.go) — `TestDeliveryQARecoveryInterruptedAndConcurrent`, `TestDeliveryQARecoveryRejectsUnprovenEffectsAndAuthority`, `TestDeliveryQARecoveryPreservesEvidenceAndAllowsOrdinaryQA`.
+- internal/taskrun/delivery_qa_recovery_test.go (`internal/taskrun/delivery_qa_recovery_test.go`, historisk kilde) — `TestDeliveryQARecoveryInterruptedAndConcurrent`, `TestDeliveryQARecoveryRejectsUnprovenEffectsAndAuthority`, `TestDeliveryQARecoveryPreservesEvidenceAndAllowsOrdinaryQA`.
 
 **First slice:** Characterize the current unpublished-attempt eligibility decisions with captured evidence, then extract a private rejection-proof function without moving locks or writes.
 

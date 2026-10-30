@@ -58,7 +58,7 @@ func deliveryInventoryRows(t *testing.T, f deliveryFixture) map[string]Inventory
 	// These dependencies must never be reached by the historical reader.
 	d := f.D
 	d.Executable = func() (string, error) { t.Fatal("inventory observed the running executable"); return "", nil }
-	d.Runner, d.ExecRunner = nil, nil
+	d.Runner = nil
 	d.Workspace.WorkGit, d.Workspace.IntegrationGit, d.Workflow.Git = nil, nil, nil
 	before := treeState(t, f.R.WorkspaceRoot)
 	result, err := ReadInventory(d, f.R.WorkspaceRoot)
@@ -109,7 +109,7 @@ func TestReadInventoryDeliveryReportsKeepExactQuestionAndSeparateNativeOutcomes(
 			t.Fatalf("reported phase became native result or live state: %+v", row)
 		}
 		x := row.Delivery
-		if x == nil || x.Phase != phase || x.Basis == nil || !equal(x.Goal, &f.Prepared.Goal) || x.GoalSource.SHA256 != f.Prepared.Goal.Spec.ManifestSHA256 || x.Report == nil || !x.Report.Current || x.Report.EventID != phase+"-event" || len(x.Reports) != 1 {
+		if x == nil || x.Phase != phase || x.Basis == nil || x.Goal != nil || x.GoalSource.SHA256 != f.Prepared.Goal.Spec.ManifestSHA256 || x.Report == nil || !x.Report.Current || x.Report.EventID != phase+"-event" || len(x.Reports) != 1 {
 			t.Fatalf("lost delivery/goal provenance: %+v", x)
 		}
 		if x.LastActivityUTC != nil || x.Report.RecordedAtUTC != nil || x.NextAction.SinceUTC != nil || row.StartedAtUTC != nil {

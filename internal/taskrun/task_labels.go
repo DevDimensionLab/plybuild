@@ -21,7 +21,7 @@ func (g deliveryReceiptGoal) presentation() (code, title string) {
 }
 
 func deliveryTaskPresentation(s workflowState) (deliveryReceiptGoal, bool) {
-	if s.Request.Worker != nil || s.Request.Delivery == nil || s.Request.Delivery.StartupProtocol != MandateReceiptV1 {
+	if s.Request.Delivery == nil || s.Request.Delivery.StartupProtocol != MandateReceiptV1 {
 		return deliveryReceiptGoal{}, false
 	}
 	g, err := readDeliveryReceiptGoal(s.Request.Delivery.Goal)

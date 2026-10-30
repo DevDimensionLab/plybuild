@@ -105,47 +105,6 @@ func TestDeliveryActualPolicyDoesNotInventRequestedProfileName(t *testing.T) {
 	}
 }
 
-func TestDeliveryNeedsInputBeforeAcceptanceGrantsNoEffects(t *testing.T) {
-	f := newDeliveryFixture(t, "codex")
-	o := workflowTestStart(t, f.workflowFixture)
-	r := DeliveryReport{Envelope: deliveryEnv("delivery-report"), RunID: o.RunID, RequestSHA256: o.RequestSHA256, SessionID: o.SessionID, EventID: "runtime-question", Phase: "needs_input", Summary: "Runtime authority is not confirmed.", Meaning: "No target writes or completed candidate are claimed.", Question: ptr("Which actual runtime policy applies to this session?"), Evidence: []FileBinding{}, VerifierResults: []DeliveryVerifierResult{{ID: "acceptance", Outcome: "not_run", Reason: "Runtime acceptance remains unresolved.", Argv: []string{}, Evidence: []FileBinding{}}}}
-	file := writeAny(t, f.R.WorkspaceRoot, "needs-input.json", r)
-	if _, err := WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, filepath.Join(o.Paths.RunRoot, "wrong-context.json"), file); err == nil {
-		t.Fatal("unbound context accepted")
-	}
-	bad := r
-	bad.SessionID = "another-owner"
-	if _, err := WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "wrong-owner.json", bad)); err == nil {
-		t.Fatal("unbound owner accepted")
-	}
-	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_session_id": "another-native-session"})
-	if _, err := WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file); err == nil {
-		t.Fatal("replaced native session accepted")
-	}
-	workflowTestModel(t, f.workflowFixture, map[string]any{"agent_session_id": "fixture-session"})
-	got, err := WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, file)
-	if err != nil {
-		t.Fatalf("truthful pre-acceptance question rejected: %v", err)
-	}
-	if got.Delivery.Phase != "needs_input" || got.NextAction.Actor != "user" || got.Delivery.PermissionState != "pending_runtime_acceptance" || len(got.Delivery.Candidates) != 0 {
-		t.Fatalf("question lost or promoted to authority: %+v", got)
-	}
-	r.EventID, r.PreviousEventSHA256, r.Phase, r.Question = "working-too-early", got.Delivery.LastEventSHA256, "working", nil
-	if _, err = WorkflowDeliveryReport(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "working.json", r)); err == nil {
-		t.Fatal("working report granted before acceptance")
-	}
-	if _, err = WorkflowDeliveryVerify(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "pre-acceptance")); err == nil {
-		t.Fatal("verification granted before acceptance")
-	}
-	if _, err = WorkflowDeliveryIntegrate(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context); err == nil {
-		t.Fatal("integration granted before acceptance")
-	}
-	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
-	if err != nil || s.StartSHA256 != nil || s.Acceptance != nil || s.Result.Delivery.Attempt != nil || len(s.Result.Delivery.Events) != 1 {
-		t.Fatalf("report fabricated acceptance or reserved an effect: %+v %v", s.Result.Delivery, err)
-	}
-}
-
 func TestDeliveryClaudePermissionModeUsesBoundRequest(t *testing.T) {
 	f := newDeliveryFixture(t, "claude")
 	for _, mode := range []string{"manual", "auto"} {

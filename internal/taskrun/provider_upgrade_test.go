@@ -92,8 +92,8 @@ func TestDeliveryProviderUpgradePreservesAcceptedContinuation(t *testing.T) {
 					t.Fatalf("same owner callback rejected after provider cleanup: %+v %v", o, err)
 				}
 				candidate := deliveryTestCandidate(t, f, "accepted provider continuity")
-				o, err = WorkflowDeliveryVerify(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "after-provider-upgrade"))
-				if err != nil || len(o.Delivery.Candidates) != 1 || o.Delivery.Candidates[0].OID != candidate || o.Delivery.Phase != "awaiting_human_qa" {
+				o, err = WorkflowDeliveryVerify(d, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
+				if err != nil || len(o.Delivery.Candidates) != 1 || o.Delivery.Candidates[0].OID != candidate || o.Delivery.Phase != "verified" {
 					t.Fatalf("accepted verification blocked after launcher cleanup: %+v %v", o.Delivery, err)
 				}
 				s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
@@ -569,7 +569,7 @@ func TestDeliveryIncompleteReportPreservesUnresolvedVerification(t *testing.T) {
 		}
 		return nil
 	}
-	interrupted, err := WorkflowDeliveryVerify(fault, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, deliveryTestReview(t, f, "unresolved"))
+	interrupted, err := WorkflowDeliveryVerify(fault, f.R.WorkspaceRoot, o.RunID, o.Paths.Context)
 	if err == nil || interrupted.Delivery.Attempt == nil || interrupted.Delivery.Attempt.State != "attempted" {
 		t.Fatalf("fixture did not preserve an unresolved verification: %+v %v", interrupted.Delivery, err)
 	}

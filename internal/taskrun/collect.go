@@ -32,11 +32,7 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 	r := j.Result
 	p.BasisEventSHA256 = r.LastEventSHA256
 	p.TaskExecution = r.TaskExecution
-	if j.Request.SchemaVersion == 2 {
-		p.SchemaVersion = 3
-		p.ProviderCompletion = r.ProviderCompletion
-		p.RuntimeFacts = &r.RuntimeFacts
-	}
+
 	inactive := taskInactive(j)
 	if proposed != nil {
 		h := digest(proposed)
@@ -55,9 +51,8 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 		return p, j, nil
 	}
 	add := func(code, detail string) { p.Reasons = append(p.Reasons, Reason{code, detail}) }
-	if !inactive && j.Request.SchemaVersion == 2 {
-		add("task_run_provider_completion_unknown", "A complete bound provider stream, exit zero and proven process group quiescence are required.")
-	} else if !inactive {
+
+	if !inactive {
 		add("task_run_task_status_"+p.TaskExecution.State, "Task execution needs a fresh, unambiguous human observation of inactive after the received report. Preview collect with --task-status, then apply its confirmation.")
 	}
 	if !quiescent(r.Process) || r.Process.State != "exited" {
@@ -75,11 +70,9 @@ func collectPreview(d Dependencies, root, id string) (CollectPreview, journal, e
 	if r.Delivery.ReportedOutcome == nil || *r.Delivery.ReportedOutcome != "complete" {
 		add("task_run_delivery_incomplete", "The semantic report is not complete.")
 	}
-	if j.Request.SchemaVersion == 2 && (r.Budget.Reported == nil || r.Budget.Reported.ActiveSeconds > j.Request.FactoryTest.TimeoutSeconds) {
-		add("task_run_factory_budget_exceeded", "Reported active time exceeds the per-call factory timeout.")
-	}
+
 	if r.Budget.WithinAgreement == nil || !*r.Budget.WithinAgreement {
-		add("task_run_budget_unknown_or_exceeded", "Reported active usage does not establish completion within agreement A.")
+		add("task_run_budget_unknown_or_exceeded", "Reported active usage does not establish completion within the human-supplied agreement.")
 	}
 	if j.Binding != nil {
 		facts, err := workflowhandoff.ReadTaskRunReturnFacts(d.Workflow, j.Binding.Handoff.Locator)
@@ -277,9 +270,7 @@ func recordedResult(d Dependencies, j journal) (*workspace.TaskResultRecord, err
 	if !quiescent(j.Result.Process) || j.Result.Process.State != "exited" || j.Result.Process.ExitCode == nil || *j.Result.Process.ExitCode != 0 || j.Result.Process.Signal != nil || j.Result.Acceptance.State != "started" || j.Result.Delivery.State != "received" {
 		return nil, integrity("frozen TaskResult lacks qualifying process and return facts")
 	}
-	if j.Request.SchemaVersion == 2 && !taskInactive(j) {
-		return nil, integrity("exec result lacks provider completion")
-	}
+
 	var found *workspace.TaskResultRecord
 	e = workspace.WithTaskSpecSnapshot(d.Workspace, j.Request.WorkspaceRoot, func(s *workspace.TaskSpecSession) error {
 		for _, x := range s.Registry.TaskResults {

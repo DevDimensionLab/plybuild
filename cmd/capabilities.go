@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
-	"github.com/devdimensionlab/plybuild/internal/taskrun"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
@@ -116,26 +115,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		}
 		return extensions[i].Mode < extensions[j].Mode
 	})
-	two := 2
-	workflow := []capabilityOperation{
-		{ID: "workflow.execute.begin", Command: []string{"workflow", "execute", "begin"}, Mode: "recipient_observation", Selectors: []string{"--context", "--provider", "--native-session", "--model", "--profile", "--policy", "--read-root", "--write-root", "--permission-confirmed", "--notification-route", "--notification-authority", "--notification-timezone"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "recipient_runtime_acceptance"},
-		{ID: "workflow.execute.check-in", Command: []string{"workflow", "execute", "check-in"}, Mode: "mandate_receipt", Selectors: []string{"--context", "--provider", "--native-session", "--model", "--profile", "--policy", "--read-root", "--write-root", "--notification-route", "--notification-authority", "--notification-timezone"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "bound_mandate_receipt"},
-		{ID: "workflow.execute.observe-stop", Command: []string{"workflow", "execute", "observe-stop"}, Mode: "sourced_observation", Selectors: []string{"--event-id", "--provider", "--native-session", "--stage", "--observer", "--reason", "--evidence", "--action", "--effect-status", "--rule"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "coordinator_observation"},
-		{ID: "workflow.execute.disposition", Command: []string{"workflow", "execute", "disposition"}, Mode: "same_owner_scoped_continuation", Selectors: []string{"--context", "--file", "--check-operation"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "scoped_disposition_or_read"},
-		{ID: "workflow.execute.resolve-stop", Command: []string{"workflow", "execute", "resolve-stop"}, Mode: "same_owner_continuation", Selectors: []string{"--context", "--stop", "--resolution", "--action"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "owner_stop_resolution"},
-		{ID: "workflow.execute.reconcile-quota-stop", Command: []string{"workflow", "execute", "reconcile-quota-stop"}, Mode: "retirement_only", Selectors: []string{"--event-id", "--stop", "--provider", "--native-session", "--action", "--quota-event", "--last-tool-result", "--source-sha256", "--observer", "--reason"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "coordinator_observation"},
-		{ID: "workflow.execute.reconcile-capacity-stop", Command: []string{"workflow", "execute", "reconcile-capacity-stop"}, Mode: "retirement_only", Selectors: []string{"--event-id", "--stop", "--provider", "--native-session", "--action", "--capacity-event", "--command-id", "--process-id", "--command-sha256", "--source-sha256", "--observer", "--reason"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "coordinator_observation"},
-		{ID: "workflow.execute.backup-goal", Command: []string{"workflow", "execute", "backup-goal"}, Mode: "retired_goal_registration", Selectors: []string{"--task", "--spec", "--provider", "--model", "--effort", "--retire", "--coordinator", "--reason", "--start", "--herdr-workspace", "--permission-profile", "--apply", "--confirmation"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.backup-goal", &one}, {"ply.workflow.backup-goal-start", &one}}, Effect: "preview_or_fresh_goal_registration"},
-		{ID: "workflow.execute.retire", Command: []string{"workflow", "execute", "retire"}, Mode: "coordinator_replacement", Selectors: []string{"--observer", "--reason"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "coordinator_owner_retirement"},
-		{ID: "workflow.execute.review", Command: []string{"workflow", "execute", "review"}, Mode: "coordinator_review", Selectors: []string{"--coordinator"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "coordinator_review_round"},
-		{ID: "workflow.execute.review-return", Command: []string{"workflow", "execute", "review-return"}, Mode: "independent_reviewer", Selectors: []string{"--context", "--file"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "reviewer_review_return"},
-		{ID: "workflow.execute.bound-start", Command: []string{"workflow", "execute", "preview"}, Mode: "interactive_codex_explicit_goal_v1", Selectors: []string{"--spec", "--request-id", "--herdr-workspace", "--permission-profile"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.bound-start-preview", &one}, {"ply.workflow.bound-start-request", &one}}, Effect: "read"},
-		{ID: "workflow.execute.bound-start.apply", Command: []string{"workflow", "execute", "apply"}, Mode: "immutable_request_v1", Selectors: []string{"--file"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.bound-start-status", &one}}, Effect: "approved_goal_start"},
-		{ID: "workflow.execute.bound-start.status", Command: []string{"workflow", "execute", "status"}, Mode: "request_identity_v1", Selectors: []string{"--workspace"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.bound-start-status", &one}}, Effect: "read"},
-		{ID: "workflow.execute.acceptance", Command: []string{"workflow", "execute", "acceptance"}, Mode: "explicit_policy_selection", Selectors: []string{"--context", "--file"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "acceptance_policy_selection"},
-		{ID: "workflow.execute.verify", Command: []string{"workflow", "execute", "verify"}, Mode: "candidate_acceptance", Selectors: []string{"--context", "--review", "--candidate-binary", "--reuse"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}, {"PlyDeliveryVerification@2", &two}}, Effect: "candidate_test_and_evidence"},
-		{ID: "workflow.execute.integrate", Command: []string{"workflow", "execute", "integrate"}, Mode: "frozen_acceptance", Selectors: []string{"--context"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.run", &two}}, Effect: "authorized_local_integration"},
-	}
+	workflow := []capabilityOperation{}
 	for _, verb := range []string{"register", "show", "list", "request", "dispatch", "recheck", "cancel", "retarget", "request-status"} {
 		effect := "followup_record"
 		kind := "AgentFollowup@1"
@@ -158,50 +138,6 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 			selectors = append(selectors, "--request-id")
 		}
 		workflow = append(workflow, capabilityOperation{ID: "workflow.followup." + verb, Command: []string{"workflow", "followup", verb}, Mode: "status_only_v1", Selectors: selectors, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{kind, &one}}, Effect: effect})
-	}
-	answerVersion := taskrun.BoundAnswerSchemaVersion
-	for _, answer := range []struct {
-		id, verb, kind, effect string
-		selectors              []string
-	}{
-		{"workflow.execute.product-question", "question", "ply.workflow.product-question", "read", []string{"--workspace"}},
-		{"workflow.execute.bound-answer", "answer preview", "ply.workflow.bound-answer-preview", "read", []string{"--workspace", "--question-id", "--question-revision", "--option-id", "--request-id"}},
-		{"workflow.execute.bound-answer.apply", "answer apply", "ply.workflow.bound-answer-status", "approved_product_answer", []string{"--file"}},
-		{"workflow.execute.bound-answer.status", "answer status", "ply.workflow.bound-answer-status", "read", []string{"--workspace"}},
-	} {
-		schemas := []capabilitySchema{{answer.kind, &answerVersion}}
-		if answer.verb == "answer preview" {
-			schemas = append(schemas, capabilitySchema{"ply.workflow.bound-answer-request", &answerVersion})
-		}
-		workflow = append(workflow, capabilityOperation{
-			ID: answer.id, Command: append([]string{"workflow", "execute"}, strings.Split(answer.verb, " ")...),
-			Mode: taskrun.BoundAnswerMode, Selectors: answer.selectors, Formats: []string{"text", "json"},
-			Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: answer.effect,
-		})
-	}
-	for _, mode := range []string{"codex_headless_standalone_v1", "codex_headless_week_v1"} {
-		for _, verb := range []string{"show", "preview", "apply", "status"} {
-			kind := "ply.workflow.control-status"
-			effect := "read"
-			selectors := []string{"--workspace"}
-			schemas := []capabilitySchema{}
-			switch verb {
-			case "show":
-				kind = "ply.workflow.control-capabilities"
-				selectors = append(selectors, "--week")
-			case "preview":
-				kind = "ply.workflow.control-preview"
-				selectors = append(selectors, "--week", "--action", "--request-id")
-			case "apply":
-				effect = "approved_runtime_control"
-				selectors = []string{"--file"}
-			}
-			schemas = append(schemas, capabilitySchema{kind, &one})
-			if verb == "preview" {
-				schemas = append(schemas, capabilitySchema{"ply.workflow.control-request", &one})
-			}
-			workflow = append(workflow, capabilityOperation{ID: "workflow.control." + verb, Command: []string{"workflow", "control", verb}, Mode: mode, Selectors: selectors, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: effect})
-		}
 	}
 	// cooperative_agent_v1 human input is additive and separate from schema 2.
 	inputVersion := humaninput.SchemaVersion
@@ -232,7 +168,6 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 			Filters: []string{}, FilterPolicy: "none", ResultSchemas: schemas, Effect: input.effect,
 		})
 	}
-	workflow = append(workflow, capabilityOperation{ID: "workflow.execute.bound-control", Command: []string{"workflow", "execute"}, Mode: "codex_headless_standalone_v1", Selectors: []string{"--headless", "--bound-control", "--spec", "--check"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.execute", &one}}, Effect: "explicit_goal_start"}, capabilityOperation{ID: "workflow.week.bound-control", Command: []string{"workflow", "week", "start"}, Mode: "codex_headless_week_v1", Selectors: []string{"--file", "--check"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"ply.workflow.week-contract", &two}}, Effect: "explicit_workset_start"})
 	sort.Slice(workflow, func(i, j int) bool {
 		if workflow[i].ID == workflow[j].ID {
 			return workflow[i].Mode < workflow[j].Mode

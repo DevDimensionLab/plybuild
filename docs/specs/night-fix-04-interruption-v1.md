@@ -1,5 +1,10 @@
 # NF04A interruption owner boundary v1 — T86252AB1
 
+> Historisk dokument etter fjerningen av den kompilerte prosesskjeden.
+> Execute-, worker/week-, delivery- og integrasjonsorkestreringen som omtales
+> her er ikke en kjørbar oppskrift i dagens kilde. Fjernede kildefiler er
+> bevart som historiske stier. Se [gjeldende direkte operasjoner](../../README.md#human-owned-process).
+
 Decision: **outside-repository rig boundary; no proven minimal safe Ply patch**.
 Keep the interruption remainder unresolved. Do not commission a developer from
 this Spec. Root w9:pE owns the batch disposition; the rig/taskrun maintainers own
@@ -36,17 +41,17 @@ process observation. Old roots, unknown effects and ownership remain preserved.
 | Boundary inspected statically | Current semantics and limit |
 | --- | --- |
 | External [riglib.py](/Users/perottochristensen/github/ply-factory-tests/riglib.py), `Commands.run`, lines 138–184 | Starts its direct command with `start_new_session=True`. On timeout/KeyboardInterrupt it sends TERM, then possibly KILL, to `child.pid`'s group and waits for that child. It records unknown descendant lifetime. The named current file and historical Git blob both hash to `53652aa7662a75333b443e712a98bd00670c3e8da857b8dbc01b894740980a2d`, matching the control. This source is available, unchanged at that path, and outside the Ply repo and this Task's implementation scope. |
-| [service.go](../../internal/taskrun/service.go), `Apply`, schema-2 runner selection; [exec_runner_darwin.go](../../internal/taskrun/exec_runner_darwin.go), `execRunner.Run` / `runOwnedExec` | Schema 2 selects ExecRunner. The Darwin pipe runner creates a separate provider group with `Setpgid: true`. Its sole waiter serializes Wait4 and group signals; timeout/observation error drives TERM/KILL before reaping. It has no signal subscription for parent interruption. The historical runner has the same group separation and timeout ownership. An outer group kill still does not by itself reach that provider group. This is a source boundary, not a newly reproduced incident. |
+| [service.go](../../internal/taskrun/service.go), `Apply`, schema-2 runner selection; exec_runner_darwin.go (`internal/taskrun/exec_runner_darwin.go`, historisk kilde), `execRunner.Run` / `runOwnedExec` | Schema 2 selects ExecRunner. The Darwin pipe runner creates a separate provider group with `Setpgid: true`. Its sole waiter serializes Wait4 and group signals; timeout/observation error drives TERM/KILL before reaping. It has no signal subscription for parent interruption. The historical runner has the same group separation and timeout ownership. An outer group kill still does not by itself reach that provider group. This is a source boundary, not a newly reproduced incident. |
 | [process.go](../../internal/taskrun/process.go), `InteractiveRunner.Run`; [process_darwin.go](../../internal/taskrun/process_darwin.go), `darwinChild.Forward` / `Wait` | The interactive terminal path already forwards INT/TERM/HUP to a birth/group-bound child, and disables forwarding before reaping. That is a different runner from factory schema 2; copying its forwarding alone would not prove the rig-to-pipe-runner journey safe. |
 | [delivery_automatic_verification.go](../../internal/taskrun/delivery_automatic_verification.go), `runDeliveryVerification`; [delivery_automatic_process_unix.go](../../internal/taskrun/delivery_automatic_process_unix.go), `configureAutomaticProcess` | Delivered in `aae8fd70d73d72991ecda62fe9168b808587a93a`: automatic acceptance uses NotifyContext plus timeout, a separate command group, group KILL on cancellation and WaitDelay. Signal handling remains installed until the caller preserves the result. This is existing automatic-verifier behavior, not a fix to the external rig or provider runner. |
-| [worker_unix.go](../../internal/taskrun/worker_unix.go), `StartWorker` / `ControlWorker`; [worker_attempt_unix.go](../../internal/taskrun/worker_attempt_unix.go), `RunWorkerAttempt`; [worker_exec_darwin.go](../../internal/taskrun/worker_exec_darwin.go) | The newer detached native controller uses Setsid; pause/stop requests retain active-attempt ownership. Provider attempts reuse runOwnedExec with a different maximum budget. Native stop is not equivalent to signaling the historical rig group, and does not prove all writers absent. |
+| worker_unix.go (`internal/taskrun/worker_unix.go`, historisk kilde), `StartWorker` / `ControlWorker`; worker_attempt_unix.go (`internal/taskrun/worker_attempt_unix.go`, historisk kilde), `RunWorkerAttempt`; worker_exec_darwin.go (`internal/taskrun/worker_exec_darwin.go`, historisk kilde) | The newer detached native controller uses Setsid; pause/stop requests retain active-attempt ownership. Provider attempts reuse runOwnedExec with a different maximum budget. Native stop is not equivalent to signaling the historical rig group, and does not prove all writers absent. |
 | [collect.go](../../internal/taskrun/collect.go), `collectPreview` | Schema-2 qualification still requires bound completion, exit zero and group quiescence, plus the native report/receipt/target gates. Preserve these checks; a later helper report cannot turn unknown completion into a qualifying result. |
 
-The [existing pipe-runner tests](../../internal/taskrun/exec_runner_darwin_test.go)
+The existing pipe-runner tests (`internal/taskrun/exec_runner_darwin_test.go`, historisk kilde)
 cover normal/delayed completion, timeout, stream limits and reaping. The
 [Darwin forwarding test](../../internal/taskrun/process_darwin_test.go) models
 birth/group mismatch and post-wait rejection. The
-[automatic interruption tests](../../internal/taskrun/delivery_automatic_execution_unix_test.go)
+automatic interruption tests (`internal/taskrun/delivery_automatic_execution_unix_test.go`, historisk kilde)
 exercise verifier interruption and result preservation. These are source-read
 test inventories, not passes in this Task; none establishes this external
 rig/separate-provider cancellation journey. NF01 reservation isolation and NF02

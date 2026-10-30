@@ -168,7 +168,7 @@ func TestWorkflowProviderRoundTrip(t *testing.T) {
 			if tc.provider == "claude" {
 				wantStart = append(wantStart, "--model", f.R.Runtime.Model, "--permission-mode", "manual")
 			} else {
-				wantStart = append(wantStart, "-C", cwd, "--model", f.R.Runtime.Model, "-a", "on-request", "-c", "approvals_reviewer=\"auto_review\"", "-c", "default_permissions=\""+f.R.Runtime.PermissionBinding.ProfileID+"\"")
+				wantStart = append(wantStart, "-C", cwd, "--model", f.R.Runtime.Model, "-c", "default_permissions=\""+f.R.Runtime.PermissionBinding.ProfileID+"\"")
 			}
 			if len(starts) != 1 || !reflect.DeepEqual(starts[0], wantStart) {
 				t.Fatalf("wrong selected provider argv: %q; want %q", starts, wantStart)
@@ -213,7 +213,7 @@ func TestWorkflowProviderRejectsInvalidSelectionBeforeEffects(t *testing.T) {
 			workflowProviderNoReservation(t, f)
 		})
 	}
-	for _, name := range []string{"codex_profile", "wrong_permission_mode", "codex_trust"} {
+	for _, name := range []string{"codex_profile", "wrong_permission_mode"} {
 		t.Run(name, func(t *testing.T) {
 			f := workflowProviderFixture(t, "claude")
 			switch name {
@@ -221,8 +221,6 @@ func TestWorkflowProviderRejectsInvalidSelectionBeforeEffects(t *testing.T) {
 				f.R.Runtime.ConfigProfile = ptr("codex-only")
 			case "wrong_permission_mode":
 				f.R.Runtime.PermissionBinding.ProfileID = "other"
-			case "codex_trust":
-				f.R.CodexProjectTrust = &CodexProjectTrust{"process-local", filepath.Join(f.R.WorkspaceRoot, "target")}
 			}
 			workflowProviderRebind(t, &f)
 			if _, err := WorkflowPreviewStart(f.D, f.File); err == nil {
@@ -239,11 +237,10 @@ func TestWorkflowProviderRejectsInvalidSelectionBeforeEffects(t *testing.T) {
 func TestWorkflowProviderDoesNotOpenNativeTransports(t *testing.T) {
 	f := workflowProviderFixture(t, "codex")
 	interactive := workflowNativeRequest(f.R)
-	_, factory, _, _ := factoryFixture(t)
 	for _, tc := range []struct {
 		name    string
 		request Request
-	}{{"interactive", interactive}, {"exec", factory}} {
+	}{{"interactive", interactive}} {
 		t.Run(tc.name, func(t *testing.T) {
 			good, _ := Canonical(tc.request)
 			if _, err := parseRequest(good); err != nil {

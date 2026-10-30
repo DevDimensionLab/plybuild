@@ -341,7 +341,7 @@ func TestTabLabelRenamePreservesDispatchAndFreshVeto(t *testing.T) {
 			s.Native = func() NativeSnapshot { reads.Add(1); return native }
 			switch state {
 			case "same-session-veto":
-				native.Vetoes = map[string]string{i.sessionKey(): "native_question"}
+				native.Vetoes = map[string]string{i.sessionKey(): "native_refusal"}
 			case "unknown-coverage":
 				native.CoverageUnknown = true
 				native.Partial = true

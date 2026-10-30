@@ -515,7 +515,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 			}
 			id := contentString(m, "preparation_id")
 			p := findPreparation(r, id)
-			if p == nil || reserved[id] || !admissionAllowed(r, q, p.Plan.AdmissionMode) || (e.Kind == "reserve_parallel") != (p.Plan.AdmissionMode == AdmissionParallel) || p.Plan.QueueID != e.QueueID || p.Plan.QueueRevision != q.Revision {
+			if p == nil || reserved[id] || (e.Kind == "reserve_parallel") != (p.Plan.AdmissionMode == AdmissionParallel) || p.Plan.QueueID != e.QueueID || p.Plan.QueueRevision != q.Revision {
 				return fmt.Errorf("invalid reservation")
 			}
 			found := false

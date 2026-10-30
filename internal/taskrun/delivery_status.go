@@ -1,27 +1,22 @@
 package taskrun
 
 import (
-	"fmt"
-
-	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // DeliveryStatus is a read-only projection, never a receipt or an authority
 // input. Each outcome remains bound to its own candidate and evidence.
 type DeliveryStatus struct {
-	ScopedContinuation  *DeliveryDispositionStatus         `json:"scoped_continuation,omitempty"`
-	ResourceRetirement  *DeliveryResourceRetirementStatus  `json:"resource_retirement"`
-	Startup             *DeliveryStartupStatus             `json:"startup,omitempty"`
-	Source              DeliverySourceStatus               `json:"source"`
-	Verification        *DeliveryVerificationStatus        `json:"verification"`
-	QualifiedCandidate  *DeliveryQualifiedStatus           `json:"qualified_candidate"`
-	HumanJudgment       *DeliveryHumanStatus               `json:"human_judgment"`
-	Acceptance          *DeliveryAcceptanceStatus          `json:"acceptance,omitempty"`
-	AcceptanceSelection *DeliveryAcceptanceSelectionStatus `json:"acceptance_selection,omitempty"`
-	FinalDelivery       DeliveryFinalStatus                `json:"final_delivery"`
-	Review              *DeliveryReviewStatus              `json:"review,omitempty"`
-	Reasons             []Reason                           `json:"reasons"`
+	ScopedContinuation *DeliveryDispositionStatus        `json:"scoped_continuation,omitempty"`
+	ResourceRetirement *DeliveryResourceRetirementStatus `json:"resource_retirement"`
+	Startup            *DeliveryStartupStatus            `json:"startup,omitempty"`
+	Source             DeliverySourceStatus              `json:"source"`
+	Verification       *DeliveryVerificationStatus       `json:"verification"`
+	QualifiedCandidate *DeliveryQualifiedStatus          `json:"qualified_candidate"`
+	HumanJudgment      *DeliveryHumanStatus              `json:"human_judgment"`
+	Acceptance         *DeliveryAcceptanceStatus         `json:"acceptance,omitempty"`
+	FinalDelivery      DeliveryFinalStatus               `json:"final_delivery"`
+	Reasons            []Reason                          `json:"reasons"`
 }
 
 // These are separate observations, not a claim that a launched terminal has
@@ -39,12 +34,6 @@ type DeliveryStartupStatus struct {
 	SandboxCoverage   string       `json:"sandbox_coverage,omitempty"`
 	HumanScope        *FileBinding `json:"human_scope,omitempty"`
 	RuntimeDecision   string       `json:"runtime_decision,omitempty"`
-}
-
-type DeliveryAcceptanceSelectionStatus struct {
-	Choice             DeliveryAcceptanceChoice    `json:"choice"`
-	Receipt            FileBinding                 `json:"receipt"`
-	EffectiveAgreement workspace.DeliveryAgreement `json:"effective_agreement"`
 }
 
 type DeliverySourceStatus struct {
@@ -99,302 +88,83 @@ func deliveryStatus(d Dependencies, s workflowState) *DeliveryStatus {
 		return nil
 	}
 	out := &DeliveryStatus{Source: DeliverySourceStatus{State: "unknown"}, FinalDelivery: DeliveryFinalStatus{State: "not_delivered"}, Reasons: []Reason{}}
-
-	var dispositionErr error
-	out.ScopedContinuation, dispositionErr = deliveryDispositionStatus(d, s)
-	if dispositionErr != nil {
-		out.Reasons = append(out.Reasons, Reason{"scoped_disposition_unknown", dispositionErr.Error()})
+	problem := func(code string, err error) { out.Reasons = append(out.Reasons, Reason{code, err.Error()}) }
+	out.Startup = &DeliveryStartupStatus{Terminal: "not_observed", NativeSession: s.Result.Transport.AgentSessionID, TaskPrompt: s.Phase, TaskReceived: "unknown", RuntimePermission: s.Result.Delivery.PermissionState, TargetWork: "unknown", Stop: s.Result.Delivery.ActiveStop}
+	if s.Result.Delivery.ActiveStop != nil {
+		out.Startup.RuntimeDecision = "preserved_stop"
 	}
-	resource, resourceErr := deliveryResourceStatus(d, s)
-	out.ResourceRetirement = resource
-	if resourceErr != nil {
-		out.Reasons = append(out.Reasons, Reason{"resource_retirement_unknown", resourceErr.Error()})
+	if s.Result.Transport.PaneID != "" {
+		out.Startup.Terminal = "created"
 	}
-	defer func() {
-		if resource.Retirement != nil {
-			out.FinalDelivery = DeliveryFinalStatus{State: "not_delivered"}
-			if out.QualifiedCandidate != nil {
-				out.QualifiedCandidate.Current = false
-			}
-			if out.Verification != nil {
-				out.Verification.Current = false
-				out.Verification.InputsMatch = false
-			}
-			if out.HumanJudgment != nil {
-				out.HumanJudgment.Current = false
-			}
-			if out.Acceptance != nil {
-				out.Acceptance.Current = false
-				out.Acceptance.Outcome = "blocked"
-				out.Acceptance.Reason = retainedResourcesCaution
-			}
-		}
-	}()
-	if !headlessRun(s.Request) {
-		out.Startup = &DeliveryStartupStatus{Terminal: "not_observed", NativeSession: s.Result.Transport.AgentSessionID, TaskPrompt: "not_attempted", TaskReceived: "unknown", RuntimePermission: s.Result.Delivery.PermissionState, TargetWork: "unknown", Stop: s.Result.Delivery.ActiveStop}
-		if mandateReceipt(s.Request) {
-			out.Startup.StartupProtocol = MandateReceiptV1
-			out.Startup.ObservationSource = "not_observed"
-			if s.Acceptance != nil {
-				out.Startup.ObservationSource = "recipient_observation"
-			}
-			out.Startup.SandboxCoverage = "unknown"
-			out.Startup.HumanScope = &FileBinding{s.Result.Handoff.Locator, s.Result.Handoff.SHA256}
-			out.Startup.RuntimeDecision = "per_action_not_observed"
-			if deliveryObservedStop(s) {
-				out.Startup.RuntimeDecision = "preserved_stop"
-			}
-		}
-		if s.Result.Transport.PaneID != "" {
-			out.Startup.Terminal = "created"
-		}
-		switch s.Phase {
-		case "following":
-			out.Startup.TaskPrompt = "sent"
-		case "prompt_attempted", "prompt_unknown":
-			out.Startup.TaskPrompt = "delivery_unknown"
-		}
-		if s.Acceptance != nil {
-			out.Startup.TaskReceived = "owner_callback_observed"
-		}
-		for _, event := range s.Result.Delivery.Events {
-			if event.Kind == "report" {
-				out.Startup.TaskReceived = "owner_callback_observed"
-			}
-		}
+	if s.Acceptance != nil {
+		out.Startup.TaskReceived = "owner_callback_observed"
 	}
-	if b := s.Result.Delivery.AcceptanceSelection; b != nil && s.EffectiveDeliveryAgreement != nil {
-		_, choice, _, err := readAcceptanceSelection(s, *b)
-		if err == nil {
-			out.AcceptanceSelection = &DeliveryAcceptanceSelectionStatus{Choice: choice, Receipt: *b, EffectiveAgreement: *s.EffectiveDeliveryAgreement}
-		}
-	}
-	automatic := deliveryEffectiveAgreement(s) != nil && deliveryEffectiveAgreement(s).AutomaticAcceptance()
-	if automatic {
-		out.Acceptance = &DeliveryAcceptanceStatus{DeliveryAcceptanceDecision: workspace.DeliveryAcceptanceDecision{Mode: "automatic", Outcome: "blocked", Reason: "Automatic acceptance requires a current qualified candidate and successful test evidence.", PolicySHA256: digest(*deliveryEffectiveAgreement(s).Acceptance)}, ResponsibleActor: deliveryEffectiveAgreement(s).Acceptance.ResponsibleActor}
-	}
-	defer func() {
-		// Preserve historical qualification, but never present invalid or newer
-		// unresolved verification evidence as the current technical candidate.
-		if q := out.QualifiedCandidate; q != nil {
-			v := out.Verification
-			q.Current = q.Current && v != nil && v.Outcome == "passed" && v.InputsMatch && v.Qualification == "qualified" && v.AttemptID == q.Key
-			if a := out.Acceptance; a != nil {
-				a.Current = a.Current && q.Current
-				if a.Outcome == "pass" && !a.Current {
-					a.Outcome, a.Reason = "blocked", "Candidate or required acceptance inputs no longer match the preserved qualification."
-				}
-			}
-		}
-	}()
-	problem := func(code, detail string) { out.Reasons = append(out.Reasons, Reason{code, detail}) }
-	dependenciesMatch := true
-	if s.StartSHA256 != nil {
-		if err := workflowhandoff.ValidateDeliveryOwnerContinuity(d.Workflow, s.Result.Handoff.Locator); err != nil {
-			dependenciesMatch = false
-			problem("delivery_required_inputs_invalid", "Required Task dependencies cannot support current qualification: "+err.Error())
-		}
-	}
-	x, err := d.Workspace.IntegrationGit.ObserveIntegrationWorktree(s.Observed.Target.WorktreeLocator, s.Observed.Target.Ref)
+	source, err := d.Workspace.IntegrationGit.ObserveIntegrationWorktree(s.Observed.Target.WorktreeLocator, s.Observed.Target.Ref)
 	if err != nil {
-		problem("delivery_source_unavailable", "Current source could not be observed: "+err.Error())
-	} else if x.Ref != s.Observed.Target.Ref || x.GitCommonDir != s.Observed.Target.GitCommonDir {
-		problem("delivery_source_stale", "Current source identity differs from the bound Task worktree")
-	} else {
-		out.Source = DeliverySourceStatus{OID: x.OID, Tree: x.Tree, Clean: x.Clean && len(x.InProgress) == 0, State: "observed"}
-		if out.Startup != nil {
-			out.Startup.TargetWork = "no_changes_observed"
-			if x.OID != s.Observed.Target.OID || x.Tree != s.Observed.Target.Tree || !x.Clean {
-				out.Startup.TargetWork = "changes_observed"
-			}
+		problem("source_unavailable", err)
+	} else if source.Ref == s.Observed.Target.Ref && source.GitCommonDir == s.Observed.Target.GitCommonDir {
+		out.Source = DeliverySourceStatus{OID: source.OID, Tree: source.Tree, Clean: source.Clean && len(source.InProgress) == 0, State: "observed"}
+		out.Startup.TargetWork = "no_changes_observed"
+		if !out.Source.Clean || source.OID != s.Observed.Target.OID || source.Tree != s.Observed.Target.Tree {
+			out.Startup.TargetWork = "changes_observed"
 		}
 	}
-	if review, err := deliveryReviewStatus(d, s, out.Source); err != nil {
-		problem("delivery_review_unknown", "Review rounds cannot be read: "+err.Error())
-	} else {
-		out.Review = review
-	}
-	matches := func(oid, tree string) bool {
-		return out.Source.State == "observed" && out.Source.Clean && out.Source.OID == oid && out.Source.Tree == tree
-	}
-	delivery := s.Result.Delivery
-	if len(delivery.Candidates) > 0 {
-		candidate := delivery.Candidates[len(delivery.Candidates)-1]
-		current := matches(candidate.OID, candidate.Tree)
-		if s.Request.SchemaVersion == 3 {
-			raw, err := workflowBound(candidate.Verification, 4<<20)
-			var receipt deliveryVerificationReceipt
-			if err == nil {
-				err = decode(raw, 4<<20, &receipt)
-			}
-			if err == nil {
-				err = deliveryRequireBasis(d, s, receipt.EffectiveBasis)
-			}
-			current = current && err == nil
-		}
-		if a := delivery.Attempt; a != nil && a.Kind == "verification" && (a.State != "recorded" || a.ID != candidate.Key) {
-			current = false
-		}
-		for i := len(delivery.Events) - 1; i >= 0; i-- {
-			if event := delivery.Events[i]; event.Kind == "verification" {
-				current = current && event.ID == candidate.Key
-				break
+	observe := func(receipt deliveryVerificationReceipt, binding FileBinding, state string) *DeliveryVerificationStatus {
+		v := &DeliveryVerificationStatus{AttemptID: receipt.AttemptID, CandidateOID: receipt.CandidateOID, CandidateTree: receipt.CandidateTree, Exit: receipt.Exit, Outcome: "unknown", Qualification: state, Receipt: &binding}
+		if err := deliveryPreservedVerificationInputs(receipt); err != nil {
+			problem("verification_evidence_changed", err)
+		} else if receipt.Exit != nil && receipt.Error == "" {
+			v.Outcome = "failed"
+			if *receipt.Exit == 0 {
+				v.Outcome = "passed"
 			}
 		}
-		out.QualifiedCandidate = &DeliveryQualifiedStatus{candidate.Key, candidate.OID, candidate.Tree, candidate.TaskResult.ID, current}
-		qa := candidate.HumanQA
-		qaCurrent := true
-		var qaErr error
-		if d.Workspace.WorkItems == nil {
-			qaErr = fmt.Errorf("native work item registry is unavailable")
+		if err := deliveryVerificationInputs(receipt); err != nil {
+			problem("verification_input_changed", err)
 		} else {
-			var registry workspace.WorkItemRegistry
-			registry, qaErr = d.Workspace.WorkItems.Snapshot(s.Request.WorkspaceRoot)
-			if qaErr == nil {
-				qa, qaErr = LatestDeliveryAcceptanceHumanQA(registry.HumanQARecords, candidate.TaskResult, deliveryEffectiveAgreement(s), s.Request.SchemaVersion == 3)
-			}
+			v.InputsMatch = true
 		}
-		if qaErr == nil {
-			qaErr = deliveryHumanEvidence(qa)
-		}
-		if qaErr != nil {
-			qaCurrent = false
-			problem("delivery_human_judgment_unknown", "Current native human judgment cannot be established: "+qaErr.Error())
-		}
-		if qa != nil {
-			judgmentCurrent := qaCurrent && matches(qa.ResultOID, qa.ResultTree) && (qa.TaskResultID == candidate.TaskResult.ID || automatic && qa.TaskID == candidate.TaskResult.TaskID && qa.Outcome != "pass")
-			out.HumanJudgment = &DeliveryHumanStatus{qa.ResultOID, qa.TaskResultID, qa.ID, qa.Outcome, judgmentCurrent}
-		}
-		decision, acceptanceErr := workspace.EvaluateDeliveryAcceptance(deliveryEffectiveAgreement(s), candidate.TaskResult, qa)
-		out.Acceptance = &DeliveryAcceptanceStatus{DeliveryAcceptanceDecision: decision, Current: current && qaCurrent && acceptanceErr == nil}
-		if automatic {
-			out.Acceptance.ResponsibleActor = deliveryEffectiveAgreement(s).Acceptance.ResponsibleActor
-		}
-		if acceptanceErr != nil {
-			out.Acceptance.Outcome, out.Acceptance.Reason = "blocked", acceptanceErr.Error()
-			problem("delivery_acceptance_invalid", acceptanceErr.Error())
-		}
-		if qaErr != nil {
-			out.Acceptance.Outcome, out.Acceptance.Reason = "blocked", qaErr.Error()
-		}
-		if delivery.Phase == "completed" || delivery.Phase == "closing" {
-			binding := candidate.Integration
-			if binding == nil {
-				binding = candidate.PullRequest
-			}
-			out.FinalDelivery = DeliveryFinalStatus{State: "unknown", CandidateOID: candidate.OID, Evidence: binding}
-			if binding == nil {
-				problem("delivery_completion_evidence_missing", "Completed phase has no observed delivery receipt")
-			} else if _, err := workflowBound(*binding, 4<<20); err != nil {
-				problem("delivery_completion_evidence_invalid", err.Error())
-			} else {
-				// Delivery is an observed historical effect. A later input change or
-				// human answer changes current acceptance, never the recorded effect.
-				completedDecision, err := workspace.EvaluateDeliveryAcceptance(deliveryEffectiveAgreement(s), candidate.TaskResult, candidate.HumanQA)
-				if err != nil || completedDecision.Outcome != "pass" {
-					problem("delivery_completion_judgment_invalid", "Completion lacks the exact candidate's preserved acceptance")
-				} else {
-					out.FinalDelivery.State = "delivered"
-				}
-			}
-		}
+		v.Current = v.Outcome != "unknown" && out.Source.State == "observed" && out.Source.Clean && out.Source.OID == receipt.CandidateOID && out.Source.Tree == receipt.CandidateTree && v.InputsMatch
+		return v
 	}
-
-	var binding *FileBinding
-	attempt := delivery.Attempt
-	if attempt != nil && attempt.Kind == "verification" {
-		v := &DeliveryVerificationStatus{AttemptID: attempt.ID, CandidateOID: attempt.CandidateOID, CandidateTree: attempt.CandidateTree, Outcome: "unknown", Qualification: "pending", Current: matches(attempt.CandidateOID, attempt.CandidateTree)}
-		out.Verification = v
-		if attempt.State == "recorded" {
-			v.Qualification = "not_qualified"
+	for i := len(s.Result.Delivery.Events) - 1; i >= 0; i-- {
+		event := s.Result.Delivery.Events[i]
+		if event.Kind != "verification" {
+			continue
 		}
-		// Recover only observation here; this never executes or qualifies anything.
-		_, b, err := deliveryRecoverVerification(s)
+		raw, err := workflowBound(event.Binding, 256<<10)
+		var receipt deliveryVerificationReceipt
+		if err == nil {
+			err = decode(raw, 256<<10, &receipt)
+		}
 		if err != nil {
-			problem("delivery_verification_evidence_unknown", fmt.Sprintf("Attempt %s: %s", attempt.ID, err))
-			return out
-		}
-		binding = &b
-	} else {
-		for i := len(delivery.Events) - 1; i >= 0; i-- {
-			event := delivery.Events[i]
-			if event.Kind == "verification" {
-				binding = &event.Binding
-				break
-			}
-		}
-	}
-	if binding == nil {
-		return out
-	}
-	if out.Verification == nil {
-		out.Verification = &DeliveryVerificationStatus{Outcome: "unknown", Qualification: "not_qualified"}
-	}
-	v := out.Verification
-	raw, err := workflowBound(*binding, 256<<10)
-	var receipt deliveryVerificationReceipt
-	if err == nil {
-		err = decode(raw, 256<<10, &receipt)
-	}
-	if err == nil && (!deliveryVerificationVersion(receipt) || receipt.RunID != s.Result.RunID || receipt.RequestSHA256 != s.Result.RequestSHA256) {
-		err = integrity("verification receipt identity differs")
-	}
-	if err == nil {
-		for _, b := range []FileBinding{receipt.AcceptanceSnapshot, receipt.Stdout, receipt.Stderr} {
-			if _, err = workflowBound(b, 4<<20); err != nil {
-				break
-			}
-		}
-	}
-	if err != nil {
-		problem("delivery_verification_evidence_invalid", err.Error())
-		return out
-	}
-	v.AttemptID, v.CandidateOID, v.CandidateTree, v.Receipt = receipt.AttemptID, receipt.CandidateOID, receipt.CandidateTree, binding
-	v.Current = matches(receipt.CandidateOID, receipt.CandidateTree)
-	if s.Request.SchemaVersion == 3 {
-		v.Current = v.Current && deliveryRequireBasis(d, s, receipt.EffectiveBasis) == nil
-	}
-	v.InputsMatch = v.Current && dependenciesMatch
-	// Live inputs determine whether evidence can still qualify this source.
-	// They cannot erase a completed command's separately preserved outcome.
-	for _, input := range []struct {
-		role string
-		b    FileBinding
-	}{{inputAcceptance, receipt.Acceptance}, {inputCandidateReview, receipt.Review}} {
-		if _, err := inputBound(input.b, input.role, 4<<20); err != nil {
-			v.InputsMatch = false
-			problem("delivery_verification_inputs_changed", "Completed verification is preserved; input changed and receipt reuse requires matching inputs: "+err.Error())
-		}
-	}
-	if automatic {
-		candidate := DeliveryCandidate{Key: receipt.AttemptID, OID: receipt.CandidateOID, Tree: receipt.CandidateTree, Verification: *binding}
-		if err := validateAutomaticVerification(d, s, candidate); err != nil {
-			v.InputsMatch = false
-			problem("delivery_automatic_acceptance_invalid", err.Error())
-		}
-	}
-	v.Exit = receipt.Exit
-	if receipt.Exit != nil {
-		v.Outcome = "failed"
-		if *receipt.Exit == 0 && receipt.Error == "" {
-			v.Outcome = "passed"
-		}
-	}
-	if automatic && receipt.Outcome == "blocked" {
-		v.Outcome = "blocked"
-	}
-	if automatic && (receipt.Outcome == "fail" || receipt.Outcome == "blocked") && v.Current {
-		out.Acceptance.Outcome, out.Acceptance.Reason = receipt.Outcome, receipt.Error
-		out.Acceptance.TaskResultID = ""
-		out.Acceptance.ResultOID, out.Acceptance.ResultTree = receipt.CandidateOID, receipt.CandidateTree
-		out.Acceptance.Current = false
-	}
-	for _, c := range delivery.Candidates {
-		if c.Key == receipt.AttemptID && c.OID == receipt.CandidateOID && c.Tree == receipt.CandidateTree && c.Verification.SHA256 == digest(receipt) {
-			v.Qualification = "qualified"
+			problem("verification_unavailable", err)
 			break
 		}
+		out.Verification = observe(receipt, event.Binding, "recorded")
+		break
+	}
+	if attempt := s.Result.Delivery.Attempt; attempt != nil && attempt.Kind == "verification" && attempt.State == "attempted" {
+		if out.Verification == nil || out.Verification.AttemptID != attempt.ID {
+			out.Verification = &DeliveryVerificationStatus{AttemptID: attempt.ID, CandidateOID: attempt.CandidateOID, CandidateTree: attempt.CandidateTree, Outcome: "unknown", Qualification: "unrecorded"}
+			if receipt, binding, err := deliveryRecoverVerification(s); err == nil {
+				out.Verification = observe(receipt, binding, "pending")
+			}
+		}
+	}
+	if n := len(s.Result.Delivery.Candidates); n > 0 {
+		c := s.Result.Delivery.Candidates[n-1]
+		current := out.Verification != nil && out.Verification.AttemptID == c.Key && out.Verification.Current
+		if err := workspace.ValidateTaskVerificationReceipt(d.Workspace, c.TaskResult); err != nil {
+			problem("verification_record_changed", err)
+			current = false
+		}
+		out.QualifiedCandidate = &DeliveryQualifiedStatus{Key: c.Key, OID: c.OID, Tree: c.Tree, TaskResultID: c.TaskResult.ID, Current: current}
+	}
+	if resource, err := deliveryResourceStatus(d, s); err == nil {
+		out.ResourceRetirement = resource
+	} else {
+		problem("resource_observation_unknown", err)
 	}
 	return out
 }

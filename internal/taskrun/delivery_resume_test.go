@@ -30,7 +30,7 @@ func deliveryPausedStartup(t *testing.T) (deliveryFixture, WorkflowRun) {
 
 func TestDeliveryResumeFirstPromptInExistingTrustedTab(t *testing.T) {
 	f, o := deliveryPausedStartup(t)
-	if !strings.Contains(o.NextAction.Message, "workflow execute resume "+o.RunID) {
+	if !strings.Contains(o.NextAction.Message, "workflow run show "+o.RunID) {
 		t.Fatalf("missing actionable recovery: %+v", o.NextAction)
 	}
 	workflowTestModel(t, f.workflowFixture, map[string]any{"observations": nil, "agent_status": "idle"})

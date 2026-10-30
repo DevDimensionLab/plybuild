@@ -22,19 +22,12 @@ export TMPDIR="$fl02_test_root"
 export GOCACHE="$fl02_test_root/go-cache" GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOENV=off GOWORK=off
 export PLY_DELIVERY_TEST_BINARY="$PLY_CANDIDATE_BINARY"
 export PLY_TASK_RUN_TEST_BINARY="$PLY_CANDIDATE_BINARY"
-"$PLY_CANDIDATE_BINARY" workflow execute check-in --help
-"$PLY_FL02_GO" test ./cmd -run '^(TestExecute(CheckIn|Begin)|TestStartupCapabilities)' -count=1 -timeout=120s
-"$PLY_FL02_GO" test ./internal/workflowhandoff -run '^(TestDelivery|Test.*Sandbox)' -count=1 -timeout=180s
-"$PLY_FL02_GO" test ./internal/workspace -run '^(TestDeliveryAgreement|TestDeliveryAuthorization|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory|TestAutomaticNativeIntegrationRecoversAfterGitWithoutHumanQA|Test.*Automatic.*Retention)' -count=1 -timeout=180s
-"$PLY_FL02_GO" test ./internal/taskexecute -count=1 -timeout=600s
-# Each selector runs in its own process: existing fixtures mutate CWD and env.
-# Worker review identity is checked here; nested sandbox-exec execution is not
-# available in this runtime (preserved sandbox_apply denial), and is outside FL02.
-for fl02_selector in '^TestDeliveryReceipt' '^TestDeliveryBegin' '^TestDeliveryStartup' '^TestDelivery(ResolvingLatestStop|ObservedStop)' '^TestDeliveryContinuationPreservesAcceptedSessionAndFrozenInputs$' '^TestDeliveryContinuationRejects' '^TestAutomaticDeliveryRevalidatesLiveInputsAtEveryGate$' '^TestAutomaticDeliveryRuntimeDriftInvalidatesCurrentAcceptance$' '^TestWorkerNativeReviewRejectsDeveloperIdentityAndForgedReview$'; do
-    "$PLY_FL02_GO" test ./internal/taskrun -run "$fl02_selector" -count=1 -timeout=180s
-done
+"$PLY_CANDIDATE_BINARY" workflow run check-in --help
+"$PLY_FL02_GO" test ./internal/workspace -run '^(TestAutomaticCloseoutRetentionPreservesExactOriginalReferences|TestAutomaticNativeIntegrationRecoversAfterGitWithoutHumanQA|TestDeliveryAgreementHumanOwnershipIsExplicitAndVersioned|TestDeliveryAgreementStrictShapeAndHistoricalAbsence|TestDeliveryAuthorizationRegistryShapePreservesLegacyAndReceipt|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory)$' -count=1 -timeout=180s
+"$PLY_FL02_GO" test ./internal/taskrun -run '^(TestDeliveryBeginBindsExistingAuthorizedNotificationNatively|TestDeliveryBeginCannotCreateSecondFrozenNotificationBinding|TestDeliveryBeginNativeAcceptanceAndLostReply|TestDeliveryBeginUnconfirmedAndWrongOwnerCannotAccept|TestDeliveryContinuationRejectsTamperedPriorControlAndAuthority|TestDeliveryContinuationRejectsUnknownVerificationAndStaleSession|TestDeliveryObservedStopInterruptedPublicationRetainsBlock|TestDeliveryObservedStopKeepsLegacyStateReadable|TestDeliveryObservedStopRequiresOwnerResolutionBeforeProgress|TestDeliveryObservedStopResolutionReplayWithPendingDenials|TestDeliveryReceiptDoesNotDowngradeLegacyContract|TestDeliveryReceiptDoesNotRequireBlanketPermission|TestDeliveryReceiptLaterRuntimeRefusalPreservesStop|TestDeliveryReceiptReportedRootsNeverAttestSandbox|TestDeliveryReceiptResolutionPreservesUncertainExternalEffects|TestDeliveryReceiptResolutionSelectsFrozenStartupEntrypoint|TestDeliveryReceiptReuseRejectsChangedInputsWithoutRunningAcceptance|TestDeliveryResolvingLatestStopDoesNotForgetEarlierDenial|TestDeliveryStartupDoesNotConfuseLaunchAcceptanceAndWork)$' -count=1 -timeout=180s
 git diff --check
 test "$(git rev-parse HEAD)" = "$PLY_CANDIDATE_OID"
 test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 test -z "$(git status --porcelain=v1 --untracked-files=all)"
-printf 'FL02 candidate-bound acceptance passed\n'
+printf 'Retained startup, refusal and Git-evidence tests passed\n'
+printf 'Retained concrete regression tests passed; removed process journeys are excluded.\n'

@@ -11,12 +11,11 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/workflowhandoff"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
-	"gopkg.in/yaml.v3"
 )
 
 type deliveryFixture struct {
 	workflowFixture
-	Prepared       workspace.TaskGoalPreparedExecution
+	Prepared       deliveryPreparedFixture
 	Parent         string
 	AcceptancePath string
 }
@@ -36,6 +35,12 @@ type deliveryFixtureOptions struct {
 	InformativeReport func(string) []byte
 }
 
+type deliveryPreparedFixture struct {
+	Preparation workspace.TaskPreparationReadback
+	Goal        workspace.TaskGoalRef
+	Delivery    *workspace.DeliveryAgreement
+}
+
 func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtureOptions) deliveryFixture {
 	t.Helper()
 	var option deliveryFixtureOptions
@@ -46,188 +51,86 @@ func newDeliveryFixture(t *testing.T, provider string, options ...deliveryFixtur
 	if option.Root != "" {
 		roots = []string{option.Root}
 	}
-	root, epic, _, oid := prepareServiceWorkspace(t, roots...)
-	if option.SeedSource != "" {
-		// Read one exact candidate from the Task source into an isolated repo.
-		// No ref, file or metadata in the source repository is changed.
-		runGit(t, epic, "fetch", "--no-tags", option.SeedSource, option.SeedOID)
-		oid = gitOutput(t, epic, "rev-parse", option.SeedOID+"^")
-		runGit(t, epic, "reset", "--hard", oid)
-	}
-	parent := option.ParentRef
-	if parent == "" {
-		parent = "epic"
-	}
-	runGit(t, epic, "branch", "-m", parent)
-	w := workspace.SystemDependencies()
-	if _, e := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Delivery fixture", ProjectID: "ply", RepoID: "ply", Worktree: epic, Ref: "refs/heads/" + parent, ExpectedOID: oid}); e != nil {
-		t.Fatal(e)
-	}
-	if _, e := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "task", Title: "Delivery fixture", Description: "A synthetic goal tests delivery semantics; no native provider or human approval.", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
-		t.Fatal(e)
-	}
-	r, e := w.WorkItems.Snapshot(root)
+	d, native, _ := fixtureSeed(t, option.SeedSource, option.SeedOID, roots...)
+	root := native.WorkspaceRoot
+	w := d.Workspace
+	registry, e := w.WorkItems.Snapshot(root)
 	if e != nil {
 		t.Fatal(e)
 	}
-	problem := workspace.TaskRevisionRef{Revision: r.TaskProblemRevisions[0].Revision, ManifestSHA256: r.TaskProblemRevisions[0].ManifestSHA256}
-	doc := filepath.Join(root, "goal.md")
-	contents := []byte("# Synthetic goal\nAdd the fixture behavior; own meaningful acceptance. Root owns any notification.\n")
-	if e = os.WriteFile(doc, contents, 0600); e != nil {
-		t.Fatal(e)
-	}
-	input := map[string]any{
-		"kind": "WorkspaceTaskSpecDraft@2", "schema_version": 2, "format": "json", "format_version": 1, "canonicalization": "RFC8785",
-		"publication_key": "fixture/goal", "task_id": "task", "spec_id": "solution", "registry_upgrade": nil, "expected_previous": nil, "problem": problem,
-		"recorder":      map[string]any{"actor_claim": "fixture planner", "control_surface": "synthetic test", "recorded_at_utc": "2026-10-05T00:00:00Z"},
-		"contract_kind": "goal", "title": "Delivery fixture", "objective": "Observe a complete delivery without attributing synthetic evidence to a real human.", "change_reason": "Synthetic fixture goal",
-		"documents": []any{map[string]any{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": hash(contents), "size_bytes": len(contents), "media_type": "text/markdown", "git_provenance": nil}}},
-		"design":    []any{map[string]any{"document_id": "design", "section": nil}}, "constraints": []string{"Local isolated fixture only."},
-		"requirements": []any{map[string]any{"id": "behavior", "acceptance": "The actual acceptance entrypoint observes the fixture behavior."}},
-		"executor":     map[string]any{"provider": provider, "model": "fixture-model", "effort": "medium"},
-	}
-	if option.AllowLocalInstall {
-		input["executor"].(map[string]any)["allow_local_install"] = true
-	}
-	if option.InformativeReport != nil {
-		report := option.InformativeReport(root)
-		path := filepath.Join(root, "historical-report.txt")
-		if e = os.WriteFile(path, report, 0600); e != nil {
-			t.Fatal(e)
-		}
-		input["documents"] = append(input["documents"].([]any), map[string]any{"id": "historical-report", "source": map[string]any{"kind": "file", "locator": path, "sha256": hash(report), "size_bytes": len(report), "media_type": "text/plain", "git_provenance": nil}})
-		input["design"] = append(input["design"].([]any), map[string]any{"document_id": "historical-report", "section": nil})
-	}
-	if option.Agreement != nil {
-		a := *option.Agreement
-		if a.SchemaVersion == 0 {
-			a.SchemaVersion = 1
-		}
-		a.ProjectID, a.RepoID, a.EpicID = "ply", "ply", "epic"
-		if a.TargetRef == "" {
-			a.TargetRef = "refs/heads/" + parent
-		}
-		if a.Mode != workspace.DeliveryPullRequest {
-			a.TargetWorktree = epic
-		}
-		input["delivery"] = a
-	}
-	publication, e := workspace.RecordTaskSpec(w, workspace.TaskContentInput{TaskID: "task", File: writeAny(t, root, "goal-draft.json", input)})
-	if e != nil {
-		t.Fatal(e)
-	}
-	goal := workspace.TaskGoalRef{SpecID: "solution", Spec: workspace.TaskRevisionRef{Revision: *publication.OutcomeRef.Revision, ManifestSHA256: publication.OutcomeRef.ManifestSHA256}}
-	r, e = w.WorkItems.Snapshot(root)
-	if e != nil {
-		t.Fatal(e)
-	}
-	queue := workspace.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/goals", ProjectID: "ply", RepoID: "ply", EpicID: "epic", Entries: []workspace.TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}}, Recorder: workspace.TaskGoalQueueRecorder{ActorClaim: "fixture planner", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}, RegistryUpgrade: &workspace.TaskRegistryUpgrade{RegistrySHA256: r.RawSHA256, FromVersion: r.FormatVersion}}
-	if _, e = workspace.SetTaskQueue(w, writeAny(t, root, "goal-queue.json", queue)); e != nil {
-		t.Fatal(e)
-	}
-	if option.AdoptExisting {
-		for _, id := range []workspace.TaskID{"foreign-u", "foreign-v"} {
-			if _, e = workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: id, Title: string(id), Description: "Preserve foreign native history", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); e != nil {
-				t.Fatal(e)
-			}
-		}
-		q, e := workspace.ListTaskQueue(w, workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, false)
-		if e != nil {
-			t.Fatal(e)
-		}
-		queue.PublicationKey = "fixture/foreign-order"
-		queue.ExpectedRevision = q.Revision
-		queue.RegistryUpgrade = nil
-		queue.Entries = []workspace.TaskGoalQueueEntry{{TaskID: "foreign-u"}, {TaskID: "task", Goal: &goal}, {TaskID: "foreign-v"}}
-		if _, e = workspace.SetTaskQueue(w, writeAny(t, root, "foreign-queue.json", queue)); e != nil {
-			t.Fatal(e)
-		}
-		// Fresh isolated format-7 fixture, analogous to workspace epicCreateFixture.
-		r, e := w.WorkItems.Snapshot(root)
-		if e != nil {
-			t.Fatal(e)
-		}
-		boundary := func(from int) *workspace.RegistryFormatBoundary {
-			return &workspace.RegistryFormatBoundary{FromVersion: from, FromSHA256: "sha256:" + strings.Repeat("a", 64), ManifestSHA256: "sha256:" + strings.Repeat("b", 64), ReaderVersion: "v1.0.0", ReaderCommit: strings.Repeat("c", 40), ReaderSHA256: "sha256:" + strings.Repeat("d", 64)}
-		}
-		r.FormatVersion = 7
-		r.FormatBoundary = boundary(4)
-		r.EpicCreateBoundary = boundary(5)
-		r.AdoptionBoundary = boundary(6)
-		r.EpicCreateOperations = []workspace.EpicCreateOperation{}
-		raw, e := yaml.Marshal(r)
-		if e != nil {
-			t.Fatal(e)
-		}
-		if e = os.WriteFile(filepath.Join(root, ".ply", "work-items.yaml"), raw, 0600); e != nil {
-			t.Fatal(e)
-		}
-		t.Chdir(epic)
-		w.SourceWriters = func(string) (workspace.SourceWriterObservation, error) {
-			return workspace.SourceWriterObservation{State: "absent", Method: "modeled_idle", Limitation: "Injected writer/provider fixture only; no actual OS or live acceptance."}, nil
-		}
-		source := filepath.Join(filepath.Dir(epic), "useful-existing")
-		runGit(t, epic, "worktree", "add", "-b", "useful-existing", source, oid)
-		if e = os.WriteFile(filepath.Join(source, "inherited.txt"), []byte("useful inherited delta\n"), 0600); e != nil {
-			t.Fatal(e)
-		}
-		runGit(t, source, "add", "inherited.txt")
-		runGit(t, source, "commit", "-m", "inherited useful work")
-		in := workspace.TaskAdoptionInput{TaskID: "task", Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Path: source, Ref: "refs/heads/useful-existing", ExpectedOID: gitOutput(t, source, "rev-parse", "HEAD")}
-		preview, e := workspace.AdoptTaskWorktree(w, in, false, "")
-		if e != nil {
-			t.Fatal(e)
-		}
-		if _, e = workspace.AdoptTaskWorktree(w, in, true, preview.Confirmation); e != nil {
-			t.Fatal(e)
+	var preparation workspace.TaskPreparation
+	for _, item := range registry.TaskPreparations {
+		if item.ID == native.PreparationID {
+			preparation = item
 		}
 	}
-	if option.Parallel {
-		r, e := w.WorkItems.Snapshot(root)
-		if e != nil {
-			t.Fatal(e)
-		}
-		r.ParallelBoundary = &workspace.RegistryFormatBoundary{FromVersion: 4, FromSHA256: r.RawSHA256, ManifestSHA256: "sha256:" + strings.Repeat("a", 64), ReaderVersion: "v0.0.0-fixture", ReaderCommit: oid, ReaderSHA256: "sha256:" + strings.Repeat("b", 64)}
-		r.FormatVersion = workspace.ParallelRegistryFormat
-		r.SourceReconciliations = []workspace.TaskSourceReconciliation{}
-		raw, e := yaml.Marshal(r)
-		if e != nil {
-			t.Fatal(e)
-		}
-		if e = os.WriteFile(filepath.Join(root, ".ply", "work-items.yaml"), raw, 0600); e != nil {
-			t.Fatal(e)
-		}
+	if preparation.ID == "" {
+		t.Fatal("manual fixture preparation missing")
 	}
-	if option.BeforePrepare != nil {
-		option.BeforePrepare(w, root, epic, goal)
-	}
-	if option.SelectFreshGoal != nil {
-		goal = option.SelectFreshGoal(w, root, epic, goal)
-	}
+	epic := preparation.Plan.ObservedParent.WorktreeLocator
 	acceptance := filepath.Join(root, "acceptance.sh")
-	execute := workspace.TaskGoalExecuteInput{Target: workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, Next: true, AcceptancePath: acceptance}
-	if option.Parallel {
-		execute.Next = false
-		execute.SpecID = goal.SpecID
-		execute.Parallel = true
+	doc := filepath.Join(root, "goal.md")
+	if e = os.WriteFile(doc, []byte("# Explicit fixture instruction\n\nChoose subsequent work separately.\n"), 0600); e != nil {
+		t.Fatal(e)
 	}
-	if option.SelectFreshGoal != nil {
-		execute.Next, execute.SpecID = false, goal.SpecID
+	goal := workspace.TaskGoalRef{SpecID: preparation.Plan.SpecID, Spec: preparation.Plan.Spec}
+	var fields map[string]any
+	if e = json.Unmarshal(native.HandoffDraft, &fields); e != nil {
+		t.Fatal(e)
 	}
-	preview, e := workspace.PreviewTaskGoalExecution(w, execute)
+	fields["schema_version"] = 3
+	fields["delivery_binding"] = map[string]any{"mode": "owner", "human_actor": "fixture human", "owner_claim": "fixture owner", "parent_handoff_locator": nil, "parent_handoff_sha256": nil, "candidate_key": nil}
+	fields["budget"] = map[string]any{"max_rounds": nil, "round_definition": map[string]any{"unit": "candidate_verification_attempt", "command_retry_consumes_round": false, "retry_condition": "only_if_no_effect_started"}}
+	fields["verifiers"] = []any{map[string]any{"id": "test", "argv": []string{"/bin/sh", acceptance}, "cwd": preparation.Plan.WorktreePath, "env": []string{}, "expected_exit": 0, "stop_on_failure": true, "evidence": map[string]any{"capture_stdout": true, "capture_stderr": true, "classification": "workspace_internal", "binding": "target_oid"}}}
+	authority := fields["authority"].(map[string]any)
+	authority["human_gates"] = []string{}
+	effects := []any{}
+	add := func(id, kind string, scope map[string]any) {
+		var limit any
+		if scope["kind"] == "delivery" {
+			limit = 1
+		}
+		effects = append(effects, map[string]any{"id": id, "type": kind, "scope": scope, "max_occurrences": limit, "sequence": len(effects) + 1})
+	}
+	add("task-write", "filesystem_write", map[string]any{"kind": "task_worktree"})
+	for _, pair := range [][2]string{{"git_index_write", "update_index"}, {"git_commit", "create_commit"}, {"git_ref_write", "update_ref"}} {
+		add(pair[0], pair[0], map[string]any{"kind": "git", "ref": "refs/heads/" + preparation.Plan.Branch, "expected_before_oid": preparation.Plan.SourceStartOID(), "operation": pair[1]})
+	}
+	add("local-commands", "command_execute", map[string]any{"kind": "command", "procedure_ids": []string{"implement"}, "verifier_ids": []string{"test"}})
+	add("process-start", "process_start", map[string]any{"kind": "boolean", "allowed": true})
+	if option.AllowLocalInstall {
+		add("install", "install", map[string]any{"kind": "boolean", "allowed": true})
+	}
+	agreement := option.Agreement
+	if agreement != nil {
+		copy := *agreement
+		agreement = &copy
+		agreement.ProjectID = "ply"
+		agreement.RepoID = "ply"
+		agreement.EpicID = "epic"
+		agreement.SourceRef = "refs/heads/" + preparation.Plan.Branch
+		if agreement.TargetRef == "" {
+			agreement.TargetRef = preparation.Plan.ObservedParent.Ref
+		}
+		if agreement.Mode != workspace.DeliveryPullRequest {
+			agreement.TargetWorktree = epic
+		}
+		fields["delivery_binding"].(map[string]any)["agreement"] = agreement
+		scope := map[string]any{"kind": "delivery", "agreement": agreement}
+		if agreement.Mode == workspace.DeliveryPullRequest {
+			add("delivery-push", "push", scope)
+			add("delivery-pr", "pull_request", scope)
+		} else if !agreement.HumanOwnedIntegration() {
+			add("delivery-integration", "integration", scope)
+		}
+	}
+	authority["allowed_effects"] = effects
+	authority["forbidden_effects"] = []any{}
+	draft, e := json.Marshal(fields)
 	if e != nil {
 		t.Fatal(e)
 	}
-	p, e := workspace.PrepareTaskGoalExecution(w, preview.Input, preview.Confirmation, workspace.QueueHumanDecision{ActorClaim: "synthetic human", DecidedAtUTC: "2026-10-05T00:00:00Z", Source: "explicit_human_instruction", Statement: "Synthetic execution choice; not actual product QA."})
-	if e != nil {
-		t.Fatal(e)
-	}
-	d := SystemDependencies(w)
-	preparation := *p.Preparation.Preparation
-	draft, e := workflowhandoff.BuildDeliveryHandoffDraft(d.Workflow, preparation.ID, "synthetic human", "fixture owner", "fixture/delivery", acceptance, workflowhandoff.DeliveryDraftAuthority{AllowLocalInstall: option.AllowLocalInstall, Agreement: p.Delivery})
-	if e != nil {
-		t.Fatal(e)
-	}
+	p := deliveryPreparedFixture{Preparation: workspace.TaskPreparationReadback{Preparation: &preparation}, Goal: goal, Delivery: agreement}
 	providerPath, ply := filepath.Join(root, "synthetic-provider"), filepath.Join(root, "synthetic-ply")
 	for _, path := range []string{providerPath, ply} {
 		if e = os.WriteFile(path, []byte("#!/bin/sh\nexit 0\n"), 0700); e != nil {

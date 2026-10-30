@@ -8,12 +8,10 @@ import (
 	"errors"
 	"io/fs"
 	"os"
-	"os/exec"
+
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // AL05: owner-submitted reports, evidence, acceptance entrypoints and reviews
@@ -167,29 +165,37 @@ func TestAL05RetainedReportRequirementsNameInputAndCause(t *testing.T) {
 // The candidate binary was already read with private=false and snapshotted
 // 0700 before AL05; this is a baseline, not a new behavior.
 func TestAL05BaselineOrdinaryCandidateBinary(t *testing.T) {
-	f, o, binary, review := autoScratchFixture(t, "#!/bin/sh\nset -eu\n\"$PLY_CANDIDATE_BINARY\"\n")
+	f, o, binary, _ := autoScratchFixture(t, "#!/bin/sh\nset -eu\n\"$PLY_CANDIDATE_BINARY\"\n")
 	if err := os.Chmod(binary, 0755); err != nil {
 		t.Fatal(err)
 	}
-	o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review, binary)
+	o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, binary)
 	if err != nil || len(o.Delivery.Candidates) != 1 {
 		t.Fatalf("0755 candidate binary did not qualify: %v %+v", err, o.DeliveryStatus.Verification)
 	}
 	r := automaticTestReceipt(t, o)
 	al05AssertMode(t, r.Automatic.CandidateBinarySnapshot.Locator, 0700)
 	al05AssertMode(t, binary, 0755)
+	s, err := workflowRead(f.R.WorkspaceRoot, o.RunID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r.Outcome = "fail"
+	if err = validateAutomaticReceipt(s, r, false); err == nil {
+		t.Fatal("automatic receipt accepted an outcome that differs from the observed exit")
+	}
 }
 
-func TestAL05OrdinaryAcceptanceAndReviewQualify(t *testing.T) {
-	f, o, binary, review := autoScratchFixture(t, "#!/bin/sh\nset -eu\n\"$PLY_CANDIDATE_BINARY\"\n")
+func TestAL05OrdinaryAcceptanceRecordsCommand(t *testing.T) {
+	f, o, binary, _ := autoScratchFixture(t, "#!/bin/sh\nset -eu\n\"$PLY_CANDIDATE_BINARY\"\n")
 	log := al04CaptureLog(t)
-	for path, mode := range map[string]os.FileMode{f.AcceptancePath: 0644, review: 0644, binary: 0755} {
+	for path, mode := range map[string]os.FileMode{f.AcceptancePath: 0644, binary: 0755} {
 		if err := os.Chmod(path, mode); err != nil {
 			t.Fatal(err)
 		}
 	}
-	o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review, binary)
-	if err != nil || len(o.Delivery.Candidates) != 1 || o.Delivery.Phase != "automatic_acceptance_passed" {
+	o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, binary)
+	if err != nil || len(o.Delivery.Candidates) != 1 || o.Delivery.Phase != "verified" {
 		t.Fatalf("ordinary 0644 acceptance and review did not qualify: %v %+v", err, o.DeliveryStatus.Verification)
 	}
 	if v := o.DeliveryStatus.Verification; v == nil || !v.InputsMatch {
@@ -197,26 +203,23 @@ func TestAL05OrdinaryAcceptanceAndReviewQualify(t *testing.T) {
 	}
 	r := automaticTestReceipt(t, o)
 	al05AssertMode(t, r.AcceptanceSnapshot.Locator, 0600)
+	if !equal(o.Delivery.Candidates[0].TaskResult.VerifierResults[0].Argv, r.Automatic.ExecutedArgv) {
+		t.Fatalf("TaskResult recorded requested argv %v instead of executed argv %v", o.Delivery.Candidates[0].TaskResult.VerifierResults[0].Argv, r.Automatic.ExecutedArgv)
+	}
 	if err = deliveryVerificationInputs(r); err != nil {
 		t.Fatalf("receipt reuse cannot re-read ordinary inputs: %v", err)
 	}
-	al05AssertWarn(t, log, "acceptance entrypoint", f.AcceptancePath, "candidate review", review, "mode=0644")
+	al05AssertWarn(t, log, "acceptance entrypoint", f.AcceptancePath, "mode=0644")
 }
 
 func TestAL05ChangedOrdinaryInputsDoNotQualify(t *testing.T) {
-	for _, target := range []string{"acceptance entrypoint", "candidate review"} {
+	for _, target := range []string{"acceptance entrypoint"} {
 		t.Run(target, func(t *testing.T) {
-			f, o, binary, review := autoScratchFixture(t, "")
+			f, o, binary, _ := autoScratchFixture(t, "")
 			changed := f.AcceptancePath
-			if target == "candidate review" {
-				changed = review
-			}
 			script := "#!/bin/sh\nset -eu\nprintf ' ' >> " + ShellQuote(changed) + "\n"
 			al05Write(t, f.AcceptancePath, []byte(script), 0644)
-			if err := os.Chmod(review, 0644); err != nil {
-				t.Fatal(err)
-			}
-			o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review, binary)
+			o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, binary)
 			al05AssertError(t, err, target, changed, "changed")
 			if len(o.Delivery.Candidates) != 0 {
 				t.Fatalf("changed %s qualified a candidate: %+v", target, o.Delivery.Candidates)
@@ -230,27 +233,16 @@ func TestAL05ChangedOrdinaryInputsDoNotQualify(t *testing.T) {
 // inside readFile: no read seam exists, and an in-place same-inode, same-size
 // rewrite during the read itself is not detected there (see the AL05 audit).
 func TestAL05InPlaceOverwriteAfterBindingDoesNotQualify(t *testing.T) {
-	for _, target := range []string{"acceptance entrypoint", "candidate review"} {
+	for _, target := range []string{"acceptance entrypoint"} {
 		t.Run(target, func(t *testing.T) {
-			f, o, binary, review := autoScratchFixture(t, "")
+			f, o, binary, _ := autoScratchFixture(t, "")
 			marker := filepath.Join(t.TempDir(), "executed")
 			script := func(word string) []byte {
 				return []byte("#!/bin/sh\nprintf " + word + " > " + ShellQuote(marker) + "\n")
 			}
 			al05Write(t, f.AcceptancePath, script("original"), 0644)
-			if err := os.Chmod(review, 0644); err != nil {
-				t.Fatal(err)
-			}
 			changed := f.AcceptancePath
 			replacement := script("replaced")
-			if target == "candidate review" {
-				changed = review
-				raw, err := os.ReadFile(review)
-				if err != nil {
-					t.Fatal(err)
-				}
-				replacement = bytes.Replace(raw, []byte("fixture-review-session"), []byte("fixture-review-SESSION"), 1)
-			}
 			f.D.Fault = func(point string) error {
 				if point != "delivery_after_verification_reservation" {
 					return nil
@@ -268,7 +260,7 @@ func TestAL05InPlaceOverwriteAfterBindingDoesNotQualify(t *testing.T) {
 				}
 				return nil
 			}
-			o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, review, binary)
+			o, err := WorkflowDeliveryVerifyWithBinary(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, binary)
 			al05AssertError(t, err, target, changed, "changed since they were bound")
 			if len(o.Delivery.Candidates) != 0 {
 				t.Fatalf("overwritten %s qualified a candidate", target)
@@ -312,112 +304,6 @@ func TestAL05NativePrivateRolesStayProtected(t *testing.T) {
 
 // The exact built CLI consumes ordinary inputs, keeps one JSON value on stdout
 // and warns on stderr, then delivers the same candidate without a mode question.
-func TestAL05CandidateCLIJourneyWithOrdinaryModes(t *testing.T) {
-	supplied := automaticCLIBinary(t)
-	suppliedInfo, err := os.Stat(supplied)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Native verify supplies Ply's private candidate snapshot; never chmod it.
-	t.Cleanup(func() {
-		if info, err := os.Stat(supplied); err != nil || info.Mode() != suppliedInfo.Mode() {
-			t.Errorf("supplied candidate binary %s changed mode: %v %v", supplied, info, err)
-		}
-	})
-	dir, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	binary := filepath.Join(dir, "ply")
-	b, err := os.ReadFile(supplied)
-	if err != nil {
-		t.Fatal(err)
-	}
-	al05Write(t, binary, b, 0755)
-	f, o := automaticCLIFixture(t, binary, true, 30)
-	root := f.R.WorkspaceRoot
-	deliveryTestCandidate(t, f, "expected")
-	al05Write(t, f.AcceptancePath, []byte("#!/bin/sh\nset -eu\ntest \"$(cat README.md)\" = expected\n\"$PLY_CANDIDATE_BINARY\" capabilities --format json >/dev/null\n"), 0644)
-	evidence := al05Write(t, filepath.Join(root, "progress.log"), []byte("focused PASS\n"), 0644)
-	file := al05WriteReport(t, filepath.Join(root, "progress.json"), al05Report(o, "cli-progress", []FileBinding{evidence}, evidence), 0644)
-	run := func(args ...string) (WorkflowRun, string, error) {
-		c := exec.Command(binary, append([]string{"workflow"}, append(args, "--format", "json")...)...)
-		c.Dir = f.Prepared.Preparation.Preparation.Plan.WorktreePath
-		var stdout, stderr bytes.Buffer
-		c.Stdout, c.Stderr = &stdout, &stderr
-		err := c.Run()
-		var out WorkflowRun
-		if decodeErr := json.Unmarshal(stdout.Bytes(), &out); decodeErr != nil {
-			t.Fatalf("stdout is not one JSON value: %v\n%s", decodeErr, stdout.Bytes())
-		}
-		return out, stderr.String(), err
-	}
-	reported, stderr, err := run("execute", "report", o.RunID, "--context", o.Paths.Context, "--file", file)
-	if err != nil || len(reported.Delivery.Events) != 1 {
-		t.Fatalf("CLI report with ordinary modes failed: %v\n%s", err, stderr)
-	}
-	for _, fact := range []string{"delivery report", file, "report evidence", evidence.Locator} {
-		if !strings.Contains(stderr, fact) {
-			t.Fatalf("stderr warn lacks %q: %s", fact, stderr)
-		}
-	}
-	if again, _, err := run("execute", "report", o.RunID, "--context", o.Paths.Context, "--file", file); err != nil || len(again.Delivery.Events) != 1 {
-		t.Fatalf("lost-reply CLI retry duplicated or failed: %v %+v", err, again.Delivery.Events)
-	}
-	writable := al05WriteReport(t, filepath.Join(root, "writable.json"), al05Report(reported, "cli-writable", []FileBinding{evidence}, evidence), 0666)
-	if _, _, err := run("execute", "report", o.RunID, "--context", o.Paths.Context, "--file", writable); err == nil {
-		t.Fatal("group/other-writable report was consumed")
-	} else if exit := new(exec.ExitError); !errors.As(err, &exit) {
-		t.Fatal(err)
-	}
-	review := deliveryTestReview(t, f, "cli")
-	if err := os.Chmod(review, 0644); err != nil {
-		t.Fatal(err)
-	}
-	verified, stderr, err := run(automaticCLIVerifyArgs(o, review, binary)...)
-	if err != nil || verified.Delivery.Phase != "automatic_acceptance_passed" {
-		t.Fatalf("CLI verify with ordinary modes failed: %v %+v\n%s", err, verified.DeliveryStatus.Verification, stderr)
-	}
-	for _, fact := range []string{"acceptance entrypoint", f.AcceptancePath, "candidate review", review} {
-		if !strings.Contains(stderr, fact) {
-			t.Fatalf("stderr warn lacks %q: %s", fact, stderr)
-		}
-	}
-	candidate := verified.Delivery.Candidates[0]
-	pending, output, err := automaticCLI(binary, f, "execute", "integrate", o.RunID, "--context", o.Paths.Context)
-	if pending.Delivery == nil || pending.Delivery.Phase != "closing" || pending.DeliveryStatus.FinalDelivery.State != "delivered" {
-		t.Fatalf("ordinary-input delivery did not retain pending source cleanup: %v\n%s", err, output)
-	}
-	if _, err := os.Stat(f.Prepared.Preparation.Preparation.Plan.WorktreePath); err != nil {
-		t.Fatalf("ordinary-input delivery removed its active owner source: %v", err)
-	}
-	if closeout, err := workspace.ReadTaskCloseoutAt(root, candidate.TaskResult.TaskID); err != nil || closeout != nil && closeout.State == "complete" {
-		t.Fatalf("ordinary-input delivery claimed completed source cleanup: %+v %v", closeout, err)
-	}
-	var exit *exec.ExitError
-	if !errors.As(err, &exit) || exit.ExitCode() != 5 || !bytes.Contains(output, []byte("owner_handoff:")) || pending.Delivery.OwnershipRelease == nil || pending.DeliveryStatus.FinalDelivery.CandidateOID != candidate.OID {
-		t.Fatalf("ordinary inputs did not deliver the exact candidate with owner handoff: %v\n%s", err, output)
-	}
-	if gitOutput(t, f.Parent, "rev-parse", "HEAD") != candidate.OID || gitOutput(t, f.Parent, "rev-parse", "HEAD^{tree}") != candidate.Tree {
-		t.Fatal("ordinary-input delivery changed candidate identity")
-	}
-	queue, err := workspace.ListTaskQueue(f.D.Workspace, workspace.QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}, false)
-	if err != nil || queue.Current != nil || len(queue.Pending) != 0 {
-		t.Fatalf("native queue not closed: %+v %v", queue, err)
-	}
-	base, err := workspace.ShowEpicBase(f.D.Workspace, workspace.EpicBaseInput{EpicID: "epic", RepoID: "ply"})
-	if err != nil || deliveryCLILatestBase(base).OID != candidate.OID || deliveryCLILatestBase(base).Tree != candidate.Tree || base.Freshness != "fresh" {
-		t.Fatalf("Epic base did not advance to the exact candidate: %+v %v", base, err)
-	}
-	registry, err := f.D.Workspace.WorkItems.Snapshot(root)
-	if err != nil || len(registry.IntegrationResults) != 1 || len(registry.HumanQARecords) != 0 {
-		t.Fatalf("ordinary-input delivery repeated integration or fabricated human QA: %v", err)
-	}
-	calls := workflowTestCalls(t, f.workflowFixture, "pane close")
-	if calls != 0 {
-		t.Fatal("ordinary-input test closed the modeled live owner pane")
-	}
-}
 
 // r001-f01: the submitted round report is an ordinary input like the delivery
 // report. The coordinator review stays owner-only as a control decision.
