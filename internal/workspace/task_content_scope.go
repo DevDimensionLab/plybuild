@@ -2,7 +2,11 @@ package workspace
 
 // taskContentScope bounds schema interpretation, never registry serialization.
 // Cross-Task Spec dependencies are currently forbidden by the contract schema.
-type taskContentScope struct{ task TaskID }
+type taskContentScope struct {
+	task        TaskID
+	queueTarget *QueueTarget
+	queueTasks  map[TaskID]bool
+}
 
 // WithTaskContentScope validates this Task's complete content and delivery
 // dependency closure while preserving all shared registrations. It grants no
@@ -27,7 +31,13 @@ func WithTaskContentScope(d Dependencies, task TaskID) Dependencies {
 }
 
 func (s *TaskContentStorage) includesTask(task TaskID) bool {
-	return s == nil || s.scope == nil || s.scope.task == task
+	if s == nil || s.scope == nil {
+		return true
+	}
+	if s.scope.queueTarget != nil {
+		return s.scope.queueTasks[task]
+	}
+	return s.scope.task == task
 }
 
 func (s *TaskContentStorage) includesTarget(r WorkItemRegistry, epic EpicID, repo RepoID) bool {
@@ -37,6 +47,9 @@ func (s *TaskContentStorage) includesTarget(r WorkItemRegistry, epic EpicID, rep
 func (s *taskContentScope) includesTarget(r WorkItemRegistry, epic EpicID, repo RepoID) bool {
 	if s == nil {
 		return true
+	}
+	if s.queueTarget != nil {
+		return s.queueTarget.EpicID == epic && s.queueTarget.RepoID == repo
 	}
 	task, _ := findTask(r, s.task)
 	return task != nil && task.ParentEpicID == epic && task.RepoID == repo
@@ -108,4 +121,20 @@ func validateTaskScopeTransition(old, next WorkItemRegistry, scope *taskContentS
 		return contentError("task_content_scope_conflict", "Task operation changed records outside its Task and registered Epic target", nil)
 	}
 	return nil
+}
+
+func withQueueContentScope(d Dependencies, r WorkItemRegistry, target QueueTarget) Dependencies {
+	if d.TaskContent == nil {
+		return d
+	}
+	scope := &taskContentScope{queueTarget: &target, queueTasks: map[TaskID]bool{}}
+	for _, task := range r.Tasks {
+		if task.ProjectID == target.ProjectID && task.RepoID == target.RepoID && task.ParentEpicID == target.EpicID {
+			scope.queueTasks[task.ID] = true
+		}
+	}
+	storage := *d.TaskContent
+	storage.scope = scope
+	d.TaskContent = &storage
+	return d
 }

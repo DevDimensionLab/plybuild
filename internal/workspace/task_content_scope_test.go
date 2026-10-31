@@ -307,3 +307,62 @@ func TestTaskStoredKnownDeliveryVersionMalformationIsInvalidContent(t *testing.T
 		t.Fatal("reader capability omitted supported delivery v2")
 	}
 }
+
+func TestQueueReadbackDoesNotInterpretAnotherEpicsContent(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	goalFixture(t, f, "task", "task/goal")
+	goalQueueFixture(t, f, []TaskGoalQueueEntry{})
+	r := mustQueueRegistry(t, f)
+	parent := r.Epics[0].RepoBindings[0].Worktree
+	if _, err := AdoptEpic(f.dependencies, EpicAdoptInput{EpicID: "other", Title: "Other", ProjectID: "ply", RepoID: "ply", Worktree: parent.Locator, Ref: parent.Ref, ExpectedOID: parent.OID}); err != nil {
+		t.Fatal(err)
+	}
+	scopedFuturePublication(t, f, "task")
+	before, err := os.ReadFile(workItemsPath(filepath.Dir(f.wrapper)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ListTaskQueue(f.dependencies, QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "other"}, false); err != nil {
+		t.Fatalf("unrelated historical content blocked queue: %v", err)
+	}
+	if _, err := ListTaskQueue(f.dependencies, queueTargetFixture(), false); err == nil {
+		t.Fatal("selected target's unknown content was accepted")
+	}
+	after, err := os.ReadFile(workItemsPath(filepath.Dir(f.wrapper)))
+	if err != nil || string(before) != string(after) {
+		t.Fatal("queue read changed registry", err)
+	}
+}
+
+func TestEmptyQueueStillRequiresItsUpgradeBackup(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	r := mustQueueRegistry(t, f)
+	parent := r.Epics[0].RepoBindings[0].Worktree
+	if _, err := AdoptEpic(f.dependencies, EpicAdoptInput{EpicID: "other", Title: "Other", ProjectID: "ply", RepoID: "ply", Worktree: parent.Locator, Ref: parent.Ref, ExpectedOID: parent.OID}); err != nil {
+		t.Fatal(err)
+	}
+	r = mustQueueRegistry(t, f)
+	upgrade := queueUpgrade(r)
+	if upgrade == nil {
+		t.Fatal("fixture must require upgrade")
+	}
+	root := filepath.Dir(f.wrapper)
+	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "other/queue", ProjectID: "ply", RepoID: "ply", EpicID: "other", ExpectedRevision: 0, Entries: []TaskGoalQueueEntry{}, Recorder: TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "test", RecordedAtUTC: "2026-10-31T12:00:00Z"}, RegistryUpgrade: upgrade}
+	raw, err := contentCanonical(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(root, "other-queue.json")
+	if err := os.WriteFile(file, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := SetTaskQueue(f.dependencies, file); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(taskContentPath(root, "backups", upgrade.RegistrySHA256)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := ListTaskQueue(f.dependencies, QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "other"}, false); err == nil {
+		t.Fatal("empty target accepted missing upgrade backup")
+	}
+}

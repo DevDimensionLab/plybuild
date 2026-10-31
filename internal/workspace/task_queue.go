@@ -219,14 +219,15 @@ func currentPreparation(d Dependencies, r WorkItemRegistry, p TaskPreparation) Q
 }
 func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, ready bool) (WorkspaceTaskQueueReadback, error) {
 	var out WorkspaceTaskQueueReadback
+	t, _, e := resolveQueueTarget(d, root, r, projects, in)
+	if e != nil {
+		return out, e
+	}
+	d = withQueueContentScope(d, r, t)
 	if e := validateTaskContentClosure(d.TaskContent, root, r, false); e != nil {
 		return out, e
 	}
 	if e := validateQueueClosure(d, root, r); e != nil {
-		return out, e
-	}
-	t, _, e := resolveQueueTarget(d, root, r, projects, in)
-	if e != nil {
 		return out, e
 	}
 	w, e := queueWorkspace(d, root)
