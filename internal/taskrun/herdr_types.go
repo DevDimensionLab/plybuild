@@ -11,7 +11,9 @@ import (
 )
 
 type WorkflowRequest struct {
-	StartupProtocol string `json:"startup_protocol,omitempty"`
+	HistoricalClaudeTrust json.RawMessage `json:"claude_project_trust,omitempty"`
+	HistoricalCodexTrust  json.RawMessage `json:"codex_project_trust,omitempty"`
+	StartupProtocol       string          `json:"startup_protocol,omitempty"`
 	Envelope
 	RequestKey        string          `json:"request_key"`
 	WorkspaceRoot     string          `json:"workspace_root"`
@@ -88,7 +90,9 @@ type WorkflowAction struct {
 	Message string `json:"message"`
 }
 type WorkflowRun struct {
-	ReportStartup *ReportStartupStatus `json:"report_startup,omitempty"`
+	HistoricalClaudeTrust json.RawMessage      `json:"claude_project_trust,omitempty"`
+	HistoricalCodexTrust  json.RawMessage      `json:"codex_project_trust,omitempty"`
+	ReportStartup         *ReportStartupStatus `json:"report_startup,omitempty"`
 	Envelope
 	Provider        string                         `json:"provider,omitempty"`
 	RunID           string                         `json:"run_id"`
@@ -166,24 +170,26 @@ type workflowRecord struct {
 	Review       *FileBinding `json:"review"`
 }
 type workflowState struct {
-	ReportProviderStop  *FileBinding     `json:"report_provider_stop,omitempty"`
-	ReportStop          *FileBinding     `json:"report_stop,omitempty"`
-	ReportRetirement    *FileBinding     `json:"report_retirement,omitempty"`
-	Request             WorkflowRequest  `json:"request"`
-	Observed            Observed         `json:"observed"`
-	Result              WorkflowRun      `json:"result"`
-	Phase               string           `json:"phase"`
-	ContextSHA256       string           `json:"context_sha256"`
-	Acceptance          *FileBinding     `json:"acceptance"`
-	StartDraft          *FileBinding     `json:"start_draft"`
-	StartSHA256         *string          `json:"start_sha256"`
-	Records             []workflowRecord `json:"records"`
-	Recovery            *FileBinding     `json:"startup_recovery,omitempty"`
-	RecoveryTransport   *FileBinding     `json:"startup_recovery_transport,omitempty"`
-	Continuation        *FileBinding     `json:"delivery_continuation,omitempty"`
-	OwnerResume         *FileBinding     `json:"owner_resume,omitempty"`
-	OwnerResumeStep     string           `json:"owner_resume_step,omitempty"`
-	OwnerResumeCallback string           `json:"owner_resume_callback,omitempty"`
+	HistoricalClaudeTrust json.RawMessage  `json:"claude_project_trust,omitempty"`
+	HistoricalCodexTrust  json.RawMessage  `json:"codex_project_trust,omitempty"`
+	ReportProviderStop    *FileBinding     `json:"report_provider_stop,omitempty"`
+	ReportStop            *FileBinding     `json:"report_stop,omitempty"`
+	ReportRetirement      *FileBinding     `json:"report_retirement,omitempty"`
+	Request               WorkflowRequest  `json:"request"`
+	Observed              Observed         `json:"observed"`
+	Result                WorkflowRun      `json:"result"`
+	Phase                 string           `json:"phase"`
+	ContextSHA256         string           `json:"context_sha256"`
+	Acceptance            *FileBinding     `json:"acceptance"`
+	StartDraft            *FileBinding     `json:"start_draft"`
+	StartSHA256           *string          `json:"start_sha256"`
+	Records               []workflowRecord `json:"records"`
+	Recovery              *FileBinding     `json:"startup_recovery,omitempty"`
+	RecoveryTransport     *FileBinding     `json:"startup_recovery_transport,omitempty"`
+	Continuation          *FileBinding     `json:"delivery_continuation,omitempty"`
+	OwnerResume           *FileBinding     `json:"owner_resume,omitempty"`
+	OwnerResumeStep       string           `json:"owner_resume_step,omitempty"`
+	OwnerResumeCallback   string           `json:"owner_resume_callback,omitempty"`
 	// Derived only after validating the immutable acceptance selection. These
 	// never replace the frozen request or become additional persisted authority.
 	EffectiveDeliveryAgreement   *workspace.DeliveryAgreement           `json:"-"`

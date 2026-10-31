@@ -37,6 +37,11 @@ func readWorkflowRequest(file string, reportOnly bool) (WorkflowRequest, error) 
 	if reportOnly && (string(fields["schema_version"]) == "2" || string(fields["schema_version"]) == "3") {
 		return r, workflowError(2, "delivery-owner start has been removed; use an explicit report-run request")
 	}
+	for _, field := range []string{"claude_project_trust", "codex_project_trust"} {
+		if _, present := fields[field]; present {
+			return r, workflowError(2, "removed trust override: "+field)
+		}
+	}
 	var runtime map[string]json.RawMessage
 	if json.Unmarshal(fields["runtime"], &runtime) == nil && runtime != nil {
 		if _, present := runtime["provider"]; !present && string(fields["schema_version"]) == "1" {
