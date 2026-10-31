@@ -144,7 +144,7 @@ func observeTaskRun(d Dependencies, root, preparationID string, raw []byte, deli
 		if i == 0 {
 			oid, tree = plan.SourceStartOID(), plan.SourceStartTree()
 		}
-		if !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || x.OID != oid || x.Tree != tree || x.GitCommonDir != plan.Target.GitCommonDir {
+		if !x.Clean || !x.Symbolic || len(x.InProgress) != 0 || ((i == 0 || delivery) && (x.OID != oid || x.Tree != tree)) || x.GitCommonDir != plan.Target.GitCommonDir {
 			return out, fmt.Errorf("target or Epic changed since preparation")
 		}
 	}

@@ -4,7 +4,9 @@
 Ply Task. It binds the frozen Task Spec, native handoff, runtime, Herdr identity,
 reports and coordinator decisions. Its result is a reviewed report. It does not
 publish TaskResult, attest provider inactivity, install a candidate, perform human
-QA or integrate changes.
+QA or integrate changes. A later commit on the Epic does not invalidate a report-only
+start from an unchanged prepared Task source. The exact Task source, input and
+ownership checks still apply; delivery retains its parent revision check.
 
 Run the coordinator commands inside the bound Ply workspace. Run recipient
 callbacks from the exact Task worktree using ordinary installed `ply` and the
