@@ -14,6 +14,8 @@ import (
 func newWorkflowCommand(dependencies workflowhandoff.Dependencies) *cobra.Command {
 	command := &cobra.Command{
 		Use:               "workflow",
+		Args:              cobra.NoArgs,
+		RunE:              func(c *cobra.Command, args []string) error { return c.Help() },
 		Short:             "Manage agent workflows",
 		Long:              "Read registered workspace workflow status, trace one Task's recorded process across its runs, create local planning repositories, start an explicitly assigned agent, and manage recorded results and notifications.",
 		Example:           "  ply workflow status\n  ply workflow status --all --json\n  ply workflow trace task-id --format json\n  ply workflow epic plan --project ply --language nb\n  ply workflow handoff show hnd_0123456789abcdef0123456789abcdef",

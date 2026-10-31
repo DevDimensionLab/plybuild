@@ -107,6 +107,7 @@ type WorkItemRegistry struct {
 	IntegrationIntents      []IntegrationIntent        `yaml:"integration_intents,omitempty"`
 	IntegrationAttempts     []IntegrationAttempt       `yaml:"integration_attempts,omitempty"`
 	IntegrationResults      []IntegrationResult        `yaml:"integration_results,omitempty"`
+	TaskSpecPolicies        *[]TaskSpecPolicy          `yaml:"task_spec_policies,omitempty"`
 	TaskProblemRevisions    []TaskProblemReference     `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference        `yaml:"task_spec_revisions"`
 	TaskSpecAssessments     []TaskAssessmentReference  `yaml:"task_spec_assessments"`

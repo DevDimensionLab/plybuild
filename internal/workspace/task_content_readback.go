@@ -449,21 +449,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 	selection := contentFields(sel)
 	selection["freshness"] = sfresh
 	sel = contentObject(selection)
-	action := TaskNextAction{"record_solution", "Record a solution revision with three parts.", []string{}}
-	if state.ProblemHead == nil {
-		action = TaskNextAction{"record_problem", "Record the Task problem explicitly.", []string{}}
-	} else if state.SpecHead != nil {
-		action = TaskNextAction{"record_human_choice", "Record an explicit human choice after a ready assessment.", []string{}}
-	}
-	if sfresh == "stale" || sfresh == "withdrawn" {
-		action = TaskNextAction{"resolve_blocker", "Clarify the current solution basis.", []string{}}
-	}
-	if sfresh == "current" && !result.WorktreeReady {
-		action = TaskNextAction{"authorize_worktree", "Worktree creation requires a separate authorized action.", []string{}}
-	}
-	if ready {
-		action = TaskNextAction{"prepare_handoff", "Prepare a handoff for the exact selected revision.", []string{}}
-	}
+	action := TaskNextAction{"choose_operation", "Choose the next Task operation; recorded Problem and Spec are optional context.", []string{}}
 	if len(results) > 0 {
 		action = TaskNextAction{"separate_result_control", "Return the historical result for separate result control.", []string{}}
 	}

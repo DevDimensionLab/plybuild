@@ -458,7 +458,7 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 			if field.PkgPath != "" {
 				continue
 			}
-			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && (field.Name == "DeliveryAuthorization" || field.Name == "Acceptance") && v.Field(i).IsNil() {
+			if t == reflect.TypeOf(WorkspaceTaskIntegrationPlan{}) && (field.Name == "DeliveryAuthorization" || field.Name == "Acceptance" || field.Name == "TaskSpecGuard") && v.Field(i).IsNil() {
 				continue
 			}
 			if t == reflect.TypeOf(DeliveryAgreement{}) && strings.Contains(field.Tag.Get("json"), ",omitempty") && v.Field(i).IsZero() {

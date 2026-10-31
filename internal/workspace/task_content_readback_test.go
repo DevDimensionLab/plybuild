@@ -109,3 +109,40 @@ func TestTaskContentMissingProblemDocumentClearsSummaryAndRequiresInspection(t *
 		t.Fatalf("unreadable problem was presented as usable content: %#v", m)
 	}
 }
+
+func TestTaskReadbackLeavesProcessChoiceToHuman(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	if _, err := CreateTaskWorktree(f.dependencies, TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: filepath.Join(f.wrapper, "task"), ExpectedParentOID: f.oid}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := ShowTask(f.dependencies, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	action := contentFields(contentFields(shown.Content)["next_action"])
+	if contentString(action, "kind") != "choose_operation" {
+		t.Fatalf("unexpected process instruction: %#v", action)
+	}
+}
+
+func TestTaskReadbackWithoutProblemLeavesProcessChoiceToHuman(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	input, err := ParseTaskCreateInput("no-problem", "No problem", "Human chooses process", "epic", "ply", "ply")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CreateTask(f.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CreateTaskWorktree(f.dependencies, TaskWorktreeCreateInput{TaskID: "no-problem", Branch: "no-problem", Path: filepath.Join(f.wrapper, "no-problem"), ExpectedParentOID: f.oid}); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := ShowTask(f.dependencies, "no-problem")
+	if err != nil {
+		t.Fatal(err)
+	}
+	action := contentFields(contentFields(shown.Content)["next_action"])
+	if contentString(action, "kind") != "choose_operation" {
+		t.Fatalf("unexpected process instruction: %#v", action)
+	}
+}

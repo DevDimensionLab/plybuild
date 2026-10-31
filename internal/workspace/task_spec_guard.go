@@ -644,7 +644,7 @@ func taskResultSpecRelevance(d Dependencies, root string, projects ProjectSnapsh
 	return out
 }
 func validateIntegrationPlanVersion(p WorkspaceTaskIntegrationPlan) error {
-	valid := p.SchemaVersion == 1 && p.Kind == "WorkspaceTaskIntegrationPlan@1" && p.DeliveryAuthorization == nil && p.Acceptance == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil && p.Acceptance == nil || p.SchemaVersion == 4 && p.Kind == "WorkspaceTaskIntegrationPlan@4" && automaticIntegrationAuthorization(p.DeliveryAuthorization) && p.Acceptance != nil
+	valid := p.SchemaVersion == 2 && p.Kind == "WorkspaceTaskIntegrationPlan@2" && p.TaskSpecGuard != nil && p.DeliveryAuthorization == nil && p.Acceptance == nil || p.SchemaVersion == 1 && p.Kind == "WorkspaceTaskIntegrationPlan@1" && p.DeliveryAuthorization == nil && p.Acceptance == nil || p.SchemaVersion == 3 && p.Kind == "WorkspaceTaskIntegrationPlan@3" && p.DeliveryAuthorization != nil && p.Acceptance == nil || p.SchemaVersion == 4 && p.Kind == "WorkspaceTaskIntegrationPlan@4" && automaticIntegrationAuthorization(p.DeliveryAuthorization) && p.Acceptance != nil
 	if !valid {
 		return fmt.Errorf("unsupported integration plan version")
 	}

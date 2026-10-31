@@ -80,6 +80,7 @@ type workItemRegistryV3Wire struct {
 	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
 	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
 	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
+	TaskSpecPolicies        *[]TaskSpecPolicy         `yaml:"task_spec_policies,omitempty"`
 	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
 	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
@@ -159,7 +160,7 @@ func (registry WorkItemRegistry) MarshalYAML() (any, error) {
 		return workItemRegistryV1Wire{FormatVersion: 1, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations}, nil
 	}
 	if registry.FormatVersion == 3 {
-		return workItemRegistryV3Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults, TaskProblemRevisions: registry.TaskProblemRevisions, TaskSpecRevisions: registry.TaskSpecRevisions, TaskSpecAssessments: registry.TaskSpecAssessments, TaskSolutionSelections: registry.TaskSolutionSelections, TaskResultSpecBindings: registry.TaskResultSpecBindings, TaskContentPublications: registry.TaskContentPublications}, nil
+		return workItemRegistryV3Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults, TaskSpecPolicies: registry.TaskSpecPolicies, TaskProblemRevisions: registry.TaskProblemRevisions, TaskSpecRevisions: registry.TaskSpecRevisions, TaskSpecAssessments: registry.TaskSpecAssessments, TaskSolutionSelections: registry.TaskSolutionSelections, TaskResultSpecBindings: registry.TaskResultSpecBindings, TaskContentPublications: registry.TaskContentPublications}, nil
 	}
 	return workItemRegistryV2Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults}, nil
 }
@@ -572,6 +573,11 @@ func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
 		)
 	}
 	if version >= 3 {
+		for i := 0; i < len(root.Content); i += 2 {
+			if root.Content[i].Value == "task_spec_policies" {
+				fields = append(fields, yamlShapeField{name: "task_spec_policies", typeOf: reflect.TypeOf([]TaskSpecPolicy{})})
+			}
+		}
 		fields = append(fields, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]TaskResultSpecBinding{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
 	}
 	if version >= 4 {
@@ -758,7 +764,11 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 				}
 				fields = filtered
 			}
-			if version == "1" {
+			guardPresent := false
+			for i := 0; i < len(node.Content); i += 2 {
+				guardPresent = guardPresent || node.Content[i].Value == "task_spec_guard"
+			}
+			if !guardPresent {
 				filtered := []yamlShapeField{}
 				for _, f := range fields {
 					if f.name != "task_spec_guard" {
@@ -1679,6 +1689,7 @@ type workItemRegistryV4Wire struct {
 	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
 	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
 	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
+	TaskSpecPolicies        *[]TaskSpecPolicy         `yaml:"task_spec_policies,omitempty"`
 	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
 	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
@@ -1692,5 +1703,5 @@ type workItemRegistryV4Wire struct {
 }
 
 func workItemRegistryV4(r WorkItemRegistry) workItemRegistryV4Wire {
-	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
+	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskSpecPolicies: r.TaskSpecPolicies, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
 }

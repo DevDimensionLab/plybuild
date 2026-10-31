@@ -104,6 +104,7 @@ type WorkspaceTaskIntegrationPlan struct {
 	Readiness             string                      `yaml:"readiness" json:"readiness"`
 	Reasons               []string                    `yaml:"reasons" json:"reasons"`
 	Effect                IntegrationPlanEffect       `yaml:"effect" json:"effect"`
+	TaskSpecGuard         *TaskSpecRelevance          `yaml:"task_spec_guard,omitempty" json:"task_spec_guard,omitempty"`
 	DeliveryAuthorization *DeliveryAuthorization      `yaml:"delivery_authorization,omitempty" json:"delivery_authorization,omitempty"`
 	Acceptance            *DeliveryAcceptanceDecision `yaml:"acceptance,omitempty" json:"acceptance,omitempty"`
 }

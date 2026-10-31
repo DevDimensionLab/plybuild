@@ -828,3 +828,10 @@ func createTaskProblem(d Dependencies, root string, session WorkItemStoreSession
 
 // MarshalTaskSpecValue provides the canonical bridge without reversing package dependencies.
 func MarshalTaskSpecValue(value any) ([]byte, error) { return contentCanonical(value) }
+
+type TaskSpecPolicy struct {
+	TaskID                   TaskID         `yaml:"task_id" json:"task_id"`
+	Mode                     string         `yaml:"mode" json:"mode"`
+	ActivationPublicationKey *string        `yaml:"activation_publication_key" json:"activation_publication_key"`
+	LegacyResultIDs          []TaskResultID `yaml:"legacy_result_ids" json:"legacy_result_ids"`
+}
