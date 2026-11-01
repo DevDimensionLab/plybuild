@@ -200,6 +200,10 @@ func (session *systemWorkItemStoreSession) Snapshot() (WorkItemRegistry, error) 
 	}
 	info, err := os.Lstat(workItemsPath(session.root))
 	if session.confirmed != nil && err == nil && session.observed != nil && os.SameFile(info, session.observed) && sameRegistryFileState(info, session.observed) {
+		if err := session.store.verifyIntegrationEvidence(session.root, *session.confirmed); err != nil {
+			session.confirmed, session.observed = nil, nil
+			return WorkItemRegistry{}, err
+		}
 		return cloneWorkItemRegistry(*session.confirmed), nil
 	}
 	session.confirmed, session.observed = nil, nil
@@ -330,7 +334,7 @@ func (store *systemWorkItemStore) readRegistry(root string) (WorkItemRegistry, e
 	if err != nil {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("cannot read work-item registry %s", path), err)
 	}
-	registry, err := decodeWorkItemRegistry(contents)
+	registry, err := store.decodeStoredRegistry(root, contents)
 	if err != nil {
 		if d := RegistryError(err); d != nil {
 			d.Artifact = path
@@ -367,7 +371,7 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
 		return err
 	}
-	contents, err := encodeWorkItemRegistry(registry)
+	contents, err := store.encodeStoredRegistry(root, &registry, old)
 	if err != nil {
 		return workError(ErrorWorkStoreConflict, fmt.Sprintf("cannot encode work-item registry: %v", err), err)
 	}
@@ -463,6 +467,7 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	if err := platformSyncDirectory(directory); err != nil {
 		return workError(ErrorWorkIO, "sync work-item registry directory", err)
 	}
+	registry.integrationEvidence = old.integrationEvidence || old.RawSHA256 == ""
 	registry.RawSHA256 = digestTaskBytes(contents)
 	registry.upgradePermit = nil
 	registry.parallelPermit = nil

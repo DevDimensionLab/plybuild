@@ -51,7 +51,7 @@ func registryDiagnostic(code, detail string, version int) *RegistryDiagnostic {
 	if code == "registry_upgrade_required" || code == "registry_upgrade_conflict" {
 		next = "Run ply workspace registry upgrade --package <release-directory> --sha256 <manifest-digest> --check --format json, inspect the fresh plan, then apply its exact confirmation."
 	}
-	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{1, 2, 3, 4, 5, 6, 7, 8}, NextAction: next}
+	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{1, 2, 3, 4, 5, 6, 7, 8, integrationEvidenceEnvelopeFormat}, NextAction: next}
 }
 
 func RegistryError(err error) *RegistryDiagnostic {

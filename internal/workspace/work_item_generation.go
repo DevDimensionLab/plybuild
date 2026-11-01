@@ -24,7 +24,10 @@ func cloneWorkItemRegistry(r WorkItemRegistry) WorkItemRegistry {
 	// part of a confirmed snapshot. All persisted reference-bearing fields are
 	// recursively copied, including queue requests with nested maps/interfaces.
 	r.upgradePermit = nil
-	return cloneRegistryValue(reflect.ValueOf(r)).Interface().(WorkItemRegistry)
+	out := cloneRegistryValue(reflect.ValueOf(r)).Interface().(WorkItemRegistry)
+	out.integrationEvidence = r.integrationEvidence
+	out.integrationEvidenceRefs = append([]string(nil), r.integrationEvidenceRefs...)
+	return out
 }
 
 func cloneRegistryValue(v reflect.Value) reflect.Value {

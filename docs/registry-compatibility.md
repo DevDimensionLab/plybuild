@@ -1,5 +1,11 @@
 # Shared work-item registry compatibility
 
+Fresh candidate stores now use a format-9 physical envelope with immutable
+integration evidence; existing inline stores retain their formats. See
+[integration evidence storage](integration-evidence-storage.md) for the exact
+reader boundary, measured publication reduction and pending release work. The
+historical release matrix below describes delivered releases, not this candidate.
+
 The work-item registry is shared by all projects in a workspace. Ply strictly
 decodes and validates it before filtering a project. Unknown authorization
 fields are rejected; ordinary writes preserve IDs, Spec/Goal references, Task

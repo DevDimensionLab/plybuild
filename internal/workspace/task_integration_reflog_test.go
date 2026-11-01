@@ -44,7 +44,7 @@ func TestTaskIntegrationReflogStorageCompatibility(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			registry, err := decodeWorkItemRegistry(stored)
+			registry, err := newSystemWorkItemStore().decodeStoredRegistry(fixture.root, stored)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -52,8 +52,9 @@ func TestTaskIntegrationReflogStorageCompatibility(t *testing.T) {
 			if registry.FormatVersion != scenario.format || plan.FormatVersion != 1 || plan.Format != "json" || plan.Canonicalization != "RFC8785" || !reflect.DeepEqual(plan.ObservedReflog, reflog) {
 				t.Fatalf("stored plan changed format or history: %#v", plan)
 			}
-			encoded, err := encodeWorkItemRegistry(registry)
-			if err != nil || !bytes.Equal(encoded, stored) {
+			err = fixture.dependencies.WorkItems.WithLock(fixture.root, func(session WorkItemStoreSession) error { return session.Publish(registry) })
+			encoded, readErr := os.ReadFile(workItemsPath(fixture.root))
+			if err != nil || readErr != nil || !bytes.Equal(encoded, stored) {
 				t.Fatalf("stored registry did not round-trip unchanged: %v", err)
 			}
 			fixture.dependencies.WorkItems = newSystemWorkItemStore()
@@ -132,7 +133,7 @@ func TestTaskIntegrationStoredExactEffectRequiresReflogProof(t *testing.T) {
 		"wrong result": func(r *IntegrationResult) { r.Reflog[0].OID = r.Reflog[1].OID },
 	} {
 		t.Run(name, func(t *testing.T) {
-			registry, err := decodeWorkItemRegistry(stored)
+			registry, err := newSystemWorkItemStore().decodeStoredRegistry(fixture.root, stored)
 			if err != nil {
 				t.Fatal(err)
 			}

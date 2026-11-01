@@ -173,6 +173,10 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, map[string]RunB
 		}
 		out.Events = append(out.Events, e)
 	}
+	integrationSources := []string{}
+	for _, source := range workspace.IntegrationEvidenceSources(root, b.Registry) {
+		integrationSources = append(integrationSources, out.source(source.Kind, source.Locator, &source.SHA256, nil, nil))
+	}
 	for _, ir := range b.Registry.IntegrationResults {
 		var a *workspace.IntegrationAuthority
 		for i := range b.Registry.IntegrationAuthorities {
@@ -186,6 +190,7 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, map[string]RunB
 			continue
 		}
 		e := nativeEvent("integration", string(ir.ID), "Integration: "+ir.Outcome, ir, registry, &ir.RecordedAtUTC)
+		e.SourceIDs = append(e.SourceIDs, integrationSources...)
 		e = axisEvent(e, "integration", ir.Outcome, candidate(t, a.Plan.Task.ResultOID, a.Plan.Task.ResultTree))
 		out.Events = append(out.Events, e)
 	}

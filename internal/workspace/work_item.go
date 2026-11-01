@@ -90,6 +90,8 @@ type WorktreeOperationRecord struct {
 }
 
 type WorkItemRegistry struct {
+	integrationEvidenceRefs []string                   `yaml:"-"`
+	integrationEvidence     bool                       `yaml:"-"`
 	ParallelActivation      *ParallelActivationPlan    `yaml:"parallel_activation,omitempty" json:"parallel_activation,omitempty"`
 	parallelPermit          *parallelActivationPermit  `yaml:"-"`
 	ParallelBoundary        *RegistryFormatBoundary    `yaml:"parallel_boundary,omitempty" json:"parallel_boundary,omitempty"`

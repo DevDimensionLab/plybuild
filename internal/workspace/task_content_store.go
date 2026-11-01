@@ -100,6 +100,9 @@ func (s *TaskContentStorage) Read(root, kind, digest string) (out []byte, err er
 	if kind == "objects" {
 		limit = taskDocumentLimit
 	}
+	if kind == integrationEvidenceKind {
+		limit = integrationEvidenceLimit
+	}
 	if kind == "closeout" {
 		limit = closeoutEvidenceLimit
 	}

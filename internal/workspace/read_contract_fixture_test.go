@@ -418,7 +418,7 @@ func readContractValidateSeeds(t *testing.T, d Dependencies, f readContractFixtu
 	if err != nil {
 		t.Fatal(err)
 	}
-	r, err := decodeWorkItemRegistry(raw)
+	r, err := newSystemWorkItemStore().decodeStoredRegistry(f.Root, raw)
 	if err != nil {
 		t.Fatal(err)
 	}

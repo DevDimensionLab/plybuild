@@ -58,8 +58,16 @@ func TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
+	registry, err := f.dependencies.WorkItems.Snapshot(f.root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	logicalBefore, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, field := range []string{"acceptance:", "responsible_actor:", "integration_results:"} {
-		if !bytes.Contains(before, []byte(field)) {
+		if !bytes.Contains(logicalBefore, []byte(field)) {
 			t.Fatalf("fixture missing %s", field)
 		}
 	}
@@ -77,7 +85,7 @@ func TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory(t *testing.T
 	if !bytes.Equal(before, after) {
 		t.Fatal("ordinary roundtrip changed authority or history")
 	}
-	bad := bytes.Replace(before, []byte("responsible_actor:"), []byte("unknown_authorizer:"), 1)
+	bad := bytes.Replace(logicalBefore, []byte("responsible_actor:"), []byte("unknown_authorizer:"), 1)
 	_, err = decodeWorkItemRegistry(bad)
 	if d := RegistryError(err); d == nil || d.Code != "registry_unknown_field" {
 		t.Fatalf("unknown authority not rejected: %v", err)

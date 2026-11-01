@@ -47,6 +47,9 @@ func ReadViewBasis(d Dependencies) (ReadViewBasisSnapshot, error) {
 	} else {
 		out.Sources[itemsPath] = out.Registry.RawSHA256
 	}
+	for _, source := range IntegrationEvidenceSources(ws.Root, out.Registry) {
+		out.Sources[source.Locator] = source.SHA256
+	}
 	out.Sources[filepath.Join(ws.Root, MarkerDirectory, MarkerFile)] = ws.MarkerSHA256
 	out.Titles = make(map[TaskID]TaskListTitle, len(out.Registry.Tasks))
 	for _, task := range out.Registry.Tasks {
@@ -64,6 +67,9 @@ func ReadViewBasis(d Dependencies) (ReadViewBasisSnapshot, error) {
 // CheckReadViewBasis detects register drift without decoding the registers a
 // second time, taking locks, or claiming a transaction across independent files.
 func CheckReadViewBasis(d Dependencies, b ReadViewBasisSnapshot) (string, []string) {
+	if err := newSystemWorkItemStore().verifyIntegrationEvidence(b.Workspace.Root, b.Registry); err != nil {
+		return "unknown", []string{"registration_sources_changed_or_unavailable"}
+	}
 	reasons := []string{}
 	for path, expected := range b.Sources {
 		actual, err := readViewSource(d, path)

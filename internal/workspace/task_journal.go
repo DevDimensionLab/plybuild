@@ -25,7 +25,7 @@ func ReadTaskJournalBasis(d Dependencies, id TaskID) (TaskJournalBasis, error) {
 	if err != nil {
 		return out, err
 	}
-	r, err := decodeWorkItemRegistry(b)
+	r, err := newSystemWorkItemStore().decodeStoredRegistry(ws.Root, b)
 	if err != nil {
 		return out, err
 	}
