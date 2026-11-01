@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/atomicfile"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
 
@@ -460,35 +461,38 @@ func TestStoreCreateEventPublicationAndHeadFaultsReconcileOnRetry(t *testing.T) 
 			store := newSystemStore(systemFileSystem{}, systemClock{}).(*systemStore)
 			input := CreateStoreInput{WorkspaceRoot: root, PublicationKey: "wf01/test", SourceDraftSHA256: digestBytes([]byte("draft")), Handoff: testStoreHandoff(t, root)}
 			failed := false
-			if strings.Contains(stage, "temp") {
+			if strings.HasPrefix(stage, "head ") {
+				store.replaceFile = func(destination string, b []byte, mode os.FileMode) error {
+					if failed {
+						return atomicfile.Replace(destination, b, mode)
+					}
+					failed = true
+					replaced := stage == "head directory sync"
+					if replaced {
+						if err := atomicfile.Replace(destination, b, mode); err != nil {
+							return err
+						}
+					}
+					return &atomicfile.Error{Op: stage, Path: destination, Replaced: replaced, Err: errors.New("injected " + stage)}
+				}
+			} else if strings.Contains(stage, "temp") {
 				original := store.ops.createTemp
 				store.ops.createTemp = func(directory, pattern string) (*os.File, error) {
 					base := filepath.Base(directory)
 					match := (stage == "event temp" && base == "events") ||
-						(stage == "publication temp" && base == "publications") ||
-						(stage == "head temp" && base == input.Handoff.Identity.ActivityID)
+						(stage == "publication temp" && base == "publications")
 					if match && !failed {
 						failed = true
 						return nil, errors.New("injected " + stage)
 					}
 					return original(directory, pattern)
 				}
-			} else if stage == "head replace" {
-				original := store.ops.replace
-				store.ops.replace = func(source, destination string) error {
-					if filepath.Base(destination) == "head.ref" && !failed {
-						failed = true
-						return errors.New("injected head replace")
-					}
-					return original(source, destination)
-				}
 			} else {
 				original := store.ops.syncDirectory
 				store.ops.syncDirectory = func(directory string) error {
 					base := filepath.Base(directory)
 					match := (stage == "event directory sync" && base == "events") ||
-						(stage == "publication directory sync" && base == "publications") ||
-						(stage == "head directory sync" && base == input.Handoff.Identity.ActivityID)
+						(stage == "publication directory sync" && base == "publications")
 					if match && !failed {
 						failed = true
 						return errors.New("injected " + stage)
@@ -496,8 +500,26 @@ func TestStoreCreateEventPublicationAndHeadFaultsReconcileOnRetry(t *testing.T) 
 					return original(directory)
 				}
 			}
-			if _, err := store.Create(input); !IsClass(err, ErrorIO) {
-				t.Fatalf("faulted create error = %v", err)
+
+			_, createErr := store.Create(input)
+			if !IsClass(createErr, ErrorIO) {
+				t.Fatalf("faulted create error = %v", createErr)
+			}
+			if strings.HasPrefix(stage, "head ") {
+				var failure *atomicfile.Error
+				replaced := stage == "head directory sync"
+				if !errors.As(createErr, &failure) || failure.Replaced != replaced {
+					t.Fatalf("replacement outcome lost through domain error: %v", createErr)
+				}
+				head := filepath.Join(storeRoot(root), "activities", input.Handoff.Identity.ActivityID, "head.ref")
+				contents, readErr := os.ReadFile(head)
+				if replaced {
+					if readErr != nil || len(contents) == 0 {
+						t.Fatalf("head after replacement: %q, %v", contents, readErr)
+					}
+				} else if !errors.Is(readErr, os.ErrNotExist) {
+					t.Fatalf("head before replacement: %q, %v", contents, readErr)
+				}
 			}
 			fresh := newSystemStore(systemFileSystem{}, systemClock{})
 			retried, err := fresh.Create(input)

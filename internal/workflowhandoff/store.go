@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/atomicfile"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -39,13 +40,13 @@ type storeOps struct {
 	syncDirectory func(string) error
 	lock          func(*os.File) error
 	unlock        func(*os.File) error
-	replace       func(string, string) error
 }
 
 type systemStore struct {
-	files FileSystem
-	clock Clock
-	ops   storeOps
+	files       FileSystem
+	clock       Clock
+	ops         storeOps
+	replaceFile func(string, []byte, fs.FileMode) error
 }
 
 func newSystemStore(files FileSystem, clock Clock) Store {
@@ -58,7 +59,6 @@ func newSystemStore(files FileSystem, clock Clock) Store {
 		statFile: func(file *os.File) (fs.FileInfo, error) { return file.Stat() },
 		rename:   os.Rename, remove: os.Remove, removeAll: os.RemoveAll,
 		syncDirectory: storeSyncDirectory, lock: storePlatformLock, unlock: storePlatformUnlock,
-		replace: storePlatformReplace,
 	}}
 }
 
@@ -1274,43 +1274,16 @@ func (store *systemStore) atomicWriteOnce(destination string, contents []byte, m
 	return true, nil
 }
 func (store *systemStore) atomicReplace(destination string, contents []byte, mode fs.FileMode) error {
-	directory := filepath.Dir(destination)
-	temporary, err := store.ops.createTemp(directory, ".ply-*.tmp")
-	if err != nil {
-		return storeIO("open temp", directory, err)
+	replace := store.replaceFile
+	if replace == nil {
+		replace = atomicfile.Replace
 	}
-	path := temporary.Name()
-	replaced := false
-	defer func() {
-		if !replaced {
-			_ = store.ops.remove(path)
+	if err := replace(destination, contents, mode); err != nil {
+		var failure *atomicfile.Error
+		if errors.As(err, &failure) {
+			return classified(ErrorIO, failure.Error(), err)
 		}
-	}()
-	written, err := store.ops.write(temporary, contents)
-	if err != nil || written != len(contents) {
-		_ = store.ops.closeFile(temporary)
-		if err == nil {
-			err = io.ErrShortWrite
-		}
-		return storeIO("write", path, err)
-	}
-	if err := store.ops.chmodFile(temporary, mode); err != nil {
-		_ = store.ops.closeFile(temporary)
-		return storeIO("chmod", path, err)
-	}
-	if err := store.ops.syncFile(temporary); err != nil {
-		_ = store.ops.closeFile(temporary)
-		return storeIO("sync", path, err)
-	}
-	if err := store.ops.closeFile(temporary); err != nil {
-		return storeIO("close", path, err)
-	}
-	if err := store.ops.replace(path, destination); err != nil {
 		return storeIO("replace", destination, err)
-	}
-	replaced = true
-	if err := store.ops.syncDirectory(directory); err != nil {
-		return storeIO("sync directory", directory, err)
 	}
 	return nil
 }
