@@ -102,8 +102,12 @@ func newIntegrationReadback(root string, registry WorkItemRegistry, ctx integrat
 }
 
 func integrationPersistedView(registry WorkItemRegistry, authority *IntegrationAuthority, intent *IntegrationIntent, attempt *IntegrationAttempt, result *IntegrationResult) canonicaljson.Value {
-	storeBytes, _ := encodeWorkItemRegistry(registry)
-	return canonicaljson.Object{{Name: "format_version", Value: int64(registry.FormatVersion)}, {Name: "sha256", Value: digestTaskBytes(storeBytes)}, {Name: "authority_id", Value: nullableID(authority)}, {Name: "intent_id", Value: nullableID(intent)}, {Name: "attempt_id", Value: nullableID(attempt)}, {Name: "integration_result_id", Value: nullableID(result)}, {Name: "freshness", Value: "fresh"}}
+	var observedHash canonicaljson.Value
+	freshness := "unknown"
+	if digestPattern.MatchString(registry.RawSHA256) {
+		observedHash, freshness = registry.RawSHA256, "fresh"
+	}
+	return canonicaljson.Object{{Name: "format_version", Value: int64(registry.FormatVersion)}, {Name: "sha256", Value: observedHash}, {Name: "authority_id", Value: nullableID(authority)}, {Name: "intent_id", Value: nullableID(intent)}, {Name: "attempt_id", Value: nullableID(attempt)}, {Name: "integration_result_id", Value: nullableID(result)}, {Name: "freshness", Value: freshness}}
 }
 
 func buildTaskShowIntegrationReadback(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, task TaskRecord, epic EpicRecord, parent EpicRepoBinding) (out WorkspaceTaskIntegrationReadback) {
@@ -273,8 +277,7 @@ func selectTaskIntegrationLeaf(registry WorkItemRegistry, taskID TaskID) (*TaskR
 }
 
 func newNullableIntegrationReadback(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, task TaskRecord, epic EpicRecord, parent EpicRepoBinding, classification string, next IntegrationNextAction) WorkspaceTaskIntegrationReadback {
-	storeBytes, _ := encodeWorkItemRegistry(registry)
-	persisted := canonicaljson.Object{{Name: "format_version", Value: int64(registry.FormatVersion)}, {Name: "sha256", Value: digestTaskBytes(storeBytes)}, {Name: "authority_id", Value: nil}, {Name: "intent_id", Value: nil}, {Name: "attempt_id", Value: nil}, {Name: "integration_result_id", Value: nil}, {Name: "freshness", Value: "fresh"}}
+	persisted := integrationPersistedView(registry, nil, nil, nil, nil)
 	project := IntegrationPlanProject{ProjectID: task.ProjectID}
 	repository := IntegrationPlanRepository{RepoID: task.RepoID, GitCommonDir: task.GitCommonDir}
 	if _, repo, err := projectAndRepo(projects, task.ProjectID, task.RepoID); err == nil {

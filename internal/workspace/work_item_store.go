@@ -228,7 +228,9 @@ func (session *systemWorkItemStoreSession) Publish(registry WorkItemRegistry) er
 func publishWorkItemRegistryRecover(session WorkItemStoreSession, registry WorkItemRegistry) (WorkItemRegistry, error) {
 	err := session.Publish(registry)
 	if err == nil {
-		return registry, nil
+		// Publish accepts a value; return the observed generation, including its
+		// physical digest and external references, rather than the caller's old one.
+		return session.Snapshot()
 	}
 	observed, readErr := session.Snapshot()
 	if readErr != nil {

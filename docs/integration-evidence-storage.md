@@ -107,3 +107,20 @@ unknown/partial results and reflog recovery through the new fresh-store boundary
 Unreferenced objects and old attempt versions are retained intentionally; nothing
 in this Task qualifies them for deletion. The duplicate inline payload is absent
 from fresh indices; legacy format readers and validators remain necessary.
+
+## Corrected readback and journal boundary
+
+Persisted integration readback uses the observed physical `RawSHA256` in both
+normal and nullable paths. Successful publication returns the store's observed
+generation, including its new physical digest. A logical registry without an
+observed digest reports unknown persisted hash/freshness; serializing an inline
+model cannot establish physical persistence. Regression checks cover format 9,
+legacy, lost Git replies, directory-sync reply loss, replay and Task show.
+
+Journal initial reads, final `before_freshness` checks and batch rechecks validate
+integration sources through workspace's managed evidence reader. Changes to 0400
+object mode or 0700 directory mode invalidate the affected source and integration
+axis even when bytes are unchanged. Batch source caching retains the stronger
+managed validation when the same path also appears as an ordinary artifact.
+End-to-end journal regressions use a restored synthetic private Git/workspace
+fixture and exercise both early corruption and the final freshness checkpoint.

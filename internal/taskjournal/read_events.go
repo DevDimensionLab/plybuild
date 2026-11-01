@@ -28,6 +28,7 @@ type EventBatch struct {
 }
 
 type sourceRead struct {
+	kind string
 	hash string
 	err  error
 }
@@ -51,23 +52,35 @@ type eventBatchReader struct {
 	preparationsErr       error
 }
 
-func cachedSourceHash(cache map[string]sourceRead, path string) (string, error) {
+func journalSourceHash(root, kind, path string) (string, error) {
+	if kind == workspace.IntegrationEvidenceSourceKind {
+		digest, err := workspace.IntegrationEvidenceSourceDigest(root, path)
+		return strings.TrimPrefix(digest, "sha256:"), err
+	}
+	return sourceHash(path)
+}
+
+// Generic observations cannot satisfy or weaken managed evidence checks.
+func cachedSourceHash(cache map[string]sourceRead, root, kind, path string) (string, error) {
 	if cache != nil {
-		if r, ok := cache[path]; ok {
+		if r, ok := cache[path]; ok && (r.kind == kind || r.kind == workspace.IntegrationEvidenceSourceKind) {
 			return r.hash, r.err
 		}
 	}
-	h, e := sourceHash(path)
+	h, e := journalSourceHash(root, kind, path)
 	if cache != nil {
-		cache[path] = sourceRead{h, e}
+		cache[path] = sourceRead{kind: kind, hash: h, err: e}
 	}
 	return h, e
 }
 
 func ReadEventBatch(d workspace.Dependencies, in EventBatchInput) (EventBatch, error) {
+	return New(d).readEventBatch(in)
+}
+
+func (s Service) readEventBatch(in EventBatchInput) (EventBatch, error) {
 	out := EventBatch{Tasks: map[workspace.TaskID]Snapshot{}, EpicEvents: map[workspace.EpicID][]Event{}, EpicSources: map[workspace.EpicID][]Source{}, Reasons: []Reason{}}
 	reader := &eventBatchReader{lifecycle: in.Lifecycle, sources: map[string]sourceRead{}, requests: map[string]bytesRead{}, runs: map[string]runRead{}}
-	s := New(d)
 	s.readBatch = reader
 	registryPath := filepath.Join(in.Workspace.Root, workspace.MarkerDirectory, workspace.WorkItemsFile)
 	for _, t := range in.Registry.Tasks {
@@ -93,12 +106,15 @@ func ReadEventBatch(d workspace.Dependencies, in EventBatchInput) (EventBatch, e
 	}
 	// A single recheck per distinct source detects concurrent changes. This is
 	// explicitly not a cross-register transaction or a filesystem snapshot.
+	if err := s.check("before_freshness"); err != nil {
+		return out, err
+	}
 	changed := map[string]bool{}
 	for path, before := range reader.sources {
 		if before.err != nil {
 			continue
 		}
-		after, err := sourceHash(path)
+		after, err := journalSourceHash(in.Workspace.Root, before.kind, path)
 		if err != nil || after != before.hash {
 			changed[path] = true
 		}

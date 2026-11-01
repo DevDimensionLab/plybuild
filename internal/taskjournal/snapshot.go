@@ -353,7 +353,7 @@ func (s Service) Show(task string, o Options) (Snapshot, error) {
 		if src.Status != "valid" || src.SHA256 == nil {
 			continue
 		}
-		h, e := sourceHash(src.Locator)
+		h, e := journalSourceHash(b.Workspace.Root, src.Kind, src.Locator)
 		if e != nil || h != *src.SHA256 {
 			out.reason("source_changed", "Source changed during snapshot reading", src.SourceID)
 			for i := range out.Sources {

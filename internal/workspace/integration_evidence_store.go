@@ -3,6 +3,7 @@ package workspace
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"strconv"
 
@@ -13,7 +14,10 @@ import (
 // nested registry retains its own lifecycle format and validators. Only fresh
 // stores use this representation; existing inline registries are never migrated.
 const integrationEvidenceEnvelopeFormat = 9
-const integrationEvidenceKind = "integration-evidence"
+
+// IntegrationEvidenceSourceKind identifies workspace-managed journal sources.
+const IntegrationEvidenceSourceKind = "integration-evidence"
+const integrationEvidenceKind = IntegrationEvidenceSourceKind
 const integrationEvidenceLimit = 64 << 20
 
 var integrationEvidenceCollections = []string{
@@ -221,4 +225,18 @@ func retainedIntegrationEvidence(old, next WorkItemRegistry) map[string]string {
 		}
 	}
 	return out
+}
+
+// IntegrationEvidenceSourceDigest revalidates a captured source through the same
+// physical-path, directory-mode, immutable-mode, bound and digest checks as the
+// authoritative store. A byte hash alone cannot establish managed validity.
+func IntegrationEvidenceSourceDigest(root, locator string) (string, error) {
+	digest := "sha256:" + filepath.Base(locator)
+	if !digestPattern.MatchString(digest) || locator != taskContentPath(root, integrationEvidenceKind, digest) {
+		return "", contentError("task_content_integrity_conflict", "integration evidence source is outside its managed binding", nil)
+	}
+	if _, err := evidenceStorage(newSystemWorkItemStore()).Read(root, integrationEvidenceKind, digest); err != nil {
+		return "", err
+	}
+	return digest, nil
 }

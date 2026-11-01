@@ -29,7 +29,7 @@ func (s *Snapshot) source(kind, path string, expected *string, seq *int, prev *s
 	}
 	status := "valid"
 	var observed *string
-	h, e := cachedSourceHash(s.sourceCache, path)
+	h, e := cachedSourceHash(s.sourceCache, s.Workspace.Root, kind, path)
 	if e != nil {
 		status = "invalid"
 		if os.IsNotExist(e) {
