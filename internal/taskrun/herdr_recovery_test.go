@@ -8,19 +8,17 @@ import (
 	"time"
 )
 
-func TestWorkflowAcceptedRequiresNativeEvidencePolicy(t *testing.T) {
+func TestWorkflowAcceptedPreservesNativeEvidencePolicyFindings(t *testing.T) {
 	f := workflowTestFixture(t)
 	var verifiers []map[string]any
 	if e := json.Unmarshal(f.Report.VerifierResults, &verifiers); e != nil {
 		t.Fatal(e)
 	}
-	// The verifier did not authorize stdout capture. Shape-valid evidence must
-	// still satisfy the native policy, not just the reported passed gate.
 	verifiers[0]["stdout_artifact_id"] = "task-requirements"
 	f.Report.VerifierResults, _ = Canonical(verifiers)
 	o := workflowTestReady(t, f)
-	if _, e := WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, workflowTestReview(t, f, o, "accepted")); e == nil {
-		t.Fatal("accepted bypassed native evidence coverage policy")
+	if got, e := WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, workflowTestReview(t, f, o, "accepted")); e != nil || got.FinalReturn.State != "accepted" || got.TaskResultState != "not_published" {
+		t.Fatalf("report acceptance: %+v %v", got, e)
 	}
 }
 
@@ -68,12 +66,12 @@ func TestWorkflowSettledObservationsMustBeNoMoreThanOneSecondApart(t *testing.T)
 	}
 }
 
-func TestWorkflowPassedAssessmentCannotOmitRequiredVerifiers(t *testing.T) {
+func TestWorkflowReportAcceptanceDoesNotQualifyReportedVerifierSet(t *testing.T) {
 	f := workflowTestFixture(t)
 	f.Report.TechnicalAssessment.RequiredVerifierIDs = []string{}
 	o := workflowTestReady(t, f)
 	file := workflowTestReview(t, f, o, "accepted")
-	if _, e := WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, file); e == nil {
-		t.Fatal("passed assessment ignored the native required verifier set")
+	if got, e := WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, file); e != nil || got.TaskResultState != "not_published" {
+		t.Fatalf("report acceptance: %+v %v", got, e)
 	}
 }

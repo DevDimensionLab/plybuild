@@ -58,7 +58,7 @@ func workflowSeal(d Dependencies, s *workflowState, r WorkflowReview) error {
 	s.Result.FinalReturn.ReportSHA256 = &r.ReportSHA256
 	s.Result.Round.State = "sealed"
 	s.Phase = "sealed"
-	s.Result.NextAction = WorkflowAction{"coordinator", "Report return accepted and sealed. TaskResult is not published; provider inactivity is not attested. Close the provider session and settle the Task preparation; any later human QA or integration needs its own selected gate."}
+	s.Result.NextAction = WorkflowAction{"coordinator", "Report accepted and sealed with its reported outcomes and limitations unchanged. Acceptance does not attest technical pass. TaskResult is not published; provider inactivity is not attested. Close the provider session and settle the Task preparation; any later human QA or integration needs its own selected gate."}
 	if r.Decision != "accepted" {
 		s.Result.NextAction = WorkflowAction{"coordinator", "Report return sealed as blocked with its actual unfinished outcomes; no TaskResult, technical pass, human QA or integration follows. Close the provider session and settle the Task preparation; continued work needs a fresh mandate."}
 	}
@@ -135,24 +135,6 @@ func WorkflowReviewRun(d Dependencies, root, id, file string) (WorkflowRun, erro
 			return workflowError(4, "same session must be freshly idle for review")
 		}
 		workflowObserve(d, s, a)
-		if r.Decision == "accepted" {
-			terminal, e := workflowBound(record.Terminal, 2<<20)
-			if e != nil {
-				return e
-			}
-			technical, _ := Canonical(report.TechnicalAssessment)
-			if e = workflowhandoff.ValidateWorkflowPassedAssessment(d.Workflow, s.Result.Handoff.Locator, terminal, technical); e != nil {
-				return workflowError(4, e.Error())
-			}
-			x, e := d.Workspace.IntegrationGit.ObserveIntegrationWorktree(s.Observed.Target.WorktreeLocator, s.Observed.Target.Ref)
-			if e != nil {
-				return e
-			}
-			valid := budgetValid(report.BudgetUsage, s.Request.Agreement)
-			if report.Outcome != "complete" || report.TechnicalAssessment.Gate != "passed" || valid == nil || !*valid || !workflowNoBlockers(report) || !x.Clean || x.Ref != s.Observed.Target.Ref || x.GitCommonDir != s.Observed.Target.GitCommonDir {
-				return workflowError(4, "acceptance requires complete native technical evidence, known usage within the human-supplied agreement and a clean bound candidate without blockers")
-			}
-		}
 		if r.Decision == "changes_requested" {
 			u := report.BudgetUsage
 			if !workflowUsageAtLeast(u, s.Result.Budget.Floor) || u == nil || !u.InitialExecutionStarted || u.CorrectionRounds >= s.Request.Agreement.MaxCorrectionRounds || u.ActiveSeconds >= s.Request.Agreement.MaxActiveSeconds || u.EnvironmentMeasures >= s.Request.Agreement.MaxEnvironmentMeasures {

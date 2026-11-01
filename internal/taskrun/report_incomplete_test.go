@@ -146,9 +146,6 @@ func TestAL10IncompleteReportAfterReceiptIsPreservedWithoutQualification(t *test
 		t.Fatal("preserved report was replaced")
 	}
 	o = workflowTestSettle(t, f, o)
-	if _, err := WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, workflowTestReview(t, f, o, "accepted")); err == nil {
-		t.Fatal("incomplete report was accepted")
-	}
 	o, err = WorkflowReviewRun(f.D, f.R.WorkspaceRoot, o.RunID, workflowTestReview(t, f, o, "blocked"))
 	if err != nil {
 		t.Fatal(err)
@@ -179,11 +176,6 @@ func TestAL10IncompleteReportCorrectsToCompleteAcceptedReturn(t *testing.T) {
 	json.Unmarshal(b, &complete)
 	note := "Model and effective policy were not observable and remain unknown from check-in; active_seconds is wall-clock time measured by the recipient."
 	complete.ProcessObservation = &note
-	gap := complete
-	gap.EvidenceGaps = json.RawMessage(`[{"type":"missing_verifier_output","detail":"Required verifier output was not captured.","artifact_ids":[],"effect_ids":[]}]`)
-	if !workflowNoBlockers(complete) || workflowNoBlockers(gap) {
-		t.Fatal("informative unknown facts and actual evidence gaps are not distinguished")
-	}
 	if o, err = WorkflowReportRound(f.D, f.R.WorkspaceRoot, o.RunID, o.Paths.Context, writeAny(t, f.R.WorkspaceRoot, "round-1-observed.json", complete)); err != nil {
 		t.Fatal(err)
 	}

@@ -330,8 +330,12 @@ and `blocked` require findings; `accepted` may use an empty array.
 session, including when internal corrections were already reported. The next
 report must use the new context, control/predecessor binding and cumulative floor.
 Unknown/decreasing usage or any reached A limit prevents another correction.
-`accepted` requires a complete report, native technical gate `passed`, unchanged
-evidence and a clean candidate. It seals the native workflow terminal once.
+`accepted` records the coordinator's decision about the exact report and seals
+the native workflow terminal once. Reported outcomes, technical assessment,
+evidence gaps, findings and budget usage remain unchanged. Acceptance does not
+require a passed assessment, an unexceeded budget or a clean candidate, and does
+not attest technical pass or publish a TaskResult. Report, session, artifact and
+candidate freshness checks still apply; dirty work must match what was reported.
 `blocked` preserves the reported outcome and coordinator stop without fabricating
 a terminal. Identical reviews are idempotent; conflicting decisions are rejected.
 After either seal the coordinator closes the provider session and settles the

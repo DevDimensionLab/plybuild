@@ -412,16 +412,3 @@ func workflowReadReport(record workflowRecord) (WorkflowReport, error) {
 	}
 	return workflowParseReport(b)
 }
-func workflowNoBlockers(r WorkflowReport) bool {
-	var review struct {
-		Open []json.RawMessage `json:"open_actionable_findings"`
-	}
-	if json.Unmarshal(r.Review, &review) != nil {
-		return false
-	}
-	var forbidden, gaps []json.RawMessage
-	if json.Unmarshal(r.ForbiddenEffectsObserved, &forbidden) != nil || json.Unmarshal(r.EvidenceGaps, &gaps) != nil {
-		return false
-	}
-	return len(review.Open) == 0 && len(forbidden) == 0 && len(gaps) == 0
-}
