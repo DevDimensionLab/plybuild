@@ -373,6 +373,9 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 				return e
 			}
 		}
+		if err != nil {
+			return nil
+		}
 		out.Revision++
 		r.Value = out
 		db.Records[id] = r

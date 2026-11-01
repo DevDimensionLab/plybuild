@@ -1,7 +1,7 @@
 {
   "request_id": "retarget-1",
   "owner_ref": "owner-fixture",
-  "expected_revision": 3,
+  "expected_revision": 2,
   "generation": 1,
   "target_ref": "agr_70f68af8357978bfbc02891f25d60f8376f2e9b60512be61b96bfc9cc5acd149"
 }
