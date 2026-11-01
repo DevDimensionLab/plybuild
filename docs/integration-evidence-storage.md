@@ -65,13 +65,10 @@ executable advertises format 9; its internal logical registry decoder deliberate
 continues to reject an envelope used as a logical registry. Consumers must use
 the workspace store, including the updated direct Task journal reader.
 
-Release work remains separate: `scripts/package-cli` is outside this Task's write
-scope and still declares formats 1–8. It must be updated to match the executable's
-format-9 capability before packaging/delivery, and all consumers of a new store
-must receive a qualified compatible reader before using it. The unchanged
-manifest/executable equality guard rejects a mismatched package. Existing inline
-consumers do not need a migration to remain usable. This is a local candidate,
-not an installed release or authorization to migrate shared data.
+The release package declares formats 1–9, matching the executable. The
+manifest/executable equality guard rejects mismatched packages. Every consumer
+of a newly created format-9 store must use a compatible reader. Existing inline
+stores remain inline; installing this release does not migrate shared data.
 
 ## Measured publication
 

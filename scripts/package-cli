@@ -35,7 +35,7 @@ def main():
         for binary in ("ply", "ply-install"):
             subprocess.run(["go", "build", "-mod=readonly", "-trimpath", "-buildvcs=true", "-ldflags", f"-s -w -X {module}.Version={version} -X {module}.SourceCommit={commit}", "-o", str(package / binary), "./cmd/" + binary], cwd=repo, env=env, check=True)
         digest = lambda p: "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest()
-        manifest = dict(kind="PlyRelease@1", schema_version=1, version=version, source_commit=commit, os="darwin", arch="arm64", sha256=digest(package / "ply"), size_bytes=(package / "ply").stat().st_size, registry_formats=[1, 2, 3, 4, 5, 6, 7, 8], installer_sha256=digest(package / "ply-install"))
+        manifest = dict(kind="PlyRelease@1", schema_version=1, version=version, source_commit=commit, os="darwin", arch="arm64", sha256=digest(package / "ply"), size_bytes=(package / "ply").stat().st_size, registry_formats=[1, 2, 3, 4, 5, 6, 7, 8, 9], installer_sha256=digest(package / "ply-install"))
         (package / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         pin = digest(package / "manifest.json")
         (stage / "manifest.sha256").write_text(pin + "\n")
