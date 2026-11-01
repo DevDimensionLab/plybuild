@@ -3,6 +3,7 @@ package workspace
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -11,6 +12,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/devdimensionlab/plybuild/internal/atomicfile"
 )
 
 func TestProjectStorePublishesDeterministicRegistry(t *testing.T) {
@@ -171,20 +174,11 @@ func TestProjectStoreFaultsPreserveOldOrCompleteNewRegistryAndRetry(t *testing.T
 	tests := []struct {
 		name          string
 		operation     string
-		shortWrite    bool
-		failCleanup   bool
 		expectPublish bool
 	}{
 		{name: "lock open", operation: "lock-open"},
 		{name: "lock", operation: "lock"},
-		{name: "temp open", operation: "temp-open"},
-		{name: "write", operation: "write"},
-		{name: "short write", shortWrite: true},
-		{name: "chmod", operation: "chmod"},
-		{name: "file sync", operation: "file-sync"},
-		{name: "close", operation: "close"},
 		{name: "replace", operation: "replace"},
-		{name: "cleanup", operation: "write", failCleanup: true},
 		{name: "directory sync", operation: "directory-sync", expectPublish: true},
 		{name: "unlock", operation: "unlock", expectPublish: true},
 		{name: "lock close", operation: "lock-close", expectPublish: true},
@@ -203,15 +197,31 @@ func TestProjectStoreFaultsPreserveOldOrCompleteNewRegistryAndRetry(t *testing.T
 				t.Fatal(err)
 			}
 			second, secondRepos := storeFixture(root, "two", "Two", "two")
-			faulty := &systemProjectStore{faults: &storeFaults{shortWrite: test.shortWrite}}
+			faulty := &systemProjectStore{faults: &storeFaults{}}
 			faulty.faults.fail = func(operation string) error {
-				if operation == test.operation || (test.failCleanup && operation == "cleanup") {
+				if operation == test.operation {
 					return errInjected
 				}
 				return nil
 			}
+			if test.operation == "replace" || test.operation == "directory-sync" {
+				faulty.replaceFile = func(path string, b []byte, mode fs.FileMode) error {
+					if test.expectPublish {
+						if err := atomicfile.Replace(path, b, mode); err != nil {
+							return err
+						}
+					}
+					return &atomicfile.Error{Op: test.operation, Path: path, Replaced: test.expectPublish, Err: errInjected}
+				}
+			}
 			_, _, _, err = faulty.Add(root, second, secondRepos)
 			assertProjectErrorClass(t, err, ErrorProjectIO)
+			if test.operation == "replace" || test.operation == "directory-sync" {
+				var failure *atomicfile.Error
+				if !errors.As(err, &failure) || failure.Replaced != test.expectPublish || !errors.Is(err, errInjected) {
+					t.Fatalf("replacement outcome lost through domain error: %v", err)
+				}
+			}
 			afterFailure, readErr := os.ReadFile(registryPath)
 			if readErr != nil {
 				t.Fatal(readErr)

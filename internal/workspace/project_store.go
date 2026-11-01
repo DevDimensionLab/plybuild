@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/atomicfile"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,12 +41,12 @@ type projectRegistry struct {
 }
 
 type storeFaults struct {
-	fail       func(string) error
-	shortWrite bool
+	fail func(string) error
 }
 
 type systemProjectStore struct {
-	faults *storeFaults
+	faults      *storeFaults
+	replaceFile func(string, []byte, fs.FileMode) error
 }
 
 func newSystemProjectStore() *systemProjectStore { return &systemProjectStore{} }
@@ -217,79 +218,17 @@ func (store *systemProjectStore) publish(workspaceRoot string, registry projectR
 	if err != nil {
 		return projectIOError("marshal registry", filepath.Join(workspaceRoot, MarkerDirectory, ProjectsFile), err)
 	}
-	directory := filepath.Join(workspaceRoot, MarkerDirectory)
-	destination := filepath.Join(directory, ProjectsFile)
-	if fault := store.fail("temp-open"); fault != nil {
-		return projectIOError("open temp", directory, fault)
+	destination := filepath.Join(workspaceRoot, MarkerDirectory, ProjectsFile)
+	replace := store.replaceFile
+	if replace == nil {
+		replace = atomicfile.Replace
 	}
-	temporary, err := os.CreateTemp(directory, ".projects-*.tmp")
-	if err != nil {
-		return projectIOError("open temp", directory, err)
-	}
-	temporaryPath := temporary.Name()
-	replaced := false
-	abort := func(operation string, primary error) error {
-		closeErr := temporary.Close()
-		if closeErr != nil && !errors.Is(closeErr, os.ErrClosed) {
-			primary = fmt.Errorf("%w; close temp: %v", primary, closeErr)
+	if err := replace(destination, contents, 0o644); err != nil {
+		var failure *atomicfile.Error
+		if errors.As(err, &failure) {
+			return projectError(ErrorProjectIO, failure.Error(), err)
 		}
-		if !replaced {
-			removeErr := store.fail("cleanup")
-			if removeErr == nil {
-				removeErr = os.Remove(temporaryPath)
-			}
-			if removeErr != nil && !errors.Is(removeErr, fs.ErrNotExist) {
-				primary = fmt.Errorf("%w; cleanup %s: %v", primary, temporaryPath, removeErr)
-			}
-		}
-		return projectIOError(operation, temporaryPath, primary)
-	}
-
-	written := 0
-	if fault := store.fail("write"); fault != nil {
-		return abort("write", fault)
-	}
-	if store.faults != nil && store.faults.shortWrite && len(contents) > 0 {
-		written, err = temporary.Write(contents[:len(contents)-1])
-	} else {
-		written, err = temporary.Write(contents)
-	}
-	if err != nil {
-		return abort("write", err)
-	}
-	if written != len(contents) {
-		return abort("write", io.ErrShortWrite)
-	}
-	if fault := store.fail("chmod"); fault != nil {
-		return abort("chmod", fault)
-	}
-	if err := temporary.Chmod(0o644); err != nil {
-		return abort("chmod", err)
-	}
-	if fault := store.fail("file-sync"); fault != nil {
-		return abort("sync", fault)
-	}
-	if err := temporary.Sync(); err != nil {
-		return abort("sync", err)
-	}
-	if err := temporary.Close(); err != nil {
-		return abort("close", err)
-	}
-	if fault := store.fail("close"); fault != nil {
-		return abort("close", fault)
-	}
-	if fault := store.fail("replace"); fault != nil {
-		return abort("replace", fault)
-	}
-	if err := platformReplace(temporaryPath, destination); err != nil {
-		return abort("replace", err)
-	}
-	replaced = true
-	if fault := store.fail("directory-sync"); fault != nil {
-		return projectIOError("sync directory", directory, fault)
-	}
-	if err := platformSyncDirectory(directory); err != nil {
-		return projectIOError("sync directory", directory, err)
+		return projectIOError("replace", destination, err)
 	}
 	return nil
 }
