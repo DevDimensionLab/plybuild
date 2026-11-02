@@ -17,11 +17,6 @@ type BasicAuth struct {
 	Password string
 }
 
-// BearerJSON contains the access token for a JSON bearer request.
-type BearerJSON struct {
-	AccessToken string
-}
-
 // POST contains the complete body, headers, and client selection for one POST request.
 type POST struct {
 	Body             []byte
@@ -31,10 +26,9 @@ type POST struct {
 
 // Request is the complete HTTP request value passed to a dependency.
 type Request struct {
-	URL        string
-	BasicAuth  *BasicAuth
-	BearerJSON *BearerJSON
-	POST       *POST
+	URL       string
+	BasicAuth *BasicAuth
+	POST      *POST
 }
 
 // Client performs one complete HTTP request.
@@ -65,7 +59,7 @@ func System() Dependencies {
 type systemClient struct{}
 
 func (systemClient) Do(request Request) (*http.Response, error) {
-	if request.BasicAuth == nil && request.BearerJSON == nil && request.POST == nil {
+	if request.BasicAuth == nil && request.POST == nil {
 		return http.Get(request.URL)
 	}
 
@@ -81,10 +75,6 @@ func (systemClient) Do(request Request) (*http.Response, error) {
 	}
 	if request.BasicAuth != nil {
 		httpRequest.SetBasicAuth(request.BasicAuth.Username, request.BasicAuth.Password)
-	}
-	if request.BearerJSON != nil {
-		httpRequest.Header.Add("Authorization", "Bearer "+request.BearerJSON.AccessToken)
-		httpRequest.Header.Add("Content-Type", "application/json")
 	}
 	if request.POST != nil {
 		for name, values := range request.POST.Header {

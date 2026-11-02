@@ -8,7 +8,13 @@
     "package github.com/devdimensionlab/plybuild/cmd/ply: added",
     "package github.com/devdimensionlab/plybuild/test/notification-driver: added"
   ],
-  "incompatible_changes": [],
+  "incompatible_changes": [
+    "./pkg/config.LocalConfiguration.SourceProvider: removed",
+    "./pkg/config.SourceProvider: removed",
+    "./pkg/http.GetJsonWithAccessToken: removed",
+    "package github.com/devdimensionlab/plybuild/pkg/bitbucket: removed",
+    "package github.com/devdimensionlab/plybuild/pkg/kibana: removed"
+  ],
   "module": "github.com/devdimensionlab/plybuild",
   "schema_version": 1,
   "tool_module": "golang.org/x/exp",

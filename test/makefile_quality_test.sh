@@ -165,10 +165,12 @@ chmod +x "$fake_bin/quality-audit.sh"
 
 for name in "${mutation_names[@]}"; do
 	upper=$(printf '%s' "$name" | tr '[:lower:]-' '[:upper:]_')
+	declared=10
+	[[ $name != http ]] || declared=8
 	cat >"$fake_scripts/test-mutate-$name" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-printf '%s\n' 'test-mutate-$name: PASS (T1-T10, declared=10 killed=10 survived=0 unusable=0)'
+printf '%s\n' 'test-mutate-$name: PASS (T1-T10, declared=$declared killed=$declared survived=0 unusable=0)'
 EOF
 	cat >"$fake_scripts/mutate-$name" <<EOF
 #!/usr/bin/env bash
@@ -181,7 +183,7 @@ mkdir -p "\$TMPDIR/mutation-$name/read-only/child"
 printf '%s\n' disposable >"\$TMPDIR/mutation-$name/read-only/child/sentinel"
 chmod 0555 "\$TMPDIR/mutation-$name/read-only" \
 	"\$TMPDIR/mutation-$name/read-only/child"
-printf 'declared=10 killed=10 survived=0 unusable=0\n'
+printf 'declared=$declared killed=$declared survived=0 unusable=0\n'
 EOF
 	chmod +x "$fake_scripts/test-mutate-$name" "$fake_scripts/mutate-$name"
 done

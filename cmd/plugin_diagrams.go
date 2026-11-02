@@ -6,7 +6,6 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/file"
-	"github.com/devdimensionlab/plybuild/pkg/kibana"
 	"github.com/spf13/cobra"
 	"strings"
 )
@@ -24,55 +23,6 @@ var diagramsCmd = &cobra.Command{
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
 			return err
-		}
-		return nil
-	},
-}
-
-var kibanaCmd = &cobra.Command{
-	Use:   "kibana",
-	Short: "Specialized (experimental) command for executing a kibana-query based on a fetch-request [arg: fetch-file] and exporting the result to a json-file [arg: output-file]",
-	Long:  `Specify the query in Kibana, then use developer tools to copy request as fetch (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		fetchFile, err := getMandatoryString(cmd, "fetch-file")
-		if err != nil {
-			return err
-		}
-
-		extractFieldsInput, err := getMandatoryString(cmd, "extract-fields")
-		if err != nil {
-			return err
-		}
-
-		outputFile := cmd.Flag("output-file").Value.String()
-
-		fieldReMapInput := cmd.Flag("field-remap").Value.String()
-		fieldFilterAndReMapping := kibana.CreateFilter(extractFieldsInput, fieldReMapInput)
-
-		kibanaRequest, err := kibana.LoadFromFetchRequest(fetchFile)
-		if err != nil {
-			return err
-		}
-
-		timeInterval, err := kibana.ExtractTimeIntervalFrom(kibanaRequest)
-		if err != nil {
-			return err
-		}
-
-		resultExists := make(map[string]bool)
-		err, _, result, _ := kibana.ExecuteKibanaQuery(kibanaRequest, timeInterval, fieldFilterAndReMapping, resultExists, "")
-		if err != nil {
-			return err
-		}
-
-		if outputFile == "" {
-			for _, hit := range result {
-				println(hit)
-			}
-		} else {
-			content := strings.Join(kibana.RemoveDuplicateStr(result), "\n")
-			_ = file.CreateFile(outputFile, content)
-			println("Output written to [" + outputFile + "]")
 		}
 		return nil
 	},
@@ -193,12 +143,6 @@ func init() {
 
 	diagramsCmd.PersistentFlags().BoolVarP(&ctx.Recursive, "recursive", "r", false, "turn on recursive mode")
 	diagramsCmd.PersistentFlags().StringVar(&ctx.TargetDirectory, "target", ".", "optional target directory")
-
-	diagramsCmd.AddCommand(kibanaCmd)
-	kibanaCmd.Flags().StringP("fetch-file", "f", "", "Path to kibana.fetch-request")
-	kibanaCmd.Flags().StringP("extract-fields", "e", "", "List of fields to extract pr hit")
-	kibanaCmd.Flags().StringP("field-remap", "m", "", "List of fields matching list extract-fields with new names in output")
-	kibanaCmd.Flags().StringP("output-file", "o", "", "Name of output-file to write results")
 
 	diagramsCmd.AddCommand(structurizrCmd)
 	structurizrCmd.Flags().StringP("workspace", "w", "", "Path or URL to the workspace JSON file/DSL file(s)")

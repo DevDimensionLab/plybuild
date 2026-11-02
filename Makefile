@@ -299,7 +299,8 @@ quality:
 			GOMODCACHE='$(QUALITY_GOMODCACHE)' '$(BASH)' "$(SCRIPTS_DIR)/test-mutate-$$name" >"$$log" 2>&1; then \
 			sed -n '1,240p' "$$log" >&2; exit 1; \
 		fi; \
-		[ "$$(grep -Fxc "test-mutate-$$name: PASS (T1-T10, declared=10 killed=10 survived=0 unusable=0)" "$$log")" -eq 1 ] || { \
+		expected=10; [ "$$name" != http ] || expected=8; \
+		[ "$$(grep -Fxc "test-mutate-$$name: PASS (T1-T10, declared=$$expected killed=$$expected survived=0 unusable=0)" "$$log")" -eq 1 ] || { \
 			printf 'quality: mutation meta-stage has no exact non-empty receipt: %s\n' "$$name" >&2; exit 1; \
 		}; \
 		printf 'mutation-meta:%s\n' "$$name" >>'$(QUALITY_OUTPUT_ROOT)/stage-ledger.txt'; \
@@ -313,7 +314,8 @@ quality:
 			GOMODCACHE='$(QUALITY_GOMODCACHE)' '$(BASH)' "$(SCRIPTS_DIR)/mutate-$$name" >"$$log" 2>&1; then \
 			sed -n '1,240p' "$$log" >&2; exit 1; \
 		fi; \
-		[ "$$(grep -Fxc 'declared=10 killed=10 survived=0 unusable=0' "$$log")" -eq 1 ] || { \
+		expected=10; [ "$$name" != http ] || expected=8; \
+		[ "$$(grep -Fxc "declared=$$expected killed=$$expected survived=0 unusable=0" "$$log")" -eq 1 ] || { \
 			printf 'quality: mutation stage has no exact non-empty receipt: %s\n' "$$name" >&2; exit 1; \
 		}; \
 		printf 'mutation:%s\n' "$$name" >>'$(QUALITY_OUTPUT_ROOT)/stage-ledger.txt'; \

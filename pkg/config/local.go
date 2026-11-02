@@ -89,7 +89,6 @@ type LocalConfigDir struct {
 
 type LocalConfiguration struct {
 	CloudConfig    LocalGitConfig `yaml:"cloudConfig"`
-	SourceProvider SourceProvider `yaml:"sourceProvider"`
 	Nexus          Nexus          `yaml:"nexus"`
 	TerminalConfig TerminalConfig `yaml:"terminal"`
 }

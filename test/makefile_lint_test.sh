@@ -88,11 +88,6 @@ linters:
     - unused
   exclusions:
     rules:
-      # Preserve the legacy exported Kibana result/error ordering.
-      - path: pkg/kibana/kibana.go
-        linters:
-          - staticcheck
-        text: "ST1008:"
       # These legacy messages are user-visible; preserve their exact text.
       - path: pkg/file/file.go
         linters:

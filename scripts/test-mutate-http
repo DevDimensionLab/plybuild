@@ -24,8 +24,8 @@ fail() {
 
 [[ -f $harness && ! -L $harness && -x $harness ]] ||
 	fail 'production harness must be a regular executable file'
-[[ $(grep -cE '^mutate "' "$harness") -eq 10 ]] ||
-	fail 'production harness must declare exactly ten visible mutations'
+[[ $(grep -cE '^mutate "' "$harness") -eq 8 ]] ||
+	fail 'production harness must declare exactly eight visible mutations'
 [[ $(grep -Fxc '[ "$survived" -eq 0 ] || fail '\''surviving mutations remain'\''' "$harness") -eq 1 ]] ||
 	fail 'production harness zero-survivor gate is missing or duplicated'
 
@@ -91,8 +91,8 @@ run_failure T10 'T10 mutation manifest or declared totals are non-deterministic'
 positive_log="$work_root/positive.log"
 "$harness" >"$positive_log"
 grep -Fxc 'subject=http' "$positive_log" >/dev/null || fail 'positive report lost its subject'
-grep -Fxc 'control=passed selections=10' "$positive_log" >/dev/null || fail 'positive report lost its clean control count'
-grep -Fxc 'declared=10 killed=10 survived=0 unusable=0' "$positive_log" >/dev/null ||
+grep -Fxc 'control=passed selections=8' "$positive_log" >/dev/null || fail 'positive report lost its clean control count'
+grep -Fxc 'declared=8 killed=8 survived=0 unusable=0' "$positive_log" >/dev/null ||
 	fail 'positive report totals are not exact'
 
 expected_mutations=(
@@ -101,13 +101,11 @@ expected_mutations=(
 	'http-response-status-gate|TestXMLHelpersPreserveStatusDependencyAndReadErrors'
 	'http-response-body-source|TestXMLHelpersPreserveAnonymousAndBasicAuthResponseBehavior'
 	'http-basic-auth-credential-order|TestXMLHelpersPreserveAnonymousAndBasicAuthResponseBehavior'
-	'http-bearer-url-component-order|TestTokenJSONHelperPassesCompleteBearerRequestParsesAndPreservesLifecycle'
-	'http-bearer-token-selection|TestTokenJSONHelperPassesCompleteBearerRequestParsesAndPreservesLifecycle'
 	'http-wget-request-url|TestWgetPassesCompleteAnonymousRequestBeforeArchivePathAndCopiesBody'
 	'http-wget-destination-path|TestWgetPassesCompleteAnonymousRequestBeforeArchivePathAndCopiesBody'
 	'http-wpost-request-url|TestWpostPassesCompleteFormRequestBeforeFileAndCopiesNonSuccessBody'
 )
-[[ ${#expected_mutations[@]} -eq 10 ]] || fail 'expected mutation population is empty or incomplete'
+[[ ${#expected_mutations[@]} -eq 8 ]] || fail 'expected mutation population is empty or incomplete'
 for expected in "${expected_mutations[@]}"; do
 	id=${expected%%|*}
 	tests=${expected#*|}
@@ -115,4 +113,4 @@ for expected in "${expected_mutations[@]}"; do
 		"$positive_log" >/dev/null || fail "positive report did not bind killed mutation $id to $tests"
 done
 
-printf 'test-mutate-http: PASS (T1-T10, declared=10 killed=10 survived=0 unusable=0)\n'
+printf 'test-mutate-http: PASS (T1-T10, declared=8 killed=8 survived=0 unusable=0)\n'

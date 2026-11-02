@@ -18,7 +18,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/devdimensionlab/plybuild/pkg/bitbucket"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/context"
 	"github.com/devdimensionlab/plybuild/pkg/file"
@@ -151,7 +150,6 @@ func InitGlobals(cmd *cobra.Command) error {
 	if debug {
 		debugLogger := logger.DebugLogger()
 		log = debugLogger
-		bitbucket.SetLogger(debugLogger)
 		config.SetLogger(debugLogger)
 		context.SetLogger(debugLogger)
 		file.SetLogger(debugLogger)

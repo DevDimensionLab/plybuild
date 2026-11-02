@@ -94,30 +94,6 @@ func getAuthXml(dependencies httpclient.Dependencies, url, username, password st
 	return nil
 }
 
-func GetJsonWithAccessToken(host string, path string, accessToken string, response interface{}) error {
-	return getJsonWithAccessToken(httpclient.System(), host, path, accessToken, response)
-}
-
-func getJsonWithAccessToken(dependencies httpclient.Dependencies, host string, path string, accessToken string, response interface{}) error {
-	request := httpclient.Request{
-		URL: host + path,
-		BearerJSON: &httpclient.BearerJSON{
-			AccessToken: accessToken,
-		},
-	}
-	resp, err := httpclient.Execute(dependencies, request)
-	if err != nil {
-		log.Debugln(http.MethodGet, host+path, err)
-		return err
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-	body, _ := io.ReadAll(resp.Body)
-	log.Debugln(http.MethodGet, host+path, resp.StatusCode, len(body))
-
-	return json.Unmarshal(body, &response)
-}
-
 func Wget(url, filepath string) error {
 	return wget(wgetDependencies{
 		HTTP:  httpclient.System(),

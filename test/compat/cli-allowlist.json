@@ -10446,6 +10446,190 @@
       },
       "kind": "command_added",
       "path": "ply integration show"
+    },
+    {
+      "before": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for bitbucket"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Bitbucket functionality",
+        "path": "ply plugin bitbucket",
+        "runnable": false,
+        "short": "Bitbucket functionality",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "bitbucket"
+      },
+      "kind": "command_removed",
+      "path": "ply plugin bitbucket"
+    },
+    {
+      "before": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for sync"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Synchronizes projects from bitbucket",
+        "path": "ply plugin bitbucket sync",
+        "runnable": true,
+        "short": "Synchronizes projects from bitbucket",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "sync"
+      },
+      "kind": "command_removed",
+      "path": "ply plugin bitbucket sync"
+    },
+    {
+      "before": {
+        "aliases": null,
+        "annotations": {},
+        "deprecated": "",
+        "disable_flag_parsing": false,
+        "disable_flags_in_use_line": false,
+        "example": "",
+        "flags": [
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "extract-fields",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "e",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "List of fields to extract pr hit"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "fetch-file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "f",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Path to kibana.fetch-request"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "field-remap",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "m",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "List of fields matching list extract-fields with new names in output"
+          },
+          {
+            "annotations": {
+              "cobra_annotation_flag_set_by_cobra": [
+                "true"
+              ]
+            },
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "help",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "h",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "help for kibana"
+          },
+          {
+            "annotations": {},
+            "default": "",
+            "deprecated": "",
+            "hidden": false,
+            "name": "output-file",
+            "no_opt_default": "",
+            "scope": "local",
+            "shorthand": "o",
+            "shorthand_deprecated": "",
+            "type": "string",
+            "usage": "Name of output-file to write results"
+          }
+        ],
+        "has_args_validator": false,
+        "has_persistent_post_run": false,
+        "has_persistent_pre_run": false,
+        "has_post_run": false,
+        "has_pre_run": false,
+        "hidden": false,
+        "long": "Specify the query in Kibana, then use developer tools to copy request as fetch (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)",
+        "path": "ply plugin diagrams kibana",
+        "runnable": true,
+        "short": "Specialized (experimental) command for executing a kibana-query based on a fetch-request [arg: fetch-file] and exporting the result to a json-file [arg: output-file]",
+        "suggest_for": null,
+        "traverse_children": false,
+        "use": "kibana"
+      },
+      "kind": "command_removed",
+      "path": "ply plugin diagrams kibana"
     }
   ],
   "base_ref": "v1.0.1",

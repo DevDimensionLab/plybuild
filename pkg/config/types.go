@@ -23,12 +23,6 @@ type GitInfo struct {
 	EnableCommit bool
 }
 
-type SourceProvider struct {
-	Host            string   `yaml:"host"`
-	AccessToken     string   `yaml:"access_token"`
-	ExcludeProjects []string `yaml:"exclude_projects"`
-}
-
 type Nexus struct {
 	Url      string `yaml:"url"`
 	Username string `yaml:"username"`
