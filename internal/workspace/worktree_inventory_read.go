@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/devdimensionlab/plybuild/internal/gitworktree"
 )
 
 // InventoryFactFreshness separates a Git inventory entry from observations of
@@ -149,61 +151,15 @@ func (g *systemTaskIntegrationGit) inventoryWorktree(repo RepoRecord, entry GitW
 // Unlike the effect-oriented parser, this preserves a missing/prunable path;
 // it makes no claim that the reported checkout exists or is a physical root.
 func parseReadInventory(b []byte) ([]GitWorktreeInventoryEntry, error) {
-	out := []GitWorktreeInventoryEntry{}
-	var current *GitWorktreeInventoryEntry
-	seen := map[string]bool{}
-	finish := func() error {
-		if current == nil {
-			return nil
-		}
-		if !filepath.IsAbs(current.Locator) || filepath.Clean(current.Locator) != current.Locator || (!current.Bare && !validOIDText(current.OID)) || (!current.Bare && !current.Detached && !validFullBranchRef(current.Ref)) {
-			return fmt.Errorf("invalid Git inventory record")
-		}
-		out = append(out, *current)
-		current = nil
-		return nil
-	}
-	for _, field := range bytes.Split(b, []byte{0}) {
-		text := string(field)
-		if text == "" {
-			if err := finish(); err != nil {
-				return nil, err
-			}
-			continue
-		}
-		key, value, _ := strings.Cut(text, " ")
-		if key == "worktree" {
-			if err := finish(); err != nil {
-				return nil, err
-			}
-			current = &GitWorktreeInventoryEntry{Locator: value}
-			seen = map[string]bool{"worktree": true}
-			continue
-		}
-		if current == nil || seen[key] {
-			return nil, fmt.Errorf("invalid Git inventory field %q", key)
-		}
-		seen[key] = true
-		switch key {
-		case "HEAD":
-			current.OID = value
-		case "branch":
-			current.Ref = value
-		case "locked":
-			current.Locked = true
-		case "prunable":
-			current.Prunable = true
-		case "bare":
-			current.Bare = true
-		case "detached":
-			current.Detached = true
-		default:
-			return nil, fmt.Errorf("unknown Git inventory field %q", key)
-		}
-	}
-	if err := finish(); err != nil {
+	entries, err := gitworktree.ParseInventory(b)
+	if err != nil {
 		return nil, err
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Locator < out[j].Locator })
-	return out, nil
+	for _, entry := range entries {
+		if !filepath.IsAbs(entry.Locator) || filepath.Clean(entry.Locator) != entry.Locator || (!entry.Bare && !validOIDText(entry.OID)) || (!entry.Bare && !entry.Detached && !validFullBranchRef(entry.Ref)) {
+			return nil, fmt.Errorf("invalid Git inventory record")
+		}
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].Locator < entries[j].Locator })
+	return entries, nil
 }

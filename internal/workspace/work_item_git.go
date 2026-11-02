@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
+	"github.com/devdimensionlab/plybuild/internal/gitworktree"
 )
 
 type GitRepoObservation struct{ Locator, GitCommonDir string }
@@ -25,11 +26,7 @@ type GitRefObservation struct {
 	Exists                       bool
 	Ref, OID, Tree, CheckedOutAt string
 }
-type GitWorktreeInventoryEntry struct {
-	Locator, Ref, OID string
-	Locked, Prunable  bool
-	Bare, Detached    bool
-}
+type GitWorktreeInventoryEntry = gitworktree.Entry
 type GitWorktreeInventory struct{ Entries []GitWorktreeInventoryEntry }
 type GitCreateInput struct {
 	Repository                                  RepoRecord
@@ -294,102 +291,20 @@ func gitObservationError(operation, path string, outcome GitCommandOutcome) erro
 }
 
 func parseWorktreeInventory(output []byte, files FileSystem) ([]GitWorktreeInventoryEntry, error) {
-	if len(output) == 0 {
-		return []GitWorktreeInventoryEntry{}, nil
+	entries, err := gitworktree.ParseInventory(output)
+	if err != nil {
+		return nil, err
 	}
-	parts := bytes.Split(output, []byte{0})
-	entries := []GitWorktreeInventoryEntry{}
-	var current *GitWorktreeInventoryEntry
-	finish := func() error {
-		if current == nil {
-			return nil
-		}
-		if current.Locator == "" || current.OID == "" || (!current.Bare && !current.Detached && current.Ref == "") {
-			return errors.New("incomplete worktree record")
+	for i := range entries {
+		current := &entries[i]
+		if current.OID == "" || (!current.Bare && !current.Detached && current.Ref == "") {
+			return nil, errors.New("incomplete worktree record")
 		}
 		physical, err := canonicalDirectory(files, "", current.Locator, "Git worktree inventory path")
 		if err != nil {
-			return err
+			return nil, err
 		}
 		current.Locator = physical
-		entries = append(entries, *current)
-		current = nil
-		return nil
-	}
-	seen := map[string]bool{}
-	for _, raw := range parts {
-		line := string(raw)
-		if line == "" {
-			if err := finish(); err != nil {
-				return nil, err
-			}
-			continue
-		}
-		key, value, _ := strings.Cut(line, " ")
-		switch key {
-		case "worktree":
-			if current != nil {
-				if err := finish(); err != nil {
-					return nil, err
-				}
-			}
-			current = &GitWorktreeInventoryEntry{Locator: value}
-			seen = map[string]bool{"worktree": true}
-		case "HEAD":
-			if current == nil {
-				return nil, errors.New("HEAD outside worktree record")
-			}
-			if seen[key] {
-				return nil, errors.New("duplicate HEAD in worktree record")
-			}
-			seen[key] = true
-			current.OID = value
-		case "branch":
-			if current == nil {
-				return nil, errors.New("branch outside worktree record")
-			}
-			if seen[key] {
-				return nil, errors.New("duplicate branch in worktree record")
-			}
-			seen[key] = true
-			current.Ref = value
-		case "locked":
-			if current == nil {
-				return nil, errors.New("locked outside worktree record")
-			}
-			if seen[key] {
-				return nil, errors.New("duplicate locked in worktree record")
-			}
-			seen[key] = true
-			current.Locked = true
-		case "prunable":
-			if current == nil {
-				return nil, errors.New("prunable outside worktree record")
-			}
-			if seen[key] {
-				return nil, errors.New("duplicate prunable in worktree record")
-			}
-			seen[key] = true
-			current.Prunable = true
-		case "bare", "detached":
-			if current == nil {
-				return nil, fmt.Errorf("%s outside worktree record", key)
-			}
-			if seen[key] {
-				return nil, fmt.Errorf("duplicate %s in worktree record", key)
-			}
-			seen[key] = true
-			if key == "bare" {
-				current.Bare = true
-			} else {
-				current.Detached = true
-			}
-		default:
-			return nil, fmt.Errorf("unknown worktree record field %s", key)
-		}
-	}
-	if err := finish(); err != nil {
-		return nil, err
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Locator < entries[j].Locator })
 	return entries, nil
