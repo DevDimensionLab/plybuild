@@ -1,6 +1,6 @@
 // Package backlog stores a project backlog as one JSON file per item under
 // <projectRoot>/backlog/. Item text and notes are kept byte for byte; notes only
-// grow. Add, AddNote and SetReady hold an exclusive lock on backlog/.lock; reads take none.
+// grow. Add, AddNote and SetStatus hold an exclusive lock on backlog/.lock; reads take none.
 // Errors are *Error with a fixed Class and a detail that never contains
 // absolute paths or the submitted text.
 package backlog
@@ -48,13 +48,25 @@ type Note struct {
 	Text string `json:"text"`
 }
 
+// Status is the stored state of an item.
+type Status string
+
+// The only valid statuses; any transition between them is allowed.
+const (
+	StatusOpen  Status = "open"
+	StatusReady Status = "ready"
+	StatusDone  Status = "done"
+)
+
+func (s Status) valid() bool { return s == StatusOpen || s == StatusReady || s == StatusDone }
+
 // Item is the exact content of one item file.
 type Item struct {
 	ID        string `json:"id"`
 	Title     string `json:"title"`
 	Text      string `json:"text"`
 	CreatedAt string `json:"created_at"`
-	Ready     bool   `json:"ready"`
+	Status    Status `json:"status"`
 	Notes     []Note `json:"notes"`
 }
 
@@ -65,7 +77,7 @@ type Summary struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	NoteCount int    `json:"note_count"`
-	Ready     bool   `json:"ready"`
+	Status    Status `json:"status"`
 }
 
 // InvalidFile is a *.json file in backlog/ that cannot be read as an item.
@@ -132,7 +144,7 @@ func (s Store) List() (ListResult, error) {
 		if len(item.Notes) > 0 {
 			updated = item.Notes[len(item.Notes)-1].At
 		}
-		result.Items = append(result.Items, Summary{ID: item.ID, Title: item.Title, CreatedAt: item.CreatedAt, UpdatedAt: updated, NoteCount: len(item.Notes), Ready: item.Ready})
+		result.Items = append(result.Items, Summary{ID: item.ID, Title: item.Title, CreatedAt: item.CreatedAt, UpdatedAt: updated, NoteCount: len(item.Notes), Status: item.Status})
 	}
 	sort.Slice(result.Items, func(i, j int) bool {
 		a, b := result.Items[i], result.Items[j]
@@ -187,7 +199,7 @@ func (s Store) Add(title, text string) (Item, error) {
 		} else if !errors.Is(err, fs.ErrNotExist) {
 			return Item{}, ioError("check item "+id, err)
 		}
-		item := Item{ID: id, Title: title, Text: text, CreatedAt: now.Format(timestampStyle), Notes: []Note{}}
+		item := Item{ID: id, Title: title, Text: text, CreatedAt: now.Format(timestampStyle), Status: StatusOpen, Notes: []Note{}}
 		return item, s.write(item)
 	}
 	return Item{}, &Error{Class: ClassIOError, Detail: "could not allocate a unique item id"}
@@ -220,14 +232,17 @@ func (s Store) AddNote(id, text string) (Item, error) {
 	return item, s.write(item)
 }
 
-// SetReady sets the item's readiness to ready and returns the whole item.
-// When the item already has that value, no item file is written.
-func (s Store) SetReady(id string, ready bool) (Item, error) {
+// SetStatus sets the item's status and returns the whole item.
+// When the item already has that status, no item file is written.
+func (s Store) SetStatus(id string, status Status) (Item, error) {
 	if err := s.checkRoot(); err != nil {
 		return Item{}, err
 	}
 	if !itemID.MatchString(id) {
 		return Item{}, invalidArguments("invalid item id")
+	}
+	if !status.valid() {
+		return Item{}, invalidArguments("status must be open, ready or done")
 	}
 	if _, err := os.Stat(s.directory()); errors.Is(err, fs.ErrNotExist) {
 		return Item{}, notFound(id)
@@ -238,10 +253,10 @@ func (s Store) SetReady(id string, ready bool) (Item, error) {
 	}
 	defer unlock()
 	item, err := s.read(id)
-	if err != nil || item.Ready == ready {
+	if err != nil || item.Status == status {
 		return item, err
 	}
-	item.Ready = ready
+	item.Status = status
 	return item, s.write(item)
 }
 
@@ -286,6 +301,10 @@ func (s Store) read(id string) (Item, error) {
 		return Item{}, itemInvalid("missing text")
 	case item.ID != id:
 		return Item{}, itemInvalid("id does not match file name")
+	case item.Status == "":
+		return Item{}, itemInvalid("missing status")
+	case !item.Status.valid():
+		return Item{}, itemInvalid("invalid status")
 	}
 	if item.Notes == nil {
 		item.Notes = []Note{}

@@ -91,7 +91,7 @@ func TestAddPreservesTextAndWritesIndentedItemFile(t *testing.T) {
 		"  \"title\": \"Scheduler: kjør nattlig opprydding\",\n" +
 		"  \"text\": \"  a\\n\\n## b\\n---\\n\",\n" +
 		"  \"created_at\": \"2026-11-04T21:30:00Z\",\n" +
-		"  \"ready\": false,\n" +
+		"  \"status\": \"open\",\n" +
 		"  \"notes\": []\n" +
 		"}\n"
 	if string(contents) != want {
@@ -147,7 +147,7 @@ func TestNotesAppendInOrderAndKeepExistingFields(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	wantSummary := Summary{ID: item.ID, Title: schedulerTitle, CreatedAt: "2026-11-04T21:30:00Z", UpdatedAt: "2026-11-04T23:30:00Z", NoteCount: 2}
+	wantSummary := Summary{ID: item.ID, Title: schedulerTitle, CreatedAt: "2026-11-04T21:30:00Z", UpdatedAt: "2026-11-04T23:30:00Z", NoteCount: 2, Status: StatusOpen}
 	if len(result.Items) != 1 || result.Items[0] != wantSummary {
 		t.Fatalf("list = %+v", result)
 	}
@@ -373,7 +373,7 @@ func TestPackageDependsOnlyOnAllowedPackages(t *testing.T) {
 	}
 }
 
-const readyItemID = "20261104-47530e79"
+const statusItemID = "20261104-47530e79"
 
 func writeItemFile(t *testing.T, store Store, id, contents string) string {
 	t.Helper()
@@ -417,27 +417,46 @@ func ageFile(t *testing.T, path string) time.Time {
 	return old
 }
 
-func TestMissingOrNullReadyReadsAsFalseWithoutRewrite(t *testing.T) {
-	for name, ready := range map[string]string{"missing": "", "null": "  \"ready\": null,\n"} {
+func statusItemFile(status string) string {
+	return "{\n  \"id\": \"" + statusItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n" + status + "  \"notes\": []\n}\n"
+}
+
+func TestMissingNullOrUnknownStatusIsInvalidWithoutRewrite(t *testing.T) {
+	cases := map[string]struct{ status, detail string }{
+		"missing":      {"", "missing status"},
+		"null":         {"  \"status\": null,\n", "missing status"},
+		"empty":        {"  \"status\": \"\",\n", "missing status"},
+		"legacy ready": {"  \"ready\": true,\n", "missing status"},
+		"unknown":      {"  \"status\": \"closed\",\n", "invalid status"},
+		"wrong case":   {"  \"status\": \"Ready\",\n", "invalid status"},
+		"not a string": {"  \"status\": 1,\n", "invalid item JSON"},
+	}
+	for name, c := range cases {
 		t.Run(name, func(t *testing.T) {
 			store := testStore(t)
-			contents := "{\n  \"id\": \"" + readyItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n" + ready + "  \"notes\": []\n}\n"
-			path := writeItemFile(t, store, readyItemID, contents)
+			contents := statusItemFile(c.status)
+			path := writeItemFile(t, store, statusItemID, contents)
 			modified := ageFile(t, path)
-			item, err := store.Read(readyItemID)
-			if err != nil || item.Ready {
-				t.Fatalf("read = %+v, %v", item, err)
+			_, err := store.Read(statusItemID)
+			requireClass(t, err, ClassItemInvalid)
+			if err.Error() != ClassItemInvalid+": "+c.detail {
+				t.Fatalf("read = %v", err)
 			}
 			result, err := store.List()
-			if err != nil || len(result.Items) != 1 || result.Items[0].Ready {
+			want := []InvalidFile{{File: statusItemID + ".json", Error: c.detail}}
+			if err != nil || len(result.Items) != 0 || fmt.Sprint(result.Invalid) != fmt.Sprint(want) {
 				t.Fatalf("list = %+v, %v", result, err)
 			}
+			_, err = store.AddNote(statusItemID, "note")
+			requireClass(t, err, ClassItemInvalid)
+			_, err = store.SetStatus(statusItemID, StatusOpen)
+			requireClass(t, err, ClassItemInvalid)
 			requireFileUnchanged(t, path, contents, modified)
 		})
 	}
 }
 
-func TestSetReadyChangesOnlyReady(t *testing.T) {
+func TestSetStatusAllowsEveryTransitionAndChangesOnlyStatus(t *testing.T) {
 	store := testStore(t)
 	item, err := store.Add(schedulerTitle, "text\n")
 	if err != nil {
@@ -449,13 +468,13 @@ func TestSetReadyChangesOnlyReady(t *testing.T) {
 	}
 	store.now = func() time.Time { return fixedTime.Add(5 * time.Hour) }
 	path := filepath.Join(store.root, "backlog", item.ID+".json")
-	encoded := func(ready string) string {
+	encoded := func(status Status) string {
 		return "{\n" +
 			"  \"id\": \"20261104-47530e79\",\n" +
 			"  \"title\": \"Scheduler: kjør nattlig opprydding\",\n" +
 			"  \"text\": \"text\\n\",\n" +
 			"  \"created_at\": \"2026-11-04T21:30:00Z\",\n" +
-			"  \"ready\": " + ready + ",\n" +
+			"  \"status\": \"" + string(status) + "\",\n" +
 			"  \"notes\": [\n" +
 			"    {\n" +
 			"      \"at\": \"2026-11-04T22:30:00Z\",\n" +
@@ -464,46 +483,41 @@ func TestSetReadyChangesOnlyReady(t *testing.T) {
 			"  ]\n" +
 			"}\n"
 	}
-	for _, ready := range []bool{true, false} {
-		set, err := store.SetReady(item.ID, ready)
-		if err != nil || set.Ready != ready || set.Text != "text\n" || len(set.Notes) != 1 {
-			t.Fatalf("set ready %v = %+v, %v", ready, set, err)
+	// open→ready→done→open→done→ready→open covers every transition, including reopening.
+	for _, status := range []Status{StatusReady, StatusDone, StatusOpen, StatusDone, StatusReady, StatusOpen} {
+		set, err := store.SetStatus(item.ID, status)
+		if err != nil || set.Status != status || set.Text != "text\n" || len(set.Notes) != 1 {
+			t.Fatalf("set status %s = %+v, %v", status, set, err)
 		}
 		contents, err := os.ReadFile(path)
-		if err != nil || string(contents) != encoded(fmt.Sprint(ready)) {
-			t.Fatalf("file =\n%s\nwant\n%s", contents, encoded(fmt.Sprint(ready)))
+		if err != nil || string(contents) != encoded(status) {
+			t.Fatalf("file =\n%s\nwant\n%s", contents, encoded(status))
 		}
 		result, err := store.List()
-		want := Summary{ID: item.ID, Title: schedulerTitle, CreatedAt: "2026-11-04T21:30:00Z", UpdatedAt: "2026-11-04T22:30:00Z", NoteCount: 1, Ready: ready}
+		want := Summary{ID: item.ID, Title: schedulerTitle, CreatedAt: "2026-11-04T21:30:00Z", UpdatedAt: "2026-11-04T22:30:00Z", NoteCount: 1, Status: status}
 		if err != nil || len(result.Items) != 1 || result.Items[0] != want {
 			t.Fatalf("list = %+v, %v", result, err)
 		}
 	}
 }
 
-func TestSetReadyToSameValueWritesNothing(t *testing.T) {
-	cases := map[string]struct {
-		contents string
-		ready    bool
-	}{
-		"ready item set true": {"{\n  \"id\": \"" + readyItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n  \"ready\": true,\n  \"notes\": []\n}\n", true},
-		"old item set false":  {"{\n  \"id\": \"" + readyItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n  \"notes\": []\n}\n", false},
-	}
-	for name, c := range cases {
-		t.Run(name, func(t *testing.T) {
+func TestSetStatusToSameValueWritesNothing(t *testing.T) {
+	for _, status := range []Status{StatusOpen, StatusReady, StatusDone} {
+		t.Run(string(status), func(t *testing.T) {
 			store := testStore(t)
-			path := writeItemFile(t, store, readyItemID, c.contents)
+			contents := statusItemFile("  \"status\": \"" + string(status) + "\",\n")
+			path := writeItemFile(t, store, statusItemID, contents)
 			if err := os.WriteFile(filepath.Join(store.root, "backlog", ".lock"), nil, 0o644); err != nil {
 				t.Fatal(err)
 			}
 			modified := ageFile(t, path)
 			// A read-only directory makes any temp file creation fail.
 			readOnlyBacklog(t, store)
-			item, err := store.SetReady(readyItemID, c.ready)
-			if err != nil || item.ID != readyItemID || item.Ready != c.ready {
-				t.Fatalf("set ready = %+v, %v", item, err)
+			item, err := store.SetStatus(statusItemID, status)
+			if err != nil || item.ID != statusItemID || item.Status != status {
+				t.Fatalf("set status = %+v, %v", item, err)
 			}
-			requireFileUnchanged(t, path, c.contents, modified)
+			requireFileUnchanged(t, path, contents, modified)
 			for file := range backlogFiles(t, store) {
 				if strings.HasPrefix(file, ".atomicfile-") {
 					t.Fatalf("temp file left: %s", file)
@@ -513,26 +527,50 @@ func TestSetReadyToSameValueWritesNothing(t *testing.T) {
 	}
 }
 
-func TestReadyIsKeptByNotesAndAddWritesFalse(t *testing.T) {
+func TestListShowsEveryStatus(t *testing.T) {
+	store := testStore(t, 0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x02, 0x03, 0x03, 0x03, 0x03)
+	statuses := map[string]Status{}
+	for _, status := range []Status{StatusOpen, StatusReady, StatusDone} {
+		item, err := store.Add(string(status), "x")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := store.SetStatus(item.ID, status); err != nil {
+			t.Fatal(err)
+		}
+		statuses[item.ID] = status
+	}
+	result, err := store.List()
+	if err != nil || len(result.Items) != 3 {
+		t.Fatalf("list = %+v, %v", result, err)
+	}
+	for _, summary := range result.Items {
+		if summary.Status != statuses[summary.ID] {
+			t.Fatalf("summary = %+v, want %s", summary, statuses[summary.ID])
+		}
+	}
+}
+
+func TestStatusIsKeptByNotesAndAddStartsOpen(t *testing.T) {
 	store := testStore(t)
 	item, err := store.Add(schedulerTitle, "text")
-	if err != nil || item.Ready {
+	if err != nil || item.Status != StatusOpen {
 		t.Fatalf("add = %+v, %v", item, err)
 	}
-	if _, err := store.SetReady(item.ID, true); err != nil {
+	if _, err := store.SetStatus(item.ID, StatusDone); err != nil {
 		t.Fatal(err)
 	}
 	noted, err := store.AddNote(item.ID, "note")
-	if err != nil || !noted.Ready || len(noted.Notes) != 1 {
+	if err != nil || noted.Status != StatusDone || len(noted.Notes) != 1 {
 		t.Fatalf("note = %+v, %v", noted, err)
 	}
 	contents, err := os.ReadFile(filepath.Join(store.root, "backlog", item.ID+".json"))
-	if err != nil || !strings.Contains(string(contents), "\"ready\": true,\n") {
+	if err != nil || !strings.Contains(string(contents), "\"status\": \"done\",\n") {
 		t.Fatalf("file = %s, %v", contents, err)
 	}
 }
 
-func TestParallelNotesAndReadinessAreNotLost(t *testing.T) {
+func TestParallelNotesAndStatusAreNotLost(t *testing.T) {
 	store := testStore(t)
 	item, err := store.Add(schedulerTitle, "text")
 	if err != nil {
@@ -550,7 +588,7 @@ func TestParallelNotesAndReadinessAreNotLost(t *testing.T) {
 		}(i)
 		go func() {
 			defer group.Done()
-			_, err := store.SetReady(item.ID, true)
+			_, err := store.SetStatus(item.ID, StatusDone)
 			errs <- err
 		}()
 	}
@@ -569,12 +607,12 @@ func TestParallelNotesAndReadinessAreNotLost(t *testing.T) {
 	for _, note := range read.Notes {
 		seen[note.Text] = true
 	}
-	if len(read.Notes) != writers || len(seen) != writers || !read.Ready {
-		t.Fatalf("notes = %d, distinct = %d, ready = %v", len(read.Notes), len(seen), read.Ready)
+	if len(read.Notes) != writers || len(seen) != writers || read.Status != StatusDone {
+		t.Fatalf("notes = %d, distinct = %d, status = %s", len(read.Notes), len(seen), read.Status)
 	}
 }
 
-func TestSetReadyWaitsForBacklogLock(t *testing.T) {
+func TestSetStatusWaitsForBacklogLock(t *testing.T) {
 	store := testStore(t)
 	item, err := store.Add(schedulerTitle, "text")
 	if err != nil {
@@ -590,12 +628,12 @@ func TestSetReadyWaitsForBacklogLock(t *testing.T) {
 	}
 	done := make(chan error, 1)
 	go func() {
-		_, err := store.SetReady(item.ID, true)
+		_, err := store.SetStatus(item.ID, StatusReady)
 		done <- err
 	}()
 	select {
 	case err := <-done:
-		t.Fatalf("set ready returned while lock was held: %v", err)
+		t.Fatalf("set status returned while lock was held: %v", err)
 	case <-time.After(200 * time.Millisecond):
 	}
 	if err := unlockFile(held); err != nil {
@@ -604,16 +642,16 @@ func TestSetReadyWaitsForBacklogLock(t *testing.T) {
 	if err := <-done; err != nil {
 		t.Fatal(err)
 	}
-	if read, err := store.Read(item.ID); err != nil || !read.Ready {
+	if read, err := store.Read(item.ID); err != nil || read.Status != StatusReady {
 		t.Fatalf("read = %+v, %v", read, err)
 	}
 }
 
-func TestSetReadyErrors(t *testing.T) {
+func TestSetStatusErrors(t *testing.T) {
 	store := testStore(t)
-	_, err := store.SetReady("../x", true)
+	_, err := store.SetStatus("../x", StatusReady)
 	requireClass(t, err, ClassInvalidArguments)
-	_, err = store.SetReady(readyItemID, true)
+	_, err = store.SetStatus(statusItemID, StatusReady)
 	requireClass(t, err, ClassItemNotFound)
 	if _, err := os.Stat(filepath.Join(store.root, "backlog")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("backlog directory stat = %v", err)
@@ -623,31 +661,31 @@ func TestSetReadyErrors(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = store.SetReady("20261104-00000000", true)
-	requireClass(t, err, ClassItemNotFound)
-	invalid := map[string]string{
-		"20261103-0badf00d": "{\"id\": ",
-		"20261103-00000003": `{"id":"20261103-00000003","title":"t","text":"x","ready":"yes"}`,
-	}
-	for id, contents := range invalid {
-		path := writeItemFile(t, store, id, contents)
-		modified := ageFile(t, path)
-		_, err := store.SetReady(id, true)
-		requireClass(t, err, ClassItemInvalid)
-		requireFileUnchanged(t, path, contents, modified)
-	}
-	_, err = store.Read("20261103-00000003")
-	if err == nil || err.Error() != "backlog_item_invalid: invalid item JSON" {
-		t.Fatalf("read non-boolean ready = %v", err)
-	}
-
 	path := filepath.Join(store.root, "backlog", item.ID+".json")
 	before, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
 	}
+	for _, status := range []Status{"", "closed", "Ready"} {
+		_, err := store.SetStatus(item.ID, status)
+		requireClass(t, err, ClassInvalidArguments)
+		if err.Error() != ClassInvalidArguments+": status must be open, ready or done" {
+			t.Fatalf("set status %q = %v", status, err)
+		}
+	}
+	if after, err := os.ReadFile(path); err != nil || !bytes.Equal(after, before) {
+		t.Fatalf("file changed after rejected status: %s, %v", after, err)
+	}
+	_, err = store.SetStatus("20261104-00000000", StatusReady)
+	requireClass(t, err, ClassItemNotFound)
+	invalidPath := writeItemFile(t, store, "20261103-0badf00d", "{\"id\": ")
+	modified := ageFile(t, invalidPath)
+	_, err = store.SetStatus("20261103-0badf00d", StatusReady)
+	requireClass(t, err, ClassItemInvalid)
+	requireFileUnchanged(t, invalidPath, "{\"id\": ", modified)
+
 	readOnlyBacklog(t, store)
-	_, err = store.SetReady(item.ID, true)
+	_, err = store.SetStatus(item.ID, StatusReady)
 	requireClass(t, err, ClassIOError)
 	if strings.Contains(err.Error(), store.root) {
 		t.Fatalf("error leaks root: %v", err)
