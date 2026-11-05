@@ -91,6 +91,7 @@ func TestAddPreservesTextAndWritesIndentedItemFile(t *testing.T) {
 		"  \"title\": \"Scheduler: kjør nattlig opprydding\",\n" +
 		"  \"text\": \"  a\\n\\n## b\\n---\\n\",\n" +
 		"  \"created_at\": \"2026-11-04T21:30:00Z\",\n" +
+		"  \"ready\": false,\n" +
 		"  \"notes\": []\n" +
 		"}\n"
 	if string(contents) != want {
@@ -369,5 +370,289 @@ func TestPackageDependsOnlyOnAllowedPackages(t *testing.T) {
 			!strings.HasPrefix(dependency, "golang.org/x/sys/") {
 			t.Fatalf("unexpected dependency %s", dependency)
 		}
+	}
+}
+
+const readyItemID = "20261104-47530e79"
+
+func writeItemFile(t *testing.T, store Store, id, contents string) string {
+	t.Helper()
+	path := filepath.Join(store.root, "backlog", id+".json")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(contents), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return path
+}
+
+func readOnlyBacklog(t *testing.T, store Store) {
+	t.Helper()
+	directory := filepath.Join(store.root, "backlog")
+	if err := os.Chmod(directory, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(directory, 0o755) })
+}
+
+func requireFileUnchanged(t *testing.T, path, contents string, modified time.Time) {
+	t.Helper()
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	after, err := os.ReadFile(path)
+	if err != nil || string(after) != contents || !info.ModTime().Equal(modified) {
+		t.Fatalf("file changed: %q, mtime %v want %v, %v", after, info.ModTime(), modified, err)
+	}
+}
+
+func ageFile(t *testing.T, path string) time.Time {
+	t.Helper()
+	old := fixedTime.Add(-24 * time.Hour)
+	if err := os.Chtimes(path, old, old); err != nil {
+		t.Fatal(err)
+	}
+	return old
+}
+
+func TestMissingOrNullReadyReadsAsFalseWithoutRewrite(t *testing.T) {
+	for name, ready := range map[string]string{"missing": "", "null": "  \"ready\": null,\n"} {
+		t.Run(name, func(t *testing.T) {
+			store := testStore(t)
+			contents := "{\n  \"id\": \"" + readyItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n" + ready + "  \"notes\": []\n}\n"
+			path := writeItemFile(t, store, readyItemID, contents)
+			modified := ageFile(t, path)
+			item, err := store.Read(readyItemID)
+			if err != nil || item.Ready {
+				t.Fatalf("read = %+v, %v", item, err)
+			}
+			result, err := store.List()
+			if err != nil || len(result.Items) != 1 || result.Items[0].Ready {
+				t.Fatalf("list = %+v, %v", result, err)
+			}
+			requireFileUnchanged(t, path, contents, modified)
+		})
+	}
+}
+
+func TestSetReadyChangesOnlyReady(t *testing.T) {
+	store := testStore(t)
+	item, err := store.Add(schedulerTitle, "text\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.now = func() time.Time { return fixedTime.Add(time.Hour) }
+	if _, err := store.AddNote(item.ID, "first\n"); err != nil {
+		t.Fatal(err)
+	}
+	store.now = func() time.Time { return fixedTime.Add(5 * time.Hour) }
+	path := filepath.Join(store.root, "backlog", item.ID+".json")
+	encoded := func(ready string) string {
+		return "{\n" +
+			"  \"id\": \"20261104-47530e79\",\n" +
+			"  \"title\": \"Scheduler: kjør nattlig opprydding\",\n" +
+			"  \"text\": \"text\\n\",\n" +
+			"  \"created_at\": \"2026-11-04T21:30:00Z\",\n" +
+			"  \"ready\": " + ready + ",\n" +
+			"  \"notes\": [\n" +
+			"    {\n" +
+			"      \"at\": \"2026-11-04T22:30:00Z\",\n" +
+			"      \"text\": \"first\\n\"\n" +
+			"    }\n" +
+			"  ]\n" +
+			"}\n"
+	}
+	for _, ready := range []bool{true, false} {
+		set, err := store.SetReady(item.ID, ready)
+		if err != nil || set.Ready != ready || set.Text != "text\n" || len(set.Notes) != 1 {
+			t.Fatalf("set ready %v = %+v, %v", ready, set, err)
+		}
+		contents, err := os.ReadFile(path)
+		if err != nil || string(contents) != encoded(fmt.Sprint(ready)) {
+			t.Fatalf("file =\n%s\nwant\n%s", contents, encoded(fmt.Sprint(ready)))
+		}
+		result, err := store.List()
+		want := Summary{ID: item.ID, Title: schedulerTitle, CreatedAt: "2026-11-04T21:30:00Z", UpdatedAt: "2026-11-04T22:30:00Z", NoteCount: 1, Ready: ready}
+		if err != nil || len(result.Items) != 1 || result.Items[0] != want {
+			t.Fatalf("list = %+v, %v", result, err)
+		}
+	}
+}
+
+func TestSetReadyToSameValueWritesNothing(t *testing.T) {
+	cases := map[string]struct {
+		contents string
+		ready    bool
+	}{
+		"ready item set true": {"{\n  \"id\": \"" + readyItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n  \"ready\": true,\n  \"notes\": []\n}\n", true},
+		"old item set false":  {"{\n  \"id\": \"" + readyItemID + "\",\n  \"title\": \"t\",\n  \"text\": \"x\",\n  \"created_at\": \"2026-11-04T21:30:00Z\",\n  \"notes\": []\n}\n", false},
+	}
+	for name, c := range cases {
+		t.Run(name, func(t *testing.T) {
+			store := testStore(t)
+			path := writeItemFile(t, store, readyItemID, c.contents)
+			if err := os.WriteFile(filepath.Join(store.root, "backlog", ".lock"), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			modified := ageFile(t, path)
+			// A read-only directory makes any temp file creation fail.
+			readOnlyBacklog(t, store)
+			item, err := store.SetReady(readyItemID, c.ready)
+			if err != nil || item.ID != readyItemID || item.Ready != c.ready {
+				t.Fatalf("set ready = %+v, %v", item, err)
+			}
+			requireFileUnchanged(t, path, c.contents, modified)
+			for file := range backlogFiles(t, store) {
+				if strings.HasPrefix(file, ".atomicfile-") {
+					t.Fatalf("temp file left: %s", file)
+				}
+			}
+		})
+	}
+}
+
+func TestReadyIsKeptByNotesAndAddWritesFalse(t *testing.T) {
+	store := testStore(t)
+	item, err := store.Add(schedulerTitle, "text")
+	if err != nil || item.Ready {
+		t.Fatalf("add = %+v, %v", item, err)
+	}
+	if _, err := store.SetReady(item.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	noted, err := store.AddNote(item.ID, "note")
+	if err != nil || !noted.Ready || len(noted.Notes) != 1 {
+		t.Fatalf("note = %+v, %v", noted, err)
+	}
+	contents, err := os.ReadFile(filepath.Join(store.root, "backlog", item.ID+".json"))
+	if err != nil || !strings.Contains(string(contents), "\"ready\": true,\n") {
+		t.Fatalf("file = %s, %v", contents, err)
+	}
+}
+
+func TestParallelNotesAndReadinessAreNotLost(t *testing.T) {
+	store := testStore(t)
+	item, err := store.Add(schedulerTitle, "text")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const writers = 20
+	var group sync.WaitGroup
+	errs := make(chan error, 2*writers)
+	for i := 0; i < writers; i++ {
+		group.Add(2)
+		go func(i int) {
+			defer group.Done()
+			_, err := store.AddNote(item.ID, fmt.Sprintf("note %d", i))
+			errs <- err
+		}(i)
+		go func() {
+			defer group.Done()
+			_, err := store.SetReady(item.ID, true)
+			errs <- err
+		}()
+	}
+	group.Wait()
+	close(errs)
+	for err := range errs {
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	read, err := store.Read(item.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]bool{}
+	for _, note := range read.Notes {
+		seen[note.Text] = true
+	}
+	if len(read.Notes) != writers || len(seen) != writers || !read.Ready {
+		t.Fatalf("notes = %d, distinct = %d, ready = %v", len(read.Notes), len(seen), read.Ready)
+	}
+}
+
+func TestSetReadyWaitsForBacklogLock(t *testing.T) {
+	store := testStore(t)
+	item, err := store.Add(schedulerTitle, "text")
+	if err != nil {
+		t.Fatal(err)
+	}
+	held, err := os.OpenFile(filepath.Join(store.root, "backlog", ".lock"), os.O_RDWR, 0o644)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer held.Close()
+	if err := lockFile(held); err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		_, err := store.SetReady(item.ID, true)
+		done <- err
+	}()
+	select {
+	case err := <-done:
+		t.Fatalf("set ready returned while lock was held: %v", err)
+	case <-time.After(200 * time.Millisecond):
+	}
+	if err := unlockFile(held); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if read, err := store.Read(item.ID); err != nil || !read.Ready {
+		t.Fatalf("read = %+v, %v", read, err)
+	}
+}
+
+func TestSetReadyErrors(t *testing.T) {
+	store := testStore(t)
+	_, err := store.SetReady("../x", true)
+	requireClass(t, err, ClassInvalidArguments)
+	_, err = store.SetReady(readyItemID, true)
+	requireClass(t, err, ClassItemNotFound)
+	if _, err := os.Stat(filepath.Join(store.root, "backlog")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("backlog directory stat = %v", err)
+	}
+
+	item, err := store.Add(schedulerTitle, "text")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = store.SetReady("20261104-00000000", true)
+	requireClass(t, err, ClassItemNotFound)
+	invalid := map[string]string{
+		"20261103-0badf00d": "{\"id\": ",
+		"20261103-00000003": `{"id":"20261103-00000003","title":"t","text":"x","ready":"yes"}`,
+	}
+	for id, contents := range invalid {
+		path := writeItemFile(t, store, id, contents)
+		modified := ageFile(t, path)
+		_, err := store.SetReady(id, true)
+		requireClass(t, err, ClassItemInvalid)
+		requireFileUnchanged(t, path, contents, modified)
+	}
+	_, err = store.Read("20261103-00000003")
+	if err == nil || err.Error() != "backlog_item_invalid: invalid item JSON" {
+		t.Fatalf("read non-boolean ready = %v", err)
+	}
+
+	path := filepath.Join(store.root, "backlog", item.ID+".json")
+	before, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	readOnlyBacklog(t, store)
+	_, err = store.SetReady(item.ID, true)
+	requireClass(t, err, ClassIOError)
+	if strings.Contains(err.Error(), store.root) {
+		t.Fatalf("error leaks root: %v", err)
+	}
+	if after, err := os.ReadFile(path); err != nil || !bytes.Equal(after, before) {
+		t.Fatalf("file changed after failed write: %s, %v", after, err)
 	}
 }

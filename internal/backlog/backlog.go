@@ -1,6 +1,6 @@
 // Package backlog stores a project backlog as one JSON file per item under
 // <projectRoot>/backlog/. Item text and notes are kept byte for byte; notes only
-// grow. Add and AddNote hold an exclusive lock on backlog/.lock; reads take none.
+// grow. Add, AddNote and SetReady hold an exclusive lock on backlog/.lock; reads take none.
 // Errors are *Error with a fixed Class and a detail that never contains
 // absolute paths or the submitted text.
 package backlog
@@ -54,6 +54,7 @@ type Item struct {
 	Title     string `json:"title"`
 	Text      string `json:"text"`
 	CreatedAt string `json:"created_at"`
+	Ready     bool   `json:"ready"`
 	Notes     []Note `json:"notes"`
 }
 
@@ -64,6 +65,7 @@ type Summary struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	NoteCount int    `json:"note_count"`
+	Ready     bool   `json:"ready"`
 }
 
 // InvalidFile is a *.json file in backlog/ that cannot be read as an item.
@@ -130,7 +132,7 @@ func (s Store) List() (ListResult, error) {
 		if len(item.Notes) > 0 {
 			updated = item.Notes[len(item.Notes)-1].At
 		}
-		result.Items = append(result.Items, Summary{ID: item.ID, Title: item.Title, CreatedAt: item.CreatedAt, UpdatedAt: updated, NoteCount: len(item.Notes)})
+		result.Items = append(result.Items, Summary{ID: item.ID, Title: item.Title, CreatedAt: item.CreatedAt, UpdatedAt: updated, NoteCount: len(item.Notes), Ready: item.Ready})
 	}
 	sort.Slice(result.Items, func(i, j int) bool {
 		a, b := result.Items[i], result.Items[j]
@@ -215,6 +217,31 @@ func (s Store) AddNote(id, text string) (Item, error) {
 		return Item{}, err
 	}
 	item.Notes = append(item.Notes, Note{At: s.now().UTC().Format(timestampStyle), Text: text})
+	return item, s.write(item)
+}
+
+// SetReady sets the item's readiness to ready and returns the whole item.
+// When the item already has that value, no item file is written.
+func (s Store) SetReady(id string, ready bool) (Item, error) {
+	if err := s.checkRoot(); err != nil {
+		return Item{}, err
+	}
+	if !itemID.MatchString(id) {
+		return Item{}, invalidArguments("invalid item id")
+	}
+	if _, err := os.Stat(s.directory()); errors.Is(err, fs.ErrNotExist) {
+		return Item{}, notFound(id)
+	}
+	unlock, err := s.lock()
+	if err != nil {
+		return Item{}, err
+	}
+	defer unlock()
+	item, err := s.read(id)
+	if err != nil || item.Ready == ready {
+		return item, err
+	}
+	item.Ready = ready
 	return item, s.write(item)
 }
 
