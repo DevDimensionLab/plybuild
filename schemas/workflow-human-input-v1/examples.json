@@ -1,0 +1,3261 @@
+{
+  "status": "Generated from the actual ply workflow input commands with a fixed clock; the workspace path is a fixture, not a registered workspace.",
+  "schema": "workflow-human-input-v1.schema.json",
+  "workspace": "/private/tmp/hi01-example-workspace",
+  "valid": [
+    {
+      "name": "draft-choice",
+      "definition": "question_draft",
+      "command": null,
+      "exit": null,
+      "value": {
+        "activity_id": "conversation/docs-export",
+        "activity_title": "Document the export format",
+        "answer_kind": "choice",
+        "kind": "ply.workflow.human-input-question-draft",
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+        "project_id": "ply",
+        "provider": "claude",
+        "publication_key": "docs-export/format",
+        "reason": "The goal leaves the scope of the README change open.",
+        "repo_id": "ply",
+        "schema_version": 1,
+        "session_id": "3087ad01-0000-4000-8000-000000000001",
+        "task_id": null,
+        "text": "Which README section should this task write?"
+      }
+    },
+    {
+      "name": "draft-text",
+      "definition": "question_draft",
+      "command": null,
+      "exit": null,
+      "value": {
+        "activity_id": "conversation/docs-export",
+        "activity_title": "Document the export format",
+        "answer_kind": "text",
+        "kind": "ply.workflow.human-input-question-draft",
+        "options": [],
+        "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+        "project_id": "ply",
+        "provider": "codex",
+        "publication_key": "docs-export/heading",
+        "reason": "The goal leaves the scope of the README change open.",
+        "repo_id": "ply",
+        "schema_version": 1,
+        "session_id": null,
+        "task_id": null,
+        "text": "What exact heading should the new section use?"
+      }
+    },
+    {
+      "name": "ask-choice-waiting",
+      "definition": "question",
+      "command": "ply workflow input ask --file $WORKSPACE/inputs/choice.json --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": null,
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "human",
+          "message": "Choose one of the listed options."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "waiting_for_answer",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "ask-choice-idempotent-replay",
+      "definition": "question",
+      "command": "ply workflow input ask --file $WORKSPACE/inputs/choice.json --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": null,
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "human",
+          "message": "Choose one of the listed options."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "waiting_for_answer",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "ask-text-waiting",
+      "definition": "question",
+      "command": "ply workflow input ask --file $WORKSPACE/inputs/text.json --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": null,
+        "answer_kind": "text",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:02Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "human",
+          "message": "Write one short text answer to this question."
+        },
+        "options": [],
+        "publication_key": "docs-export/heading",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "codex",
+          "session_id": null
+        },
+        "state": "waiting_for_answer",
+        "text": "What exact heading should the new section use?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "error-publication-conflict",
+      "definition": "error",
+      "command": "ply workflow input ask --file $WORKSPACE/inputs/changed.json --workspace $WORKSPACE",
+      "exit": 1,
+      "value": {
+        "code": "human_input_publication_conflict",
+        "detail": "this publication key already names a different question; publish a changed question under a new key",
+        "kind": "ply.workflow.human-input-error",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-30T22:21:40.982052Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "list-first-page",
+      "definition": "list",
+      "command": "ply workflow input list --project ply --limit 1 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "complete": false,
+        "cursor": null,
+        "has_more": true,
+        "kind": "ply.workflow.human-input-list",
+        "limit": 1,
+        "mode": "cooperative_agent_v1",
+        "next_cursor": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "observed_at_utc": "2026-10-18T18:00:03Z",
+        "project_id": "ply",
+        "questions": [
+          {
+            "answer": null,
+            "answer_kind": "text",
+            "continuation": null,
+            "created_at_utc": "2026-10-18T18:00:02Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "human",
+              "message": "Write one short text answer to this question."
+            },
+            "options": [],
+            "publication_key": "docs-export/heading",
+            "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+            "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": null,
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "codex",
+              "session_id": null
+            },
+            "state": "waiting_for_answer",
+            "text": "What exact heading should the new section use?",
+            "withdrawal": null,
+            "workspace": "/private/tmp/hi01-example-workspace"
+          }
+        ],
+        "schema_version": 1,
+        "state": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "list-last-page",
+      "definition": "list",
+      "command": "ply workflow input list --project ply --limit 1 --cursor hiq_46320dca9c67033536c4b962ba5dd32a --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "complete": true,
+        "cursor": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "has_more": false,
+        "kind": "ply.workflow.human-input-list",
+        "limit": 1,
+        "mode": "cooperative_agent_v1",
+        "next_cursor": null,
+        "observed_at_utc": "2026-10-18T18:00:04Z",
+        "project_id": "ply",
+        "questions": [
+          {
+            "answer": null,
+            "answer_kind": "choice",
+            "continuation": null,
+            "created_at_utc": "2026-10-18T18:00:01Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "human",
+              "message": "Choose one of the listed options."
+            },
+            "options": [
+              {
+                "consequence": "One paragraph under Usage.",
+                "id": "short",
+                "label": "Short usage note"
+              },
+              {
+                "consequence": "A new section with every flag.",
+                "id": "full",
+                "label": "Full reference"
+              }
+            ],
+            "publication_key": "docs-export/format",
+            "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+            "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": null,
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "claude",
+              "session_id": "3087ad01-0000-4000-8000-000000000001"
+            },
+            "state": "waiting_for_answer",
+            "text": "Which README section should this task write?",
+            "withdrawal": null,
+            "workspace": "/private/tmp/hi01-example-workspace"
+          }
+        ],
+        "schema_version": 1,
+        "state": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "wait-timeout-still-waiting",
+      "definition": "wait",
+      "command": "ply workflow input wait hiq_def36bfdf584e1912033f71c538f4480 --timeout-seconds 1 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-wait",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:05Z",
+        "outcome": "still_waiting",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "schema_version": 1,
+        "timeout_seconds": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-not-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer status app-choice-0001 --question-id hiq_def36bfdf584e1912033f71c538f4480 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:06Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [],
+        "request_id": "app-choice-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "not_recorded",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "error-invalid-answer-option",
+      "definition": "error",
+      "command": "ply workflow input answer preview hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0001 --option-id medium --workspace $WORKSPACE",
+      "exit": 1,
+      "value": {
+        "code": "human_input_invalid_answer",
+        "detail": "option medium is not one of this question's options",
+        "kind": "ply.workflow.human-input-error",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-30T22:21:41.984198Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "preview-choice",
+      "definition": "preview",
+      "command": "ply workflow input answer preview hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0001 --option-id full --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-preview",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:07Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "text": null
+          },
+          "binding_sha256": "sha256:97f90c62f2b7470d972f61be1337a0fb6ada473d0c528d7be6700060f7be8739",
+          "kind": "ply.workflow.human-input-answer-request",
+          "mode": "cooperative_agent_v1",
+          "purpose": "human_input_answer_v1",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "request_id": "app-choice-0001",
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-choice",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "choice",
+          "option_id": "full",
+          "text": null
+        },
+        "binding_sha256": "sha256:97f90c62f2b7470d972f61be1337a0fb6ada473d0c528d7be6700060f7be8739",
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "human_input_answer_v1",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "request_id": "app-choice-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "preview-choice-competing",
+      "definition": "preview",
+      "command": "ply workflow input answer preview hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0002 --option-id short --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-preview",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:08Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "short",
+            "text": null
+          },
+          "binding_sha256": "sha256:bf0882ffd96ac118502961068f5efe471423ad40595091c78d96b5f40d2d6429",
+          "kind": "ply.workflow.human-input-answer-request",
+          "mode": "cooperative_agent_v1",
+          "purpose": "human_input_answer_v1",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "request_id": "app-choice-0002",
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request_sha256": "sha256:d97b21da1114a6900d90ee16174aedf32f13bd8a5ff1d61b4cebfa7b92a4ba51",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "apply-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-choice.json",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:09Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [],
+        "request_id": "app-choice-0001",
+        "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+        "schema_version": 1,
+        "state": "recorded",
+        "winner": {
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "apply-replay-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-choice.json",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:11Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [],
+        "request_id": "app-choice-0001",
+        "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+        "schema_version": 1,
+        "state": "recorded",
+        "winner": {
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "apply-other-winner",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-competing.json",
+      "exit": 1,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:12Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [
+          {
+            "code": "human_input_already_answered",
+            "detail": "another request is this question's recorded answer; it is not overwritten"
+          }
+        ],
+        "request_id": "app-choice-0002",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "other_winner",
+        "winner": {
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "apply-workspace-mismatch-not-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE/ply --file $WORKSPACE/inputs/request-choice.json",
+      "exit": 1,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:13Z",
+        "question": null,
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [
+          {
+            "code": "human_input_request_mismatch",
+            "detail": "--workspace differs from the request's immutable workspace; nothing was read or changed"
+          }
+        ],
+        "request_id": "app-choice-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "not_recorded",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace/ply"
+      }
+    },
+    {
+      "name": "apply-same-id-other-bytes",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-conflict.json",
+      "exit": 1,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:14Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [
+          {
+            "code": "human_input_request_conflict",
+            "detail": "this request ID already names different request bytes"
+          }
+        ],
+        "request_id": "app-choice-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "other_winner",
+        "winner": {
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer status app-choice-0001 --question-id hiq_def36bfdf584e1912033f71c538f4480 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:15Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [],
+        "request_id": "app-choice-0001",
+        "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+        "schema_version": 1,
+        "state": "recorded",
+        "winner": {
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-other-winner",
+      "definition": "status",
+      "command": "ply workflow input answer status app-choice-0002 --question-id hiq_def36bfdf584e1912033f71c538f4480 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:16Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [],
+        "request_id": "app-choice-0002",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "other_winner",
+        "winner": {
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "error-already-answered",
+      "definition": "error",
+      "command": "ply workflow input answer preview hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0003 --option-id short --workspace $WORKSPACE",
+      "exit": 1,
+      "value": {
+        "code": "human_input_already_answered",
+        "detail": "this question already has its one recorded answer",
+        "kind": "ply.workflow.human-input-error",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-30T22:21:42.015115Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "wait-answered",
+      "definition": "wait",
+      "command": "ply workflow input wait hiq_def36bfdf584e1912033f71c538f4480 --timeout-seconds 1 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-wait",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:17Z",
+        "outcome": "answered",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "schema_version": 1,
+        "timeout_seconds": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "acknowledge-received",
+      "definition": "question",
+      "command": "ply workflow input acknowledge hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0001 --request-sha256 sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": {
+          "answer_kind": "choice",
+          "option_id": "full",
+          "recorded_at_utc": "2026-10-18T18:00:10Z",
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+          "text": null
+        },
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "agent",
+          "message": "The agent reported receiving the answer and has not yet reported using it."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": {
+          "provenance": "reported_by_agent",
+          "reported_at_utc": "2026-10-18T18:00:19Z",
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "agent_received",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "continue-reported",
+      "definition": "question",
+      "command": "ply workflow input continue hiq_def36bfdf584e1912033f71c538f4480 --request-id app-choice-0001 --request-sha256 sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800 --summary Wrote the full reference section into README.md. --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": {
+          "answer_kind": "choice",
+          "option_id": "full",
+          "recorded_at_utc": "2026-10-18T18:00:10Z",
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+          "text": null
+        },
+        "answer_kind": "choice",
+        "continuation": {
+          "provenance": "reported_by_agent",
+          "reported_at_utc": "2026-10-18T18:00:21Z",
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+          "summary": "Wrote the full reference section into README.md."
+        },
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "none",
+          "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": {
+          "provenance": "reported_by_agent",
+          "reported_at_utc": "2026-10-18T18:00:19Z",
+          "request_id": "app-choice-0001",
+          "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+        },
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "agent_reported_continued",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "preview-text-exact",
+      "definition": "preview",
+      "command": "ply workflow input answer preview hiq_46320dca9c67033536c4b962ba5dd32a --request-id app-text-0001 --text-file $WORKSPACE/inputs/answer.txt --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-preview",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:22Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "text",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:02Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Write one short text answer to this question."
+          },
+          "options": [],
+          "publication_key": "docs-export/heading",
+          "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+          "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "codex",
+            "session_id": null
+          },
+          "state": "waiting_for_answer",
+          "text": "What exact heading should the new section use?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request": {
+          "answer": {
+            "answer_kind": "text",
+            "option_id": null,
+            "text": "Export format\r\n  (v1) \n"
+          },
+          "binding_sha256": "sha256:bbe9bebf185345b725d84c5b34a94e7e03acf79f9a974731d2cbadc716521ec7",
+          "kind": "ply.workflow.human-input-answer-request",
+          "mode": "cooperative_agent_v1",
+          "purpose": "human_input_answer_v1",
+          "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+          "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+          "request_id": "app-text-0001",
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-text",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": null,
+          "text": "Export format\r\n  (v1) \n"
+        },
+        "binding_sha256": "sha256:bbe9bebf185345b725d84c5b34a94e7e03acf79f9a974731d2cbadc716521ec7",
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "human_input_answer_v1",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "request_id": "app-text-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "preview-text-4000-codepoints-16000-bytes-boundary",
+      "definition": "preview",
+      "command": "ply workflow input answer preview hiq_46320dca9c67033536c4b962ba5dd32a --request-id app-text-max-0001 --text-file $WORKSPACE/inputs/answer-max.txt --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-preview",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:23Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "text",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:02Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Write one short text answer to this question."
+          },
+          "options": [],
+          "publication_key": "docs-export/heading",
+          "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+          "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "codex",
+            "session_id": null
+          },
+          "state": "waiting_for_answer",
+          "text": "What exact heading should the new section use?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request": {
+          "answer": {
+            "answer_kind": "text",
+            "option_id": null,
+            "text": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+          },
+          "binding_sha256": "sha256:ef40aeed55e458f58e581fc45457adafa84374a6c0753780f51e86b5370608b1",
+          "kind": "ply.workflow.human-input-answer-request",
+          "mode": "cooperative_agent_v1",
+          "purpose": "human_input_answer_v1",
+          "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+          "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+          "request_id": "app-text-max-0001",
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request_sha256": "sha256:a0ea438976958cf0696da07f7ee8cf22fd909124bdf73adf99950ea065853fe4",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "error-invalid-answer-blank-text",
+      "definition": "error",
+      "command": "ply workflow input answer preview hiq_46320dca9c67033536c4b962ba5dd32a --request-id app-text-0002 --text-file $WORKSPACE/inputs/blank.txt --workspace $WORKSPACE",
+      "exit": 1,
+      "value": {
+        "code": "human_input_invalid_answer",
+        "detail": "text must be non-blank UTF-8 without NUL, at most 4000 codepoints and 16000 bytes",
+        "kind": "ply.workflow.human-input-error",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-30T22:21:42.05366Z",
+        "question": null,
+        "question_id": null,
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "apply-text-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-text.json",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:24Z",
+        "question": {
+          "answer": {
+            "answer_kind": "text",
+            "option_id": null,
+            "recorded_at_utc": "2026-10-18T18:00:25Z",
+            "request_id": "app-text-0001",
+            "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+            "text": "Export format\r\n  (v1) \n"
+          },
+          "answer_kind": "text",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:02Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [],
+          "publication_key": "docs-export/heading",
+          "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+          "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "codex",
+            "session_id": null
+          },
+          "state": "answered",
+          "text": "What exact heading should the new section use?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "reasons": [],
+        "request_id": "app-text-0001",
+        "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+        "schema_version": 1,
+        "state": "recorded",
+        "winner": {
+          "request_id": "app-text-0001",
+          "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "show-text-answered",
+      "definition": "question",
+      "command": "ply workflow input show hiq_46320dca9c67033536c4b962ba5dd32a --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": null,
+          "recorded_at_utc": "2026-10-18T18:00:25Z",
+          "request_id": "app-text-0001",
+          "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+          "text": "Export format\r\n  (v1) \n"
+        },
+        "answer_kind": "text",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:02Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "agent",
+          "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+        },
+        "options": [],
+        "publication_key": "docs-export/heading",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "codex",
+          "session_id": null
+        },
+        "state": "answered",
+        "text": "What exact heading should the new section use?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "continue-without-receipt",
+      "definition": "question",
+      "command": "ply workflow input continue hiq_46320dca9c67033536c4b962ba5dd32a --request-id app-text-0001 --request-sha256 sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232 --summary Used the exact text answer. --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": null,
+          "recorded_at_utc": "2026-10-18T18:00:25Z",
+          "request_id": "app-text-0001",
+          "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+          "text": "Export format\r\n  (v1) \n"
+        },
+        "answer_kind": "text",
+        "continuation": {
+          "provenance": "reported_by_agent",
+          "reported_at_utc": "2026-10-18T18:00:27Z",
+          "request_id": "app-text-0001",
+          "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+          "summary": "Used the exact text answer."
+        },
+        "created_at_utc": "2026-10-18T18:00:02Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "none",
+          "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+        },
+        "options": [],
+        "publication_key": "docs-export/heading",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "codex",
+          "session_id": null
+        },
+        "state": "agent_reported_continued",
+        "text": "What exact heading should the new section use?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "ask-to-withdraw",
+      "definition": "question",
+      "command": "ply workflow input ask --file $WORKSPACE/inputs/gone.json --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": null,
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:28Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "human",
+          "message": "Choose one of the listed options."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/obsolete",
+        "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+        "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "waiting_for_answer",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "preview-before-withdrawal",
+      "definition": "preview",
+      "command": "ply workflow input answer preview hiq_48819b4abb8c00be5caf7b192e19c7c9 --request-id app-gone-0001 --option-id short --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-preview",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:29Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:28Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "human",
+            "message": "Choose one of the listed options."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/obsolete",
+          "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+          "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "waiting_for_answer",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "short",
+            "text": null
+          },
+          "binding_sha256": "sha256:7cd763ec4428a3a6b1942ecc42174abac44e3ac27e6b714910f2dabef9219142",
+          "kind": "ply.workflow.human-input-answer-request",
+          "mode": "cooperative_agent_v1",
+          "purpose": "human_input_answer_v1",
+          "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+          "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+          "request_id": "app-gone-0001",
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "request_sha256": "sha256:c77b34482750fc3389447d27310b4bda3bd7c5f1f1a14ce5f48e042fee91d777",
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "withdraw",
+      "definition": "question",
+      "command": "ply workflow input withdraw hiq_48819b4abb8c00be5caf7b192e19c7c9 --reason The goal already answers this. --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "answer": null,
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:28Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "none",
+          "message": "The agent withdrew this unanswered question. Progress of the whole assignment and any later human steps are not tracked here."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/obsolete",
+        "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+        "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "withdrawn",
+        "text": "Which README section should this task write?",
+        "withdrawal": {
+          "provenance": "reported_by_agent",
+          "reason": "The goal already answers this.",
+          "withdrawn_at_utc": "2026-10-18T18:00:31Z"
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "apply-after-withdrawal-not-recorded",
+      "definition": "status",
+      "command": "ply workflow input answer apply --workspace $WORKSPACE --file $WORKSPACE/inputs/request-gone.json",
+      "exit": 1,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:32Z",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:28Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "none",
+            "message": "The agent withdrew this unanswered question. Progress of the whole assignment and any later human steps are not tracked here."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/obsolete",
+          "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+          "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "withdrawn",
+          "text": "Which README section should this task write?",
+          "withdrawal": {
+            "provenance": "reported_by_agent",
+            "reason": "The goal already answers this.",
+            "withdrawn_at_utc": "2026-10-18T18:00:31Z"
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+        "reasons": [
+          {
+            "code": "human_input_withdrawn",
+            "detail": "the agent withdrew this question; it takes no answer"
+          }
+        ],
+        "request_id": "app-gone-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "not_recorded",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "wait-withdrawn",
+      "definition": "wait",
+      "command": "ply workflow input wait hiq_48819b4abb8c00be5caf7b192e19c7c9 --timeout-seconds 1 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-wait",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:33Z",
+        "outcome": "withdrawn",
+        "question": {
+          "answer": null,
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:28Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "none",
+            "message": "The agent withdrew this unanswered question. Progress of the whole assignment and any later human steps are not tracked here."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/obsolete",
+          "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+          "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "withdrawn",
+          "text": "Which README section should this task write?",
+          "withdrawal": {
+            "provenance": "reported_by_agent",
+            "reason": "The goal already answers this.",
+            "withdrawn_at_utc": "2026-10-18T18:00:31Z"
+          },
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+        "schema_version": 1,
+        "timeout_seconds": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "list-all-states",
+      "definition": "list",
+      "command": "ply workflow input list --project ply --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "complete": true,
+        "cursor": null,
+        "has_more": false,
+        "kind": "ply.workflow.human-input-list",
+        "limit": 20,
+        "mode": "cooperative_agent_v1",
+        "next_cursor": null,
+        "observed_at_utc": "2026-10-18T18:00:34Z",
+        "project_id": "ply",
+        "questions": [
+          {
+            "answer": {
+              "answer_kind": "text",
+              "option_id": null,
+              "recorded_at_utc": "2026-10-18T18:00:25Z",
+              "request_id": "app-text-0001",
+              "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+              "text": "Export format\r\n  (v1) \n"
+            },
+            "answer_kind": "text",
+            "continuation": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:27Z",
+              "request_id": "app-text-0001",
+              "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+              "summary": "Used the exact text answer."
+            },
+            "created_at_utc": "2026-10-18T18:00:02Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "none",
+              "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+            },
+            "options": [],
+            "publication_key": "docs-export/heading",
+            "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+            "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": null,
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "codex",
+              "session_id": null
+            },
+            "state": "agent_reported_continued",
+            "text": "What exact heading should the new section use?",
+            "withdrawal": null,
+            "workspace": "/private/tmp/hi01-example-workspace"
+          },
+          {
+            "answer": null,
+            "answer_kind": "choice",
+            "continuation": null,
+            "created_at_utc": "2026-10-18T18:00:28Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "none",
+              "message": "The agent withdrew this unanswered question. Progress of the whole assignment and any later human steps are not tracked here."
+            },
+            "options": [
+              {
+                "consequence": "One paragraph under Usage.",
+                "id": "short",
+                "label": "Short usage note"
+              },
+              {
+                "consequence": "A new section with every flag.",
+                "id": "full",
+                "label": "Full reference"
+              }
+            ],
+            "publication_key": "docs-export/obsolete",
+            "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+            "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": null,
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "claude",
+              "session_id": "3087ad01-0000-4000-8000-000000000001"
+            },
+            "state": "withdrawn",
+            "text": "Which README section should this task write?",
+            "withdrawal": {
+              "provenance": "reported_by_agent",
+              "reason": "The goal already answers this.",
+              "withdrawn_at_utc": "2026-10-18T18:00:31Z"
+            },
+            "workspace": "/private/tmp/hi01-example-workspace"
+          },
+          {
+            "answer": {
+              "answer_kind": "choice",
+              "option_id": "full",
+              "recorded_at_utc": "2026-10-18T18:00:10Z",
+              "request_id": "app-choice-0001",
+              "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+              "text": null
+            },
+            "answer_kind": "choice",
+            "continuation": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:21Z",
+              "request_id": "app-choice-0001",
+              "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+              "summary": "Wrote the full reference section into README.md."
+            },
+            "created_at_utc": "2026-10-18T18:00:01Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "none",
+              "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+            },
+            "options": [
+              {
+                "consequence": "One paragraph under Usage.",
+                "id": "short",
+                "label": "Short usage note"
+              },
+              {
+                "consequence": "A new section with every flag.",
+                "id": "full",
+                "label": "Full reference"
+              }
+            ],
+            "publication_key": "docs-export/format",
+            "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+            "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:19Z",
+              "request_id": "app-choice-0001",
+              "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+            },
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "claude",
+              "session_id": "3087ad01-0000-4000-8000-000000000001"
+            },
+            "state": "agent_reported_continued",
+            "text": "Which README section should this task write?",
+            "withdrawal": null,
+            "workspace": "/private/tmp/hi01-example-workspace"
+          }
+        ],
+        "schema_version": 1,
+        "state": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-unavailable",
+      "definition": "status",
+      "command": "ply workflow input answer status app-none-0001 --question-id hiq_00000000000000000000000000000000 --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:35Z",
+        "question": null,
+        "question_id": "hiq_00000000000000000000000000000000",
+        "reasons": [
+          {
+            "code": "human_input_not_found",
+            "detail": "no question hiq_00000000000000000000000000000000 exists in this workspace"
+          }
+        ],
+        "request_id": "app-none-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "unavailable",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "error-not-found",
+      "definition": "error",
+      "command": "ply workflow input show hiq_00000000000000000000000000000000 --workspace $WORKSPACE",
+      "exit": 1,
+      "value": {
+        "code": "human_input_not_found",
+        "detail": "no question hiq_00000000000000000000000000000000 exists in this workspace",
+        "kind": "ply.workflow.human-input-error",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-30T22:21:42.100632Z",
+        "question": null,
+        "question_id": null,
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-unknown",
+      "definition": "status",
+      "command": "ply workflow input answer status app-text-0001 --question-id hiq_46320dca9c67033536c4b962ba5dd32a --workspace $WORKSPACE",
+      "exit": 0,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:36Z",
+        "question": null,
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "reasons": [
+          {
+            "code": "human_input_state_invalid",
+            "detail": "malformed human-input file answers/hiq_46320dca9c67033536c4b962ba5dd32a.json; nothing was repaired or changed"
+          }
+        ],
+        "request_id": "app-text-0001",
+        "request_sha256": null,
+        "schema_version": 1,
+        "state": "unknown",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "error-state-invalid",
+      "definition": "error",
+      "command": "ply workflow input show hiq_46320dca9c67033536c4b962ba5dd32a --workspace $WORKSPACE",
+      "exit": 1,
+      "value": {
+        "code": "human_input_state_invalid",
+        "detail": "malformed human-input file answers/hiq_46320dca9c67033536c4b962ba5dd32a.json; nothing was repaired or changed",
+        "kind": "ply.workflow.human-input-error",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-30T22:21:42.101355Z",
+        "question": null,
+        "question_id": null,
+        "schema_version": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-text-4000-codepoints-16000-bytes-boundary",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": null,
+          "text": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+        },
+        "binding_sha256": "sha256:ef40aeed55e458f58e581fc45457adafa84374a6c0753780f51e86b5370608b1",
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "human_input_answer_v1",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "request_id": "app-text-max-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    }
+  ],
+  "schema_invalid": [
+    {
+      "name": "question-unknown-field",
+      "definition": "question",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": null,
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "human",
+          "message": "Choose one of the listed options."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "waiting_for_answer",
+        "task_title": "invented",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "question-missing-nullable",
+      "definition": "question",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "human",
+          "message": "Choose one of the listed options."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "waiting_for_answer",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "question-waiting-agent-actor",
+      "definition": "question",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": null,
+        "answer_kind": "choice",
+        "continuation": null,
+        "created_at_utc": "2026-10-18T18:00:01Z",
+        "kind": "ply.workflow.human-input-question",
+        "mode": "cooperative_agent_v1",
+        "next_action": {
+          "actor": "agent",
+          "message": "Choose one of the listed options."
+        },
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "publication_key": "docs-export/format",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "reason": "The goal leaves the scope of the README change open.",
+        "receipt": null,
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "source": {
+          "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+          "provenance": "reported_by_agent",
+          "provider": "claude",
+          "session_id": "3087ad01-0000-4000-8000-000000000001"
+        },
+        "state": "waiting_for_answer",
+        "text": "Which README section should this task write?",
+        "withdrawal": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-recorded-without-winner",
+      "definition": "status",
+      "command": null,
+      "exit": null,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:15Z",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "reasons": [],
+        "request_id": "app-choice-0001",
+        "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+        "schema_version": 1,
+        "state": "recorded",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "status-unknown-with-digest",
+      "definition": "status",
+      "command": null,
+      "exit": null,
+      "value": {
+        "kind": "ply.workflow.human-input-answer-status",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:36Z",
+        "question": null,
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "reasons": [
+          {
+            "code": "human_input_state_invalid",
+            "detail": "malformed human-input file answers/hiq_46320dca9c67033536c4b962ba5dd32a.json; nothing was repaired or changed"
+          }
+        ],
+        "request_id": "app-text-0001",
+        "request_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "schema_version": 1,
+        "state": "unknown",
+        "winner": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-missing-binding",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "choice",
+          "option_id": "full",
+          "text": null
+        },
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "human_input_answer_v1",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "request_id": "app-choice-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-old-purpose",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "choice",
+          "option_id": "full",
+          "text": null
+        },
+        "binding_sha256": "sha256:97f90c62f2b7470d972f61be1337a0fb6ada473d0c528d7be6700060f7be8739",
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "product_answer_v1",
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+        "request_id": "app-choice-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-text-with-option",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": "short",
+          "text": "Export format\r\n  (v1) \n"
+        },
+        "binding_sha256": "sha256:bbe9bebf185345b725d84c5b34a94e7e03acf79f9a974731d2cbadc716521ec7",
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "human_input_answer_v1",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "request_id": "app-text-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "request-text-4001-codepoints",
+      "definition": "request",
+      "command": null,
+      "exit": null,
+      "value": {
+        "answer": {
+          "answer_kind": "text",
+          "option_id": null,
+          "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "binding_sha256": "sha256:bbe9bebf185345b725d84c5b34a94e7e03acf79f9a974731d2cbadc716521ec7",
+        "kind": "ply.workflow.human-input-answer-request",
+        "mode": "cooperative_agent_v1",
+        "purpose": "human_input_answer_v1",
+        "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+        "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+        "request_id": "app-text-0001",
+        "schema_version": 1,
+        "scope": {
+          "activity_id": "conversation/docs-export",
+          "activity_title": "Document the export format",
+          "project_id": "ply",
+          "repo_id": "ply",
+          "task_id": null
+        },
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "draft-one-option",
+      "definition": "question_draft",
+      "command": null,
+      "exit": null,
+      "value": {
+        "activity_id": "conversation/docs-export",
+        "activity_title": "Document the export format",
+        "answer_kind": "choice",
+        "kind": "ply.workflow.human-input-question-draft",
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          }
+        ],
+        "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+        "project_id": "ply",
+        "provider": "claude",
+        "publication_key": "docs-export/format",
+        "reason": "The goal leaves the scope of the README change open.",
+        "repo_id": "ply",
+        "schema_version": 1,
+        "session_id": "3087ad01-0000-4000-8000-000000000001",
+        "task_id": null,
+        "text": "Which README section should this task write?"
+      }
+    },
+    {
+      "name": "draft-text-with-options",
+      "definition": "question_draft",
+      "command": null,
+      "exit": null,
+      "value": {
+        "activity_id": "conversation/docs-export",
+        "activity_title": "Document the export format",
+        "answer_kind": "text",
+        "kind": "ply.workflow.human-input-question-draft",
+        "options": [
+          {
+            "consequence": "One paragraph under Usage.",
+            "id": "short",
+            "label": "Short usage note"
+          },
+          {
+            "consequence": "A new section with every flag.",
+            "id": "full",
+            "label": "Full reference"
+          }
+        ],
+        "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+        "project_id": "ply",
+        "provider": "codex",
+        "publication_key": "docs-export/heading",
+        "reason": "The goal leaves the scope of the README change open.",
+        "repo_id": "ply",
+        "schema_version": 1,
+        "session_id": null,
+        "task_id": null,
+        "text": "What exact heading should the new section use?"
+      }
+    },
+    {
+      "name": "list-limit-21",
+      "definition": "list",
+      "command": null,
+      "exit": null,
+      "value": {
+        "complete": true,
+        "cursor": null,
+        "has_more": false,
+        "kind": "ply.workflow.human-input-list",
+        "limit": 21,
+        "mode": "cooperative_agent_v1",
+        "next_cursor": null,
+        "observed_at_utc": "2026-10-18T18:00:34Z",
+        "project_id": "ply",
+        "questions": [
+          {
+            "answer": {
+              "answer_kind": "text",
+              "option_id": null,
+              "recorded_at_utc": "2026-10-18T18:00:25Z",
+              "request_id": "app-text-0001",
+              "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+              "text": "Export format\r\n  (v1) \n"
+            },
+            "answer_kind": "text",
+            "continuation": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:27Z",
+              "request_id": "app-text-0001",
+              "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232",
+              "summary": "Used the exact text answer."
+            },
+            "created_at_utc": "2026-10-18T18:00:02Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "none",
+              "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+            },
+            "options": [],
+            "publication_key": "docs-export/heading",
+            "question_id": "hiq_46320dca9c67033536c4b962ba5dd32a",
+            "question_sha256": "sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": null,
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "codex",
+              "session_id": null
+            },
+            "state": "agent_reported_continued",
+            "text": "What exact heading should the new section use?",
+            "withdrawal": null,
+            "workspace": "/private/tmp/hi01-example-workspace"
+          },
+          {
+            "answer": null,
+            "answer_kind": "choice",
+            "continuation": null,
+            "created_at_utc": "2026-10-18T18:00:28Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "none",
+              "message": "The agent withdrew this unanswered question. Progress of the whole assignment and any later human steps are not tracked here."
+            },
+            "options": [
+              {
+                "consequence": "One paragraph under Usage.",
+                "id": "short",
+                "label": "Short usage note"
+              },
+              {
+                "consequence": "A new section with every flag.",
+                "id": "full",
+                "label": "Full reference"
+              }
+            ],
+            "publication_key": "docs-export/obsolete",
+            "question_id": "hiq_48819b4abb8c00be5caf7b192e19c7c9",
+            "question_sha256": "sha256:84bceafc91cbe07f100b96f6d9c1e96554e5087d629d5b7d0fbce060d3df8f59",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": null,
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "claude",
+              "session_id": "3087ad01-0000-4000-8000-000000000001"
+            },
+            "state": "withdrawn",
+            "text": "Which README section should this task write?",
+            "withdrawal": {
+              "provenance": "reported_by_agent",
+              "reason": "The goal already answers this.",
+              "withdrawn_at_utc": "2026-10-18T18:00:31Z"
+            },
+            "workspace": "/private/tmp/hi01-example-workspace"
+          },
+          {
+            "answer": {
+              "answer_kind": "choice",
+              "option_id": "full",
+              "recorded_at_utc": "2026-10-18T18:00:10Z",
+              "request_id": "app-choice-0001",
+              "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+              "text": null
+            },
+            "answer_kind": "choice",
+            "continuation": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:21Z",
+              "request_id": "app-choice-0001",
+              "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+              "summary": "Wrote the full reference section into README.md."
+            },
+            "created_at_utc": "2026-10-18T18:00:01Z",
+            "kind": "ply.workflow.human-input-question",
+            "mode": "cooperative_agent_v1",
+            "next_action": {
+              "actor": "none",
+              "message": "The agent reported that it continued its work with this answer. Progress of the whole assignment and any later human steps are not tracked here."
+            },
+            "options": [
+              {
+                "consequence": "One paragraph under Usage.",
+                "id": "short",
+                "label": "Short usage note"
+              },
+              {
+                "consequence": "A new section with every flag.",
+                "id": "full",
+                "label": "Full reference"
+              }
+            ],
+            "publication_key": "docs-export/format",
+            "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+            "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+            "reason": "The goal leaves the scope of the README change open.",
+            "receipt": {
+              "provenance": "reported_by_agent",
+              "reported_at_utc": "2026-10-18T18:00:19Z",
+              "request_id": "app-choice-0001",
+              "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+            },
+            "schema_version": 1,
+            "scope": {
+              "activity_id": "conversation/docs-export",
+              "activity_title": "Document the export format",
+              "project_id": "ply",
+              "repo_id": "ply",
+              "task_id": null
+            },
+            "source": {
+              "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+              "provenance": "reported_by_agent",
+              "provider": "claude",
+              "session_id": "3087ad01-0000-4000-8000-000000000001"
+            },
+            "state": "agent_reported_continued",
+            "text": "Which README section should this task write?",
+            "withdrawal": null,
+            "workspace": "/private/tmp/hi01-example-workspace"
+          }
+        ],
+        "schema_version": 1,
+        "state": null,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    },
+    {
+      "name": "wait-unknown-outcome",
+      "definition": "wait",
+      "command": null,
+      "exit": null,
+      "value": {
+        "kind": "ply.workflow.human-input-wait",
+        "mode": "cooperative_agent_v1",
+        "observed_at_utc": "2026-10-18T18:00:17Z",
+        "outcome": "timed_out",
+        "question": {
+          "answer": {
+            "answer_kind": "choice",
+            "option_id": "full",
+            "recorded_at_utc": "2026-10-18T18:00:10Z",
+            "request_id": "app-choice-0001",
+            "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800",
+            "text": null
+          },
+          "answer_kind": "choice",
+          "continuation": null,
+          "created_at_utc": "2026-10-18T18:00:01Z",
+          "kind": "ply.workflow.human-input-question",
+          "mode": "cooperative_agent_v1",
+          "next_action": {
+            "actor": "agent",
+            "message": "The answer is recorded. The agent has not reported receiving it; an interrupted agent must be resumed before it can use the answer."
+          },
+          "options": [
+            {
+              "consequence": "One paragraph under Usage.",
+              "id": "short",
+              "label": "Short usage note"
+            },
+            {
+              "consequence": "A new section with every flag.",
+              "id": "full",
+              "label": "Full reference"
+            }
+          ],
+          "publication_key": "docs-export/format",
+          "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+          "question_sha256": "sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d",
+          "reason": "The goal leaves the scope of the README change open.",
+          "receipt": null,
+          "schema_version": 1,
+          "scope": {
+            "activity_id": "conversation/docs-export",
+            "activity_title": "Document the export format",
+            "project_id": "ply",
+            "repo_id": "ply",
+            "task_id": null
+          },
+          "source": {
+            "origin_cwd": "/private/tmp/hi01-example-workspace/ply/main",
+            "provenance": "reported_by_agent",
+            "provider": "claude",
+            "session_id": "3087ad01-0000-4000-8000-000000000001"
+          },
+          "state": "answered",
+          "text": "Which README section should this task write?",
+          "withdrawal": null,
+          "workspace": "/private/tmp/hi01-example-workspace"
+        },
+        "question_id": "hiq_def36bfdf584e1912033f71c538f4480",
+        "schema_version": 1,
+        "timeout_seconds": 1,
+        "workspace": "/private/tmp/hi01-example-workspace"
+      }
+    }
+  ],
+  "canonical_request_vectors": [
+    {
+      "name": "request-choice",
+      "canonical_utf8": "{\"answer\":{\"answer_kind\":\"choice\",\"option_id\":\"full\",\"text\":null},\"binding_sha256\":\"sha256:97f90c62f2b7470d972f61be1337a0fb6ada473d0c528d7be6700060f7be8739\",\"kind\":\"ply.workflow.human-input-answer-request\",\"mode\":\"cooperative_agent_v1\",\"purpose\":\"human_input_answer_v1\",\"question_id\":\"hiq_def36bfdf584e1912033f71c538f4480\",\"question_sha256\":\"sha256:750fbcfb0a726d81c836fe88464e80e8129b1d8a27780d737b7b1d9b4f4dcb9d\",\"request_id\":\"app-choice-0001\",\"schema_version\":1,\"scope\":{\"activity_id\":\"conversation/docs-export\",\"activity_title\":\"Document the export format\",\"project_id\":\"ply\",\"repo_id\":\"ply\",\"task_id\":null},\"workspace\":\"/private/tmp/hi01-example-workspace\"}",
+      "request_sha256": "sha256:970342233597a53e746dbbb4ec34508419489dc0ac21aca88fadb8cc9f717800"
+    },
+    {
+      "name": "request-text",
+      "canonical_utf8": "{\"answer\":{\"answer_kind\":\"text\",\"option_id\":null,\"text\":\"Export format\\r\\n  (v1) \\n\"},\"binding_sha256\":\"sha256:bbe9bebf185345b725d84c5b34a94e7e03acf79f9a974731d2cbadc716521ec7\",\"kind\":\"ply.workflow.human-input-answer-request\",\"mode\":\"cooperative_agent_v1\",\"purpose\":\"human_input_answer_v1\",\"question_id\":\"hiq_46320dca9c67033536c4b962ba5dd32a\",\"question_sha256\":\"sha256:813b2ea0d68e002ba6d8a69bff9569f6e6c020dc2477b936ec9647cc9a7b2d78\",\"request_id\":\"app-text-0001\",\"schema_version\":1,\"scope\":{\"activity_id\":\"conversation/docs-export\",\"activity_title\":\"Document the export format\",\"project_id\":\"ply\",\"repo_id\":\"ply\",\"task_id\":null},\"workspace\":\"/private/tmp/hi01-example-workspace\"}",
+      "request_sha256": "sha256:cdbb7aa8b991302e6a975ce737066d5e73476d5ce60d626d1434aca77ef2f232"
+    }
+  ]
+}

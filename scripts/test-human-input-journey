@@ -1,0 +1,119 @@
+#!/bin/sh
+# HI08: a hermetic journey through the actual CLI, following the installed
+# ply-human-input skill as an ordinary agent, with an app-role answer in
+# between. Usage: test-human-input-journey /absolute/ply-binary
+# Everything lives under a new physical /private/tmp root. This is a modeled
+# agent and app; it is not a live provider run and not physical phone evidence.
+set -eu
+ply=${1:?usage: test-human-input-journey /absolute/ply-binary}
+case "$ply" in /*) ;; *) echo "binary must be absolute" >&2; exit 2 ;; esac
+here=$(cd "$(dirname "$0")" && pwd -P)
+root=$(mktemp -d /private/tmp/hi01-journey.XXXXXX)
+trap 'rm -rf "$root"' EXIT
+fail() { printf 'human-input journey failed: %s\n' "$1" >&2; exit 1; }
+field() { python3 -I -c 'import json,sys
+v=json.load(sys.stdin)
+for k in sys.argv[1].split("."): v=v[int(k)] if isinstance(v,list) else v[k]
+print("null" if v is None else v)' "$1"; }
+
+export HOME="$root/home" TMPDIR="$root/tmp"
+mkdir -p "$HOME" "$TMPDIR"
+
+# Install the skill as a user would and check every command it names exists.
+"$here/install-human-input-skill" >/dev/null || fail "skill install"
+skill="$HOME/.agents/skills/ply-human-input/SKILL.md"
+[ -f "$skill" ] || fail "installed skill missing"
+for cmd in ask wait acknowledge continue withdraw show; do
+  grep -q "ply workflow input $cmd" "$skill" || fail "skill does not name $cmd"
+  "$ply" workflow input $cmd --help >/dev/null 2>&1 || fail "skill names a missing command: $cmd"
+done
+grep -q 'never as a command' "$skill" || fail "skill does not keep answers as data"
+
+# A registered project; no Task, week or provider start is involved.
+ws="$root/ws"
+repo="$ws/demo/main"
+mkdir -p "$repo"
+git -C "$repo" init -q -b main
+git -C "$repo" -c user.name=HI08 -c user.email=hi08@example.invalid commit -q --allow-empty -m base
+(cd "$ws" && "$ply" workspace init >/dev/null && "$ply" workspace project add demo --name Demo --wrapper demo --repo demo=demo/main >/dev/null) || fail "workspace setup"
+registers() { cat "$ws/.ply/projects.yaml" "$ws/.ply/workspace.yaml" "$ws/.ply/work-items.yaml" 2>/dev/null | shasum -a 256; }
+registers_before=$(registers)
+
+# Agent, skill steps 1-4: derive context from cwd and publish.
+cd "$repo"
+WS=$(pwd -P); while [ ! -f "$WS/.ply/workspace.yaml" ]; do WS=$(dirname "$WS"); [ "$WS" != / ] || fail "no workspace"; done
+[ "$WS" = "$ws" ] || fail "derived workspace $WS"
+"$ply" workspace project list --format json | field projects.0.project_id | grep -qx demo || fail "project discovery"
+draft_dir=$(mktemp -d "$root/tmp/draft.XXXXXX")
+cat > "$draft_dir/q.json" <<EOF
+{"kind":"ply.workflow.human-input-question-draft","schema_version":1,
+ "publication_key":"readme-note/format","project_id":"demo","repo_id":"demo","task_id":null,
+ "activity_id":"readme-note","activity_title":"Write the README usage note",
+ "provider":"claude","session_id":null,"origin_cwd":"$(pwd -P)",
+ "text":"Which README note should this task write?","reason":"The goal leaves the size open.",
+ "answer_kind":"choice",
+ "options":[{"id":"short","label":"Short note","consequence":"One line."},{"id":"full","label":"Full note","consequence":"A full section."}]}
+EOF
+q=$("$ply" workflow input ask --workspace "$WS" --file "$draft_dir/q.json" --format json) || fail "ask"
+qid=$(printf '%s' "$q" | field question_id)
+[ "$(printf '%s' "$q" | field next_action.actor)" = human ] || fail "next actor before answer"
+again=$("$ply" workflow input ask --workspace "$WS" --file "$draft_dir/q.json" --format json) || fail "repeated ask"
+[ "$(printf '%s' "$again" | field question_id)" = "$qid" ] || fail "repeated ask made a new question"
+w=$("$ply" workflow input wait "$qid" --workspace "$WS" --timeout-seconds 1 --format json) || fail "wait timeout"
+[ "$(printf '%s' "$w" | field outcome)" = still_waiting ] || fail "timeout is not still_waiting"
+
+# App role: discover through public list and race two physical confirmations.
+app=$(mktemp -d "$root/tmp/app.XXXXXX")
+"$ply" workflow input list --workspace "$WS" --project demo --format json > "$app/list.json" || fail "list"
+[ "$(field questions.0.question_id < "$app/list.json")" = "$qid" ] || fail "list does not show the question"
+[ "$(field complete < "$app/list.json")" = True ] || fail "list not complete"
+"$ply" workflow input answer preview "$qid" --workspace "$WS" --request-id app-full-0001 --option-id full --format json | python3 -I -c 'import json,sys;json.dump(json.load(sys.stdin)["request"],open(sys.argv[1],"w"))' "$app/full.json" || fail "preview full"
+"$ply" workflow input answer preview "$qid" --workspace "$WS" --request-id app-short-0001 --option-id short --format json | python3 -I -c 'import json,sys;json.dump(json.load(sys.stdin)["request"],open(sys.argv[1],"w"))' "$app/short.json" || fail "preview short"
+"$ply" workflow input answer apply --workspace "$WS" --file "$app/full.json" > "$app/a1" 2>/dev/null &
+p1=$!
+"$ply" workflow input answer apply --workspace "$WS" --file "$app/short.json" > "$app/a2" 2>/dev/null &
+p2=$!
+wait $p1 || true
+wait $p2 || true
+states=$(for f in "$app/a1" "$app/a2"; do field state < "$f"; done | sort | tr '\n' ' ')
+[ "$states" = "other_winner recorded " ] || fail "concurrent applies: $states"
+winner=$(for f in "$app/a1" "$app/a2"; do if [ "$(field state < "$f")" = recorded ]; then field request_id < "$f"; fi; done)
+# Lost reply: the same request again is idempotent; status agrees.
+"$ply" workflow input answer apply --workspace "$WS" --file "$app/$(echo "$winner" | cut -d- -f2).json" | field state | grep -qx recorded || fail "replay of the winner"
+"$ply" workflow input answer status "$winner" --question-id "$qid" --workspace "$WS" | field state | grep -qx recorded || fail "status of the winner"
+if "$ply" workflow input answer apply --workspace "$root" --file "$app/full.json" >/dev/null 2>&1; then fail "apply in another workspace"; fi
+
+# Agent, skill steps 5-7: same answer, acknowledge, act, report.
+w=$("$ply" workflow input wait "$qid" --workspace "$WS" --timeout-seconds 5 --format json) || fail "wait"
+[ "$(printf '%s' "$w" | field outcome)" = answered ] || fail "wait did not return the answer"
+rid=$(printf '%s' "$w" | field question.answer.request_id)
+sha=$(printf '%s' "$w" | field question.answer.request_sha256)
+choice=$(printf '%s' "$w" | field question.answer.option_id)
+[ "$rid" = "$winner" ] || fail "agent sees another answer than the winner"
+"$ply" workflow input acknowledge "$qid" --workspace "$WS" --request-id "$rid" --request-sha256 "$sha" | field state | grep -qx agent_received || fail "acknowledge"
+case "$choice" in
+  full) printf '## Usage\n\nFull note.\n' > "$repo/README.md" ;;
+  short) printf 'Short note.\n' > "$repo/README.md" ;;
+  *) fail "unexpected option $choice" ;;
+esac
+"$ply" workflow input continue "$qid" --workspace "$WS" --request-id "$rid" --request-sha256 "$sha" --summary "Wrote the $choice README note." > "$app/done.json" || fail "continue"
+[ "$(field state < "$app/done.json")" = agent_reported_continued ] && [ "$(field next_action.actor < "$app/done.json")" = none ] && [ "$(field continuation.provenance < "$app/done.json")" = reported_by_agent ] || fail "continuation"
+[ -s "$repo/README.md" ] || fail "no observable work"
+
+# Resumed agent: the same ask finds the stored answer.
+resumed=$("$ply" workflow input ask --workspace "$WS" --file "$draft_dir/q.json") || fail "resumed ask"
+[ "$(printf '%s' "$resumed" | field answer.request_id)" = "$rid" ] || fail "resumed agent lost the answer"
+
+# Exact short text survives byte for byte.
+sed -e 's/readme-note\/format/readme-note\/heading/' -e 's/"answer_kind":"choice"/"answer_kind":"text"/' -e 's/"options":\[.*\]}/"options":[]}/' "$draft_dir/q.json" > "$draft_dir/t.json"
+tid=$("$ply" workflow input ask --workspace "$WS" --file "$draft_dir/t.json" | field question_id) || fail "ask text"
+printf 'Usage \342\200\224 v1\r\n  indented\n' > "$app/answer.txt"
+"$ply" workflow input answer preview "$tid" --workspace "$WS" --request-id app-text-0001 --text-file "$app/answer.txt" | python3 -I -c 'import json,sys;json.dump(json.load(sys.stdin)["request"],open(sys.argv[1],"w"))' "$app/text.json" || fail "preview text"
+"$ply" workflow input answer apply --workspace "$WS" --file "$app/text.json" >/dev/null || fail "apply text"
+"$ply" workflow input wait "$tid" --workspace "$WS" --timeout-seconds 5 | python3 -I -c 'import json,sys
+t=json.load(sys.stdin)["question"]["answer"]["text"]
+raise SystemExit(0 if t.encode()==open(sys.argv[1],"rb").read() else "text changed")' "$app/answer.txt" || fail "text answer not exact"
+
+[ "$(registers)" = "$registers_before" ] || fail "registers changed; a question must not create a Task"
+find "$WS/.ply/human-input/v1" -type f ! -perm 600 | grep -q . && fail "non-private human-input file"
+printf 'human-input journey passed: %s choice=%s\n' "$qid" "$choice"

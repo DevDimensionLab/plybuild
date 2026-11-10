@@ -1,0 +1,45 @@
+#!/bin/sh
+# Install the repository's ply-human-input skill. An identical install is a
+# no-op; a different existing skill is replaced only after it is moved to a new
+# --backup path. Symlinked or relative destinations are refused.
+set -eu
+usage() { printf 'usage: %s [--destination DIR] [--backup NEW_DIR]\n' "$0" >&2; exit 2; }
+here=$(cd "$(dirname "$0")" && pwd -P)
+source_skill="$here/../skills/ply-human-input/SKILL.md"
+dest="${HOME:?}/.agents/skills/ply-human-input"
+backup=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --destination) [ $# -ge 2 ] || usage; dest=$2; shift 2 ;;
+    --backup) [ $# -ge 2 ] || usage; backup=$2; shift 2 ;;
+    *) usage ;;
+  esac
+done
+refuse() { printf 'install-human-input-skill: %s\n' "$1" >&2; exit 1; }
+case "$dest" in /*) ;; *) refuse "--destination must be absolute" ;; esac
+[ -f "$source_skill" ] || refuse "source skill is missing"
+
+install_new() {
+  mkdir -p "$(dirname "$dest")"
+  mkdir -m 755 "$dest"
+  cp "$source_skill" "$dest/SKILL.md.tmp"
+  chmod 644 "$dest/SKILL.md.tmp"
+  mv "$dest/SKILL.md.tmp" "$dest/SKILL.md"
+  printf 'installed %s\n' "$dest"
+  printf 'next: confirm that Claude and Codex discover it, or that a readable mandate pointer names %s/SKILL.md\n' "$dest"
+}
+
+if [ -L "$dest" ]; then refuse "--destination is a symlink"; fi
+if [ ! -e "$dest" ]; then install_new; exit 0; fi
+[ -d "$dest" ] || refuse "--destination exists and is not a directory"
+if [ "$(ls -A "$dest")" = SKILL.md ] && [ ! -L "$dest/SKILL.md" ] && cmp -s "$dest/SKILL.md" "$source_skill"; then
+  printf 'already installed %s\n' "$dest"
+  exit 0
+fi
+[ -n "$backup" ] || refuse "a different skill exists at $dest; rerun with --backup NEW_DIR to keep it"
+case "$backup" in /*) ;; *) refuse "--backup must be absolute" ;; esac
+if [ -e "$backup" ] || [ -L "$backup" ]; then refuse "--backup must name a new path"; fi
+mkdir -p "$(dirname "$backup")"
+mv "$dest" "$backup"
+printf 'kept previous skill at %s\n' "$backup"
+install_new

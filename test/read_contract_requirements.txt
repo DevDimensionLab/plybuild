@@ -1,0 +1,3 @@
+# Test-only JSON Schema validator. Ply itself does not depend on Python.
+# Distribution source: https://pypi.org/project/jsonschema/4.26.0/
+jsonschema==4.26.0

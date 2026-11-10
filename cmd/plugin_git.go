@@ -21,16 +21,17 @@ var gitInstallHooksCmd = &cobra.Command{
 	Use:   "install-hooks",
 	Short: "install git hooks from cloud config",
 	Long:  `install git hooks from cloud config`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := SyncActiveProfileCloudConfig(); err != nil {
 			log.Warnln(err)
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		gitHooksFolderName := "git-hooks"

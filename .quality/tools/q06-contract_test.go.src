@@ -1,0 +1,41 @@
+package testutil
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"testing/fstest"
+)
+
+func TestQualityAuditSafeWriterContract(t *testing.T) {
+	repositoryPath, err := filepath.Abs(filepath.Join("audit-contract", "result.txt"))
+	if err != nil {
+		t.Fatalf("make repository path absolute: %v", err)
+	}
+	if !WouldLeakIntoWorkingTree(repositoryPath) {
+		t.Fatalf("guard accepted repository path %s", repositoryPath)
+	}
+
+	externalPath := filepath.Join(t.TempDir(), "result.txt")
+	if WouldLeakIntoWorkingTree(externalPath) {
+		t.Fatalf("guard rejected external temp path %s", externalPath)
+	}
+	if err := WriteFileOutsideWorkingTree(repositoryPath, []byte("must not exist"), 0o600); err == nil {
+		t.Fatal("safe writer accepted a repository path")
+	}
+	if _, err := os.Lstat(repositoryPath); !os.IsNotExist(err) {
+		t.Fatalf("safe writer leaked into repository: %v", err)
+	}
+	if err := WriteFileOutsideWorkingTree(externalPath, []byte("outside"), 0o600); err != nil {
+		t.Fatalf("safe writer rejected external temp path: %v", err)
+	}
+
+	repositoryCopy := filepath.Dir(repositoryPath)
+	fixture := fstest.MapFS{"fixture.txt": &fstest.MapFile{Data: []byte("fixture")}}
+	if err := CopyFSOutsideWorkingTree(repositoryCopy, fixture); err == nil {
+		t.Fatal("safe copy accepted a repository path")
+	}
+	if err := CopyFSOutsideWorkingTree(t.TempDir(), fixture); err != nil {
+		t.Fatalf("safe copy rejected external temp path: %v", err)
+	}
+}

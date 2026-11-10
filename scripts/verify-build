@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C GOENV=off GOWORK=off
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+source "$repo_root/test/acceptance/common.sh"
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-verify-build.XXXXXX")
+cleanup_temp_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+log="$work_root/verdict.log"
+artifact=${PLY_VERIFY_ARTIFACT:-"$work_root/bin/ply"}
+failures=0
+guard_message='A help probe alone proves nothing without a locally generated project.'
+printf '%s\n' "$guard_message" | tee -a "$log" >/dev/null
+
+if [[ -z "${PLY_VERIFY_ARTIFACT:-}" ]]; then
+	acceptance_build_artifact "$repo_root" "$work_root" "$artifact"
+fi
+[[ -f "$artifact" && -x "$artifact" ]] || failures=$((failures + 1))
+
+if "$artifact" build --help >"$work_root/help.stdout" 2>"$work_root/help.stderr" &&
+	grep -F 'Builds a ply project' "$work_root/help.stdout" >/dev/null; then
+	printf 'build --help: PASS\n' | tee -a "$log"
+else
+	printf 'build --help: FAIL\n' | tee -a "$log"
+	failures=$((failures + 1))
+fi
+
+acceptance_copy_order_fixture "$repo_root" "$work_root/project"
+cp -R "$work_root/project" "$work_root/project-before"
+if HOME="$work_root/home" "$artifact" build \
+	--target "$work_root/project" --cloud-sync=false --upstream none \
+	--disable-upgrading --config-file "$work_root/project/co-pilot.json" 2>&1 |
+	tee -a "$log" >"$work_root/build.stdout"; then
+	build_exit=0
+else
+	build_exit=${PIPESTATUS[0]}
+fi
+printf 'build exit=%s\n' "$build_exit" | tee -a "$log"
+if [[ "$build_exit" -ne 0 || ! -s "$work_root/project/ply.json" ]] ||
+	! grep -F '"groupId": "com.example"' "$work_root/project/ply.json" >/dev/null ||
+	! grep -F 'writes project config file' "$work_root/build.stdout" >/dev/null; then
+	failures=$((failures + 1))
+fi
+while IFS= read -r relative; do
+	[[ "$relative" == './pom.xml' ]] && continue
+	cmp -s "$work_root/project-before/${relative#./}" "$work_root/project/${relative#./}" ||
+		failures=$((failures + 1))
+done < <(cd "$work_root/project-before" && find . -type f -print | LC_ALL=C sort)
+(cd "$work_root/project-before" && find . -type f -print | LC_ALL=C sort) \
+	>"$work_root/files-before"
+(cd "$work_root/project" && find . -type f -print | LC_ALL=C sort) \
+	>"$work_root/files-after"
+missing_files=$(comm -23 "$work_root/files-before" "$work_root/files-after")
+added_files=$(comm -13 "$work_root/files-before" "$work_root/files-after")
+if [[ -n "$missing_files" || "$added_files" != './ply.json' ]]; then
+	failures=$((failures + 1))
+fi
+
+mkdir -p "$work_root/bad-project"
+printf '{"groupId":"","artifactId":"","language":"kotlin","package":"bad","name":"bad"}\n' \
+	>"$work_root/bad-config.json"
+bad_before=$(acceptance_tree_digest "$work_root/bad-project")
+set +e
+HOME="$work_root/home" "$artifact" build \
+	--target "$work_root/bad-project" --cloud-sync=false --upstream none \
+	--disable-upgrading --config-file "$work_root/bad-config.json" 2>&1 |
+	tee -a "$log" >"$work_root/bad.stdout"
+bad_exit=${PIPESTATUS[0]}
+set -e
+bad_after=$(acceptance_tree_digest "$work_root/bad-project")
+if [[ "$bad_exit" -eq 0 || "$bad_before" != "$bad_after" ]]; then
+	failures=$((failures + 1))
+fi
+
+[ "$failures" -eq 0 ]
+printf 'verify-build: PASS\n'

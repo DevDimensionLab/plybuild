@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/mvn-pom-mutator/pkg/pom"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/logger"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"github.com/devdimensionlab/plybuild/pkg/sorting"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -109,13 +109,25 @@ func (mvnProject MavenProject) Type() ValidProjectType {
 	return Maven
 }
 
+type projectConfigWriteDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemProjectConfigWriteDependencies() projectConfigWriteDependencies {
+	return projectConfigWriteDependencies{Files: filesystem.System()}
+}
+
 func (config *ProjectConfiguration) WriteTo(targetFile string) error {
+	return config.writeTo(systemProjectConfigWriteDependencies(), targetFile)
+}
+
+func (config *ProjectConfiguration) writeTo(dependencies projectConfigWriteDependencies, targetFile string) error {
 	log.Infof("writes project config file to %s", targetFile)
 	data, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(targetFile, data, 0644)
+	return filesystem.WriteFile(dependencies.Files, targetFile, data, 0644)
 }
 
 func (config *ProjectConfiguration) SourceMainPath() string {
@@ -186,8 +198,8 @@ func (config *ProjectConfiguration) Populate(targetDir string) error {
 			return nil
 		}
 
-		return errors.New(fmt.Sprintf("%s directory detected, but language was not set in %s",
-			file.Path("%s/src", targetDir), "config file (ply.json, or co-pilot.json"))
+		return fmt.Errorf("%s directory detected, but language was not set in %s",
+			file.Path("%s/src", targetDir), "config file (ply.json, or co-pilot.json")
 	}
 
 	return nil

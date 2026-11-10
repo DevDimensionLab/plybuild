@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export LC_ALL=C LANG=C
+package_test_repo=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
+. "$package_test_repo/scripts/compat_root.sh"
+compat_run_root 'test-package-cli' ply-package-controls
+python3 - "$package_test_repo" "$run_root" <<'PY'
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+
+# This controls the publisher's decisions with a fake compiler. Actual release
+# bytes are qualified separately by test/cb01a_acceptance.sh.
+source = Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix="fixture-", dir=sys.argv[2]) as td:
+    root = Path(td).resolve()
+    repo = root / "repo"
+    (repo / "scripts").mkdir(parents=True)
+    (repo / "docs").mkdir()
+    shutil.copyfile(source / "scripts/package-cli", repo / "scripts/package-cli")
+    shutil.copy2(source / "scripts/with-go", repo / "scripts/with-go")
+    shutil.copyfile(source / "go.mod", repo / "go.mod")
+    selected = next(line.split()[1] for line in (source / "go.mod").read_text().splitlines() if line.startswith("toolchain "))
+    (repo / "docs/cli-installation.md").write_text("Fixture installation guide.\n")
+    def git(*args):
+        return subprocess.check_output(["git", *args], cwd=repo, text=True).strip()
+    git("init", "-b", "main")
+    git("add", ".")
+    git("-c", "user.name=Package fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "Fixture publisher")
+    commit = git("rev-parse", "HEAD")
+    (root / "bin").mkdir()
+    (root / "stale").mkdir()
+    stale = root / "stale/go"
+    stale.write_text("#!/bin/sh\nexit 97\n")
+    stale.chmod(0o755)
+    compiler = root / "bin/go"
+    compiler.write_text("#!" + sys.executable + "\n" + f'''
+import sys
+if sys.argv[1:] == ["env", "GOVERSION", "GOROOT"]:
+    print({selected!r}); print({str(root)!r}); sys.exit(0)
+''' + '''
+import os
+from pathlib import Path
+out = Path(sys.argv[sys.argv.index('-o')+1])
+out.write_bytes(('fixture executable '+out.name).encode())
+out.chmod(0o755)
+if os.environ.get('PACKAGE_TEST_DRIFT') == '1':
+    Path('docs/cli-installation.md').write_text('Source changed during build.\\n')
+''')
+    compiler.chmod(0o755)
+    # The publisher must use the explicit selection, never the stale go first on PATH.
+    env = dict(os.environ, PLY_GO=str(compiler), PATH=str(root / "stale") + os.pathsep + os.environ["PATH"])
+    def build(output, success, extra=None):
+        result = subprocess.run([sys.executable, str(repo / "scripts/package-cli"), "v1.2.3-test.1", str(output)], cwd=root, env=dict(env, **(extra or {})), capture_output=True, text=True)
+        assert (result.returncode == 0) == success, result.stdout + result.stderr
+        return result
+    unselected = dict(env)
+    del unselected["PLY_GO"]
+    result = subprocess.run([sys.executable, str(repo / "scripts/package-cli"), "v1.2.3-test.1", str(root / "unselected")], cwd=root, env=unselected, capture_output=True, text=True)
+    assert result.returncode != 0 and "PLY_GO must be an absolute path" in result.stderr, result.stdout + result.stderr
+    assert not (root / "unselected").exists()
+    (repo / "dirty").write_text("uncommitted")
+    build(root / "dirty-output", False)
+    assert not (root / "dirty-output").exists()
+    (repo / "dirty").unlink()
+    build(repo / "output", False)
+    result = build(root / "release", True)
+    receipt = json.loads(result.stdout)
+    package = Path(receipt["package"])
+    manifest = json.loads((package / "manifest.json").read_text())
+    digest = lambda p: "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest()
+    assert manifest["source_commit"] == commit
+    assert manifest["version"] == "v1.2.3-test.1"
+    assert (manifest["os"], manifest["arch"]) == ("darwin", "arm64")
+    assert manifest["sha256"] == digest(package / "ply")
+    assert manifest["installer_sha256"] == digest(package / "ply-install")
+    assert receipt["manifest_sha256"] == digest(package / "manifest.json")
+    before = (package / "manifest.json").read_bytes()
+    build(root / "release", False)
+    assert (package / "manifest.json").read_bytes() == before
+    build(root / "drift-output", False, {"PACKAGE_TEST_DRIFT": "1"})
+    assert not (root / "drift-output").exists()
+    assert not list(root.glob(".ply-package-*"))
+print("test-package-cli: PASS (explicit Go selection, publisher identity, immutable output, source drift and cleanup)")
+PY

@@ -18,13 +18,14 @@ var lintKotlinCmd = &cobra.Command{
 	Use:   "kotlin",
 	Short: "uses ktlint for linting kotlin code",
 	Long:  `uses ktlint for linting kotlin code`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true

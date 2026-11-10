@@ -1,0 +1,104 @@
+{
+  "format": "ply-backlog-archive-group/v1",
+  "group": "fixture-v1",
+  "items": [
+    {
+      "id": "20261106-4458fcb9",
+      "title": "Arkivering av ferdig backlog",
+      "text": "Tekst <æ> & \"sitat\"\n",
+      "created_at": "2026-11-06T04:45:02Z",
+      "notes": [
+        {
+          "at": "2026-11-06T06:00:00Z",
+          "text": "med forfatter",
+          "author": "øøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøøø"
+        },
+        {
+          "at": "2026-11-06T07:00:00Z",
+          "text": "uten"
+        }
+      ],
+      "repos": [
+        "r00",
+        "r01",
+        "r02",
+        "r03",
+        "r04",
+        "r05",
+        "r06",
+        "r07",
+        "r08",
+        "r09",
+        "r10",
+        "r11",
+        "r12",
+        "r13",
+        "r14",
+        "r15",
+        "r16",
+        "r17",
+        "r18",
+        "r19",
+        "r20",
+        "r21",
+        "r22",
+        "r23",
+        "r24",
+        "r25",
+        "r26",
+        "r27",
+        "r28",
+        "r29",
+        "r30",
+        "a.b_c-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ],
+      "topics": [
+        "Topic 00",
+        "Topic 01",
+        "Topic 02",
+        "Topic 03",
+        "Topic 04",
+        "Topic 05",
+        "Topic 06",
+        "Topic 07",
+        "Topic 08",
+        "Topic 09",
+        "Topic 10",
+        "Topic 11",
+        "Topic 12",
+        "Topic 13",
+        "Topic 14",
+        "Topic 15",
+        "Topic 16",
+        "Topic 17",
+        "Topic 18",
+        "Topic 19",
+        "Topic 20",
+        "Topic 21",
+        "Topic 22",
+        "Topic 23",
+        "Topic 24",
+        "Topic 25",
+        "Topic 26",
+        "Topic 27",
+        "Topic 28",
+        "Topic 29",
+        "Topic 30",
+        "ÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆÆ"
+      ],
+      "archived_at": "2026-11-07T08:00:00Z"
+    },
+    {
+      "id": "20261106-7c1e0a52",
+      "title": "Spec",
+      "text": "",
+      "created_at": "2026-11-06T09:00:00Z",
+      "notes": [],
+      "file": {
+        "name": "my spec ✓ æ.md",
+        "size": 10999
+      },
+      "archived_at": "2026-11-07T08:05:00Z"
+    }
+  ]
+}

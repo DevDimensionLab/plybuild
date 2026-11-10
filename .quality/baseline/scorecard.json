@@ -1,0 +1,1559 @@
+{
+  "attained_level": "none",
+  "criteria": [
+    {
+      "id": "Q0.1",
+      "level": "L0",
+      "measured": "go build ./... clean over 20 packages",
+      "title": "one command builds every package",
+      "verdict": "PASS"
+    },
+    {
+      "id": "Q0.2",
+      "level": "L0",
+      "measured": "go test ./... -count=1 exited 1; first failure: --- FAIL: TestSortAndWritePom_sort_enabled_by_default (0.00s) in github.com/devdimensionlab/plybuild/pkg/config",
+      "title": "one command runs every test, uncached",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q0.3",
+      "level": "L0",
+      "lift": "ACCEPTANCE-CRITERIA.md Q0.3",
+      "measured": "go vet clean, but there is no checked-in linter config",
+      "title": "the static gate is clean",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q0.4",
+      "level": "L0",
+      "measured": "the ordinary suite is not green, so an isolated run proves nothing",
+      "title": "tests are hermetic",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q0.5",
+      "level": "L0",
+      "measured": "the suite did not run green, so an unchanged tree proves nothing",
+      "title": "the suite leaves the tree byte-identical",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q0.6",
+      "level": "L0",
+      "lift": "04-seams-and-test-doubles.md \u00a76",
+      "measured": "central guard 0/1; guarded safe writers 0/2; safe-writer call sites 0 (write 0, copy 0); repository controls 0/2; audit contract 0/1; unsafe direct test writes 0; 2 skipped tests of 33",
+      "metric": {
+        "central_guard_call_sites": 0,
+        "central_guard_definitions": 0,
+        "contract_tests_expected": 1,
+        "contract_tests_passed": 0,
+        "copy_safe_call_sites": 0,
+        "direction": "max",
+        "guarded_safe_writers": 0,
+        "name": "skipped_tests",
+        "population": 33,
+        "precondition_met": false,
+        "repository_control_tests_expected": 2,
+        "repository_control_tests_passed": 0,
+        "repository_control_tests_run_and_passed": [],
+        "safe_writer_call_sites": 0,
+        "safe_writer_definitions": 0,
+        "unsafe_direct_test_write_sites": [],
+        "unsafe_direct_test_writes": 0,
+        "value": 2,
+        "write_safe_call_sites": 0
+      },
+      "title": "no test writes into the repository; no permanently skipped tests",
+      "upstream_measured": "leak guard defined 0 times, called 0 times; 2 skipped tests of 33",
+      "verdict": "FAIL",
+      "wrapper_findings": [
+        "project-local semantic leak-guard contract"
+      ]
+    },
+    {
+      "id": "Q0.7",
+      "level": "L0",
+      "measured": "20 packages, 100 go files, 33 test functions, 1 scripts, 0 harnesses, 0 acceptance scripts",
+      "title": "the denominators are recorded",
+      "verdict": "PASS"
+    },
+    {
+      "id": "Q0.8",
+      "level": "L0",
+      "lift": "01-mutation-harness.md \u00a711",
+      "measured": "1 of 1 scripts have no scripts/test-<name>",
+      "metric": {
+        "direction": "max",
+        "name": "scripts_without_meta_test",
+        "population": 1,
+        "value": 1
+      },
+      "title": "every script has a meta-test and parses",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q1.1",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a710",
+      "measured": "15 of 20 packages have no test files (RATCHET)",
+      "metric": {
+        "direction": "max",
+        "name": "packages_without_tests",
+        "population": 20,
+        "value": 15
+      },
+      "title": "no package with logic has zero tests",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q1.2",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a710",
+      "measured": "127 process-exiting calls outside main() - the layer cannot be driven from a test at all (RATCHET)",
+      "metric": {
+        "direction": "max",
+        "name": "process_exiting_calls",
+        "population": 100,
+        "value": 127
+      },
+      "title": "the entry layer is testable",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q1.3",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a72",
+      "measured": "80 direct external call sites outside 5 exact adapters of 80 production call sites; 5 adapter paths invalid",
+      "metric": {
+        "adapter_paths": [
+          "internal/adapter/process",
+          "internal/adapter/httpclient",
+          "internal/adapter/filesystem",
+          "internal/adapter/clock",
+          "internal/adapter/server"
+        ],
+        "adapter_receipts": [
+          {
+            "path": "internal/adapter/process",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/httpclient",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/filesystem",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/clock",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/server",
+            "status": "missing"
+          }
+        ],
+        "declared_adapters": 5,
+        "direction": "max",
+        "invalid_adapter_paths": [
+          {
+            "path": "internal/adapter/process",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/httpclient",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/filesystem",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/clock",
+            "status": "missing"
+          },
+          {
+            "path": "internal/adapter/server",
+            "status": "missing"
+          }
+        ],
+        "missing_adapter_paths": [
+          "internal/adapter/process",
+          "internal/adapter/httpclient",
+          "internal/adapter/filesystem",
+          "internal/adapter/clock",
+          "internal/adapter/server"
+        ],
+        "name": "direct_external_call_sites",
+        "population": 80,
+        "test_support_paths": [
+          "internal/testutil"
+        ],
+        "value": 80,
+        "violations": [
+          {
+            "column": 19,
+            "kind": "process",
+            "line": 86,
+            "path": "cmd/plugin_diagrams.go"
+          },
+          {
+            "column": 42,
+            "kind": "process",
+            "line": 94,
+            "path": "cmd/plugin_diagrams.go"
+          },
+          {
+            "column": 20,
+            "kind": "process",
+            "line": 97,
+            "path": "cmd/plugin_diagrams.go"
+          },
+          {
+            "column": 11,
+            "kind": "process",
+            "line": 51,
+            "path": "cmd/profile.go"
+          },
+          {
+            "column": 11,
+            "kind": "process",
+            "line": 54,
+            "path": "cmd/profile.go"
+          },
+          {
+            "column": 18,
+            "kind": "filesystem",
+            "line": 75,
+            "path": "cmd/tips.go"
+          },
+          {
+            "column": 15,
+            "kind": "filesystem",
+            "line": 72,
+            "path": "pkg/bitbucket/bitbucket.go"
+          },
+          {
+            "column": 16,
+            "kind": "filesystem",
+            "line": 161,
+            "path": "pkg/config/cloud.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 230,
+            "path": "pkg/config/cloud.go"
+          },
+          {
+            "column": 16,
+            "kind": "filesystem",
+            "line": 252,
+            "path": "pkg/config/cloud.go"
+          },
+          {
+            "column": 15,
+            "kind": "filesystem",
+            "line": 49,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 50,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 76,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 81,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 86,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 104,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 109,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 114,
+            "path": "pkg/config/local.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 118,
+            "path": "pkg/config/project.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 16,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 32,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 84,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 15,
+            "kind": "filesystem",
+            "line": 92,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 102,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 126,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 16,
+            "kind": "filesystem",
+            "line": 153,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 19,
+            "kind": "filesystem",
+            "line": 168,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 175,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 201,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 13,
+            "kind": "filesystem",
+            "line": 203,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 213,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 224,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 339,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 343,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 16,
+            "kind": "filesystem",
+            "line": 347,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 364,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 373,
+            "path": "pkg/file/file.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 11,
+            "path": "pkg/file/grep.go"
+          },
+          {
+            "column": 16,
+            "kind": "filesystem",
+            "line": 54,
+            "path": "pkg/file/ide.go"
+          },
+          {
+            "column": 21,
+            "kind": "filesystem",
+            "line": 16,
+            "path": "pkg/file/render.go"
+          },
+          {
+            "column": 15,
+            "kind": "http",
+            "line": 44,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 14,
+            "kind": "http",
+            "line": 78,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 15,
+            "kind": "http",
+            "line": 85,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 14,
+            "kind": "http",
+            "line": 105,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 15,
+            "kind": "http",
+            "line": 114,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 15,
+            "kind": "http",
+            "line": 129,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 14,
+            "kind": "filesystem",
+            "line": 136,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 140,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 11,
+            "kind": "filesystem",
+            "line": 143,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 15,
+            "kind": "http",
+            "line": 149,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 14,
+            "kind": "filesystem",
+            "line": 156,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 160,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 11,
+            "kind": "filesystem",
+            "line": 163,
+            "path": "pkg/http/client.go"
+          },
+          {
+            "column": 3,
+            "kind": "clock",
+            "line": 117,
+            "path": "pkg/kibana/kibana.go"
+          },
+          {
+            "column": 14,
+            "kind": "http",
+            "line": 131,
+            "path": "pkg/kibana/kibana.go"
+          },
+          {
+            "column": 15,
+            "kind": "http",
+            "line": 141,
+            "path": "pkg/kibana/kibana.go"
+          },
+          {
+            "column": 10,
+            "kind": "process",
+            "line": 16,
+            "path": "pkg/maven/command.go"
+          },
+          {
+            "column": 10,
+            "kind": "process",
+            "line": 19,
+            "path": "pkg/maven/command.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 102,
+            "path": "pkg/maven/graph.go"
+          },
+          {
+            "column": 13,
+            "kind": "process",
+            "line": 30,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 51,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 10,
+            "kind": "filesystem",
+            "line": 68,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 75,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 19,
+            "kind": "filesystem",
+            "line": 79,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 12,
+            "kind": "filesystem",
+            "line": 89,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 91,
+            "path": "pkg/shell/command.go"
+          },
+          {
+            "column": 13,
+            "kind": "process",
+            "line": 11,
+            "path": "pkg/shell/git.go"
+          },
+          {
+            "column": 13,
+            "kind": "process",
+            "line": 15,
+            "path": "pkg/shell/git.go"
+          },
+          {
+            "column": 13,
+            "kind": "process",
+            "line": 42,
+            "path": "pkg/shell/git.go"
+          },
+          {
+            "column": 17,
+            "kind": "filesystem",
+            "line": 109,
+            "path": "pkg/spring/io.go"
+          },
+          {
+            "column": 9,
+            "kind": "clock",
+            "line": 114,
+            "path": "pkg/spring/io.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 26,
+            "path": "pkg/structurizr/structurizr.go"
+          },
+          {
+            "column": 9,
+            "kind": "filesystem",
+            "line": 31,
+            "path": "pkg/template/template.go"
+          },
+          {
+            "column": 8,
+            "kind": "filesystem",
+            "line": 208,
+            "path": "pkg/template/template.go"
+          },
+          {
+            "column": 16,
+            "kind": "filesystem",
+            "line": 17,
+            "path": "pkg/tips/tips.go"
+          },
+          {
+            "column": 12,
+            "kind": "server",
+            "line": 25,
+            "path": "pkg/webservice/api.go"
+          },
+          {
+            "column": 6,
+            "kind": "server",
+            "line": 31,
+            "path": "pkg/webservice/api.go"
+          },
+          {
+            "column": 10,
+            "kind": "process",
+            "line": 37,
+            "path": "pkg/webservice/api.go"
+          },
+          {
+            "column": 10,
+            "kind": "process",
+            "line": 39,
+            "path": "pkg/webservice/api.go"
+          },
+          {
+            "column": 10,
+            "kind": "process",
+            "line": 41,
+            "path": "pkg/webservice/api.go"
+          }
+        ]
+      },
+      "title": "external effects go through an injection point",
+      "upstream_measured": "9 files make direct calls outside the declared adapters (RATCHET)",
+      "verdict": "FAIL",
+      "wrapper_findings": [
+        "project-local import-aware exact-path scan"
+      ]
+    },
+    {
+      "id": "Q1.4",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a71",
+      "measured": "0 of 8 declared seams covered",
+      "metric": {
+        "denominator": 8,
+        "direction": "min_ratio",
+        "name": "covered_seams",
+        "numerator": 0
+      },
+      "title": "every seam has an argument-swap test",
+      "verdict": "FAIL",
+      "wrapper_findings": [
+        "declared population is not fully covered"
+      ]
+    },
+    {
+      "id": "Q1.5",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a77",
+      "measured": "1 direct time.Now() calls, 0 clock declarations",
+      "title": "time is injected",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q1.6",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a74",
+      "measured": "MANUAL: read the test harness. Does every dependency get a default double, and is the struct passed on whole rather than rebuilt field by field?",
+      "title": "doubles record arguments; defaults for every side effect",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q1.7",
+      "level": "L1",
+      "lift": "04-seams-and-test-doubles.md \u00a79",
+      "measured": "MANUAL: does any test assert only the exit code of a command that reports per-item failures?",
+      "title": "partial-failure commands are asserted on content",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q1.9",
+      "level": "L1",
+      "lift": "02-reading-a-surviving-mutant.md \u00a72",
+      "measured": "MANUAL: read the tests that iterate a collection. Is there an assertion - not a comment - that fails when the collection is empty?",
+      "title": "tests refuse to pass on an empty population",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q1.8",
+      "level": "L1",
+      "measured": "the ordinary suite is not green, so a second run proves nothing",
+      "title": "no state leaks between runs",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q2.1",
+      "level": "L2",
+      "measured": "0 of 8 declared subjects have real production roots and a matching executable harness",
+      "metric": {
+        "denominator": 8,
+        "direction": "min_ratio",
+        "invalid_subject_bindings": [
+          {
+            "declared_sources": [
+              "cmd",
+              "pkg/context"
+            ],
+            "harness": {
+              "path": "scripts/mutate-cli-context",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-cli-context"
+              }
+            ],
+            "name": "cli-context",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "cmd",
+                "production_go_files": 21,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/context",
+                "production_go_files": 2,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/config"
+            ],
+            "harness": {
+              "path": "scripts/mutate-config-cloud",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-config-cloud"
+              }
+            ],
+            "name": "config-cloud",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/config",
+                "production_go_files": 9,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/maven",
+              "pkg/sorting"
+            ],
+            "harness": {
+              "path": "scripts/mutate-maven-sorting",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-maven-sorting"
+              }
+            ],
+            "name": "maven-sorting",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/maven",
+                "production_go_files": 17,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/sorting",
+                "production_go_files": 1,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/template"
+            ],
+            "harness": {
+              "path": "scripts/mutate-template",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-template"
+              }
+            ],
+            "name": "template",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/template",
+                "production_go_files": 2,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/file",
+              "pkg/shell"
+            ],
+            "harness": {
+              "path": "scripts/mutate-file-shell",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-file-shell"
+              }
+            ],
+            "name": "file-shell",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/file",
+                "production_go_files": 7,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/shell",
+                "production_go_files": 3,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/spring"
+            ],
+            "harness": {
+              "path": "scripts/mutate-spring",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-spring"
+              }
+            ],
+            "name": "spring",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/spring",
+                "production_go_files": 3,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/http"
+            ],
+            "harness": {
+              "path": "scripts/mutate-http",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-http"
+              }
+            ],
+            "name": "http",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/http",
+                "production_go_files": 2,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "cmd/build.go",
+              "pkg/webservice"
+            ],
+            "harness": {
+              "path": "scripts/mutate-interactive-build",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-interactive-build"
+              }
+            ],
+            "name": "interactive-build",
+            "source_roots": [
+              {
+                "kind": "file",
+                "path": "cmd/build.go",
+                "production_go_files": 1,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/webservice",
+                "production_go_files": 9,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          }
+        ],
+        "name": "valid_subject_harness_bindings",
+        "numerator": 0,
+        "source_precondition_met": true,
+        "subjects": [
+          {
+            "declared_sources": [
+              "cmd",
+              "pkg/context"
+            ],
+            "harness": {
+              "path": "scripts/mutate-cli-context",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-cli-context"
+              }
+            ],
+            "name": "cli-context",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "cmd",
+                "production_go_files": 21,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/context",
+                "production_go_files": 2,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/config"
+            ],
+            "harness": {
+              "path": "scripts/mutate-config-cloud",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-config-cloud"
+              }
+            ],
+            "name": "config-cloud",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/config",
+                "production_go_files": 9,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/maven",
+              "pkg/sorting"
+            ],
+            "harness": {
+              "path": "scripts/mutate-maven-sorting",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-maven-sorting"
+              }
+            ],
+            "name": "maven-sorting",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/maven",
+                "production_go_files": 17,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/sorting",
+                "production_go_files": 1,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/template"
+            ],
+            "harness": {
+              "path": "scripts/mutate-template",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-template"
+              }
+            ],
+            "name": "template",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/template",
+                "production_go_files": 2,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/file",
+              "pkg/shell"
+            ],
+            "harness": {
+              "path": "scripts/mutate-file-shell",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-file-shell"
+              }
+            ],
+            "name": "file-shell",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/file",
+                "production_go_files": 7,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/shell",
+                "production_go_files": 3,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/spring"
+            ],
+            "harness": {
+              "path": "scripts/mutate-spring",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-spring"
+              }
+            ],
+            "name": "spring",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/spring",
+                "production_go_files": 3,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "pkg/http"
+            ],
+            "harness": {
+              "path": "scripts/mutate-http",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-http"
+              }
+            ],
+            "name": "http",
+            "source_roots": [
+              {
+                "kind": "directory",
+                "path": "pkg/http",
+                "production_go_files": 2,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          },
+          {
+            "declared_sources": [
+              "cmd/build.go",
+              "pkg/webservice"
+            ],
+            "harness": {
+              "path": "scripts/mutate-interactive-build",
+              "status": "missing"
+            },
+            "issues": [
+              {
+                "code": "missing",
+                "kind": "harness",
+                "path": "scripts/mutate-interactive-build"
+              }
+            ],
+            "name": "interactive-build",
+            "source_roots": [
+              {
+                "kind": "file",
+                "path": "cmd/build.go",
+                "production_go_files": 1,
+                "status": "valid"
+              },
+              {
+                "kind": "directory",
+                "path": "pkg/webservice",
+                "production_go_files": 9,
+                "status": "valid"
+              }
+            ],
+            "status": "uncovered"
+          }
+        ]
+      },
+      "title": "every declared subject has a mutation harness",
+      "upstream_measured": "0 harnesses for 8 declared subjects of 20 packages",
+      "upstream_verdict": "PASS",
+      "verdict": "FAIL",
+      "wrapper_findings": [
+        "project-local subject-to-harness validation",
+        "declared population is not fully covered"
+      ]
+    },
+    {
+      "id": "Q2.2",
+      "level": "L2",
+      "lift": "01-mutation-harness.md \u00a72",
+      "measured": "no harnesses to measure",
+      "title": "each harness declares enough mutations and can fail",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.3",
+      "level": "L2",
+      "lift": "01-mutation-harness.md \u00a78",
+      "measured": "no harnesses to measure",
+      "title": "each harness has a T1-T10 meta-test",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.4",
+      "level": "L2",
+      "lift": "01-mutation-harness.md \u00a78",
+      "measured": "not run by this audit: a harness run mutates source and can take many minutes. Run each scripts/test-mutate-* yourself and record the numbers.",
+      "title": "declared equals killed, measured by running it",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.5",
+      "level": "L2",
+      "lift": "03-acceptance-scripts.md",
+      "measured": "8 missing scripts across 4 features",
+      "title": "each user-facing feature has an acceptance script",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q2.6",
+      "level": "L2",
+      "lift": "03-acceptance-scripts.md",
+      "measured": "no acceptance scripts to inspect",
+      "title": "acceptance-script properties",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.7",
+      "level": "L2",
+      "lift": "03-acceptance-scripts.md",
+      "measured": "no acceptance scripts to inspect",
+      "title": "acceptance-script properties",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.8",
+      "level": "L2",
+      "lift": "03-acceptance-scripts.md",
+      "measured": "no acceptance scripts to inspect",
+      "title": "acceptance-script properties",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.9",
+      "level": "L2",
+      "lift": "03-acceptance-scripts.md",
+      "measured": "no acceptance scripts to inspect",
+      "title": "acceptance-script properties",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q2.10",
+      "level": "L2",
+      "lift": "03-acceptance-scripts.md",
+      "measured": "no acceptance scripts to inspect",
+      "title": "acceptance-script properties",
+      "verdict": "UNMEASURABLE",
+      "wrapper_findings": [
+        "population is 0, so PASS is impossible"
+      ]
+    },
+    {
+      "id": "Q3.1",
+      "level": "L3",
+      "lift": "06-documentation-as-apparatus.md \u00a75",
+      "measured": "no AGENTS.md, CLAUDE.md, CONTRIBUTING.md or rules document found",
+      "title": "the rules file is numbered and names its checks",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q3.2",
+      "level": "L3",
+      "lift": "06-documentation-as-apparatus.md \u00a74",
+      "measured": "no test references the README",
+      "title": "the overview is tested against the real command tree",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q3.3",
+      "level": "L3",
+      "lift": "06-documentation-as-apparatus.md \u00a74",
+      "measured": "MANUAL: is there a test on the entry/boot document, and are its assertions independent of incidental order? An assertion that fails early makes every assertion below it unreachable.",
+      "title": "entry documents are under test, order-independently",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q3.4",
+      "level": "L3",
+      "lift": "06-documentation-as-apparatus.md \u00a73",
+      "measured": "0 state-claim phrases in markdown (RATCHET, indicator only - the phrase list is a heuristic and proves nothing on its own)",
+      "metric": {
+        "direction": "max",
+        "name": "state_claim_phrases",
+        "population": 1,
+        "value": 0
+      },
+      "title": "claim rot is bounded",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q3.5",
+      "level": "L3",
+      "lift": "06-documentation-as-apparatus.md \u00a71",
+      "measured": "no docs/design/ notes",
+      "title": "features have a design note with a premises table",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q3.6",
+      "level": "L3",
+      "lift": "06-documentation-as-apparatus.md \u00a72",
+      "measured": "none found",
+      "title": "a rolling handover exists",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q3.7",
+      "level": "L3",
+      "lift": "07-agent-harness.md \u00a73",
+      "measured": "MANUAL: cmp -s each instruction file in the repository against its installed copy, BOTH directions, and check what the install step actually iterates over.",
+      "title": "no drift between repository and installed instruction copies",
+      "verdict": "UNMEASURABLE"
+    },
+    {
+      "id": "Q3.8",
+      "level": "L3",
+      "lift": "01-mutation-harness.md \u00a711",
+      "measured": "no single make target runs tests, meta-tests and acceptance scripts",
+      "title": "one entry point runs the apparatus",
+      "verdict": "FAIL"
+    },
+    {
+      "id": "Q3.9",
+      "level": "L3",
+      "lift": "05-evidence-discipline.md \u00a74",
+      "measured": "MANUAL, and deliberately so: the top level cannot be reached by a script alone. Record the four manual findings from ACCEPTANCE-CRITERIA.md 'How to score', with numbers.",
+      "title": "the score is reproducible and a human has read the output",
+      "upstream_verdict": "UNMEASURABLE",
+      "verdict": "PASS",
+      "wrapper_findings": [
+        "manual evidence is valid and bound to the measured clean tree"
+      ]
+    }
+  ],
+  "denominators": {
+    "acceptance_scripts": 0,
+    "declared_adapters": 5,
+    "declared_features": 4,
+    "declared_seams": 8,
+    "declared_subjects": 8,
+    "enabled_ci_workflows": 0,
+    "go_files": 100,
+    "inventory": "present",
+    "markdown_files": 1,
+    "mutation_harnesses": 0,
+    "packages": 20,
+    "packages_with_tests": 5,
+    "scripts": 1,
+    "skipped_tests": 2,
+    "table_driven_tests": 0,
+    "test_functions": 33
+  },
+  "inventory": {
+    "overlay": true,
+    "path": ".quality/inventory",
+    "present": true,
+    "sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d"
+  },
+  "levels": {
+    "L0": {
+      "FAIL": 4,
+      "N-A": 0,
+      "PASS": 2,
+      "UNMEASURABLE": 2,
+      "expected": 8,
+      "measured": 8
+    },
+    "L1": {
+      "FAIL": 5,
+      "N-A": 0,
+      "PASS": 0,
+      "UNMEASURABLE": 4,
+      "expected": 9,
+      "measured": 9
+    },
+    "L2": {
+      "FAIL": 2,
+      "N-A": 0,
+      "PASS": 0,
+      "UNMEASURABLE": 8,
+      "expected": 10,
+      "measured": 10
+    },
+    "L3": {
+      "FAIL": 5,
+      "N-A": 0,
+      "PASS": 1,
+      "UNMEASURABLE": 3,
+      "expected": 9,
+      "measured": 9
+    }
+  },
+  "manual_evidence": {
+    "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
+    "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
+    "criterion_receipts": 0,
+    "instrument": {
+      "call_scanner_sha256": "73dba9d563fb0b3e85af032487d024c7f42b80fd76de9f928d2888fed7347879",
+      "parser_sha256": "f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a",
+      "q06_contract_sha256": "7881988a831b02e367b21aa0d2ad3d08e25afb7524a5c30f8bfa2a2533c64772",
+      "report_template_sha256": "3138b45cd2ad3f3e396ad3c5ea1325130619d6d2c61c2d2c64db262035c0f07d",
+      "upstream_sha256": "45787c231a0f07f27093824b19685aee4fb4cab5159cdb7864834b79fbc9cee9",
+      "upstream_version": "1",
+      "wrapper_sha256": "b896bb8fac4c81fd5c4aab40732b3064e8355fa0d320dbc4b797541192beda75",
+      "wrapper_version": 1
+    },
+    "inventory_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d",
+    "receipts": {},
+    "seam_receipts": 3,
+    "sha256": "be738161fddc1d22ad4d2e9fb71bed502846df5060f1185020c1132dec338965",
+    "status": "valid",
+    "survivor_classifications": [
+      "missing test"
+    ],
+    "survivor_receipts": 3
+  },
+  "ratchet": {
+    "compared": 0,
+    "held": 0,
+    "improved": 0,
+    "regressed": 0,
+    "status": "not_supplied"
+  },
+  "repository": {
+    "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
+    "module": "github.com/devdimensionlab/plybuild",
+    "tree": {
+      "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
+      "dirty_paths": [
+        ".quality/inventory"
+      ],
+      "git_clean": false,
+      "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d",
+      "measurement_clean": true,
+      "status_sha256": "92c7d2ec4ac196dcda23b73a0e97a46b9889b37f12b97b9963220c50444e32b1"
+    }
+  },
+  "schema_version": 2,
+  "tool": {
+    "call_scanner_sha256": "73dba9d563fb0b3e85af032487d024c7f42b80fd76de9f928d2888fed7347879",
+    "go_build": {
+      "cgo_enabled": "0",
+      "go386": "",
+      "goamd64": "",
+      "goarch": "arm64",
+      "goarm": "",
+      "goarm64": "v8.0",
+      "goenv": "off",
+      "goexperiment": "",
+      "goflags": "",
+      "gomips": "",
+      "gomips64": "",
+      "goos": "darwin",
+      "goppc64": "",
+      "goriscv64": "",
+      "gowasm": "",
+      "gowork": "off",
+      "production_files": {
+        "count": 86,
+        "sha256": "810af0990b151ea970aa380abd993fc3c9739a73dedd43ad41e9c0cfb814ba9e"
+      },
+      "test_files": {
+        "count": 14,
+        "sha256": "dcc538ca99211b5b6c0394908ea97aacbd1bcd9d722d2636e5ff0bc8fb29afb5"
+      },
+      "version": "go version go1.26.7 darwin/arm64"
+    },
+    "mode": "full mode",
+    "parser_sha256": "f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a",
+    "partial": false,
+    "q06_contract_sha256": "7881988a831b02e367b21aa0d2ad3d08e25afb7524a5c30f8bfa2a2533c64772",
+    "report_template_sha256": "3138b45cd2ad3f3e396ad3c5ea1325130619d6d2c61c2d2c64db262035c0f07d",
+    "upstream_exit": 1,
+    "upstream_sha256": "45787c231a0f07f27093824b19685aee4fb4cab5159cdb7864834b79fbc9cee9",
+    "upstream_version": "1",
+    "wrapper_sha256": "b896bb8fac4c81fd5c4aab40732b3064e8355fa0d320dbc4b797541192beda75",
+    "wrapper_version": 1
+  }
+}

@@ -5,7 +5,7 @@ import "testing"
 func TestIsSecondPartyGroupIdId(t *testing.T) {
 	result1, err := isSecondPartyGroupId("com.example.backend", "com.example")
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Fatalf("compare second-party group ID: %v", err)
 	}
 	if result1 != true {
 		t.Errorf("com.example.backend and com.example.frontend should return true for sortKey")
@@ -13,7 +13,7 @@ func TestIsSecondPartyGroupIdId(t *testing.T) {
 
 	result2, err := isSecondPartyGroupId("com.example2.backend", "com.example")
 	if err != nil {
-		t.Errorf("%v", err)
+		t.Fatalf("compare non-second-party group ID: %v", err)
 	}
 	if result2 {
 		t.Errorf("com.example2.backend is not a secondParty com.example groupId, and should not be true")

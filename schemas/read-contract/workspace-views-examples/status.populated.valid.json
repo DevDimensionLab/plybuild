@@ -1,0 +1,40 @@
+{
+  "kind": "WorkspaceStatusReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": "registered_ply_facts",
+  "registry_sha256": "sha256:cd31fdfb669f3995cdefde4b86d774226af8638b8275e0743585c20f158ab166",
+  "freshness": "fresh",
+  "registers": [
+    {
+      "id": "projects",
+      "registry_sha256": "sha256:551cae7c3a5cacc8160c45762a12e89a5b0ce8b3c7f1ac21b28e3c038249be06",
+      "freshness": "fresh",
+      "file_count": 2,
+      "reasons": []
+    },
+    {
+      "id": "work_items",
+      "registry_sha256": "sha256:18c4860d405ff6a8f4dd5279e34cd11c2239e877ab6f6c70fff3b1f89ae3bc32",
+      "freshness": "fresh",
+      "file_count": 2,
+      "reasons": []
+    },
+    {
+      "id": "journal",
+      "registry_sha256": "sha256:97ef5ee28030d6ad32231faaf85ce92fcf09b90a0b0823d795be2df081f9a3b0",
+      "freshness": "fresh",
+      "file_count": 1,
+      "reasons": []
+    },
+    {
+      "id": "runs",
+      "registry_sha256": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "freshness": "fresh",
+      "file_count": 0,
+      "reasons": []
+    }
+  ]
+}

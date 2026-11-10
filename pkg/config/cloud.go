@@ -1,19 +1,301 @@
 package config
 
 import (
-	"errors"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 	"github.com/devdimensionlab/plybuild/pkg/file"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"gopkg.in/yaml.v3"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
 type GitCloudConfig struct {
 	Impl DirConfig
+}
+
+type servicesLoader interface {
+	Load(directory Directory) (CloudServices, error)
+}
+
+type servicesDependencies struct {
+	Loader servicesLoader
+}
+
+func systemServicesDependencies() servicesDependencies {
+	return servicesDependencies{Loader: fileServicesLoader{}}
+}
+
+func (dependencies servicesDependencies) Load(directory Directory) (CloudServices, error) {
+	if dependencies.Loader == nil {
+		return CloudServices{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileServicesLoader struct{}
+
+func (fileServicesLoader) Load(directory Directory) (CloudServices, error) {
+	var services CloudServices
+
+	path, err := directory.FilePath("services.json")
+	if err != nil {
+		return services, err
+	}
+
+	err = file.ReadJson(path, &services)
+	return services, err
+}
+
+type projectDefaultsLoader interface {
+	Load(directory Directory) (CloudProjectDefaults, error)
+}
+
+type projectDefaultsDependencies struct {
+	Loader projectDefaultsLoader
+}
+
+func systemProjectDefaultsDependencies() projectDefaultsDependencies {
+	return projectDefaultsDependencies{Loader: fileProjectDefaultsLoader{}}
+}
+
+func (dependencies projectDefaultsDependencies) Load(directory Directory) (CloudProjectDefaults, error) {
+	if dependencies.Loader == nil {
+		return CloudProjectDefaults{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileProjectDefaultsLoader struct{}
+
+func (fileProjectDefaultsLoader) Load(directory Directory) (CloudProjectDefaults, error) {
+	var projectDefaults CloudProjectDefaults
+
+	path, err := directory.FilePath("project-defaults.json")
+	if err != nil {
+		return projectDefaults, err
+	}
+
+	err = file.ReadJson(path, &projectDefaults)
+	return projectDefaults, err
+}
+
+type deprecatedLoader interface {
+	Load(directory Directory) (CloudDeprecated, error)
+}
+
+type deprecatedDependencies struct {
+	Loader deprecatedLoader
+}
+
+func systemDeprecatedDependencies() deprecatedDependencies {
+	return deprecatedDependencies{Loader: fileDeprecatedLoader{}}
+}
+
+func (dependencies deprecatedDependencies) Load(directory Directory) (CloudDeprecated, error) {
+	if dependencies.Loader == nil {
+		return CloudDeprecated{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileDeprecatedLoader struct{}
+
+func (fileDeprecatedLoader) Load(directory Directory) (CloudDeprecated, error) {
+	var deprecated CloudDeprecated
+
+	path, err := directory.FilePath("deprecated.json")
+	if err != nil {
+		return deprecated, err
+	}
+
+	err = file.ReadJson(path, &deprecated)
+	return deprecated, err
+}
+
+type globalConfigLoader interface {
+	Load(directory Directory) (GlobalCloudConfig, error)
+}
+
+type globalConfigDependencies struct {
+	Loader globalConfigLoader
+}
+
+func systemGlobalConfigDependencies() globalConfigDependencies {
+	return globalConfigDependencies{Loader: fileGlobalConfigLoader{}}
+}
+
+func (dependencies globalConfigDependencies) Load(directory Directory) (GlobalCloudConfig, error) {
+	if dependencies.Loader == nil {
+		return GlobalCloudConfig{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type fileGlobalConfigLoader struct{}
+
+func (fileGlobalConfigLoader) Load(directory Directory) (globalCloudConfig GlobalCloudConfig, err error) {
+	globalConfigFile := file.Path("%s/global-config.yaml", directory.Dir())
+
+	b, err := file.Open(globalConfigFile)
+	if err != nil {
+		return globalCloudConfig, err
+	}
+
+	b = []byte(os.ExpandEnv(string(b)))
+
+	err = yaml.Unmarshal(b, &globalCloudConfig)
+	return globalCloudConfig, err
+}
+
+type gitHookFilesDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemGitHookFilesDependencies() gitHookFilesDependencies {
+	return gitHookFilesDependencies{Files: filesystem.System()}
+}
+
+type examplesDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemExamplesDependencies() examplesDependencies {
+	return examplesDependencies{Files: filesystem.System()}
+}
+
+type templateProjectLoader interface {
+	Load(directory string) (Project, error)
+}
+
+type templatesDependencies struct {
+	Files  filesystem.Dependencies
+	Loader templateProjectLoader
+}
+
+func systemTemplatesDependencies() templatesDependencies {
+	return templatesDependencies{
+		Files:  filesystem.System(),
+		Loader: initTemplateProjectLoader{},
+	}
+}
+
+func (dependencies templatesDependencies) Load(directory string) (Project, error) {
+	if dependencies.Loader == nil {
+		return Project{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(directory)
+}
+
+type initTemplateProjectLoader struct{}
+
+func (initTemplateProjectLoader) Load(directory string) (Project, error) {
+	return InitProjectFromDirectory(directory)
+}
+
+type templateListLoader interface {
+	Load(gitCfg GitCloudConfig) ([]CloudTemplate, error)
+}
+
+type templateLookupDependencies struct {
+	Loader templateListLoader
+}
+
+func systemTemplateLookupDependencies() templateLookupDependencies {
+	return templateLookupDependencies{Loader: gitTemplateListLoader{}}
+}
+
+func (dependencies templateLookupDependencies) Load(gitCfg GitCloudConfig) ([]CloudTemplate, error) {
+	if dependencies.Loader == nil {
+		return nil, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(gitCfg)
+}
+
+type gitTemplateListLoader struct{}
+
+func (gitTemplateListLoader) Load(gitCfg GitCloudConfig) ([]CloudTemplate, error) {
+	return gitCfg.Templates()
+}
+
+type perNameTemplateLoader interface {
+	Load(gitCfg GitCloudConfig, name string) (CloudTemplate, error)
+}
+
+type validTemplatesDependencies struct {
+	Loader perNameTemplateLoader
+}
+
+func systemValidTemplatesDependencies() validTemplatesDependencies {
+	return validTemplatesDependencies{Loader: gitPerNameTemplateLoader{}}
+}
+
+func (dependencies validTemplatesDependencies) Load(gitCfg GitCloudConfig, name string) (CloudTemplate, error) {
+	if dependencies.Loader == nil {
+		return CloudTemplate{}, filesystem.ErrNoFilesystem
+	}
+	return dependencies.Loader.Load(gitCfg, name)
+}
+
+type gitPerNameTemplateLoader struct{}
+
+func (gitPerNameTemplateLoader) Load(gitCfg GitCloudConfig, name string) (CloudTemplate, error) {
+	return gitCfg.Template(name)
+}
+
+type refreshGit interface {
+	Clone(url string, target string) shell.Output
+	Pull(target string) shell.Output
+}
+
+type refreshCacheProbe interface {
+	Exists(path string) bool
+}
+
+type refreshGitDependencies struct {
+	Git   refreshGit
+	Cache refreshCacheProbe
+}
+
+func systemRefreshGitDependencies() refreshGitDependencies {
+	return refreshGitDependencies{Git: shellRefreshGit{}, Cache: fileRefreshCache{}}
+}
+
+func (dependencies refreshGitDependencies) Clone(url string, target string) shell.Output {
+	if dependencies.Git == nil {
+		return shell.Output{}
+	}
+	return dependencies.Git.Clone(url, target)
+}
+
+func (dependencies refreshGitDependencies) Pull(target string) shell.Output {
+	if dependencies.Git == nil {
+		return shell.Output{}
+	}
+	return dependencies.Git.Pull(target)
+}
+
+func (dependencies refreshGitDependencies) Exists(path string) bool {
+	if dependencies.Cache == nil {
+		return false
+	}
+	return dependencies.Cache.Exists(path)
+}
+
+type shellRefreshGit struct{}
+
+func (shellRefreshGit) Clone(url string, target string) shell.Output {
+	return shell.GitClone(url, target)
+}
+
+func (shellRefreshGit) Pull(target string) shell.Output {
+	return shell.GitPull(target)
+}
+
+type fileRefreshCache struct{}
+
+func (fileRefreshCache) Exists(path string) bool {
+	return file.Exists(path)
 }
 
 type CloudConfig interface {
@@ -52,21 +334,25 @@ func (gitCfg GitCloudConfig) Implementation() Directory {
 }
 
 func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
+	return gitCfg.refresh(systemRefreshGitDependencies(), localConfig)
+}
+
+func (gitCfg GitCloudConfig) refresh(dependencies refreshGitDependencies, localConfig LocalConfigFile) error {
 	localCfg, err := localConfig.Config()
 	if err != nil {
 		return err
 	}
 
 	target := gitCfg.Implementation().Dir()
-	if file.Exists(file.Path("%s/.git", target)) {
+	if dependencies.Exists(file.Path("%s/.git", target)) {
 		log.Info(fmt.Sprintf("pulling cloud config on %s", target))
-		pull := shell.GitPull(target)
+		pull := dependencies.Pull(target)
 		if pull.Err != nil {
 			return pull.FormatError()
 		}
 	} else {
 		log.Info(fmt.Sprintf("cloning %s to %s", localCfg.CloudConfig.Git.Url, target))
-		clone := shell.GitClone(localCfg.CloudConfig.Git.Url, target)
+		clone := dependencies.Clone(localCfg.CloudConfig.Git.Url, target)
 		if clone.Err != nil {
 			return clone.FormatError()
 		}
@@ -76,24 +362,14 @@ func (gitCfg GitCloudConfig) Refresh(localConfig LocalConfigFile) error {
 }
 
 func (gitCfg GitCloudConfig) Services() func() (CloudServices, error) {
-	var services CloudServices
+	return gitCfg.services(systemServicesDependencies())
+}
 
-	path, err := gitCfg.Implementation().FilePath("services.json")
-	if err != nil {
-		return func() (CloudServices, error) {
-			return services, err
-		}
-	}
-
-	err = file.ReadJson(path, &services)
-	if err != nil {
-		return func() (CloudServices, error) {
-			return services, err
-		}
-	}
+func (gitCfg GitCloudConfig) services(dependencies servicesDependencies) func() (CloudServices, error) {
+	services, err := dependencies.Load(gitCfg.Implementation())
 
 	return func() (CloudServices, error) {
-		return services, nil
+		return services, err
 	}
 }
 
@@ -116,7 +392,7 @@ func (gitCfg GitCloudConfig) LinkFromService(services func() (CloudServices, err
 		}
 	}
 
-	return url, errors.New(fmt.Sprintf("could not get cloud config service information on %s:%s", groupId, artifactId))
+	return url, fmt.Errorf("could not get cloud config service information on %s:%s", groupId, artifactId)
 }
 
 func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, key string) (url string, err error) {
@@ -129,36 +405,32 @@ func (gitCfg GitCloudConfig) DefaultServiceEnvironmentUrl(service CloudService, 
 		}
 	}
 
-	return url, errors.New(fmt.Sprintf("could not find environment with link key %s", key))
+	return url, fmt.Errorf("could not find environment with link key %s", key)
 }
 
 func (gitCfg GitCloudConfig) Deprecated() (CloudDeprecated, error) {
-	var deprecated CloudDeprecated
+	return gitCfg.deprecated(systemDeprecatedDependencies())
+}
 
-	path, err := gitCfg.Implementation().FilePath("deprecated.json")
-	if err != nil {
-		return deprecated, err
-	}
-
-	err = file.ReadJson(path, &deprecated)
-	return deprecated, err
+func (gitCfg GitCloudConfig) deprecated(dependencies deprecatedDependencies) (CloudDeprecated, error) {
+	return dependencies.Load(gitCfg.Implementation())
 }
 
 func (gitCfg GitCloudConfig) ProjectDefaults() (CloudProjectDefaults, error) {
-	var projectDefaults CloudProjectDefaults
+	return gitCfg.projectDefaults(systemProjectDefaultsDependencies())
+}
 
-	path, err := gitCfg.Implementation().FilePath("project-defaults.json")
-	if err != nil {
-		return CloudProjectDefaults{}, err
-	}
-
-	err = file.ReadJson(path, &projectDefaults)
-	return projectDefaults, err
+func (gitCfg GitCloudConfig) projectDefaults(dependencies projectDefaultsDependencies) (CloudProjectDefaults, error) {
+	return dependencies.Load(gitCfg.Implementation())
 }
 
 func (gitCfg GitCloudConfig) GitHookFiles(path string) ([]string, error) {
+	return gitCfg.gitHookFiles(systemGitHookFilesDependencies(), path)
+}
+
+func (gitCfg GitCloudConfig) gitHookFiles(dependencies gitHookFilesDependencies, path string) ([]string, error) {
 	root := file.Path("%s/%s", gitCfg.Implementation().Dir(), path)
-	files, err := ioutil.ReadDir(root)
+	files, err := filesystem.ReadDir(dependencies.Files, root)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +482,11 @@ func (gitCfg GitCloudConfig) HasTemplate(name string) bool {
 }
 
 func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
-	templates, err := gitCfg.Templates()
+	return gitCfg.template(systemTemplateLookupDependencies(), name)
+}
+
+func (gitCfg GitCloudConfig) template(dependencies templateLookupDependencies, name string) (CloudTemplate, error) {
+	templates, err := dependencies.Load(gitCfg)
 	if err != nil {
 		return CloudTemplate{}, err
 	}
@@ -221,17 +497,21 @@ func (gitCfg GitCloudConfig) Template(name string) (CloudTemplate, error) {
 		}
 	}
 
-	return CloudTemplate{}, errors.New(fmt.Sprintf("could not find any valid templates with name: %s", name))
+	return CloudTemplate{}, fmt.Errorf("could not find any valid templates with name: %s", name)
 }
 
 func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) {
+	return gitCfg.templates(systemTemplatesDependencies())
+}
+
+func (gitCfg GitCloudConfig) templates(dependencies templatesDependencies) (templates []CloudTemplate, err error) {
 	root := file.Path("%s/templates", gitCfg.Implementation().Dir())
 
-	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err = filesystem.Walk(dependencies.Files, root, func(path string, info os.FileInfo, err error) error {
 		if err == nil && (info.Name() == projectConfigFileName || info.Name() == legacyProjectConfigFileName) {
 			relPath := strings.Split(path, file.Path("/"+info.Name()))
 			name := strings.Split(relPath[0], file.Path("/templates/"))
-			project, err := InitProjectFromDirectory(relPath[0])
+			project, err := dependencies.Load(relPath[0])
 			if err != nil {
 				log.Error(err)
 				return err
@@ -248,8 +528,12 @@ func (gitCfg GitCloudConfig) Templates() (templates []CloudTemplate, err error) 
 }
 
 func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
+	return gitCfg.examples(systemExamplesDependencies())
+}
+
+func (gitCfg GitCloudConfig) examples(dependencies examplesDependencies) (templates []string, err error) {
 	examplesDir := file.Path("%s/examples", gitCfg.Implementation().Dir())
-	items, err := ioutil.ReadDir(examplesDir)
+	items, err := filesystem.ReadDir(dependencies.Files, examplesDir)
 	if err != nil {
 		return
 	}
@@ -264,23 +548,20 @@ func (gitCfg GitCloudConfig) Examples() (templates []string, err error) {
 }
 
 func (gitCfg GitCloudConfig) GlobalCloudConfig() (globalCloudConfig GlobalCloudConfig, err error) {
+	return gitCfg.globalCloudConfig(systemGlobalConfigDependencies())
+}
 
-	globalConfigFile := file.Path("%s/global-config.yaml", gitCfg.Implementation().Dir())
-
-	b, err := file.Open(globalConfigFile)
-	if err != nil {
-		return
-	}
-
-	b = []byte(os.ExpandEnv(string(b)))
-
-	err = yaml.Unmarshal(b, &globalCloudConfig)
-	return
+func (gitCfg GitCloudConfig) globalCloudConfig(dependencies globalConfigDependencies) (GlobalCloudConfig, error) {
+	return dependencies.Load(gitCfg.Implementation())
 }
 
 func (gitCfg GitCloudConfig) ValidTemplatesFrom(list []string) (templates []CloudTemplate, err error) {
+	return gitCfg.validTemplatesFrom(systemValidTemplatesDependencies(), list)
+}
+
+func (gitCfg GitCloudConfig) validTemplatesFrom(dependencies validTemplatesDependencies, list []string) (templates []CloudTemplate, err error) {
 	for _, t := range unique(list) {
-		template, err := gitCfg.Template(t)
+		template, err := dependencies.Load(gitCfg, t)
 		if err != nil {
 			return templates, err
 		} else {

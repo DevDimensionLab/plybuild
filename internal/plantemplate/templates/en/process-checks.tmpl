@@ -1,0 +1,23 @@
+# Process checks
+
+Conditional checks. Use a section only when its trigger actually occurred; none of them is a routine step.
+
+## Runtime and permissions
+
+Trigger: starting a run or an effect whose authority is unknown. Bind the actual runtime, start surface and physical effect path before the effect. A writable-looking path or a profile name is no proof. Do not change runtime or permission configuration to widen authority; stop only the dependent effect and name the missing fact.
+
+## Effect paths
+
+Trigger: any write outside this planning repository. Name repository, worktree, branch/base and allowed effects first. After a possible side effect, record the state before, the attempted effect and the actual state after; an exit code is not proof of the effect.
+
+## Unknown start or return
+
+Trigger: a delegated run whose start or return is unknown. Do not send the same task again. Find the bound state first, and preserve the run and its tab.
+
+## Result binding
+
+Trigger: accepting a delegated result. Bind it to the exact commit and tree and to the tests that actually ran. Keep the report, the recorded effect and the human judgment as separate layers.
+
+## Reading control
+
+Trigger: printing large files. Measure the UTF-8 size first and split reads above 12,000 bytes.

@@ -1,0 +1,9 @@
+{
+  "kind": "ply.workflow.notification-route",
+  "schema_version": 1,
+  "name": "agent-events",
+  "transport": "slack_incoming_webhook",
+  "channel_label": "#agent-events",
+  "webhook_env": "PLY_SLACK_WEBHOOK",
+  "state_root": "/private/tmp/ply-notification-example/notification-state"
+}

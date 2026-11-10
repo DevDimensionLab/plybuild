@@ -1,0 +1,300 @@
+{
+  "kind": "WorkflowStatusReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "filters": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "include_all": false,
+  "observed_at_utc": "2026-10-06T18:00:00Z",
+  "source_basis": "registered",
+  "freshness": "fresh",
+  "projects": [
+    {
+      "project_id": "ply",
+      "name": "Ply",
+      "repo_ids": [
+        "cli"
+      ]
+    },
+    {
+      "project_id": "plyapp",
+      "name": "Plyapp",
+      "repo_ids": [
+        "app"
+      ]
+    },
+    {
+      "project_id": "empty",
+      "name": "Empty project",
+      "repo_ids": []
+    }
+  ],
+  "epics": [
+    {
+      "epic_id": "cli",
+      "project_id": "ply",
+      "title": "CLI",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 3,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 3
+      },
+      "last_activity_utc": null
+    },
+    {
+      "epic_id": "home",
+      "project_id": "plyapp",
+      "title": "Home",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 1,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 1
+      },
+      "last_activity_utc": null
+    },
+    {
+      "epic_id": "later",
+      "project_id": "plyapp",
+      "title": "Empty Epic",
+      "lifecycle": "active",
+      "base": [],
+      "worktrees": [],
+      "task_count": 0,
+      "progress_counts": {
+        "integrated": 0,
+        "attention": 0,
+        "in_progress": 0,
+        "nothing": 0
+      },
+      "last_activity_utc": null
+    }
+  ],
+  "items": [
+    {
+      "task_id": "clarify-output",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Clarify the output",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "needs_you",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [
+        {
+          "source": "delivery_report",
+          "kind": "answer_question",
+          "actor": "probably-human",
+          "reason": "Which output should be the default?",
+          "severity": "next_step",
+          "since_utc": null,
+          "evidence_ids": [
+            "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+            "question-event-a"
+          ],
+          "current": true,
+          "run_id": "wfr_1111111111111111111111111111111111111111111111111111111111111111",
+          "queue_id": null
+        }
+      ],
+      "queues": []
+    },
+    {
+      "task_id": "repair-output",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Repair the output",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "follow_up",
+      "progress": {
+        "state": "attention",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "integration_result_id": null,
+        "next_actions": [
+          {
+            "source": "content",
+            "kind": "follow_human_qa",
+            "actor": "agent",
+            "reason": "Address the recorded QA failure.",
+            "severity": "next_step",
+            "since_utc": null,
+            "evidence_ids": [
+              "qa-result-a"
+            ]
+          }
+        ],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [
+        {
+          "source": "content",
+          "kind": "follow_human_qa",
+          "actor": "agent",
+          "reason": "Address the recorded QA failure.",
+          "severity": "next_step",
+          "since_utc": null,
+          "evidence_ids": [
+            "qa-result-a"
+          ],
+          "current": true,
+          "run_id": null,
+          "queue_id": null
+        }
+      ],
+      "queues": []
+    },
+    {
+      "task_id": "navigation",
+      "project_id": "plyapp",
+      "repo_id": "app",
+      "epic_id": "home",
+      "title": "Implement navigation",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "worktree_ready",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "in_progress",
+      "progress": {
+        "state": "in_progress",
+        "has_progress": true,
+        "integration_classification": "unknown",
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [],
+      "queues": []
+    },
+    {
+      "task_id": "workflow-status",
+      "project_id": "ply",
+      "repo_id": "cli",
+      "epic_id": "cli",
+      "title": "Workspace workflow status",
+      "title_source": "problem_revision",
+      "title_status": "available",
+      "worktree_state": "unbound",
+      "task_lifecycle": "active",
+      "epic_lifecycle": "active",
+      "category": "ready_next",
+      "progress": {
+        "state": "nothing",
+        "has_progress": false,
+        "integration_classification": "unknown",
+        "integration_result_id": null,
+        "next_actions": [],
+        "last_activity_utc": null,
+        "freshness": "fresh",
+        "source_basis": "registered",
+        "reasons": []
+      },
+      "last_activity_utc": null,
+      "freshness": "fresh",
+      "next_actions": [],
+      "queues": [
+        {
+          "queue_id": "queue-a",
+          "revision": 3,
+          "target": {
+            "project_id": "ply",
+            "repo_id": "cli",
+            "epic_id": "cli",
+            "git_common_dir": "/work/ply/main/.git",
+            "parent_worktree_id": "epic-worktree-a",
+            "parent_locator": "/work/ply/cli",
+            "parent_ref": "refs/heads/cli"
+          },
+          "state": "pending",
+          "rank": 1,
+          "spec_id": "status-goal",
+          "spec": {
+            "revision": 1,
+            "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "readiness": "ready",
+          "freshness": "fresh",
+          "since_utc": "2026-10-06T17:00:00Z",
+          "reasons": [],
+          "evidence_ids": [
+            "queue-a",
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ],
+          "goal": {
+            "spec_id": "status-goal",
+            "spec": {
+              "revision": 1,
+              "manifest_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            }
+          },
+          "selection": null
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "total": 17,
+    "visible": 4,
+    "hidden": {
+      "inactive": 3,
+      "completed": 2,
+      "backlog": 8
+    },
+    "categories": {
+      "needs_you": 1,
+      "follow_up": 1,
+      "in_progress": 1,
+      "ready_next": 1,
+      "inactive": 0,
+      "completed": 0,
+      "backlog": 0
+    }
+  },
+  "diagnostics": []
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "repository": {
+    "commit": "5635d50bd161a9a5aa81fc4332cc0c9d68885d08",
+    "module": "github.com/devdimensionlab/plybuild",
+    "tree": {
+      "commit_tree": "ad3b300e55a9ff08936c09fdbeb875a35bbcf376",
+      "status_sha256": "92c7d2ec4ac196dcda23b73a0e97a46b9889b37f12b97b9963220c50444e32b1",
+      "inventory_overlay_sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d"
+    }
+  },
+  "inventory": {
+    "path": ".quality/inventory",
+    "present": true,
+    "sha256": "4cec690f46b9595d70bce9a08c164aa56d46ac5bb3d69bfe84f83d9006c06e8d",
+    "overlay": true
+  },
+  "instrument": {
+    "wrapper_version": 1,
+    "upstream_version": "1",
+    "upstream_sha256": "45787c231a0f07f27093824b19685aee4fb4cab5159cdb7864834b79fbc9cee9",
+    "parser_sha256": "f56dc96885c0f3ab5e18bdb3ccbe155411efc0ce7bacfeb4fe701d8a23d0c31a",
+    "wrapper_sha256": "b896bb8fac4c81fd5c4aab40732b3064e8355fa0d320dbc4b797541192beda75",
+    "call_scanner_sha256": "73dba9d563fb0b3e85af032487d024c7f42b80fd76de9f928d2888fed7347879",
+    "q06_contract_sha256": "7881988a831b02e367b21aa0d2ad3d08e25afb7524a5c30f8bfa2a2533c64772",
+    "report_template_sha256": "3138b45cd2ad3f3e396ad3c5ea1325130619d6d2c61c2d2c64db262035c0f07d"
+  },
+  "criteria": [],
+  "findings": {
+    "seam_test": [
+      {
+        "command": "go test ./pkg/config -run '^TestGitCloudConfig_' -count=1",
+        "mutation": "swapped cloud-config clone URL and target directory in a throwaway clone",
+        "measured": "3 selected tests passed with exit 0 after the swap; none exercises Refresh",
+        "unverified": "the already-failing full suite could not provide a clean whole-repository control"
+      },
+      {
+        "command": "go test ./pkg/maven -run '^TestGetRepo$' -count=1",
+        "mutation": "swapped Maven metadata username and password in a throwaway clone",
+        "measured": "1 selected test passed with exit 0 after the swap; it does not exercise authenticated metadata",
+        "unverified": "the Maven package's full test population fails earlier on a machine-specific profile path"
+      },
+      {
+        "command": "go test ./pkg/spring -count=1",
+        "mutation": "swapped Spring download URL and archive path in a throwaway clone",
+        "measured": "exit 0 with 0 test functions and '[no test files]'; this population proves nothing",
+        "unverified": "no Spring download test exists at the baseline commit"
+      }
+    ],
+    "human_output": {
+      "command": "fresh baseline build at /private/tmp/ply-baseline-human-output/ply --help",
+      "measured": "exit 0; 7 commands and 5 global flags in 33 lines (968 bytes)",
+      "unverified": "this was a fresh build, not an installed artifact, and no external service was contacted"
+    },
+    "survivors": [
+      {
+        "location": "pkg/config/cloud.go GitCloudConfig.Refresh clone branch",
+        "classification": "missing test",
+        "measured": "0 of 3 selected GitCloudConfig tests exercise Refresh; the URL/target swap survived",
+        "unverified": "real clone behavior was not run"
+      },
+      {
+        "location": "pkg/maven/query.go Repository.GetMetaData authenticated branch",
+        "classification": "missing test",
+        "measured": "0 of 1 selected Maven tests exercise authenticated metadata; the credential swap survived",
+        "unverified": "no repository endpoint was contacted"
+      },
+      {
+        "location": "pkg/spring/io.go DownloadInitializer download branch",
+        "classification": "missing test",
+        "measured": "0 test functions exist in pkg/spring; the URL/path swap survived compilation",
+        "unverified": "download, ZIP extraction, and cleanup were not run"
+      }
+    ],
+    "premise_check": {
+      "premise": "README installation is performed by the default make target",
+      "command": "git show 5635d50:README.md and git show 5635d50:Makefile",
+      "measured": "the README names 1 command, make; the default all target has 2 prerequisites, build and install, but install copies only to GOPATH/bin",
+      "held": true,
+      "unverified": "this source check does not prove the destination exists or that GOBIN is honored"
+    }
+  }
+}

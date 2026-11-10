@@ -1,0 +1,11 @@
+{
+  "kind": "WorkspaceProjectListReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": null
+  },
+  "projects": []
+}

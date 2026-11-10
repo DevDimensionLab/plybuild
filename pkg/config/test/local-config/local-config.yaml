@@ -1,6 +1,3 @@
 cloudConfig:
   git:
     url: "git@github.com:devdimensionlab/ply-config.git"
-sourceProvider:
-  host: "test-source-provider"
-  access_token: ""

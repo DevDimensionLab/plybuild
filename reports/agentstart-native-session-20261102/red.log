@@ -1,0 +1,19 @@
+--- FAIL: TestAgentStartPromptsSettledCodexWithoutNativeSession (0.36s)
+    agentstart_test.go:390: {Key:fixture-key Provider:codex InputSHA256:46d67d09cd7896711bc7eca5b58948792447817ed37caf29da96c5214bfa7d8f Reached:agent_started Pending: Tab:w1:t2 Pane:w1:p2 Terminal:term-2 Session: Failure:0x23be34b57d40 Bootstrap:acknowledged Legacy:false} session_unbound at await_session: deadline expired before a settled native session was observed
+--- FAIL: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady (1.78s)
+    --- FAIL: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/foreground_cwd_unreported (0.36s)
+        agentstart_test.go:423: {Key:fixture-key Provider:codex InputSHA256:ae4e404618cd4dfc41073c7a6bec2ca8fbefcb6956af324c5a8913b5d3908ae8 Reached:agent_started Pending: Tab:w1:t2 Pane:w1:p2 Terminal:term-2 Session: Failure:0x23be34bc39b0 Bootstrap:acknowledged Legacy:false}
+--- FAIL: TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold (0.41s)
+    --- FAIL: TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold/vanished (0.35s)
+        agentstart_test.go:456: want code [agent_response], got "session_unbound" (deadline expired before a settled native session was observed)
+--- FAIL: TestAgentStartLostReplyKeepsPendingAndNeverResends (0.51s)
+    --- FAIL: TestAgentStartLostReplyKeepsPendingAndNeverResends/prompt_sessionless=true (0.36s)
+        agentstart_test.go:574: want code [prompt_response], got "session_unbound" (deadline expired before a settled native session was observed)
+--- FAIL: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat (0.98s)
+    --- FAIL: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:prompt_sessionless=true (0.36s)
+        agentstart_test.go:660: crash point after_pending:prompt not reached: session_unbound at await_session: deadline expired before a settled native session was observed
+    --- FAIL: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:prompt_sessionless=true (0.36s)
+        agentstart_test.go:660: crash point after_call:prompt not reached: session_unbound at await_session: deadline expired before a settled native session was observed
+FAIL
+FAIL	github.com/devdimensionlab/plybuild/internal/agentstart	8.697s
+FAIL

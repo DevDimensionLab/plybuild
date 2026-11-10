@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Run a command with the explicitly selected Go toolchain: PLY_GO must report the exact
+# go.mod toolchain version in the same environment that then runs the command.
+
+set -euo pipefail
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+
+fail() {
+	printf 'with-go: %s\n' "$*" >&2
+	exit 2
+}
+
+[[ $# -gt 0 ]] || fail 'usage: PLY_GO=/abs/sdk/bin/go scripts/with-go command [args...]'
+selected=${PLY_GO-}
+[[ $selected == /* && ${selected##*/} == go && -f $selected && -x $selected ]] ||
+	fail 'PLY_GO must be an absolute path to the selected go binary'
+expected=$(awk '$1 == "toolchain" { print $2 }' "$repo_root/go.mod")
+[[ -n $expected ]] || fail 'go.mod declares no toolchain directive'
+
+unset GOROOT
+export GOTOOLCHAIN=local GO=$selected PATH="${selected%/go}:$PATH"
+probe=$(go env GOVERSION GOROOT) || fail "cannot query the selected go: $selected"
+{ read -r actual && read -r goroot; } <<<"$probe" || fail "cannot query the selected go: $selected"
+[[ $actual == "$expected" ]] || fail "expected $expected, got $actual from $selected"
+printf 'with-go: %s GOROOT=%s GO=%s\n' "$actual" "$goroot" "$selected" >&2
+exec "$@"

@@ -15,9 +15,12 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
-	"github.com/devdimensionlab/plybuild/pkg/bitbucket"
+	"github.com/devdimensionlab/plybuild/internal/buildinfo"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/context"
 	"github.com/devdimensionlab/plybuild/pkg/file"
@@ -36,9 +39,13 @@ import (
 	"strings"
 )
 
-const version = "v1.0.1"
+var version = buildinfo.Version
 
 var log = logger.Context()
+
+var initializationErr error
+
+var errCommandComplete = errors.New("command complete")
 
 var templates = &promptui.PromptTemplates{
 	Prompt:  "{{ . }} ",
@@ -51,45 +58,77 @@ var RootCmd = &cobra.Command{
 	Use:   "ply",
 	Short: "Ply is a developer tool for automating common tasks on a spring boot project",
 	Long:  header(),
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return InitGlobals(cmd)
 	},
 }
 
+// ExecuteE runs the command tree and returns any command error to the executable
+// boundary. Cobra's legacy diagnostic text is preserved without letting Cobra
+// select the process exit behavior.
+func ExecuteE() error {
+	silenceErrors := RootCmd.SilenceErrors
+	silenceUsage := RootCmd.SilenceUsage
+	RootCmd.SilenceErrors = true
+	RootCmd.SilenceUsage = true
+	executed, err := RootCmd.ExecuteC()
+	RootCmd.SilenceErrors = silenceErrors
+	RootCmd.SilenceUsage = silenceUsage
+
+	if errors.Is(err, errCommandComplete) {
+		return nil
+	}
+	if err != nil {
+		if diagnostic := workspace.RegistryError(err); diagnostic != nil && executed != nil {
+			format, _ := executed.Flags().GetString("format")
+			if format == "json" {
+				if writeErr := json.NewEncoder(executed.ErrOrStderr()).Encode(diagnostic); writeErr != nil {
+					return writeErr
+				}
+				return err
+			}
+		}
+		RootCmd.PrintErrln("Error:", err.Error())
+		if strings.HasPrefix(err.Error(), "unknown command") {
+			RootCmd.PrintErrf("Run '%v --help' for usage.\n", executed.CommandPath())
+		}
+	}
+	return err
+}
+
+// Execute preserves the original public API while leaving process termination
+// to executable main packages.
 func Execute() {
-	if err := RootCmd.Execute(); err != nil {
+	if err := ExecuteE(); err != nil {
 		fmt.Println(err)
-		os.Exit(1)
 	}
 }
 
 func init() {
-	cobra.OnInitialize(func() {
-		initConfig()
-	})
-
 	logrus.SetOutput(os.Stdout)
 	RootCmd.PersistentFlags().Bool("debug", false, "turn on debug output")
-	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging")
+	RootCmd.PersistentFlags().Bool("json", false, "turn on json output logging; workflow status and trace select JSON result data")
 	RootCmd.PersistentFlags().Bool("force", false, "uses default for prompts")
 	RootCmd.PersistentFlags().Bool("doc", false, "open documentation website")
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	initializationErr = initializeConfig()
+}
+
+func initializeConfig() error {
 	// migration step from old version without profiles
 	_, err := config.GetActiveProfilePath()
 	if err != nil && strings.Contains(err.Error(), "no such file or directory") {
 		if err := config.InstallOrMigrateToProfiles(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 	}
 
 	ctx.ProfilesPath, err = config.GetActiveProfilePath()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 	ctx.LoadProfile(ctx.ProfilesPath)
 
@@ -97,11 +136,16 @@ func initConfig() {
 	viper.SetConfigFile(ctx.LocalConfig.FilePath())
 	_ = viper.ReadInConfig()
 	viper.AutomaticEnv() // read in environment variables that match
+	return nil
 }
 
 var ctx context.Context
 
 func InitGlobals(cmd *cobra.Command) error {
+	initConfig()
+	if initializationErr != nil {
+		return initializationErr
+	}
 	json, err := cmd.Flags().GetBool("json")
 	if err != nil {
 		return err
@@ -118,7 +162,6 @@ func InitGlobals(cmd *cobra.Command) error {
 	if debug {
 		debugLogger := logger.DebugLogger()
 		log = debugLogger
-		bitbucket.SetLogger(debugLogger)
 		config.SetLogger(debugLogger)
 		context.SetLogger(debugLogger)
 		file.SetLogger(debugLogger)
@@ -139,8 +182,7 @@ func InitGlobals(cmd *cobra.Command) error {
 
 func OkHelp(cmd *cobra.Command, depend func() bool) error {
 	if !cmd.Flags().HasFlags() || !depend() {
-		_ = cmd.Help()
-		os.Exit(0)
+		return flag.ErrHelp
 	}
 	return nil
 }
@@ -164,7 +206,7 @@ func OpenDocumentationWebsite(cmd *cobra.Command, path string) error {
 		if err != nil {
 			return err
 		}
-		os.Exit(0)
+		return errCommandComplete
 	}
 	return nil
 }

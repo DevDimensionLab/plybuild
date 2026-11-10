@@ -25,14 +25,15 @@ var queryCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return OkHelp(cmd, queryOpts.Any)
 	},
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		ctx.Recursive = true
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true

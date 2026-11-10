@@ -1,0 +1,34 @@
+{
+  "kind": "WorkspaceAttentionReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "items": [
+    {
+      "subject": "task",
+      "subject_id": "t0-0",
+      "project_id": "p0",
+      "epic_id": "e0",
+      "title": "Task 0-0",
+      "kind": "recorded_wait",
+      "actor": "human",
+      "reason": "Synthetic question for acceptance",
+      "severity": "next_step",
+      "since_utc": "2026-10-06T04:31:57.700551Z",
+      "source": "journal",
+      "freshness": "fresh",
+      "evidence_ids": [
+        "jev_2c415ecf219c1a8d13d803c83b959f89e574a314dd05555c4390f76da8776b9a"
+      ]
+    }
+  ],
+  "freshness": "fresh",
+  "source_basis": "registered",
+  "reasons": []
+}

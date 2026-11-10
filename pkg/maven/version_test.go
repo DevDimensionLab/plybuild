@@ -211,6 +211,10 @@ func TestVersionSort(t *testing.T) {
 
 	sort.Sort(VersionSort(versions))
 
+	if len(versions) < 2 {
+		t.Fatal("Maven version-order population has fewer than two entries")
+	}
+
 	var lastVersion = version1
 	for _, version := range versions[1:] {
 		if !lastVersion.IsLessThan(version) {

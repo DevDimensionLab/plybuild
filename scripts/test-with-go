@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)
+. "$repo_root/scripts/compat_root.sh"
+compat_run_root 'with-go contract' ply-with-go
+wrapper="$repo_root/scripts/with-go"
+selected_root="$run_root/selected sdk"
+stale_root="$run_root/stale path"
+calls_file="$run_root/calls"
+
+fail() {
+	printf 'with-go contract: %s\n' "$*" >&2
+	exit 1
+}
+
+# Each fake answers only the version probe and an environment echo; no real toolchain starts.
+write_fake_go() {
+	local root=$1 version=$2 probe_status=${3:-0}
+	mkdir -p "$root/bin"
+	cat >"$root/bin/go" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s %s\n' "\$0" "\$*" >>"\$FAKE_GO_CALLS"
+if [[ "\$*" == 'env GOVERSION GOROOT' ]]; then
+	printf '%s\n%s\n' '$version' '$root'
+	exit $probe_status
+fi
+printf 'fake-go=%s\n' '$version'
+EOF
+	chmod +x "$root/bin/go"
+}
+write_fake_go "$selected_root" go1.26.10
+write_fake_go "$stale_root" go1.26.2
+wrong_root="$run_root/wrong sdk"
+write_fake_go "$wrong_root" go1.26.7
+failing_root="$run_root/failing sdk"
+write_fake_go "$failing_root" go1.26.10 1
+
+probe='printf "go=%s\nGO=%s\nGOTOOLCHAIN=%s\nGOROOT=%s\nLC_ALL=%s\n" "$(command -v go)" "$GO" "$GOTOOLCHAIN" "${GOROOT-unset}" "$LC_ALL"; go version'
+
+run_wrapper() {
+	local output=$1
+	shift
+	: >"$calls_file"
+	env PATH="$stale_root/bin:/usr/bin:/bin" FAKE_GO_CALLS="$calls_file" \
+		GOTOOLCHAIN=auto GOROOT="$stale_root" LC_ALL=en_US.UTF-8 "$@" "$wrapper" bash -c "$probe" >"$output" 2>"$output.err"
+}
+
+[[ $(awk '$1 == "toolchain" { print $2 }' "$repo_root/go.mod") == go1.26.10 ]] ||
+	fail 'go.mod toolchain directive is not the selected go1.26.10'
+
+run_wrapper "$run_root/selected" PLY_GO="$selected_root/bin/go" ||
+	{ sed -n '1,40p' "$run_root/selected.err" >&2; fail 'explicit go1.26.10 selection did not run the command'; }
+expected_selected=$(printf '%s\n' \
+	"go=$selected_root/bin/go" "GO=$selected_root/bin/go" 'GOTOOLCHAIN=local' 'GOROOT=unset' 'LC_ALL=en_US.UTF-8' 'fake-go=go1.26.10')
+[[ $(cat "$run_root/selected") == "$expected_selected" ]] ||
+	{ sed -n '1,40p' "$run_root/selected" >&2; fail 'command did not run in the selected toolchain environment'; }
+grep -Fxq "with-go: go1.26.10 GOROOT=$selected_root GO=$selected_root/bin/go" "$run_root/selected.err" ||
+	fail 'selected version and GOROOT were not reported'
+if grep -Fq "$stale_root" "$calls_file"; then
+	fail 'stale PATH go was invoked despite explicit selection'
+fi
+
+if run_wrapper "$run_root/unset"; then
+	fail 'missing PLY_GO fell back to PATH go'
+fi
+grep -Fq 'PLY_GO must be an absolute path to the selected go binary' "$run_root/unset.err" ||
+	fail 'missing PLY_GO did not explain the explicit selection'
+[[ ! -s "$run_root/unset" && ! -s "$calls_file" ]] || fail 'missing PLY_GO ran a command or any go'
+
+if (cd "$selected_root" && run_wrapper "$run_root/relative" PLY_GO=bin/go); then
+	fail 'relative PLY_GO was accepted'
+fi
+[[ ! -s "$run_root/relative" && ! -s "$calls_file" ]] || fail 'relative PLY_GO ran a command or any go'
+
+if run_wrapper "$run_root/stale" PLY_GO="$stale_root/bin/go"; then
+	fail 'stale go1.26.2 selection was accepted'
+fi
+grep -Fq 'with-go: expected go1.26.10, got go1.26.2' "$run_root/stale.err" ||
+	fail 'stale selection did not report expected and actual versions'
+[[ ! -s "$run_root/stale" ]] || fail 'stale selection ran the command'
+
+if run_wrapper "$run_root/wrong" PLY_GO="$wrong_root/bin/go"; then
+	fail 'previous go1.26.7 selection was accepted'
+fi
+[[ ! -s "$run_root/wrong" ]] || fail 'previous go1.26.7 selection ran the command'
+
+if run_wrapper "$run_root/failing" PLY_GO="$failing_root/bin/go"; then
+	fail 'nonzero version probe with valid output was accepted'
+fi
+grep -Fq "with-go: cannot query the selected go: $failing_root/bin/go" "$run_root/failing.err" ||
+	fail 'nonzero version probe did not explain the failed query'
+[[ ! -s "$run_root/failing" ]] || fail 'nonzero version probe ran the command'
+
+printf 'with-go contract: PASS (explicit go1.26.10 beats stale PATH, GOTOOLCHAIN, and GOROOT; missing, relative, and wrong selections and failed probes fail closed)\n'

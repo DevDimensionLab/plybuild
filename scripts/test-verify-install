@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+export LC_ALL=C LANG=C
+unset CDPATH
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+tmp_base=${TMPDIR:-/tmp}
+tmp_base=${tmp_base%/}
+work_root=$(mktemp -d "$tmp_base/ply-test-verify-install.XXXXXX")
+cleanup_temp_root() {
+	find "$work_root" -type d -exec chmod u+rwx {} + 2>/dev/null || true
+	rm -rf -- "$work_root"
+}
+trap cleanup_temp_root EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+source "$repo_root/test/acceptance/meta-common.sh"
+fake_go="$work_root/fake-go"
+
+cat >"$fake_go" <<'FAKE_GO'
+#!/usr/bin/env bash
+set -euo pipefail
+mode=${PLY_FAKE_MODE:-good}
+mkdir -p "$GOBIN"
+if [[ "$mode" == noop ]]; then
+	exit 0
+fi
+if [[ "$mode" == wrong-name ]]; then
+	printf '#!/usr/bin/env bash\nexit 0\n' >"$GOBIN/not-ply"
+	chmod +x "$GOBIN/not-ply"
+	exit 0
+fi
+cat >"$GOBIN/ply" <<'FAKE_ARTIFACT'
+#!/usr/bin/env bash
+set -euo pipefail
+mode=${PLY_FAKE_MODE:-good}
+if [[ "${1:-}" == --help ]]; then
+	[[ "$mode" != bad-help ]] || exit 1
+	printf 'Usage: ply [command]\n'
+	exit 0
+fi
+if [[ "${1:-}" == definitely-not-a-command ]]; then
+	[[ "$mode" != bad-input-write ]] || printf 'unexpected\n' >created-by-bad-input
+	[[ "$mode" != bad-input-success ]] || exit 0
+	exit 1
+fi
+exit 0
+FAKE_ARTIFACT
+chmod +x "$GOBIN/ply"
+FAKE_GO
+chmod +x "$fake_go"
+
+verifier="$repo_root/scripts/verify-install"
+acceptance_meta_expect_pass good env PLY_VERIFY_GO="$fake_go" PLY_FAKE_MODE=good "$verifier"
+acceptance_meta_expect_fail noop env PLY_VERIFY_GO="$fake_go" PLY_FAKE_MODE=noop "$verifier"
+acceptance_meta_expect_fail wrong-name env PLY_VERIFY_GO="$fake_go" PLY_FAKE_MODE=wrong-name "$verifier"
+acceptance_meta_expect_fail bad-help env PLY_VERIFY_GO="$fake_go" PLY_FAKE_MODE=bad-help "$verifier"
+acceptance_meta_expect_fail bad-input-success env PLY_VERIFY_GO="$fake_go" PLY_FAKE_MODE=bad-input-success "$verifier"
+acceptance_meta_expect_fail bad-input-write env PLY_VERIFY_GO="$fake_go" PLY_FAKE_MODE=bad-input-write "$verifier"
+printf 'test-verify-install: PASS (%s controls)\n' "$acceptance_meta_control"

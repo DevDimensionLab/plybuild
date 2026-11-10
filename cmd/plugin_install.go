@@ -16,20 +16,21 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Various install options for generating autocompletion etc",
 	Long:  `Various install options for generating autocompletion etc`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if installOpts.AutoComplete {
-			generateAutoCompleteFiles(cmd)
+			return generateAutoCompleteFiles(cmd)
 		}
+		return nil
 	},
 }
 
-func generateAutoCompleteFiles(cmd *cobra.Command) {
+func generateAutoCompleteFiles(cmd *cobra.Command) error {
 	completeDir, err := configPathFor("autocomplete")
 	if err != nil {
 		log.Warnln(err)
 	}
 	if err := file.CreateDirectory(completeDir); err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	if err := generateCompleteFor("autocomplete/autocomplete.bash", cmd.Root().GenBashCompletionFile); err != nil {
@@ -49,6 +50,7 @@ func generateAutoCompleteFiles(cmd *cobra.Command) {
 	if err := cmd.Root().GenFishCompletionFile(fishFile, true); err != nil {
 		log.Warnln(err.Error())
 	}
+	return nil
 }
 
 func generateCompleteFor(relPath string, generator func(string) error) error {

@@ -2,15 +2,24 @@ package file
 
 import (
 	"fmt"
-	"io/ioutil"
 	"strings"
+
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
+
+type removeIntellijFileDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemRemoveIntellijFileDependencies() removeIntellijFileDependencies {
+	return removeIntellijFileDependencies{Files: filesystem.System()}
+}
 
 func RemoveIntellijFiles(targetDir string, recursive bool, dryRun bool) (string, error) {
 	if recursive {
 		return removeIntellijFiles(targetDir, dryRun)
 	} else {
-		return removeIntellijFile(targetDir, dryRun)
+		return removeIntellijFile(systemRemoveIntellijFileDependencies(), targetDir, dryRun)
 	}
 }
 
@@ -47,11 +56,11 @@ func removeIntellijFiles(targetDir string, dryRun bool) (string, error) {
 	}
 }
 
-func removeIntellijFile(targetDir string, dryRun bool) (string, error) {
+func removeIntellijFile(dependencies removeIntellijFileDependencies, targetDir string, dryRun bool) (string, error) {
 	var filesDeleted = 0
 	var dirsDeleted = 0
 
-	files, err := ioutil.ReadDir(targetDir)
+	files, err := filesystem.ReadDir(dependencies.Files, targetDir)
 	if err != nil {
 		return "", err
 	}

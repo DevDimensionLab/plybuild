@@ -1,10 +1,12 @@
 package cmd
 
 import (
+	"io"
+	"os"
+
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/spf13/cobra"
-	"os"
-	"os/exec"
 )
 
 const DefaultTerminalWidth = 80
@@ -23,57 +25,85 @@ func (configOpts ConfigOpts) Any() bool {
 
 var configOpts ConfigOpts
 
+type profileEditorDependencies struct {
+	Process process.Dependencies
+	Stdin   io.Reader
+	Stdout  io.Writer
+}
+
+func systemProfileEditorDependencies() profileEditorDependencies {
+	dependencies := profileEditorDependencies{Process: process.SystemRunner()}
+	dependencies.Stdin = os.Stdin
+	dependencies.Stdout = os.Stdout
+	return dependencies
+}
+
+func selectProfileEditor(editor string) string {
+	if editor == "" {
+		return "vim"
+	}
+	return editor
+}
+
+func runProfileEditor(dependencies profileEditorDependencies, editor, configPath string) error {
+	return process.Execute(dependencies.Process, process.Command{
+		Name:   editor,
+		Args:   []string{configPath},
+		Dir:    "",
+		Stdin:  dependencies.Stdin,
+		Stdout: dependencies.Stdout,
+		Stderr: nil,
+	})
+}
+
 var profileCmd = &cobra.Command{
 	Use:     "profile",
 	Short:   "Manage profiles settings for ply",
 	Long:    `Manage profiles settings for ply`,
 	Aliases: []string{"profiles"},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if configOpts.UseProfile != "" {
 			log.Infof("switching to config: %s", configOpts.UseProfile)
 			err := config.SwitchProfile(configOpts.UseProfile)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			profilePath, err := config.GetProfilesPathFor(configOpts.UseProfile)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 			ctx.LoadProfile(profilePath)
-			return
+			return nil
 		}
 
 		if configOpts.Edit {
-			var editor = os.Getenv("EDITOR")
-			if editor == "" {
-				editor = "vim"
-			}
-			cmd := exec.Command(editor, ctx.LocalConfig.FilePath())
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			err := cmd.Run()
+			editor := os.Getenv("EDITOR")
+			editor = selectProfileEditor(editor)
+			configPath := ctx.LocalConfig.FilePath()
+			err := runProfileEditor(systemProfileEditorDependencies(), editor, configPath)
 			if err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
 		if configOpts.Sync {
 			if err := ctx.CloudConfig.Refresh(ctx.LocalConfig); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
 		if configOpts.Reset {
 			if err := ctx.LocalConfig.TouchFile(); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
 
 		if !configOpts.Reset || !configOpts.Sync || !configOpts.Edit {
 			if err := ctx.LocalConfig.Print(); err != nil {
-				log.Fatalln(err)
+				return err
 			}
 		}
+		return nil
 	},
 }
 
@@ -81,24 +111,22 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Config display in the terminal",
 	Long:  `Config display in the terminal`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return InitGlobals(cmd)
 	},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 
 		cfg, err := ctx.LocalConfig.Config()
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		width, err := cmd.Flags().GetInt("width")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		format, err := cmd.Flags().GetString("format")
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 
 		if width != DefaultTerminalWidth {
@@ -111,8 +139,9 @@ var configCmd = &cobra.Command{
 
 		err = ctx.LocalConfig.UpdateLocalConfig(cfg)
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 

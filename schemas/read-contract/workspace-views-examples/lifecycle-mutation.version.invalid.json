@@ -1,0 +1,40 @@
+{
+  "kind": "WorkspaceWorkItemLifecycleMutation@1",
+  "schema_version": "1",
+  "workspace": {
+    "root": "/work"
+  },
+  "subject_kind": "task",
+  "subject_id": "t0-0",
+  "lifecycle": "active",
+  "revision": 4,
+  "events": [
+    {
+      "event_id": "lce_58de9d0db838c0d1e2d56ba7e90648a986c0d8346bb6015b3c334c5daa67735e",
+      "sequence": 1,
+      "subject_kind": "task",
+      "subject_id": "t0-0",
+      "from": "active",
+      "to": "frozen",
+      "actor_claim": "acceptance fixture",
+      "recorded_at_utc": "2026-10-06T04:31:57.810902Z"
+    },
+    {
+      "event_id": "lce_2f678c0291f6e71ea2d3bc515be07697bbab948529130560bc95eb2cb1f8e852",
+      "sequence": 2,
+      "subject_kind": "task",
+      "subject_id": "t0-0",
+      "from": "frozen",
+      "to": "active",
+      "actor_claim": "acceptance fixture",
+      "recorded_at_utc": "2026-10-06T04:31:57.922335Z"
+    }
+  ],
+  "source": {
+    "locator": "/work/.ply/work-item-lifecycle.json",
+    "sha256": "sha256:2904f1ca37683adc3acf34b30ec122791519497a897d31af32403724a38787a6",
+    "exists": true
+  },
+  "changed": false,
+  "event": null
+}

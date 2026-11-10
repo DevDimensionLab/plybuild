@@ -1,7 +1,6 @@
 package maven
 
 import (
-	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/pkg/shell"
 	"strings"
@@ -31,10 +30,10 @@ func isSecondPartyGroupId(groupId string, secondPartyGroupId string) (bool, erro
 	secondPartyGroupIdParts := strings.Split(secondPartyGroupId, ".")
 
 	if len(groupIdParts) <= 1 || len(secondPartyGroupIdParts) <= 1 {
-		return false, errors.New(fmt.Sprintf(
+		return false, fmt.Errorf(
 			"secondParty groupId (%s) should contain, at least, two punctuations for comparison",
 			groupId,
-		))
+		)
 	} else {
 		for i := range secondPartyGroupIdParts[:2] {
 			if groupIdParts[i] != secondPartyGroupIdParts[i] {

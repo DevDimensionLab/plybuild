@@ -34,14 +34,10 @@ func PostGenerate(w http.ResponseWriter, r *http.Request) {
 
 	for key, values := range r.PostForm {
 		if key == "templates" {
-			for _, tmpl := range values {
-				cfg.Templates = append(cfg.Templates, tmpl)
-			}
+			cfg.Templates = append(cfg.Templates, values...)
 		}
 		if key == "dependencies" {
-			for _, dep := range values {
-				cfg.Dependencies = append(cfg.Dependencies, dep)
-			}
+			cfg.Dependencies = append(cfg.Dependencies, values...)
 		}
 	}
 	go func() { CallbackChannel <- true }()

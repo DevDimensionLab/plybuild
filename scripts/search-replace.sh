@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e pipefail
+set -euo pipefail
 
 pomFile="pom.xml"
 
@@ -29,6 +29,5 @@ while IFS= read -r input; do
       done <<< "$(grep -n "$oldVersion" -C 2 "$pomFile" | grep -C 2 "$artifactId" | grep -e "^[0-9]\+:")"
   fi
 done
-
 
 

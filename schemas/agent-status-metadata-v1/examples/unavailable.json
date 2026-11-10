@@ -1,0 +1,16 @@
+{
+  "kind": "AgentStatusMetadataReadback@1",
+  "schema_version": 1,
+  "observed_at_utc": "2026-10-24T22:50:00Z",
+  "sources": [
+    {
+      "source": "herdr.agent.list",
+      "status": "unavailable",
+      "freshness": "unknown",
+      "source_observed_at_utc": null,
+      "coverage": "unknown",
+      "scope": "Recognized codex/claude agents in the current Herdr user agent list; maximum 4096 source rows."
+    }
+  ],
+  "agents": []
+}

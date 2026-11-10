@@ -2,21 +2,33 @@ package maven
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/config"
-	"github.com/devdimensionlab/plybuild/pkg/logger"
-	"os/exec"
+	"github.com/sirupsen/logrus"
 	"strings"
 )
 
 const versionsPlugin = "org.codehaus.mojo:versions-maven-plugin:2.8.1"
 
+func systemRunOnDependencies() process.Dependencies {
+	dependencies := process.SystemRunner()
+	dependencies.Stdout = process.SystemStdout()
+	return dependencies
+}
+
 func RunOn(cmd string, args ...string) func(repository Repository, project config.Project) error {
+	return runOn(systemRunOnDependencies(), cmd, args...)
+}
+
+func runOn(dependencies process.Dependencies, cmd string, args ...string) func(repository Repository, project config.Project) error {
 	return func(repository Repository, project config.Project) error {
 		log.Infof("running: [%s] => %s %s", project.Path, cmd, strings.Join(args, " "))
-		cmd := exec.Command(cmd, args...)
-		cmd.Dir = project.Path
-		cmd.Stdout = logger.StdOut()
-		return cmd.Run()
+		return process.Execute(dependencies, process.Command{
+			Name:   cmd,
+			Args:   args,
+			Dir:    project.Path,
+			Stdout: process.Stdout(dependencies, logrus.IsLevelEnabled(logrus.DebugLevel)),
+		})
 	}
 }
 

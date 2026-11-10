@@ -1,0 +1,211 @@
+package workspace
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+)
+
+func TestConcurrentTaskWorktreeCreateSerializesIdenticalAndConflictingIntents(t *testing.T) {
+	t.Run("identical", func(t *testing.T) {
+		fixture := newWorkItemJourneyFixture(t)
+		input, _ := ParseTaskWorktreeCreateInput("task", "task", filepath.Join(fixture.wrapper, "task"), fixture.oid)
+		start := make(chan struct{})
+		results := make(chan TaskWorktreeMutationResult, 2)
+		errors := make(chan error, 2)
+		for index := 0; index < 2; index++ {
+			go func() {
+				<-start
+				result, err := CreateTaskWorktree(fixture.dependencies, input)
+				results <- result
+				errors <- err
+			}()
+		}
+		close(start)
+		var got []TaskWorktreeMutationResult
+		for index := 0; index < 2; index++ {
+			select {
+			case err := <-errors:
+				if err != nil {
+					t.Fatal(err)
+				}
+			case <-time.After(10 * time.Second):
+				t.Fatal("concurrent create timed out")
+			}
+			got = append(got, <-results)
+		}
+		if got[0].Task.Worktree == nil || got[1].Task.Worktree == nil || got[0].Task.Worktree.ID != got[1].Task.Worktree.ID || got[0].Task.Worktree.OperationID != got[1].Task.Worktree.OperationID {
+			t.Fatalf("results = %#v", got)
+		}
+		if !((got[0].Outcome == "created" && got[1].Outcome == "already_ready") || (got[1].Outcome == "created" && got[0].Outcome == "already_ready")) {
+			t.Fatalf("outcomes = %q, %q", got[0].Outcome, got[1].Outcome)
+		}
+	})
+
+	t.Run("different", func(t *testing.T) {
+		fixture := newWorkItemJourneyFixture(t)
+		inputs := []TaskWorktreeCreateInput{}
+		first, _ := ParseTaskWorktreeCreateInput("task", "task-one", filepath.Join(fixture.wrapper, "task-one"), fixture.oid)
+		second, _ := ParseTaskWorktreeCreateInput("task", "task-two", filepath.Join(fixture.wrapper, "task-two"), fixture.oid)
+		inputs = append(inputs, first, second)
+		start := make(chan struct{})
+		errors := make(chan error, 2)
+		for _, input := range inputs {
+			input := input
+			go func() { <-start; _, err := CreateTaskWorktree(fixture.dependencies, input); errors <- err }()
+		}
+		close(start)
+		successes, conflicts := 0, 0
+		for index := 0; index < 2; index++ {
+			select {
+			case err := <-errors:
+				if err == nil {
+					successes++
+				} else if hasWorkErrorClass(err, ErrorWorkIdentityConflict) {
+					conflicts++
+				} else {
+					t.Fatalf("unexpected error: %v", err)
+				}
+			case <-time.After(10 * time.Second):
+				t.Fatal("concurrent create timed out")
+			}
+		}
+		if successes != 1 || conflicts != 1 {
+			t.Fatalf("successes=%d conflicts=%d", successes, conflicts)
+		}
+	})
+}
+
+type workItemJourneyFixture struct {
+	dependencies Dependencies
+	wrapper      string
+	oid          string
+}
+
+func newWorkItemJourneyFixture(t *testing.T) workItemJourneyFixture {
+	return newWorkItemJourneyFixtureVersion(t, false)
+}
+
+func newWorkItemJourneyFixtureVersion(t *testing.T, legacy bool) workItemJourneyFixture {
+	return newWorkItemJourneyFixtureHistory(t, legacy, false)
+}
+
+func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, parentBranch ...string) workItemJourneyFixture {
+	t.Helper()
+	root := createProjectWorkspace(t)
+	wrapper := filepath.Join(root, "ply")
+	repository := filepath.Join(wrapper, "main")
+	if err := os.MkdirAll(repository, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	repository = physicalPath(t, repository)
+	runLocalGit(t, repository, "init", "-b", "main")
+	runLocalGit(t, repository, "config", "user.email", "tests@example.invalid")
+	runLocalGit(t, repository, "config", "user.name", "Ply tests")
+	if err := os.WriteFile(filepath.Join(repository, "README.md"), []byte("fixture\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	runLocalGit(t, repository, "add", "README.md")
+	runLocalGit(t, repository, "commit", "-m", "fixture")
+	oid := runLocalGit(t, repository, "rev-parse", "HEAD")
+	common := physicalPath(t, filepath.Join(repository, ".git"))
+	epicPath := filepath.Join(wrapper, "epic")
+	branch := "epic"
+	if len(parentBranch) > 0 {
+		branch = parentBranch[0]
+	}
+	if branch == "main" || branch == "master" {
+		epicPath = repository
+		if branch == "master" {
+			runLocalGit(t, repository, "branch", "-m", "master")
+		}
+	} else {
+		runLocalGit(t, repository, "worktree", "add", "-b", branch, epicPath, oid)
+	}
+	epicPath = physicalPath(t, epicPath)
+	if priorEpicWork {
+		if err := os.WriteFile(filepath.Join(epicPath, "prior.txt"), []byte("prior Epic work\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		runLocalGit(t, epicPath, "add", "prior.txt")
+		runLocalGit(t, epicPath, "commit", "-m", "prior Epic work")
+		oid = runLocalGit(t, epicPath, "rev-parse", "HEAD")
+	}
+	projects := newSystemProjectStore()
+	project := ProjectRecord{ID: "ply", Name: "Ply", Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{"ply"}}
+	repo := RepoRecord{ID: "ply", Locator: repository, GitCommonDir: common}
+	if _, _, _, err := projects.Add(root, project, []RepoRecord{repo}); err != nil {
+		t.Fatal(err)
+	}
+	dependencies := SystemDependencies()
+	dependencies.ProjectDataRoot = func(string) (string, error) { return "", nil }
+	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: root}
+	dependencies.ProjectLocks = projects
+	dependencies.Projects = projects
+	adopt, _ := ParseEpicAdoptInput("epic", "Epic", "ply", "ply", epicPath, "refs/heads/"+branch, oid)
+	if _, err := AdoptEpic(dependencies, adopt); err != nil {
+		t.Fatal(err)
+	}
+	if legacy {
+		// Seed an explicit pre-WS05 registry; do not weaken the policy of new Tasks.
+		err := dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+			r, err := session.Snapshot()
+			if err != nil {
+				return err
+			}
+			r.FormatVersion = 1
+			r.TaskProblemRevisions = nil
+			r.TaskSpecRevisions = nil
+			r.TaskSpecAssessments = nil
+			r.TaskSolutionSelections = nil
+			r.TaskResultSpecBindings = nil
+			r.TaskContentPublications = nil
+			r.TaskResults = nil
+			r.HumanQARecords = nil
+			r.IntegrationAuthorities = nil
+			r.IntegrationIntents = nil
+			r.IntegrationAttempts = nil
+			r.IntegrationResults = nil
+			r.Tasks = append(r.Tasks, TaskRecord{ID: "task", Title: "Task", Description: "Description", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply", GitCommonDir: common, WorktreeState: WorkItemUnbound})
+			// Fixture seeding is not a production downgrade operation.
+			b, err := encodeWorkItemRegistry(r)
+			if err != nil {
+				return err
+			}
+			return os.WriteFile(workItemsPath(root), b, 0o644)
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	} else {
+		task, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
+		if err := fixtureCreateTaskWithProblem(dependencies, root, task); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return workItemJourneyFixture{dependencies: dependencies, wrapper: wrapper, oid: oid}
+}
+
+func hasWorkErrorClass(err error, class WorkItemErrorClass) bool {
+	typed, ok := err.(*WorkItemError)
+	return ok && typed.Class == class
+}
+
+func fixtureCreateTaskWithProblem(d Dependencies, root string, in TaskCreateInput) error {
+	return d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
+		_, repo, err := projectAndRepo(projects, in.ProjectID, in.RepoID)
+		if err != nil {
+			return err
+		}
+		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+			registry, err := session.Snapshot()
+			if err != nil {
+				return err
+			}
+			task := TaskRecord{ID: in.TaskID, Title: in.Title, Description: in.Description, ParentEpicID: in.ParentEpicID, ProjectID: in.ProjectID, RepoID: in.RepoID, GitCommonDir: repo.GitCommonDir, WorktreeState: WorkItemUnbound}
+			_, err = createTaskProblem(d, root, session, registry, projects, task, nil)
+			return err
+		})
+	})
+}

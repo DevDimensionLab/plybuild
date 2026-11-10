@@ -1,0 +1,35 @@
+{
+  "kind": "ply.workflow.notification-request",
+  "schema_version": 4,
+  "route": "agent-events",
+  "source": {
+    "kind": "external",
+    "activity": "example/agent-events",
+    "run": "example-run-001",
+    "worktree": "/private/tmp/ply-notification-example/worktree"
+  },
+  "event": {
+    "id": "finished-1",
+    "type": "agent_finished",
+    "occurred_at": "2026-10-04T14:00:00Z",
+    "phase": "after_start"
+  },
+  "sender": {
+    "actor_claim": "delivery agent"
+  },
+  "public": {
+    "task_title": "Example delivery",
+    "summary": "The result is ready for your review.",
+    "next_action": "Review the result in the Task worktree.",
+    "next_actor": "user",
+    "status": "ready_for_review"
+  },
+  "presentation": {
+    "provider": "codex",
+    "origin_cwd": "/private/tmp/ply-notification-example/ply/planning",
+    "context_root": "/private/tmp/ply-notification-example",
+    "context": "ply/planning",
+    "timezone": "Europe/Oslo",
+    "local_occurred_at": "2026-10-04T16:00:00+02:00"
+  }
+}

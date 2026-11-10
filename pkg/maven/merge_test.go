@@ -8,29 +8,21 @@ import (
 func TestMergeBuildPlugins(t *testing.T) {
 
 	from, err := pom.GetModelFrom("test/merge/mergeBuildPluginFrom.xml")
-	to, err := pom.GetModelFrom("test/merge/mergeBuildPluginTo.xml")
-
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("load source POM fixture: %v", err)
+	}
+	to, err := pom.GetModelFrom("test/merge/mergeBuildPluginTo.xml")
+	if err != nil {
+		t.Fatalf("load target POM fixture: %v", err)
 	}
 
 	err = mergeBuildPlugins(from, to)
 	if err != nil {
-		t.Error(err)
-	}
-
-	err = to.WriteToFile("test/merge/mergeBuildPluginMerged.xml", "    ")
-	if err != nil {
-		t.Error(err)
-	}
-
-	merged, err := pom.GetModelFrom("test/merge/mergeBuildPluginMerged.xml")
-	if err != nil {
-		t.Error(err)
+		t.Fatalf("merge build plugins: %v", err)
 	}
 
 	var failed = true
-	for _, mergedPlugin := range merged.Build.Plugins.Plugin {
+	for _, mergedPlugin := range to.Build.Plugins.Plugin {
 		if mergedPlugin.GroupId == "org.springframework.boot" && mergedPlugin.ArtifactId == "spring-boot-maven-plugin" {
 			if mergedPlugin.Configuration.AnyElements[0].XMLName.Local == "layers" {
 				failed = false

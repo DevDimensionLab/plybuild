@@ -1,0 +1,23 @@
+# Prosesskontroller
+
+Betingede kontroller. Bruk et avsnitt bare når utløseren faktisk inntraff; ingen av dem er et rutinesteg.
+
+## Runtime og tillatelser
+
+Utløser: start av en kjøring eller effekt med ukjent fullmakt. Bind faktisk runtime, startflate og fysisk effektsti før effekten. En sti som ser skrivbar ut eller et profilnavn er ikke bevis. Ikke endre runtime- eller permissionconfig for å utvide fullmakten; stopp bare den avhengige effekten og navngi det manglende faktumet.
+
+## Effektstier
+
+Utløser: enhver skriving utenfor dette planrepoet. Navngi repo, worktree, branch/base og tillatte effekter først. Etter en mulig sideeffekt føres tilstanden før, den forsøkte effekten og den faktiske tilstanden etterpå; en exitkode er ikke bevis for effekten.
+
+## Ukjent oppstart eller retur
+
+Utløser: en delegert kjøring der oppstart eller retur er ukjent. Ikke send samme oppgave på nytt. Finn den bundne tilstanden først, og bevar kjøringen og fanen.
+
+## Resultatbinding
+
+Utløser: mottak av et delegert resultat. Bind det til eksakt commit og tre og til testene som faktisk kjørte. Hold meldingen, den registrerte effekten og den menneskelige vurderingen som adskilte lag.
+
+## Lesekontroll
+
+Utløser: utskrift av store filer. Mål UTF-8-størrelsen først og del opp lesing over 12 000 bytes.

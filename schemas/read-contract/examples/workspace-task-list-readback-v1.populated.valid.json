@@ -1,0 +1,54 @@
+{
+  "kind": "WorkspaceTaskListReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": "alpha",
+    "repo_id": null,
+    "epic_id": null
+  },
+  "tasks": [
+    {
+      "task_id": "alpha-current",
+      "project_id": "alpha",
+      "repo_id": "core",
+      "parent_epic_id": "alpha-epic",
+      "worktree_state": "worktree_ready",
+      "title": "Current title – “café”",
+      "title_source": "problem_revision",
+      "title_status": "available"
+    },
+    {
+      "task_id": "beta-legacy",
+      "project_id": "alpha",
+      "repo_id": "core",
+      "parent_epic_id": "alpha-epic",
+      "worktree_state": "unbound",
+      "title": "Legacy registration",
+      "title_source": "registration",
+      "title_status": "available"
+    },
+    {
+      "task_id": "delta-literal",
+      "project_id": "alpha",
+      "repo_id": "missing",
+      "parent_epic_id": "alpha-epic",
+      "worktree_state": "creating",
+      "title": "Problem content unavailable",
+      "title_source": "problem_revision",
+      "title_status": "available"
+    },
+    {
+      "task_id": "gamma-unavailable",
+      "project_id": "alpha",
+      "repo_id": "missing",
+      "parent_epic_id": "alpha-epic",
+      "worktree_state": "reconciliation_required",
+      "title": null,
+      "title_source": "problem_revision",
+      "title_status": "unavailable"
+    }
+  ]
+}

@@ -3,12 +3,25 @@ package file
 import (
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
+
+	"github.com/devdimensionlab/plybuild/internal/adapter/filesystem"
 )
 
+type grepRecursiveDependencies struct {
+	Files filesystem.Dependencies
+}
+
+func systemGrepRecursiveDependencies() grepRecursiveDependencies {
+	return grepRecursiveDependencies{Files: filesystem.System()}
+}
+
 func GrepRecursive(targetDir string, keyword string) (files []string, err error) {
-	err = filepath.Walk(targetDir,
+	return grepRecursive(systemGrepRecursiveDependencies(), targetDir, keyword)
+}
+
+func grepRecursive(dependencies grepRecursiveDependencies, targetDir string, keyword string) (files []string, err error) {
+	err = filesystem.Walk(dependencies.Files, targetDir,
 		func(path string, fi os.FileInfo, errIn error) error {
 			hit, err := Grep(path, keyword)
 			if err != nil {

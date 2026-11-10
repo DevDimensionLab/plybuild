@@ -1,0 +1,35 @@
+# This file declares the quality population. A declaration is not evidence: the
+# audit must still find the named harness, mutation label, or acceptance script.
+
+[subjects]
+cli-context       = cmd,pkg/context              : scripts/mutate-cli-context
+config-cloud      = pkg/config                   : scripts/mutate-config-cloud
+maven-sorting     = pkg/maven,pkg/sorting        : scripts/mutate-maven-sorting
+template          = pkg/template                 : scripts/mutate-template
+file-shell        = pkg/file,pkg/shell           : scripts/mutate-file-shell
+spring            = pkg/spring                   : scripts/mutate-spring
+http              = pkg/http                     : scripts/mutate-http
+interactive-build = cmd/build.go,pkg/webservice  : scripts/mutate-interactive-build
+
+[seams]
+git-process      = pkg/shell/git.go         : scripts/mutate-file-shell        : "1. git clone keeps URL before target directory"
+maven-process    = pkg/maven/command.go     : scripts/mutate-maven-sorting     : "2. Maven command keeps executable before arguments"
+cloud-clone      = pkg/config/cloud.go      : scripts/mutate-config-cloud      : "3. cloud clone keeps URL before target directory"
+maven-http       = pkg/maven/query.go       : scripts/mutate-maven-sorting     : "4. Maven metadata keeps username before password"
+spring-download  = pkg/spring/io.go         : scripts/mutate-spring            : "5. Spring download keeps URL before archive path"
+template-copy    = pkg/template/template.go : scripts/mutate-template          : "6. template copy keeps source before destination"
+git-commit       = pkg/shell/git.go         : scripts/mutate-file-shell        : "7. git commit keeps target directory before message"
+loopback-server  = pkg/webservice/api.go    : scripts/mutate-interactive-build : "8. interactive server binds only to loopback"
+
+[features]
+install = scripts/verify-install
+status  = scripts/verify-status
+upgrade = scripts/verify-upgrade
+build   = scripts/verify-build
+
+[adapters]
+internal/adapter/process
+internal/adapter/httpclient
+internal/adapter/filesystem
+internal/adapter/clock
+internal/adapter/server

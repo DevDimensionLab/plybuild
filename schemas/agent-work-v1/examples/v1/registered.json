@@ -1,0 +1,92 @@
+{
+  "history": [],
+  "kind": "AgentFollowup@1",
+  "schema_version": 1,
+  "id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+  "revision": 1,
+  "generation": 1,
+  "owner_ref": "owner-fixture",
+  "mandate_ref": "mandate-fixture",
+  "registrar": {
+    "kind": "human_requested",
+    "actor_ref": "human-fixture"
+  },
+  "target_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
+  "wait_kind": "review",
+  "wait_ref": "review-fixture",
+  "work": {
+    "project_id": "project-fixture",
+    "repo_id": "repo-fixture",
+    "epic_id": "epic-fixture",
+    "task_id": "task-fixture",
+    "run_id": "run-fixture",
+    "attempt_ref": "run-fixture",
+    "phase": "working",
+    "next_actor": "agent",
+    "next_action": "continue_delivery",
+    "reason": "Read the registered native action before continuing.",
+    "detail_ref": "workflow.trace:task-fixture",
+    "source": "registered",
+    "freshness": "fresh",
+    "source_observed_at_utc": null
+  },
+  "next_check_at_utc": "2026-10-23T13:01:00Z",
+  "state": "waiting",
+  "cycle": 1,
+  "transport": {
+    "dispatch_subject": null,
+    "state": "not_sent",
+    "reason": "Registered; no input attempted.",
+    "cycle_ref": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2/cycle/1",
+    "attempted_at_utc": null,
+    "acknowledged_at_utc": null
+  },
+  "recheck": null,
+  "registered_at_utc": "2026-10-23T13:00:00Z",
+  "capabilities": {
+    "cancel": {
+      "state": "enabled",
+      "reason": "Owner declaration and expected revision are required.",
+      "subject": {
+        "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
+        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "revision": 1,
+        "generation": 1,
+        "cycle": 1
+      }
+    },
+    "dispatch": {
+      "state": "disabled",
+      "reason": "Next technical check is not due.",
+      "subject": {
+        "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
+        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "revision": 1,
+        "generation": 1,
+        "cycle": 1
+      }
+    },
+    "recheck": {
+      "state": "enabled",
+      "reason": "Matching recipient, generation and revision are required; report is self-reported.",
+      "subject": {
+        "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
+        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "revision": 1,
+        "generation": 1,
+        "cycle": 1
+      }
+    },
+    "request": {
+      "state": "enabled",
+      "reason": "Makes this unconsumed cycle due.",
+      "subject": {
+        "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
+        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "revision": 1,
+        "generation": 1,
+        "cycle": 1
+      }
+    }
+  }
+}

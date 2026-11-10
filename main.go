@@ -16,8 +16,13 @@ package main
 
 import (
 	"github.com/devdimensionlab/plybuild/cmd"
+	"os"
 )
 
+var execute = cmd.ExecuteE
+
 func main() {
-	cmd.Execute()
+	if err := execute(); err != nil {
+		os.Exit(cmd.ExitCode(err))
+	}
 }

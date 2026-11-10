@@ -1,0 +1,38 @@
+{
+  "kind": "WorkflowStatusReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "filters": {
+    "project_id": null,
+    "repo_id": null,
+    "epic_id": null
+  },
+  "include_all": false,
+  "observed_at_utc": "2026-10-06T18:00:00Z",
+  "source_basis": "registered",
+  "freshness": "fresh",
+  "projects": [],
+  "epics": [],
+  "items": null,
+  "counts": {
+    "total": 0,
+    "visible": 0,
+    "hidden": {
+      "inactive": 0,
+      "completed": 0,
+      "backlog": 0
+    },
+    "categories": {
+      "needs_you": 0,
+      "follow_up": 0,
+      "in_progress": 0,
+      "ready_next": 0,
+      "inactive": 0,
+      "completed": 0,
+      "backlog": 0
+    }
+  },
+  "diagnostics": []
+}

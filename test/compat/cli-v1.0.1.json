@@ -1,0 +1,3262 @@
+{
+  "schema_version": 1,
+  "root": "ply",
+  "commands": [
+    {
+      "path": "ply",
+      "use": "ply",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Ply is a developer tool for automating common tasks on a spring boot project",
+      "long": "\n           __      __          _ __    __\n    ____  / /_  __/ /_  __  __(_) /___/ /\n   / __ \\/ / / / / __ \\/ / / / / / __  / \n  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  \n / .___/_/\\__, /_.___/\\__,_/_/_/\\__,_/   \n/_/      /____/                          \n\n== version: v1.0.1 ==\n",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for ply",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "debug",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on debug output",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "doc",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "open documentation website",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "force",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "uses default for prompts",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "json",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on json output logging",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply about",
+      "use": "about",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "About ply",
+      "long": "\n           __      __          _ __    __\n    ____  / /_  __/ /_  __  __(_) /___/ /\n   / __ \\/ / / / / __ \\/ / / / / / __  / \n  / /_/ / / /_/ / /_/ / /_/ / / / /_/ /  \n / .___/_/\\__, /_.___/\\__,_/_/_/\\__,_/   \n/_/      /____/                          \n\n== version: v1.0.1 ==\n\n## About plybuild - https://devdimensionlab.github.io/\n- Plybuild is a command line tool that supports developers using Spring Boot and Maven\n- ply upgrade all | 2party | 3party  -> upgrades maven version of maven dependencies to latest \n- ply build ply.json -> generates a new application ready for business logic\n- Authors:\n  - Alexander Skjolden, Runwith AS\n  - Per Otto Christensen, Codify Consulting AS\n",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for about",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply build",
+      "use": "build",
+      "aliases": [
+        "generate"
+      ],
+      "suggest_for": null,
+      "short": "Builds a ply project with ply files and formatting",
+      "long": "Builds a ply project with ply files and formatting",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "application-name",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Overrides applicationName from config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "artifact-id",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Overrides artifactId from config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "boot-version",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Defines spring-boot version to use",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "config-file",
+          "shorthand": "",
+          "type": "string",
+          "default": "ply.json",
+          "no_opt_default": "",
+          "usage": "Optional config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "disable-upgrading",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "dont upgrade dependencies",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "group-id",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Overrides groupId from config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for build",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "interactive",
+          "shorthand": "i",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "Interactive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "name",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Overrides name from config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "package",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Overrides package from config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "upstream",
+          "shorthand": "",
+          "type": "string",
+          "default": "initializer",
+          "no_opt_default": "",
+          "usage": "Upstream to use, ex: [initializer, none]",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "cloud-sync",
+          "shorthand": "",
+          "type": "bool",
+          "default": "true",
+          "no_opt_default": "true",
+          "usage": "Cloud sync",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build add",
+      "use": "add",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Add templates and functionalities for files to a build",
+      "long": "Add templates and functionalities for files to a build",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for add",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "from",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "file to add",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build add pom",
+      "use": "pom",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Adds a pom-file into a project",
+      "long": "Adds a pom-file into a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for pom",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build add template",
+      "use": "template",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Adds a template from ply-config",
+      "long": "Adds a template from ply-config",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for template",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "name",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "template to add",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build add text",
+      "use": "text",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Merges two text files",
+      "long": "Merges two text files",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for text",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "to",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "target file to add to",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build example",
+      "use": "example",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Builds example from cloud-config",
+      "long": "Builds example from cloud-config",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "boot-version",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Defines spring-boot version to use",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for example",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "name",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Example name to use",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "upstream",
+          "shorthand": "",
+          "type": "string",
+          "default": "initializer",
+          "no_opt_default": "",
+          "usage": "Upstream to use, ex: [initializer, none]",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "dry-run",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "dry run does not write to pom.xml",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build format",
+      "use": "format",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Format functionality for a project",
+      "long": "Format functionality for a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for format",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "dry-run",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "dry run does not write to pom.xml",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build format inherit",
+      "use": "inherit",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Removes manual versions from spring dependencies",
+      "long": "Removes manual versions from spring dependencies",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for inherit",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply build format pom",
+      "use": "pom",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Formats pom.xml and sorts dependencies",
+      "long": "Formats pom.xml and sorts dependencies",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for pom",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply build format version",
+      "use": "version",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Removes version tags and replaces them with property tags",
+      "long": "Removes version tags and replaces them with property tags",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for version",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply build init",
+      "use": "init",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Initializes build with ply files and formatting",
+      "long": "Initializes build project with ply files and formatting",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "config-file",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Optional config file",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for init",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "dry-run",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "dry run does not write to pom.xml",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build options",
+      "use": "options",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Prints options on spring version, dependencies etc",
+      "long": "Prints options on spring version, dependencies etc",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for options",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "examples",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show plybuild examples",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "maven-repositories",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show current maven repositories",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "spring-dependencies",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show spring boot status",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "spring-managed",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show spring boot managed dependencies info",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "templates",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show plybuild templates",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply build remove",
+      "use": "remove",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Removes files and folders in a ply build project",
+      "long": "Removes files and folders in a ply build project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "generated",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "removes plybuild generated files and folders",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for remove",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "intellij",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "removes .idea folders and *.iml files",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply completion",
+      "use": "completion",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "",
+      "long": "",
+      "example": "",
+      "hidden": true,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for completion",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply help",
+      "use": "help [command]",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Help about any command",
+      "long": "Help provides help for any command in the application.\nSimply type ply help [path to command] for full details.",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for help",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin",
+      "use": "plugin",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Plugin functionality for plybuild",
+      "long": "Plugin functionality for plybuild",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for plugin",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin bitbucket",
+      "use": "bitbucket",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Bitbucket functionality",
+      "long": "Bitbucket functionality",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for bitbucket",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin bitbucket sync",
+      "use": "sync",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Synchronizes projects from bitbucket",
+      "long": "Synchronizes projects from bitbucket",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for sync",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin diagrams",
+      "use": "diagrams",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Various tools for generating diagrams",
+      "long": "Various tools for generating diagrams",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for diagrams",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin diagrams kibana",
+      "use": "kibana",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Specialized (experimental) command for executing a kibana-query based on a fetch-request [arg: fetch-file] and exporting the result to a json-file [arg: output-file]",
+      "long": "Specify the query in Kibana, then use developer tools to copy request as fetch (https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "extract-fields",
+          "shorthand": "e",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "List of fields to extract pr hit",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "fetch-file",
+          "shorthand": "f",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Path to kibana.fetch-request",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "field-remap",
+          "shorthand": "m",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "List of fields matching list extract-fields with new names in output",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for kibana",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "output-file",
+          "shorthand": "o",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Name of output-file to write results",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin diagrams structurizr",
+      "use": "structurizr",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Adding PNG-output support for structurizr with the help of graphviz",
+      "long": "Adding PNG-output support for structurizr with the help of graphviz.\n\nSupport for structurizr requires binaries from structurizr-cli and graphviz installed:\n- structurizr-cli -> https://structurizr.com/help/cli\n- dot -> https://graphviz.org\n",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for structurizr",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "workspace",
+          "shorthand": "w",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Path or URL to the workspace JSON file/DSL file(s)",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin git",
+      "use": "git",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Git commands",
+      "long": "Git commands",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for git",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "cloud-sync",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "force cloud sync",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin git install-hooks",
+      "use": "install-hooks",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "install git hooks from cloud config",
+      "long": "install git hooks from cloud config",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for install-hooks",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin install",
+      "use": "install",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Various install options for generating autocompletion etc",
+      "long": "Various install options for generating autocompletion etc",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "autocomplete",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "Generate autocomplete files",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for install",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin lint",
+      "use": "lint",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Linting commands",
+      "long": "Linting commands",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for lint",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin lint kotlin",
+      "use": "kotlin",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "uses ktlint for linting kotlin code",
+      "long": "uses ktlint for linting kotlin code",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for kotlin",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven",
+      "use": "maven",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Run maven (mvn) commands",
+      "long": "Run maven (mvn) commands",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for maven",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven analyze",
+      "use": "analyze",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Perform an analyze on a projects",
+      "long": "Perform an analyze on a projects",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "deps",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "Show dependency usage",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for analyze",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven boot-run",
+      "use": "boot-run",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "runs a spring boot application",
+      "long": "runs a spring boot application",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for boot-run",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven checkstyle",
+      "use": "checkstyle",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "runs checkstyle",
+      "long": "runs checkstyle",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for checkstyle",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "open",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "open report in browser",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven enforcer",
+      "use": "enforcer",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "runs enforcer",
+      "long": "runs enforcer",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for enforcer",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven graph",
+      "use": "graph",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "creates a graph using maven for dependencies in a project",
+      "long": "creates a graph using maven for dependencies in a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for graph",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "exclude-filters",
+          "shorthand": "",
+          "type": "stringArray",
+          "default": "[]",
+          "no_opt_default": "",
+          "usage": "exclude filter rules",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "exclude-test-scope",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "exclude test scope from graph",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "include-filters",
+          "shorthand": "",
+          "type": "stringArray",
+          "default": "[]",
+          "no_opt_default": "",
+          "usage": "include filter rules",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "open",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "open report in browser",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven graph 2party",
+      "use": "2party",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "creates a graph only for 2party dependencies in a project",
+      "long": "creates a graph only for 2party dependencies in a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for 2party",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply plugin maven owasp",
+      "use": "owasp",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "runs owasp",
+      "long": "runs owasp",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for owasp",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "open",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "open report in browser",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply plugin query",
+      "use": "query",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Query dependencies in a project",
+      "long": "Query dependencies in a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": true,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "artifactId",
+          "shorthand": "a",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "artifactId",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "groupId",
+          "shorthand": "g",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "groupId",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for query",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply profile",
+      "use": "profile",
+      "aliases": [
+        "profiles"
+      ],
+      "suggest_for": null,
+      "short": "Manage profiles settings for ply",
+      "long": "Manage profiles settings for ply",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "cloud-sync",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "sync with cloud config repo",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "edit",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "edit active profile local config",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for profile",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "reset",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "reset local config",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "show",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show local config",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "use",
+          "shorthand": "",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "switch to profile",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply profile config",
+      "use": "config",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Config display in the terminal",
+      "long": "Config display in the terminal",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "format",
+          "shorthand": "f",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "Configure format of rendering in the terminal: markdown",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for config",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "local",
+          "name": "width",
+          "shorthand": "w",
+          "type": "int",
+          "default": "80",
+          "no_opt_default": "",
+          "usage": "Configure width of rendering in the terminal",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply status",
+      "use": "status",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Status functionality for a project",
+      "long": "Status functionality for a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for status",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "cloud-sync",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "force cloud sync",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "show",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "show project status",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply tips",
+      "use": "tips",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Use tips to learn information faster",
+      "long": "A concentrated version of things you need to know for a topic, \ntypically internal know-how that you can't find on the internet",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": true,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for tips",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply tips list",
+      "use": "list",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Lists all tips for current profile",
+      "long": "Lists all tip for current profile",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for list",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply tips show",
+      "use": "show",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Show tips",
+      "long": "Show tips",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for show",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade",
+      "use": "upgrade",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade options",
+      "long": "Perform upgrade on existing projects",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": false,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": true,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for upgrade",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "cloud-sync",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "force cloud sync",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "dry-run",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "dry run does not write to pom.xml",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "recursive",
+          "shorthand": "r",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "turn on recursive mode",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "stealth",
+          "shorthand": "",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "use alternative pom.xml writer",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "target",
+          "shorthand": "",
+          "type": "string",
+          "default": ".",
+          "no_opt_default": "",
+          "usage": "Optional target directory",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade 2party",
+      "use": "2party",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade all 2party dependencies to project",
+      "long": "Upgrade all 2party dependencies to project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for 2party",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade 3party",
+      "use": "3party",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade all 3party dependencies to project",
+      "long": "Upgrade all 3party dependencies to project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for 3party",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade all",
+      "use": "all",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade everything in project",
+      "long": "Upgrade everything in project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for all",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade dependency",
+      "use": "dependency",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade a specific dependency on a project",
+      "long": "Upgrade a specific dependency on a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for dependency",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        },
+        {
+          "scope": "persistent",
+          "name": "artifactId",
+          "shorthand": "a",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "ArtifactId for upgrade",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        },
+        {
+          "scope": "persistent",
+          "name": "groupId",
+          "shorthand": "g",
+          "type": "string",
+          "default": "",
+          "no_opt_default": "",
+          "usage": "GroupId for upgrade",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {}
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade deprecated",
+      "use": "deprecated",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Remove and replace deprecated dependencies in a project",
+      "long": "Remove and replace deprecated dependencies in a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for deprecated",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade interactive",
+      "use": "interactive",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Interactively upgrade the project",
+      "long": "Interactively upgrade the project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for interactive",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade kotlin",
+      "use": "kotlin",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade kotlin version in project",
+      "long": "Upgrade kotlin version in project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for kotlin",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade plugins",
+      "use": "plugins",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade all plugins found in project",
+      "long": "Upgrade all plugins found in project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for plugins",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade spring-boot",
+      "use": "spring-boot",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade spring-boot to the latest version",
+      "long": "Upgrade spring-boot to the latest version",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for spring-boot",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "path": "ply upgrade with-versions",
+      "use": "with-versions",
+      "aliases": null,
+      "suggest_for": null,
+      "short": "Upgrade using mvn versions in a project",
+      "long": "Upgrade using mvn versions in a project",
+      "example": "",
+      "hidden": false,
+      "deprecated": "",
+      "disable_flag_parsing": false,
+      "disable_flags_in_use_line": false,
+      "traverse_children": false,
+      "runnable": true,
+      "has_args_validator": false,
+      "has_pre_run": false,
+      "has_persistent_pre_run": false,
+      "has_post_run": false,
+      "has_persistent_post_run": false,
+      "annotations": {},
+      "flags": [
+        {
+          "scope": "local",
+          "name": "help",
+          "shorthand": "h",
+          "type": "bool",
+          "default": "false",
+          "no_opt_default": "true",
+          "usage": "help for with-versions",
+          "hidden": false,
+          "deprecated": "",
+          "shorthand_deprecated": "",
+          "annotations": {
+            "cobra_annotation_flag_set_by_cobra": [
+              "true"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

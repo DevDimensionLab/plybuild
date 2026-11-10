@@ -9,13 +9,14 @@ var formatCmd = &cobra.Command{
 	Use:   "format",
 	Short: "Format functionality for a project",
 	Long:  `Format functionality for a project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 }
 

@@ -2,17 +2,29 @@ package shell
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/pkg/file"
-	"os/exec"
 	"strings"
 )
 
+func systemGitDependencies() process.Dependencies {
+	return process.SystemRunner()
+}
+
 func GitClone(url string, target string) Output {
-	return run(exec.Command("git", "clone", url, target))
+	return gitClone(systemGitDependencies(), url, target)
+}
+
+func gitClone(dependencies process.Dependencies, url string, target string) Output {
+	return runGit(dependencies, "clone", url, target)
 }
 
 func GitPull(targetDir string) Output {
-	return run(exec.Command("git", "-C", targetDir, "pull", "origin"))
+	return gitPull(systemGitDependencies(), targetDir)
+}
+
+func gitPull(dependencies process.Dependencies, targetDir string) Output {
+	return runGit(dependencies, "-C", targetDir, "pull", "origin")
 }
 
 func GitDirty(targetDir string) (bool, error) {
@@ -39,15 +51,37 @@ func GitIsRepo(targetDir string) (bool, error) {
 }
 
 func GitInit(targetDir string) Output {
-	return run(exec.Command("git", "-C", targetDir, "init"))
+	return gitInit(systemGitDependencies(), targetDir)
+}
+
+func gitInit(dependencies process.Dependencies, targetDir string) Output {
+	return runGit(dependencies, "-C", targetDir, "init")
 }
 
 func GitAddAndCommit(targetDir string, message string) Output {
-	add := Run("git", "-C", targetDir, "add", ".")
+	return gitAddAndCommit(systemGitDependencies(), targetDir, message)
+}
+
+func gitAddAndCommit(dependencies process.Dependencies, targetDir string, message string) Output {
+	add := runGit(dependencies, "-C", targetDir, "add", ".")
 	if add.Err != nil {
 		return add
 	}
-	return Run("git", "-C", targetDir, "commit", "-m", fmt.Sprintf("\"%s\"", message))
+	return runGit(dependencies, "-C", targetDir, "commit", "-m", fmt.Sprintf("\"%s\"", message))
+}
+
+func runGit(dependencies process.Dependencies, args ...string) (output Output) {
+	command := process.Command{
+		Name:   "git",
+		Args:   args,
+		Stdout: &output.StdOut,
+		Stderr: &output.StdErr,
+	}
+	log.Debugf("running: %s %s", command.Name, strings.Join(command.Args, " "))
+	if err := process.Execute(dependencies, command); err != nil {
+		return output
+	}
+	return output
 }
 
 func InstallGitHooks(sourceDir string, sourceFileNames []string, targetDir string) error {

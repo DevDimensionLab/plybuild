@@ -1,0 +1,18 @@
+{
+  "kind": "WorkspaceProjectListReadback@1",
+  "schema_version": 1,
+  "workspace": {
+    "root": "/work"
+  },
+  "scope": {
+    "project_id": null
+  },
+  "projects": [
+    {
+      "project_id": "alpha",
+      "name": "Alpha – café / core",
+      "wrapper": "/work/alpha wrapper",
+      "repo_count": 2
+    }
+  ]
+}

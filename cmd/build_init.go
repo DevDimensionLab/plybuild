@@ -9,13 +9,14 @@ var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initializes build with ply files and formatting",
 	Long:  `Initializes build project with ply files and formatting`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
+			return err
 		}
+		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, project := range ctx.Projects {

@@ -12,6 +12,13 @@ var mavenGraphExcludeTestScope bool
 var mavenGraphExcludeFilters []string
 var mavenGraphIncludeFilters []string
 
+func initializeMavenCommand(cmd *cobra.Command, _ []string) error {
+	if err := InitGlobals(cmd); err != nil {
+		return err
+	}
+	return ctx.FindAndPopulateMavenProjects()
+}
+
 type AnalyzeOpts struct {
 	Deps bool
 }
@@ -32,17 +39,10 @@ var mavenCmd = &cobra.Command{
 }
 
 var mavenGraphCmd = &cobra.Command{
-	Use:   "graph",
-	Short: "creates a graph using maven for dependencies in a project",
-	Long:  `creates a graph using maven for dependencies in a project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Use:               "graph",
+	Short:             "creates a graph using maven for dependencies in a project",
+	Long:              `creates a graph using maven for dependencies in a project`,
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, inc := range mavenGraphIncludeFilters {
 			println(inc)
@@ -61,17 +61,10 @@ var mavenGraphCmd = &cobra.Command{
 }
 
 var mavenGraph2PartyCmd = &cobra.Command{
-	Use:   "2party",
-	Short: "creates a graph only for 2party dependencies in a project",
-	Long:  `creates a graph only for 2party dependencies in a project`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Use:               "2party",
+	Short:             "creates a graph only for 2party dependencies in a project",
+	Long:              `creates a graph only for 2party dependencies in a project`,
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachMavenProject("creating 2party graph for",
@@ -84,17 +77,10 @@ var mavenGraph2PartyCmd = &cobra.Command{
 }
 
 var mavenCheckstyleCmd = &cobra.Command{
-	Use:   "checkstyle",
-	Short: "runs checkstyle",
-	Long:  `runs checkstyle`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Use:               "checkstyle",
+	Short:             "runs checkstyle",
+	Long:              `runs checkstyle`,
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachMavenProject("running checkstyle analysis on",
@@ -104,17 +90,10 @@ var mavenCheckstyleCmd = &cobra.Command{
 }
 
 var mavenOwaspCmd = &cobra.Command{
-	Use:   "owasp",
-	Short: "runs owasp",
-	Long:  `runs owasp`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Use:               "owasp",
+	Short:             "runs owasp",
+	Long:              `runs owasp`,
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachMavenProject("running wasp analysis on",
@@ -125,17 +104,10 @@ var mavenOwaspCmd = &cobra.Command{
 }
 
 var mavenSpringBootRunCmd = &cobra.Command{
-	Use:   "boot-run",
-	Short: "runs a spring boot application",
-	Long:  `runs a spring boot application`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Use:               "boot-run",
+	Short:             "runs a spring boot application",
+	Long:              `runs a spring boot application`,
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachMavenProject("running spring-boot:run",
@@ -145,17 +117,10 @@ var mavenSpringBootRunCmd = &cobra.Command{
 }
 
 var mavenEnforcerCmd = &cobra.Command{
-	Use:   "enforcer",
-	Short: "runs enforcer",
-	Long:  `runs enforcer`,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	Use:               "enforcer",
+	Short:             "runs enforcer",
+	Long:              `runs enforcer`,
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachMavenProject("running enforcer on",
@@ -175,14 +140,7 @@ var analyzeCmd = &cobra.Command{
 	PreRunE: func(cmd *cobra.Command, args []string) error {
 		return OkHelp(cmd, analyzeOpts.Any)
 	},
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if err := InitGlobals(cmd); err != nil {
-			log.Fatalln(err)
-		}
-		if err := ctx.FindAndPopulateMavenProjects(); err != nil {
-			log.Fatalln(err)
-		}
-	},
+	PersistentPreRunE: initializeMavenCommand,
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx.DryRun = true
 		ctx.OnEachMavenProject("Undeclared and unused dependencies", func(repository maven.Repository, project config.Project) error {

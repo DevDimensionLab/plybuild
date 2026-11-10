@@ -28,12 +28,7 @@ func (repository Repository) upgradeParent(model *pom.Model, project config.Proj
 
 	parentGroupId := model.Parent.GroupId
 	parentArtifactId := model.Parent.ArtifactId
-	latestVersionMeta, err := repository.GetMetaData(parentGroupId, parentArtifactId)
-	if err != nil {
-		return err
-	}
-
-	latestVersion, err := latestVersionMeta.LatestRelease()
+	latestVersion, err := repository.latestRelease(parentGroupId, parentArtifactId)
 	if err != nil {
 		return err
 	}

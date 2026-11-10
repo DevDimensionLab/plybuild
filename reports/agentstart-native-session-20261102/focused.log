@@ -1,0 +1,252 @@
+=== RUN   TestAgentStartArgvPerProviderKeepsDefaults
+=== RUN   TestAgentStartArgvPerProviderKeepsDefaults/codex_inherited_defaults
+=== RUN   TestAgentStartArgvPerProviderKeepsDefaults/claude_inherited_defaults
+=== RUN   TestAgentStartArgvPerProviderKeepsDefaults/claude_model_and_permission_mode
+=== RUN   TestAgentStartArgvPerProviderKeepsDefaults/codex_model_permission_profile
+--- PASS: TestAgentStartArgvPerProviderKeepsDefaults (0.32s)
+    --- PASS: TestAgentStartArgvPerProviderKeepsDefaults/codex_inherited_defaults (0.08s)
+    --- PASS: TestAgentStartArgvPerProviderKeepsDefaults/claude_inherited_defaults (0.08s)
+    --- PASS: TestAgentStartArgvPerProviderKeepsDefaults/claude_model_and_permission_mode (0.08s)
+    --- PASS: TestAgentStartArgvPerProviderKeepsDefaults/codex_model_permission_profile (0.08s)
+=== RUN   TestAgentStartPassesExplicitEnvironmentToTab
+--- PASS: TestAgentStartPassesExplicitEnvironmentToTab (0.08s)
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_prompt
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/relative_herdr_path
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/profile_on_claude
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/unknown_provider
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/relative_receipt
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_workspace
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/short_herdr_sha
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/env_without_assignment
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_key
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_provider
+=== RUN   TestAgentStartRejectsInvalidInputBeforeAnyEffect/relative_cwd
+--- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect (0.01s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_prompt (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/relative_herdr_path (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/profile_on_claude (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/unknown_provider (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/relative_receipt (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_workspace (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/short_herdr_sha (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/env_without_assignment (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_key (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/empty_provider (0.00s)
+    --- PASS: TestAgentStartRejectsInvalidInputBeforeAnyEffect/relative_cwd (0.00s)
+=== RUN   TestAgentStartSameInputTwiceSendsNothingAgain
+--- PASS: TestAgentStartSameInputTwiceSendsNothingAgain (0.07s)
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/permission
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/cwd
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/workspace
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/label
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/env
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/prompt
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/herdr_sha
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/provider
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/model
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/codex_profile
+=== RUN   TestAgentStartChangedInputMismatchesBeforeEffect/herdr_path
+--- PASS: TestAgentStartChangedInputMismatchesBeforeEffect (0.83s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/permission (0.07s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/cwd (0.07s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/workspace (0.07s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/label (0.07s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/env (0.08s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/prompt (0.08s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/herdr_sha (0.08s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/provider (0.08s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/model (0.08s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/codex_profile (0.08s)
+    --- PASS: TestAgentStartChangedInputMismatchesBeforeEffect/herdr_path (0.08s)
+=== RUN   TestAgentStartDigestIgnoresKeyReceiptPathAndPrecondition
+--- PASS: TestAgentStartDigestIgnoresKeyReceiptPathAndPrecondition (0.14s)
+=== RUN   TestAgentStartReceiptStoresDigestNotPromptAndWritesOnlyReceipt
+--- PASS: TestAgentStartReceiptStoresDigestNotPromptAndWritesOnlyReceipt (0.07s)
+=== RUN   TestAgentStartRecordsPendingBeforeEveryMutatingCallAndPreconditionBeforeEach
+--- PASS: TestAgentStartRecordsPendingBeforeEveryMutatingCallAndPreconditionBeforeEach (0.07s)
+=== RUN   TestAgentStartPromptsSettledCodexWithoutNativeSession
+--- PASS: TestAgentStartPromptsSettledCodexWithoutNativeSession (0.07s)
+=== RUN   TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady
+=== RUN   TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/launch_pending
+=== RUN   TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/not_interactive
+=== RUN   TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/interactive_unknown
+=== RUN   TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/foreground_cwd_unreported
+=== RUN   TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/still_working
+--- PASS: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady (1.80s)
+    --- PASS: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/launch_pending (0.36s)
+    --- PASS: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/not_interactive (0.36s)
+    --- PASS: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/interactive_unknown (0.36s)
+    --- PASS: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/foreground_cwd_unreported (0.36s)
+    --- PASS: TestAgentStartNeverPromptsBeforeSessionlessAgentIsReady/still_working (0.36s)
+=== RUN   TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold
+=== RUN   TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold/changed
+=== RUN   TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold/vanished
+--- PASS: TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold (0.12s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold/changed (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedNativeSessionDoesNotHold/vanished (0.06s)
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_pane_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_pane_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/empty_tab_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/empty_tab_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_kind_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_kind_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/name_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/name_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/agent_kind_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/agent_kind_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/pane_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/pane_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/tab_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/tab_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_tab_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_tab_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_terminal_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_terminal_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_agent_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_agent_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/terminal_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/terminal_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/workspace_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/workspace_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_workspace_sessionless=false
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_workspace_sessionless=true
+=== RUN   TestAgentStartRefusesPromptWhenObservedIdentityDiffers/claude_foreground_cwd
+--- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers (1.45s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_pane_sessionless=false (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_pane_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/empty_tab_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/empty_tab_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_kind_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_kind_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/name_sessionless=false (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/name_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/agent_kind_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/agent_kind_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/pane_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/pane_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/tab_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/tab_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_tab_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_tab_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_terminal_sessionless=false (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_terminal_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_agent_sessionless=false (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/session_agent_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/terminal_sessionless=false (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/terminal_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/workspace_sessionless=false (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/workspace_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_workspace_sessionless=false (0.06s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/no_workspace_sessionless=true (0.05s)
+    --- PASS: TestAgentStartRefusesPromptWhenObservedIdentityDiffers/claude_foreground_cwd (0.05s)
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_terminal
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_pane
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/other_space
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/only_pane
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_workspace
+=== RUN   TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_tab
+--- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart (0.17s)
+    --- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_terminal (0.03s)
+    --- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_pane (0.03s)
+    --- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/other_space (0.03s)
+    --- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/only_pane (0.03s)
+    --- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_workspace (0.03s)
+    --- PASS: TestAgentStartRejectsIncompleteTabIdentityBeforeAgentStart/no_tab (0.03s)
+=== RUN   TestAgentStartChecksCodexForegroundCwdOnlyWhenReported
+--- PASS: TestAgentStartChecksCodexForegroundCwdOnlyWhenReported (0.17s)
+=== RUN   TestAgentStartLostReplyKeepsPendingAndNeverResends
+=== RUN   TestAgentStartLostReplyKeepsPendingAndNeverResends/tab_create_sessionless=false
+=== RUN   TestAgentStartLostReplyKeepsPendingAndNeverResends/agent_start_sessionless=false
+=== RUN   TestAgentStartLostReplyKeepsPendingAndNeverResends/prompt_sessionless=false
+=== RUN   TestAgentStartLostReplyKeepsPendingAndNeverResends/prompt_sessionless=true
+--- PASS: TestAgentStartLostReplyKeepsPendingAndNeverResends (0.21s)
+    --- PASS: TestAgentStartLostReplyKeepsPendingAndNeverResends/tab_create_sessionless=false (0.03s)
+    --- PASS: TestAgentStartLostReplyKeepsPendingAndNeverResends/agent_start_sessionless=false (0.05s)
+    --- PASS: TestAgentStartLostReplyKeepsPendingAndNeverResends/prompt_sessionless=false (0.07s)
+    --- PASS: TestAgentStartLostReplyKeepsPendingAndNeverResends/prompt_sessionless=true (0.06s)
+=== RUN   TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep
+=== RUN   TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep/tab_create
+=== RUN   TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep/agent_start
+=== RUN   TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep/prompt
+--- PASS: TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep (0.12s)
+    --- PASS: TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep/tab_create (0.02s)
+    --- PASS: TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep/agent_start (0.04s)
+    --- PASS: TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep/prompt (0.06s)
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_excl_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_reserve_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:tab_create_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:tab_create_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:agent_start_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:agent_start_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:prompt_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:prompt_sessionless=false
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:prompt_sessionless=true
+=== RUN   TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:prompt_sessionless=true
+--- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat (0.35s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_excl_sessionless=false (0.00s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_reserve_sessionless=false (0.01s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:tab_create_sessionless=false (0.02s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:tab_create_sessionless=false (0.02s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:agent_start_sessionless=false (0.04s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:agent_start_sessionless=false (0.04s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:prompt_sessionless=false (0.06s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:prompt_sessionless=false (0.06s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_pending:prompt_sessionless=true (0.05s)
+    --- PASS: TestAgentStartCrashPointsNeverReadAsFreeOrLegacyAndNeverRepeat/after_call:prompt_sessionless=true (0.05s)
+=== RUN   TestAgentStartConcurrentOwnersStartExactlyOnce
+--- PASS: TestAgentStartConcurrentOwnersStartExactlyOnce (0.08s)
+=== RUN   TestAgentStartConcurrentDifferentInputNeverStartsSecond
+--- PASS: TestAgentStartConcurrentDifferentInputNeverStartsSecond (0.07s)
+=== RUN   TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding
+=== RUN   TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/submitted
+=== RUN   TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/tab_created_after_failure
+=== RUN   TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/reserved
+=== RUN   TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/agent_ready
+=== RUN   TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/prompt_attempting
+--- PASS: TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding (0.01s)
+    --- PASS: TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/submitted (0.00s)
+    --- PASS: TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/tab_created_after_failure (0.00s)
+    --- PASS: TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/reserved (0.00s)
+    --- PASS: TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/agent_ready (0.00s)
+    --- PASS: TestAgentStartReadsLegacyReceiptsWithoutClaimingInputBinding/prompt_attempting (0.00s)
+=== RUN   TestAgentStartReceiptFromBootstrapCandidateStaysUnknownAndRefused
+--- PASS: TestAgentStartReceiptFromBootstrapCandidateStaysUnknownAndRefused (0.00s)
+=== RUN   TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy
+=== RUN   TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/empty
+=== RUN   TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/garbage
+=== RUN   TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/foreign_json
+=== RUN   TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/truncated_legacy
+--- PASS: TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy (0.00s)
+    --- PASS: TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/empty (0.00s)
+    --- PASS: TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/garbage (0.00s)
+    --- PASS: TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/foreign_json (0.00s)
+    --- PASS: TestAgentStartUnparseableReceiptIsIncompleteNotFreeOrLegacy/truncated_legacy (0.00s)
+=== RUN   TestAgentStartEffectUnknownClassification
+--- PASS: TestAgentStartEffectUnknownClassification (0.00s)
+=== RUN   TestAgentStartPackageHasNoProcessDependencies
+--- PASS: TestAgentStartPackageHasNoProcessDependencies (0.04s)
+=== RUN   TestAgentStartExportedSurfaceNamesNoProcessConcepts
+--- PASS: TestAgentStartExportedSurfaceNamesNoProcessConcepts (0.00s)
+=== RUN   TestAgentStartHerdrClientVerifiesBinaryBeforeExecuting
+--- PASS: TestAgentStartHerdrClientVerifiesBinaryBeforeExecuting (0.15s)
+=== RUN   TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput
+=== RUN   TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/error_envelope
+=== RUN   TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/null_result
+=== RUN   TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/not_json
+=== RUN   TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/exit_status
+=== RUN   TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/oversized
+--- PASS: TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput (0.52s)
+    --- PASS: TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/error_envelope (0.09s)
+    --- PASS: TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/null_result (0.09s)
+    --- PASS: TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/not_json (0.09s)
+    --- PASS: TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/exit_status (0.09s)
+    --- PASS: TestAgentStartHerdrClientRejectsUnsuccessfulOrOversizedOutput/oversized (0.17s)
+=== RUN   TestAgentStartResolveHerdrBindsResolvedBinary
+--- PASS: TestAgentStartResolveHerdrBindsResolvedBinary (0.00s)
+PASS
+ok  	github.com/devdimensionlab/plybuild/internal/agentstart	7.069s
