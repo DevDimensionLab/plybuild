@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/agentlaunch"
 	"github.com/devdimensionlab/plybuild/internal/agents/quota"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -138,6 +139,7 @@ func newAgentCommand(readers agentQuotaReaders) *cobra.Command {
 			return nil
 		},
 	}
+	command.AddCommand(newAgentAssignmentCommand(agentlaunch.Start))
 	return command
 }
 
