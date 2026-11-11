@@ -1,0 +1,12 @@
+{
+  "kind": "InboxError@1",
+  "schema_version": 1,
+  "class": "inbox_conflict",
+  "detail": "payload differs",
+  "retryable": false,
+  "conflicting_fields": [
+    "body"
+  ],
+  "existing_payload_sha256": "sha256:366ee08325e6ffe905382270509dc804ebaccdcdbed05553bde5343700df00a2",
+  "submitted_payload_sha256": "sha256:b99f649dc726c51f18ef19def4ae90241d6999dbde398dfe1ea877b420e04158"
+}

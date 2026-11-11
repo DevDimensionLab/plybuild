@@ -1,0 +1,93 @@
+{
+  "kind": "InboxDerivedTitleCases@1",
+  "rule": "derived-title-v1",
+  "fallback_title": "Svar uten tekst",
+  "max_code_points": 60,
+  "cases": [
+    {
+      "name": "empty body",
+      "body": "",
+      "derived_title": "Svar uten tekst"
+    },
+    {
+      "name": "only blank and marker lines",
+      "body": "\n   \n#\n- \n> \n1.\n",
+      "derived_title": "Svar uten tekst"
+    },
+    {
+      "name": "heading",
+      "body": "## Spec ferdig",
+      "derived_title": "Spec ferdig"
+    },
+    {
+      "name": "nested markers",
+      "body": "> - **Spec** `ferdig`",
+      "derived_title": "Spec ferdig"
+    },
+    {
+      "name": "numbered list",
+      "body": "12. Første punkt",
+      "derived_title": "Første punkt"
+    },
+    {
+      "name": "plus and star",
+      "body": "+ * Punkt",
+      "derived_title": "Punkt"
+    },
+    {
+      "name": "marker without whitespace is text",
+      "body": "#tag og >pil",
+      "derived_title": "#tag og >pil"
+    },
+    {
+      "name": "bold start is not a list marker",
+      "body": "**Viktig:** les",
+      "derived_title": "Viktig: les"
+    },
+    {
+      "name": "leading blank lines",
+      "body": "\n\n   \n  Tekst  her\nNeste",
+      "derived_title": "Tekst her"
+    },
+    {
+      "name": "crlf line endings",
+      "body": "\r\n# Tittel\r\nmer",
+      "derived_title": "Tittel"
+    },
+    {
+      "name": "collapse whitespace",
+      "body": "a \t  b",
+      "derived_title": "a b"
+    },
+    {
+      "name": "exactly 60 code points",
+      "body": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "derived_title": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "name": "61 code points without space",
+      "body": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "derived_title": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb…"
+    },
+    {
+      "name": "61 code points with space",
+      "body": "ord ccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "derived_title": "ord…"
+    },
+    {
+      "name": "cut at last space and trim",
+      "body": "dddddddddddddddddddddddddddddddddddddddddddddddddd  eeeeeeeeeeeeeeeeeeee",
+      "derived_title": "dddddddddddddddddddddddddddddddddddddddddddddddddd…"
+    },
+    {
+      "name": "emoji counted as code points",
+      "body": "🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂",
+      "derived_title": "🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂🙂…"
+    },
+    {
+      "name": "backticks only line",
+      "body": "``` \n`code`",
+      "derived_title": "code"
+    }
+  ]
+}

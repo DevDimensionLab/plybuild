@@ -1,0 +1,133 @@
+{
+  "kind": "PlyCapabilities@1",
+  "inbox_extensions": [
+    {
+      "id": "inbox.put",
+      "command": [
+        "inbox",
+        "put"
+      ],
+      "mode": "inbox_v1",
+      "selectors": [
+        "--workspace",
+        "--project",
+        "--owner",
+        "--file"
+      ],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "InboxPutResult@1",
+          "schema_version": 1
+        },
+        {
+          "kind": "InboxError@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "inbox_message_record"
+    },
+    {
+      "id": "inbox.show",
+      "command": [
+        "inbox",
+        "show"
+      ],
+      "mode": "inbox_v1",
+      "selectors": [
+        "--workspace",
+        "--project",
+        "--owner",
+        "--conversation",
+        "--message"
+      ],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "InboxItem@1",
+          "schema_version": 1
+        },
+        {
+          "kind": "InboxError@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "read"
+    },
+    {
+      "id": "inbox.list",
+      "command": [
+        "inbox",
+        "list"
+      ],
+      "mode": "inbox_v1",
+      "selectors": [
+        "--workspace",
+        "--project",
+        "--owner",
+        "--limit",
+        "--cursor"
+      ],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "InboxList@1",
+          "schema_version": 1
+        },
+        {
+          "kind": "InboxError@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "read"
+    },
+    {
+      "id": "inbox.mark",
+      "command": [
+        "inbox",
+        "mark"
+      ],
+      "mode": "inbox_v1",
+      "selectors": [
+        "--workspace",
+        "--project",
+        "--owner",
+        "--conversation",
+        "--message",
+        "--value"
+      ],
+      "formats": [
+        "text",
+        "json"
+      ],
+      "filters": [],
+      "filter_policy": "none",
+      "result_schemas": [
+        {
+          "kind": "InboxMarkResult@1",
+          "schema_version": 1
+        },
+        {
+          "kind": "InboxError@1",
+          "schema_version": 1
+        }
+      ],
+      "effect": "inbox_read_mark"
+    }
+  ]
+}

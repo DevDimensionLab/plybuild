@@ -1,0 +1,22 @@
+{
+  "kind": "InboxMessage@1",
+  "schema_version": 1,
+  "project_id": "ply",
+  "owner": "owner-1",
+  "conversation_id": "conv_00000000000000000000000000000000",
+  "message_id": "msg_00000000000000000000000000000000",
+  "replied_at_utc": "2026-11-11T14:05:00.123456000Z",
+  "title": null,
+  "derived_title": "Spec ferdig, to valg gjenstår",
+  "derived_title_rule": "derived-title-v1",
+  "body": "## Spec ferdig, to valg gjenstår\n\n- Valg 1: **lagring**\n- Valg 2: `cursor`\n",
+  "body_sha256": "4b53b7bcc686d00b6b46a126cd5f32ad43dc53dd1f4b4cdb8497b892c8bcfdcc",
+  "truncated": false,
+  "full_sha256": null,
+  "answer_source": "codex.item_completed",
+  "agent_label": "quality",
+  "provider": "codex",
+  "write_kind": "live",
+  "recorded_at_utc": "2026-11-11T15:00:00.000000000Z",
+  "payload_sha256": "sha256:366ee08325e6ffe905382270509dc804ebaccdcdbed05553bde5343700df00a2"
+}

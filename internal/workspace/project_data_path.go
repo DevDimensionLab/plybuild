@@ -15,6 +15,9 @@ const DataPathBacklog = "backlog"
 // DataPathBacklogArchive is the data_paths category of the project's backlog archive.
 const DataPathBacklogArchive = "backlog-archive"
 
+// DataPathInbox is the data_paths category of the project's agent reply Inbox.
+const DataPathInbox = "inbox"
+
 // ProjectDataPath resolves the directory of category for project: its
 // configured data path, or <wrapper>/<category> when none is configured.
 // Nothing is created. The existing part of the path must stay inside the

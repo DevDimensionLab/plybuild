@@ -1,0 +1,14 @@
+{
+  "kind": "InboxPutRequest@1",
+  "conversation_id": "conv_00000000000000000000000000000000",
+  "message_id": "msg_00000000000000000000000000000000",
+  "replied_at_utc": "2026-11-11T14:05:00.123456Z",
+  "title": null,
+  "body": "## Spec ferdig, to valg gjenstår\n\n- Valg 1: **lagring**\n- Valg 2: `cursor`\n",
+  "truncated": false,
+  "full_sha256": null,
+  "answer_source": "codex.item_completed",
+  "agent_label": "quality",
+  "provider": "codex",
+  "write_kind": "live"
+}

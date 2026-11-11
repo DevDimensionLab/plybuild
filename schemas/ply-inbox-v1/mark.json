@@ -1,0 +1,8 @@
+{
+  "kind": "InboxMarkResult@1",
+  "schema_version": 1,
+  "conversation_id": "conv_00000000000000000000000000000000",
+  "message_id": "msg_00000000000000000000000000000000",
+  "read": true,
+  "effect": "marked"
+}

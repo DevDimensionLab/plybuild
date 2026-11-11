@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
+	"github.com/devdimensionlab/plybuild/internal/inbox"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
@@ -42,6 +43,7 @@ type capabilityCatalog struct {
 	Operations         []capabilityOperation `json:"operations"`
 	ReadExtensions     []capabilityOperation `json:"read_extensions"`
 	WorkflowExtensions []capabilityOperation `json:"workflow_extensions,omitempty"`
+	InboxExtensions    []capabilityOperation `json:"inbox_extensions"`
 }
 
 func embeddedCapabilityBuild(info *debug.BuildInfo) capabilityBuild {
@@ -173,7 +175,31 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		}
 		return workflow[i].ID < workflow[j].ID
 	})
-	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops, extensions, workflow}
+	return capabilityCatalog{"PlyCapabilities@1", workspace.CoreReadSchemaVersion, build, "workspace-core-read", ops, extensions, workflow, inboxCapabilities()}
+}
+
+// inboxCapabilities is the additive inbox_v1 contract; it is always present.
+func inboxCapabilities() []capabilityOperation {
+	version := inbox.SchemaVersion
+	scope := []string{"--workspace", "--project", "--owner"}
+	operations := []capabilityOperation{}
+	for _, verb := range []struct {
+		name, effect, kind string
+		selectors          []string
+	}{
+		{"put", "inbox_message_record", inbox.PutResultKind, []string{"--file"}},
+		{"show", "read", inbox.ItemKind, []string{"--conversation", "--message"}},
+		{"list", "read", inbox.ListKind, []string{"--limit", "--cursor"}},
+		{"mark", "inbox_read_mark", inbox.MarkResultKind, []string{"--conversation", "--message", "--value"}},
+	} {
+		operations = append(operations, capabilityOperation{
+			ID: "inbox." + verb.name, Command: []string{"inbox", verb.name}, Mode: inbox.Mode,
+			Selectors: append(append([]string{}, scope...), verb.selectors...), Formats: []string{"text", "json"},
+			Filters: []string{}, FilterPolicy: "none",
+			ResultSchemas: []capabilitySchema{{verb.kind, &version}, {inbox.ErrorKind, &version}}, Effect: verb.effect,
+		})
+	}
+	return operations
 }
 
 func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
@@ -222,7 +248,7 @@ func newCapabilitiesCommand(build func() capabilityBuild) *cobra.Command {
 					return err
 				}
 			}
-			for _, op := range catalog.WorkflowExtensions {
+			for _, op := range append(append([]capabilityOperation{}, catalog.WorkflowExtensions...), catalog.InboxExtensions...) {
 				if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  %s (%s): %s; effect: %s\n", op.ID, op.Mode, strings.Join(op.Command, " "), op.Effect); err != nil {
 					return err
 				}
