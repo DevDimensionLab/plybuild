@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -22,6 +24,9 @@ func TestWorkingAndSingleSubmission(t *testing.T) {
 			return json.RawMessage(`{"process_info":{"pane_id":"w1:p2","shell_pid":42,"foreground_process_group_id":42,"foreground_processes":[{"pid":42,"name":"zsh"}]}}`), nil
 		case "pane run":
 			calls++
+			if !strings.HasPrefix(args[3], "cd -- '/work' && exec ") {
+				t.Fatalf("cwd not established before agent start: %q", args[3])
+			}
 			if !strings.Contains(args[3], `'hello '\''$()'`) {
 				t.Fatalf("unsafe command: %q", args)
 			}
@@ -133,5 +138,69 @@ func TestShellWaitDeadline(t *testing.T) {
 	}, time.Millisecond)
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatal(err)
+	}
+}
+
+func TestHerdrErrorHelper(t *testing.T) {
+	if os.Getenv("PLY_LAUNCH_ERROR_HELPER") != "1" {
+		return
+	}
+	fmt.Fprint(os.Stderr, os.Getenv("PLY_LAUNCH_ERROR_RESPONSE"))
+	os.Exit(1)
+}
+func TestCallNeverLeaksHerdrErrorMessage(t *testing.T) {
+	executable, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PLY_LAUNCH_ERROR_HELPER", "1")
+	for _, raw := range []string{
+		`{"error":{"code":"agent_pane_busy","message":"PRIVATE_PROMPT secret_env=PRIVATE_ENV"}}`,
+		`PRIVATE_PROMPT secret_env=PRIVATE_ENV`,
+		`{"error":{"code":"PRIVATE_PROMPT secret_env=PRIVATE_ENV"}}`,
+	} {
+		t.Setenv("PLY_LAUNCH_ERROR_RESPONSE", raw)
+		_, err = call(context.Background(), executable, []string{"-test.run=^TestHerdrErrorHelper$", "--"})
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) {
+			t.Fatalf("exit error not preserved: %v", err)
+		}
+		if strings.Contains(err.Error(), "PRIVATE_") {
+			t.Fatalf("sensitive diagnostic: %v", err)
+		}
+		if strings.Contains(raw, `"agent_pane_busy"`) && !strings.Contains(err.Error(), "agent_pane_busy") {
+			t.Fatalf("missing safe code: %v", err)
+		}
+	}
+}
+
+func TestCommandEstablishesCwdBeforeExecutable(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "target ' space")
+	if err := os.Mkdir(target, 0700); err != nil {
+		t.Fatal(err)
+	}
+	executable := filepath.Join(root, "fake provider")
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\npwd -P\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	in := Request{Cwd: target, Executable: executable, InitialPrompt: "no task"}
+	command := exec.Command("/bin/sh", "-c", launchCommand(in))
+	command.Dir = root
+	output, err := command.Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	physical, err := filepath.EvalSymlinks(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(string(output)) != physical {
+		t.Fatalf("wrong cwd: %q", output)
+	}
+	in.Cwd = filepath.Join(root, "absent")
+	output, err = exec.Command("/bin/sh", "-c", launchCommand(in)).Output()
+	if err == nil || len(output) != 0 {
+		t.Fatalf("executable ran after cd failed: %q %v", output, err)
 	}
 }

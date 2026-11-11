@@ -98,7 +98,7 @@ func launch(ctx context.Context, in Request, run runner, interval time.Duration)
 	if e = waitShell(ctx, p, run, interval); e != nil {
 		return r, e
 	}
-	command := quote(in.Executable) + " " + quote(in.InitialPrompt)
+	command := launchCommand(in)
 	r.State = "submission_unknown"
 	r.EffectUnknown = true
 	if _, e = run(ctx, []string{"pane", "run", p.Pane, command}); e != nil {
@@ -237,7 +237,7 @@ func call(ctx context.Context, binary string, args []string) (json.RawMessage, e
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("herdr %s %s: %w; stderr: %s", args[0], args[1], err, diagnostic(stderr.data))
+		return nil, fmt.Errorf("herdr %s %s: %w; code: %s", args[0], args[1], err, diagnostic(stderr.data))
 	}
 	if out.overflow || stderr.overflow {
 		return nil, errors.New("Herdr output exceeded limit")
@@ -259,13 +259,26 @@ func call(ctx context.Context, binary string, args []string) (json.RawMessage, e
 }
 
 func diagnostic(raw []byte) string {
-	if len(raw) > 4096 {
-		raw = raw[:4096]
+	var envelope struct {
+		Error struct {
+			Code string `json:"code"`
+		} `json:"error"`
 	}
-	return strings.Map(func(r rune) rune {
-		if r < 32 && r != '\n' && r != '\t' {
-			return -1
+	if json.Unmarshal(raw, &envelope) != nil {
+		return "unavailable"
+	}
+	code := envelope.Error.Code
+	if len(code) == 0 || len(code) > 64 || code[0] < 'a' || code[0] > 'z' {
+		return "unavailable"
+	}
+	for _, c := range code {
+		if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_') {
+			return "unavailable"
 		}
-		return r
-	}, strings.TrimSpace(string(raw)))
+	}
+	return code
+}
+
+func launchCommand(in Request) string {
+	return "cd -- " + quote(in.Cwd) + " && exec " + quote(in.Executable) + " " + quote(in.InitialPrompt)
 }
