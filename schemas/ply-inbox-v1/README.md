@@ -48,8 +48,9 @@ tests decode each one back with the production types:
 - `list` orders by `replied_at_utc` descending, then `conversation_id`, then
   `message_id`. The cursor is opaque and bound to project and owner.
   `unread_count_exact` is true only when every counted message was validated in
-  this call; otherwise the count is a lower bound from file names
-  (`filename_unverified`). A corrupt mark never reads as read.
+  this call; otherwise the count is an uncertain, name-based estimate
+  (`filename_unverified`), neither a lower nor an upper bound on valid unread
+  messages. A corrupt mark never reads as read.
 - Marks are never pruned. Only `mark --value unread` removes one.
 
 Nothing here starts, steers or answers agents, sends notifications, or uses the
