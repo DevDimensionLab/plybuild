@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/agentlaunch"
+	"gopkg.in/yaml.v3"
 )
 
 func TestAgentAssignmentBuildsPullPrompt(t *testing.T) {
@@ -105,5 +106,23 @@ func TestAssignmentSkillLabelFollowsActualProvider(t *testing.T) {
 		if !strings.Contains(text, rule) {
 			t.Fatalf("skill lacks %q", rule)
 		}
+	}
+}
+
+func TestAssignmentSkillFrontmatterIsValidYAML(t *testing.T) {
+	skill, err := os.ReadFile(filepath.Join("..", "skills", "ply-assignment", "SKILL.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	parts := strings.SplitN(string(skill), "---\n", 3)
+	if len(parts) != 3 || parts[0] != "" {
+		t.Fatal("skill lacks a --- delimited frontmatter")
+	}
+	var meta struct{ Name, Description string }
+	if err = yaml.Unmarshal([]byte(parts[1]), &meta); err != nil {
+		t.Fatalf("frontmatter is not valid YAML: %v", err)
+	}
+	if meta.Name != "ply-assignment" || !strings.Contains(meta.Description, "$ply-assignment ASSIGNMENT-7 --project ply") {
+		t.Fatalf("frontmatter %+v", meta)
 	}
 }

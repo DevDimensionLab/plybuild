@@ -1,6 +1,6 @@
 ---
 name: ply-assignment
-description: Work on a Ply Assignment named at session start, e.g. `/ply-assignment ASSIGNMENT-7 --project ply` (Codex: `$ply-assignment ASSIGNMENT-7 --project ply`). Read it with `ply assignment show`, take it before working, mark it done when finished, and follow a Task it mentions read-only.
+description: 'Work on a Ply Assignment named at session start, e.g. `/ply-assignment ASSIGNMENT-7 --project ply` (Codex: `$ply-assignment ASSIGNMENT-7 --project ply`). Read it with `ply assignment show`, take it before working, mark it done when finished, and follow a Task it mentions read-only.'
 argument-hint: ASSIGNMENT-<n> [--project <project-id>]
 ---
 
