@@ -11,14 +11,22 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
+	"slices"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 const (
 	herdrCallTimeout = 40 * time.Second
 	herdrOutputLimit = 1 << 20
+	// herdrMessageLimit bounds the Herdr error message kept in Ply's error text.
+	herdrMessageLimit = 160
 )
+
+var herdrErrorCode = regexp.MustCompile(`^[a-z][a-z0-9_]{0,63}$`)
 
 type limitedOutput struct {
 	data     []byte
@@ -75,7 +83,11 @@ func callHerdr(ctx context.Context, h HerdrBinary, args []string) (json.RawMessa
 	var stdout, stderr limitedOutput
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err = cmd.Run(); err != nil {
-		return nil, fmt.Errorf("herdr %s %s: %w", args[0], subcommand(args), err)
+		var detail string
+		if ctx.Err() == nil && !stderr.overflow {
+			detail = herdrErrorDetail(stderr.data, args)
+		}
+		return nil, fmt.Errorf("herdr %s %s: %w%s", args[0], subcommand(args), err, detail)
 	}
 	if stdout.overflow || stderr.overflow {
 		return nil, fmt.Errorf("herdr %s %s: output limit exceeded", args[0], subcommand(args))
@@ -88,9 +100,57 @@ func callHerdr(ctx context.Context, h HerdrBinary, args []string) (json.RawMessa
 		return nil, fmt.Errorf("herdr %s %s: invalid response", args[0], subcommand(args))
 	}
 	if hasValue(envelope.Error) || !hasValue(envelope.Result) {
-		return nil, fmt.Errorf("herdr %s %s: unsuccessful response", args[0], subcommand(args))
+		return nil, fmt.Errorf("herdr %s %s: unsuccessful response%s", args[0], subcommand(args), herdrErrorDetail(stdout.data, args))
 	}
 	return envelope.Result, nil
+}
+
+// herdrErrorDetail renders the code and message of a Herdr JSON error reply as
+// " (herdr error code: message)", or "" when the reply is not exactly such an
+// object. The message is bounded and withheld for calls carrying a sensitive
+// payload; no other output text is kept.
+func herdrErrorDetail(output []byte, args []string) string {
+	var reply struct {
+		Error *struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if json.Unmarshal(output, &reply) != nil || reply.Error == nil || !herdrErrorCode.MatchString(reply.Error.Code) {
+		return ""
+	}
+	message := reply.Error.Message
+	if withholdsMessage(args) {
+		message = "message withheld"
+	}
+	if message = boundedMessage(message); message == "" {
+		return " (herdr error " + reply.Error.Code + ")"
+	}
+	return " (herdr error " + reply.Error.Code + ": " + message + ")"
+}
+
+// withholdsMessage reports whether the call carries a payload that a Herdr
+// message might echo: the prompt of agent prompt, or environment values.
+func withholdsMessage(args []string) bool {
+	return len(args) > 1 && args[0] == "agent" && args[1] == "prompt" || slices.Contains(args, "--env")
+}
+
+func boundedMessage(message string) string {
+	message = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return ' '
+		}
+		return r
+	}, strings.ToValidUTF8(message, "\uFFFD"))
+	message = strings.TrimSpace(message)
+	if len(message) <= herdrMessageLimit {
+		return message
+	}
+	cut := herdrMessageLimit
+	for cut > 0 && !utf8.RuneStart(message[cut]) {
+		cut--
+	}
+	return message[:cut] + "…"
 }
 
 func subcommand(args []string) string {
