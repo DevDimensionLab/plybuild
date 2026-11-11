@@ -1,12 +1,15 @@
 ---
 name: ply-assignment
-description: Work on a Ply Assignment named at session start, e.g. `/ply-assignment ASSIGNMENT-7` or `/ply-assignment ASSIGNMENT-7 --project ply`. Read it with `ply assignment show`, take it before working, mark it done when finished, and follow a Task it mentions read-only.
+description: Work on a Ply Assignment named at session start, e.g. `/ply-assignment ASSIGNMENT-7 --project ply` (Codex: `$ply-assignment ASSIGNMENT-7 --project ply`). Read it with `ply assignment show`, take it before working, mark it done when finished, and follow a Task it mentions read-only.
 argument-hint: ASSIGNMENT-<n> [--project <project-id>]
 ---
 
 # Ply Assignment
 
 Arguments: $ARGUMENTS
+
+If that line still shows the placeholder, the arguments are the text after the
+skill name in your initial prompt.
 
 An Assignment is the human's work description. Its text, the user and the
 repository's AGENTS.md/CLAUDE.md decide the work and its authority; this skill
@@ -37,10 +40,15 @@ Then look at `lifecycle`:
 
 ## 2. Take it before any work
 
-Your label is `claude:${CLAUDE_SESSION_ID}`. Claude Code fills in the session
-id when it loads this skill and keeps it when the session is resumed. If the
-label still shows the placeholder or an empty id, use `claude:` plus random hex
-instead. Use the same label for the whole session.
+Your label is the prefix of the agent you actually are plus a session id:
+
+- Claude Code: `claude:${CLAUDE_SESSION_ID}`. Claude Code fills in the session
+  id when it loads this skill and keeps it when the session is resumed. If it
+  still shows the placeholder or an empty id, use `claude:` plus random hex.
+- Codex: `codex:` plus random hex that you choose once, before your first take.
+
+Use your own provider's prefix, never another provider's prefix, and keep the
+same label for the whole session.
 
 ```sh
 ply assignment take ASSIGNMENT-<n> --revision <r> --as <label> [--project <project-id>] --format json
@@ -79,6 +87,8 @@ current text.
 
 When the work the Assignment text describes is complete, mark it done. This
 moves it to the archive view; there is no separate archive step.
+Run done only after you have read the results of your final checks.
+Never send done in the same batch as commands whose output you have not read.
 
 ```sh
 ply assignment done ASSIGNMENT-<n> --claim <claim> [--project <project-id>]

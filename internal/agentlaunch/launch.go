@@ -13,15 +13,17 @@ import (
 )
 
 type Request struct {
-	Herdr, Executable, Cwd, Workspace, Label, InitialPrompt string
-	Env                                                     []string
-	Timeout                                                 time.Duration
+	// Agent is the Herdr agent identity the started executable must report.
+	Agent, Herdr, Executable, Cwd, Workspace, Label, InitialPrompt string
+	Env                                                            []string
+	Timeout                                                        time.Duration
 }
 type Result struct {
 	State         string `json:"state"`
 	Pane          string `json:"pane,omitempty"`
 	Tab           string `json:"tab,omitempty"`
 	Terminal      string `json:"terminal,omitempty"`
+	Agent         string `json:"agent,omitempty"`
 	Session       string `json:"session,omitempty"`
 	AgentStatus   string `json:"agent_status,omitempty"`
 	EffectUnknown bool   `json:"effect_unknown"`
@@ -50,10 +52,10 @@ func Start(ctx context.Context, in Request) (Result, error) {
 	return launch(ctx, in, func(ctx context.Context, args []string) (json.RawMessage, error) { return call(ctx, in.Herdr, args) }, 200*time.Millisecond)
 }
 func validate(in Request) error {
-	if !filepath.IsAbs(in.Executable) || !filepath.IsAbs(in.Cwd) || in.Workspace == "" || in.InitialPrompt == "" || in.Timeout <= 0 {
-		return errors.New("absolute executable/cwd, workspace, prompt and positive timeout required")
+	if in.Agent == "" || !filepath.IsAbs(in.Executable) || !filepath.IsAbs(in.Cwd) || in.Workspace == "" || in.InitialPrompt == "" || in.Timeout <= 0 {
+		return errors.New("agent, absolute executable/cwd, workspace, prompt and positive timeout required")
 	}
-	for _, s := range append([]string{in.Executable, in.Cwd, in.Workspace, in.Label, in.InitialPrompt}, in.Env...) {
+	for _, s := range append([]string{in.Agent, in.Executable, in.Cwd, in.Workspace, in.Label, in.InitialPrompt}, in.Env...) {
 		if strings.ContainsAny(s, "\x00\r\n") {
 			return errors.New("launch arguments must be single-line without NUL")
 		}
@@ -111,9 +113,10 @@ func launch(ctx context.Context, in Request, run runner, interval time.Duration)
 			return r, e
 		}
 		if observed.Agent != "" {
-			if observed.Agent != "claude" || observed.Cwd != in.Cwd {
+			if observed.Agent != in.Agent || observed.Cwd != in.Cwd {
 				return r, errors.New("unexpected agent or foreground directory")
 			}
+			r.Agent = observed.Agent
 			r.AgentStatus = observed.Status
 			if observed.Session != nil {
 				r.Session = observed.Session.Value

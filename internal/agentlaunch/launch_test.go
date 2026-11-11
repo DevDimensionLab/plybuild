@@ -42,8 +42,8 @@ func TestWorkingAndSingleSubmission(t *testing.T) {
 		t.Fatalf("unexpected %v", args)
 		return nil, nil
 	}
-	r, err := launch(context.Background(), Request{Executable: "/bin/claude", Cwd: "/work", Workspace: "w1", InitialPrompt: "hello '$()", Timeout: time.Second}, run, time.Millisecond)
-	if err != nil || r.State != "agent_observed" || r.AgentStatus != "working" || calls != 1 || polls < 2 {
+	r, err := launch(context.Background(), Request{Agent: "claude", Executable: "/bin/claude", Cwd: "/work", Workspace: "w1", InitialPrompt: "hello '$()", Timeout: time.Second}, run, time.Millisecond)
+	if err != nil || r.State != "agent_observed" || r.Agent != "claude" || r.AgentStatus != "working" || calls != 1 || polls < 2 {
 		t.Fatalf("%+v %v calls=%d", r, err, calls)
 	}
 }
@@ -63,7 +63,7 @@ func TestUnknownSendNotRetried(t *testing.T) {
 		}
 		return nil, errors.New("unexpected")
 	}
-	r, err := launch(context.Background(), Request{Executable: "/bin/claude", Cwd: "/work", Workspace: "w", InitialPrompt: "hello", Timeout: time.Second}, run, time.Millisecond)
+	r, err := launch(context.Background(), Request{Agent: "claude", Executable: "/bin/claude", Cwd: "/work", Workspace: "w", InitialPrompt: "hello", Timeout: time.Second}, run, time.Millisecond)
 	if err == nil || !r.EffectUnknown || r.Terminal != "term" || calls != 1 {
 		t.Fatalf("%+v %v %d", r, err, calls)
 	}
@@ -95,7 +95,7 @@ func TestIdentityReplacement(t *testing.T) {
 }
 func TestInputRejectedBeforeEffect(t *testing.T) {
 	for _, prompt := range []string{"", "a\nb", "a\x00b"} {
-		_, err := launch(context.Background(), Request{Executable: "/bin/claude", Cwd: "/work", Workspace: "w", InitialPrompt: prompt, Timeout: time.Second}, func(context.Context, []string) (json.RawMessage, error) { t.Fatal("side effect"); return nil, nil }, time.Millisecond)
+		_, err := launch(context.Background(), Request{Agent: "claude", Executable: "/bin/claude", Cwd: "/work", Workspace: "w", InitialPrompt: prompt, Timeout: time.Second}, func(context.Context, []string) (json.RawMessage, error) { t.Fatal("side effect"); return nil, nil }, time.Millisecond)
 		if err == nil {
 			t.Fatal("invalid prompt accepted")
 		}
@@ -224,5 +224,58 @@ func TestPaneRunAcceptsEmptySuccessOnlyForSubmission(t *testing.T) {
 	var exit *exec.ExitError
 	if !errors.As(err, &exit) {
 		t.Fatalf("nonzero submission accepted: %v", err)
+	}
+}
+
+func observedAgentRunner(agent string) runner {
+	return func(_ context.Context, args []string) (json.RawMessage, error) {
+		switch strings.Join(args[:2], " ") {
+		case "tab create":
+			return json.RawMessage(`{"root_pane":{"pane_id":"p","tab_id":"t","workspace_id":"w","terminal_id":"term"}}`), nil
+		case "pane process-info":
+			return json.RawMessage(`{"process_info":{"pane_id":"p","shell_pid":1,"foreground_process_group_id":1,"foreground_processes":[{"pid":1,"name":"zsh"}]}}`), nil
+		case "pane run":
+			agent = "," + agent
+			return json.RawMessage(`{}`), nil
+		case "pane current":
+			observed := ""
+			if strings.HasPrefix(agent, ",") {
+				observed = `,"agent":"` + agent[1:] + `","agent_status":"working","foreground_cwd":"/work"`
+			}
+			return json.RawMessage(`{"pane":{"pane_id":"p","tab_id":"t","workspace_id":"w","terminal_id":"term"` + observed + `}}`), nil
+		}
+		return nil, errors.New("unexpected")
+	}
+}
+
+func TestExpectedProviderAgentObserved(t *testing.T) {
+	in := Request{Agent: "codex", Executable: "/bin/codex", Cwd: "/work", Workspace: "w", InitialPrompt: "$ply-assignment ASSIGNMENT-7", Timeout: time.Second}
+	r, err := launch(context.Background(), in, observedAgentRunner("codex"), time.Millisecond)
+	if err != nil || r.State != "agent_observed" || r.Agent != "codex" || r.AgentStatus != "working" || r.EffectUnknown {
+		t.Fatalf("%+v %v", r, err)
+	}
+	r, err = launch(context.Background(), in, observedAgentRunner("claude"), time.Millisecond)
+	if err == nil || r.State == "agent_observed" || r.Agent != "" {
+		t.Fatalf("other provider accepted: %+v %v", r, err)
+	}
+}
+
+func TestMissingAgentRejectedBeforeEffect(t *testing.T) {
+	_, err := launch(context.Background(), Request{Executable: "/bin/codex", Cwd: "/work", Workspace: "w", InitialPrompt: "hello", Timeout: time.Second}, func(context.Context, []string) (json.RawMessage, error) { t.Fatal("side effect"); return nil, nil }, time.Millisecond)
+	if err == nil {
+		t.Fatal("missing agent identity accepted")
+	}
+}
+
+func TestCommandPassesSkillMentionAsOneLiteralArgument(t *testing.T) {
+	root := t.TempDir()
+	executable := filepath.Join(root, "fake codex")
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nprintf '%s|' \"$#\" \"$@\"\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	prompt := "$ply-assignment ASSIGNMENT-7 --project ply"
+	output, err := exec.Command("/bin/sh", "-c", launchCommand(Request{Cwd: root, Executable: executable, InitialPrompt: prompt})).Output()
+	if err != nil || string(output) != "1|"+prompt+"|" {
+		t.Fatalf("%q %v", output, err)
 	}
 }

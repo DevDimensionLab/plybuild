@@ -849,6 +849,24 @@ session with `claude -p --resume <session-id> "/ply-assignment ASSIGNMENT-7"` (s
 flags), which adopts the claim by its label, or, if the session is lost, a human
 revokes the claim as above.
 
+Codex finds the same skill under `.agents/skills`, for example
+`make install-assignment-skill ASSIGNMENT_SKILL_DEST=<repo>/.agents/skills/ply-assignment`
+(or `~/.agents/skills/ply-assignment`), and invokes it explicitly with `$skill-name`:
+`codex '$ply-assignment ASSIGNMENT-7 --project ply'`. Single quotes keep the shell
+from expanding `$`. Its take is labelled `codex:<random hex>`.
+
+From inside Herdr, `ply agent assignment` starts one agent in a new visible tab with
+that initial prompt; `--provider` is `claude` (default) or `codex`, with
+`--claude-bin`/`--codex-bin` naming the executable:
+
+```sh
+ply agent assignment ASSIGNMENT-7 --project ply --herdr-workspace <id> --cwd <repo> --provider codex
+```
+
+It prints JSON with `state`, the observed `agent` and `effect_unknown`. `agent_observed`
+means only that Herdr saw that agent start; the skill's take and done are read with
+`ply assignment show`. Never rerun an uncertain launch without inspecting its pane.
+
 ## Agent quota
 
 `ply agent` shows the remaining subscription quota that Codex and Claude report

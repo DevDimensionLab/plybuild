@@ -14,16 +14,23 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// assignmentSkillMention is how each supported provider invokes a skill from its initial prompt.
+var assignmentSkillMention = map[string]string{"claude": "/ply-assignment", "codex": "$ply-assignment"}
+
 func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) (agentlaunch.Result, error)) *cobra.Command {
-	var project, cwd, workspace, label, claude, herdr string
+	var provider, project, cwd, workspace, label, claude, codex, herdr string
 	var timeout time.Duration
 	command := &cobra.Command{
-		Use: "assignment ASSIGNMENT-ID", Short: "Start Claude with the Assignment skill in a new visible Herdr tab",
-		Long: "Start one Claude process with /ply-assignment as its initial prompt. The skill reads and takes the Assignment. No Task binding or durable launch receipt is created. Never retry an uncertain launch without inspecting the returned pane. The pilot supports sh/bash/zsh; foreground shell observation does not prove shell initialization has finished.",
+		Use: "assignment ASSIGNMENT-ID", Short: "Start Claude or Codex with the Assignment skill in a new visible Herdr tab",
+		Long: "Start one Claude (/ply-assignment) or Codex ($ply-assignment) process with the Assignment skill as its initial prompt. The skill reads and takes the Assignment. No Task binding or durable launch receipt is created. Never retry an uncertain launch without inspecting the returned pane. The pilot supports sh/bash/zsh; foreground shell observation does not prove shell initialization has finished.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !regexp.MustCompile(`^ASSIGNMENT-[1-9][0-9]*$`).MatchString(args[0]) {
 				return fmt.Errorf("expected ASSIGNMENT-N")
+			}
+			mention, ok := assignmentSkillMention[provider]
+			if !ok {
+				return fmt.Errorf("--provider must be claude or codex")
 			}
 			if !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`).MatchString(project) {
 				return fmt.Errorf("--project requires an explicit project identifier")
@@ -42,7 +49,11 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			if !stat.IsDir() {
 				return fmt.Errorf("--cwd must be a directory")
 			}
-			executable, err := exec.LookPath(claude)
+			binary := claude
+			if provider == "codex" {
+				binary = codex
+			}
+			executable, err := exec.LookPath(binary)
 			if err != nil {
 				return err
 			}
@@ -61,18 +72,20 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			if label == "" {
 				label = args[0]
 			}
-			result, startErr := start(cmd.Context(), agentlaunch.Request{Herdr: runtime, Executable: executable, Cwd: physical, Workspace: workspace, Label: label, InitialPrompt: "/ply-assignment " + args[0] + " --project " + project, Timeout: timeout})
+			result, startErr := start(cmd.Context(), agentlaunch.Request{Agent: provider, Herdr: runtime, Executable: executable, Cwd: physical, Workspace: workspace, Label: label, InitialPrompt: mention + " " + args[0] + " --project " + project, Timeout: timeout})
 			if err = json.NewEncoder(cmd.OutOrStdout()).Encode(result); err != nil {
 				return err
 			}
 			return startErr
 		},
 	}
+	command.Flags().StringVar(&provider, "provider", "claude", "Agent provider: claude or codex")
 	command.Flags().StringVar(&project, "project", "", "Explicit Ply project identifier")
 	command.Flags().StringVar(&cwd, "cwd", ".", "Existing working directory; no worktree is created")
 	command.Flags().StringVar(&workspace, "herdr-workspace", "", "Explicit Herdr workspace ID")
 	command.Flags().StringVar(&label, "label", "", "New tab label (defaults to Assignment ID)")
 	command.Flags().StringVar(&claude, "claude-bin", "claude", "Claude executable")
+	command.Flags().StringVar(&codex, "codex-bin", "codex", "Codex executable")
 	command.Flags().StringVar(&herdr, "herdr-bin", "herdr", "Herdr executable")
 	command.Flags().DurationVar(&timeout, "timeout", 45*time.Second, "Total launch/observation budget")
 	_ = command.MarkFlagRequired("project")
