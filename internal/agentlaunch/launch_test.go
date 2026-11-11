@@ -204,3 +204,25 @@ func TestCommandEstablishesCwdBeforeExecutable(t *testing.T) {
 		t.Fatalf("executable ran after cd failed: %q %v", output, err)
 	}
 }
+
+func TestPaneRunAcceptsEmptySuccessOnlyForSubmission(t *testing.T) {
+	success, err := exec.LookPath("true")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = call(context.Background(), success, []string{"pane", "run", "p", "command"}); err != nil {
+		t.Fatalf("silent successful admission rejected: %v", err)
+	}
+	if _, err = call(context.Background(), success, []string{"pane", "current", "--pane", "p"}); err == nil {
+		t.Fatal("empty read response accepted")
+	}
+	failure, err := exec.LookPath("false")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = call(context.Background(), failure, []string{"pane", "run", "p", "command"})
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) {
+		t.Fatalf("nonzero submission accepted: %v", err)
+	}
+}

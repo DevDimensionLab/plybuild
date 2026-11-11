@@ -242,6 +242,9 @@ func call(ctx context.Context, binary string, args []string) (json.RawMessage, e
 	if out.overflow || stderr.overflow {
 		return nil, errors.New("Herdr output exceeded limit")
 	}
+	if len(args) >= 2 && args[0] == "pane" && args[1] == "run" && strings.TrimSpace(string(out.data)) == "" {
+		return json.RawMessage(`{}`), nil
+	}
 	var envelope struct {
 		Result json.RawMessage `json:"result"`
 		Error  json.RawMessage `json:"error"`
