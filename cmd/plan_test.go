@@ -269,3 +269,56 @@ func TestPlanIsRegisteredBesideExistingCommands(t *testing.T) {
 		}
 	}
 }
+
+type failingPlanWriter struct{}
+
+func (failingPlanWriter) Write([]byte) (int, error) {
+	return 0, errors.New("raw stdout failure /secret/path")
+}
+
+// TestPlanWriteReadbackFailureReportsTheStoredRevision checks that a lost
+// readback after a successful store says what was stored and what to do,
+// without the writer's own error.
+func TestPlanWriteReadbackFailureReportsTheStoredRevision(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	run := func(args ...string) error {
+		t.Helper()
+		command := newPlanCommand(workspace.SystemDependencies())
+		command.SilenceUsage, command.SilenceErrors = true, true
+		command.SetOut(failingPlanWriter{})
+		command.SetErr(&bytes.Buffer{})
+		command.SetIn(strings.NewReader(planV1Snapshot))
+		command.SetArgs(args)
+		return command.Execute()
+	}
+	steps := []struct {
+		args []string
+		want string
+	}{
+		{[]string{"add", "--project", "a", "--actor", "a", "--reason", "r"}, "PLAN-1 revision 1"},
+		{[]string{"add", "--project", "a", "--actor", "a", "--reason", "r", "--format", "json"}, "PLAN-2 revision 1"},
+		{[]string{"update", "PLAN-1", "--project", "a", "--revision", "1", "--actor", "a", "--reason", "r"}, "PLAN-1 revision 2"},
+		{[]string{"update", "PLAN-1", "--project", "a", "--revision", "2", "--actor", "a", "--reason", "r", "--format", "json"}, "PLAN-1 revision 3"},
+	}
+	for _, step := range steps {
+		err := run(step.args...)
+		var e *plan.Error
+		if !errors.As(err, &e) || e.Class != plan.ClassIOError {
+			t.Fatalf("%v: error %v", step.args, err)
+		}
+		if !strings.Contains(e.Detail, step.want+" was stored") || !strings.Contains(e.Detail, "run show before writing again") ||
+			strings.Contains(e.Detail, "raw stdout failure") || strings.Contains(e.Detail, "secret") {
+			t.Fatalf("%v: detail %q", step.args, e.Detail)
+		}
+	}
+	for id, revision := range map[string]string{"PLAN-1": `"revision": 3`, "PLAN-2": `"revision": 1`} {
+		out, err := runPlan(t, root, "", "show", id, "--project", "a", "--format", "json")
+		if err != nil || !strings.Contains(out, revision) {
+			t.Fatalf("%s readback %q %v", id, out, err)
+		}
+	}
+	history, err := runPlan(t, root, "", "history", "PLAN-1", "--project", "a", "--format", "json")
+	if err != nil || strings.Count(history, `"revision":`) != 3 {
+		t.Fatalf("history %q %v", history, err)
+	}
+}

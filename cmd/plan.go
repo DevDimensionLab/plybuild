@@ -116,7 +116,11 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		return readback(cmd, v)
+		if readback(cmd, v) != nil {
+			// The writer's error may carry paths; the stored result is what matters.
+			return &plan.Error{Class: plan.ClassIOError, Detail: fmt.Sprintf("%s revision %d was stored; writing its readback failed; run show before writing again", v.ID, v.Revision)}
+		}
+		return nil
 	}
 
 	addCommand := addFlags(&cobra.Command{

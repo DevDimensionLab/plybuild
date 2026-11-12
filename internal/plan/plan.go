@@ -153,6 +153,8 @@ type Store struct {
 	now     func() time.Time
 	replace func(string, []byte, fs.FileMode) error
 	lock    filelock.Options
+
+	beforeOpen func(path string) // test seam: runs right before a read opens the plan file
 }
 
 // Open returns the store for directory, the absolute plans directory itself.
@@ -452,12 +454,27 @@ func encode(d document) ([]byte, error) {
 
 func (s Store) path(id string) string { return filepath.Join(s.dir, id+fileSuffix) }
 
-// read returns the valid document of id. It takes no lock and creates nothing.
+// errNotRegular is a plan path that is a symlink or another non-regular file.
+var errNotRegular = errors.New("not a regular file")
+
+// read returns the valid document of id. It takes no lock and creates
+// nothing. It checks the file it opened, so a concurrent atomic replacement
+// yields the whole old or new file, never a refusal.
 func (s Store) read(id string) (document, error) {
-	info, err := os.Lstat(s.path(id))
-	if errors.Is(err, fs.ErrNotExist) {
-		return document{}, &Error{Class: ClassNotFound, Detail: id}
+	if s.beforeOpen != nil {
+		s.beforeOpen(s.path(id))
 	}
+	file, err := openPlanFile(s.path(id))
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		return document{}, &Error{Class: ClassNotFound, Detail: id}
+	case errors.Is(err, errNotRegular):
+		return document{}, invalid("not a regular file")
+	case err != nil:
+		return document{}, ioError("read "+id, err)
+	}
+	defer file.Close()
+	info, err := file.Stat()
 	if err != nil {
 		return document{}, ioError("inspect "+id, err)
 	}
@@ -466,17 +483,6 @@ func (s Store) read(id string) (document, error) {
 	}
 	if info.Size() > maxFileBytes {
 		return document{}, invalid("file too large")
-	}
-	file, err := os.Open(s.path(id))
-	if errors.Is(err, fs.ErrNotExist) {
-		return document{}, &Error{Class: ClassNotFound, Detail: id}
-	}
-	if err != nil {
-		return document{}, ioError("read "+id, err)
-	}
-	defer file.Close()
-	if opened, err := file.Stat(); err != nil || !os.SameFile(info, opened) {
-		return document{}, invalid("not a regular file")
 	}
 	contents, err := io.ReadAll(io.LimitReader(file, maxFileBytes+1))
 	if err != nil {
