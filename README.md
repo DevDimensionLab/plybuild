@@ -867,6 +867,40 @@ It prints JSON with `state`, the observed `agent` and `effect_unknown`. `agent_o
 means only that Herdr saw that agent start; the skill's take and done are read with
 `ply assignment show`. Never rerun an uncertain launch without inspecting its pane.
 
+## Plans
+
+A plan describes one larger piece of work so an agent and a human read the same thing:
+`PLAN-<n>` with title, goal, scope, owner, `selection` (`proposal` or `selected`),
+`status` (`planned`, `active`, `waiting`, `blocked`, `done` or `unknown`), summary, next
+action, optional attention `{reason, who, needs_human}`, details, decisions, learning,
+refs, and 1 to 128 ordered steps with stable ids and optional `depends_on`. A plan
+grants no mandate, starts nothing, and is never derived from Task, Assignment, Git or
+agent status; refs are stored as plain data and never resolved.
+
+```sh
+ply plan add --project ply --actor ply-epic --reason 'Brukeren valgte oppdraget' < plan.json
+ply plan list --project ply                       # --status <status>, --format json
+ply plan show PLAN-1 --project ply                # short view; --details, --revision <r>
+ply plan update PLAN-1 --project ply --revision 1 --actor ply-epic --reason 'Spec ferdig' < plan.json
+ply plan history PLAN-1 --project ply
+```
+
+`add` and `update` read one complete JSON snapshot from stdin (at most 128 KiB);
+unknown, case-folded or duplicate keys, `null` and trailing data are refused. To change
+a plan, read it with `show --format json`, edit `.plan` and write it back with the
+revision you read; a stale revision gets `plan_conflict` and writes nothing. `waiting`,
+`blocked` and `unknown` need attention, and a `done` plan needs every step done.
+`needs_human` and `progress` (counts per status, no percentage) are derived from the
+shown revision and never stored. JSON readbacks are `PlyPlanReadback@1`,
+`PlyPlanList@1` and `PlyPlanHistory@1`.
+
+Each plan is one file `<plans>/PLAN-<n>.json` holding every revision, in the Project's
+`data_paths.plans` (default `<project wrapper>/plans/`). Writes lock `<plans>/.lock` and
+replace the file atomically; reads take no lock and create nothing. A file that cannot
+be read is listed under `invalid` and never overwritten. A file is limited to 8 MiB
+including history; beyond it `update` returns `plan_full` and keeps the file. On
+`result unknown`, run `show` or `list` before writing again.
+
 ## Agent quota
 
 `ply agent` shows the remaining subscription quota that Codex and Claude report
