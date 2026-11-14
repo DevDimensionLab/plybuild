@@ -6,7 +6,7 @@ import (
 )
 
 // RegisteredTaskQueues is a request-local view of registered queue facts. A
-// ready pending goal still requires execute preflight; this view observes no
+// ready pending goal still requires a workflow goal-start preview; this view observes no
 // live checkout, process, provider, or repository state.
 type RegisteredTaskQueues struct {
 	SchemaVersion int

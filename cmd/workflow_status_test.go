@@ -267,3 +267,10 @@ func TestWorkflowStatusTextIdentifiesOrphanDiagnostics(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkflowStatusHelpNamesOnlyExistingCommands(t *testing.T) {
+	long := newWorkflowStatusCommandWithReader(nil).Long
+	if strings.Contains(long, "execute") || !strings.Contains(long, "workflow goal-start") {
+		t.Fatalf("status help must point to goal-start, not the removed execute: %q", long)
+	}
+}
