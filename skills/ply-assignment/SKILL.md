@@ -83,6 +83,11 @@ start agents, add or change Assignments or Tasks, or write extra report files
 unless the Assignment text or the human asks. You may re-run step 1 to see the
 current text.
 
+Report your own status with the `ply-agent-status` skill: `waiting_background`
+when your turn ends while your own job or delegate runs, `needs_answer` while
+you wait for the human, `clear` when you continue, and `done` when delivered or
+stopped.
+
 ## 5. Finish
 
 When the work the Assignment text describes is complete, mark it done. This
