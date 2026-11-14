@@ -49,6 +49,17 @@ type WorkItemGit interface {
 	IsAncestor(repository RepoRecord, ancestor, descendant string) (bool, error)
 	RemoveWorktree(repository RepoRecord, locator string) GitCommandOutcome
 	DeleteRef(repository RepoRecord, ref, expectedOID string) GitCommandOutcome
+	FastForwardRef(GitFastForwardInput) GitCommandOutcome
+}
+
+// GitFastForwardInput moves Ref from From to To; Worktree is where Ref is
+// checked out, or empty. Reason becomes the reflog action.
+type GitFastForwardInput struct {
+	Repository RepoRecord
+	Ref        string
+	Worktree   string
+	From, To   string
+	Reason     string
 }
 
 type workGitRunner func(arguments []string, environment []string) GitCommandOutcome
@@ -286,6 +297,14 @@ func (git *systemWorkItemGit) RemoveWorktree(repository RepoRecord, locator stri
 // DeleteRef deletes ref only while it still points at expectedOID.
 func (git *systemWorkItemGit) DeleteRef(repository RepoRecord, ref, expectedOID string) GitCommandOutcome {
 	return git.run([]string{"-C", repository.Locator, "update-ref", "-d", ref, expectedOID}, []string{"LC_ALL=C", "LANG=C"})
+}
+
+func (git *systemWorkItemGit) FastForwardRef(input GitFastForwardInput) GitCommandOutcome {
+	environment := []string{"GIT_REFLOG_ACTION=" + input.Reason, "LC_ALL=C", "LANG=C"}
+	if input.Worktree == "" {
+		return git.run([]string{"-C", input.Repository.Locator, "update-ref", "-m", input.Reason + ": Fast-forward", input.Ref, input.To, input.From}, environment)
+	}
+	return git.run([]string{"-c", "core.hooksPath=" + os.DevNull, "-c", "merge.autoStash=false", "-c", "gc.auto=0", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-c", "submodule.recurse=false", "-C", input.Worktree, "merge", "--ff-only", "--no-stat", "--no-autostash", input.To}, environment)
 }
 
 func (git *systemWorkItemGit) gitPath(path, argument string) (string, error) {
