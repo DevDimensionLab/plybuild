@@ -14,6 +14,7 @@ type workspaceTaskServices struct {
 	list           func(workspace.TaskListFilters) (workspace.TaskListResult, error)
 	createWorktree func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
 	integrate      func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
+	retireWorktree func(workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error)
 }
 
 func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command {
@@ -30,6 +31,8 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 			return workspace.ApplyTaskIntegration(dependencies, input)
 		}
 		return workspace.CheckTaskIntegration(dependencies, input)
+	}, retireWorktree: func(input workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error) {
+		return workspace.RetireTaskWorktree(dependencies, input)
 	}})
 	addWorkspaceTaskContentCommands(command, dependencies)
 	command.AddCommand(newWorkspaceTaskGoalCommand(dependencies))
@@ -250,7 +253,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 }
 
 func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Command {
-	command := &cobra.Command{Use: "worktree", Short: "Manage Task worktrees", Long: "Create and inspect the single local worktree binding for a Task.", Example: "  ply workspace task worktree create workspace-work-item-bootstrap --branch ply_workspace_work_item_bootstrap --path ../ply/ply_workspace_work_item_bootstrap --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df"}
+	command := &cobra.Command{Use: "worktree", Short: "Manage Task worktrees", Long: "Create and retire the single local worktree binding for a Task.", Example: "  ply workspace task worktree create workspace-work-item-bootstrap --branch ply_workspace_work_item_bootstrap --path ../ply/ply_workspace_work_item_bootstrap --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df"}
 	var branch, path, expected string
 	create := &cobra.Command{Use: "create <task-id>", Short: "Create and bind a Task worktree", Long: "Persist a Task worktree intent, then add one local branch and worktree from the exact Epic base.", Example: "  ply workspace task worktree create workspace-work-item-bootstrap --branch ply_workspace_work_item_bootstrap --path ../ply/ply_workspace_work_item_bootstrap --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
@@ -276,7 +279,35 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		_ = create.MarkFlagRequired(name)
 	}
 	setWorkFlagErrors(create)
-	command.AddCommand(create)
+	var apply bool
+	var format string
+	retire := &cobra.Command{Use: "retire <task-id>", Short: "Remove a delivered Task worktree and branch", Long: "Check, or with --apply perform, the cleanup of one delivered Task: remove its clean worktree without force, delete its branch while it still points at the observed commit, and set worktree_state retired. The branch commit must be contained in the Epic ref; uncommitted or untracked files stop the cleanup. Ignored files inside the worktree are removed with it. A rerun finishes what an interrupted run left. Close any agent still working in the worktree first.", Example: "  ply workspace task worktree retire workspace-work-item-bootstrap\n  ply workspace task worktree retire workspace-work-item-bootstrap --apply --format json", Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) != 1 {
+			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
+		}
+		if _, err := workspace.ParseTaskID(args[0]); err != nil {
+			return err
+		}
+		return validateWorkFormat(format)
+	}, RunE: func(cmd *cobra.Command, args []string) error {
+		result, err := services.retireWorktree(workspace.TaskWorktreeRetireInput{TaskID: workspace.TaskID(args[0]), Apply: apply})
+		if err != nil {
+			return err
+		}
+		if format == "json" {
+			return writeAssignmentJSON(cmd.OutOrStdout(), struct {
+				Kind          string `json:"kind"`
+				SchemaVersion int    `json:"schema_version"`
+				workspace.TaskWorktreeRetireResult
+			}{"WorkspaceTaskWorktreeRetire@1", 1, result})
+		}
+		_, err = fmt.Fprintf(cmd.OutOrStdout(), "Task %s worktree %s: %s\nBranch %s: %s\nEpic %s at %s\nState: %s\n", result.TaskID, result.Locator, result.Worktree, result.Ref, result.Branch, result.EpicRef, result.EpicOID, result.State)
+		return err
+	}}
+	retire.Flags().BoolVar(&apply, "apply", false, "remove the worktree and branch (default: check only)")
+	retire.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	setWorkFlagErrors(retire)
+	command.AddCommand(create, retire)
 	return command
 }
 

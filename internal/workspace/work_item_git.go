@@ -46,6 +46,9 @@ type WorkItemGit interface {
 	ListWorktrees(RepoRecord) (GitWorktreeInventory, error)
 	CreateBranchAndWorktree(GitCreateInput) GitCommandOutcome
 	AddWorktreeForExistingBranch(GitCreateInput) GitCommandOutcome
+	IsAncestor(repository RepoRecord, ancestor, descendant string) (bool, error)
+	RemoveWorktree(repository RepoRecord, locator string) GitCommandOutcome
+	DeleteRef(repository RepoRecord, ref, expectedOID string) GitCommandOutcome
 }
 
 type workGitRunner func(arguments []string, environment []string) GitCommandOutcome
@@ -262,6 +265,27 @@ func (git *systemWorkItemGit) CreateBranchAndWorktree(input GitCreateInput) GitC
 }
 func (git *systemWorkItemGit) AddWorktreeForExistingBranch(input GitCreateInput) GitCommandOutcome {
 	return git.run([]string{"-c", "core.hooksPath=" + os.DevNull, "-C", input.Repository.Locator, "worktree", "add", input.TargetLocator, input.Branch}, []string{"LC_ALL=C", "LANG=C"})
+}
+
+func (git *systemWorkItemGit) IsAncestor(repository RepoRecord, ancestor, descendant string) (bool, error) {
+	result := git.read(repository.Locator, "merge-base", "--is-ancestor", ancestor, descendant)
+	switch {
+	case result.Err == nil:
+		return true, nil
+	case result.Exit == 1:
+		return false, nil
+	}
+	return false, gitObservationError("merge-base --is-ancestor", repository.Locator, result)
+}
+
+// RemoveWorktree never forces: Git refuses a worktree with changes or untracked files.
+func (git *systemWorkItemGit) RemoveWorktree(repository RepoRecord, locator string) GitCommandOutcome {
+	return git.run([]string{"-c", "core.hooksPath=" + os.DevNull, "-C", repository.Locator, "worktree", "remove", locator}, []string{"LC_ALL=C", "LANG=C"})
+}
+
+// DeleteRef deletes ref only while it still points at expectedOID.
+func (git *systemWorkItemGit) DeleteRef(repository RepoRecord, ref, expectedOID string) GitCommandOutcome {
+	return git.run([]string{"-C", repository.Locator, "update-ref", "-d", ref, expectedOID}, []string{"LC_ALL=C", "LANG=C"})
 }
 
 func (git *systemWorkItemGit) gitPath(path, argument string) (string, error) {
