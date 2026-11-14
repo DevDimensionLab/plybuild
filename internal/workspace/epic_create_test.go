@@ -472,3 +472,13 @@ func TestEpicCreateDirtyParentDoesNotHidePartialEffect(t *testing.T) {
 		t.Fatal("partial effect retried Git after parent restoration")
 	}
 }
+
+func TestEpicCreateExplainsParentWithoutCommit(t *testing.T) {
+	f, in := epicCreateFixture(t)
+	in.ParentRef = "refs/heads/unborn"
+	in.ExpectedParentOID = strings.Repeat("0", 40)
+	_, e := CreateEpic(f.dependencies, in)
+	if e == nil || !strings.Contains(e.Error(), "refs/heads/unborn has no commit") || !strings.Contains(e.Error(), "first commit") {
+		t.Fatalf("missing first-commit guidance: %v", e)
+	}
+}

@@ -195,6 +195,15 @@ func createEpic(d Dependencies, in EpicCreateInput) (EpicCreateResult, string, e
 			if observedRepo.GitCommonDir != repo.GitCommonDir || observedRepo.Locator != repo.Locator {
 				return workError(ErrorWorkProjectConflict, "registered repository changed; inspect Project binding", nil)
 			}
+			if op == nil {
+				parent, e := d.WorkGit.ObserveRef(repo, in.ParentRef)
+				if e != nil {
+					return e
+				}
+				if !parent.Exists {
+					return workError(ErrorWorkParentStale, fmt.Sprintf("parent %s has no commit; a repository without commits needs a first commit on that branch before Epic create or adopt", in.ParentRef), nil)
+				}
+			}
 			if g, ok := d.WorkGit.(*systemWorkItemGit); ok {
 				if e = g.checkEpicMaterialization(repo, in.ExpectedParentOID); e != nil {
 					return e
