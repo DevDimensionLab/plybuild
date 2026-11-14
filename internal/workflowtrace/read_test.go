@@ -333,3 +333,34 @@ func TestTraceConcurrentJournalAppendMakesCapturedPrefixPartial(t *testing.T) {
 	}
 	t.Fatal("missing directory-change diagnostic")
 }
+
+func TestTraceShowsGoalStartReceipt(t *testing.T) {
+	d, root := readFixture(t)
+	dir := filepath.Join(root, ".ply", "task-process", "goal-start")
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	receipt := `{"key":"task","provider":"claude","input_sha256":"` + strings.Repeat("a", 64) + `","reached":"prompt_submitted","tab":"w0:t3","pane":"w0:p3","terminal":"term_1","session":"aba59e60-6d2a-444d-8f26-40ab3c197902"}`
+	if err := os.WriteFile(filepath.Join(dir, "task.json"), []byte(receipt), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d.WorkGit = noGit{}
+	d.Files = readOnlyFiles{d.Files}
+	r, err := Read(d, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var start *Event
+	for i := range r.Events {
+		if r.Events[i].Type == "goal_start" {
+			start = &r.Events[i]
+		}
+	}
+	if start == nil || start.Title != "Goal start: prompt_submitted" || start.Outcome == nil || *start.Outcome != "prompt_submitted" ||
+		!strings.Contains(string(start.Data), `"pane":"w0:p3"`) || !strings.Contains(string(start.Data), `"session":"aba59e60-6d2a-444d-8f26-40ab3c197902"`) {
+		t.Fatalf("goal start event %+v", start)
+	}
+	if err = ValidateReferences(r); err != nil {
+		t.Fatal(err)
+	}
+}

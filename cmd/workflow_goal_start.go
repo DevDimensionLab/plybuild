@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
@@ -164,7 +163,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if resume {
 			run = resumeGoal
 		}
-		out, e := run(c.Context(), plan, filepath.Join(task.Workspace, ".ply", "task-process", "goal-start", args[0]+".json"), herdr, func() error { return checkGoalGit(wt) })
+		out, e := run(c.Context(), plan, workspace.GoalStartReceiptPath(task.Workspace, workspace.TaskID(args[0])), herdr, func() error { return checkGoalGit(wt) })
 		if writeErr := json.NewEncoder(c.OutOrStdout()).Encode(out); writeErr != nil {
 			return writeErr
 		}

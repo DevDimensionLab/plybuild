@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -72,6 +73,7 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 		}
 	}
 	b.goals(d, basis, *task)
+	b.goalStart(workspace.GoalStartReceiptPath(basis.Workspace.Root, id))
 	if afterHistory != nil {
 		afterHistory()
 	}
@@ -173,6 +175,34 @@ func (b *builder) goals(d workspace.Dependencies, basis workspace.ReadViewBasisS
 		b.out.CurrentGoals = append(b.out.CurrentGoals, g)
 	}
 	sort.Slice(b.out.CurrentGoals, func(i, j int) bool { return b.out.CurrentGoals[i].SpecID < b.out.CurrentGoals[j].SpecID })
+}
+
+// goalStart projects the goal-start receipt: who was started where, and how
+// far the start got. A missing receipt means no goal-start was recorded.
+func (b *builder) goalStart(path string) {
+	if _, err := os.Lstat(path); os.IsNotExist(err) {
+		return
+	}
+	digest, err := sourceDigest(path)
+	if err != nil {
+		b.diagnostic("goal_start_receipt_unavailable", "Goal-start receipt could not be safely read: "+path, nil, nil)
+		return
+	}
+	source := b.source(Source{Kind: "goal_start_receipt", Locator: path, SHA256: ptr(digest), Status: "valid"})
+	receipt, err := agentstart.ReadReceipt(path)
+	if err != nil {
+		b.diagnostic("goal_start_receipt_unreadable", err.Error(), []string{source}, nil)
+		return
+	}
+	title := "Goal start: " + receipt.Reached
+	if receipt.Failure != nil {
+		title += fmt.Sprintf(" (stopped at %s: %s)", receipt.Failure.Stage, receipt.Failure.Class)
+	}
+	b.event(Event{ID: nativeID("goal_start", receipt.Key, receipt), Type: "goal_start", Title: title, Role: "ply", ActorClaim: ptr("ply"),
+		Recorder: "goal-start receipt", EvidenceClass: "controlled", Outcome: ptr(receipt.Reached),
+		TimeBasis: taskjournal.TimeBasis{Kind: "unknown", Precision: "unknown"}, SourceIDs: []string{source},
+		Data: raw(map[string]any{"provider": receipt.Provider, "reached": receipt.Reached, "pending": receipt.Pending, "tab": receipt.Tab,
+			"pane": receipt.Pane, "terminal": receipt.Terminal, "session": receipt.Session, "failure": receipt.Failure, "effect_unknown": receipt.EffectUnknown()})})
 }
 
 func (b *builder) recheckSources() {
