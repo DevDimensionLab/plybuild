@@ -317,13 +317,16 @@ func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendR
 	return s.appendInput(task, raw, "event")
 }
 
-// PlanLink returns the latest plan link Ply recorded for task, or nil.
+// PlanLink returns the latest plan link Ply recorded for task, or nil. A
+// damaged journal is read up to its validated prefix, so the damage stops
+// no one who only asks for the link; journal show reports it.
 func (s Service) PlanLink(task string) (*PlyAction, error) {
 	b, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
 	if e != nil {
 		return nil, e
 	}
-	return ReadPlanLink(b.Workspace, task)
+	records, _ := ReadContributions(b.Workspace, task)
+	return LatestPlanLink(records), nil
 }
 
 // Contribution is one published journal record: an event or an observation
@@ -364,17 +367,6 @@ func ReadContributions(w workspace.WorkspaceObservation, task string) ([]Contrib
 		out = append(out, Contribution{r.Record.EventID, r.Record.RecordedAt, r.Common, r.Event, r.Observation})
 	}
 	return out, e
-}
-
-// ReadPlanLink reads only the journal records of task in w, not its native
-// facts, and returns the latest plan link or nil. A Task without journal has
-// none.
-func ReadPlanLink(w workspace.WorkspaceObservation, task string) (*PlyAction, error) {
-	records, e := ReadContributions(w, task)
-	if e != nil {
-		return nil, e
-	}
-	return LatestPlanLink(records), nil
 }
 
 // LatestPlanLink returns the latest plan link among records, or nil.

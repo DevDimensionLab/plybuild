@@ -505,3 +505,18 @@ func TestTaskCleanBuildEmptiesTheRegisteredWorktreeBuild(t *testing.T) {
 		t.Fatalf(".build %v %v", entries, e)
 	}
 }
+
+// A damaged journal does not stop goal-start of a Task without plan link;
+// the valid prefix is read for the link.
+func TestGoalStartReadsTheValidPrefixOfADamagedJournal(t *testing.T) {
+	f, oid := recordingFixture(t)
+	registerGoal(t, f, "damaged")
+	f.success(t, f.root, "workspace", "task", "worktree", "create", "damaged", "--branch", "damaged", "--path", filepath.Join(f.root, "damaged"), "--expected-parent-oid", oid)
+	if e := os.Remove(filepath.Join(f.root, ".ply", "task-process", "v1", "damaged", "000000001.json")); e != nil {
+		t.Fatal(e)
+	}
+	preview := f.success(t, f.root, "workflow", "goal-start", "damaged", "--spec", "damaged-v1", "--revision", "1", "--herdr-workspace", "w1")
+	if strings.Contains(preview, "journal_instruction") {
+		t.Fatalf("instruction without plan link: %s", preview)
+	}
+}
