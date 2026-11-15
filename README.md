@@ -692,10 +692,47 @@ intervals. Offline validation checks the duration against its original timestamp
 evidence. Existing whole-second snapshot digests remain compatible; other journal
 numeric fields retain their strict integer contract.
 
-To append a note, put the following in `/absolute/event.json`, replacing the Task,
-source path and the source's 64 lowercase hexadecimal SHA-256. Every field is
-required, including explicit `null` values and empty arrays. The source must be
-an existing physical regular file whose bytes match the digest.
+Most records need no JSON file. The commands give the record Ply's current time;
+`--source` adds an existing file:
+
+```sh
+ply workspace task journal step start my-task --id impl --kind implementation --title 'Implement' --actor dev-1
+ply workspace task journal step start my-task --id fix-1 --kind correction --parent impl --title 'Fix review finding'
+ply workspace task journal step finish my-task --id fix-1 --kind correction --parent impl --title 'Fix review finding' --outcome complete
+ply workspace task journal step finish my-task --id impl --kind implementation --title 'Implement' --outcome complete
+ply workspace task journal note my-task --title 'Returned to coordinator' --outcome complete
+```
+
+Set `--parent` (`parent_step_id`) when a step happens inside another one, such as a
+correction or review round inside an implementation; a step that follows another
+has no parent. Roles are `human`, `planner`, `developer`, `reviewer`, `observer` and
+`tool`; Ply's own records use `ply`. Sources are optional for `note`,
+`step_started` and `step_finished` and required for decisions and observations.
+Ply keeps a copy of each source (at most 4 MiB, 16 MiB per record), so the journal
+stays complete when the original is changed or removed. A reported `occurred_at`
+after Ply's registration time is refused; one more than five minutes before the
+same actor's previous report is marked `reported_time_out_of_order`.
+
+A Task belongs to a plan step through its journal: `goal register` and `task create`
+take `--plan PLAN-<n> --plan-step <id>`, and `ply workspace task journal link` links an
+existing Task. Ply then records its own actions in the journal with `--actor` (or
+`PLY_ACTOR`) and its own time. `ply plan trace PLAN-<n> --format json`
+(`PlyPlanTrace@1`) reads the plan revisions, the linked Tasks and all their journal
+records. To ask an agent to record its steps, add a constraint like this to the
+Goal:
+
+```text
+Record each work step in the Task journal: ply workspace task journal step start
+<task> --id <id> --kind <kind> --title <title> when it starts and step finish with the
+same --id, --kind and --outcome when it ends; use --parent <id> for a correction or
+review inside another step. Record a note when you return.
+```
+
+To append a record from a file, put the following in `/absolute/event.json`,
+replacing the Task, source path and the source's 64 lowercase hexadecimal SHA-256.
+Every field is required, including explicit `null` values and empty arrays; `ply` is
+the only optional field and is written by Ply alone. The source must be an existing
+physical regular file whose bytes match the digest.
 
 ```json
 {

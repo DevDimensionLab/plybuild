@@ -233,6 +233,19 @@ func (s Service) Append(task, file, kind string) (AppendResult, error) {
 	return s.appendInput(task, b, kind)
 }
 
+// AppendEvent publishes one event built by a caller instead of read from a
+// file, under the same rules as Append.
+func (s Service) AppendEvent(task string, in EventInput) (AppendResult, error) {
+	if in.Actor.Role == plyRole {
+		return AppendResult{}, invalid("records with role ply are written by Ply")
+	}
+	b, e := Canonical(in)
+	if e != nil {
+		return AppendResult{}, e
+	}
+	return s.appendInput(task, b, "event")
+}
+
 // AppendPly records an operation Ply performed for actor, at Ply's own time.
 func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendResult, error) {
 	if _, e := workspace.ParseTaskID(task); e != nil {

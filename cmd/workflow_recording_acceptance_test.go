@@ -210,6 +210,7 @@ type planTraceDoc struct {
 		Role         *string `json:"role"`
 		StepID       *string `json:"step_id"`
 		StepKind     *string `json:"step_kind"`
+		ParentStepID *string `json:"parent_step_id"`
 		PlanStep     *string `json:"plan_step"`
 		PlyOperation *string `json:"ply_operation"`
 		RecordedAt   *string `json:"recorded_at"`
@@ -295,5 +296,37 @@ func TestPlanTraceReadsTenTasksAndFiveHundredEventsWithinASecond(t *testing.T) {
 	t.Logf("plan trace: %d Tasks, %d events (%d ply) in %s", len(trace.Tasks), len(trace.Events), ply, elapsed)
 	if len(trace.Tasks) != 10 || ply != 500 || elapsed > time.Second {
 		t.Fatalf("%d Tasks, %d ply events in %s", len(trace.Tasks), ply, elapsed)
+	}
+}
+
+// An existing Task is linked afterwards; step commands need no JSON file and
+// a correction inside an implementation keeps its parent (K7).
+func TestJournalLinkAndStepCommands(t *testing.T) {
+	f, _ := recordingFixture(t)
+	registerGoal(t, f, "later", "--actor", "planner-a")
+	f.failure(t, f.root, nil, "--plan-step nope is not a step of PLAN-1", "workspace", "task", "journal", "link", "later", "--plan", "PLAN-1", "--plan-step", "nope")
+	f.success(t, f.root, "workspace", "task", "journal", "link", "later", "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "planner-a")
+	journal := []string{"workspace", "task", "journal"}
+	f.success(t, f.root, append(journal, "step", "start", "later", "--id", "impl", "--kind", "implementation", "--title", "Implement", "--actor", "dev-1")...)
+	f.success(t, f.root, append(journal, "step", "start", "later", "--id", "fix-1", "--kind", "correction", "--parent", "impl", "--title", "Fix finding", "--actor", "dev-1")...)
+	f.success(t, f.root, append(journal, "step", "finish", "later", "--id", "fix-1", "--kind", "correction", "--parent", "impl", "--title", "Fix finding", "--outcome", "complete", "--actor", "dev-1")...)
+	f.success(t, f.root, append(journal, "step", "finish", "later", "--id", "impl", "--kind", "implementation", "--title", "Implement", "--outcome", "complete", "--actor", "dev-1")...)
+	f.success(t, f.root, append(journal, "note", "later", "--title", "Returned", "--role", "developer", "--actor", "dev-1")...)
+	var trace planTraceDoc
+	if e := json.Unmarshal([]byte(f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")), &trace); e != nil {
+		t.Fatal(e)
+	}
+	if len(trace.Tasks) != 1 || trace.Tasks[0].TaskID != "later" || *trace.Tasks[0].PlanStep != "impl" {
+		t.Fatalf("tasks %+v", trace.Tasks)
+	}
+	var child, note bool
+	for _, ev := range trace.Events {
+		if ev.StepID != nil && *ev.StepID == "fix-1" && ev.ParentStepID != nil && *ev.ParentStepID == "impl" {
+			child = true
+		}
+		note = note || ev.Type == "note" && *ev.ActorID == "dev-1"
+	}
+	if !child || !note {
+		t.Fatalf("events %+v", trace.Events)
 	}
 }

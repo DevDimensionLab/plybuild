@@ -109,5 +109,6 @@ func addWorkspaceTaskJournalCommands(task *cobra.Command, d workspace.Dependenci
 		c.SetFlagErrorFunc(func(c *cobra.Command, e error) error { return workspace.WorkInvalidArguments(e.Error()) })
 		journal.AddCommand(c)
 	}
+	addWorkspaceTaskJournalWriteCommands(journal, d)
 	task.AddCommand(journal)
 }
