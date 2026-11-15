@@ -109,11 +109,15 @@ func newFixture(t *testing.T, url func(f fixture) string) fixture {
 	return f
 }
 
-// create runs repo create for map; only the GitHub step is local.
+// create runs repo create for map without its GitHub, commit and planning steps.
 func (f fixture) create(t *testing.T) repoestablish.Result {
 	t.Helper()
-	deps := establish.New(process.SystemRunner().Runner)
+	deps := establish.New(process.SystemRunner().Runner, "")
 	deps.Check = func(context.Context, repoestablish.Resolved) error { return nil }
+	// These cases start from an unborn repository in a wrapper of its own; the
+	// first README commit and the planning repository are separate cases.
+	deps.Commit = func(context.Context, repoestablish.Resolved) (bool, error) { return false, nil }
+	deps.Plan = func(context.Context, repoestablish.Resolved) (bool, error) { return false, nil }
 	deps.GitHub = func(context.Context, string, string) (string, bool, error) { return f.url, false, nil }
 	result, err := repoestablish.Run(context.Background(), repoestablish.Request{Workspace: f.root, Project: "ply", RepoName: "map", Actor: "tester",
 		Overrides: repoestablish.Overrides{GitHubOwner: "tester"}}, deps)
@@ -330,7 +334,8 @@ func TestUnbornWithEmptyRemoteRemovesLocallyWithoutContactingRemoteAndRecreates(
 		outcomes[step.Step] = step.Changed
 	}
 	if want := map[repoestablish.Step]bool{repoestablish.StepWrapper: true, repoestablish.StepInit: true, repoestablish.StepGitHub: false,
-		repoestablish.StepRemote: true, repoestablish.StepDefine: true, repoestablish.StepMetadata: true}; !reflect.DeepEqual(outcomes, want) {
+		repoestablish.StepRemote: true, repoestablish.StepDefine: true, repoestablish.StepMetadata: true,
+		repoestablish.StepCommit: false, repoestablish.StepPlan: false}; !reflect.DeepEqual(outcomes, want) {
 		t.Fatalf("recreate %+v", recreated.Steps)
 	}
 }
