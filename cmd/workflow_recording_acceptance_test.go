@@ -468,6 +468,7 @@ func TestPlanJournalRecordsPlanStepsInTheTrace(t *testing.T) {
 	f.success(t, f.root, append(journal, "step", "start", "PLAN-1", "--project", "example", "--id", "map", "--kind", "planning", "--title", "Map", "--actor", "ply-plan")...)
 	f.success(t, f.root, append(journal, "step", "finish", "PLAN-1", "--project", "example", "--id", "map", "--kind", "planning", "--title", "Map", "--outcome", "complete", "--actor", "ply-plan")...)
 	f.success(t, f.root, append(journal, "note", "PLAN-1", "--project", "example", "--title", "User chose option 1", "--actor", "ply-plan")...)
+	f.success(t, f.root, append(journal, "note", "PLAN-1", "--project", "example", "--title", "Reviewed", "--actor", "rev-1", "--role", "reviewer")...)
 	var trace planTraceDoc
 	if e := json.Unmarshal([]byte(f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")), &trace); e != nil {
 		t.Fatal(e)
@@ -480,6 +481,10 @@ func TestPlanJournalRecordsPlanStepsInTheTrace(t *testing.T) {
 	}
 	if !reflect.DeepEqual(types, []string{"step_started", "step_finished", "note"}) {
 		t.Fatalf("plan events %+v", trace.Events)
+	}
+	last := trace.Events[len(trace.Events)-1]
+	if last.TaskID != "" || *last.ActorID != "rev-1" || *last.Role != "reviewer" {
+		t.Fatalf("last plan event %+v", last)
 	}
 }
 

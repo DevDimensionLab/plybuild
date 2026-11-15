@@ -111,8 +111,9 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 		out.Reasons = append(out.Reasons, Reason{"", "journal_damaged", "Only the readable prefix of the plan journal is read: " + err.Error()})
 	}
 	for i, e := range journal {
-		at := e.At
-		out.Events = append(out.Events, Event{EventID: fmt.Sprintf("%s-journal-%d", planID, i+1), Type: e.Type, Title: e.Title, ActorID: &e.ActorID, Role: &e.Role,
+		// go.mod is go 1.18, so e is shared across iterations: copy what is pointed to.
+		at, actor, role := e.At, e.ActorID, e.Role
+		out.Events = append(out.Events, Event{EventID: fmt.Sprintf("%s-journal-%d", planID, i+1), Type: e.Type, Title: e.Title, ActorID: &actor, Role: &role,
 			StepID: e.StepID, StepKind: e.StepKind, ParentStepID: e.ParentStepID, Outcome: e.Outcome, OccurredAt: &at, RecordedAt: &at})
 	}
 	sort.SliceStable(out.Events, func(i, j int) bool {
