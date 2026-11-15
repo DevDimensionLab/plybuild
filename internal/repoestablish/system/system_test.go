@@ -301,6 +301,24 @@ func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
 	}
 }
 
+// A workspace root kept in Git with a .gitignore that admits only its own
+// files does not make the new repository nested.
+func TestRunEstablishesBelowAWorkspaceRepositoryThatIgnoresIt(t *testing.T) {
+	f := newFixture(t)
+	write(t, filepath.Join(f.root, ".gitignore"), "/*\n!/.gitignore\n!/"+workspacedef.File+"\n")
+	git(t, f.root, "init", "-q")
+	result, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, dir := range []string{result.Resolved.RepoDir, filepath.Join(result.Resolved.Wrapper, "code-map-plan")} {
+		top, err := exec.Command("git", "-C", dir, "rev-parse", "--show-toplevel").Output()
+		if err != nil || strings.TrimSpace(string(top)) != dir {
+			t.Fatalf("%s toplevel %q, error %v", dir, top, err)
+		}
+	}
+}
+
 // established runs Run until the define step so that SetWrapper can be tested alone.
 func established(t *testing.T, f *fixture) repoestablish.Resolved {
 	t.Helper()
