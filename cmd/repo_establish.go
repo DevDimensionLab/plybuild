@@ -28,7 +28,11 @@ type repoCreateEnv struct {
 func systemRepoCreateEnv(runner process.Runner) repoCreateEnv {
 	return repoCreateEnv{files: workspace.SystemDependencies().Files, getenv: os.Getenv,
 		run: func(ctx context.Context, req repoestablish.Request) (repoestablish.Result, error) {
-			return repoestablish.Run(ctx, req, system.New(runner))
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return repoestablish.Result{}, fmt.Errorf("%w: home directory for the planning template: %v", repoestablish.ErrInvalid, err)
+			}
+			return repoestablish.Run(ctx, req, system.New(runner, filepath.Join(home, system.PlanTemplate)))
 		}}
 }
 
@@ -36,9 +40,12 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 	var req repoestablish.Request
 	command := &cobra.Command{
 		Use:   "create <repo-name>",
-		Short: "Create a Project repository with its wrapper, Git, GitHub, definition and metadata",
+		Short: "Create a Project repository with its wrapper, Git, GitHub, definition, metadata and planning repository",
 		Long: "Establish the repository <repo-name> of a Project in fixed order: wrapper directory <Project root>/<repo-name>,\n" +
-			"local Git repository, private GitHub repository, remote, workspace definition and wrapper metadata.\n" +
+			"local Git repository, a first commit with README.md when the branch has none, private GitHub repository, remote,\n" +
+			"workspace definition, wrapper metadata and the local planning repository <repo-name>-plan in the wrapper.\n" +
+			"The planning repository is made from the template ~/.agents/templates/plan-repo ({{repo}} and {{date}} filled in,\n" +
+			"gitignore named .gitignore, the template's README.md left out), committed once on main and has no remote.\n" +
 			"The command creates a private GitHub repository through gh when it is not visible.\n" +
 			"The repository name is the repository ID, the wrapper name and the GitHub name. The Project is the one whose\n" +
 			"root is the current directory unless --project is given; github_owner, leaf, branch and remote come from\n" +

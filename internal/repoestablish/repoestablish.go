@@ -1,6 +1,7 @@
 // Package repoestablish establishes one repository of a Project in fixed
-// order: wrapper directory, local Git repository, private GitHub repository,
-// remote, workspace definition and wrapper metadata. Every effect goes through
+// order: wrapper directory, local Git repository, its first commit, private
+// GitHub repository, remote, workspace definition, wrapper metadata and the
+// local planning repository in the wrapper. Every effect goes through
 // Dependencies; the package has no output, flags, working directory or
 // environment.
 package repoestablish
@@ -46,10 +47,12 @@ const (
 	StepCheck    Step = "check"
 	StepWrapper  Step = "wrapper"
 	StepInit     Step = "init"
+	StepCommit   Step = "commit"
 	StepGitHub   Step = "github"
 	StepRemote   Step = "remote"
 	StepDefine   Step = "define"
 	StepMetadata Step = "metadata"
+	StepPlan     Step = "plan"
 )
 
 type StepResult struct {
@@ -83,15 +86,17 @@ type Dependencies struct {
 	Check      func(ctx context.Context, r Resolved) error
 	Observe    func(ctx context.Context, dir string) (gitrepo.Repo, error)
 	Init       func(ctx context.Context, dir, branch string) (bool, error)
+	Commit     func(ctx context.Context, r Resolved) (bool, error)
 	GitHub     func(ctx context.Context, owner, name string) (sshURL string, changed bool, err error)
 	Remote     func(ctx context.Context, dir, name, url string) (bool, error)
 	Define     func(ctx context.Context, r Resolved) (bool, error)
 	SetWrapper func(ctx context.Context, r Resolved) (bool, error)
+	Plan       func(ctx context.Context, r Resolved) (bool, error)
 }
 
 func (d Dependencies) complete() bool {
-	return d.Prepare != nil && d.Check != nil && d.Observe != nil && d.Init != nil && d.GitHub != nil &&
-		d.Remote != nil && d.Define != nil && d.SetWrapper != nil
+	return d.Prepare != nil && d.Check != nil && d.Observe != nil && d.Init != nil && d.Commit != nil && d.GitHub != nil &&
+		d.Remote != nil && d.Define != nil && d.SetWrapper != nil && d.Plan != nil
 }
 
 func invalid(format string, args ...interface{}) error {
@@ -146,6 +151,7 @@ func Run(ctx context.Context, req Request, d Dependencies) (Result, error) {
 	}{
 		{StepWrapper, func() (bool, error) { return makeWrapper(r) }},
 		{StepInit, func() (bool, error) { return d.Init(ctx, r.RepoDir, r.Branch) }},
+		{StepCommit, func() (bool, error) { return d.Commit(ctx, r) }},
 		{StepGitHub, func() (bool, error) {
 			url, changed, err := d.GitHub(ctx, r.GitHubOwner, r.RepoName)
 			if err == nil {
@@ -156,6 +162,7 @@ func Run(ctx context.Context, req Request, d Dependencies) (Result, error) {
 		{StepRemote, func() (bool, error) { return d.Remote(ctx, r.RepoDir, r.Remote, result.SSHURL) }},
 		{StepDefine, func() (bool, error) { return d.Define(ctx, r) }},
 		{StepMetadata, func() (bool, error) { return d.SetWrapper(ctx, r) }},
+		{StepPlan, func() (bool, error) { return d.Plan(ctx, r) }},
 	}
 	for _, s := range steps {
 		if err := ctx.Err(); err != nil {

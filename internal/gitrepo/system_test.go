@@ -132,3 +132,80 @@ func readFile(t *testing.T, path string) string {
 	}
 	return string(content)
 }
+
+func isolatedGit(t *testing.T) (string, process.Runner) {
+	t.Helper()
+	base := tempBase(t)
+	config := filepath.Join(base, "gitconfig")
+	if err := os.WriteFile(config, []byte("[user]\n\tname = Ply Test\n\temail = ply@example.invalid\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("HOME", base)
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	t.Setenv("GIT_CONFIG_GLOBAL", config)
+	return base, process.SystemRunner().Runner
+}
+
+func gitOutput(t *testing.T, dir string, args ...string) string {
+	t.Helper()
+	out, err := exec.Command("git", append([]string{"-C", dir}, args...)...).Output()
+	if err != nil {
+		t.Fatalf("git %v: %v", args, err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+func TestEnsureInitialCommitCommitsExactlyTheNamedFilesOnce(t *testing.T) {
+	base, runner := isolatedGit(t)
+	dir := filepath.Join(base, "repo")
+	if _, _, err := EnsureInit(context.Background(), runner, dir, "main"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte("# repo\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	changed, err := EnsureInitialCommit(context.Background(), runner, dir, "main", "Add README", []string{"README.md"})
+
+	if err != nil || !changed {
+		t.Fatalf("first EnsureInitialCommit = %v, %v", changed, err)
+	}
+	if files := gitOutput(t, dir, "ls-tree", "--name-only", "main"); files != "README.md" {
+		t.Fatalf("committed files %q", files)
+	}
+	if subject := gitOutput(t, dir, "log", "-1", "--format=%s", "main"); subject != "Add README" {
+		t.Fatalf("subject %q", subject)
+	}
+	head := gitOutput(t, dir, "rev-parse", "HEAD")
+	if changed, err = EnsureInitialCommit(context.Background(), runner, dir, "main", "Add README", []string{"README.md"}); err != nil || changed {
+		t.Fatalf("second EnsureInitialCommit = %v, %v; want unchanged", changed, err)
+	}
+	if again := gitOutput(t, dir, "rev-parse", "HEAD"); again != head {
+		t.Fatalf("HEAD moved %s -> %s", head, again)
+	}
+}
+
+func TestEnsureInitialCommitNeverAdoptsOtherFiles(t *testing.T) {
+	base, runner := isolatedGit(t)
+	dir := filepath.Join(base, "repo")
+	if _, _, err := EnsureInit(context.Background(), runner, dir, "main"); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"README.md", "notes.txt"} {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("x\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if changed, err := EnsureInitialCommit(context.Background(), runner, dir, "main", "Add README", []string{"README.md"}); !errors.Is(err, ErrConflict) || changed {
+		t.Fatalf("unnamed file adopted: %v, %v", changed, err)
+	}
+	if changed, err := EnsureInitialCommit(context.Background(), runner, dir, "main", "Add README", []string{"README.md", "missing.md"}); !errors.Is(err, ErrConflict) || changed {
+		t.Fatalf("missing named file accepted: %v, %v", changed, err)
+	}
+	if changed, err := EnsureInitialCommit(context.Background(), runner, dir, "trunk", "Add README", []string{"README.md"}); !errors.Is(err, ErrConflict) || changed {
+		t.Fatalf("other branch accepted: %v, %v", changed, err)
+	}
+	if _, _, code, _ := Read(context.Background(), runner, dir, "rev-parse", "--verify", "-q", "HEAD"); code == 0 {
+		t.Fatal("a refused call committed")
+	}
+}

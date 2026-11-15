@@ -256,6 +256,69 @@ func initialize(ctx context.Context, runner process.Runner, dir, branch string) 
 	return repo, true, nil
 }
 
+// EnsureInitialCommit makes the first commit on branch in the repository root
+// dir from exactly the named top-level files, or verifies that branch already
+// has a commit. It never adopts other files.
+func EnsureInitialCommit(ctx context.Context, runner process.Runner, dir, branch, message string, files []string) (bool, error) {
+	if ctx == nil || runner == nil || !filepath.IsAbs(dir) || branch == "" || message == "" || strings.HasPrefix(message, "-") || len(files) == 0 {
+		return false, fail(ErrInvalid, "context, runner, absolute directory, branch, message and files are required")
+	}
+	named := map[string]bool{".git": true}
+	for _, name := range files {
+		if name == "" || name == "." || name == ".." || name == ".git" || strings.ContainsRune(name, '/') || strings.HasPrefix(name, "-") {
+			return false, fail(ErrInvalid, "file %q must be one top-level name", name)
+		}
+		named[name] = true
+	}
+	repo, err := observe(ctx, runner, dir, dir)
+	if err != nil {
+		return false, err
+	}
+	if repo.State != Root || repo.Toplevel != dir || repo.Branch != branch {
+		return false, fail(ErrConflict, "%s is %s on branch %q, want its root on %q", dir, repo.State, repo.Branch, branch)
+	}
+	if committed, err := HasCommit(ctx, runner, dir); err != nil || committed {
+		return false, err
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return false, fail(ErrUnknown, "read %s: %v", dir, err)
+	}
+	for _, entry := range entries {
+		if !named[entry.Name()] {
+			return false, fail(ErrConflict, "%s holds %s, which is not one of the files to commit", dir, entry.Name())
+		}
+	}
+	for _, name := range files {
+		if _, err := os.Lstat(filepath.Join(dir, name)); err != nil {
+			return false, fail(ErrConflict, "%s has no %s to commit", dir, name)
+		}
+	}
+	if _, stderr, _, err := git(ctx, runner, dir, append([]string{"add", "--"}, files...)...); err != nil {
+		return false, fail(ErrUnknown, "git add in %s: %v: %s", dir, err, strings.TrimSpace(stderr))
+	}
+	_, stderr, _, commitErr := git(ctx, runner, dir, "-c", "core.hooksPath="+os.DevNull, "-c", "commit.gpgSign=false", "commit", "-q", "-m", message)
+	readCtx, cancel := readbackContext(ctx)
+	defer cancel()
+	committed, err := HasCommit(readCtx, runner, dir)
+	if commitErr != nil || err != nil || !committed {
+		return false, fail(ErrUnknown, "git commit in %s: %v: %s; readback committed %v: %v", dir, commitErr, strings.TrimSpace(stderr), committed, err)
+	}
+	return true, nil
+}
+
+// HasCommit reports whether HEAD of the repository dir names a commit.
+func HasCommit(ctx context.Context, runner process.Runner, dir string) (bool, error) {
+	_, stderr, code, err := Read(ctx, runner, dir, "rev-parse", "--verify", "-q", "HEAD^{commit}")
+	switch {
+	case err == nil:
+		return true, nil
+	case code == 1 && ctx.Err() == nil:
+		return false, nil
+	}
+	return false, fail(ErrUnknown, "read HEAD of %s: %v: %s", dir, err, strings.TrimSpace(stderr))
+}
+
 // readbackContext keeps ctx, or bounds a fresh context when ctx has ended.
 func readbackContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	if ctx.Err() != nil {

@@ -25,6 +25,8 @@ type world struct {
 	remotes   map[string]string
 	defined   bool
 	wrapper   string
+	committed bool
+	planned   bool
 	fail      map[string]error
 	before    map[string]func()
 }
@@ -83,6 +85,24 @@ func (w *world) deps() Dependencies {
 			w.repos[dir] = gitrepo.Repo{State: gitrepo.Root, Dir: dir, Toplevel: dir, Branch: branch}
 			return true, nil
 		},
+		Commit: func(ctx context.Context, r Resolved) (bool, error) {
+			w.resolved = append(w.resolved, r)
+			if err := w.enter("commit " + r.RepoDir); err != nil {
+				return false, err
+			}
+			changed := !w.committed
+			w.committed = true
+			return changed, nil
+		},
+		Plan: func(ctx context.Context, r Resolved) (bool, error) {
+			w.resolved = append(w.resolved, r)
+			if err := w.enter("plan " + r.Wrapper); err != nil {
+				return false, err
+			}
+			changed := !w.planned
+			w.planned = true
+			return changed, nil
+		},
 		GitHub: func(ctx context.Context, owner, name string) (string, bool, error) {
 			if err := w.enter("github " + owner + "/" + name); err != nil {
 				return "", false, err
@@ -122,7 +142,7 @@ func (w *world) deps() Dependencies {
 
 func allSteps(changed bool) []StepResult {
 	steps := []StepResult{}
-	for _, step := range []Step{StepWrapper, StepInit, StepGitHub, StepRemote, StepDefine, StepMetadata} {
+	for _, step := range []Step{StepWrapper, StepInit, StepCommit, StepGitHub, StepRemote, StepDefine, StepMetadata, StepPlan} {
 		steps = append(steps, StepResult{step, changed})
 	}
 	return steps
@@ -162,8 +182,8 @@ func TestRunResolvesOnceAndRunsStepsInOrderWithURLFlow(t *testing.T) {
 			t.Fatalf("adapter got %+v", r)
 		}
 	}
-	wantCalls := []string{"prepare", "check", "observe " + wrapper, "init " + repoDir + " main", "github Org/code-map",
-		"remote " + repoDir + " origin " + url, "define", "metadata"}
+	wantCalls := []string{"prepare", "check", "observe " + wrapper, "init " + repoDir + " main", "commit " + repoDir, "github Org/code-map",
+		"remote " + repoDir + " origin " + url, "define", "metadata", "plan " + wrapper}
 	if !reflect.DeepEqual(w.calls, wantCalls) {
 		t.Fatalf("calls\n%q\nwant\n%q", w.calls, wantCalls)
 	}
@@ -255,7 +275,7 @@ func TestRunFullRerunIsUnchangedToTheEnd(t *testing.T) {
 		t.Fatalf("rerun %+v, error %v", result, err)
 	}
 	// The wrapper now exists, so nesting is observed at the repository directory.
-	if w.calls[2] != "observe "+result.Resolved.RepoDir || w.calls[len(w.calls)-1] != "metadata" {
+	if w.calls[2] != "observe "+result.Resolved.RepoDir || strings.Fields(w.calls[len(w.calls)-1])[0] != "plan" {
 		t.Fatalf("calls %q", w.calls)
 	}
 }
@@ -348,19 +368,19 @@ func TestRunPrecheckStopsWithoutEffect(t *testing.T) {
 }
 
 func TestRunStopsAtEachEffectStepWithConfirmedStepsOnly(t *testing.T) {
-	names := []string{"init", "github", "remote", "define", "metadata"}
+	names := []string{"init", "commit", "github", "remote", "define", "metadata", "plan"}
 	for index, name := range names {
 		for _, kind := range []error{ErrConflict, ErrInvalid, ErrUnknown} {
 			t.Run(fmt.Sprintf("%s %v", name, kind), func(t *testing.T) {
 				w := newWorld(t)
 				d := failAt(w.deps(), name, fmt.Errorf("%w: injected", kind))
 				result, err := Run(context.Background(), w.request(), d)
-				step := []Step{StepInit, StepGitHub, StepRemote, StepDefine, StepMetadata}[index]
+				step := []Step{StepInit, StepCommit, StepGitHub, StepRemote, StepDefine, StepMetadata, StepPlan}[index]
 				requireStop(t, err, step, kind)
 				if want := allSteps(true)[:index+1]; !reflect.DeepEqual(result.Steps, want) {
 					t.Fatalf("steps %+v, want %+v", result.Steps, want)
 				}
-				if (result.SSHURL != "") != (index > 1) {
+				if (result.SSHURL != "") != (index > 2) {
 					t.Fatalf("SSH URL %q at %s", result.SSHURL, name)
 				}
 			})
@@ -396,6 +416,10 @@ func failAt(d Dependencies, name string, err error) Dependencies {
 	switch name {
 	case "init":
 		d.Init = func(context.Context, string, string) (bool, error) { return false, err }
+	case "commit":
+		d.Commit = func(context.Context, Resolved) (bool, error) { return false, err }
+	case "plan":
+		d.Plan = func(context.Context, Resolved) (bool, error) { return false, err }
 	case "github":
 		d.GitHub = func(context.Context, string, string) (string, bool, error) { return "", false, err }
 	case "remote":
@@ -409,7 +433,7 @@ func failAt(d Dependencies, name string, err error) Dependencies {
 }
 
 func TestRunRerunAfterEachBoundaryResumes(t *testing.T) {
-	names := []string{"wrapper", "init", "github", "remote", "define", "metadata"}
+	names := []string{"wrapper", "init", "commit", "github", "remote", "define", "metadata", "plan"}
 	for k := 1; k <= len(names); k++ {
 		t.Run(names[k-1], func(t *testing.T) {
 			w := newWorld(t)
@@ -443,7 +467,7 @@ func TestRunCancellationStopsBeforeTheNextStep(t *testing.T) {
 	}{
 		{"", StepPrepare, ""},
 		{"prepare", StepCheck, "prepare"},
-		{"init", StepGitHub, "init"},
+		{"init", StepCommit, "init"},
 		{"define", StepMetadata, "define"},
 	} {
 		t.Run(string(tc.next), func(t *testing.T) {
@@ -471,7 +495,7 @@ func TestRunCancellationStopsBeforeTheNextStep(t *testing.T) {
 			if last != tc.last {
 				t.Fatalf("calls %q", w.calls)
 			}
-			if tc.next == StepGitHub && !reflect.DeepEqual(result.Steps, allSteps(true)[:2]) {
+			if tc.next == StepCommit && !reflect.DeepEqual(result.Steps, allSteps(true)[:2]) {
 				t.Fatalf("steps %+v", result.Steps)
 			}
 		})

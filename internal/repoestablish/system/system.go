@@ -23,10 +23,17 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/repoestablish"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
+	"github.com/devdimensionlab/plybuild/internal/wrapperplan"
 )
 
 // DefaultsFile holds the optional repository defaults in a Project root.
 const DefaultsFile = "ply-repo-defaults.json"
+
+// PlanTemplate is the planning repository template below the user's home.
+const PlanTemplate = ".agents/templates/plan-repo"
+
+// readmeMessage is the subject of the first commit of a new repository.
+const readmeMessage = "Add README"
 
 const (
 	gitTimeout    = 30 * time.Second
@@ -40,18 +47,30 @@ var (
 	metadataConflicts = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorWorkProjectConflict): true}
 )
 
-// hooks is a private, per-call test seam; production has none.
-type hooks struct{ afterMetadataRead func() }
-
-// New returns the production dependencies of repoestablish.Run.
-func New(runner process.Runner) repoestablish.Dependencies {
-	return newDependencies(runner, hooks{})
+// hooks is a private, per-call test seam; production has none but the date.
+type hooks struct {
+	afterMetadataRead func()
+	today             func() string
 }
 
-func newDependencies(runner process.Runner, h hooks) repoestablish.Dependencies {
+// New returns the production dependencies of repoestablish.Run; planTemplate
+// is the absolute planning repository template.
+func New(runner process.Runner, planTemplate string) repoestablish.Dependencies {
+	return newDependencies(runner, planTemplate, hooks{today: func() string { return time.Now().Format(time.DateOnly) }})
+}
+
+func newDependencies(runner process.Runner, planTemplate string, h hooks) repoestablish.Dependencies {
+	plan := func(r repoestablish.Resolved) wrapperplan.Request {
+		return wrapperplan.Request{Template: planTemplate, Wrapper: r.Wrapper, Repo: r.RepoName, Date: h.today(), Branch: wrapperplan.DefaultBranch}
+	}
 	return repoestablish.Dependencies{
 		Prepare: prepare,
-		Check:   check,
+		Check: func(ctx context.Context, r repoestablish.Resolved) error {
+			if err := check(ctx, r); err != nil {
+				return err
+			}
+			return capability(wrapperplan.Check(plan(r)), wrapperplan.ErrInvalid, wrapperplan.ErrConflict)
+		},
 		Observe: func(ctx context.Context, dir string) (gitrepo.Repo, error) {
 			ctx, cancel := context.WithTimeout(ctx, gitTimeout)
 			defer cancel()
@@ -63,6 +82,17 @@ func newDependencies(runner process.Runner, h hooks) repoestablish.Dependencies 
 			defer cancel()
 			_, changed, err := gitrepo.EnsureInit(ctx, runner, dir, branch)
 			return changed, capability(err, gitrepo.ErrInvalid, gitrepo.ErrConflict)
+		},
+		Commit: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
+			ctx, cancel := context.WithTimeout(ctx, gitTimeout)
+			defer cancel()
+			return firstCommit(ctx, runner, r)
+		},
+		Plan: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
+			ctx, cancel := context.WithTimeout(ctx, gitTimeout)
+			defer cancel()
+			changed, err := wrapperplan.Ensure(ctx, runner, plan(r))
+			return changed, capability(err, wrapperplan.ErrInvalid, wrapperplan.ErrConflict)
 		},
 		GitHub: func(ctx context.Context, owner, name string) (string, bool, error) {
 			ctx, cancel := context.WithTimeout(ctx, githubTimeout)
@@ -81,6 +111,31 @@ func newDependencies(runner process.Runner, h hooks) repoestablish.Dependencies 
 			return setWrapper(ctx, r, h)
 		},
 	}
+}
+
+// firstCommit commits a README.md naming the repository when its branch has
+// no commit yet, so that Epic commands have a parent; an existing history is
+// left as it is.
+func firstCommit(ctx context.Context, runner process.Runner, r repoestablish.Resolved) (bool, error) {
+	committed, err := gitrepo.HasCommit(ctx, runner, r.RepoDir)
+	if err != nil || committed {
+		return false, capability(err, gitrepo.ErrInvalid, gitrepo.ErrConflict)
+	}
+	readme := filepath.Join(r.RepoDir, "README.md")
+	file, err := os.OpenFile(readme, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err == nil {
+		_, err = file.WriteString("# " + r.RepoName + "\n")
+		if closeErr := file.Close(); err == nil {
+			err = closeErr
+		}
+	} else if errors.Is(err, os.ErrExist) {
+		err = nil
+	}
+	if err != nil {
+		return false, fail(repoestablish.ErrUnknown, "write %s: %v", readme, err)
+	}
+	changed, err := gitrepo.EnsureInitialCommit(ctx, runner, r.RepoDir, r.Branch, readmeMessage, []string{"README.md"})
+	return changed, capability(err, gitrepo.ErrInvalid, gitrepo.ErrConflict)
 }
 
 // classified carries one repoestablish sentinel and the original error.

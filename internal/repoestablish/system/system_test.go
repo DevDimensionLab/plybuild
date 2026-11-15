@@ -53,6 +53,7 @@ type fixture struct {
 	root, projects, marker string
 	gh                     *fakeGH
 	ghMarker               string
+	template               string
 }
 
 func physical(t *testing.T, path string) string {
@@ -91,6 +92,14 @@ func newFixture(t *testing.T) *fixture {
 		t.Fatal(err)
 	}
 	f := &fixture{t: t, root: root, projects: filepath.Join(root, "projects"), gh: &fakeGH{}}
+	home := physical(t, t.TempDir())
+	write(t, filepath.Join(home, "gitconfig"), "[user]\n\tname = Ply Test\n\temail = ply@example.invalid\n")
+	t.Setenv("HOME", home)
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(home, "gitconfig"))
+	f.template = filepath.Join(home, ".agents", "templates", "plan-repo")
+	write(t, filepath.Join(f.template, "AGENTS.md"), "# {{repo}}-plan {{date}}\n")
+	write(t, filepath.Join(f.template, "gitignore"), ".build/\n")
 	for _, dir := range []string{"projects/ply/main", "apps/app/main"} {
 		if err := os.MkdirAll(filepath.Join(root, dir), 0o755); err != nil {
 			t.Fatal(err)
@@ -126,7 +135,10 @@ func (f *fixture) request() repoestablish.Request {
 }
 
 func (f *fixture) deps(h hooks) repoestablish.Dependencies {
-	return newDependencies(f.gh, h)
+	if h.today == nil {
+		h.today = func() string { return "2026-11-15" }
+	}
+	return newDependencies(f.gh, f.template, h)
 }
 
 func (f *fixture) read(path string) string {
@@ -237,7 +249,7 @@ func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	wrapper := filepath.Join(f.projects, "code-map")
-	if result.Resolved.Wrapper != wrapper || result.SSHURL != "git@github.com:Org/code-map.git" || len(result.Steps) != 6 {
+	if result.Resolved.Wrapper != wrapper || result.SSHURL != "git@github.com:Org/code-map.git" || len(result.Steps) != 8 {
 		t.Fatalf("result %+v", result)
 	}
 	for _, step := range result.Steps {
@@ -256,6 +268,22 @@ func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
 	remote, err := exec.Command("git", "-C", result.Resolved.RepoDir, "remote", "get-url", "origin").Output()
 	if err != nil || string(remote) != result.SSHURL+"\n" {
 		t.Fatalf("remote %q, error %v", remote, err)
+	}
+	if readme := f.read(filepath.Join(result.Resolved.RepoDir, "README.md")); readme != "# code-map\n" {
+		t.Fatalf("README %q", readme)
+	}
+	if tree, err := exec.Command("git", "-C", result.Resolved.RepoDir, "ls-tree", "--name-only", "main").Output(); err != nil || string(tree) != "README.md\n" {
+		t.Fatalf("first commit %q, error %v", tree, err)
+	}
+	plan := filepath.Join(wrapper, "code-map-plan")
+	if agents := f.read(filepath.Join(plan, "AGENTS.md")); agents != "# code-map-plan 2026-11-15\n" {
+		t.Fatalf("planning AGENTS.md %q", agents)
+	}
+	if log, err := exec.Command("git", "-C", plan, "log", "--format=%s", "main").Output(); err != nil || strings.Count(string(log), "\n") != 1 {
+		t.Fatalf("planning log %q, error %v", log, err)
+	}
+	if remotes, err := exec.Command("git", "-C", plan, "remote").Output(); err != nil || len(remotes) != 0 {
+		t.Fatalf("planning remotes %q, error %v", remotes, err)
 	}
 
 	definitions, metadata, calls := f.definitions(), f.metadata(), len(f.gh.calls)
@@ -442,5 +470,42 @@ func TestProjectAtRootSelectsExactlyOnePhysicalRoot(t *testing.T) {
 	}
 	if _, err := ProjectAtRoot(filepath.Join(f.root, "apps"), f.projects); !errors.Is(err, repoestablish.ErrInvalid) {
 		t.Fatalf("no definitions: %v", err)
+	}
+}
+
+func TestCommitKeepsAnExistingHistoryWithoutReadme(t *testing.T) {
+	f := newFixture(t)
+	repoDir := filepath.Join(f.projects, "code-map", "main")
+	if err := os.MkdirAll(repoDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	git(t, repoDir, "init", "-q", "-b", "main")
+	git(t, repoDir, "commit", "-q", "--allow-empty", "-m", "existing")
+	result, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
+	if err != nil || result.Steps[2] != (repoestablish.StepResult{Step: repoestablish.StepCommit, Changed: false}) {
+		t.Fatalf("steps %+v, error %v", result.Steps, err)
+	}
+	if _, err := os.Lstat(filepath.Join(repoDir, "README.md")); !os.IsNotExist(err) {
+		t.Fatalf("README written into an existing history: %v", err)
+	}
+}
+
+func TestCheckStopsBeforeWrapperOnAnUnusablePlanTemplate(t *testing.T) {
+	for name, change := range map[string]func(f *fixture){
+		"missing template": func(f *fixture) { _ = os.RemoveAll(f.template) },
+		"taken plan path":  func(f *fixture) { write(t, filepath.Join(f.projects, "code-map", "code-map-plan"), "") },
+	} {
+		t.Run(name, func(t *testing.T) {
+			f := newFixture(t)
+			change(f)
+			_, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
+			var stopped *repoestablish.Error
+			if !errors.As(err, &stopped) || stopped.Step != repoestablish.StepCheck {
+				t.Fatalf("error %v, want a stop at check", err)
+			}
+			if _, err := os.Lstat(filepath.Join(f.projects, "code-map", "main")); !os.IsNotExist(err) || len(f.gh.calls) != 0 {
+				t.Fatalf("effect before the plan check: %v, gh calls %q", err, f.gh.calls)
+			}
+		})
 	}
 }
