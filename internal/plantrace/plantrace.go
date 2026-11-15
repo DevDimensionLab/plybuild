@@ -89,12 +89,7 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 	}
 	for _, task := range tasks {
 		records, readErr := taskjournal.ReadContributions(w, task)
-		var link *taskjournal.PlyAction
-		for _, r := range records {
-			if r.Event != nil && r.Event.Ply != nil && r.Event.Ply.Operation == "plan_link" {
-				link = r.Event.Ply
-			}
-		}
+		link := taskjournal.LatestPlanLink(records)
 		if link == nil || link.Plan == nil || *link.Plan != planID || link.Refs["project"] != string(project) {
 			continue
 		}
@@ -111,10 +106,7 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 		out.Reasons = append(out.Reasons, Reason{"", "journal_damaged", "Only the readable prefix of the plan journal is read: " + err.Error()})
 	}
 	for i, e := range journal {
-		// go.mod is go 1.18, so e is shared across iterations: copy what is pointed to.
-		at, actor, role := e.At, e.ActorID, e.Role
-		out.Events = append(out.Events, Event{EventID: fmt.Sprintf("%s-journal-%d", planID, i+1), Type: e.Type, Title: e.Title, ActorID: &actor, Role: &role,
-			StepID: e.StepID, StepKind: e.StepKind, ParentStepID: e.ParentStepID, Outcome: e.Outcome, OccurredAt: &at, RecordedAt: &at})
+		out.Events = append(out.Events, planEvent(planID, i, e))
 	}
 	sort.SliceStable(out.Events, func(i, j int) bool {
 		a, b := at(out.Events[i]), at(out.Events[j])
@@ -141,6 +133,13 @@ func event(task string, link *taskjournal.PlyAction, r taskjournal.Contribution)
 		e.Type, e.Title = "observation_"+x.Type, x.Finding
 	}
 	return e
+}
+
+// planEvent is record i of the plan's own journal, with an empty TaskID. It
+// takes e by value, so the pointers it returns are its own (go.mod is go 1.18).
+func planEvent(planID string, i int, e plan.JournalEntry) Event {
+	return Event{EventID: fmt.Sprintf("%s-journal-%d", planID, i+1), Type: e.Type, Title: e.Title, ActorID: &e.ActorID, Role: &e.Role,
+		StepID: e.StepID, StepKind: e.StepKind, ParentStepID: e.ParentStepID, Outcome: e.Outcome, OccurredAt: &e.At, RecordedAt: &e.At}
 }
 
 // at is the time an event is ordered by: occurred, else recorded.

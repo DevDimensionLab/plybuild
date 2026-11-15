@@ -370,17 +370,22 @@ func ReadContributions(w workspace.WorkspaceObservation, task string) ([]Contrib
 // facts, and returns the latest plan link or nil. A Task without journal has
 // none.
 func ReadPlanLink(w workspace.WorkspaceObservation, task string) (*PlyAction, error) {
-	records, e := readStore(w.Root, task, workspaceID(w.Root, w.MarkerSHA256))
+	records, e := ReadContributions(w, task)
 	if e != nil {
 		return nil, e
 	}
+	return LatestPlanLink(records), nil
+}
+
+// LatestPlanLink returns the latest plan link among records, or nil.
+func LatestPlanLink(records []Contribution) *PlyAction {
 	var link *PlyAction
 	for _, r := range records {
 		if r.Event != nil && r.Event.Ply != nil && r.Event.Ply.Operation == "plan_link" {
 			link = r.Event.Ply
 		}
 	}
-	return link, nil
+	return link
 }
 
 func (s Service) appendInput(task string, raw []byte, kind string) (result AppendResult, err error) {
