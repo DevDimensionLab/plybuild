@@ -390,29 +390,11 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if r, found, e := retry(records, c, b); found {
 		return r, e
 	}
-	snap, e := s.build(basis, records)
-	if e != nil {
+	if e = s.validateAppend(basis, records, c, ev, ob); e != nil {
 		return result, e
-	}
-	if e = validateReferences(c, ev, ob, snap); e != nil {
-		return result, e
-	}
-	if ev != nil && ev.Candidate != nil {
-		if e = workspace.ValidateTaskJournalCandidate(s.Workspace, basis, ev.Candidate.OID, ev.Candidate.Tree); e != nil {
-			return result, e
-		}
 	}
 	if e = checkSourceSizes(c.Sources); e != nil {
 		return result, e
-	}
-	for _, src := range c.Sources {
-		h, e := sourceHash(src.Locator)
-		if e != nil {
-			return result, e
-		}
-		if h != src.SHA256 {
-			return result, conflict("source bytes differ: " + src.Locator)
-		}
 	}
 	// No directory or lock is created until the first append is fully validated.
 	p := storePath(root, task)
@@ -466,26 +448,10 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if r, found, e := retry(records, c, b); found {
 		return r, e
 	}
-	snap, e = s.build(nowBasis, records)
-	if e != nil {
+	if e = s.validateAppend(nowBasis, records, c, ev, ob); e != nil {
 		return result, e
-	}
-	if e = validateReferences(c, ev, ob, snap); e != nil {
-		return result, e
-	}
-	if ev != nil && ev.Candidate != nil {
-		if e = workspace.ValidateTaskJournalCandidate(s.Workspace, basis, ev.Candidate.OID, ev.Candidate.Tree); e != nil {
-			return result, e
-		}
 	}
 	for _, src := range c.Sources {
-		h, e := sourceHash(src.Locator)
-		if e != nil {
-			return result, e
-		}
-		if h != src.SHA256 {
-			return result, conflict("source bytes changed before append")
-		}
 		if e = keepSource(root, src); e != nil {
 			return result, e
 		}
@@ -537,4 +503,31 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	}
 	result = receipt(stored{r, c, ev, ob, filepath.Join(p, name), hash(bytes)}, true)
 	return result, nil
+}
+
+// validateAppend checks an input against the journal records and the current
+// sources. appendInput runs it before the lock and again under it.
+func (s Service) validateAppend(basis workspace.TaskJournalBasis, records []stored, c Common, ev *EventInput, ob *ObservationInput) error {
+	snap, e := s.build(basis, records)
+	if e != nil {
+		return e
+	}
+	if e = validateReferences(c, ev, ob, snap); e != nil {
+		return e
+	}
+	if ev != nil && ev.Candidate != nil {
+		if e = workspace.ValidateTaskJournalCandidate(s.Workspace, basis, ev.Candidate.OID, ev.Candidate.Tree); e != nil {
+			return e
+		}
+	}
+	for _, src := range c.Sources {
+		h, e := sourceHash(src.Locator)
+		if e != nil {
+			return e
+		}
+		if h != src.SHA256 {
+			return conflict("source bytes differ: " + src.Locator)
+		}
+	}
+	return nil
 }
