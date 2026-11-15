@@ -218,8 +218,9 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 
 func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Command {
 	var resultOID, parentOID, confirm, retry, format, actor string
+	var keepWorktree bool
 	var check, apply, refresh bool
-	command := &cobra.Command{Use: "integrate <task-id>", Short: "Integrate a Task into its Epic parent", Long: "Check or apply one confirmed local fast-forward from the exact Task commit to its registered Epic parent. The same operation serves every Task, with or without a Goal; the human decides when to run it.", Example: "  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>\n  ply workspace task integrate workspace-work-item-bootstrap --refresh-parent --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 7d1e0c5b9f0a4c2e8b6d3f1a5c7e9b2d4f6a8c0e --check", Args: func(cmd *cobra.Command, args []string) error {
+	command := &cobra.Command{Use: "integrate <task-id>", Short: "Integrate a Task into its Epic parent", Long: "Check or apply one confirmed local fast-forward from the exact Task commit to its registered Epic parent. The same operation serves every Task, with or without a Goal; the human decides when to run it. After --apply the Task worktree and branch are retired as with worktree retire, unless --keep-worktree is given; uncommitted or untracked files keep them, and stderr then gives the retire command to run later.", Example: "  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>\n  ply workspace task integrate workspace-work-item-bootstrap --refresh-parent --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 7d1e0c5b9f0a4c2e8b6d3f1a5c7e9b2d4f6a8c0e --check", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
@@ -256,6 +257,9 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			}
 			err = services.record(string(input.TaskID), plyActor(actor), "the integration is applied", taskjournal.PlyAction{Operation: "integration", Refs: refs})
 		}
+		if err == nil && input.Apply && out.Readback.RecoveryStatus == "complete" && !keepWorktree && services.retireWorktree != nil {
+			retireTaskAfterIntegration(cmd, services, input.TaskID, plyActor(actor))
+		}
 		if err != nil && out.Readback.Value == nil {
 			return taskContentCommandError(cmd, format, err)
 		}
@@ -283,11 +287,35 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 	command.Flags().BoolVar(&refresh, "refresh-parent", false, "integrer fra Epicens registrerte base oppgitt i --expected-parent-oid i stedet for Taskens opprinnelige basis")
 	command.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	command.Flags().StringVar(&actor, "actor", "", "who integrates, recorded in the Task journal (default: PLY_ACTOR)")
+	command.Flags().BoolVar(&keepWorktree, "keep-worktree", false, "keep the Task worktree and branch after --apply instead of retiring them")
 	for _, n := range []string{"expected-result-oid", "expected-parent-oid"} {
 		_ = command.MarkFlagRequired(n)
 	}
 	setWorkFlagErrors(command)
 	return command
+}
+
+// retireTaskAfterIntegration retires the worktree and branch of an integrated
+// Task with the checks of worktree retire. The integration stands either way;
+// when cleanup cannot run, stderr says why and how to finish it later.
+func retireTaskAfterIntegration(cmd *cobra.Command, services workspaceTaskServices, task workspace.TaskID, actor string) {
+	result, err := services.retireWorktree(workspace.TaskWorktreeRetireInput{TaskID: task, Apply: true})
+	if err != nil {
+		fmt.Fprintf(cmd.ErrOrStderr(), "Worktree kept: %v\nRetire it when it is safe: ply workspace task worktree retire %s --apply\n", err, task)
+		return
+	}
+	fmt.Fprintf(cmd.ErrOrStderr(), "Worktree %s, branch %s\n", result.Worktree, result.Branch)
+	if services.record != nil {
+		refs := map[string]string{"worktree": result.Worktree, "branch": result.Branch, "locator": result.Locator, "ref": result.Ref}
+		for key, value := range refs {
+			if value == "" {
+				delete(refs, key)
+			}
+		}
+		if err := services.record(string(task), actor, "the worktree is retired", taskjournal.PlyAction{Operation: "worktree_retire", Refs: refs}); err != nil {
+			fmt.Fprintf(cmd.ErrOrStderr(), "Warning: %v\n", err)
+		}
+	}
 }
 
 func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Command {

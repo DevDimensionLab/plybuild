@@ -276,7 +276,7 @@ func TestPlanTraceReadsTenTasksAndFiveHundredEventsWithinASecond(t *testing.T) {
 	journal := taskjournal.New(workspace.SystemDependencies())
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 48; j++ { // with the two records of goal register: 50 per Task
-			if _, e := journal.AppendPly(fmt.Sprintf("load-%d", i), "dev", "load", taskjournal.PlyAction{Operation: "lifecycle"}); e != nil {
+			if _, e := journal.AppendPly(fmt.Sprintf("load-%d", i), "dev", "load", taskjournal.PlyAction{Operation: "lifecycle", Refs: map[string]string{"n": fmt.Sprint(j)}}); e != nil {
 				t.Fatal(e)
 			}
 		}
@@ -353,5 +353,55 @@ func TestEpicIntegrateRecordsOnNewlyIntegratedTasks(t *testing.T) {
 	}
 	if epic == nil || epic.Actor.ID != "planner-a" || epic.Ply.Refs["before_oid"] != oid || epic.Ply.Refs["after_oid"] != candidate || epic.Ply.Refs["effect"] != "fast_forwarded" || epic.Ply.Refs["target_ref"] != "refs/heads/main" {
 		t.Fatalf("epic integration record %+v", epic)
+	}
+}
+
+// Integration retires the Task worktree and branch unless they are kept; a
+// blocked integration leaves them alone and says nothing about cleanup.
+func TestTaskIntegrateRetiresTheWorktree(t *testing.T) {
+	for _, c := range []struct {
+		task       string
+		extra      []string
+		locked     bool
+		integrated bool
+		gone       bool
+	}{
+		{"retired", nil, false, true, true},
+		{"kept", []string{"--keep-worktree"}, false, true, false},
+		{"blocked", nil, true, false, false},
+	} {
+		f, parent := recordingFixture(t)
+		repo := filepath.Join(f.root, "repo")
+		registerGoal(t, f, c.task, "--actor", "planner-a")
+		f.success(t, f.root, "workspace", "task", "worktree", "create", c.task, "--branch", c.task, "--path", filepath.Join(f.root, c.task), "--expected-parent-oid", parent)
+		worktree := filepath.Join(f.root, c.task)
+		mustPlanWrite(t, filepath.Join(worktree, c.task+".txt"), c.task+"\n", 0600)
+		f.git(t, worktree, "add", c.task+".txt")
+		f.git(t, worktree, "commit", "-m", c.task)
+		candidate := f.git(t, worktree, "rev-parse", "HEAD")
+		if c.locked { // a locked worktree blocks the integration
+			f.git(t, repo, "worktree", "lock", worktree)
+		}
+		integrate := []string{"workspace", "task", "integrate", c.task, "--expected-result-oid", candidate, "--expected-parent-oid", parent, "--format", "json"}
+		var check struct {
+			Plan struct {
+				SHA256 string `json:"sha256"`
+			} `json:"plan"`
+		}
+		if e := json.Unmarshal([]byte(f.success(t, f.root, append(integrate, "--check")...)), &check); e != nil {
+			t.Fatal(e)
+		}
+		_, stderr, exit := f.run(t, f.root, nil, append(append(integrate, "--apply", "--confirm", check.Plan.SHA256), c.extra...)...)
+		if exit != 0 || (f.git(t, repo, "rev-parse", "refs/heads/epic") == candidate) != c.integrated {
+			t.Fatalf("%s: integration %d %s", c.task, exit, stderr)
+		}
+		_, statErr := os.Stat(worktree)
+		branches := f.git(t, repo, "branch", "--list", c.task)
+		if gone := os.IsNotExist(statErr) && branches == ""; gone != c.gone {
+			t.Fatalf("%s: worktree gone %v (branch %q), want %v; stderr %s", c.task, gone, branches, c.gone, stderr)
+		}
+		if !c.integrated && strings.Contains(stderr, "Worktree") {
+			t.Fatalf("%s: cleanup attempted after a blocked integration: %s", c.task, stderr)
+		}
 	}
 }
