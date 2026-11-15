@@ -174,3 +174,13 @@ func TestTraceSourceSequenceAndExactNativeDedupPreserveProjections(t *testing.T)
 		t.Fatal(err)
 	}
 }
+
+// Every agent role of the journal maps to the v1 role agent, not unknown
+// (backlog 20261115-08522a41, K2).
+func TestJournalRolesMapToTraceRoles(t *testing.T) {
+	for role, want := range map[string]string{"human": "human", "planner": "agent", "developer": "agent", "reviewer": "agent", "observer": "agent", "tool": "unknown"} {
+		if got := journalRole(role); got != want {
+			t.Errorf("journalRole(%q) = %q, want %q", role, got, want)
+		}
+	}
+}

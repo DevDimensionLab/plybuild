@@ -202,12 +202,24 @@ func validateTime(at *string, b TimeBasis) error {
 	}
 	return nil
 }
+
+// Roles are the actor roles a journal input may claim; Ply's own records use
+// the role ply.
+var Roles = []string{"human", "planner", "developer", "reviewer", "observer", "tool"}
+
 func validateCommon(c Common, kind, task string) error {
 	if c.Kind != "ply.workspace.task-journal-"+kind+"-input" || c.SchemaVersion != 1 || c.TaskID != task || !keyPattern.MatchString(c.PublicationKey) {
 		return invalid("input kind, version, Task or publication key differs")
 	}
-	if !textOK(c.Actor.ID, 256, false) || !one(c.Actor.Role, "human", "planner", "developer", "observer", "tool") || !optionalText(c.Actor.SessionID, 256) || !optionalText(c.ActivityID, 256) {
-		return invalid("invalid actor or activity")
+	switch {
+	case !textOK(c.Actor.ID, 256, false):
+		return invalid("actor.id must be one line of 1 to 256 characters")
+	case !one(c.Actor.Role, Roles...):
+		return invalid("actor.role must be one of " + strings.Join(Roles, ", "))
+	case !optionalText(c.Actor.SessionID, 256):
+		return invalid("actor.session_id must be null or one line of 1 to 256 characters")
+	case !optionalText(c.ActivityID, 256):
+		return invalid("activity_id must be null or one line of 1 to 256 characters")
 	}
 	if e := validateTime(c.OccurredAt, c.TimeBasis); e != nil {
 		return e

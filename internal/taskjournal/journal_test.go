@@ -450,3 +450,31 @@ func TestIntervalsWithoutPointAreNotInvented(t *testing.T) {
 	}
 	_ = time.UTC
 }
+
+// One role list for journal input; a refusal names the field and the valid
+// values (backlog 20261115-08522a41, K2).
+func TestRolesAndPreciseActorErrors(t *testing.T) {
+	f := fixture(t)
+	for i, role := range []string{"planner", "reviewer"} {
+		in := f.input
+		in.PublicationKey, in.Actor = fmt.Sprintf("role:%d", i), Actor{ID: role, Role: role}
+		f.append(t, in)
+	}
+	for label, c := range map[string]struct {
+		change func(*EventInput)
+		want   string
+	}{
+		"role":     {func(in *EventInput) { in.Actor.Role = "coordinator" }, "actor.role must be one of human, planner, developer, reviewer, observer, tool"},
+		"actor id": {func(in *EventInput) { in.Actor.ID = "" }, "actor.id must be"},
+		"activity": {func(in *EventInput) { in.ActivityID = ptr(strings.Repeat("x", 257)) }, "activity_id must be"},
+	} {
+		t.Run(label, func(t *testing.T) {
+			in := f.input
+			in.PublicationKey = "bad:" + strings.ReplaceAll(label, " ", "-")
+			c.change(&in)
+			if _, e := f.s.Append("task", f.file(t, in), "event"); e == nil || !strings.Contains(e.Error(), c.want) {
+				t.Fatalf("error %v, want %q", e, c.want)
+			}
+		})
+	}
+}
