@@ -14,9 +14,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// repoCreateNote is the known K6 boundary: only project metadata reads the definitions file.
-const repoCreateNote = "Note: project metadata reads ply-workspace.json; 'ply workspace project show/list' and Task/queue still read the legacy registry and do not see this repository."
-
 // repoCreateEnv is the caller context of ply repo create: working directory,
 // environment and the operation.
 type repoCreateEnv struct {
@@ -100,7 +97,6 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 				}
 				report("%s: %s\n", step.Step, outcome)
 			}
-			report("%s\n", repoCreateNote)
 			if writeErr != nil {
 				return errors.Join(err, writeErr)
 			}

@@ -215,7 +215,7 @@ func TestRepoCreatePassesOverridesAndRejectsJSON(t *testing.T) {
 	}
 }
 
-func TestRepoCreateReportsResolvedStepsAndNote(t *testing.T) {
+func TestRepoCreateReportsResolvedStepsWithoutRegistryNote(t *testing.T) {
 	root := createWorkspace(t)
 	resolved := repoestablish.Resolved{Workspace: root, Project: "ply", ProjectRoot: "/p", RepoName: "code-map", Wrapper: "/p/code-map", RepoDir: "/p/code-map/main",
 		Leaf: "main", Branch: "main", Remote: "origin", GitHubOwner: "Org", Actor: "ply-epic"}
@@ -223,7 +223,7 @@ func TestRepoCreateReportsResolvedStepsAndNote(t *testing.T) {
 	fake := &fakeEstablish{result: repoestablish.Result{Resolved: resolved, Steps: []repoestablish.StepResult{{Step: repoestablish.StepWrapper, Changed: true}, {Step: repoestablish.StepInit}}},
 		err: &repoestablish.Error{Step: repoestablish.StepGitHub, Err: fmt.Errorf("%w: GitHub repository Org/code-map is PUBLIC", repoestablish.ErrConflict)}}
 	stdout, stderr, err := executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map")
-	if want := header + "wrapper: created\ninit: unchanged\n" + repoCreateNote + "\n"; ExitCode(err) != 1 || stdout != want {
+	if want := header + "wrapper: created\ninit: unchanged\n"; ExitCode(err) != 1 || stdout != want {
 		t.Fatalf("stdout %q, want %q, error %v", stdout, want, err)
 	}
 	if stderr != "Error: github: conflict: GitHub repository Org/code-map is PUBLIC\n" {
@@ -231,7 +231,7 @@ func TestRepoCreateReportsResolvedStepsAndNote(t *testing.T) {
 	}
 	fake.err = &repoestablish.Error{Step: repoestablish.StepPrepare, Err: repoestablish.ErrInvalid}
 	fake.result = repoestablish.Result{}
-	if stdout, _, _ = executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map"); stdout != repoCreateNote+"\n" {
+	if stdout, _, _ = executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map"); stdout != "" {
 		t.Fatalf("prepare failure stdout %q", stdout)
 	}
 }
