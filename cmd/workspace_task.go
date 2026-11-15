@@ -48,6 +48,7 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 	addWorkspaceTaskJournalCommands(command, dependencies)
 	addWorkspaceTaskProgressCommands(command, dependencies)
 	command.AddCommand(newWorkspaceLifecycleCommand(dependencies, "task"))
+	command.AddCommand(newWorkspaceTaskCleanBuildCommand(dependencies))
 	return command
 }
 

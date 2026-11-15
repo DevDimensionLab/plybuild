@@ -482,3 +482,21 @@ func TestPlanJournalRecordsPlanStepsInTheTrace(t *testing.T) {
 		t.Fatalf("plan events %+v", trace.Events)
 	}
 }
+
+func TestTaskCleanBuildEmptiesTheRegisteredWorktreeBuild(t *testing.T) {
+	f, oid := recordingFixture(t)
+	registerGoal(t, f, "cleaned")
+	f.failure(t, f.root, nil, "has no worktree", "workspace", "task", "clean-build", "cleaned")
+	worktree := filepath.Join(f.root, "cleaned")
+	f.success(t, f.root, "workspace", "task", "worktree", "create", "cleaned", "--branch", "cleaned", "--path", worktree, "--expected-parent-oid", oid)
+	if e := os.MkdirAll(filepath.Join(worktree, ".build", "out"), 0700); e != nil {
+		t.Fatal(e)
+	}
+	mustPlanWrite(t, filepath.Join(worktree, ".build", "out", "x"), "x\n", 0600)
+	if out := f.success(t, f.root, "workspace", "task", "clean-build", "cleaned"); !strings.Contains(out, "Removed 1 entries") {
+		t.Fatalf("output %q", out)
+	}
+	if entries, e := os.ReadDir(filepath.Join(worktree, ".build")); e != nil || len(entries) != 0 {
+		t.Fatalf(".build %v %v", entries, e)
+	}
+}
