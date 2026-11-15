@@ -365,7 +365,11 @@ func TestRetryAfterSourceLossAndCrossCommandConflict(t *testing.T) {
 	f := fixture(t)
 	r := f.append(t, f.input)
 	before, _ := os.ReadFile(r.RecordLocator)
+	// Without Ply's copy too, as for a record made before copies were kept.
 	if e := os.Remove(f.input.Sources[0].Locator); e != nil {
+		t.Fatal(e)
+	}
+	if e := os.Remove(sourceCopyPath(f.root, f.input.Sources[0].SHA256)); e != nil {
 		t.Fatal(e)
 	}
 	again, e := f.s.Append("task", f.file(t, f.input), "event")
@@ -546,5 +550,44 @@ func TestReportedTimeAfterRegistrationRefusedAndBackwardsMarked(t *testing.T) {
 	}
 	if !marked {
 		t.Fatalf("backwards report not marked: %+v", snap.Coverage.Reasons)
+	}
+}
+
+// K3: Ply keeps a copy of each source, so deleting the original afterwards
+// leaves the journal complete; an oversized source is refused.
+func TestSourcesAreKeptByPly(t *testing.T) {
+	f := fixture(t)
+	evidence := filepath.Join(f.root, "report.txt")
+	write(t, evidence, []byte("kept evidence\n"))
+	in := f.input
+	in.PublicationKey, in.Sources = "kept:1", []SourceRef{{evidence, hash([]byte("kept evidence\n"))}}
+	f.append(t, in)
+	if e := os.Remove(evidence); e != nil {
+		t.Fatal(e)
+	}
+	snap, e := f.s.Show("task", Options{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	for _, r := range snap.Coverage.Reasons {
+		if strings.HasPrefix(r.Code, "source_") {
+			t.Fatalf("deleted original made coverage partial: %+v", snap.Coverage.Reasons)
+		}
+	}
+	var kept string
+	for _, src := range snap.Sources {
+		if src.Kind == "artifact" && src.Status == "valid" && src.Locator != evidence {
+			kept = src.Locator
+		}
+	}
+	if b, e := os.ReadFile(kept); e != nil || string(b) != "kept evidence\n" {
+		t.Fatalf("Ply's copy %q: %q %v", kept, b, e)
+	}
+	large := filepath.Join(f.root, "large.bin")
+	write(t, large, make([]byte, 4<<20+1))
+	big := f.input
+	big.PublicationKey, big.Sources = "kept:large", []SourceRef{{large, hash(make([]byte, 4<<20+1))}}
+	if _, e := f.s.Append("task", f.file(t, big), "event"); e == nil || !strings.Contains(e.Error(), "4 MiB") {
+		t.Fatalf("oversized source: %v", e)
 	}
 }

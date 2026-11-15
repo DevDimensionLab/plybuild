@@ -57,8 +57,11 @@ func TestEventBatchMatchesJournalEventsWithoutGitOrWrites(t *testing.T) {
 func TestEventBatchKeepsTaskAfterMissingContributionArtifact(t *testing.T) {
 	f := fixture(t)
 	f.append(t, f.input)
-	if err := os.Remove(f.input.Sources[0].Locator); err != nil {
-		t.Fatal(err)
+	// Without Ply's copy too, as for a record made before copies were kept.
+	for _, path := range []string{f.input.Sources[0].Locator, sourceCopyPath(f.root, f.input.Sources[0].SHA256)} {
+		if err := os.Remove(path); err != nil {
+			t.Fatal(err)
+		}
 	}
 	in := eventBatchInput(t, f)
 	b, err := ReadEventBatch(f.s.Workspace, in)

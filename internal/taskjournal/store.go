@@ -153,6 +153,66 @@ func retry(records []stored, c Common, b []byte) (AppendResult, bool, error) {
 	return AppendResult{}, false, nil
 }
 
+// Ply keeps a copy of every source under its digest, so a journal stays
+// complete after the original is changed or removed.
+const (
+	sourceLimit      = 4 << 20
+	eventSourceLimit = 16 << 20
+)
+
+func sourceCopyPath(root, sha string) string {
+	return filepath.Join(root, ".ply", "task-process", "sources", sha)
+}
+
+// checkSourceSizes refuses sources over 4 MiB each or 16 MiB together.
+func checkSourceSizes(sources []SourceRef) error {
+	total := int64(0)
+	for _, src := range sources {
+		info, e := os.Stat(src.Locator)
+		if e != nil {
+			return e
+		}
+		if info.Size() > sourceLimit {
+			return invalid("source " + src.Locator + " exceeds 4 MiB")
+		}
+		if total += info.Size(); total > eventSourceLimit {
+			return invalid("the sources of one record exceed 16 MiB together")
+		}
+	}
+	return nil
+}
+
+// keepSource copies the bytes of src into Ply's source store, once per digest.
+func keepSource(root string, src SourceRef) error {
+	target := sourceCopyPath(root, src.SHA256)
+	if h, e := sourceHash(target); e == nil && h == src.SHA256 {
+		return nil
+	}
+	b, e := readFile(src.Locator, sourceLimit)
+	if e != nil {
+		return e
+	}
+	if hash(b) != src.SHA256 {
+		return conflict("source bytes changed before append: " + src.Locator)
+	}
+	if e = os.MkdirAll(filepath.Dir(target), 0o700); e != nil {
+		return e
+	}
+	nonce := make([]byte, 8)
+	if _, e = rand.Read(nonce); e != nil {
+		return e
+	}
+	temp := fmt.Sprintf("%s.%x.tmp", target, nonce)
+	if e = os.WriteFile(temp, b, 0o600); e != nil {
+		return e
+	}
+	if e = os.Rename(temp, target); e != nil {
+		os.Remove(temp)
+		return e
+	}
+	return nil
+}
+
 // Append publishes one contribution read from file. Records with role ply
 // are Ply's own and come only from AppendPly.
 func (s Service) Append(task, file, kind string) (AppendResult, error) {
@@ -292,6 +352,9 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 			return result, e
 		}
 	}
+	if e = checkSourceSizes(c.Sources); e != nil {
+		return result, e
+	}
 	for _, src := range c.Sources {
 		h, e := sourceHash(src.Locator)
 		if e != nil {
@@ -372,6 +435,9 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 		}
 		if h != src.SHA256 {
 			return result, conflict("source bytes changed before append")
+		}
+		if e = keepSource(root, src); e != nil {
+			return result, e
 		}
 	}
 	var prev *string

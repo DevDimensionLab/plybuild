@@ -37,6 +37,13 @@ func (s *Snapshot) source(kind, path string, expected *string, seq *int, prev *s
 			status = "changed"
 		}
 	}
+	if status != "valid" && kind == "artifact" && expected != nil {
+		// The original is gone or changed; Ply's copy keeps the recorded bytes.
+		kept := sourceCopyPath(s.Workspace.Root, *expected)
+		if h, e := sourceHash(kept); e == nil && h == *expected {
+			path, observed, status = kept, &h, "valid"
+		}
+	}
 	s.Sources = append(s.Sources, Source{id, kind, path, observed, seq, prev, status})
 	if status != "valid" {
 		s.reason("source_"+status, "Source could not be read at its recorded version: "+path, id)

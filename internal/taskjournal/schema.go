@@ -277,8 +277,8 @@ func parseInput(b []byte, kind, task string) (Common, *EventInput, *ObservationI
 	if ply != strings.HasPrefix(c.PublicationKey, "ply:") || ply != (ev != nil && ev.Type == "ply_action") || ev != nil && (ev.Ply != nil) != (ev.Type == "ply_action") {
 		return c, nil, nil, nil, invalid("role ply, type ply_action, the ply field and a ply: publication key belong together; such records are written by Ply")
 	}
-	if len(c.Sources) == 0 && (ev == nil || !one(ev.Type, "note", "step_started", "ply_action")) {
-		return c, nil, nil, nil, invalid("at least one source is required except for note, step_started and ply_action")
+	if len(c.Sources) == 0 && (ev == nil || !one(ev.Type, "note", "step_started", "step_finished", "ply_action")) {
+		return c, nil, nil, nil, invalid("at least one source is required for a decision or an observation")
 	}
 	var value any
 	var e error
