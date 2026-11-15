@@ -15,7 +15,7 @@ type workspaceDefinitionServices struct {
 func newWorkspaceDefinitionCommand(dependencies workspace.Dependencies) *cobra.Command {
 	return newWorkspaceDefinitionCommandWithServices(workspaceDefinitionServices{
 		addRepo: func(project, repo, path string) (workspace.DefinitionRepoResult, error) {
-			return workspace.AddDefinitionRepo(dependencies, project, repo, path)
+			return workspace.AddDefinitionRepo(dependencies, project, repo, path, "")
 		},
 	})
 }

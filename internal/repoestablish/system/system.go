@@ -106,7 +106,9 @@ func newDependencies(runner process.Runner, planTemplate string, h hooks) repoes
 			changed, err := gitrepo.EnsureRemote(ctx, runner, dir, name, url)
 			return changed, capability(err, gitrepo.ErrInvalid, gitrepo.ErrConflict)
 		},
-		Define: define,
+		Define: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
+			return define(ctx, runner, r)
+		},
 		SetWrapper: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
 			return setWrapper(ctx, r, h)
 		},
@@ -386,7 +388,7 @@ func check(ctx context.Context, r repoestablish.Resolved) error {
 		return fail(repoestablish.ErrInvalid, "read %s: %v", workspacedef.File, err)
 	}
 	var defined *workspacedef.Error
-	if _, err := workspacedef.AddRepo(defs, r.Project, r.RepoName, stored); errors.As(err, &defined) && defined.Kind == workspacedef.KindConflict {
+	if _, err := workspacedef.AddRepo(defs, r.Project, r.RepoName, stored, ""); errors.As(err, &defined) && defined.Kind == workspacedef.KindConflict {
 		return classified{repoestablish.ErrConflict, err}
 	} else if err != nil {
 		return classified{repoestablish.ErrInvalid, err}
@@ -413,7 +415,7 @@ func notStarted(ctx context.Context) error {
 	return nil
 }
 
-func define(ctx context.Context, r repoestablish.Resolved) (bool, error) {
+func define(ctx context.Context, runner process.Runner, r repoestablish.Resolved) (bool, error) {
 	if err := notStarted(ctx); err != nil {
 		return false, err
 	}
@@ -421,7 +423,14 @@ func define(ctx context.Context, r repoestablish.Resolved) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	result, err := workspace.AddDefinitionRepo(fixedDependencies(r.Workspace), r.Project, r.RepoName, stored)
+	// The remote step has set the remote; its URL is recorded for ply repo clone.
+	readCtx, cancel := context.WithTimeout(ctx, gitTimeout)
+	defer cancel()
+	url, _, code, err := gitrepo.Read(readCtx, runner, r.RepoDir, "remote", "get-url", "--", r.Remote)
+	if err != nil {
+		return false, fail(repoestablish.ErrUnknown, "read remote %s of %s: exit %d: %v", r.Remote, r.RepoDir, code, err)
+	}
+	result, err := workspace.AddDefinitionRepo(fixedDependencies(r.Workspace), r.Project, r.RepoName, stored, strings.TrimSpace(string(url)))
 	return result.Changed, classify(err, defineConflicts, repoestablish.ErrUnknown)
 }
 

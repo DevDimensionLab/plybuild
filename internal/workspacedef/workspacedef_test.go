@@ -92,7 +92,7 @@ func basisOf(t *testing.T, root string) string {
 }
 
 func addRepo(project, id, path string) func(*Definitions) (bool, error) {
-	return func(d *Definitions) (bool, error) { return AddRepo(d, project, id, path) }
+	return func(d *Definitions) (bool, error) { return AddRepo(d, project, id, path, "") }
 }
 
 func accept(Definitions) error { return nil }
@@ -129,6 +129,7 @@ func TestReadRejectsInOrder(t *testing.T) {
 		"projects null":       {`{"format_version": 1, "projects": null}`, KindFormat},
 		"projects missing":    {`{"format_version": 1}`, KindFormat},
 		"unknown then format": {`{"format_version": 2, "projects": [], "extra": 1}`, KindSchema},
+		"remote with space":   {`{"format_version": 1, "projects": [{"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a", "path": "a", "remote": "git@x:a b"}], "epics": []}]}`, KindSchema},
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, _, err := Read(writeRoot(t, tc.contents))
@@ -169,23 +170,49 @@ func TestReadReturnsRawInspectError(t *testing.T) {
 
 func TestAddRepo(t *testing.T) {
 	defs := Definitions{FormatVersion: 1, Projects: []Project{{ID: "ply", Repos: []Repo{{ID: "ply", Path: "ply/main"}}}}}
-	if _, err := AddRepo(&defs, "other", "x", "x"); err == nil {
+	if _, err := AddRepo(&defs, "other", "x", "x", ""); err == nil {
 		t.Fatal("missing Project accepted")
 	} else {
 		requireKind(t, err, KindNotFound)
 	}
-	if changed, err := AddRepo(&defs, "ply", "ply", "ply/main"); changed || err != nil {
+	if changed, err := AddRepo(&defs, "ply", "ply", "ply/main", ""); changed || err != nil {
 		t.Fatalf("identical: %v %v", changed, err)
 	}
-	if _, err := AddRepo(&defs, "ply", "ply", "ply/other"); err == nil {
+	if _, err := AddRepo(&defs, "ply", "ply", "ply/other", ""); err == nil {
 		t.Fatal("different path accepted")
 	} else {
 		requireKind(t, err, KindConflict)
 	}
-	if changed, err := AddRepo(&defs, "ply", "map", "map"); !changed || err != nil {
+	if changed, err := AddRepo(&defs, "ply", "map", "map", ""); !changed || err != nil {
 		t.Fatalf("new: %v %v", changed, err)
 	}
 	if want := []Repo{{ID: "ply", Path: "ply/main"}, {ID: "map", Path: "map"}}; !reflect.DeepEqual(defs.Projects[0].Repos, want) {
+		t.Fatalf("repos %+v", defs.Projects[0].Repos)
+	}
+}
+
+// The remote of a member is filled once and never replaced.
+func TestAddRepoRemote(t *testing.T) {
+	defs := Definitions{FormatVersion: 1, Projects: []Project{{ID: "ply", Repos: []Repo{{ID: "ply", Path: "ply/main"}}}}}
+	if changed, err := AddRepo(&defs, "ply", "ply", "ply/main", "git@github.com:o/ply.git"); !changed || err != nil {
+		t.Fatalf("fill: %v %v", changed, err)
+	}
+	if changed, err := AddRepo(&defs, "ply", "ply", "ply/main", "git@github.com:o/ply.git"); changed || err != nil {
+		t.Fatalf("same: %v %v", changed, err)
+	}
+	if changed, err := AddRepo(&defs, "ply", "ply", "ply/main", ""); changed || err != nil {
+		t.Fatalf("without remote: %v %v", changed, err)
+	}
+	if _, err := AddRepo(&defs, "ply", "ply", "ply/main", "git@github.com:o/other.git"); err == nil {
+		t.Fatal("other remote accepted")
+	} else {
+		requireKind(t, err, KindConflict)
+	}
+	if changed, err := AddRepo(&defs, "ply", "map", "map", "git@github.com:o/map.git"); !changed || err != nil {
+		t.Fatalf("new: %v %v", changed, err)
+	}
+	want := []Repo{{ID: "ply", Path: "ply/main", Remote: "git@github.com:o/ply.git"}, {ID: "map", Path: "map", Remote: "git@github.com:o/map.git"}}
+	if !reflect.DeepEqual(defs.Projects[0].Repos, want) {
 		t.Fatalf("repos %+v", defs.Projects[0].Repos)
 	}
 }

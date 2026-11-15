@@ -27,10 +27,11 @@ type DefinitionRepoResult struct {
 }
 
 // AddDefinitionRepo adds an existing Git worktree root as the last repository
-// member of a Project defined in ply-workspace.json. The current and the
+// member of a Project defined in ply-workspace.json, with its remote URL
+// when one is given (filled once into a member without one). The current and the
 // changed definitions are both validated against live Git while projects.lock
 // is held; a new repository ID must also match its recorded history.
-func AddDefinitionRepo(d Dependencies, project, repo, path string) (DefinitionRepoResult, error) {
+func AddDefinitionRepo(d Dependencies, project, repo, path, remote string) (DefinitionRepoResult, error) {
 	projectID, err := ParseProjectID(project)
 	if err != nil {
 		return DefinitionRepoResult{}, err
@@ -67,7 +68,7 @@ func AddDefinitionRepo(d Dependencies, project, repo, path string) (DefinitionRe
 	}
 	added := false
 	mutate := func(defs *workspacedef.Definitions) (bool, error) {
-		changed, err := workspacedef.AddRepo(defs, project, repo, stored)
+		changed, err := workspacedef.AddRepo(defs, project, repo, stored, remote)
 		added = changed
 		return changed, err
 	}

@@ -13,6 +13,8 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
+	"unicode"
 
 	"github.com/devdimensionlab/plybuild/internal/atomicfile"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
@@ -38,8 +40,9 @@ type Project struct {
 	Epics     []Epic            `json:"epics"`
 }
 type Repo struct {
-	ID   string `json:"id"`
-	Path string `json:"path"`
+	ID     string `json:"id"`
+	Path   string `json:"path"`
+	Remote string `json:"remote,omitempty"` // clone URL; absent when the repository has none
 }
 type Epic struct {
 	ID    string `json:"id"`
@@ -140,6 +143,13 @@ func decode(path string, raw []byte) (*Definitions, error) {
 	if out.FormatVersion != 1 || out.Projects == nil {
 		return nil, &Error{Kind: KindFormat, Path: path, Detail: "expected format_version 1 and projects array"}
 	}
+	for _, p := range out.Projects {
+		for _, r := range p.Repos {
+			if len(r.Remote) > maxRemoteBytes || strings.IndexFunc(r.Remote, unicode.IsSpace) >= 0 || strings.IndexFunc(r.Remote, unicode.IsControl) >= 0 {
+				return nil, &Error{Kind: KindSchema, Path: path, Detail: fmt.Sprintf("remote of repository %s in Project %s must be one URL without spaces", r.ID, p.ID)}
+			}
+		}
+	}
 	return &out, nil
 }
 
@@ -148,23 +158,35 @@ func digest(raw []byte) string {
 	return "sha256:" + hex.EncodeToString(sum[:])
 }
 
-// AddRepo appends {id, path} to project's repos. An identical member is no
-// change; the same id with another path is a conflict.
-func AddRepo(d *Definitions, project, id, path string) (bool, error) {
+// maxRemoteBytes bounds a remote URL.
+const maxRemoteBytes = 1024
+
+// AddRepo appends {id, path, remote} to project's repos. An identical member
+// is no change, and an empty remote matches any; a member without remote gets
+// the remote. The same id with another path or remote is a conflict.
+func AddRepo(d *Definitions, project, id, path, remote string) (bool, error) {
 	for i := range d.Projects {
 		p := &d.Projects[i]
 		if p.ID != project {
 			continue
 		}
-		for _, r := range p.Repos {
-			if r.ID == id && r.Path == path {
-				return false, nil
-			}
-			if r.ID == id {
+		for j, r := range p.Repos {
+			if r.ID == id && r.Path != path {
 				return false, &Error{Kind: KindConflict, Detail: fmt.Sprintf("repository %s of Project %s is already defined with path %s", id, project, r.Path)}
 			}
+			if r.ID != id {
+				continue
+			}
+			switch {
+			case remote == "" || r.Remote == remote:
+				return false, nil
+			case r.Remote == "":
+				p.Repos[j].Remote = remote
+				return true, nil
+			}
+			return false, &Error{Kind: KindConflict, Detail: fmt.Sprintf("repository %s of Project %s is already defined with remote %s", id, project, r.Remote)}
 		}
-		p.Repos = append(p.Repos, Repo{ID: id, Path: path})
+		p.Repos = append(p.Repos, Repo{ID: id, Path: path, Remote: remote})
 		return true, nil
 	}
 	return false, &Error{Kind: KindNotFound, Detail: fmt.Sprintf("Project %s is not defined", project)}

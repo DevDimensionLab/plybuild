@@ -258,7 +258,7 @@ func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
 		}
 	}
 	defs, _, err := workspacedef.Read(f.root)
-	if err != nil || !reflect.DeepEqual(defs.Projects[0].Repos[1], workspacedef.Repo{ID: "code-map", Path: "projects/code-map/main"}) {
+	if err != nil || !reflect.DeepEqual(defs.Projects[0].Repos[1], workspacedef.Repo{ID: "code-map", Path: "projects/code-map/main", Remote: "git@github.com:Org/code-map.git"}) {
 		t.Fatalf("definitions %+v, error %v", defs, err)
 	}
 	snapshot, err := workspace.ReadProjectMetadata(workspace.SystemDependencies(), f.root)

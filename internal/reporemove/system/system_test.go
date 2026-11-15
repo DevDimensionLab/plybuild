@@ -693,7 +693,7 @@ func TestReRegistrationBeforeRenameKeepsWrapper(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, err := workspace.AddDefinitionRepo(d, "ply", "map", "map/main"); err != nil {
+		if _, err := workspace.AddDefinitionRepo(d, "ply", "map", "map/main", ""); err != nil {
 			t.Fatal(err)
 		}
 	}

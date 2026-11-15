@@ -247,7 +247,7 @@ func (f definitionFixture) dependencies(cwd string) Dependencies {
 
 func (f definitionFixture) add(t *testing.T, cwd, project, repo, path string) (DefinitionRepoResult, error) {
 	t.Helper()
-	return AddDefinitionRepo(f.dependencies(cwd), project, repo, path)
+	return AddDefinitionRepo(f.dependencies(cwd), project, repo, path, "")
 }
 
 type treeState map[string]string
@@ -477,7 +477,7 @@ func TestAddDefinitionRepoWaitsForProjectsLock(t *testing.T) {
 	}
 	done := make(chan error, 1)
 	go func() {
-		_, err := AddDefinitionRepo(f.dependencies(f.root), "ply", "ply-code-map", "ply-code-map")
+		_, err := AddDefinitionRepo(f.dependencies(f.root), "ply", "ply-code-map", "ply-code-map", "")
 		done <- err
 	}()
 	select {
