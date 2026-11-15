@@ -88,6 +88,27 @@ func RetireEpic(d Dependencies, input EpicRetireInput) (EpicRetireResult, error)
 	return run(true)
 }
 
+// epicWorktreeRemovable reports whether the Epic worktree is present, and
+// refuses one that no longer has its branch checked out or is not clean.
+func epicWorktreeRemovable(d Dependencies, w EpicWorktreeBinding, ref GitRefObservation) (bool, error) {
+	if _, err := d.Files.Lstat(w.Locator); errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	} else if err != nil {
+		return false, workError(ErrorWorkPathConflict, fmt.Sprintf("cannot inspect Epic worktree %s", w.Locator), err)
+	}
+	observed, err := d.WorkGit.ObserveWorktree(w.Locator)
+	if err != nil {
+		return false, err
+	}
+	if observed.Ref != w.Ref || !ref.Exists || observed.OID != ref.OID {
+		return false, workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree %s no longer has its branch %s checked out", w.Locator, w.Ref), nil)
+	}
+	if !observed.Clean {
+		return false, workError(ErrorWorkParentDirty, fmt.Sprintf("Epic worktree %s has uncommitted or untracked files; commit, integrate or remove them first", w.Locator), nil)
+	}
+	return true, nil
+}
+
 func retireEpicLocked(d Dependencies, projects ProjectSnapshot, registry WorkItemRegistry, input EpicRetireInput, result *EpicRetireResult) error {
 	epic, _ := findEpic(registry, input.EpicID)
 	if epic == nil {
@@ -126,23 +147,9 @@ func retireEpicLocked(d Dependencies, projects ProjectSnapshot, registry WorkIte
 	if err != nil {
 		return err
 	}
-	worktreePresent := true
-	if _, err := d.Files.Lstat(w.Locator); errors.Is(err, fs.ErrNotExist) {
-		worktreePresent = false
-	} else if err != nil {
-		return workError(ErrorWorkPathConflict, fmt.Sprintf("cannot inspect Epic worktree %s", w.Locator), err)
-	}
-	if worktreePresent {
-		observed, err := d.WorkGit.ObserveWorktree(w.Locator)
-		if err != nil {
-			return err
-		}
-		if observed.Ref != w.Ref || !ref.Exists || observed.OID != ref.OID {
-			return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree %s no longer has its branch %s checked out", w.Locator, w.Ref), nil)
-		}
-		if !observed.Clean {
-			return workError(ErrorWorkParentDirty, fmt.Sprintf("Epic worktree %s has uncommitted or untracked files; commit, integrate or remove them first", w.Locator), nil)
-		}
+	worktreePresent, err := epicWorktreeRemovable(d, w, ref)
+	if err != nil {
+		return err
 	}
 	if ref.Exists {
 		result.OID = ref.OID
