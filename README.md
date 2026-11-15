@@ -724,9 +724,11 @@ Goal:
 
 ```text
 Record each work step in the Task journal: ply workspace task journal step start
-<task> --id <id> --kind <kind> --title <title> when it starts and step finish with the
-same --id, --kind and --outcome when it ends; use --parent <id> for a correction or
-review inside another step. Record a note when you return.
+<task> --id <id> --kind <kind> --title <title> when it starts, and step finish with the
+same --id, --kind and --title plus --outcome when it ends. Kinds: clarification,
+planning, implementation, verification, review, correction, coordination. Outcomes:
+pass, fail, complete, blocked, unknown, deferred, declined. Use --parent <id> for a
+correction or review inside another step. Record a note with --title when you return.
 ```
 
 To append a record from a file, put the following in `/absolute/event.json`,

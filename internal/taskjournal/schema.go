@@ -217,6 +217,9 @@ var Roles = []string{"human", "planner", "developer", "reviewer", "observer", "t
 
 const plyRole = "ply"
 
+// StepKinds are the kinds of a work step.
+var StepKinds = []string{"clarification", "planning", "implementation", "verification", "review", "correction", "coordination", "waiting"}
+
 // PlyOperations are the operations Ply records in a Task journal.
 var PlyOperations = []string{"plan_link", "task_create", "goal_register", "worktree_create", "goal_start_reserved", "goal_start_started", "goal_start_prompt_submitted", "integration", "lifecycle", "epic_integrate"}
 
@@ -317,8 +320,13 @@ func validateEventInput(ev *EventInput) error {
 		return invalid("decision is a point, not a step")
 	}
 	if s := ev.Step; s != nil {
-		if !textOK(s.ID, 256, false) || !optionalText(s.ParentStepID, 256) || !one(s.Kind, "clarification", "planning", "implementation", "verification", "review", "correction", "coordination", "waiting") {
-			return invalid("invalid step")
+		switch {
+		case !textOK(s.ID, 256, false):
+			return invalid("step.id must be one line of 1 to 256 characters")
+		case !optionalText(s.ParentStepID, 256):
+			return invalid("step.parent_step_id must be null or one line of 1 to 256 characters")
+		case !one(s.Kind, StepKinds...):
+			return invalid("step.kind must be one of " + strings.Join(StepKinds, ", "))
 		}
 		if s.Kind == "waiting" && ev.Waiting == nil {
 			return invalid("waiting step needs explicit reason, dependency and next actor")

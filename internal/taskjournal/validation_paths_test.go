@@ -37,7 +37,7 @@ func TestParseInputErrorPaths(t *testing.T) {
 		"outcome":            {func(e *EventInput) { e.Outcome = ptr("maybe") }, "invalid reported outcome"},
 		"start without step": {func(e *EventInput) { e.Type = "step_started" }, "start and finish require a step"},
 		"decision step":      {func(e *EventInput) { e.Type = "decision"; e.Step = &StepRef{"s", "planning", nil} }, "decision is a point, not a step"},
-		"step kind":          {func(e *EventInput) { e.Step = &StepRef{"s", "dreaming", nil} }, "invalid step"},
+		"step kind":          {func(e *EventInput) { e.Step = &StepRef{"s", "dreaming", nil} }, "step.kind must be one of clarification, planning, implementation, verification, review, correction, coordination, waiting"},
 		"waiting reason":     {func(e *EventInput) { e.Step = &StepRef{"s", "waiting", nil} }, "waiting step needs explicit reason, dependency and next actor"},
 		"waiting step":       {func(e *EventInput) { e.Waiting = &Waiting{"r", "d", "n"} }, "invalid waiting metadata"},
 		"candidate":          {func(e *EventInput) { e.Candidate = &Candidate{"repo", "wt", "bad", oid} }, "invalid candidate"},

@@ -471,6 +471,9 @@ func TestRolesAndPreciseActorErrors(t *testing.T) {
 		"role":     {func(in *EventInput) { in.Actor.Role = "coordinator" }, "actor.role must be one of human, planner, developer, reviewer, observer, tool"},
 		"actor id": {func(in *EventInput) { in.Actor.ID = "" }, "actor.id must be"},
 		"activity": {func(in *EventInput) { in.ActivityID = ptr(strings.Repeat("x", 257)) }, "activity_id must be"},
+		"step kind": {func(in *EventInput) {
+			in.Type, in.Step = "step_started", &StepRef{"s", "investigation", nil}
+		}, "step.kind must be one of clarification, planning, implementation, verification, review, correction, coordination, waiting"},
 	} {
 		t.Run(label, func(t *testing.T) {
 			in := f.input
