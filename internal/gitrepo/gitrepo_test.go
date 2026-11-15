@@ -108,6 +108,10 @@ func root(path, branch string) []step {
 	return cat(inside(path, "true"), toplevel(path, path), head(path, branch+"\n", 0))
 }
 
+func ignored(path, dir string, code int) []step {
+	return []step{{path: path, args: "check-ignore -q -- " + dir, code: code}}
+}
+
 func initStep(path, branch string, code int) []step {
 	return []step{{path: path, args: "init -q --initial-branch=" + branch + " --template=", code: code, stderr: "init diagnostic\n"}}
 }
@@ -131,6 +135,7 @@ func TestEnsureInitStates(t *testing.T) {
 		}
 	}
 	created, nested := filepath.Join(base, "created"), filepath.Join(base, "nested")
+	enclosed, enclosedRoot, unchecked := filepath.Join(base, "enclosed"), filepath.Join(base, "enclosed-root"), filepath.Join(base, "unchecked")
 	tests := []struct {
 		name, dir, branch string
 		steps             []step
@@ -139,14 +144,19 @@ func TestEnsureInitStates(t *testing.T) {
 	}{
 		{"missing dir under absent parent", created, "main", cat(refOK(base, "main"), absent(base), initStep(created, "main", 0), root(created, "main")), true, nil},
 		{"missing parent", filepath.Join(base, "none", "child"), "main", nil, false, ErrInvalid},
-		{"missing dir under repo", nested, "main", cat(refOK(base, "main"), inside(base, "true"), toplevel(base, "/elsewhere")), false, ErrConflict},
+		{"missing dir under repo", nested, "main", cat(refOK(base, "main"), inside(base, "true"), toplevel(base, "/elsewhere"), ignored(base, nested, 1)), false, ErrConflict},
+		{"missing dir ignored by enclosing repo", enclosed, "main", cat(refOK(base, "main"), inside(base, "true"), toplevel(base, "/elsewhere"), ignored(base, enclosed, 0), initStep(enclosed, "main", 0), root(enclosed, "main")), true, nil},
+		{"missing dir ignored by enclosing root", enclosedRoot, "main", cat(refOK(base, "main"), inside(base, "true"), toplevel(base, base), head(base, "main", 0), ignored(base, enclosedRoot, 0), initStep(enclosedRoot, "main", 0), root(enclosedRoot, "main")), true, nil},
+		{"ignore check failure", unchecked, "main", cat(refOK(base, "main"), inside(base, "true"), toplevel(base, "/elsewhere"), ignored(base, unchecked, 128)), false, ErrUnknown},
 		{"final symlink", link, "main", nil, false, ErrConflict},
 		{"not a directory", file, "main", nil, false, ErrConflict},
 		{"non-empty absent", full, "main", cat(refOK(full, "main"), absent(full)), false, ErrConflict},
 		{"root same branch", full, "main", cat(refOK(full, "main"), root(full, "main")), false, nil},
 		{"root other branch", full, "main", cat(refOK(full, "main"), root(full, "dev")), false, ErrConflict},
 		{"root detached", full, "main", cat(refOK(full, "main"), inside(full, "true"), toplevel(full, full), head(full, "", 1)), false, ErrConflict},
-		{"nested", full, "main", cat(refOK(full, "main"), inside(full, "true"), toplevel(full, base)), false, ErrConflict},
+		{"nested", full, "main", cat(refOK(full, "main"), inside(full, "true"), toplevel(full, base), ignored(full, full, 1)), false, ErrConflict},
+		{"nested non-empty ignored", full, "main", cat(refOK(full, "main"), inside(full, "true"), toplevel(full, base), ignored(full, full, 0)), false, ErrConflict},
+		{"empty dir ignored by enclosing repo", empty, "main", cat(refOK(empty, "main"), inside(empty, "true"), toplevel(empty, base), ignored(empty, empty, 0), initStep(empty, "main", 0), root(empty, "main")), true, nil},
 		{"not worktree", full, "main", cat(refOK(full, "main"), inside(full, "false")), false, ErrConflict},
 		{"git missing", full, "main", cat(refOK(full, "main"), insideFails(full, "", 0, exec.ErrNotFound)), false, ErrUnknown},
 		{"dubious ownership", full, "main", cat(refOK(full, "main"), insideFails(full, "fatal: detected dubious ownership in repository\n", 128, nil)), false, ErrUnknown},

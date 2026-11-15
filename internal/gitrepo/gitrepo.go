@@ -212,7 +212,11 @@ func EnsureInit(ctx context.Context, runner process.Runner, dir, branch string) 
 			return Repo{}, false, err
 		}
 		if above.State != Absent {
-			return Repo{}, false, fail(ErrConflict, "%s would be nested in a Git repository (%s)", dir, above.State)
+			if ok, err := enclosingIgnores(ctx, runner, parent, dir, above.State); err != nil {
+				return Repo{}, false, err
+			} else if !ok {
+				return Repo{}, false, fail(ErrConflict, "%s would be nested in a Git repository (%s)", dir, above.State)
+			}
 		}
 		if err := os.Mkdir(dir, 0o755); err != nil {
 			return Repo{}, false, fail(ErrUnknown, "create %s: %v", dir, err)
@@ -229,7 +233,11 @@ func EnsureInit(ctx context.Context, runner process.Runner, dir, branch string) 
 	case repo.State == Root:
 		return Repo{}, false, fail(ErrConflict, "%s is on branch %q, want %q", dir, repo.Branch, branch)
 	case repo.State != Absent:
-		return Repo{}, false, fail(ErrConflict, "%s is %s in a Git repository", dir, repo.State)
+		if ok, err := enclosingIgnores(ctx, runner, dir, dir, repo.State); err != nil {
+			return Repo{}, false, err
+		} else if !ok {
+			return Repo{}, false, fail(ErrConflict, "%s is %s in a Git repository", dir, repo.State)
+		}
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -239,6 +247,23 @@ func EnsureInit(ctx context.Context, runner process.Runner, dir, branch string) 
 		return Repo{}, false, fail(ErrConflict, "%s is not empty", dir)
 	}
 	return initialize(ctx, runner, dir, branch)
+}
+
+// enclosingIgnores reports whether the repository around path, observed in
+// state, ignores dir, as a repository whose .gitignore admits only its own
+// files does for the repositories below it.
+func enclosingIgnores(ctx context.Context, runner process.Runner, path, dir string, state State) (bool, error) {
+	if state != Root && state != Nested {
+		return false, nil
+	}
+	_, stderr, code, err := git(ctx, runner, path, "check-ignore", "-q", "--", dir)
+	switch {
+	case err == nil:
+		return true, nil
+	case code == 1 && ctx.Err() == nil:
+		return false, nil
+	}
+	return false, fail(ErrUnknown, "check-ignore %s: %v: %s", dir, err, strings.TrimSpace(stderr))
 }
 
 func initialize(ctx context.Context, runner process.Runner, dir, branch string) (Repo, bool, error) {
