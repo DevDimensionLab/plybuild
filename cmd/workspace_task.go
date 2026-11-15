@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -15,6 +16,9 @@ type workspaceTaskServices struct {
 	createWorktree func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
 	integrate      func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
 	retireWorktree func(workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error)
+	// planLink and record are absent in fakes; then nothing is linked or recorded.
+	planLink func(workspace.ProjectID, string, string) (*taskjournal.PlyAction, error)
+	record   func(task, actor, done string, records ...taskjournal.PlyAction) error
 }
 
 func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command {
@@ -33,6 +37,10 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 		return workspace.CheckTaskIntegration(dependencies, input)
 	}, retireWorktree: func(input workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error) {
 		return workspace.RetireTaskWorktree(dependencies, input)
+	}, planLink: func(project workspace.ProjectID, plan, step string) (*taskjournal.PlyAction, error) {
+		return taskPlanLink(dependencies, project, plan, step)
+	}, record: func(task, actor, done string, records ...taskjournal.PlyAction) error {
+		return recordPly(dependencies, task, actor, done, records...)
 	}})
 	addWorkspaceTaskContentCommands(command, dependencies)
 	command.AddCommand(newWorkspaceTaskGoalCommand(dependencies))
@@ -45,7 +53,7 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 
 func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.Command {
 	command := &cobra.Command{Use: "task", Short: "Manage Tasks in a Ply workspace", Long: "Create, inspect, and advance repository-bound Tasks owned by workspace Epics.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply\n  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check"}
-	var title, description, epicID, projectID, repoID, createFormat string
+	var title, description, epicID, projectID, repoID, createFormat, planID, planStep, actor string
 	create := &cobra.Command{Use: "create <task-id>", Short: "Register a repository-bound Task", Long: "Register one Task under an existing Epic with the supplied title and description.", Example: "  ply workspace task create workspace-work-item-bootstrap --title \"Workspace-owned Epic, Task, and worktree support\" --description \"Add explicit workspace work items and prepare a Task worktree from the Epic base.\" --epic ply-agentic-workflow-support --project ply --repo ply", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
@@ -60,7 +68,20 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		if err := validateWorkFormat(createFormat); err != nil {
 			return err
 		}
+		var link *taskjournal.PlyAction
+		if services.planLink != nil {
+			if link, err = services.planLink(input.ProjectID, planID, planStep); err != nil {
+				return err
+			}
+		}
 		result, err := services.create(input)
+		if err == nil && result.Created && services.record != nil {
+			records := []taskjournal.PlyAction{{Operation: "task_create"}}
+			if link != nil {
+				records = append(records, *link)
+			}
+			err = services.record(string(input.TaskID), plyActor(actor), "the Task is created", records...)
+		}
 		if createFormat == "json" && result.Content != nil {
 			b, marshalErr := workspace.MarshalTaskContentMutation(*result.Content)
 			if marshalErr != nil {
@@ -100,6 +121,9 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 	create.Flags().StringVar(&epicID, "epic", "", "parent Epic ID")
 	create.Flags().StringVar(&projectID, "project", "", "registered Project ID")
 	create.Flags().StringVar(&repoID, "repo", "", "registered repository ID")
+	create.Flags().StringVar(&planID, "plan", "", "PLAN-<n> of the Project the Task belongs to, recorded in the Task journal")
+	create.Flags().StringVar(&planStep, "plan-step", "", "step ID of --plan the Task carries")
+	create.Flags().StringVar(&actor, "actor", "", "who creates, recorded in the Task journal (default: PLY_ACTOR)")
 	for _, name := range []string{"title", "description", "epic", "project", "repo"} {
 		_ = create.MarkFlagRequired(name)
 	}
