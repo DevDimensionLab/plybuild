@@ -405,3 +405,47 @@ func TestTaskIntegrateRetiresTheWorktree(t *testing.T) {
 		}
 	}
 }
+
+// Epic -> main retires the Epic worktree and branch and archives the Epic;
+// --keep-worktree keeps them.
+func TestEpicIntegrateRetiresTheEpic(t *testing.T) {
+	binary := os.Getenv("PLY_CANDIDATE_BINARY")
+	if binary == "" {
+		t.Skip("opt-in CLI fixture: set PLY_CANDIDATE_BINARY to the actual make-built candidate")
+	}
+	for _, keep := range []bool{false, true} {
+		f := newPlanCLI(t, binary)
+		repo := filepath.Join(f.root, "repo")
+		if e := os.Mkdir(repo, 0700); e != nil {
+			t.Fatal(e)
+		}
+		f.git(t, repo, "init", "-b", "main")
+		mustPlanWrite(t, filepath.Join(repo, "README.md"), "fixture\n", 0600)
+		f.git(t, repo, "add", "README.md")
+		f.git(t, repo, "commit", "-m", "fixture")
+		base := f.git(t, repo, "rev-parse", "HEAD")
+		epic := filepath.Join(f.root, "epic")
+		f.git(t, repo, "worktree", "add", "-b", "epic", epic, base)
+		f.success(t, f.root, "workspace", "init")
+		f.success(t, f.root, "workspace", "project", "add", "example", "--name", "Example", "--wrapper", f.root, "--repo", "code="+repo)
+		f.success(t, f.root, "workspace", "epic", "adopt", "work", "--title", "Work", "--project", "example", "--repo", "code", "--worktree", epic, "--ref", "refs/heads/epic", "--expected-oid", base)
+		mustPlanWrite(t, filepath.Join(epic, "epic.txt"), "epic\n", 0600)
+		f.git(t, epic, "add", "epic.txt")
+		f.git(t, epic, "commit", "-m", "epic work")
+		head := f.git(t, epic, "rev-parse", "HEAD")
+		args := []string{"workspace", "epic", "integrate", "work", "--repo", "code", "--target-ref", "refs/heads/main", "--expected-target-oid", base, "--expected-epic-oid", head, "--apply"}
+		if keep {
+			args = append(args, "--keep-worktree")
+		}
+		_, stderr, exit := f.run(t, f.root, map[string]string{"PLY_ACTOR": "planner-a"}, args...)
+		if exit != 0 || f.git(t, repo, "rev-parse", "refs/heads/main") != head {
+			t.Fatalf("keep=%v: integrate %d %s", keep, exit, stderr)
+		}
+		_, statErr := os.Stat(epic)
+		lifecycle := f.success(t, f.root, "workspace", "epic", "lifecycle", "show", "work")
+		archived := strings.Contains(lifecycle, "archived")
+		if gone := os.IsNotExist(statErr) && f.git(t, repo, "branch", "--list", "epic") == ""; gone == keep || archived == keep {
+			t.Fatalf("keep=%v: worktree gone %v, archived %v; stderr %s; lifecycle %s", keep, gone, archived, stderr, lifecycle)
+		}
+	}
+}

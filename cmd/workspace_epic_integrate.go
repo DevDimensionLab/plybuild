@@ -9,14 +9,21 @@ import (
 
 func newWorkspaceEpicIntegrateCommand(d workspace.Dependencies) *cobra.Command {
 	var actor string
-	c := newWorkspaceEpicIntegrateCommandWith(func(input workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
+	var keepWorktree bool
+	var c *cobra.Command
+	c = newWorkspaceEpicIntegrateCommandWith(func(input workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
 		result, err := workspace.IntegrateEpic(d, input)
 		if err == nil && result.Applied && result.Effect == "fast_forwarded" {
 			err = recordEpicIntegration(d, input, result, plyActor(actor))
+			if err == nil && !keepWorktree {
+				retireEpicAfterIntegration(c.ErrOrStderr(), d, input, plyActor(actor))
+			}
 		}
 		return result, err
 	})
+	c.Long += " After a fast-forward with --apply the Epic worktree and branch are retired and the Epic archived as with epic retire, unless --keep-worktree is given; when that cannot run, stderr gives the retire command."
 	c.Flags().StringVar(&actor, "actor", "", "who integrates, recorded in the journals of the Tasks it brings to the target (default: PLY_ACTOR)")
+	c.Flags().BoolVar(&keepWorktree, "keep-worktree", false, "keep the Epic worktree and branch after --apply instead of retiring them")
 	return c
 }
 
