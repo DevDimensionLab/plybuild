@@ -722,12 +722,12 @@ func (git *systemTaskIntegrationGit) ObserveParentReflog(path, ref string, limit
 	if out.Err != nil {
 		return nil, fmt.Errorf("observe parent reflog: %s", safeGitDetail(out))
 	}
-	fields := bytes.Split(out.Stdout, []byte{0})
+	// Each entry is three NUL-separated fields ended by NUL; an empty %gs is
+	// an empty third field.
 	values := []string{}
-	for _, f := range fields {
-		v := strings.TrimSpace(string(f))
-		if v != "" {
-			values = append(values, v)
+	if body := bytes.TrimSuffix(out.Stdout, []byte{0}); len(body) > 0 {
+		for _, f := range bytes.Split(body, []byte{0}) {
+			values = append(values, strings.TrimSpace(string(f)))
 		}
 	}
 	if len(values)%3 != 0 {
@@ -737,6 +737,13 @@ func (git *systemTaskIntegrationGit) ObserveParentReflog(path, ref string, limit
 	for i := 0; i < len(values); i += 3 {
 		if !validOIDText(values[i]) {
 			return nil, fmt.Errorf("malformed reflog object ID")
+		}
+		if values[i+1] == "" {
+			return nil, fmt.Errorf("malformed parent reflog")
+		}
+		if values[i+2] == "" {
+			// Ply records each observed action and requires it to be non-empty.
+			return nil, fmt.Errorf("parent reflog entry %s has an empty message, which Ply cannot record; to continue, a human may add two entries with git reflog write %s <oid> <oid> <message> in the parent worktree, where <oid> is the current parent commit", values[i+1], ref)
 		}
 		entries = append(entries, IntegrationReflogEntry{Ordinal: len(entries), OID: values[i], Selector: values[i+1], Action: values[i+2]})
 	}

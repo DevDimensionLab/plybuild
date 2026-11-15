@@ -171,3 +171,23 @@ func TestTaskIntegrationReflogObservationRejectsMissingOrMalformedHistory(t *tes
 		})
 	}
 }
+
+func TestTaskIntegrationReflogObservationNamesAnEmptyMessage(t *testing.T) {
+	oid := strings.Repeat("a", 40)
+	reply := func(out string) *systemTaskIntegrationGit {
+		return &systemTaskIntegrationGit{run: func(argv, env []string) GitCommandOutcome {
+			if containsExact(argv, "exists") {
+				return GitCommandOutcome{}
+			}
+			return GitCommandOutcome{Stdout: []byte(out)}
+		}}
+	}
+	entries, err := reply(oid+"\x00refs/heads/epic@{0}\x00commit: b\x00"+oid+"\x00refs/heads/epic@{1}\x00branch: Created from HEAD\x00").ObserveParentReflog("/repo", "refs/heads/epic", 2)
+	if err != nil || len(entries) != 2 || entries[1].Action != "branch: Created from HEAD" {
+		t.Fatalf("valid history: %#v %v", entries, err)
+	}
+	entries, err = reply(oid+"\x00refs/heads/epic@{0}\x00\x00"+oid+"\x00refs/heads/epic@{1}\x00commit: b\x00").ObserveParentReflog("/repo", "refs/heads/epic", 2)
+	if err == nil || entries != nil || strings.Contains(err.Error(), "malformed") || !strings.Contains(err.Error(), "refs/heads/epic@{0} has an empty message") || !strings.Contains(err.Error(), "git reflog write") {
+		t.Fatalf("empty message not named: %#v %v", entries, err)
+	}
+}
