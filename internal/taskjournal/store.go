@@ -246,7 +246,13 @@ func (s Service) AppendEvent(task string, in EventInput) (AppendResult, error) {
 	return s.appendInput(task, b, "event")
 }
 
+// attemptOperations are recorded once per attempt; every other operation is
+// recorded once per distinct action, so an identical retry adds nothing.
+var attemptOperations = map[string]bool{"goal_start_reserved": true, "goal_start_started": true, "goal_start_prompt_submitted": true}
+
 // AppendPly records an operation Ply performed for actor, at Ply's own time.
+// A plan link equal to the latest one, and a repeated identical operation,
+// return the earlier record instead of a new one.
 func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendResult, error) {
 	if _, e := workspace.ParseTaskID(task); e != nil {
 		return AppendResult{}, e
@@ -254,19 +260,50 @@ func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendR
 	if actor == "" {
 		actor = "unknown"
 	}
-	nonce := make([]byte, 8)
-	if _, e := rand.Read(nonce); e != nil {
-		return AppendResult{}, e
-	}
-	now := s.Now().UTC().Format(time.RFC3339Nano)
-	in := EventInput{Common: Common{Kind: "ply.workspace.task-journal-event-input", SchemaVersion: 1, PublicationKey: fmt.Sprintf("ply:%s:%x", action.Operation, nonce), TaskID: task,
-		Actor: Actor{ID: actor, Role: plyRole}, OccurredAt: &now, TimeBasis: TimeBasis{Kind: "observed", Clock: ptr("ply"), Precision: "nanosecond"}, Sources: []SourceRef{}},
-		Type: "ply_action", Title: title, Relations: []Relation{}, Ply: &action}
-	b, e := Canonical(in)
+	b, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
 	if e != nil {
 		return AppendResult{}, e
 	}
-	return s.appendInput(task, b, "event")
+	records, e := readStore(b.Workspace.Root, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
+	if e != nil {
+		return AppendResult{}, e
+	}
+	key := ""
+	switch {
+	case action.Operation == "plan_link":
+		var latest *stored
+		for i := range records {
+			if r := records[i]; r.Event != nil && r.Event.Ply != nil && r.Event.Ply.Operation == "plan_link" {
+				latest = &records[i]
+			}
+		}
+		if latest != nil && equal(latest.Event.Ply, action) {
+			return receipt(*latest, false), nil
+		}
+	case !attemptOperations[action.Operation]:
+		key = "ply:" + action.Operation + ":" + digest(action)[:32]
+		for _, r := range records {
+			if r.Common.PublicationKey == key {
+				return receipt(r, false), nil
+			}
+		}
+	}
+	if key == "" {
+		nonce := make([]byte, 8)
+		if _, e := rand.Read(nonce); e != nil {
+			return AppendResult{}, e
+		}
+		key = fmt.Sprintf("ply:%s:%x", action.Operation, nonce)
+	}
+	now := s.Now().UTC().Format(time.RFC3339Nano)
+	in := EventInput{Common: Common{Kind: "ply.workspace.task-journal-event-input", SchemaVersion: 1, PublicationKey: key, TaskID: task,
+		Actor: Actor{ID: actor, Role: plyRole}, OccurredAt: &now, TimeBasis: TimeBasis{Kind: "observed", Clock: ptr("ply"), Precision: "nanosecond"}, Sources: []SourceRef{}},
+		Type: "ply_action", Title: title, Relations: []Relation{}, Ply: &action}
+	raw, e := Canonical(in)
+	if e != nil {
+		return AppendResult{}, e
+	}
+	return s.appendInput(task, raw, "event")
 }
 
 // PlanLink returns the latest plan link Ply recorded for task, or nil.

@@ -594,3 +594,42 @@ func TestSourcesAreKeptByPly(t *testing.T) {
 		t.Fatalf("oversized source: %v", e)
 	}
 }
+
+// An identical retry of an operation records Ply's action once; a plan link
+// is recorded again only when it differs from the latest one.
+func TestPlyRecordsAreIdempotentForRetries(t *testing.T) {
+	f := fixture(t)
+	count := func() int {
+		snap, e := f.s.Show("task", Options{})
+		if e != nil {
+			t.Fatal(e)
+		}
+		n := 0
+		for _, ev := range snap.Events {
+			if ev.Type == "ply_action" {
+				n++
+			}
+		}
+		return n
+	}
+	register := PlyAction{Operation: "goal_register", Refs: map[string]string{"spec_id": "s", "spec_revision": "1"}}
+	for i := 0; i < 2; i++ {
+		if _, e := f.s.AppendPly("task", "a", "register", register); e != nil {
+			t.Fatal(e)
+		}
+	}
+	a, b := "PLAN-1", "PLAN-2"
+	for _, p := range []*string{&a, &a, &b, &a} {
+		if _, e := f.s.AppendPly("task", "a", "link", PlyAction{Operation: "plan_link", Plan: p}); e != nil {
+			t.Fatal(e)
+		}
+	}
+	for i := 0; i < 2; i++ {
+		if _, e := f.s.AppendPly("task", "a", "start", PlyAction{Operation: "goal_start_reserved"}); e != nil {
+			t.Fatal(e)
+		}
+	}
+	if got := count(); got != 1+3+2 {
+		t.Fatalf("ply records %d, want 6 (register once, links A, B, A, two start attempts)", got)
+	}
+}
