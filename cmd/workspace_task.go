@@ -217,7 +217,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 }
 
 func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Command {
-	var resultOID, parentOID, confirm, retry, format string
+	var resultOID, parentOID, confirm, retry, format, actor string
 	var check, apply, refresh bool
 	command := &cobra.Command{Use: "integrate <task-id>", Short: "Integrate a Task into its Epic parent", Long: "Check or apply one confirmed local fast-forward from the exact Task commit to its registered Epic parent. The same operation serves every Task, with or without a Goal; the human decides when to run it.", Example: "  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --check\n  ply workspace task integrate workspace-work-item-bootstrap --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df --apply --confirm sha256:<64hex>\n  ply workspace task integrate workspace-work-item-bootstrap --refresh-parent --expected-result-oid a55b192334cafcd8527895372205205fa43f3cc5 --expected-parent-oid 7d1e0c5b9f0a4c2e8b6d3f1a5c7e9b2d4f6a8c0e --check", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
@@ -243,6 +243,19 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			return err
 		}
 		out, err := services.integrate(input)
+		if err == nil && input.Apply && services.record != nil {
+			r := out.Readback
+			refs := map[string]string{"classification": r.Classification, "recovery": r.RecoveryStatus, "result_oid": r.ResultOID, "epic": string(r.EpicID), "parent_ref": r.ParentRef, "parent_oid": r.ParentOID}
+			if r.GitChanged != nil {
+				refs["git_changed"] = fmt.Sprint(*r.GitChanged)
+			}
+			for key, value := range refs {
+				if value == "" {
+					delete(refs, key)
+				}
+			}
+			err = services.record(string(input.TaskID), plyActor(actor), "the integration is applied", taskjournal.PlyAction{Operation: "integration", Refs: refs})
+		}
 		if err != nil && out.Readback.Value == nil {
 			return taskContentCommandError(cmd, format, err)
 		}
@@ -269,6 +282,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 	command.Flags().StringVar(&retry, "retry-after", "", "exact prior no-effect integration result ID")
 	command.Flags().BoolVar(&refresh, "refresh-parent", false, "integrer fra Epicens registrerte base oppgitt i --expected-parent-oid i stedet for Taskens opprinnelige basis")
 	command.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	command.Flags().StringVar(&actor, "actor", "", "who integrates, recorded in the Task journal (default: PLY_ACTOR)")
 	for _, n := range []string{"expected-result-oid", "expected-parent-oid"} {
 		_ = command.MarkFlagRequired(n)
 	}

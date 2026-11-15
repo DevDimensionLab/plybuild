@@ -130,3 +130,58 @@ func TestTaskCreateLinksPlanWithActorFromEnvironment(t *testing.T) {
 		t.Fatalf("operations %v", got)
 	}
 }
+
+func TestGoalStartRecordsReservationAndReachedState(t *testing.T) {
+	f, oid := recordingFixture(t)
+	registerGoal(t, f, "started", "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "planner-a")
+	f.success(t, f.root, "workspace", "task", "worktree", "create", "started", "--branch", "started", "--path", filepath.Join(f.root, "started"), "--expected-parent-oid", oid)
+	herdr, _ := fakeHerdrBinary(t)
+	env := map[string]string{"HERDR_ENV": "1", "PLY_ACTOR": "planner-a", "PATH": filepath.Dir(herdr.Path) + string(os.PathListSeparator) + os.Getenv("PATH")}
+	if _, stderr, exit := f.run(t, f.root, env, "workflow", "goal-start", "started", "--spec", "started-v1", "--revision", "1", "--herdr-workspace", "w1", "--apply"); exit != 0 {
+		t.Fatalf("goal-start: %d %s", exit, stderr)
+	}
+	if got := operationsOf(t, plyActions(t, f, "started"), "planner-a"); strings.Join(got, ",") != "goal_register,goal_start_prompt_submitted,goal_start_reserved,plan_link" {
+		t.Fatalf("operations %v", got)
+	}
+}
+
+// integrateTask commits one change in the Task worktree and integrates it
+// into the Epic; it returns the integrated commit.
+func integrateTask(t *testing.T, f planCLIFixture, task, parent string, env map[string]string) string {
+	t.Helper()
+	worktree := filepath.Join(f.root, task)
+	mustPlanWrite(t, filepath.Join(worktree, task+".txt"), task+"\n", 0600)
+	f.git(t, worktree, "add", task+".txt")
+	f.git(t, worktree, "commit", "-m", task)
+	candidate := f.git(t, worktree, "rev-parse", "HEAD")
+	integrate := []string{"workspace", "task", "integrate", task, "--expected-result-oid", candidate, "--expected-parent-oid", parent, "--format", "json"}
+	var check struct {
+		Plan struct {
+			SHA256 string `json:"sha256"`
+		} `json:"plan"`
+	}
+	if e := json.Unmarshal([]byte(f.success(t, f.root, append(integrate, "--check")...)), &check); e != nil {
+		t.Fatal(e)
+	}
+	if _, stderr, exit := f.run(t, f.root, env, append(integrate, "--apply", "--confirm", check.Plan.SHA256)...); exit != 0 {
+		t.Fatalf("integrate: %d %s", exit, stderr)
+	}
+	return candidate
+}
+
+func TestTaskIntegrateRecordsActorAndResult(t *testing.T) {
+	f, oid := recordingFixture(t)
+	registerGoal(t, f, "merged", "--plan", "PLAN-1", "--actor", "planner-a")
+	f.success(t, f.root, "workspace", "task", "worktree", "create", "merged", "--branch", "merged", "--path", filepath.Join(f.root, "merged"), "--expected-parent-oid", oid)
+	candidate := integrateTask(t, f, "merged", oid, map[string]string{"PLY_ACTOR": "planner-a"})
+	var integration *taskjournal.EventInput
+	for _, ev := range plyActions(t, f, "merged") {
+		var in taskjournal.EventInput
+		if e := json.Unmarshal(ev.Data, &in); e == nil && in.Ply != nil && in.Ply.Operation == "integration" {
+			integration = &in
+		}
+	}
+	if integration == nil || integration.Actor.ID != "planner-a" || integration.Ply.Refs["result_oid"] != candidate || integration.Ply.Refs["epic"] != "work" {
+		t.Fatalf("integration record %+v", integration)
+	}
+}

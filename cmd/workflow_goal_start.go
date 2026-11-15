@@ -3,12 +3,14 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
+	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -101,7 +103,7 @@ func checkGoalGit(wt *workspace.TaskWorktreeBinding) error {
 }
 
 func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
-	var spec, herdrWorkspace string
+	var spec, herdrWorkspace, actor string
 	var revision int
 	var apply, resume bool
 	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent), with inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
@@ -163,17 +165,32 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if resume {
 			run = resumeGoal
 		}
+		goalRefs := map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "provider": provider, "resume": fmt.Sprint(resume)}
+		if e = recordPly(d, args[0], plyActor(actor), "nothing was started", taskjournal.PlyAction{Operation: "goal_start_reserved", Refs: goalRefs}); e != nil {
+			return e
+		}
 		out, e := run(c.Context(), plan, workspace.GoalStartReceiptPath(task.Workspace, workspace.TaskID(args[0])), herdr, func() error { return checkGoalGit(wt) })
+		reached := taskjournal.PlyAction{Operation: "goal_start_started", Refs: map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "reached": out.Reached}}
+		if out.Reached == "prompt_submitted" {
+			reached.Operation = "goal_start_prompt_submitted"
+		}
+		for key, value := range map[string]string{"pending": out.Pending, "pane": out.Pane, "session": out.Session} {
+			if value != "" {
+				reached.Refs[key] = value
+			}
+		}
+		recordErr := recordPly(d, args[0], plyActor(actor), "the start is in its receipt", reached)
 		if writeErr := json.NewEncoder(c.OutOrStdout()).Encode(out); writeErr != nil {
 			return writeErr
 		}
-		return e
+		return errors.Join(e, recordErr)
 	}}
 	c.Flags().StringVar(&spec, "spec", "", "registered Goal Spec ID")
 	c.Flags().IntVar(&revision, "revision", 0, "registered Goal revision")
 	c.Flags().StringVar(&herdrWorkspace, "herdr-workspace", "", "explicit Herdr workspace")
 	c.Flags().BoolVar(&apply, "apply", false, "start the explicit Goal once")
 	c.Flags().BoolVar(&resume, "resume", false, "with --apply, continue a start stopped before its prompt in the same agent")
+	c.Flags().StringVar(&actor, "actor", "", "who starts, recorded in the Task journal (default: PLY_ACTOR)")
 	return c
 }
 
