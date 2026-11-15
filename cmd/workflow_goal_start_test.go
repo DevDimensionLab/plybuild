@@ -207,6 +207,7 @@ case "$1 $2" in
 "tab create")
   p=; for a in "$@"; do [ "$p" = --cwd ] && echo "$a" > $state/cwd; p=$a; done
   echo '{"result":{"root_pane":{"pane_id":"w1:p2","tab_id":"w1:t2","terminal_id":"term-2","workspace_id":"w1"}}}';;
+"pane process-info") echo '{"result":{"process_info":{"pane_id":"w1:p2","shell_pid":40,"foreground_process_group_id":40,"foreground_processes":[{"pid":40}]}}}';;
 "agent start") echo "$3" > $state/name; echo "$5" > $state/kind; [ -f $state/fail-start ] && exit 1; echo '{"result":{"ok":true}}';;
 "agent get")
   n=$(cat $state/name); k=$(cat $state/kind); c=$(cat $state/cwd)
@@ -235,7 +236,7 @@ func TestGoalStartStartsEitherProviderOnceThroughSharedOwner(t *testing.T) {
 			}
 			raw, _ := os.ReadFile(log)
 			lines := strings.Split(strings.TrimSpace(string(raw)), "\n")
-			if len(lines) < 4 || !strings.HasPrefix(lines[0], "tab create") || !strings.Contains(lines[1], "--kind "+provider+" --pane w1:p2") || strings.Contains(lines[1], " -- ") || lines[2] != "agent get w1:p2" || !strings.HasPrefix(lines[3], "agent prompt w1:p2 ") || strings.Count(string(raw), "agent prompt") != 1 {
+			if len(lines) < 5 || !strings.HasPrefix(lines[0], "tab create") || lines[1] != "pane process-info --pane w1:p2" || !strings.Contains(lines[2], "--kind "+provider+" --pane w1:p2") || strings.Contains(lines[2], " -- ") || lines[3] != "agent get w1:p2" || !strings.HasPrefix(lines[4], "agent prompt w1:p2 ") || strings.Count(string(raw), "agent prompt") != 1 {
 				t.Fatalf("argv: %q", lines)
 			}
 			if _, err = startGoal(context.Background(), plan, receipt, herdr, func() error { return nil }); err != nil {

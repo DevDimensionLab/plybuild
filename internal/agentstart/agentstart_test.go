@@ -43,6 +43,12 @@ type fakeHerdr struct {
 	trustCwd   string
 	screen     string
 	stuckTrust bool
+	// shellBusy is the number of process-info reads that show a job beside
+	// the new pane's shell; shellNever keeps it busy. busyStarts is the
+	// number of agent starts Herdr refuses as agent_pane_busy.
+	shellBusy  int
+	shellNever bool
+	busyStarts int
 	// update is the selected option ("1", "2" or "3") of a shown Codex update
 	// dialog; empty when no dialog is shown.
 	update string
@@ -92,11 +98,23 @@ func (f *fakeHerdr) call(_ context.Context, _ HerdrBinary, args []string) (json.
 		}
 		return json.RawMessage(`{"root_pane":{"pane_id":"w1:p2","tab_id":"w1:t2","terminal_id":"term-2","workspace_id":"w1"}}`), nil
 	case StageAgentStart:
+		if f.busyStarts > 0 {
+			f.busyStarts--
+			return nil, &herdrRefusal{code: "agent_pane_busy", err: errors.New("herdr agent start: exit status 1 (herdr error agent_pane_busy)")}
+		}
 		f.name = args[2]
 		f.kind = args[4]
 		if f.startFails {
 			return nil, errors.New("herdr agent start: exit status 1")
 		}
+	}
+	if args[0] == "pane" && args[1] == "process-info" {
+		processes := `[{"pid":40,"name":"zsh"}]`
+		if f.shellNever || f.shellBusy > 0 {
+			f.shellBusy--
+			processes = `[{"pid":41,"name":"brew"},{"pid":40,"name":"zsh"}]`
+		}
+		return json.RawMessage(`{"process_info":{"pane_id":"` + args[3] + `","shell_pid":40,"foreground_process_group_id":40,"foreground_processes":` + processes + `}}`), nil
 	}
 	if args[0] == "agent" && args[1] == "get" {
 		cwd := ""
@@ -296,6 +314,7 @@ func TestAgentStartArgvPerProviderKeepsDefaults(t *testing.T) {
 			}
 			want := [][]string{
 				{"tab", "create", "--workspace", "w1", "--cwd", in.Cwd, "--label", "fixture", "--no-focus"},
+				{"pane", "process-info", "--pane", "w1:p2"},
 				c.start,
 				{"agent", "get", "w1:p2"},
 				{"agent", "prompt", "w1:p2", "do the bounded work", "--wait", "--until", "working", "--timeout", "10000"},
@@ -464,7 +483,7 @@ func TestAgentStartRecordsPendingBeforeEveryMutatingCallAndPreconditionBeforeEac
 	if _, err := run(in, f, nil); err != nil {
 		t.Fatal(err)
 	}
-	want := "pre tab_create pre agent_start agent get pre prompt"
+	want := "pre tab_create pane process-info pre agent_start agent get pre prompt"
 	if got := strings.Join(log, " "); got != want {
 		t.Fatalf("order\n got %s\nwant %s", got, want)
 	}
@@ -484,7 +503,7 @@ func TestAgentStartPromptsSettledCodexWithoutNativeSession(t *testing.T) {
 	if err != nil || r.Reached != ReachedPromptSubmitted || r.Pending != "" || r.Failure != nil || r.Session != "" {
 		t.Fatalf("%+v %v", r, err)
 	}
-	if got, want := strings.Join(log, " "), "tab_create agent_start agent get prompt"; got != want {
+	if got, want := strings.Join(log, " "), "tab_create pane process-info agent_start agent get prompt"; got != want {
 		t.Fatalf("order\n got %s\nwant %s", got, want)
 	}
 	if f.count("agent", "prompt") != 1 || f.count("agent", "prompt", "w1:p2", "do the bounded work") != 1 {
@@ -692,8 +711,8 @@ func TestAgentStartPreconditionFailureAfterPartialEffectIsKnownPerStep(t *testin
 		calls   int
 	}{
 		{1, StageTabCreate, ReachedReserved, 0},
-		{2, StageAgentStart, ReachedTabCreated, 1},
-		{3, StagePrompt, ReachedSessionBound, 3},
+		{2, StageAgentStart, ReachedTabCreated, 2},
+		{3, StagePrompt, ReachedSessionBound, 4},
 	}
 	for _, c := range cases {
 		t.Run(c.stage, func(t *testing.T) {
@@ -1691,6 +1710,74 @@ func TestAgentStartLeavesUnrecognizedCodexUpdateToTheHuman(t *testing.T) {
 			}
 			if keys := f.keys(); len(keys) != 0 {
 				t.Fatalf("keys sent to an unrecognized screen: %q", keys)
+			}
+		})
+	}
+}
+
+func (f *fakeHerdr) order() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var got []string
+	for _, c := range f.calls {
+		if c[0] == "pane" && c[1] == "process-info" || stageOf(c) == StageAgentStart {
+			got = append(got, c[0]+" "+c[1])
+		}
+	}
+	return got
+}
+
+func TestAgentStartWaitsForTheNewShellBeforeAgentStart(t *testing.T) {
+	in := testInput(t)
+	f := newFake(t, in)
+	f.shellBusy = 2
+	r, err := run(in, f, nil)
+	if err != nil || r.Reached != ReachedPromptSubmitted {
+		t.Fatalf("%+v %v", r, err)
+	}
+	want := "[pane process-info pane process-info pane process-info agent start]"
+	if got := fmt.Sprint(f.order()); got != want {
+		t.Fatalf("agent start before the shell was alone: %s", got)
+	}
+}
+
+func TestAgentStartRetriesOnlyTheKnownBusyRefusal(t *testing.T) {
+	in := testInput(t)
+	f := newFake(t, in)
+	f.busyStarts = 1
+	r, err := run(in, f, nil)
+	if err != nil || r.Reached != ReachedPromptSubmitted || f.count("agent", "start") != 2 || f.count("agent", "prompt") != 1 {
+		t.Fatalf("busy refusal not retried once: %+v %v %q", r, err, f.calls)
+	}
+}
+
+func TestAgentStartBusyShellStopsWithKnownNoStartAndResumeStarts(t *testing.T) {
+	for name, busy := range map[string]func(f *fakeHerdr){
+		"shell never alone":   func(f *fakeHerdr) { f.shellNever = true },
+		"refused until limit": func(f *fakeHerdr) { f.busyStarts = 1000 },
+	} {
+		t.Run(name, func(t *testing.T) {
+			in := testInput(t)
+			in.Provider = ProviderClaude
+			f := newFake(t, in)
+			busy(f)
+			r, err := run(in, f, nil)
+			wantCode(t, err, ClassNotReady)
+			if r.Reached != ReachedTabCreated || r.Pending != "" || r.Failure == nil || r.Failure.Stage != StageAgentStart || r.Failure.EffectUnknown || r.EffectUnknown() {
+				t.Fatalf("not a known stop before agent start: %+v", r)
+			}
+			saved, err := ReadReceipt(in.ReceiptPath)
+			if err != nil || !reflect.DeepEqual(saved, r) {
+				t.Fatalf("not durable: %+v %v", saved, err)
+			}
+			f.shellNever, f.busyStarts = false, 0
+			started := f.count("agent", "start")
+			r, err = resume(in, f)
+			if err != nil || r.Reached != ReachedPromptSubmitted || r.Tab != "w1:t2" || f.count("tab", "create") != 1 {
+				t.Fatalf("resume did not start the agent in the same tab: %+v %v", r, err)
+			}
+			if f.count("agent", "start") != started+1 || f.count("agent", "prompt") != 1 {
+				t.Fatalf("want one more agent start and one prompt: %q", f.calls)
 			}
 		})
 	}

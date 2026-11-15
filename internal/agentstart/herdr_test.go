@@ -30,6 +30,13 @@ func TestAgentStartHerdrClientKeepsStructuredErrorFromStderr(t *testing.T) {
 	if !errors.As(err, &exit) || exit.ExitCode() != 1 {
 		t.Fatalf("exit status lost: %v", err)
 	}
+	if herdrCode(err) != "agent_pane_busy" {
+		t.Fatalf("structured code not kept: %v", err)
+	}
+	_, err = callHerdr(context.Background(), executable(t, herdrFailing("stderr", "secret raw text", 1)), []string{"agent", "start"})
+	if err == nil || herdrCode(err) != "" {
+		t.Fatalf("unstructured reply got a code: %v", err)
+	}
 }
 
 func TestAgentStartHerdrClientKeepsStructuredErrorFromStdoutEnvelope(t *testing.T) {

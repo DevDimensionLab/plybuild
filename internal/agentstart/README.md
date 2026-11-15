@@ -103,13 +103,22 @@ makes no Herdr call and no `Precondition` call:
 | `reserved` without marker, failure or pending | `incomplete_reservation` |
 | anything else | `already_reserved`, receipt shows `Pending`/`Failure` |
 
-`StartAgent` never retries or sends a second prompt. A reservation is never
+Before `agent start`, the package waits until the created pane's shell is
+alone in its own foreground process group (`pane process-info`), which Herdr
+requires. Herdr's `agent_pane_busy` refusal sends nothing, so the package
+waits and tries again within the same deadline. When the deadline passes,
+the receipt stops at `agent_start` with `not_ready` and a known effect: no
+agent was started.
+
+`StartAgent` never retries any other call or sends a second prompt. A reservation is never
 deleted by this package. Continuing after a partial start is a human decision
 that starts from inspecting the Herdr agent named after `Key`; when the start
 stopped before its prompt (for example Claude waiting on an unrecognized dialog), the
 caller may then call `ResumeAgent` with the same input.
 
-`ResumeAgent` never calls `tab create` or `agent start`. It holds an exclusive
+`ResumeAgent` never calls `tab create`. It calls `agent start` only for a
+receipt that stopped at `agent_start` with a known effect, that is before any
+agent was started. It holds an exclusive
 lock on `ReceiptPath + ".lock"` for the whole call and decides on the receipt
 read under that lock, so a waiting call sees the previous call's result:
 

@@ -284,9 +284,17 @@ func continueStart(ctx context.Context, in StartInput, o ops) (_ Receipt, err er
 	}
 	s := &session{ctx: ctx, in: in, o: o, r: stored, observing: true}
 	if s.r.Reached == ReachedTabCreated {
-		s.r.Reached = ReachedAgentStarted
+		if s.r.Pending == "" && s.r.Failure.Stage == StageAgentStart && !s.r.Failure.EffectUnknown {
+			// The stop came before any agent start, so start it now.
+			err = s.startAgent()
+		} else {
+			s.r.Reached = ReachedAgentStarted
+		}
 	}
-	if err = s.awaitReady(); err == nil {
+	if err == nil {
+		err = s.awaitReady()
+	}
+	if err == nil {
 		err = s.prompt()
 	}
 	if err != nil && s.observing {
@@ -419,21 +427,89 @@ func (s *session) drive() error {
 	if err = s.commit(StageTabCreate); err != nil {
 		return err
 	}
-	if _, err = s.effect(StageAgentStart, ClassAgentResponse, startArgs(s.in, s.r.Pane)); err != nil {
-		var coded *Error
-		if !errors.As(err, &coded) || coded.Code != ClassAgentResponse || !s.blockedOnDialog() {
-			return err
-		}
-		s.r.Failure = nil
-	}
-	s.r.Reached = ReachedAgentStarted
-	if err = s.commit(StageAgentStart); err != nil {
+	if err = s.startAgent(); err != nil {
 		return err
 	}
 	if err = s.awaitReady(); err != nil {
 		return err
 	}
 	return s.prompt()
+}
+
+// startAgent starts the agent in the created tab once its shell is alone in
+// the foreground. Herdr's agent_pane_busy refusal sends nothing, so it waits
+// and tries again; giving up then is a known stop before any agent start.
+func (s *session) startAgent() error {
+	deadline := time.Now().Add(s.o.awaitTimeout)
+	for {
+		if err := s.awaitShell(deadline); err != nil {
+			return err
+		}
+		_, err := s.effect(StageAgentStart, ClassAgentResponse, startArgs(s.in, s.r.Pane))
+		if err == nil {
+			break
+		}
+		if herdrCode(err) == "agent_pane_busy" {
+			s.r.Pending, s.r.Failure = "", nil
+			if err = s.pauseUntil(deadline, err); err != nil {
+				return err
+			}
+			continue
+		}
+		var coded *Error
+		if !errors.As(err, &coded) || coded.Code != ClassAgentResponse || !s.blockedOnDialog() {
+			return err
+		}
+		s.r.Failure = nil
+		break
+	}
+	s.r.Reached = ReachedAgentStarted
+	return s.commit(StageAgentStart)
+}
+
+// awaitShell waits until the shell of the created pane is alone in its own
+// foreground process group, which Herdr requires for agent start.
+func (s *session) awaitShell(deadline time.Time) error {
+	for {
+		raw, err := s.o.call(s.ctx, s.in.Herdr, []string{"pane", "process-info", "--pane", s.r.Pane})
+		if err != nil {
+			return s.fail(StageAgentStart, ClassAgentResponse, false, err)
+		}
+		var got struct {
+			Info struct {
+				PaneID     string `json:"pane_id"`
+				ShellPID   int    `json:"shell_pid"`
+				Group      int    `json:"foreground_process_group_id"`
+				Foreground []struct {
+					PID int `json:"pid"`
+				} `json:"foreground_processes"`
+			} `json:"process_info"`
+		}
+		if err = json.Unmarshal(raw, &got); err != nil || got.Info.PaneID != s.r.Pane {
+			return s.fail(StageAgentStart, ClassAgentResponse, false, errors.New("pane process-info returned an unreadable or different pane"))
+		}
+		info := got.Info
+		if info.ShellPID > 0 && info.Group == info.ShellPID && len(info.Foreground) == 1 && info.Foreground[0].PID == info.ShellPID {
+			return nil
+		}
+		if err = s.pauseUntil(deadline, errors.New("the shell in the created pane was not ready for agent start")); err != nil {
+			return err
+		}
+	}
+}
+
+// pauseUntil waits before the next agent start attempt, or stops with a known
+// stop before any agent start when the deadline has passed.
+func (s *session) pauseUntil(deadline time.Time, cause error) error {
+	if !time.Now().Before(deadline) {
+		return s.fail(StageAgentStart, ClassNotReady, false, cause)
+	}
+	select {
+	case <-s.ctx.Done():
+		return s.fail(StageAgentStart, ClassNotReady, false, s.ctx.Err())
+	case <-time.After(s.o.pause):
+		return nil
+	}
 }
 
 func (s *session) prompt() error {

@@ -84,7 +84,7 @@ func callHerdr(ctx context.Context, h HerdrBinary, args []string) (json.RawMessa
 		return nil, fmt.Errorf("herdr %s %s: invalid response", args[0], subcommand(args))
 	}
 	if hasValue(envelope.Error) || !hasValue(envelope.Result) {
-		return nil, fmt.Errorf("herdr %s %s: unsuccessful response%s", args[0], subcommand(args), herdrErrorDetail(out, args))
+		return nil, refusal(out, fmt.Errorf("herdr %s %s: unsuccessful response%s", args[0], subcommand(args), herdrErrorDetail(out, args)))
 	}
 	return envelope.Result, nil
 }
@@ -108,11 +108,10 @@ func runHerdr(ctx context.Context, h HerdrBinary, args []string) ([]byte, error)
 	var stdout, stderr limitedOutput
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr
 	if err = cmd.Run(); err != nil {
-		var detail string
-		if ctx.Err() == nil && !stderr.overflow {
-			detail = herdrErrorDetail(stderr.data, args)
+		if ctx.Err() != nil || stderr.overflow {
+			return nil, fmt.Errorf("herdr %s %s: %w", args[0], subcommand(args), err)
 		}
-		return nil, fmt.Errorf("herdr %s %s: %w%s", args[0], subcommand(args), err, detail)
+		return nil, refusal(stderr.data, fmt.Errorf("herdr %s %s: %w%s", args[0], subcommand(args), err, herdrErrorDetail(stderr.data, args)))
 	}
 	if stdout.overflow || stderr.overflow {
 		return nil, fmt.Errorf("herdr %s %s: output limit exceeded", args[0], subcommand(args))
@@ -120,11 +119,34 @@ func runHerdr(ctx context.Context, h HerdrBinary, args []string) ([]byte, error)
 	return stdout.data, nil
 }
 
-// herdrErrorDetail renders the code and message of a Herdr JSON error reply as
-// " (herdr error code: message)", or "" when the reply is not exactly such an
-// object. The message is bounded and withheld for calls carrying a sensitive
-// payload; no other output text is kept.
-func herdrErrorDetail(output []byte, args []string) string {
+// herdrRefusal is a failed Herdr call whose reply is exactly a Herdr JSON
+// error with a well-formed code.
+type herdrRefusal struct {
+	code string
+	err  error
+}
+
+func (e *herdrRefusal) Error() string { return e.err.Error() }
+func (e *herdrRefusal) Unwrap() error { return e.err }
+
+// refusal wraps err with the code of the Herdr JSON error in output, if any.
+func refusal(output []byte, err error) error {
+	if code, _, ok := herdrErrorReply(output); ok {
+		return &herdrRefusal{code: code, err: err}
+	}
+	return err
+}
+
+// herdrCode returns the Herdr error code carried by err, or "".
+func herdrCode(err error) string {
+	var refused *herdrRefusal
+	if errors.As(err, &refused) {
+		return refused.code
+	}
+	return ""
+}
+
+func herdrErrorReply(output []byte) (code, message string, ok bool) {
 	var reply struct {
 		Error *struct {
 			Code    string `json:"code"`
@@ -132,16 +154,27 @@ func herdrErrorDetail(output []byte, args []string) string {
 		} `json:"error"`
 	}
 	if json.Unmarshal(output, &reply) != nil || reply.Error == nil || !herdrErrorCode.MatchString(reply.Error.Code) {
+		return "", "", false
+	}
+	return reply.Error.Code, reply.Error.Message, true
+}
+
+// herdrErrorDetail renders the code and message of a Herdr JSON error reply as
+// " (herdr error code: message)", or "" when the reply is not exactly such an
+// object. The message is bounded and withheld for calls carrying a sensitive
+// payload; no other output text is kept.
+func herdrErrorDetail(output []byte, args []string) string {
+	code, message, ok := herdrErrorReply(output)
+	if !ok {
 		return ""
 	}
-	message := reply.Error.Message
 	if withholdsMessage(args) {
 		message = "message withheld"
 	}
 	if message = boundedMessage(message); message == "" {
-		return " (herdr error " + reply.Error.Code + ")"
+		return " (herdr error " + code + ")"
 	}
-	return " (herdr error " + reply.Error.Code + ": " + message + ")"
+	return " (herdr error " + code + ": " + message + ")"
 }
 
 // withholdsMessage reports whether the call carries a payload that a Herdr
