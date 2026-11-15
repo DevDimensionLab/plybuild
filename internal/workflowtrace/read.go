@@ -202,7 +202,7 @@ func (b *builder) goalStart(path string) {
 		Recorder: "goal-start receipt", EvidenceClass: "controlled", Outcome: ptr(receipt.Reached),
 		TimeBasis: taskjournal.TimeBasis{Kind: "unknown", Precision: "unknown"}, SourceIDs: []string{source},
 		Data: raw(map[string]any{"provider": receipt.Provider, "reached": receipt.Reached, "pending": receipt.Pending, "tab": receipt.Tab,
-			"pane": receipt.Pane, "terminal": receipt.Terminal, "session": receipt.Session, "folder_trust_accepted": receipt.FolderTrustAccepted, "failure": receipt.Failure, "effect_unknown": receipt.EffectUnknown()})})
+			"pane": receipt.Pane, "terminal": receipt.Terminal, "session": receipt.Session, "folder_trust_accepted": receipt.FolderTrustAccepted, "codex_update_skipped": receipt.CodexUpdateSkipped, "failure": receipt.Failure, "effect_unknown": receipt.EffectUnknown()})})
 }
 
 func (b *builder) recheckSources() {

@@ -45,13 +45,19 @@ provider configuration.
 | `Permission` | `--permission-mode` | `-c default_permissions="…"` |
 | `CodexProfile` | rejected | `--profile` |
 
-No trust or approval flag is ever sent. Claude's folder trust dialog is
-answered in the pane instead: when Claude is blocked and the end of `pane read`
-is exactly that dialog for `Cwd`, the package selects "Yes, I trust this folder"
-once (`down` when "No, exit" is selected, then `enter`), records
-`FolderTrustAccepted` and continues. A failed `agent start` that shows this
-dialog is not a stop. Any other blocked screen is left to the human. Claude
-itself stores the trust. Both providers inherit the tab cwd;
+No trust or approval flag is ever sent. Two startup dialogs are answered in
+the pane instead, once each, when the agent is blocked and the end of
+`pane read` is exactly that dialog (`down` when the option above is selected,
+then `enter`):
+
+| Provider | Dialog | Choice | Receipt |
+|---|---|---|---|
+| Claude | folder trust for `Cwd` | Yes, I trust this folder | `FolderTrustAccepted` |
+| Codex | update available | Skip | `CodexUpdateSkipped` |
+
+A failed `agent start` that shows such a dialog is not a stop. Any other
+blocked screen is left to the human. Claude itself stores the trust; Skip
+changes neither the installed Codex nor its settings. Both providers inherit the tab cwd;
 `-C` is not sent. `Env` entries become `--env KEY=VALUE` on tab create; nothing
 is added implicitly. The receipt states what was requested, not an observed
 model, profile or sandbox.

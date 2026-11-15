@@ -43,6 +43,9 @@ type fakeHerdr struct {
 	trustCwd   string
 	screen     string
 	stuckTrust bool
+	// update is the selected option ("1", "2" or "3") of a shown Codex update
+	// dialog; empty when no dialog is shown.
+	update string
 }
 
 func newFake(t *testing.T, in StartInput) *fakeHerdr {
@@ -107,7 +110,7 @@ func (f *fakeHerdr) call(_ context.Context, _ HerdrBinary, args []string) (json.
 		if f.working {
 			a["agent_status"] = "working"
 		}
-		if f.trust != "" {
+		if f.trust != "" || f.update != "" {
 			a["agent_status"], a["launch_pending"] = "blocked", true
 			delete(a, "agent_session")
 			delete(a, "interactive_ready")
@@ -133,6 +136,19 @@ func trustScreen(cwd, selected string) string {
 		"", " Claude Code'll be able to read, edit, and execute files here.", "", " Security guide", "", no, yes, "", " Enter to confirm · Esc to cancel", "", ""}, "\n")
 }
 
+func updateScreen(selected string) string {
+	options := []string{"1. Update now (runs `brew upgrade --cask codex`)", "2. Skip", "3. Skip until next version"}
+	for i, option := range options {
+		if option[:1] == selected {
+			options[i] = "› " + option
+		} else {
+			options[i] = "  " + option
+		}
+	}
+	return strings.Join(append([]string{"", "  ✨ Update available · 0.164.0 → 0.168.0", "  Release notes: https://github.com/openai/codex/releases/latest", ""},
+		append(options, "", "  enter continue · esc skip", "")...), "\n")
+}
+
 // text serves pane read and pane send-keys, which reply with plain text.
 func (f *fakeHerdr) text(_ context.Context, _ HerdrBinary, args []string) (string, error) {
 	f.mu.Lock()
@@ -142,6 +158,13 @@ func (f *fakeHerdr) text(_ context.Context, _ HerdrBinary, args []string) (strin
 	case args[0] == "pane" && args[1] == "read":
 		if f.screen != "" {
 			return f.screen, nil
+		}
+		if f.update != "" {
+			// Codex draws on the alternate screen, which only visible shows.
+			if args[4] != "visible" {
+				return "", nil
+			}
+			return updateScreen(f.update), nil
 		}
 		if f.trust == "" {
 			return "ordinary output\n", nil
@@ -157,6 +180,10 @@ func (f *fakeHerdr) text(_ context.Context, _ HerdrBinary, args []string) (strin
 			f.trust = "yes"
 		case args[3] == "enter" && f.trust == "yes":
 			f.trust = ""
+		case args[3] == "down" && f.update == "1":
+			f.update = "2"
+		case args[3] == "enter" && f.update == "2":
+			f.update = ""
 		}
 		return "", nil
 	}
@@ -1607,5 +1634,64 @@ func TestAgentStartStopsWhenTrustSelectionDoesNotMoveToYes(t *testing.T) {
 	}
 	if got := f.keys(); fmt.Sprint(got) != "[w1:p2 down]" {
 		t.Fatalf("want one down and no enter, got %q", got)
+	}
+}
+
+func codexAtUpdate(t *testing.T) (StartInput, *fakeHerdr) {
+	in := testInput(t)
+	f := newFake(t, in)
+	f.startFails, f.update = true, "1"
+	return in, f
+}
+
+func TestAgentStartSkipsCodexUpdateAndPromptsOnce(t *testing.T) {
+	in, f := codexAtUpdate(t)
+	r, err := run(in, f, nil)
+	if err != nil || r.Reached != ReachedPromptSubmitted || r.Failure != nil || !r.CodexUpdateSkipped || r.FolderTrustAccepted {
+		t.Fatalf("start did not pass the Codex update dialog: %+v %v", r, err)
+	}
+	if got := f.keys(); fmt.Sprint(got) != "[w1:p2 down w1:p2 enter]" {
+		t.Fatalf("want down then enter to the reserved pane, got %q", got)
+	}
+	if f.count("agent", "start") != 1 || f.count("agent", "prompt") != 1 {
+		t.Fatalf("start or prompt repeated: %q", f.calls)
+	}
+}
+
+func TestAgentResumeSkipsCodexUpdateLeftByEarlierStart(t *testing.T) {
+	in, f := codexAtUpdate(t)
+	f.update = ""
+	stoppedAtTrust(t, in, f)
+	f.update = "2"
+	r, err := resume(in, f)
+	if err != nil || r.Reached != ReachedPromptSubmitted || !r.CodexUpdateSkipped {
+		t.Fatalf("resume did not pass the Codex update dialog: %+v %v", r, err)
+	}
+	if got := f.keys(); fmt.Sprint(got) != "[w1:p2 enter]" {
+		t.Fatalf("want only enter when Skip is selected, got %q", got)
+	}
+}
+
+func TestAgentStartLeavesUnrecognizedCodexUpdateToTheHuman(t *testing.T) {
+	cases := map[string]func(in *StartInput, f *fakeHerdr){
+		"skip until next": func(_ *StartInput, f *fakeHerdr) { f.update = "3" },
+		"changed text": func(_ *StartInput, f *fakeHerdr) {
+			f.screen = strings.Replace(updateScreen("1"), "2. Skip", "2. Skip once", 1)
+		},
+		"claude": func(in *StartInput, _ *fakeHerdr) { in.Provider = ProviderClaude },
+	}
+	for name, change := range cases {
+		t.Run(name, func(t *testing.T) {
+			in, f := codexAtUpdate(t)
+			change(&in, f)
+			r, err := run(in, f, nil)
+			wantCode(t, err, ClassAgentResponse)
+			if r.Failure == nil || r.Failure.Stage != StageAgentStart || r.CodexUpdateSkipped {
+				t.Fatalf("unrecognized dialog changed the stop: %+v", r)
+			}
+			if keys := f.keys(); len(keys) != 0 {
+				t.Fatalf("keys sent to an unrecognized screen: %q", keys)
+			}
+		})
 	}
 }

@@ -94,7 +94,9 @@ type Receipt struct {
 	// FolderTrustAccepted records that Ply answered Yes in Claude's folder
 	// trust dialog for the requested cwd.
 	FolderTrustAccepted bool `json:"folder_trust_accepted,omitempty"`
-	Legacy              bool `json:"legacy,omitempty"`
+	// CodexUpdateSkipped records that Ply chose Skip in Codex's update prompt.
+	CodexUpdateSkipped bool `json:"codex_update_skipped,omitempty"`
+	Legacy             bool `json:"legacy,omitempty"`
 }
 
 type Error struct {
@@ -328,8 +330,8 @@ type session struct {
 	o         ops
 	r         Receipt
 	observing bool
-	// trustAnswered limits Ply to one answer of the folder trust dialog.
-	trustAnswered bool
+	// answered limits Ply to one answer of each startup dialog.
+	answered map[string]bool
 }
 
 func (s *session) hit(point string) error {
@@ -418,7 +420,8 @@ func (s *session) drive() error {
 		return err
 	}
 	if _, err = s.effect(StageAgentStart, ClassAgentResponse, startArgs(s.in, s.r.Pane)); err != nil {
-		if !s.blockedOnTrust() {
+		var coded *Error
+		if !errors.As(err, &coded) || coded.Code != ClassAgentResponse || !s.blockedOnDialog() {
 			return err
 		}
 		s.r.Failure = nil
@@ -518,7 +521,7 @@ func (s *session) awaitReady() error {
 			return nil
 		}
 		if a.Status == "blocked" {
-			if err = s.answerTrust(); err != nil {
+			if err = s.answerDialog(); err != nil {
 				return err
 			}
 		}

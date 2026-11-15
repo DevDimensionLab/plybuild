@@ -340,7 +340,7 @@ func TestTraceShowsGoalStartReceipt(t *testing.T) {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}
-	receipt := `{"key":"task","provider":"claude","input_sha256":"` + strings.Repeat("a", 64) + `","reached":"prompt_submitted","tab":"w0:t3","pane":"w0:p3","terminal":"term_1","session":"aba59e60-6d2a-444d-8f26-40ab3c197902","folder_trust_accepted":true}`
+	receipt := `{"key":"task","provider":"claude","input_sha256":"` + strings.Repeat("a", 64) + `","reached":"prompt_submitted","tab":"w0:t3","pane":"w0:p3","terminal":"term_1","session":"aba59e60-6d2a-444d-8f26-40ab3c197902","folder_trust_accepted":true,"codex_update_skipped":true}`
 	if err := os.WriteFile(filepath.Join(dir, "task.json"), []byte(receipt), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -358,7 +358,7 @@ func TestTraceShowsGoalStartReceipt(t *testing.T) {
 	}
 	if start == nil || start.Title != "Goal start: prompt_submitted" || start.Outcome == nil || *start.Outcome != "prompt_submitted" ||
 		!strings.Contains(string(start.Data), `"pane":"w0:p3"`) || !strings.Contains(string(start.Data), `"session":"aba59e60-6d2a-444d-8f26-40ab3c197902"`) ||
-		!strings.Contains(string(start.Data), `"folder_trust_accepted":true`) {
+		!strings.Contains(string(start.Data), `"folder_trust_accepted":true`) || !strings.Contains(string(start.Data), `"codex_update_skipped":true`) {
 		t.Fatalf("goal start event %+v", start)
 	}
 	if err = ValidateReferences(r); err != nil {
