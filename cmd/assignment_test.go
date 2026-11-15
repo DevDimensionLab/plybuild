@@ -239,3 +239,25 @@ func TestAssignmentCommandIsRegistered(t *testing.T) {
 		t.Fatalf("assignment show not registered: %v", err)
 	}
 }
+
+// An agent started with --cwd outside the workspace reads its Assignment
+// through --workspace (backlog 20261112-2529c1e7).
+func TestAssignmentWorkspaceFlagReadsFromOutsideTheWorkspace(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	if _, err := runAssignment(t, root, "Tekst\n", "add", "--project", "a", "--title", "Utenfor", "--repo", "a-app"); err != nil {
+		t.Fatal(err)
+	}
+	outside, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runAssignment(t, outside, "", "show", "ASSIGNMENT-1", "--project", "a"); err == nil {
+		t.Fatal("show outside the workspace without --workspace succeeded")
+	}
+	out, err := runAssignment(t, outside, "", "--workspace", root, "show", "ASSIGNMENT-1", "--project", "a")
+	if err != nil || !strings.Contains(out, "Utenfor") {
+		t.Fatalf("show with --workspace: %q %v", out, err)
+	}
+	_, err = runAssignment(t, outside, "", "--workspace", filepath.Join(root, "a"), "show", "ASSIGNMENT-1", "--project", "a")
+	requireAssignmentError(t, err, "assignment_invalid_arguments: workspace must be its physical root")
+}

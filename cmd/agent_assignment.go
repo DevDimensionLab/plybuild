@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/agentlaunch"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +19,11 @@ import (
 var assignmentSkillMention = map[string]string{"claude": "/ply-assignment", "codex": "$ply-assignment"}
 
 func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) (agentlaunch.Result, error)) *cobra.Command {
-	var provider, project, cwd, workspace, label, claude, codex, herdr string
+	var provider, project, cwd, herdrWorkspace, label, claude, codex, herdr string
 	var timeout time.Duration
 	command := &cobra.Command{
 		Use: "assignment ASSIGNMENT-ID", Short: "Start Claude or Codex with the Assignment skill in a new visible Herdr tab",
-		Long: "Start one Claude (/ply-assignment) or Codex ($ply-assignment) process with the Assignment skill as its initial prompt. The skill reads and takes the Assignment. No Task binding or durable launch receipt is created. Never retry an uncertain launch without inspecting the returned pane. The pilot supports sh/bash/zsh; foreground shell observation does not prove shell initialization has finished.",
+		Long: "Start one Claude (/ply-assignment) or Codex ($ply-assignment) process with the Assignment skill as its initial prompt. The skill reads and takes the Assignment in the workspace containing the current directory, passed as --workspace, so --cwd may be outside it. No Task binding or durable launch receipt is created. Never retry an uncertain launch without inspecting the returned pane. The pilot supports sh/bash/zsh; foreground shell observation does not prove shell initialization has finished.",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if !regexp.MustCompile(`^ASSIGNMENT-[1-9][0-9]*$`).MatchString(args[0]) {
@@ -34,6 +35,10 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			}
 			if !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`).MatchString(project) {
 				return fmt.Errorf("--project requires an explicit project identifier")
+			}
+			observed, err := workspace.ObserveContainingRoot(workspace.SystemDependencies())
+			if err != nil {
+				return err
 			}
 			physical, err := filepath.Abs(cwd)
 			if err == nil {
@@ -72,7 +77,7 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			if label == "" {
 				label = args[0]
 			}
-			result, startErr := start(cmd.Context(), agentlaunch.Request{Agent: provider, Herdr: runtime, Executable: executable, Cwd: physical, Workspace: workspace, Label: label, InitialPrompt: mention + " " + args[0] + " --project " + project, Timeout: timeout})
+			result, startErr := start(cmd.Context(), agentlaunch.Request{Agent: provider, Herdr: runtime, Executable: executable, Cwd: physical, Workspace: herdrWorkspace, Label: label, InitialPrompt: mention + " " + args[0] + " --project " + project + " --workspace " + observed.Root, Timeout: timeout})
 			if err = json.NewEncoder(cmd.OutOrStdout()).Encode(result); err != nil {
 				return err
 			}
@@ -82,7 +87,7 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 	command.Flags().StringVar(&provider, "provider", "claude", "Agent provider: claude or codex")
 	command.Flags().StringVar(&project, "project", "", "Explicit Ply project identifier")
 	command.Flags().StringVar(&cwd, "cwd", ".", "Existing working directory; no worktree is created")
-	command.Flags().StringVar(&workspace, "herdr-workspace", "", "Explicit Herdr workspace ID")
+	command.Flags().StringVar(&herdrWorkspace, "herdr-workspace", "", "Explicit Herdr workspace ID")
 	command.Flags().StringVar(&label, "label", "", "New tab label (defaults to Assignment ID)")
 	command.Flags().StringVar(&claude, "claude-bin", "claude", "Claude executable")
 	command.Flags().StringVar(&codex, "codex-bin", "codex", "Codex executable")

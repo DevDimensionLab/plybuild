@@ -13,6 +13,7 @@ import (
 )
 
 func TestAgentAssignmentBuildsPullPrompt(t *testing.T) {
+	root := newAssignmentWorkspace(t)
 	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
@@ -20,7 +21,7 @@ func TestAgentAssignmentBuildsPullPrompt(t *testing.T) {
 	called := false
 	command := newAgentAssignmentCommand(func(_ context.Context, in agentlaunch.Request) (agentlaunch.Result, error) {
 		called = true
-		if in.InitialPrompt != "/ply-assignment ASSIGNMENT-7 --project ply" || in.Agent != "claude" || in.Executable != exe || in.Workspace != "w7" || in.Label != "ASSIGNMENT-7" {
+		if in.InitialPrompt != "/ply-assignment ASSIGNMENT-7 --project ply --workspace "+root || in.Agent != "claude" || in.Executable != exe || in.Workspace != "w7" || in.Label != "ASSIGNMENT-7" {
 			t.Fatalf("%+v", in)
 		}
 		return agentlaunch.Result{State: "agent_observed", AgentStatus: "working"}, nil
@@ -35,6 +36,24 @@ func TestAgentAssignmentBuildsPullPrompt(t *testing.T) {
 		t.Fatal(out.String())
 	}
 }
+func TestAgentAssignmentRefusesACallerOutsideAWorkspace(t *testing.T) {
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Chdir(t.TempDir())
+	command := newAgentAssignmentCommand(func(context.Context, agentlaunch.Request) (agentlaunch.Result, error) {
+		t.Fatal("start")
+		return agentlaunch.Result{}, nil
+	})
+	command.SetOut(&bytes.Buffer{})
+	command.SetErr(&bytes.Buffer{})
+	command.SetArgs([]string{"ASSIGNMENT-7", "--project", "ply", "--herdr-workspace", "w7", "--claude-bin", exe, "--herdr-bin", exe})
+	if err := command.Execute(); err == nil || !strings.Contains(err.Error(), "workspace") {
+		t.Fatalf("caller outside a workspace: %v", err)
+	}
+}
+
 func TestAgentAssignmentRejectsExtraInstruction(t *testing.T) {
 	command := newAgentAssignmentCommand(func(context.Context, agentlaunch.Request) (agentlaunch.Result, error) {
 		t.Fatal("start")
@@ -47,6 +66,7 @@ func TestAgentAssignmentRejectsExtraInstruction(t *testing.T) {
 }
 
 func TestAgentAssignmentStartsCodexWithSkillMention(t *testing.T) {
+	root := newAssignmentWorkspace(t)
 	exe, err := os.Executable()
 	if err != nil {
 		t.Fatal(err)
@@ -58,7 +78,7 @@ func TestAgentAssignmentStartsCodexWithSkillMention(t *testing.T) {
 	called := false
 	command := newAgentAssignmentCommand(func(_ context.Context, in agentlaunch.Request) (agentlaunch.Result, error) {
 		called = true
-		if in.InitialPrompt != "$ply-assignment ASSIGNMENT-7 --project ply" || in.Agent != "codex" || in.Executable != codex {
+		if in.InitialPrompt != "$ply-assignment ASSIGNMENT-7 --project ply --workspace "+root || in.Agent != "codex" || in.Executable != codex {
 			t.Fatalf("%+v", in)
 		}
 		return agentlaunch.Result{State: "agent_observed", Agent: "codex"}, nil
@@ -102,6 +122,7 @@ func TestAssignmentSkillLabelFollowsActualProvider(t *testing.T) {
 		"`codex:` plus random hex",
 		"never another provider's prefix",
 		"Never send done in the same batch",
+		"`--workspace <root>`",
 	} {
 		if !strings.Contains(text, rule) {
 			t.Fatalf("skill lacks %q", rule)

@@ -1,7 +1,7 @@
 ---
 name: ply-assignment
 description: 'Work on a Ply Assignment named at session start, e.g. `/ply-assignment ASSIGNMENT-7 --project ply` (Codex: `$ply-assignment ASSIGNMENT-7 --project ply`). Read it with `ply assignment show`, take it before working, mark it done when finished, and follow a Task it mentions read-only.'
-argument-hint: ASSIGNMENT-<n> [--project <project-id>]
+argument-hint: ASSIGNMENT-<n> [--project <project-id>] [--workspace <root>]
 ---
 
 # Ply Assignment
@@ -16,7 +16,10 @@ repository's AGENTS.md/CLAUDE.md decide the work and its authority; this skill
 only says how to read, take and finish it. It grants nothing beyond them.
 
 Use `--project <project-id>` in every `ply assignment` command below only when
-the arguments give one.
+the arguments give one. Likewise, when the arguments give `--workspace <root>`
+(the starter's workspace, because this session may run outside it), put it
+right after `ply assignment` in every command below:
+`ply assignment --workspace <root> show …`.
 
 ## 1. Read the Assignment
 
