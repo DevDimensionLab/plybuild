@@ -705,7 +705,8 @@ ply workspace task journal note my-task --title 'Returned to coordinator' --outc
 
 Set `--parent` (`parent_step_id`) when a step happens inside another one, such as a
 correction or review round inside an implementation; a step that follows another
-has no parent. Roles are `human`, `planner`, `developer`, `reviewer`, `observer` and
+has no parent. Outcomes are `pass`, `fail`, `complete`, `blocked`, `unknown`,
+`deferred` and `declined`. Roles are `human`, `planner`, `developer`, `reviewer`, `observer` and
 `tool`; Ply's own records use `ply`. Sources are optional for `note`,
 `step_started` and `step_finished` and required for decisions and observations.
 Ply keeps a copy of each source (at most 4 MiB, 16 MiB per record), so the journal

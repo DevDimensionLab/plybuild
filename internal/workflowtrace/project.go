@@ -211,6 +211,8 @@ func journalRole(role string) string {
 	switch role {
 	case "human":
 		return "human"
+	case "ply":
+		return "ply"
 	case "planner", "developer", "reviewer", "observer", "coordinator", "agent":
 		return "agent"
 	default:

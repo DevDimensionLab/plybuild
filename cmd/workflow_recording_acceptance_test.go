@@ -137,13 +137,13 @@ func TestTaskCreateLinksPlanWithActorFromEnvironment(t *testing.T) {
 func TestGoalStartRecordsReservationAndReachedState(t *testing.T) {
 	f, oid := recordingFixture(t)
 	registerGoal(t, f, "started", "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "planner-a")
-	f.success(t, f.root, "workspace", "task", "worktree", "create", "started", "--branch", "started", "--path", filepath.Join(f.root, "started"), "--expected-parent-oid", oid)
+	f.success(t, f.root, "workspace", "task", "worktree", "create", "started", "--branch", "started", "--path", filepath.Join(f.root, "started"), "--expected-parent-oid", oid, "--actor", "planner-a")
 	herdr, _ := fakeHerdrBinary(t)
 	env := map[string]string{"HERDR_ENV": "1", "PLY_ACTOR": "planner-a", "PATH": filepath.Dir(herdr.Path) + string(os.PathListSeparator) + os.Getenv("PATH")}
 	if _, stderr, exit := f.run(t, f.root, env, "workflow", "goal-start", "started", "--spec", "started-v1", "--revision", "1", "--herdr-workspace", "w1", "--apply"); exit != 0 {
 		t.Fatalf("goal-start: %d %s", exit, stderr)
 	}
-	if got := operationsOf(t, plyActions(t, f, "started"), "planner-a"); strings.Join(got, ",") != "goal_register,goal_start_prompt_submitted,goal_start_reserved,plan_link" {
+	if got := operationsOf(t, plyActions(t, f, "started"), "planner-a"); strings.Join(got, ",") != "goal_register,goal_start_prompt_submitted,goal_start_reserved,plan_link,worktree_create" {
 		t.Fatalf("operations %v", got)
 	}
 }

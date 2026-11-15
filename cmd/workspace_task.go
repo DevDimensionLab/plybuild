@@ -292,7 +292,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 
 func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Command {
 	command := &cobra.Command{Use: "worktree", Short: "Manage Task worktrees", Long: "Create and retire the single local worktree binding for a Task.", Example: "  ply workspace task worktree create workspace-work-item-bootstrap --branch ply_workspace_work_item_bootstrap --path ../ply/ply_workspace_work_item_bootstrap --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df"}
-	var branch, path, expected string
+	var branch, path, expected, actor string
 	create := &cobra.Command{Use: "create <task-id>", Short: "Create and bind a Task worktree", Long: "Persist a Task worktree intent, then add one local branch and worktree from the exact Epic base.", Example: "  ply workspace task worktree create workspace-work-item-bootstrap --branch ply_workspace_work_item_bootstrap --path ../ply/ply_workspace_work_item_bootstrap --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df", Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
@@ -308,8 +308,24 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		if err != nil {
 			return err
 		}
-		return renderTaskWorktreeMutation(cmd, result)
+		if writeErr := renderTaskWorktreeMutation(cmd, result); writeErr != nil {
+			return writeErr
+		}
+		if services.record == nil {
+			return nil
+		}
+		refs := map[string]string{"outcome": result.Outcome}
+		if wt := result.Task.Worktree; wt != nil {
+			refs["ref"], refs["oid"], refs["locator"] = wt.Ref, wt.OID, wt.Locator
+		}
+		for key, value := range refs {
+			if value == "" {
+				delete(refs, key)
+			}
+		}
+		return services.record(args[0], plyActor(actor), "the worktree is created", taskjournal.PlyAction{Operation: "worktree_create", Refs: refs})
 	}}
+	create.Flags().StringVar(&actor, "actor", "", "who creates, recorded in the Task journal (default: PLY_ACTOR)")
 	create.Flags().StringVar(&branch, "branch", "", "new short local branch name")
 	create.Flags().StringVar(&path, "path", "", "new Task worktree path")
 	create.Flags().StringVar(&expected, "expected-parent-oid", "", "expected current Epic parent commit object ID")

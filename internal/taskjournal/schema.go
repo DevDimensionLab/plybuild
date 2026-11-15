@@ -218,7 +218,7 @@ var Roles = []string{"human", "planner", "developer", "reviewer", "observer", "t
 const plyRole = "ply"
 
 // PlyOperations are the operations Ply records in a Task journal.
-var PlyOperations = []string{"plan_link", "task_create", "goal_register", "goal_start_reserved", "goal_start_started", "goal_start_prompt_submitted", "integration", "lifecycle", "epic_integrate"}
+var PlyOperations = []string{"plan_link", "task_create", "goal_register", "worktree_create", "goal_start_reserved", "goal_start_started", "goal_start_prompt_submitted", "integration", "lifecycle", "epic_integrate"}
 
 var planIDPattern = regexp.MustCompile(`^PLAN-[1-9][0-9]{0,8}$`)
 
