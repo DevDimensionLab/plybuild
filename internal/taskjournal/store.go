@@ -202,7 +202,54 @@ func (s Service) PlanLink(task string) (*PlyAction, error) {
 	if e != nil {
 		return nil, e
 	}
-	records, e := readStore(b.Workspace.Root, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
+	return ReadPlanLink(b.Workspace, task)
+}
+
+// Contribution is one published journal record: an event or an observation
+// with its identity and Ply's registration time.
+type Contribution struct {
+	EventID     string
+	RecordedAt  string
+	Common      Common
+	Event       *EventInput
+	Observation *ObservationInput
+}
+
+// JournalTasks lists the Tasks that have a journal in the workspace at root.
+func JournalTasks(root string) ([]string, error) {
+	entries, e := os.ReadDir(filepath.Join(root, ".ply", "task-process", "v1"))
+	if os.IsNotExist(e) {
+		return nil, nil
+	}
+	if e != nil {
+		return nil, e
+	}
+	tasks := []string{}
+	for _, entry := range entries {
+		if _, err := workspace.ParseTaskID(entry.Name()); err == nil && entry.IsDir() {
+			tasks = append(tasks, entry.Name())
+		}
+	}
+	return tasks, nil
+}
+
+// ReadContributions reads the validated journal records of task in w without
+// native facts, registry or source reads. A damaged journal returns its
+// validated prefix with the error.
+func ReadContributions(w workspace.WorkspaceObservation, task string) ([]Contribution, error) {
+	records, e := readStore(w.Root, task, workspaceID(w.Root, w.MarkerSHA256))
+	out := make([]Contribution, 0, len(records))
+	for _, r := range records {
+		out = append(out, Contribution{r.Record.EventID, r.Record.RecordedAt, r.Common, r.Event, r.Observation})
+	}
+	return out, e
+}
+
+// ReadPlanLink reads only the journal records of task in w, not its native
+// facts, and returns the latest plan link or nil. A Task without journal has
+// none.
+func ReadPlanLink(w workspace.WorkspaceObservation, task string) (*PlyAction, error) {
+	records, e := readStore(w.Root, task, workspaceID(w.Root, w.MarkerSHA256))
 	if e != nil {
 		return nil, e
 	}

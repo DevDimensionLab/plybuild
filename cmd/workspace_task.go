@@ -17,7 +17,7 @@ type workspaceTaskServices struct {
 	integrate      func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
 	retireWorktree func(workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error)
 	// planLink and record are absent in fakes; then nothing is linked or recorded.
-	planLink func(workspace.ProjectID, string, string) (*taskjournal.PlyAction, error)
+	planLink func(project workspace.ProjectID, plan, step, title string) (*taskjournal.PlyAction, error)
 	record   func(task, actor, done string, records ...taskjournal.PlyAction) error
 }
 
@@ -37,8 +37,8 @@ func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command
 		return workspace.CheckTaskIntegration(dependencies, input)
 	}, retireWorktree: func(input workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error) {
 		return workspace.RetireTaskWorktree(dependencies, input)
-	}, planLink: func(project workspace.ProjectID, plan, step string) (*taskjournal.PlyAction, error) {
-		return taskPlanLink(dependencies, project, plan, step)
+	}, planLink: func(project workspace.ProjectID, plan, step, title string) (*taskjournal.PlyAction, error) {
+		return taskPlanLink(dependencies, project, plan, step, title)
 	}, record: func(task, actor, done string, records ...taskjournal.PlyAction) error {
 		return recordPly(dependencies, task, actor, done, records...)
 	}})
@@ -70,7 +70,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		}
 		var link *taskjournal.PlyAction
 		if services.planLink != nil {
-			if link, err = services.planLink(input.ProjectID, planID, planStep); err != nil {
+			if link, err = services.planLink(input.ProjectID, planID, planStep, input.Title); err != nil {
 				return err
 			}
 		}

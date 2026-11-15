@@ -24,8 +24,9 @@ func plyActor(flag string) string {
 }
 
 // taskPlanLink validates --plan and --plan-step against the plans of project
-// and returns the link to record, or nil without --plan.
-func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID, step string) (*taskjournal.PlyAction, error) {
+// and returns the link to record, with the project and Task title so that a
+// plan trace needs no registry read, or nil without --plan.
+func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID, step, title string) (*taskjournal.PlyAction, error) {
 	if planID == "" {
 		if step != "" {
 			return nil, workspace.WorkInvalidArguments("--plan-step requires --plan")
@@ -48,7 +49,7 @@ func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID,
 	case err != nil:
 		return nil, err
 	}
-	link := &taskjournal.PlyAction{Operation: "plan_link", Plan: &planID}
+	link := &taskjournal.PlyAction{Operation: "plan_link", Plan: &planID, Refs: map[string]string{"project": string(project), "task_title": title}}
 	if step != "" {
 		if !slices.ContainsFunc(v.Plan.Steps, func(s plan.Step) bool { return s.ID == step }) {
 			return nil, workspace.WorkInvalidArguments(fmt.Sprintf("--plan-step %s is not a step of %s", step, planID))

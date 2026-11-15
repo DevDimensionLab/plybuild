@@ -42,7 +42,7 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 		if effort != "" {
 			in.Executor.Effort = &effort
 		}
-		link, err := taskPlanLink(d, workspace.ProjectID(project), planID, planStep)
+		link, err := taskPlanLink(d, workspace.ProjectID(project), planID, planStep, in.Title)
 		if err != nil {
 			return err
 		}
