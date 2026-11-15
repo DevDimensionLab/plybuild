@@ -719,17 +719,11 @@ take `--plan PLAN-<n> --plan-step <id>`, and `ply workspace task journal link` l
 existing Task. Ply then records its own actions in the journal with `--actor` (or
 `PLY_ACTOR`) and its own time. `ply plan trace PLAN-<n> --format json`
 (`PlyPlanTrace@1`) reads the plan revisions, the linked Tasks and all their journal
-records. To ask an agent to record its steps, add a constraint like this to the
-Goal:
-
-```text
-Record each work step in the Task journal: ply workspace task journal step start
-<task> --id <id> --kind <kind> --title <title> when it starts, and step finish with the
-same --id, --kind and --title plus --outcome when it ends. Kinds: clarification,
-planning, implementation, verification, review, correction, coordination. Outcomes:
-pass, fail, complete, blocked, unknown, deferred, declined. Use --parent <id> for a
-correction or review inside another step. Record a note with --title when you return.
-```
+records. `goal-start` of a Task linked to a plan adds the journal commands after the
+Goal in the agent's prompt, so the agent records its steps without a Goal constraint.
+The plan owner records its own steps outside any Task with `ply plan journal step
+start|finish PLAN-<n>` and `ply plan journal note PLAN-<n>`; `plan trace` shows them
+with an empty `task_id`.
 
 To append a record from a file, put the following in `/absolute/event.json`,
 replacing the Task, source path and the source's 64 lowercase hexadecimal SHA-256.

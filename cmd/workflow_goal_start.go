@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
@@ -25,6 +26,21 @@ type goalAgentPlan struct {
 	Workspace string          `json:"herdr_workspace"`
 	Provider  string          `json:"provider,omitempty"`
 	Goal      json.RawMessage `json:"goal"`
+	Journal   string          `json:"journal_instruction,omitempty"`
+}
+
+// journalInstruction asks the agent of a Task linked to a plan to record its
+// steps, so that ply plan trace shows them; a Task without link gets none.
+func journalInstruction(task string, link *taskjournal.PlyAction) string {
+	if link == nil || link.Plan == nil {
+		return ""
+	}
+	belongs := *link.Plan
+	if link.PlanStep != nil {
+		belongs += " step " + *link.PlanStep
+	}
+	return fmt.Sprintf("\n\nThis Task belongs to %s. Record each work step in the Task journal: ply workspace task journal step start %s --id <id> --kind <kind> --title <title> when it starts, and ply workspace task journal step finish %s with the same --id, --kind and --title plus --outcome <outcome> when it ends. Use --parent <id> for a step inside another, such as a correction or review. Kinds: %s. Outcomes: %s. When you return, record ply workspace task journal note %s --title <title>.",
+		belongs, task, task, strings.Join(taskjournal.StepKinds, ", "), strings.Join(taskjournal.Outcomes, ", "), task)
 }
 
 func goalProvider(goal json.RawMessage) (string, error) {
@@ -59,7 +75,7 @@ func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBi
 		Cwd:          plan.Worktree,
 		Workspace:    plan.Workspace,
 		Label:        plan.Task,
-		Prompt:       goalAgentPrompt + string(plan.Goal),
+		Prompt:       goalAgentPrompt + string(plan.Goal) + plan.Journal,
 		Herdr:        herdr,
 		Precondition: precondition,
 	}
@@ -150,7 +166,11 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if herdrWorkspace == "" {
 			return fmt.Errorf("--herdr-workspace is required")
 		}
-		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Goal: read.Goal}
+		link, e := taskjournal.New(d).PlanLink(args[0])
+		if e != nil {
+			return e
+		}
+		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Goal: read.Goal, Journal: journalInstruction(args[0], link)}
 		if !apply {
 			return json.NewEncoder(c.OutOrStdout()).Encode(plan)
 		}

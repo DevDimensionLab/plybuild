@@ -205,10 +205,12 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 	})
 	listCommand.Flags().StringVar(&status, "status", "", "only plans with this status: "+strings.Join(plan.Statuses, ", "))
 
+	command.AddCommand(newPlanJournalCommand(&project, open))
+
 	addFlags(&cobra.Command{
 		Use:   "trace <PLAN-n>",
 		Short: "Read the recorded workflow of a plan: revisions, linked Tasks and their journal events",
-		Long: "A Task belongs to the plan when the latest plan link in its journal names it (goal register or task create with --plan).\n" +
+		Long: "A Task belongs to the plan when the latest plan link in its journal names it (goal register or task create with --plan). Records of ply plan journal have an empty task_id.\n" +
 			"JSON is " + plantrace.Kind + ": the plan revisions, the linked Tasks with their plan step, and every event of their journals with actor, role, step, outcome and time, ordered by occurred, else recorded time. Nothing is interpreted.",
 		Args: validate(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

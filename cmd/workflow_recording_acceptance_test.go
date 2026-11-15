@@ -140,6 +140,10 @@ func TestGoalStartRecordsReservationAndReachedState(t *testing.T) {
 	f.success(t, f.root, "workspace", "task", "worktree", "create", "started", "--branch", "started", "--path", filepath.Join(f.root, "started"), "--expected-parent-oid", oid, "--actor", "planner-a")
 	herdr, _ := fakeHerdrBinary(t)
 	env := map[string]string{"HERDR_ENV": "1", "PLY_ACTOR": "planner-a", "PATH": filepath.Dir(herdr.Path) + string(os.PathListSeparator) + os.Getenv("PATH")}
+	preview := f.success(t, f.root, "workflow", "goal-start", "started", "--spec", "started-v1", "--revision", "1", "--herdr-workspace", "w1")
+	if !strings.Contains(preview, "This Task belongs to PLAN-1 step impl.") {
+		t.Fatalf("preview lacks the journal instruction: %s", preview)
+	}
 	if _, stderr, exit := f.run(t, f.root, env, "workflow", "goal-start", "started", "--spec", "started-v1", "--revision", "1", "--herdr-workspace", "w1", "--apply"); exit != 0 {
 		t.Fatalf("goal-start: %d %s", exit, stderr)
 	}
@@ -452,5 +456,29 @@ func TestEpicIntegrateRetiresTheEpic(t *testing.T) {
 		if gone := os.IsNotExist(statErr) && f.git(t, repo, "branch", "--list", "epic") == ""; gone == keep || archived == keep {
 			t.Fatalf("keep=%v: worktree gone %v, archived %v; stderr %s; lifecycle %s", keep, gone, archived, stderr, lifecycle)
 		}
+	}
+}
+
+// The plan's owner records steps and notes on the plan itself; plan trace
+// shows them with an empty task_id among the Task events.
+func TestPlanJournalRecordsPlanStepsInTheTrace(t *testing.T) {
+	f, _ := recordingFixture(t)
+	journal := []string{"plan", "journal"}
+	f.failure(t, f.root, nil, "kind", append(journal, "step", "start", "PLAN-1", "--project", "example", "--id", "map", "--kind", "nope", "--title", "Map")...)
+	f.success(t, f.root, append(journal, "step", "start", "PLAN-1", "--project", "example", "--id", "map", "--kind", "planning", "--title", "Map", "--actor", "ply-plan")...)
+	f.success(t, f.root, append(journal, "step", "finish", "PLAN-1", "--project", "example", "--id", "map", "--kind", "planning", "--title", "Map", "--outcome", "complete", "--actor", "ply-plan")...)
+	f.success(t, f.root, append(journal, "note", "PLAN-1", "--project", "example", "--title", "User chose option 1", "--actor", "ply-plan")...)
+	var trace planTraceDoc
+	if e := json.Unmarshal([]byte(f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")), &trace); e != nil {
+		t.Fatal(e)
+	}
+	var types []string
+	for _, ev := range trace.Events {
+		if ev.TaskID == "" && *ev.Role == "planner" && *ev.ActorID == "ply-plan" {
+			types = append(types, ev.Type)
+		}
+	}
+	if !reflect.DeepEqual(types, []string{"step_started", "step_finished", "note"}) {
+		t.Fatalf("plan events %+v", trace.Events)
 	}
 }

@@ -220,6 +220,9 @@ const plyRole = "ply"
 // StepKinds are the kinds of a work step.
 var StepKinds = []string{"clarification", "planning", "implementation", "verification", "review", "correction", "coordination", "waiting"}
 
+// Outcomes are the outcomes a reporter may claim for an event.
+var Outcomes = []string{"pass", "fail", "complete", "blocked", "unknown", "deferred", "declined"}
+
 // PlyOperations are the operations Ply records in a Task journal.
 var PlyOperations = []string{"plan_link", "task_create", "goal_register", "worktree_create", "worktree_retire", "goal_start_reserved", "goal_start_started", "goal_start_prompt_submitted", "integration", "lifecycle", "epic_integrate"}
 
@@ -310,7 +313,7 @@ func validateEventInput(ev *EventInput) error {
 			}
 		}
 	}
-	if ev.Outcome != nil && !one(*ev.Outcome, "pass", "fail", "complete", "blocked", "unknown", "deferred", "declined") {
+	if ev.Outcome != nil && !one(*ev.Outcome, Outcomes...) {
 		return invalid("invalid reported outcome")
 	}
 	if one(ev.Type, "step_started", "step_finished") && ev.Step == nil {

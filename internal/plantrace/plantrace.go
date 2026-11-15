@@ -5,6 +5,7 @@
 package plantrace
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
@@ -39,7 +40,8 @@ type Task struct {
 	PlanStep *string `json:"plan_step"`
 }
 
-// Event is one journal record with what a drawing needs.
+// Event is one journal record with what a drawing needs. A record of the
+// plan's own journal has an empty TaskID.
 type Event struct {
 	TaskID       string            `json:"task_id"`
 	EventID      string            `json:"event_id"`
@@ -58,7 +60,8 @@ type Event struct {
 	Refs         map[string]string `json:"refs"`
 }
 
-// Reason is a journal that could not be read completely.
+// Reason is a journal that could not be read completely; an empty TaskID is
+// the plan's own journal.
 type Reason struct {
 	TaskID string `json:"task_id"`
 	Code   string `json:"code"`
@@ -102,6 +105,15 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 		for _, r := range records {
 			out.Events = append(out.Events, event(task, link, r))
 		}
+	}
+	journal, err := plans.Journal(planID)
+	if err != nil {
+		out.Reasons = append(out.Reasons, Reason{"", "journal_damaged", "Only the readable prefix of the plan journal is read: " + err.Error()})
+	}
+	for i, e := range journal {
+		at := e.At
+		out.Events = append(out.Events, Event{EventID: fmt.Sprintf("%s-journal-%d", planID, i+1), Type: e.Type, Title: e.Title, ActorID: &e.ActorID, Role: &e.Role,
+			StepID: e.StepID, StepKind: e.StepKind, ParentStepID: e.ParentStepID, Outcome: e.Outcome, OccurredAt: &at, RecordedAt: &at})
 	}
 	sort.SliceStable(out.Events, func(i, j int) bool {
 		a, b := at(out.Events[i]), at(out.Events[j])

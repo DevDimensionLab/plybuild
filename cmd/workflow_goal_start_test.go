@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
+	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"os/exec"
@@ -345,5 +346,26 @@ func TestGoalStartResumeRequiresApplyBeforeReading(t *testing.T) {
 	err := c.Execute()
 	if err == nil || !strings.Contains(err.Error(), "--resume requires --apply") {
 		t.Fatalf("resume without apply: %v", err)
+	}
+}
+
+// A Task linked to a plan gets the journal commands after its Goal; any
+// other Task gets the unchanged prompt.
+func TestGoalStartPromptAsksAPlanLinkedTaskToRecordItsSteps(t *testing.T) {
+	planID, step := "PLAN-39", "impl-d10"
+	if journalInstruction("task-1", nil) != "" {
+		t.Fatal("a Task without plan link got a journal instruction")
+	}
+	goal := `{"a":1}`
+	plan := goalAgentPlan{Task: "task-1", Provider: "claude", Goal: json.RawMessage(goal), Journal: journalInstruction("task-1", &taskjournal.PlyAction{Operation: "plan_link", Plan: &planID, PlanStep: &step})}
+	prompt := goalStartInput(plan, "/r/task-1.json", agentstart.HerdrBinary{}, nil).Prompt
+	rest, found := strings.CutPrefix(prompt, wantGoalPrompt+goal)
+	if !found {
+		t.Fatalf("Goal not kept first: %q", prompt)
+	}
+	for _, want := range []string{"PLAN-39 step impl-d10", "ply workspace task journal step start task-1 --id", "step finish task-1", "--parent", "waiting", "declined", "journal note task-1"} {
+		if !strings.Contains(rest, want) {
+			t.Errorf("instruction lacks %q: %q", want, rest)
+		}
 	}
 }
