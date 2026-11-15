@@ -72,6 +72,31 @@ func ResolveHerdr() (HerdrBinary, error) {
 }
 
 func callHerdr(ctx context.Context, h HerdrBinary, args []string) (json.RawMessage, error) {
+	out, err := runHerdr(ctx, h, args)
+	if err != nil {
+		return nil, err
+	}
+	var envelope struct {
+		Result json.RawMessage `json:"result"`
+		Error  json.RawMessage `json:"error"`
+	}
+	if err = json.Unmarshal(out, &envelope); err != nil {
+		return nil, fmt.Errorf("herdr %s %s: invalid response", args[0], subcommand(args))
+	}
+	if hasValue(envelope.Error) || !hasValue(envelope.Result) {
+		return nil, fmt.Errorf("herdr %s %s: unsuccessful response%s", args[0], subcommand(args), herdrErrorDetail(out, args))
+	}
+	return envelope.Result, nil
+}
+
+// callHerdrText runs a Herdr command that replies with plain text, such as
+// pane read and pane send-keys.
+func callHerdrText(ctx context.Context, h HerdrBinary, args []string) (string, error) {
+	out, err := runHerdr(ctx, h, args)
+	return string(out), err
+}
+
+func runHerdr(ctx context.Context, h HerdrBinary, args []string) ([]byte, error) {
 	sum, err := fileSHA256(h.Path)
 	if err != nil || sum != h.SHA256 {
 		return nil, &Error{Code: ClassBinaryChanged, Err: errors.New("herdr executable differs from the bound digest")}
@@ -92,17 +117,7 @@ func callHerdr(ctx context.Context, h HerdrBinary, args []string) (json.RawMessa
 	if stdout.overflow || stderr.overflow {
 		return nil, fmt.Errorf("herdr %s %s: output limit exceeded", args[0], subcommand(args))
 	}
-	var envelope struct {
-		Result json.RawMessage `json:"result"`
-		Error  json.RawMessage `json:"error"`
-	}
-	if err = json.Unmarshal(stdout.data, &envelope); err != nil {
-		return nil, fmt.Errorf("herdr %s %s: invalid response", args[0], subcommand(args))
-	}
-	if hasValue(envelope.Error) || !hasValue(envelope.Result) {
-		return nil, fmt.Errorf("herdr %s %s: unsuccessful response%s", args[0], subcommand(args), herdrErrorDetail(stdout.data, args))
-	}
-	return envelope.Result, nil
+	return stdout.data, nil
 }
 
 // herdrErrorDetail renders the code and message of a Herdr JSON error reply as

@@ -37,6 +37,12 @@ type fakeHerdr struct {
 	// startFails makes agent start fail after Herdr named the pane, as when
 	// Claude waits on its folder trust dialog past the start timeout.
 	startFails bool
+	// trust is the selected option of a shown Claude folder trust dialog
+	// ("no" or "yes"); empty when no dialog is shown.
+	trust      string
+	trustCwd   string
+	screen     string
+	stuckTrust bool
 }
 
 func newFake(t *testing.T, in StartInput) *fakeHerdr {
@@ -101,6 +107,11 @@ func (f *fakeHerdr) call(_ context.Context, _ HerdrBinary, args []string) (json.
 		if f.working {
 			a["agent_status"] = "working"
 		}
+		if f.trust != "" {
+			a["agent_status"], a["launch_pending"] = "blocked", true
+			delete(a, "agent_session")
+			delete(a, "interactive_ready")
+		}
 		if f.agent != nil {
 			f.agent(a)
 		}
@@ -108,6 +119,49 @@ func (f *fakeHerdr) call(_ context.Context, _ HerdrBinary, args []string) (json.
 		return raw, nil
 	}
 	return json.RawMessage(`{"ok":true}`), nil
+}
+
+func trustScreen(cwd, selected string) string {
+	no, yes := "   No, exit", "   Yes, I trust this folder"
+	if selected == "no" {
+		no = " ❯ No, exit"
+	} else {
+		yes = " ❯ Yes, I trust this folder"
+	}
+	return strings.Join([]string{"user@host t1 % claude", "", strings.Repeat("─", 40), " Accessing workspace:", "", " " + cwd, "",
+		" Quick safety check: Is this a project you created or one you trust? (Like your own code, a well-known open source project, or work from your team). If not, take a moment to review what's in this folder first.",
+		"", " Claude Code'll be able to read, edit, and execute files here.", "", " Security guide", "", no, yes, "", " Enter to confirm · Esc to cancel", "", ""}, "\n")
+}
+
+// text serves pane read and pane send-keys, which reply with plain text.
+func (f *fakeHerdr) text(_ context.Context, _ HerdrBinary, args []string) (string, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.calls = append(f.calls, args)
+	switch {
+	case args[0] == "pane" && args[1] == "read":
+		if f.screen != "" {
+			return f.screen, nil
+		}
+		if f.trust == "" {
+			return "ordinary output\n", nil
+		}
+		cwd := f.trustCwd
+		if cwd == "" {
+			cwd = f.cwd()
+		}
+		return trustScreen(cwd, f.trust), nil
+	case args[0] == "pane" && args[1] == "send-keys":
+		switch {
+		case args[3] == "down" && f.trust == "no" && !f.stuckTrust:
+			f.trust = "yes"
+		case args[3] == "enter" && f.trust == "yes":
+			f.trust = ""
+		}
+		return "", nil
+	}
+	f.t.Errorf("unexpected text call %q", args)
+	return "", errors.New("unexpected")
 }
 
 func (f *fakeHerdr) cwd() string {
@@ -158,7 +212,7 @@ func testInput(t *testing.T) StartInput {
 func str(s string) *string { return &s }
 
 func run(in StartInput, f *fakeHerdr, fault func(string) error) (Receipt, error) {
-	return start(context.Background(), in, ops{call: f.call, fault: fault, awaitTimeout: 300 * time.Millisecond, pause: time.Millisecond})
+	return start(context.Background(), in, ops{call: f.call, text: f.text, fault: fault, awaitTimeout: 300 * time.Millisecond, pause: time.Millisecond})
 }
 
 func resume(in StartInput, f *fakeHerdr) (Receipt, error) {
@@ -166,7 +220,7 @@ func resume(in StartInput, f *fakeHerdr) (Receipt, error) {
 }
 
 func resumeAgent(ctx context.Context, in StartInput, f *fakeHerdr) (Receipt, error) {
-	return continueStart(ctx, in, ops{call: f.call, awaitTimeout: 300 * time.Millisecond, pause: time.Millisecond})
+	return continueStart(ctx, in, ops{call: f.call, text: f.text, awaitTimeout: 300 * time.Millisecond, pause: time.Millisecond})
 }
 
 func wantCode(t *testing.T, err error, codes ...string) *Error {
@@ -1361,7 +1415,7 @@ func TestAgentResumeConcurrentCallsPromptTheSameAgentOnce(t *testing.T) {
 
 func resumeWithLockFault(in StartInput, f *fakeHerdr, op string) (Receipt, error) {
 	fault := errors.New("injected " + op + " fault")
-	return continueStart(context.Background(), in, ops{call: f.call, awaitTimeout: 300 * time.Millisecond, pause: time.Millisecond, lockFail: func(got string) error {
+	return continueStart(context.Background(), in, ops{call: f.call, text: f.text, awaitTimeout: 300 * time.Millisecond, pause: time.Millisecond, lockFail: func(got string) error {
 		if got == op {
 			return fault
 		}
@@ -1455,4 +1509,103 @@ func TestAgentResumeCancelledBeforePromptMarkerKeepsReceiptForLaterResume(t *tes
 		in.Precondition = nil
 		wantResumed(t, in, f, f.total())
 	})
+}
+
+func (f *fakeHerdr) keys() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var keys []string
+	for _, c := range f.calls {
+		if c[0] == "pane" && c[1] == "send-keys" {
+			keys = append(keys, c[2]+" "+c[3])
+		}
+	}
+	return keys
+}
+
+func claudeAtTrust(t *testing.T) (StartInput, *fakeHerdr) {
+	in := testInput(t)
+	in.Provider = ProviderClaude
+	f := newFake(t, in)
+	f.startFails, f.trust = true, "no"
+	return in, f
+}
+
+func TestAgentStartAnswersClaudeFolderTrustAndPromptsOnce(t *testing.T) {
+	in, f := claudeAtTrust(t)
+	r, err := run(in, f, nil)
+	if err != nil || r.Reached != ReachedPromptSubmitted || r.Failure != nil || r.Pending != "" || !r.FolderTrustAccepted {
+		t.Fatalf("start did not pass folder trust: %+v %v", r, err)
+	}
+	if got := f.keys(); fmt.Sprint(got) != "[w1:p2 down w1:p2 enter]" {
+		t.Fatalf("want down then enter to the reserved pane, got %q", got)
+	}
+	if f.count("agent", "start") != 1 || f.count("agent", "prompt") != 1 {
+		t.Fatalf("start or prompt repeated: %q", f.calls)
+	}
+	saved, err := ReadReceipt(in.ReceiptPath)
+	if err != nil || !reflect.DeepEqual(saved, r) {
+		t.Fatalf("receipt not durable: %+v %v", saved, err)
+	}
+}
+
+func TestAgentResumeAnswersClaudeFolderTrustLeftByEarlierStart(t *testing.T) {
+	in, f := claudeAtTrust(t)
+	f.trust = ""
+	stoppedAtTrust(t, in, f)
+	f.trust = "yes"
+	r, err := resume(in, f)
+	if err != nil || r.Reached != ReachedPromptSubmitted || !r.FolderTrustAccepted {
+		t.Fatalf("resume did not pass folder trust: %+v %v", r, err)
+	}
+	if got := f.keys(); fmt.Sprint(got) != "[w1:p2 enter]" {
+		t.Fatalf("want only enter when Yes is selected, got %q", got)
+	}
+}
+
+func TestAgentStartLeavesUnrecognizedDialogToTheHuman(t *testing.T) {
+	cases := map[string]func(in StartInput, f *fakeHerdr){
+		"other folder": func(_ StartInput, f *fakeHerdr) { f.trustCwd = "/elsewhere" },
+		"changed text": func(in StartInput, f *fakeHerdr) {
+			f.screen = strings.Replace(trustScreen(in.Cwd, "no"), "Security guide", "Security guide\n Extra", 1)
+		},
+		"not last": func(in StartInput, f *fakeHerdr) { f.screen = trustScreen(in.Cwd, "no") + "more output\n" },
+		"two selected": func(in StartInput, f *fakeHerdr) {
+			f.screen = strings.Replace(trustScreen(in.Cwd, "no"), "   Yes", " ❯ Yes", 1)
+		},
+		"other agent": func(_ StartInput, f *fakeHerdr) { f.agent = func(a map[string]any) { a["name"] = "someone-else" } },
+		"not blocked": func(_ StartInput, f *fakeHerdr) { f.agent = func(a map[string]any) { a["agent_status"] = "working" } },
+		"codex":       nil,
+	}
+	for name, change := range cases {
+		t.Run(name, func(t *testing.T) {
+			in, f := claudeAtTrust(t)
+			if change == nil {
+				in.Provider = ProviderCodex
+			} else {
+				change(in, f)
+			}
+			r, err := run(in, f, nil)
+			wantCode(t, err, ClassAgentResponse)
+			if r.Failure == nil || r.Failure.Stage != StageAgentStart || !r.Failure.EffectUnknown || r.FolderTrustAccepted {
+				t.Fatalf("unrecognized dialog changed the stop: %+v", r)
+			}
+			if keys := f.keys(); len(keys) != 0 {
+				t.Fatalf("keys sent to an unrecognized screen: %q", keys)
+			}
+		})
+	}
+}
+
+func TestAgentStartStopsWhenTrustSelectionDoesNotMoveToYes(t *testing.T) {
+	in, f := claudeAtTrust(t)
+	f.stuckTrust = true
+	r, err := run(in, f, nil)
+	wantCode(t, err, ClassNotReady)
+	if r.Failure == nil || r.Failure.Stage != StageAwaitReady || r.FolderTrustAccepted || f.count("agent", "prompt") != 0 {
+		t.Fatalf("%+v", r)
+	}
+	if got := f.keys(); fmt.Sprint(got) != "[w1:p2 down]" {
+		t.Fatalf("want one down and no enter, got %q", got)
+	}
 }

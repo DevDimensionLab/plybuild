@@ -91,7 +91,10 @@ type Receipt struct {
 	Terminal    string        `json:"terminal,omitempty"`
 	Session     string        `json:"session,omitempty"`
 	Failure     *StartFailure `json:"failure,omitempty"`
-	Legacy      bool          `json:"legacy,omitempty"`
+	// FolderTrustAccepted records that Ply answered Yes in Claude's folder
+	// trust dialog for the requested cwd.
+	FolderTrustAccepted bool `json:"folder_trust_accepted,omitempty"`
+	Legacy              bool `json:"legacy,omitempty"`
 }
 
 type Error struct {
@@ -114,6 +117,7 @@ func (e *Error) Unwrap() error { return e.Err }
 
 type ops struct {
 	call         func(ctx context.Context, h HerdrBinary, args []string) (json.RawMessage, error)
+	text         func(ctx context.Context, h HerdrBinary, args []string) (string, error)
 	fault        func(point string) error
 	awaitTimeout time.Duration
 	pause        time.Duration
@@ -123,11 +127,11 @@ type ops struct {
 var sha256Hex = regexp.MustCompile(`^[0-9a-f]{64}$`)
 
 func StartAgent(ctx context.Context, in StartInput) (Receipt, error) {
-	return start(ctx, in, ops{call: callHerdr, awaitTimeout: awaitReadyTimeout, pause: awaitReadyPause})
+	return start(ctx, in, ops{call: callHerdr, text: callHerdrText, awaitTimeout: awaitReadyTimeout, pause: awaitReadyPause})
 }
 
 func ResumeAgent(ctx context.Context, in StartInput) (Receipt, error) {
-	return continueStart(ctx, in, ops{call: callHerdr, awaitTimeout: awaitReadyTimeout, pause: awaitReadyPause})
+	return continueStart(ctx, in, ops{call: callHerdr, text: callHerdrText, awaitTimeout: awaitReadyTimeout, pause: awaitReadyPause})
 }
 
 func plain(s string) bool {
@@ -324,6 +328,8 @@ type session struct {
 	o         ops
 	r         Receipt
 	observing bool
+	// trustAnswered limits Ply to one answer of the folder trust dialog.
+	trustAnswered bool
 }
 
 func (s *session) hit(point string) error {
@@ -412,7 +418,10 @@ func (s *session) drive() error {
 		return err
 	}
 	if _, err = s.effect(StageAgentStart, ClassAgentResponse, startArgs(s.in, s.r.Pane)); err != nil {
-		return err
+		if !s.blockedOnTrust() {
+			return err
+		}
+		s.r.Failure = nil
 	}
 	s.r.Reached = ReachedAgentStarted
 	if err = s.commit(StageAgentStart); err != nil {
@@ -507,6 +516,11 @@ func (s *session) awaitReady() error {
 			}
 		} else if a.settled() && a.sessionlessReady() {
 			return nil
+		}
+		if a.Status == "blocked" {
+			if err = s.answerTrust(); err != nil {
+				return err
+			}
 		}
 		if !time.Now().Before(deadline) {
 			return s.fail(StageAwaitReady, ClassNotReady, false, errors.New("deadline expired before the agent was observed ready"))

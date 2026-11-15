@@ -45,7 +45,13 @@ provider configuration.
 | `Permission` | `--permission-mode` | `-c default_permissions="…"` |
 | `CodexProfile` | rejected | `--profile` |
 
-No trust or approval flag is ever sent. Both providers inherit the tab cwd;
+No trust or approval flag is ever sent. Claude's folder trust dialog is
+answered in the pane instead: when Claude is blocked and the end of `pane read`
+is exactly that dialog for `Cwd`, the package selects "Yes, I trust this folder"
+once (`down` when "No, exit" is selected, then `enter`), records
+`FolderTrustAccepted` and continues. A failed `agent start` that shows this
+dialog is not a stop. Any other blocked screen is left to the human. Claude
+itself stores the trust. Both providers inherit the tab cwd;
 `-C` is not sent. `Env` entries become `--env KEY=VALUE` on tab create; nothing
 is added implicitly. The receipt states what was requested, not an observed
 model, profile or sandbox.
@@ -94,7 +100,7 @@ makes no Herdr call and no `Precondition` call:
 `StartAgent` never retries or sends a second prompt. A reservation is never
 deleted by this package. Continuing after a partial start is a human decision
 that starts from inspecting the Herdr agent named after `Key`; when the start
-stopped before its prompt (for example Claude waiting on folder trust), the
+stopped before its prompt (for example Claude waiting on an unrecognized dialog), the
 caller may then call `ResumeAgent` with the same input.
 
 `ResumeAgent` never calls `tab create` or `agent start`. It holds an exclusive
