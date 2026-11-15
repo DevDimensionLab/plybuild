@@ -50,17 +50,20 @@ def registration(ply, root, version, package, pin):
     registry.write_text(empty_registry(version))
     run([ply, "workspace", "epic", "adopt", "greetings", "--title", "Greetings", "--project", "example", "--repo", "example", "--worktree", repo, "--ref", "refs/heads/main", "--expected-oid", oid], root, structured=False)
     create = [ply, "workspace", "task", "create", "greeting", "--title", "Named greeting", "--description", "Add an optional name", "--project", "example", "--repo", "example", "--epic", "greetings", "--format", "json"]
-    if version < 3:
-        before = registry.read_bytes()
-        run(create, root, success=False)
-        assert registry.read_bytes() == before
-        create += ["--upgrade-store", digest(registry)]
     run(create, root)
-    task = run([ply, "workspace", "task", "show", "greeting", "--format", "json"], root)
+    # Task create stores into the existing format; it never migrates silently.
+    assert registry.read_text().startswith(f"format_version: {version}\n")
+    recorder = dict(actor_claim="CB-01A isolated acceptance", control_surface="fixture only", recorded_at_utc="2026-10-09T00:00:00Z")
+    problem_doc = root / "problem.md"
+    problem_doc.write_text("# Greeting\n\nThe greeting cannot name the reader.\n")
+    upgrade = dict(from_version=version, registry_sha256=digest(registry)) if version < 3 else None
+    problem_draft = dict(kind="WorkspaceTaskProblemDraft@1", schema_version=1, format="json", format_version=1, canonicalization="RFC8785", publication_key="fixture/problem", task_id="greeting", registry_upgrade=upgrade, expected_previous=None, origin=dict(kind="authored"), title="Named greeting", summary="Support an optional name", problem_document_id="problem", documents=[dict(id="problem", source=dict(kind="file", locator=str(problem_doc), sha256=digest(problem_doc), size_bytes=problem_doc.stat().st_size, media_type="text/markdown", git_provenance=None))], sources=[], claims=[], deadline=None, change_reason="Record the fixture problem", recorder=recorder)
+    path = root / "problem.json"
+    path.write_text(json.dumps(problem_draft))
+    problem = run([ply, "workspace", "task", "problem", "record", "greeting", "--file", path, "--format", "json"], root)["outcome_ref"]
     doc = root / "spec.md"
     doc.write_text("# Named greeting\n\nKeep the default greeting and support an optional name.\n")
-    recorder = dict(actor_claim="CB-01A isolated acceptance", control_surface="fixture only", recorded_at_utc="2026-10-09T00:00:00Z")
-    draft = dict(kind="WorkspaceTaskSpecDraft@2", schema_version=2, format="json", format_version=1, canonicalization="RFC8785", publication_key="fixture/goal", task_id="greeting", recorder=recorder, registry_upgrade=None, spec_id="greeting-v1", contract_kind="goal", expected_previous=None, problem=task["problem"]["head"], title="Named greeting", objective="Support an optional name while keeping the default greeting.", documents=[dict(id="spec", source=dict(kind="file", locator=str(doc), sha256=digest(doc), size_bytes=doc.stat().st_size, media_type="text/markdown", git_provenance=None))], design=[dict(document_id="spec", section=None)], requirements=[dict(id="greeting", acceptance="The existing default and named greetings are verified.")], constraints=["No agent starts during this fixture."], executor=dict(provider=None, model=None, effort=None), change_reason="Register isolated acceptance input.")
+    draft = dict(kind="WorkspaceTaskSpecDraft@2", schema_version=2, format="json", format_version=1, canonicalization="RFC8785", publication_key="fixture/goal", task_id="greeting", recorder=recorder, registry_upgrade=None, spec_id="greeting-v1", contract_kind="goal", expected_previous=None, problem={key: problem[key] for key in ("revision", "manifest_sha256")}, title="Named greeting", objective="Support an optional name while keeping the default greeting.", documents=[dict(id="spec", source=dict(kind="file", locator=str(doc), sha256=digest(doc), size_bytes=doc.stat().st_size, media_type="text/markdown", git_provenance=None))], design=[dict(document_id="spec", section=None)], requirements=[dict(id="greeting", acceptance="The existing default and named greetings are verified.")], constraints=["No agent starts during this fixture."], executor=dict(provider=None, model=None, effort=None), change_reason="Register isolated acceptance input.")
     path = root / "goal.json"
     path.write_text(json.dumps(draft))
     spec = run([ply, "workspace", "task", "spec", "record", "greeting", "--file", path, "--format", "json"], root)["outcome_ref"]

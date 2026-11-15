@@ -112,9 +112,15 @@ func TestRegistryDeliveredTransitionFaultsAndRetry(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			r.FormatVersion, r.FormatBoundary = 4, nil
+			// The stored registry may carry an evidence envelope, so compare records.
+			original, err := newSystemWorkItemStore().decodeStoredRegistry(root, before)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r.FormatVersion, r.FormatBoundary = original.FormatVersion, original.FormatBoundary
 			restored, err := encodeWorkItemRegistry(r)
-			if err != nil || !bytes.Equal(restored, before) {
+			want, wantErr := encodeWorkItemRegistry(original)
+			if err != nil || wantErr != nil || !bytes.Equal(restored, want) {
 				t.Fatal("migration changed records")
 			}
 			queueSetFixture(t, f, "compatible-format-5-write", []TaskGoalQueueEntry{})
@@ -265,7 +271,7 @@ func TestRegistryDeliveredProcessKillRecovery(t *testing.T) {
 			if stage == "replace" && !bytes.Equal(before, after) {
 				t.Fatal("registry changed before replacement")
 			}
-			if _, err := decodeWorkItemRegistry(after); err != nil {
+			if _, err := newSystemWorkItemStore().decodeStoredRegistry(root, after); err != nil {
 				t.Fatalf("partial registry after SIGKILL: %v", err)
 			}
 			got, err := UpgradeRegistry(f.dependencies, directory, pin, p.Confirmation, true)
