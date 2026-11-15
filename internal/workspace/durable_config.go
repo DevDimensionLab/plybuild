@@ -91,7 +91,7 @@ func ensureDefinitionEpics(d Dependencies, root string) error {
 			path, err := canonicalDirectory(d.Files, root, e.Path, "Epic worktree")
 			existing, _ := findEpic(registry, epicID)
 			if err != nil && existing != nil {
-				path, err = archivedEpicLocator(d.Files, root, e.Path, epicID, err)
+				path, err = missingEpicLocator(d.Files, root, e.Path, err)
 			}
 			if err != nil {
 				return err
@@ -123,19 +123,14 @@ func ensureDefinitionEpics(d Dependencies, root string) error {
 	return nil
 }
 
-func archivedEpicLocator(files FileSystem, root, input string, epicID EpicID, pathErr error) (string, error) {
+// missingEpicLocator lets a registered Epic whose worktree is gone keep its
+// locator, so that one missing worktree stops only that Epic, not the Project.
+func missingEpicLocator(files FileSystem, root, input string, pathErr error) (string, error) {
 	absolute := filepath.Clean(input)
 	if !filepath.IsAbs(absolute) {
 		absolute = filepath.Join(root, absolute)
 	}
 	if _, err := files.Lstat(absolute); !errors.Is(err, fs.ErrNotExist) {
-		return "", pathErr
-	}
-	lifecycles, err := readWorkItemLifecycle(root)
-	if err != nil {
-		return "", err
-	}
-	if lifecycles.Epic(epicID) != LifecycleArchived {
 		return "", pathErr
 	}
 	parent, err := files.EvalSymlinks(filepath.Dir(absolute))

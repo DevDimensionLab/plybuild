@@ -148,15 +148,12 @@ func TestRetireDefinedEpicsInTurnKeepsTheWorkspaceUsable(t *testing.T) {
 }
 
 // The state an earlier Ply left: worktree and branch gone, Epic not archived.
-// Retire names the recovery; with the worktree back on its path it finishes.
-func TestRetireRecoversAWorktreeRemovedBeforeArchiving(t *testing.T) {
+// Retire finishes by archiving it.
+func TestRetireFinishesAnEpicWhoseWorktreeIsGone(t *testing.T) {
 	x := definedEpicRetireFixture(t)
 	runLocalGit(t, x.repository, "worktree", "remove", x.epic)
 	runLocalGit(t, x.repository, "branch", "-D", "epic")
-	_, err := x.retire(true)
-	requireWorkClass(t, err, ErrorWorkPathConflict)
-	runLocalGit(t, x.repository, "worktree", "add", x.epic, "-b", "epic", "refs/heads/main")
-	if r, err := x.retire(true); err != nil || r.Worktree != "removed" || r.Branch != "deleted" || r.Lifecycle != LifecycleArchived {
-		t.Fatalf("rerun %+v %v", r, err)
+	if r, err := x.retire(true); err != nil || r.Worktree != "absent" || r.Branch != "absent" || r.Lifecycle != LifecycleArchived {
+		t.Fatalf("retire %+v %v", r, err)
 	}
 }

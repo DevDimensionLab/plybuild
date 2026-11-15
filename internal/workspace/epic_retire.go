@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"path/filepath"
-	"strings"
 )
 
 // EpicRetireInput names one repository binding of an integrated Epic and the
@@ -38,10 +36,8 @@ type EpicRetireResult struct {
 
 // RetireEpic removes an integrated Epic's clean worktree and its branch once
 // the branch commit is contained in the target ref and no Task of the Epic
-// still has a worktree. It archives the Epic before any Git effect: the
-// definitions keep naming the worktree path, and only an archived Epic may
-// lack it, so a stop between the steps never leaves the workspace unusable.
-// The registry keeps the binding as history. A rerun finishes what an
+// still has a worktree. It archives the Epic before any Git effect. The
+// registry keeps the binding as history. A rerun finishes what an
 // interrupted run left.
 func RetireEpic(d Dependencies, input EpicRetireInput) (EpicRetireResult, error) {
 	if _, err := ParseEpicID(string(input.EpicID)); err != nil {
@@ -51,13 +47,6 @@ func RetireEpic(d Dependencies, input EpicRetireInput) (EpicRetireResult, error)
 		return EpicRetireResult{}, workError(ErrorWorkInvalidArguments, "target ref and actor are required", nil)
 	}
 	if err := requireWorkMutationDependencies(d); err != nil {
-		return EpicRetireResult{}, err
-	}
-	observed, err := ObserveContainingRoot(d)
-	if err != nil {
-		return EpicRetireResult{}, err
-	}
-	if err := checkEpicPathPresent(d, observed.Root, input); err != nil {
 		return EpicRetireResult{}, err
 	}
 	root, err := containingWorkItemWorkspace(d)
@@ -182,35 +171,5 @@ func retireEpicLocked(d Dependencies, projects ProjectSnapshot, registry WorkIte
 		result.Branch = "deleted"
 	}
 	result.Applied = true
-	return nil
-}
-
-// checkEpicPathPresent names the one recovery when an earlier Ply removed the
-// worktree of a defined Epic before archiving it: every Project lookup then
-// fails until the worktree is back on its path.
-func checkEpicPathPresent(d Dependencies, root string, input EpicRetireInput) error {
-	defs, _, err := readDefinitions(root)
-	if err != nil || defs == nil {
-		return err
-	}
-	lifecycles, err := readWorkItemLifecycle(root)
-	if err != nil || lifecycles.Epic(input.EpicID) == LifecycleArchived {
-		return err
-	}
-	for _, p := range defs.Projects {
-		for _, e := range p.Epics {
-			if e.ID != string(input.EpicID) || e.Repo != string(input.RepoID) {
-				continue
-			}
-			path := e.Path
-			if !filepath.IsAbs(path) {
-				path = filepath.Join(root, path)
-			}
-			if _, err := d.Files.Lstat(path); errors.Is(err, fs.ErrNotExist) {
-				branch := strings.TrimPrefix(e.Ref, "refs/heads/")
-				return workError(ErrorWorkPathConflict, fmt.Sprintf("Epic %s is defined at %s, which is gone, and the Epic is not archived, so Project lookups fail; put the worktree back with git -C <repository> worktree add %s -b %s %s, then rerun retire", input.EpicID, path, path, branch, input.TargetRef), nil)
-			}
-		}
-	}
 	return nil
 }

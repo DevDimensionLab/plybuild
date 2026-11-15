@@ -109,17 +109,28 @@ func TestDurableConfigArchivedEpicWithoutWorktreeStaysHistorical(t *testing.T) {
 	}
 }
 
-func TestDurableConfigArchivedExceptionIsNarrow(t *testing.T) {
+// A missing worktree of one Epic, whatever its lifecycle, leaves the rest of
+// the Project usable; only that Epic is not ready.
+func TestDurableConfigMissingEpicWorktreeStopsOnlyThatEpic(t *testing.T) {
 	for _, state := range []LifecycleState{LifecycleActive, LifecycleParked, LifecycleFrozen, LifecycleCompleted} {
 		t.Run(string(state), func(t *testing.T) {
 			_, _, d := archivedEpicFixture(t, state)
-			if _, err := ListEpics(d); err == nil {
-				t.Fatal("missing non-archived Epic worktree accepted")
+			if epics, err := ListEpics(d); err != nil || len(epics.Epics) != 2 {
+				t.Fatalf("list: %#v, %v", epics, err)
+			}
+			if old, err := ShowEpic(d, "old"); err != nil || old.Ready {
+				t.Fatalf("Epic without worktree: %#v, %v", old, err)
+			}
+			if _, err := CreateTask(d, TaskCreateInput{TaskID: "other", Title: "Other", Description: "Other Epic", ParentEpicID: "feature", ProjectID: "sample", RepoID: "code"}); err != nil {
+				t.Fatalf("write on another Epic: %v", err)
 			}
 		})
 	}
+}
+
+func TestDurableConfigArchivedExceptionIsNarrow(t *testing.T) {
 	conflict, pathError := string(ErrorWorkIdentityConflict), string(ErrorProjectPath)
-	for test, want := range map[string]string{"project": conflict, "repo": conflict, "common-dir": conflict, "title": conflict, "ref": conflict, "locator": conflict, "corrupt-lifecycle": string(ErrorWorkStoreConflict), "unregistered": pathError, "dangling-symlink": pathError, "file": pathError, "parent-symlink": conflict, "permission": pathError} {
+	for test, want := range map[string]string{"project": conflict, "repo": conflict, "common-dir": conflict, "title": conflict, "ref": conflict, "locator": conflict, "unregistered": pathError, "dangling-symlink": pathError, "file": pathError, "parent-symlink": conflict, "permission": pathError} {
 		t.Run(test, func(t *testing.T) {
 			root, _, d := archivedEpicFixture(t, LifecycleArchived)
 			config := archivedEpicConfig
@@ -138,8 +149,6 @@ func TestDurableConfigArchivedExceptionIsNarrow(t *testing.T) {
 				config = strings.Replace(config, "refs/heads/old", "refs/heads/main", 1)
 			case "locator":
 				config = strings.Replace(config, "box/old", "box/moved", 1)
-			case "corrupt-lifecycle":
-				err = os.WriteFile(lifecycleLocator(root), []byte("{"), 0644)
 			case "unregistered":
 				err = os.Remove(workItemsPath(root))
 			case "dangling-symlink":
