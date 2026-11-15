@@ -17,7 +17,7 @@ func TestRegistrationClockRegressionIsVisible(t *testing.T) {
 	f.append(t, f.input)
 	now = now.Add(-time.Minute)
 	in := f.input
-	in.PublicationKey = "regressed-clock"
+	in.PublicationKey, in.OccurredAt = "regressed-clock", ptr("2026-10-03T09:58:00Z")
 	r := f.append(t, in)
 	s := f.show(t)
 	found := false

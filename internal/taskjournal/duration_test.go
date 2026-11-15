@@ -6,6 +6,7 @@ import (
 	"math"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 )
@@ -13,6 +14,8 @@ import (
 func closedDurationFixture(t *testing.T, start, finish string) (testFixture, Snapshot) {
 	t.Helper()
 	f := fixture(t)
+	// Ply refuses a report after its registration time, so it registers later.
+	f.s.Now = func() time.Time { return time.Date(9999, 12, 31, 23, 59, 59, 999999999, time.UTC) }
 	in := f.input
 	in.PublicationKey, in.Type = "duration:start", "step_started"
 	in.Step = &StepRef{"measured", "implementation", nil}

@@ -331,7 +331,14 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if len(records) > 0 {
 		prev = ptr(records[len(records)-1].SHA256)
 	}
-	r := Record{"ply.workspace.task-journal-record", 1, ws, task, eventID(ws, task, c.PublicationKey), len(records) + 1, prev, s.Now().UTC().Format(time.RFC3339Nano), hash(b), b}
+	now := s.Now().UTC()
+	if c.OccurredAt != nil {
+		// One clock serves Ply and the reporter here; a second covers precision.
+		if at, e := parseTime(*c.OccurredAt); e == nil && at.After(now.Add(time.Second)) {
+			return result, invalid("occurred_at is after Ply's registration time " + now.Format(time.RFC3339))
+		}
+	}
+	r := Record{"ply.workspace.task-journal-record", 1, ws, task, eventID(ws, task, c.PublicationKey), len(records) + 1, prev, now.Format(time.RFC3339Nano), hash(b), b}
 	bytes, e := Canonical(r)
 	if e != nil {
 		return result, e

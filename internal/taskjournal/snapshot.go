@@ -14,6 +14,10 @@ func (s Service) build(b workspace.TaskJournalBasis, records []stored) (Snapshot
 		return out, e
 	}
 	var previousRegistration *time.Time
+	// reportedOutOfOrder bounds how far a report may fall behind the same
+	// actor's previous report before it is marked.
+	const reportedOutOfOrder = 5 * time.Minute
+	previousReported := map[string]time.Time{}
 	for _, r := range records {
 		c := r.Common
 		src := out.source("contribution", r.Locator, &r.SHA256, &r.Record.Sequence, r.Record.PreviousSHA256)
@@ -44,6 +48,14 @@ func (s Service) build(b workspace.TaskJournalBasis, records []stored) (Snapshot
 			out.Observations = append(out.Observations, Observation{*x, ev.EventID})
 		}
 		out.Events = append(out.Events, ev)
+		if c.OccurredAt != nil {
+			if at, e := parseTime(*c.OccurredAt); e == nil {
+				if before, ok := previousReported[c.Actor.ID]; ok && at.Before(before.Add(-reportedOutOfOrder)) {
+					out.reason("reported_time_out_of_order", "Event "+ev.EventID+" is reported more than 5 minutes before the previous report of actor "+c.Actor.ID, src)
+				}
+				previousReported[c.Actor.ID] = at
+			}
+		}
 		registration, _ := parseTime(r.Record.RecordedAt)
 		if previousRegistration != nil && registration.Before(*previousRegistration) {
 			out.Coverage.TimeConflictEventIDs = append(out.Coverage.TimeConflictEventIDs, ev.EventID)

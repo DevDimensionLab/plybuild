@@ -519,3 +519,32 @@ func TestPlyRecordsAndSourcelessNotes(t *testing.T) {
 		t.Fatalf("sourceless decision: %v", e)
 	}
 }
+
+// K5: a reported time after Ply's registration is refused; one well before
+// the same actor's previous report is kept and marked.
+func TestReportedTimeAfterRegistrationRefusedAndBackwardsMarked(t *testing.T) {
+	f := fixture(t)
+	f.s.Now = func() time.Time { return time.Date(2026, 11, 15, 12, 0, 0, 0, time.UTC) }
+	future := f.input
+	future.PublicationKey, future.OccurredAt = "time:future", ptr("2026-11-15T12:00:05Z")
+	if _, e := f.s.Append("task", f.file(t, future), "event"); e == nil || !strings.Contains(e.Error(), "occurred_at is after Ply's registration time") {
+		t.Fatalf("future time: %v", e)
+	}
+	late := f.input
+	late.PublicationKey, late.OccurredAt = "time:late", ptr("2026-11-15T11:50:00Z")
+	f.append(t, late)
+	early := f.input
+	early.PublicationKey, early.OccurredAt = "time:early", ptr("2026-11-15T11:40:00Z")
+	r := f.append(t, early)
+	snap, e := f.s.Show("task", Options{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	marked := false
+	for _, reason := range snap.Coverage.Reasons {
+		marked = marked || reason.Code == "reported_time_out_of_order" && strings.Contains(reason.Detail, r.EventID)
+	}
+	if !marked {
+		t.Fatalf("backwards report not marked: %+v", snap.Coverage.Reasons)
+	}
+}
