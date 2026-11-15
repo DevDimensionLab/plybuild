@@ -251,12 +251,23 @@ func (s Service) AppendEvent(task string, in EventInput) (AppendResult, error) {
 var attemptOperations = map[string]bool{"goal_start_reserved": true, "goal_start_started": true, "goal_start_prompt_submitted": true}
 
 // AppendPly records an operation Ply performed for actor, at Ply's own time.
-// A plan link equal to the latest one, and a repeated identical operation,
-// return the earlier record instead of a new one.
+// References with an empty value are left out. A plan link equal to the
+// latest one, and a repeated identical operation, return the earlier record
+// instead of a new one.
 func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendResult, error) {
 	if _, e := workspace.ParseTaskID(task); e != nil {
 		return AppendResult{}, e
 	}
+	var refs map[string]string
+	for key, value := range action.Refs {
+		if value != "" {
+			if refs == nil {
+				refs = map[string]string{}
+			}
+			refs[key] = value
+		}
+	}
+	action.Refs = refs
 	if actor == "" {
 		actor = "unknown"
 	}

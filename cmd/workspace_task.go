@@ -251,11 +251,6 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			if r.GitChanged != nil {
 				refs["git_changed"] = fmt.Sprint(*r.GitChanged)
 			}
-			for key, value := range refs {
-				if value == "" {
-					delete(refs, key)
-				}
-			}
 			err = services.record(string(input.TaskID), plyActor(actor), "the integration is applied", taskjournal.PlyAction{Operation: "integration", Refs: refs})
 		}
 		if err == nil && input.Apply && out.Readback.RecoveryStatus == "complete" && !keepWorktree && services.retireWorktree != nil {
@@ -308,11 +303,6 @@ func retireTaskAfterIntegration(cmd *cobra.Command, services workspaceTaskServic
 	fmt.Fprintf(cmd.ErrOrStderr(), "Worktree %s, branch %s\n", result.Worktree, result.Branch)
 	if services.record != nil {
 		refs := map[string]string{"worktree": result.Worktree, "branch": result.Branch, "locator": result.Locator, "ref": result.Ref}
-		for key, value := range refs {
-			if value == "" {
-				delete(refs, key)
-			}
-		}
 		if err := services.record(string(task), actor, "the worktree is retired", taskjournal.PlyAction{Operation: "worktree_retire", Refs: refs}); err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "Warning: %v\n", err)
 		}
@@ -346,11 +336,6 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		refs := map[string]string{"outcome": result.Outcome}
 		if wt := result.Task.Worktree; wt != nil {
 			refs["ref"], refs["oid"], refs["locator"] = wt.Ref, wt.OID, wt.Locator
-		}
-		for key, value := range refs {
-			if value == "" {
-				delete(refs, key)
-			}
 		}
 		return services.record(args[0], plyActor(actor), "the worktree is created", taskjournal.PlyAction{Operation: "worktree_create", Refs: refs})
 	}}
