@@ -8,9 +8,16 @@ import (
 )
 
 func newWorkspaceEpicIntegrateCommand(d workspace.Dependencies) *cobra.Command {
-	return newWorkspaceEpicIntegrateCommandWith(func(input workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
-		return workspace.IntegrateEpic(d, input)
+	var actor string
+	c := newWorkspaceEpicIntegrateCommandWith(func(input workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
+		result, err := workspace.IntegrateEpic(d, input)
+		if err == nil && result.Applied && result.Effect == "fast_forwarded" {
+			err = recordEpicIntegration(d, input, result, plyActor(actor))
+		}
+		return result, err
 	})
+	c.Flags().StringVar(&actor, "actor", "", "who integrates, recorded in the journals of the Tasks it brings to the target (default: PLY_ACTOR)")
+	return c
 }
 
 func newWorkspaceEpicIntegrateCommandWith(integrate func(workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error)) *cobra.Command {

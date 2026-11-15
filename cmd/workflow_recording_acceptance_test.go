@@ -330,3 +330,28 @@ func TestJournalLinkAndStepCommands(t *testing.T) {
 		t.Fatalf("events %+v", trace.Events)
 	}
 }
+
+// K6: Epic -> main is recorded on the Tasks it brings to the target for the
+// first time, with the exact before and after commits.
+func TestEpicIntegrateRecordsOnNewlyIntegratedTasks(t *testing.T) {
+	f, oid := recordingFixture(t)
+	repo := filepath.Join(f.root, "repo")
+	f.git(t, repo, "branch", "main", oid)
+	env := map[string]string{"PLY_ACTOR": "planner-a"}
+	registerGoal(t, f, "shipped", "--plan", "PLAN-1", "--actor", "planner-a")
+	f.success(t, f.root, "workspace", "task", "worktree", "create", "shipped", "--branch", "shipped", "--path", filepath.Join(f.root, "shipped"), "--expected-parent-oid", oid)
+	candidate := integrateTask(t, f, "shipped", oid, env)
+	if _, stderr, exit := f.run(t, f.root, env, "workspace", "epic", "integrate", "work", "--repo", "code", "--target-ref", "refs/heads/main", "--expected-target-oid", oid, "--expected-epic-oid", candidate, "--apply"); exit != 0 {
+		t.Fatalf("epic integrate: %d %s", exit, stderr)
+	}
+	var epic *taskjournal.EventInput
+	for _, ev := range plyActions(t, f, "shipped") {
+		var in taskjournal.EventInput
+		if e := json.Unmarshal(ev.Data, &in); e == nil && in.Ply != nil && in.Ply.Operation == "epic_integrate" {
+			epic = &in
+		}
+	}
+	if epic == nil || epic.Actor.ID != "planner-a" || epic.Ply.Refs["before_oid"] != oid || epic.Ply.Refs["after_oid"] != candidate || epic.Ply.Refs["effect"] != "fast_forwarded" || epic.Ply.Refs["target_ref"] != "refs/heads/main" {
+		t.Fatalf("epic integration record %+v", epic)
+	}
+}

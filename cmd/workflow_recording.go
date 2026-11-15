@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"slices"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
@@ -79,4 +80,49 @@ func plyTitle(action taskjournal.PlyAction) string {
 		return "Task belongs to " + *action.Plan
 	}
 	return "Ply " + action.Operation
+}
+
+// recordEpicIntegration records epic_integrate in the journal of each Task
+// whose integrated result reached the target with this fast-forward: it is
+// in the new target commit and was not in the old one.
+func recordEpicIntegration(d workspace.Dependencies, input workspace.EpicIntegrateInput, result workspace.EpicIntegrateResult, actor string) error {
+	done := "the target is fast-forwarded"
+	epic, err := workspace.ShowEpic(d, input.EpicID)
+	if err != nil {
+		return fmt.Errorf("%s; reading the Epic for its Task journals failed: %w", done, err)
+	}
+	gitDir := ""
+	for _, b := range epic.Epic.RepoBindings {
+		if b.RepoID == input.RepoID {
+			gitDir = b.GitCommonDir
+		}
+	}
+	w, err := workspace.ObserveContainingRoot(d)
+	if err != nil {
+		return fmt.Errorf("%s; %w", done, err)
+	}
+	tasks, err := taskjournal.JournalTasks(w.Root)
+	if err != nil {
+		return fmt.Errorf("%s; %w", done, err)
+	}
+	ancestor := func(commit, of string) bool {
+		return exec.Command("git", "--git-dir", gitDir, "merge-base", "--is-ancestor", commit, of).Run() == nil
+	}
+	refs := map[string]string{"epic": string(input.EpicID), "repo": string(input.RepoID), "target_ref": result.TargetRef, "before_oid": input.ExpectedTargetOID, "after_oid": result.TargetOID, "effect": result.Effect}
+	for _, task := range tasks {
+		records, _ := taskjournal.ReadContributions(w, task)
+		for _, r := range records {
+			p := r.Event
+			if p == nil || p.Ply == nil || p.Ply.Operation != "integration" || p.Ply.Refs["epic"] != string(input.EpicID) {
+				continue
+			}
+			if oid := p.Ply.Refs["result_oid"]; oid != "" && ancestor(oid, result.TargetOID) && !ancestor(oid, input.ExpectedTargetOID) {
+				if err := recordPly(d, task, actor, done, taskjournal.PlyAction{Operation: "epic_integrate", Refs: refs}); err != nil {
+					return err
+				}
+				break
+			}
+		}
+	}
+	return nil
 }
