@@ -2,15 +2,18 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // recordingFixture is a workspace with one Epic and PLAN-1 (steps impl and
@@ -183,5 +186,114 @@ func TestTaskIntegrateRecordsActorAndResult(t *testing.T) {
 	}
 	if integration == nil || integration.Actor.ID != "planner-a" || integration.Ply.Refs["result_oid"] != candidate || integration.Ply.Refs["epic"] != "work" {
 		t.Fatalf("integration record %+v", integration)
+	}
+}
+
+// planTraceDoc is the part of PlyPlanTrace@1 the acceptance reads.
+type planTraceDoc struct {
+	Kind string `json:"kind"`
+	Plan struct {
+		ID        string `json:"id"`
+		Revisions []struct {
+			Revision int    `json:"revision"`
+			Actor    string `json:"actor"`
+		} `json:"revisions"`
+	} `json:"plan"`
+	Tasks []struct {
+		TaskID   string  `json:"task_id"`
+		PlanStep *string `json:"plan_step"`
+	} `json:"tasks"`
+	Events []struct {
+		TaskID       string  `json:"task_id"`
+		Type         string  `json:"type"`
+		ActorID      *string `json:"actor_id"`
+		Role         *string `json:"role"`
+		StepID       *string `json:"step_id"`
+		StepKind     *string `json:"step_kind"`
+		PlanStep     *string `json:"plan_step"`
+		PlyOperation *string `json:"ply_operation"`
+		RecordedAt   *string `json:"recorded_at"`
+	} `json:"events"`
+}
+
+// K8: one read gives the plan revisions, its linked Tasks and all their
+// journal events with roles, steps and plan step; unlinked Tasks stay out.
+func TestPlanTraceReadsLinkedTasksAndTheirJournals(t *testing.T) {
+	f, _ := recordingFixture(t)
+	registerGoal(t, f, "first", "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "planner-a")
+	registerGoal(t, f, "second", "--plan", "PLAN-1", "--plan-step", "review", "--actor", "planner-a")
+	registerGoal(t, f, "other", "--actor", "planner-a")
+	step := map[string]any{"kind": "ply.workspace.task-journal-event-input", "schema_version": 1, "publication_key": "dev:1", "task_id": "first",
+		"actor": map[string]any{"id": "dev-1", "role": "developer", "session_id": nil}, "activity_id": nil, "run_binding": nil,
+		"occurred_at": "2026-11-15T10:00:00Z", "time_basis": map[string]any{"kind": "reported", "clock": "agent", "precision": "second", "uncertainty": nil},
+		"sources": []any{}, "type": "step_started", "title": "Implement", "detail": "", "step": map[string]any{"id": "impl-1", "kind": "implementation", "parent_step_id": nil},
+		"outcome": nil, "candidate": nil, "relations": []any{}, "waiting": nil}
+	b, _ := json.Marshal(step)
+	input := filepath.Join(f.root, "step.json")
+	mustPlanWrite(t, input, string(b), 0600)
+	f.success(t, f.root, "workspace", "task", "journal", "record", "first", "--file", input)
+
+	var trace planTraceDoc
+	if e := json.Unmarshal([]byte(f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")), &trace); e != nil {
+		t.Fatal(e)
+	}
+	if trace.Kind != "PlyPlanTrace@1" || trace.Plan.ID != "PLAN-1" || len(trace.Plan.Revisions) != 1 || trace.Plan.Revisions[0].Actor != "planner-a" {
+		t.Fatalf("plan %+v", trace)
+	}
+	tasks := map[string]string{}
+	for _, task := range trace.Tasks {
+		tasks[task.TaskID] = *task.PlanStep
+	}
+	if len(tasks) != 2 || tasks["first"] != "impl" || tasks["second"] != "review" {
+		t.Fatalf("tasks %+v", trace.Tasks)
+	}
+	var developer, register bool
+	for _, ev := range trace.Events {
+		if ev.TaskID == "other" {
+			t.Fatalf("unlinked Task in trace: %+v", ev)
+		}
+		if ev.Type == "step_started" && ev.Role != nil && *ev.Role == "developer" && *ev.StepID == "impl-1" && *ev.StepKind == "implementation" && *ev.PlanStep == "impl" {
+			developer = true
+		}
+		if ev.PlyOperation != nil && *ev.PlyOperation == "goal_register" && ev.TaskID == "second" && *ev.ActorID == "planner-a" && *ev.Role == "ply" && ev.RecordedAt != nil {
+			register = true
+		}
+	}
+	if !developer || !register {
+		t.Fatalf("events %+v", trace.Events)
+	}
+	f.failure(t, f.root, nil, "PLAN-9", "plan", "trace", "PLAN-9", "--project", "example", "--format", "json")
+}
+
+// K8 budget: a plan with 10 Tasks and 500 events is read within 1 s.
+func TestPlanTraceReadsTenTasksAndFiveHundredEventsWithinASecond(t *testing.T) {
+	f, _ := recordingFixture(t)
+	for i := 0; i < 10; i++ {
+		registerGoal(t, f, fmt.Sprintf("load-%d", i), "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "planner-a")
+	}
+	t.Chdir(f.root)
+	journal := taskjournal.New(workspace.SystemDependencies())
+	for i := 0; i < 10; i++ {
+		for j := 0; j < 48; j++ { // with the two records of goal register: 50 per Task
+			if _, e := journal.AppendPly(fmt.Sprintf("load-%d", i), "dev", "load", taskjournal.PlyAction{Operation: "lifecycle"}); e != nil {
+				t.Fatal(e)
+			}
+		}
+	}
+	start := time.Now()
+	var trace planTraceDoc
+	if e := json.Unmarshal([]byte(f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")), &trace); e != nil {
+		t.Fatal(e)
+	}
+	elapsed := time.Since(start)
+	ply := 0
+	for _, ev := range trace.Events {
+		if ev.PlyOperation != nil {
+			ply++
+		}
+	}
+	t.Logf("plan trace: %d Tasks, %d events (%d ply) in %s", len(trace.Tasks), len(trace.Events), ply, elapsed)
+	if len(trace.Tasks) != 10 || ply != 500 || elapsed > time.Second {
+		t.Fatalf("%d Tasks, %d ply events in %s", len(trace.Tasks), ply, elapsed)
 	}
 }

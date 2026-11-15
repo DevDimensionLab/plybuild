@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
+	"github.com/devdimensionlab/plybuild/internal/plantrace"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -205,6 +206,41 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 	listCommand.Flags().StringVar(&status, "status", "", "only plans with this status: "+strings.Join(plan.Statuses, ", "))
 
 	addFlags(&cobra.Command{
+		Use:   "trace <PLAN-n>",
+		Short: "Read the recorded workflow of a plan: revisions, linked Tasks and their journal events",
+		Long: "A Task belongs to the plan when the latest plan link in its journal names it (goal register or task create with --plan).\n" +
+			"JSON is " + plantrace.Kind + ": the plan revisions, the linked Tasks with their plan step, and every event of their journals with actor, role, step, outcome and time, ordered by occurred, else recorded time. Nothing is interpreted.",
+		Args: validate(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			s, err := open()
+			if err != nil {
+				return err
+			}
+			trace, err := plantrace.Read(d, resolved.ID, s, args[0])
+			if err != nil {
+				return err
+			}
+			if format == "json" {
+				return writeAssignmentJSON(cmd.OutOrStdout(), trace)
+			}
+			var out strings.Builder
+			fmt.Fprintf(&out, "%s %s (%s): %d revisions, %d Tasks, %d events\n", trace.Plan.ID, trace.Plan.Title, trace.Plan.Status, len(trace.Plan.Revisions), len(trace.Tasks), len(trace.Events))
+			for _, e := range trace.Events {
+				when, who := "unknown", "unknown"
+				if t := at(e.OccurredAt, e.RecordedAt); t != nil {
+					when = *t
+				}
+				if e.ActorID != nil {
+					who = *e.ActorID + "/" + *e.Role
+				}
+				fmt.Fprintf(&out, "%s %s %s %s: %s\n", when, e.TaskID, who, e.Type, e.Title)
+			}
+			_, err = io.WriteString(cmd.OutOrStdout(), out.String())
+			return err
+		},
+	})
+
+	addFlags(&cobra.Command{
 		Use:   "history <PLAN-n>",
 		Short: "List revision, time, actor and reason of every revision",
 		Long:  "Revisions are listed in ascending order, never truncated. Read one with show --revision.",
@@ -333,6 +369,16 @@ func planListText(result plan.ListResult) string {
 		fmt.Fprintf(&out, "warning: invalid plan file %s: %s\n", invalid.File, invalid.Error)
 	}
 	return out.String()
+}
+
+// at is the first of the times that is known.
+func at(times ...*string) *string {
+	for _, t := range times {
+		if t != nil {
+			return t
+		}
+	}
+	return nil
 }
 
 func planInvalidArguments(detail string) error {
