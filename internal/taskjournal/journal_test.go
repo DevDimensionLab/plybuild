@@ -478,3 +478,44 @@ func TestRolesAndPreciseActorErrors(t *testing.T) {
 		})
 	}
 }
+
+// Ply writes its own records with role ply; a file input cannot claim them,
+// and notes need no source (backlog 20261115-08522a41, K1, K3, K4).
+func TestPlyRecordsAndSourcelessNotes(t *testing.T) {
+	f := fixture(t)
+	plan, step := "PLAN-39", "impl-d9"
+	r, e := f.s.AppendPly("task", "ply-epic", "Plan link", PlyAction{Operation: "plan_link", Plan: &plan, PlanStep: &step})
+	if e != nil || !r.Created {
+		t.Fatalf("append ply: %+v %v", r, e)
+	}
+	snap, e := f.s.Show("task", Options{})
+	if e != nil {
+		t.Fatal(e)
+	}
+	var found bool
+	for _, ev := range snap.Events {
+		if ev.EventID == r.EventID {
+			found = ev.Type == "ply_action" && ev.Actor != nil && ev.Actor.ID == "ply-epic" && ev.Actor.Role == "ply" && ev.OccurredAt != nil && strings.Contains(string(ev.Data), `"plan":"PLAN-39"`)
+		}
+	}
+	if !found {
+		t.Fatalf("ply record missing from snapshot: %+v", snap.Events)
+	}
+	if p, e := f.s.PlanLink("task"); e != nil || p == nil || *p.Plan != plan || *p.PlanStep != step {
+		t.Fatalf("plan link %+v %v", p, e)
+	}
+	forged := f.input
+	forged.PublicationKey, forged.Actor, forged.Type, forged.Sources = "ply:forged", Actor{ID: "x", Role: "ply"}, "ply_action", []SourceRef{}
+	forged.Ply = &PlyAction{Operation: "plan_link", Plan: &plan}
+	if _, e := f.s.Append("task", f.file(t, forged), "event"); e == nil || !strings.Contains(e.Error(), "written by Ply") {
+		t.Fatalf("forged ply record: %v", e)
+	}
+	note := f.input
+	note.PublicationKey, note.Sources = "note:no-source", []SourceRef{}
+	f.append(t, note)
+	finished := f.input
+	finished.PublicationKey, finished.Sources, finished.Type = "finish:no-source", []SourceRef{}, "decision"
+	if _, e := f.s.Append("task", f.file(t, finished), "event"); e == nil || !strings.Contains(e.Error(), "source") {
+		t.Fatalf("sourceless decision: %v", e)
+	}
+}

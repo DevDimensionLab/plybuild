@@ -76,6 +76,16 @@ type EventInput struct {
 	Candidate *Candidate `json:"candidate"`
 	Relations []Relation `json:"relations"`
 	Waiting   *Waiting   `json:"waiting"`
+	Ply       *PlyAction `json:"ply,omitempty"`
+}
+
+// PlyAction is what Ply itself records about an operation it performed: the
+// plan link of a Task or one of its own native actions, with plain references.
+type PlyAction struct {
+	Operation string            `json:"operation"`
+	Plan      *string           `json:"plan,omitempty"`
+	PlanStep  *string           `json:"plan_step,omitempty"`
+	Refs      map[string]string `json:"refs,omitempty"`
 }
 type Interval struct {
 	From     string   `json:"from"`

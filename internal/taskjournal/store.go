@@ -153,15 +153,70 @@ func retry(records []stored, c Common, b []byte) (AppendResult, bool, error) {
 	return AppendResult{}, false, nil
 }
 
-func (s Service) Append(task, file, kind string) (result AppendResult, err error) {
+// Append publishes one contribution read from file. Records with role ply
+// are Ply's own and come only from AppendPly.
+func (s Service) Append(task, file, kind string) (AppendResult, error) {
 	if _, e := workspace.ParseTaskID(task); e != nil {
-		return result, e
+		return AppendResult{}, e
 	}
 	b, e := readFile(file, inputLimit)
 	if e != nil {
-		return result, e
+		return AppendResult{}, e
 	}
-	c, ev, ob, b, e := parseInput(b, kind, task)
+	c, _, _, _, e := parseInput(b, kind, task)
+	if e != nil {
+		return AppendResult{}, e
+	}
+	if c.Actor.Role == plyRole {
+		return AppendResult{}, invalid("records with role ply are written by Ply, not from a file")
+	}
+	return s.appendInput(task, b, kind)
+}
+
+// AppendPly records an operation Ply performed for actor, at Ply's own time.
+func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendResult, error) {
+	if _, e := workspace.ParseTaskID(task); e != nil {
+		return AppendResult{}, e
+	}
+	if actor == "" {
+		actor = "unknown"
+	}
+	nonce := make([]byte, 8)
+	if _, e := rand.Read(nonce); e != nil {
+		return AppendResult{}, e
+	}
+	now := s.Now().UTC().Format(time.RFC3339Nano)
+	in := EventInput{Common: Common{Kind: "ply.workspace.task-journal-event-input", SchemaVersion: 1, PublicationKey: fmt.Sprintf("ply:%s:%x", action.Operation, nonce), TaskID: task,
+		Actor: Actor{ID: actor, Role: plyRole}, OccurredAt: &now, TimeBasis: TimeBasis{Kind: "observed", Clock: ptr("ply"), Precision: "nanosecond"}, Sources: []SourceRef{}},
+		Type: "ply_action", Title: title, Relations: []Relation{}, Ply: &action}
+	b, e := Canonical(in)
+	if e != nil {
+		return AppendResult{}, e
+	}
+	return s.appendInput(task, b, "event")
+}
+
+// PlanLink returns the latest plan link Ply recorded for task, or nil.
+func (s Service) PlanLink(task string) (*PlyAction, error) {
+	b, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
+	if e != nil {
+		return nil, e
+	}
+	records, e := readStore(b.Workspace.Root, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
+	if e != nil {
+		return nil, e
+	}
+	var link *PlyAction
+	for _, r := range records {
+		if r.Event != nil && r.Event.Ply != nil && r.Event.Ply.Operation == "plan_link" {
+			link = r.Event.Ply
+		}
+	}
+	return link, nil
+}
+
+func (s Service) appendInput(task string, raw []byte, kind string) (result AppendResult, err error) {
+	c, ev, ob, b, e := parseInput(raw, kind, task)
 	if e != nil {
 		return result, e
 	}

@@ -67,7 +67,9 @@ func shape(v any, t reflect.Type) error {
 		if !ok {
 			return invalid("expected object")
 		}
-		fields := map[string]reflect.Type{}
+		// Fields tagged omitempty were added later and may be absent; every
+		// other field is required, also as an explicit null or empty list.
+		fields, optional := map[string]reflect.Type{}, map[string]bool{}
 		var add func(reflect.Type)
 		add = func(t reflect.Type) {
 			for i := 0; i < t.NumField(); i++ {
@@ -75,21 +77,27 @@ func shape(v any, t reflect.Type) error {
 				if f.Anonymous {
 					add(f.Type)
 				} else {
-					n := strings.Split(f.Tag.Get("json"), ",")[0]
-					if n != "-" {
-						fields[n] = f.Type
+					tag := strings.Split(f.Tag.Get("json"), ",")
+					if tag[0] != "-" {
+						fields[tag[0]] = f.Type
+						optional[tag[0]] = len(tag) > 1 && tag[1] == "omitempty"
 					}
 				}
 			}
 		}
 		add(t)
-		if len(m) != len(fields) {
-			return invalid("missing or unknown fields in " + t.Name())
+		for n := range m {
+			if _, ok := fields[n]; !ok {
+				return invalid("missing or unknown fields in " + t.Name())
+			}
 		}
 		for n, ft := range fields {
 			x, ok := m[n]
+			if !ok && optional[n] {
+				continue
+			}
 			if !ok {
-				return invalid("missing " + n)
+				return invalid("missing or unknown fields in " + t.Name())
 			}
 			if e := shape(x, ft); e != nil {
 				return fmt.Errorf("%s: %w", n, e)
@@ -204,8 +212,15 @@ func validateTime(at *string, b TimeBasis) error {
 }
 
 // Roles are the actor roles a journal input may claim; Ply's own records use
-// the role ply.
+// plyRole.
 var Roles = []string{"human", "planner", "developer", "reviewer", "observer", "tool"}
+
+const plyRole = "ply"
+
+// PlyOperations are the operations Ply records in a Task journal.
+var PlyOperations = []string{"plan_link", "task_create", "goal_register", "goal_start_reserved", "goal_start_started", "goal_start_prompt_submitted", "integration", "lifecycle", "epic_integrate"}
+
+var planIDPattern = regexp.MustCompile(`^PLAN-[1-9][0-9]{0,8}$`)
 
 func validateCommon(c Common, kind, task string) error {
 	if c.Kind != "ply.workspace.task-journal-"+kind+"-input" || c.SchemaVersion != 1 || c.TaskID != task || !keyPattern.MatchString(c.PublicationKey) {
@@ -214,7 +229,7 @@ func validateCommon(c Common, kind, task string) error {
 	switch {
 	case !textOK(c.Actor.ID, 256, false):
 		return invalid("actor.id must be one line of 1 to 256 characters")
-	case !one(c.Actor.Role, Roles...):
+	case !one(c.Actor.Role, append(Roles, plyRole)...):
 		return invalid("actor.role must be one of " + strings.Join(Roles, ", "))
 	case !optionalText(c.Actor.SessionID, 256):
 		return invalid("actor.session_id must be null or one line of 1 to 256 characters")
@@ -223,9 +238,6 @@ func validateCommon(c Common, kind, task string) error {
 	}
 	if e := validateTime(c.OccurredAt, c.TimeBasis); e != nil {
 		return e
-	}
-	if len(c.Sources) == 0 {
-		return invalid("at least one source is required")
 	}
 	for _, s := range c.Sources {
 		if !filepath.IsAbs(s.Locator) || filepath.Clean(s.Locator) != s.Locator || !hexHash.MatchString(s.SHA256) {
@@ -261,6 +273,13 @@ func parseInput(b []byte, kind, task string) (Common, *EventInput, *ObservationI
 	if e := validateCommon(c, kind, task); e != nil {
 		return c, nil, nil, nil, e
 	}
+	ply := c.Actor.Role == plyRole
+	if ply != strings.HasPrefix(c.PublicationKey, "ply:") || ply != (ev != nil && ev.Type == "ply_action") || ev != nil && (ev.Ply != nil) != (ev.Type == "ply_action") {
+		return c, nil, nil, nil, invalid("role ply, type ply_action, the ply field and a ply: publication key belong together; such records are written by Ply")
+	}
+	if len(c.Sources) == 0 && (ev == nil || !one(ev.Type, "note", "step_started", "ply_action")) {
+		return c, nil, nil, nil, invalid("at least one source is required except for note, step_started and ply_action")
+	}
 	var value any
 	var e error
 	if ev != nil {
@@ -275,8 +294,18 @@ func parseInput(b []byte, kind, task string) (Common, *EventInput, *ObservationI
 	return c, ev, ob, canonical, e
 }
 func validateEventInput(ev *EventInput) error {
-	if !one(ev.Type, "step_started", "step_finished", "note", "decision") || !textOK(ev.Title, 256, false) || ev.Detail != "" {
+	if !one(ev.Type, "step_started", "step_finished", "note", "decision", "ply_action") || !textOK(ev.Title, 256, false) || ev.Detail != "" {
 		return invalid("invalid event type, title or detail (detail must be empty in v1)")
+	}
+	if p := ev.Ply; p != nil {
+		if !one(p.Operation, PlyOperations...) || p.Plan != nil && !planIDPattern.MatchString(*p.Plan) || p.PlanStep != nil && (p.Plan == nil || !textOK(*p.PlanStep, 64, false)) || len(p.Refs) > 16 {
+			return invalid("invalid ply action")
+		}
+		for k, v := range p.Refs {
+			if !textOK(k, 64, false) || !textOK(v, 256, false) {
+				return invalid("invalid ply action reference")
+			}
+		}
 	}
 	if ev.Outcome != nil && !one(*ev.Outcome, "pass", "fail", "complete", "blocked", "unknown", "deferred", "declined") {
 		return invalid("invalid reported outcome")
