@@ -31,8 +31,7 @@ Do not ask for:
 1. **Context.** Reuse the workspace, project, repository and Task that your
    assignment already names, for example in its mandate, handoff or Ply
    context. Only when it names none, fall back to discovery:
-   - `WS`: the nearest ancestor of `pwd -P` that contains
-     `.ply/workspace.yaml`.
+   - `WS`: `workspace.root` from `ply workspace project list --format json`.
    - `PROJECT`: the project from `ply workspace project list --format json`
      whose wrapper or repository contains your cwd.
 
