@@ -126,8 +126,11 @@ func TestGoalStartMapsPlanToStartInputKeepingPromptBindingAndInheritedRuntime(t 
 	if in.Key != "task-1" || in.ReceiptPath != "/r/task-1.json" || in.Provider != "claude" || in.Cwd != "/wt" || in.Workspace != "wM" || in.Label != "task-1" || in.Herdr != herdr {
 		t.Fatalf("%+v", in)
 	}
-	if in.Model != nil || in.Effort != nil || in.Permission != nil || in.CodexProfile != nil || len(in.Env) != 0 {
+	if in.Model != nil || in.Effort != nil || in.Permission != nil || in.CodexProfile != nil {
 		t.Fatal("Goal start must inherit provider runtime configuration")
+	}
+	if !reflect.DeepEqual(in.Env, []string{"PLY_ACTOR=claude:task-1"}) {
+		t.Fatalf("the agent's Ply records need a known actor: %q", in.Env)
 	}
 	if in.Prompt != wantGoalPrompt+`{"a":1}` {
 		t.Fatalf("prompt changed: %q", in.Prompt)
@@ -375,7 +378,7 @@ func TestGoalStartPromptAsksAPlanLinkedTaskToRecordItsSteps(t *testing.T) {
 	if !found {
 		t.Fatalf("Goal not kept first: %q", prompt)
 	}
-	for _, want := range []string{"PLAN-39 step impl-d10", "ply workspace task journal step start task-1 --id", "step finish task-1", "--parent", "waiting", "declined", "journal note task-1"} {
+	for _, want := range []string{"PLAN-39 step impl-d10", "ply workspace task journal step start task-1 --id", "step finish task-1", "--parent", "waiting", "declined", "journal note task-1", "PLY_ACTOR", "final reporting and cleanup use kind coordination"} {
 		if !strings.Contains(rest, want) {
 			t.Errorf("instruction lacks %q: %q", want, rest)
 		}

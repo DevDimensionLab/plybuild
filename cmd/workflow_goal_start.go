@@ -41,7 +41,7 @@ func journalInstruction(task string, link *taskjournal.PlyAction) string {
 	if link.PlanStep != nil {
 		belongs += " step " + *link.PlanStep
 	}
-	return fmt.Sprintf("\n\nThis Task belongs to %s. Record each work step in the Task journal: ply workspace task journal step start %s --id <id> --kind <kind> --title <title> when it starts, and ply workspace task journal step finish %s with the same --id, --kind and --title plus --outcome <outcome> when it ends. Use --parent <id> for a step inside another, such as a correction or review. Kinds: %s. Outcomes: %s. When you return, record ply workspace task journal note %s --title <title>.",
+	return fmt.Sprintf("\n\nThis Task belongs to %s. Record each work step in the Task journal: ply workspace task journal step start %s --id <id> --kind <kind> --title <title> when it starts, and ply workspace task journal step finish %s with the same --id, --kind and --title plus --outcome <outcome> when it ends. Use --parent <id> for a step inside another, such as a correction or review. Kinds: %s; final reporting and cleanup use kind coordination. Outcomes: %s. When you return, record ply workspace task journal note %s --title <title>. Ply sets PLY_ACTOR in this terminal, so these entries name you; do not pass --actor.",
 		belongs, task, task, strings.Join(taskjournal.StepKinds, ", "), strings.Join(taskjournal.Outcomes, ", "), task)
 }
 
@@ -74,6 +74,11 @@ func goalExecutorOf(goal json.RawMessage) (goalExecutor, error) {
 	return goalExecutor{Provider: provider, Model: g.Executor.Model, Effort: g.Executor.Effort}, nil
 }
 
+// goalAgentActor is the actor the started agent's Ply commands record.
+func goalAgentActor(plan goalAgentPlan) string {
+	return plan.Provider + ":" + plan.Task
+}
+
 func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBinary, precondition func() error) agentstart.StartInput {
 	return agentstart.StartInput{
 		Key:          plan.Task,
@@ -84,6 +89,7 @@ func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBi
 		Cwd:          plan.Worktree,
 		Workspace:    plan.Workspace,
 		Label:        plan.Task,
+		Env:          []string{"PLY_ACTOR=" + goalAgentActor(plan)},
 		Prompt:       goalAgentPrompt + string(plan.Goal) + plan.Journal,
 		Herdr:        herdr,
 		Precondition: precondition,
@@ -131,7 +137,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 	var spec, herdrWorkspace, actor string
 	var revision int
 	var apply, resume bool
-	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start; everything else is inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start. The agent tab gets PLY_ACTOR=<provider>:<task>, so the Ply commands the agent runs record it as actor; everything else is inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if resume && !apply {
 			return fmt.Errorf("--resume requires --apply")
 		}
