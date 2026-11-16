@@ -1,6 +1,7 @@
 package workspace
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -15,6 +16,40 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/repohistory"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
+
+func TestProjectShowReturnsDefinedRemoteAndNullWhenAbsent(t *testing.T) {
+	f := newDefinitionFixture(t)
+	path := filepath.Join(f.root, workspacedef.File)
+	definitions := strings.Replace(fixtureDefinitions, `"path": "ply/main"`, `"path": "ply/main", "remote": "git@github.com:example/ply.git"`, 1)
+	mustWriteFile(t, path, definitions)
+	dependencies := SystemDependencies()
+	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: f.root}
+	for _, tc := range []struct {
+		project ProjectID
+		remote  any
+	}{{"ply", "git@github.com:example/ply.git"}, {"app", nil}} {
+		shown, err := ShowProject(dependencies, tc.project)
+		if err != nil {
+			t.Fatal(err)
+		}
+		encoded, err := MarshalProject(shown)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var readback struct {
+			Repositories []map[string]any `json:"repositories"`
+		}
+		if err := json.Unmarshal(encoded, &readback); err != nil {
+			t.Fatal(err)
+		}
+		if len(readback.Repositories) != 1 || readback.Repositories[0]["remote"] != tc.remote {
+			t.Fatalf("project %s remote: %s", tc.project, encoded)
+		}
+		if _, present := readback.Repositories[0]["remote"]; !present {
+			t.Fatalf("project %s missing remote field: %s", tc.project, encoded)
+		}
+	}
+}
 
 func assertWorkErrorClass(t *testing.T, err error, class WorkItemErrorClass) {
 	t.Helper()

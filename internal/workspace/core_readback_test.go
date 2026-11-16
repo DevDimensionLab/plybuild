@@ -163,8 +163,11 @@ func TestCoreReadSerializersPreserveStoredPathsSortAndEmptyArrays(t *testing.T) 
 	}
 	repoRows := value["repositories"].([]any)
 	firstRepo := repoRows[0].(map[string]any)
-	if firstRepo["repo_id"] != "a" || firstRepo["locator"] != "/missing A" || firstRepo["git_common_dir"] != "/A.git" || firstRepo["wrapper"] != nil {
+	if firstRepo["repo_id"] != "a" || firstRepo["locator"] != "/missing A" || firstRepo["git_common_dir"] != "/A.git" || firstRepo["wrapper"] != nil || firstRepo["remote"] != nil {
 		t.Fatalf("repos=%s", b)
+	}
+	if _, present := firstRepo["remote"]; !present {
+		t.Fatalf("remote field missing: %s", b)
 	}
 	for _, tc := range []struct {
 		marshal func() ([]byte, error)

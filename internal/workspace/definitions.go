@@ -204,7 +204,7 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 				return registry, err
 			}
 			project.RepoIDs = append(project.RepoIDs, RepoID(r.ID))
-			repos = append(repos, RepoRecord{ID: RepoID(r.ID), Locator: observed.Locator, GitCommonDir: observed.GitCommonDir})
+			repos = append(repos, RepoRecord{ID: RepoID(r.ID), Locator: observed.Locator, GitCommonDir: observed.GitCommonDir, Remote: r.Remote})
 		}
 		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
 		var errApply error

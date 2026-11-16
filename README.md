@@ -118,6 +118,8 @@ The wrapper and repository members are explicit and may be outside the workspace
 only the nominated worktree roots. Dirty repositories are accepted, and registration performs no
 discovery or Git mutation. Read registrations with `ply workspace project show <id>` and
 `ply workspace project list`. These commands also accept `--format json`.
+In `project show` JSON, each repository's `remote` is the URL from
+`ply-workspace.json`, or `null` when no remote is defined. Ply does not infer it from Git.
 See the [workspace read contract](docs/read-contract.md) for independent Task filters,
 versioned JSON schemas, and `ply capabilities`.
 

@@ -45,6 +45,7 @@ type RepoRecord struct {
 	ID           RepoID `yaml:"id"`
 	Locator      string `yaml:"locator"`
 	GitCommonDir string `yaml:"git_common_dir"`
+	Remote       string `yaml:"-"` // from ply-workspace.json; not part of the legacy registry
 }
 
 type ProjectResult struct {

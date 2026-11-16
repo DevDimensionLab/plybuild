@@ -103,6 +103,7 @@ type repositoryReadRecord struct {
 	Locator      string  `json:"locator"`
 	GitCommonDir string  `json:"git_common_dir"`
 	Wrapper      *string `json:"wrapper"`
+	Remote       *string `json:"remote"`
 }
 
 func projectRead(p ProjectRecord, metadata ProjectMetadataSnapshot) projectReadRecord {
@@ -127,7 +128,11 @@ func MarshalProjectList(result ProjectListResult) ([]byte, error) {
 func MarshalProject(result ProjectResult) ([]byte, error) {
 	repos := make([]repositoryReadRecord, 0, len(result.Repos))
 	for _, r := range result.Repos {
-		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, result.Metadata.RepositoryWrapper(r.ID)})
+		var remote *string
+		if r.Remote != "" {
+			remote = &r.Remote
+		}
+		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, result.Metadata.RepositoryWrapper(r.ID), remote})
 	}
 	sort.Slice(repos, func(i, j int) bool { return repos[i].ID < repos[j].ID })
 	return json.Marshal(struct {
