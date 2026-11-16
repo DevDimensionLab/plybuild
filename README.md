@@ -93,6 +93,20 @@ directory path. The directory does not need to be a Git repository. Re-running t
 safe and leaves an existing compatible marker unchanged. It does not create a Git repository or
 create workflows.
 
+To use a directory of repositories as a workspace with one Project, run from that directory:
+
+```shell script
+cd ~/github/trip
+ply workspace init --discover
+```
+
+This also writes `ply-workspace.json` with one Project whose ID is the directory name (or
+`--project <id>`) and whose wrapper is `.`. Each child directory holding a Git worktree root,
+as `<name>` or `<name>/main`, becomes repository `<name>` with the URL of its `origin` as
+`remote`. The output lists what was found and what was left out. Re-running with the same
+repositories changes nothing; other repositories are a conflict. A workspace whose Projects
+exist only in `.ply` is refused, because the new file would hide them.
+
 From an initialized workspace, or any directory below it, register a project with an explicit
 wrapper and one or more Git worktree roots:
 
@@ -137,8 +151,7 @@ identical retries (including symlinks and linked worktrees) do not rewrite regis
 Conflicting IDs or Git identities and unavailable worktrees fail without partial membership.
 This metadata operation accepts dirty repositories and paths outside the wrapper, requires no
 Epic, and leaves Tasks, queues, Runs, history, Git refs and source unchanged. It does not relocate
-or remove members, rebind execution, or grant cross-repository Epic support. `project init`
-remains outside these commands.
+or remove members, rebind execution, or grant cross-repository Epic support.
 
 Adopt one existing clean worktree as the repository anchor for a workspace-owned Epic:
 

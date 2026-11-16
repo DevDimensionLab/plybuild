@@ -224,6 +224,22 @@ func systemHooks() hooks {
 	return hooks{beforeFresh: func() {}, replace: atomicfile.Replace}
 }
 
+// Create writes definitions without Projects when root has none, while
+// holding <root>/.ply/projects.lock. Existing definitions are left unchanged.
+func Create(root string) error {
+	return WithLock(root, func() error {
+		path := filepath.Join(root, File)
+		if _, err := os.Lstat(path); !errors.Is(err, fs.ErrNotExist) {
+			return err
+		}
+		raw, err := json.MarshalIndent(Definitions{FormatVersion: 1, Projects: []Project{}}, "", "  ")
+		if err != nil {
+			return err
+		}
+		return atomicfile.Replace(path, append(raw, '\n'), 0o644)
+	})
+}
+
 // Update applies mutate to a copy of the definitions whose digest is basis
 // while holding <root>/.ply/projects.lock. check runs on the current
 // definitions and on a changed candidate before anything is written; it must

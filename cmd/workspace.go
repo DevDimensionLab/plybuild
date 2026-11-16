@@ -17,11 +17,13 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 			return nil
 		},
 	}
+	var discover bool
+	var project string
 	initCommand := &cobra.Command{
 		Use:     "init",
 		Short:   "Initialize a Ply workspace in the current directory",
-		Long:    "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.\nThe current directory does not need to be a Git repository.",
-		Example: "  ply workspace init",
+		Long:    "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.\nThe current directory does not need to be a Git repository.\nWith --discover it also writes ply-workspace.json with one Project (wrapper .) whose repositories are the Git worktree roots in <name> or <name>/main, with the URL of origin as remote.",
+		Example: "  ply workspace init\n  ply workspace init --discover",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 0 {
 				return workspace.InvalidArguments(fmt.Sprintf("expected no positional arguments, got %d", len(args)))
@@ -29,6 +31,12 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if project != "" && !discover {
+				return workspace.InvalidArguments("--project requires --discover")
+			}
+			if discover {
+				return runInitDiscover(cmd, dependencies, project)
+			}
 			result, err := workspace.Init(dependencies)
 			if err != nil {
 				return err
@@ -41,6 +49,8 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 			return err
 		},
 	}
+	initCommand.Flags().BoolVar(&discover, "discover", false, "also define one Project in ply-workspace.json with the Git repositories in <name> or <name>/main")
+	initCommand.Flags().StringVar(&project, "project", "", "Project ID for --discover (default the directory name)")
 	initCommand.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
 		return workspace.InvalidArguments(err.Error())
 	})
@@ -49,6 +59,30 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 	workspaceCommand.AddCommand(newWorkspaceOverviewCommand(dependencies), newWorkspaceDefinitionCommand(dependencies))
 	workspaceCommand.AddCommand(newWorkspaceRegistryCommand(dependencies))
 	return workspaceCommand
+}
+
+func runInitDiscover(cmd *cobra.Command, dependencies workspace.Dependencies, project string) error {
+	result, err := workspace.InitDiscover(dependencies, project)
+	if err != nil {
+		return err
+	}
+	out := cmd.OutOrStdout()
+	state := "already defined"
+	if result.Changed {
+		state = "defined"
+	}
+	fmt.Fprintf(out, "Ply workspace %s: Project %s %s in ply-workspace.json with %d repositories.\n", result.Root, result.ProjectID, state, len(result.Repos))
+	for _, repo := range result.Repos {
+		remote := repo.Remote
+		if remote == "" {
+			remote = "no origin"
+		}
+		fmt.Fprintf(out, "  %s  %s  %s\n", repo.ID, repo.Path, remote)
+	}
+	for _, omission := range result.Omissions {
+		fmt.Fprintf(out, "  left out %s: %s\n", omission.Path, omission.Reason)
+	}
+	return nil
 }
 
 func init() {

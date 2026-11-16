@@ -30,7 +30,6 @@ func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Comm
 			return workspace.ListProjects(dependencies)
 		},
 	})
-	command.AddCommand(newWorkspaceProjectInitCommand(dependencies))
 	addWorkspaceProjectMetadataCommands(command, dependencies)
 	return command
 }

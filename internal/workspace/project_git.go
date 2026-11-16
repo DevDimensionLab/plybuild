@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/internal/gitrepo"
@@ -17,6 +18,23 @@ type RepoObservation struct {
 
 type RepoObserver interface {
 	Observe(path string) (RepoObservation, error)
+}
+
+// RemoteObserver reads the URL of the origin remote of a repository; it is
+// empty when the repository has no origin.
+type RemoteObserver interface {
+	Remote(path string) (string, error)
+}
+
+func (observer systemRepoObserver) Remote(path string) (string, error) {
+	out, stderr, code, err := gitrepo.Read(context.Background(), observer.runner, path, "config", "--get", "remote.origin.url")
+	if code == 1 {
+		return "", nil
+	}
+	if err != nil {
+		return "", projectError(ErrorProjectRepoObservation, fmt.Sprintf("read origin of %s: exit %d: %s", path, code, strings.TrimSpace(stderr)), err)
+	}
+	return strings.TrimSpace(string(out)), nil
 }
 
 type systemRepoObserver struct {

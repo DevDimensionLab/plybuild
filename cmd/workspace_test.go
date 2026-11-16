@@ -52,8 +52,8 @@ func TestNewWorkspaceCommandShape(t *testing.T) {
 	if initCommand == command ||
 		initCommand.Use != "init" ||
 		initCommand.Short != "Initialize a Ply workspace in the current directory" ||
-		initCommand.Long != "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.\nThe current directory does not need to be a Git repository." ||
-		initCommand.Example != "  ply workspace init" ||
+		initCommand.Long != "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.\nThe current directory does not need to be a Git repository.\nWith --discover it also writes ply-workspace.json with one Project (wrapper .) whose repositories are the Git worktree roots in <name> or <name>/main, with the URL of origin as remote." ||
+		initCommand.Example != "  ply workspace init\n  ply workspace init --discover" ||
 		initCommand.CommandPath() != "ply workspace init" ||
 		!initCommand.Runnable() {
 		t.Fatalf("init command metadata = Use %q, Short %q, Long %q, Example %q, path %q, runnable %t",
@@ -68,7 +68,7 @@ func TestNewWorkspaceCommandShape(t *testing.T) {
 	localFlags.VisitAll(func(flag *pflag.Flag) {
 		localFlagNames = append(localFlagNames, flag.Name)
 	})
-	if !reflect.DeepEqual(localFlagNames, []string{"help"}) || localFlags.Lookup("name") != nil {
+	if !reflect.DeepEqual(localFlagNames, []string{"discover", "help", "project"}) || localFlags.Lookup("name") != nil {
 		t.Fatalf("workspace init local product flags changed: %s", localFlags.FlagUsages())
 	}
 }
