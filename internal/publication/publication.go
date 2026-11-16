@@ -30,7 +30,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/filelock"
 )
 
-// DataPathCategory is the data_paths category of a Project's publications.
+// DataPathCategory is the data directory category of a Project's publications.
 const DataPathCategory = "publications"
 
 // ProjectSegment is the directory of runs for the whole Project.

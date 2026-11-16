@@ -24,10 +24,10 @@ func newAssignmentCommand(d workspace.Dependencies) *cobra.Command {
 		Use:   "assignment",
 		Short: "Add, show, list, take, release and finish the Assignments of a Project",
 		Long: "An Assignment is a short work description stored in a Project of the containing Ply workspace: ASSIGNMENT-<n>, a title, text read from stdin, one or more repo IDs of the Project and optional topics. It is never changed after add.\n" +
-			"Assignments live as one JSON file each in the Project's data_paths.assignments in ply-workspace.json, relative to the Project wrapper (default <project wrapper>/assignments/).\n" +
+			"Assignments live as one JSON file each in <project wrapper>/data/assignments/.\n" +
 			"Without --project the single Project whose wrapper contains the current directory is used.\n" +
 			"--workspace selects a workspace by its physical root instead of the current directory, for an agent working outside it.\n" +
-			"An agent takes an Assignment before working on it and marks it done when finished; done puts it in the archive view of list. The original file is never changed: the lifecycle is kept in data_paths.assignments/.lifecycle/.\n" +
+			"An agent takes an Assignment before working on it and marks it done when finished; done puts it in the archive view of list. The original file is never changed: the lifecycle is kept in data/assignments/.lifecycle/.\n" +
 			"An agent session starts on one with the ply-assignment skill: /ply-assignment ASSIGNMENT-<n>.",
 		Example: "  printf '%s\\n' 'Vis repo-tags i backlog list.' | ply assignment add --title 'Vis repo-tags' --repo ply --topic backlog\n" +
 			"  ply assignment show ASSIGNMENT-7 --format json\n" +

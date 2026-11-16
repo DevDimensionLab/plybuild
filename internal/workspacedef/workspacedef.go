@@ -35,7 +35,6 @@ type Project struct {
 	ID        string            `json:"id"`
 	Name      string            `json:"name"`
 	Wrapper   string            `json:"wrapper"`
-	DataPaths map[string]string `json:"data_paths,omitempty"`
 	Repos     []Repo            `json:"repos"`
 	Epics     []Epic            `json:"epics"`
 }
@@ -357,13 +356,6 @@ func clone(d Definitions) Definitions {
 		}
 		if p.Epics != nil {
 			p.Epics = append([]Epic{}, p.Epics...)
-		}
-		if p.DataPaths != nil {
-			paths := make(map[string]string, len(p.DataPaths))
-			for k, v := range p.DataPaths {
-				paths[k] = v
-			}
-			p.DataPaths = paths
 		}
 		out.Projects[i] = p
 	}

@@ -132,6 +132,8 @@ The wrapper and repository members are explicit and may be outside the workspace
 only the nominated worktree roots. Dirty repositories are accepted, and registration performs no
 discovery or Git mutation. Read registrations with `ply workspace project show <id>` and
 `ply workspace project list`. These commands also accept `--format json`.
+All data of a Project (backlog, backlog-archive, inbox, plans, assignments, publications,
+agent-status) lives in `<project wrapper>/data/<category>/`; there is no configuration of these paths.
 In `project show` JSON, each repository's `remote` is the URL from
 `ply-workspace.json`, or `null` when no remote is defined. Ply does not infer it from Git.
 See the [workspace read contract](docs/read-contract.md) for independent Task filters,
@@ -842,8 +844,7 @@ ply assignment list
 ```
 
 Without `--project` the single Project whose wrapper contains the current directory
-is used. Files live in the Project's `data_paths.assignments` (default
-`<project wrapper>/assignments/`). `list` reports unreadable files under `invalid` and
+is used. Files live in `<project wrapper>/data/assignments/`. `list` reports unreadable files under `invalid` and
 still exits 0. If `add` loses its answer, run `list` and look up the title before
 trying again.
 
@@ -943,8 +944,8 @@ revision you read; a stale revision gets `plan_conflict` and writes nothing. `wa
 shown revision and never stored. JSON readbacks are `PlyPlanReadback@1`,
 `PlyPlanList@1` and `PlyPlanHistory@1`.
 
-Each plan is one file `<plans>/PLAN-<n>.json` holding every revision, in the Project's
-`data_paths.plans` (default `<project wrapper>/plans/`). Writes lock `<plans>/.lock` and
+Each plan is one file `<plans>/PLAN-<n>.json` holding every revision, in
+`<project wrapper>/data/plans/`. Writes lock `<plans>/.lock` and
 replace the file atomically; reads take no lock and create nothing. A file that cannot
 be read is listed under `invalid` and never overwritten. A file is limited to 8 MiB
 including history; beyond it `update` returns `plan_full` and keeps the file. On

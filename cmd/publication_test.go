@@ -97,7 +97,7 @@ func TestPublicationPublishListShowRoundTrip(t *testing.T) {
 		v.Title != "Kodekart" || v.Entry != "index.html" || v.Source != "d585196" || v.Actor != "ply-epic" || v.Agent != "" {
 		t.Fatalf("metadata %+v", v)
 	}
-	if want := filepath.Join(root, "a", "publications", "a-app", "code-map", v.Run); v.Path != want {
+	if want := filepath.Join(root, "a", "data", "publications", "a-app", "code-map", v.Run); v.Path != want {
 		t.Fatalf("path %q, want %q", v.Path, want)
 	}
 	if len(v.Files) != 2 || v.Files[0].Name != "data/map.json" || v.Files[1].Name != "index.html" || v.Files[1].Size != int64(len(files["index.html"])) || len(v.Files[1].SHA256) != 64 {
@@ -129,7 +129,7 @@ func TestPublicationKeepsProjectRepoAndAgentPathsApart(t *testing.T) {
 	repo := publishJSON(t, root, "--repo", "a-app", "--category", "workflow", "--dir", dir, "--entry", "index.html", "--title", "Repo")
 	project := publishJSON(t, root, "--category", "workflow", "--dir", dir, "--entry", "index.html", "--title", "Prosjekt")
 	agent := publishJSON(t, root, "--category", "workflow", "--agent", "ply-epic", "--dir", dir, "--entry", "index.html", "--title", "Agent")
-	publications := filepath.Join(root, "a", "publications")
+	publications := filepath.Join(root, "a", "data", "publications")
 	if project.Repo != "" || filepath.Dir(project.Path) != filepath.Join(publications, "_project", "workflow") ||
 		filepath.Dir(agent.Path) != filepath.Join(publications, "_project", "workflow", "ply-epic") ||
 		filepath.Dir(repo.Path) != filepath.Join(publications, "a-app", "workflow") {

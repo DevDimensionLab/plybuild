@@ -9,28 +9,21 @@ import (
 	"strings"
 )
 
-// DataPathBacklog is the data_paths category of the project backlog.
+// DataPathBacklog is the data directory category of the project backlog.
 const DataPathBacklog = "backlog"
 
-// DataPathBacklogArchive is the data_paths category of the project's backlog archive.
+// DataPathBacklogArchive is the data directory category of the project's backlog archive.
 const DataPathBacklogArchive = "backlog-archive"
 
-// DataPathInbox is the data_paths category of the project's agent reply Inbox.
+// DataPathInbox is the data directory category of the project's agent reply Inbox.
 const DataPathInbox = "inbox"
 
-// ProjectDataPath resolves the directory of category for project: its
-// configured data path, or <wrapper>/<category> when none is configured.
-// Nothing is created. The existing part of the path must stay inside the
-// wrapper after symlinks are followed. Error details carry no paths.
+// ProjectDataPath resolves the directory of category for project:
+// <wrapper>/data/<category>. Nothing is created. The existing part of the
+// path must stay inside the wrapper after symlinks are followed. Error
+// details carry no paths.
 func ProjectDataPath(project ProjectRecord, category string) (string, error) {
-	relative, configured := project.DataPaths[category]
-	if !configured {
-		relative = category
-	}
-	if detail := dataPathProblem(relative); detail != "" {
-		return "", projectError(ErrorProjectPath, fmt.Sprintf("data path %s of project %s %s", category, project.ID, detail), nil)
-	}
-	path := filepath.Join(project.Wrapper, relative)
+	path := filepath.Join(project.Wrapper, "data", category)
 	wrapper, err := filepath.EvalSymlinks(project.Wrapper)
 	if err != nil {
 		return "", projectError(ErrorProjectPath, fmt.Sprintf("cannot resolve wrapper of project %s", project.ID), nil)

@@ -28,7 +28,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/filelock"
 )
 
-// DataPathCategory is the data_paths category of a Project's Assignments.
+// DataPathCategory is the data directory category of a Project's Assignments.
 const DataPathCategory = "assignments"
 
 // Error classes shared with the CLI contract.

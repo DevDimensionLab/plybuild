@@ -54,7 +54,7 @@ func newInboxCommandWithDirectory(resolve func(string) (string, error)) *cobra.C
 		Use:   "inbox",
 		Short: "Store and read canonical agent replies and their read marks",
 		Long: "Store and read the canonical agent replies of one owner in a project registered in the containing Ply workspace, with shared per-item read marks.\n" +
-			"Replies live as one write-once JSON file each in the project's data_paths.inbox (default <project wrapper>/inbox/), under --owner. " +
+			"Replies live as one write-once JSON file each in <project wrapper>/data/inbox/, under --owner. " +
 			"put stores one InboxPutRequest@1 from --file (- for stdin): a replay of the same payload is unchanged, a different payload under the same conversation and message is a conflict. " +
 			"Both created and unchanged confirm that the payload is stored. show and list read; list pages newest first with an opaque --cursor. mark sets read or unread and never changes a message or the order.\n" +
 			"Nothing here starts agents, sends notifications or uses the network. The contract bundle is schemas/ply-inbox-v1.",

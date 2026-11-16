@@ -98,7 +98,7 @@ func TestPlanAddShowUpdateListHistoryInJSON(t *testing.T) {
 		readback.Progress != (plan.Progress{Total: 3, Planned: 1, Waiting: 1, Done: 1}) {
 		t.Fatalf("readback %+v", readback)
 	}
-	if _, err := os.Stat(filepath.Join(root, "a", "plans", "PLAN-1.json")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, "a", "data", "plans", "PLAN-1.json")); err != nil {
 		t.Fatalf("plan not stored in the Project's plans data path: %v", err)
 	}
 
@@ -195,7 +195,7 @@ func TestPlanShortTextShowsEveryNeededHumanAction(t *testing.T) {
 	if err != nil || !strings.Contains(listed, "PLAN-1") || !strings.Contains(listed, "needs human") {
 		t.Fatalf("list text %q %v", listed, err)
 	}
-	if err := os.WriteFile(filepath.Join(root, "a", "plans", "PLAN-2.json"), []byte("{"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "a", "data", "plans", "PLAN-2.json"), []byte("{"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	listed, err = runPlan(t, root, "", "list", "--project", "a")
@@ -216,7 +216,7 @@ func TestPlanReadsCreateNothing(t *testing.T) {
 	} {
 		_, _ = runPlan(t, root, "", args...)
 	}
-	if _, err := os.Lstat(filepath.Join(root, "a", "plans")); !errors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Lstat(filepath.Join(root, "a", "data", "plans")); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatal("read created the plans directory")
 	}
 	out, err := runPlan(t, root, "", "list", "--project", "a", "--format", "json")

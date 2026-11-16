@@ -98,7 +98,7 @@ func TestAssignmentLifecycleJourneyInText(t *testing.T) {
 	if out := mustRun(t, a, "show", "ASSIGNMENT-2"); !regexp.MustCompile(`\ncreated: \S+\nstate: available \(revision 0\)\n\nx$`).MatchString(out) {
 		t.Fatalf("show %q", out)
 	}
-	original := treeState(t, filepath.Join(a, "assignments"))["ASSIGNMENT-2.json"]
+	original := treeState(t, filepath.Join(a, "data", "assignments"))["ASSIGNMENT-2.json"]
 
 	out = mustRun(t, a, "take", "ASSIGNMENT-2", "--revision", "0", "--as", "agent a")
 	match := takenLine.FindStringSubmatch(out)
@@ -121,7 +121,7 @@ func TestAssignmentLifecycleJourneyInText(t *testing.T) {
 	if out := mustRun(t, a, "done", "ASSIGNMENT-2", "--claim", claim); out != "ASSIGNMENT-2 done revision 2\n" {
 		t.Fatalf("done %q", out)
 	}
-	if changed := changedFiles(before, treeState(t, root)); fmt.Sprint(changed) != "["+filepath.Join("a", "assignments", ".lifecycle", "ASSIGNMENT-2.json")+"]" {
+	if changed := changedFiles(before, treeState(t, root)); fmt.Sprint(changed) != "["+filepath.Join("a", "data", "assignments", ".lifecycle", "ASSIGNMENT-2.json")+"]" {
 		t.Fatalf("done changed %v", changed)
 	}
 	if ids := listIDs(t, a); fmt.Sprint(ids) != "[ASSIGNMENT-1 ASSIGNMENT-3]" {
@@ -141,7 +141,7 @@ func TestAssignmentLifecycleJourneyInText(t *testing.T) {
 	if out := mustRun(t, a, "show", "ASSIGNMENT-2"); !regexp.MustCompile(`\nstate: done by agent a at \S+Z \(revision 2\)\n\n`).MatchString(out) {
 		t.Fatalf("show done %q", out)
 	}
-	if treeState(t, filepath.Join(a, "assignments"))["ASSIGNMENT-2.json"] != original {
+	if treeState(t, filepath.Join(a, "data", "assignments"))["ASSIGNMENT-2.json"] != original {
 		t.Fatal("original changed")
 	}
 	_, err := runAssignment(t, a, "", "take", "ASSIGNMENT-2", "--revision", "2", "--as", "b")
@@ -190,7 +190,7 @@ func TestAssignmentHasNoArchiveOperation(t *testing.T) {
 func TestAssignmentLifecycleJSONShape(t *testing.T) {
 	root := newAssignmentWorkspace(t)
 	a := filepath.Join(root, "a")
-	dir := filepath.Join(a, "assignments")
+	dir := filepath.Join(a, "data", "assignments")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -308,14 +308,14 @@ func TestAssignmentLifecycleArgumentErrors(t *testing.T) {
 			}
 		})
 	}
-	if _, err := os.Lstat(filepath.Join(a, "assignments", ".lifecycle")); err == nil {
+	if _, err := os.Lstat(filepath.Join(a, "data", "assignments", ".lifecycle")); err == nil {
 		t.Fatal("argument errors created .lifecycle")
 	}
 }
 
 func TestAssignmentInvalidLifecycleIsReportedAndBlocks(t *testing.T) {
 	_, a := lifecycleWorkspace(t)
-	dir := filepath.Join(a, "assignments", ".lifecycle")
+	dir := filepath.Join(a, "data", "assignments", ".lifecycle")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}

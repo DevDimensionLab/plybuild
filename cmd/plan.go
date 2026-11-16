@@ -29,7 +29,7 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		Use:   "plan",
 		Short: "Add, update, show, list and trace the plans of a Project",
 		Long: "A plan describes one larger piece of work for agents and humans: PLAN-<n>, a goal, scope, owner, status and ordered steps. It grants no mandate, starts nothing and is never derived from Task, Assignment or agent status.\n" +
-			"Each plan is one JSON file holding every revision, in the Project's data_paths.plans in ply-workspace.json, relative to the Project wrapper (default <project wrapper>/plans/).\n" +
+			"Each plan is one JSON file holding every revision, in <project wrapper>/data/plans/.\n" +
 			"Without --project the single Project whose wrapper contains the current directory is used.\n" +
 			"add and update read one complete snapshot as JSON from stdin. To change a plan, read it with show --format json, edit .plan and write it back with update --revision <the revision read>.",
 		Example: "  ply plan add --project ply --actor ply-epic --reason 'Brukeren valgte oppdraget' < plan.json\n" +

@@ -13,7 +13,7 @@ import (
 )
 
 // The tags journey runs the actual CLI against an isolated workspace whose
-// project has two repos and a configured data_paths.backlog.
+// project has two repos.
 func TestBacklogAuthorTagsAndFiltersAcceptance(t *testing.T) {
 	binary := filepath.Join(t.TempDir(), "ply")
 	if out, err := exec.Command("go", "build", "-o", binary, "./ply").CombinedOutput(); err != nil {
@@ -30,8 +30,8 @@ func TestBacklogAuthorTagsAndFiltersAcceptance(t *testing.T) {
 		f.git(t, dir, "commit", "--allow-empty", "-m", "fixture")
 	}
 	f.success(t, ws, "workspace", "init")
-	mustPlanWrite(t, filepath.Join(ws, "ply-workspace.json"), `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","data_paths":{"backlog":"workflow/backlog"},"repos":[{"id":"code","path":"code"},{"id":"web","path":"web"}],"epics":[]}]}`, 0o644)
-	backlogDir := filepath.Join(ws, "workflow", "backlog")
+	mustPlanWrite(t, filepath.Join(ws, "ply-workspace.json"), `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","repos":[{"id":"code","path":"code"},{"id":"web","path":"web"}],"epics":[]}]}`, 0o644)
+	backlogDir := filepath.Join(ws, "data", "backlog")
 	run := func(stdin string, args ...string) string {
 		c := exec.Command(binary, append([]string{"backlog", "--workspace", ws}, append(args, "--project", "ply")...)...)
 		c.Dir, c.Env, c.Stdin = f.root, f.environment(nil), strings.NewReader(stdin)

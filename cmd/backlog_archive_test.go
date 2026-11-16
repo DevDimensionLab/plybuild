@@ -9,14 +9,12 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/backlog"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 func TestBacklogArchiveGroupsAndGroupCommands(t *testing.T) {
 	f := newBacklogFixture(t, "ply")
-	f.dataPaths["ply"] = map[string]string{workspace.DataPathBacklogArchive: "data/archive/backlog"}
 	root := f.roots["ply"]
-	archiveDir := filepath.Join(root, "data", "archive", "backlog")
+	archiveDir := filepath.Join(root, "data", "backlog-archive")
 	if out := f.success(t, "", "groups", "--project", "ply"); out != "No archive groups in project ply.\n" {
 		t.Fatalf("empty groups = %q", out)
 	}
@@ -24,7 +22,7 @@ func TestBacklogArchiveGroupsAndGroupCommands(t *testing.T) {
 		t.Fatalf("empty groups json = %q", out)
 	}
 	const textID = "20261101-0a0b0c0d"
-	writeBacklogItem(t, filepath.Join(root, "backlog"), textID, `{"id":"`+textID+`","title":"Tekst","text":"Brødtekst\n","created_at":"2026-11-01T10:00:00Z","status":"done",
+	writeBacklogItem(t, filepath.Join(root, "data", "backlog"), textID, `{"id":"`+textID+`","title":"Tekst","text":"Brødtekst\n","created_at":"2026-11-01T10:00:00Z","status":"done",
 "notes":[{"at":"2026-11-02T10:00:00Z","text":"med","author":"ply-admin"},{"at":"2026-11-03T10:00:00Z","text":"uten"}],"repos":["ply","gone"],"topics":["Web app"]}`)
 	source := filepath.Join(t.TempDir(), "my spec.md")
 	if err := os.WriteFile(source, []byte("innhold"), 0o600); err != nil {

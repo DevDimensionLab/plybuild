@@ -40,9 +40,9 @@ func TestBacklogFileImportAcceptance(t *testing.T) {
 	f.git(t, repo, "init", "-b", "main")
 	f.git(t, repo, "commit", "--allow-empty", "-m", "fixture")
 	f.success(t, ws, "workspace", "init")
-	definitions := `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","data_paths":{"backlog":"workflow/backlog"},"repos":[{"id":"code","path":"repo"}],"epics":[]}]}`
+	definitions := `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","repos":[{"id":"code","path":"repo"}],"epics":[]}]}`
 	mustPlanWrite(t, filepath.Join(ws, "ply-workspace.json"), definitions, 0o644)
-	backlogDir := filepath.Join(ws, "workflow", "backlog")
+	backlogDir := filepath.Join(ws, "data", "backlog")
 	original := []byte("# Min spec\n\xff not UTF-8\n")
 	mustPlanWrite(t, filepath.Join(downloads, "min spec.md"), string(original), 0o600)
 	backlogAt := func(root string, args ...string) []string {
@@ -125,7 +125,7 @@ func TestBacklogFileImportAcceptance(t *testing.T) {
 		}
 	}
 	if _, err := os.Lstat(filepath.Join(ws, "backlog")); err == nil {
-		t.Fatal("default backlog directory used instead of data_paths.backlog")
+		t.Fatal("backlog directory outside data used")
 	}
 	a, _ := os.Open(large)
 	b, _ := os.Open(filepath.Join(backlogDir, "files", item.ID, "large.bin"))

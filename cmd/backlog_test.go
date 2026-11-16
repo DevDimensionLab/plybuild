@@ -17,13 +17,12 @@ import (
 )
 
 type backlogFixture struct {
-	roots     map[string]string
-	dataPaths map[string]map[string]string
+	roots map[string]string
 }
 
 func newBacklogFixture(t *testing.T, projects ...string) backlogFixture {
 	t.Helper()
-	f := backlogFixture{roots: map[string]string{}, dataPaths: map[string]map[string]string{}}
+	f := backlogFixture{roots: map[string]string{}}
 	for _, project := range projects {
 		f.roots[project] = t.TempDir()
 	}
@@ -33,7 +32,7 @@ func newBacklogFixture(t *testing.T, projects ...string) backlogFixture {
 // show stands in for workspace.ShowProject so the real data path resolution runs.
 func (f backlogFixture) show(id workspace.ProjectID) (workspace.ProjectResult, error) {
 	if root, ok := f.roots[string(id)]; ok {
-		return workspace.ProjectResult{Project: workspace.ProjectRecord{ID: id, Wrapper: root, DataPaths: f.dataPaths[string(id)]}}, nil
+		return workspace.ProjectResult{Project: workspace.ProjectRecord{ID: id, Wrapper: root}}, nil
 	}
 	return workspace.ProjectResult{}, &workspace.ProjectError{Class: workspace.ErrorProjectNotFound, Detail: "project " + string(id) + " is not registered in Ply workspace /ws"}
 }
@@ -116,7 +115,7 @@ func TestBacklogListWithoutDirectoryIsEmptyAndCreatesNothing(t *testing.T) {
 	if string(raw["project"]) != `"ply"` || string(raw["items"]) != "[]" || string(raw["invalid"]) != "[]" || len(raw) != 3 {
 		t.Fatalf("list = %s", out)
 	}
-	if _, err := os.Stat(filepath.Join(f.roots["ply"], "backlog")); !errors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(f.roots["ply"], "data", "backlog")); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("list created backlog directory: %v", err)
 	}
 }
@@ -129,7 +128,7 @@ func TestBacklogAddShowNoteListUseSelectedProjectRoot(t *testing.T) {
 	if item.Title != "Scheduler: kjør nattlig opprydding" || item.Text != text || item.Status != backlog.StatusOpen || len(item.Notes) != 0 {
 		t.Fatalf("added item = %#v", item)
 	}
-	file, err := os.ReadFile(filepath.Join(f.roots["ply"], "backlog", item.ID+".json"))
+	file, err := os.ReadFile(filepath.Join(f.roots["ply"], "data", "backlog", item.ID+".json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -139,7 +138,7 @@ func TestBacklogAddShowNoteListUseSelectedProjectRoot(t *testing.T) {
 	if shown := f.success(t, "", "show", "--project", "ply", item.ID, "--format", "json"); shown != string(file) {
 		t.Fatalf("show = %s, want %s", shown, file)
 	}
-	if _, err := os.Stat(filepath.Join(f.roots["other"], "backlog")); !errors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Stat(filepath.Join(f.roots["other"], "data", "backlog")); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("add wrote outside selected project: %v", err)
 	}
 	if other := decodeBacklogList(t, f.success(t, "", "list", "--project", "other", "--format", "json")); other.Project != "other" || len(other.Items) != 0 {
@@ -153,7 +152,7 @@ func TestBacklogAddShowNoteListUseSelectedProjectRoot(t *testing.T) {
 		noted.Text != item.Text || noted.CreatedAt != item.CreatedAt || noted.Title != item.Title {
 		t.Fatalf("noted item = %#v", noted)
 	}
-	if file, _ := os.ReadFile(filepath.Join(f.roots["ply"], "backlog", item.ID+".json")); second != string(file) {
+	if file, _ := os.ReadFile(filepath.Join(f.roots["ply"], "data", "backlog", item.ID+".json")); second != string(file) {
 		t.Fatalf("note stdout differs from item file:\n%s\n%s", second, file)
 	}
 	list := decodeBacklogList(t, f.success(t, "", "list", "--project", "ply", "--format", "json"))
@@ -225,7 +224,7 @@ func TestBacklogStatusSetsEveryValueAndRepeatsWithoutWriting(t *testing.T) {
 	f := newBacklogFixture(t, "ply")
 	item := decodeBacklogItem(t, f.success(t, "Tekst\n", "add", "--project", "ply", "--title", "Tittel", "--format", "json"))
 	f.success(t, "Note\n", "note", "--project", "ply", item.ID)
-	path := filepath.Join(f.roots["ply"], "backlog", item.ID+".json")
+	path := filepath.Join(f.roots["ply"], "data", "backlog", item.ID+".json")
 	before := decodeBacklogItem(t, f.success(t, "", "show", "--project", "ply", item.ID, "--format", "json"))
 	for _, step := range []struct {
 		value backlog.Status
@@ -286,7 +285,7 @@ func TestBacklogListFiltersByStatusAndKeepsInvalidFiles(t *testing.T) {
 		f.success(t, "", "status", "--project", "ply", "--value", string(status), item.ID)
 		ids[status] = item.ID
 	}
-	writeBacklogItem(t, filepath.Join(f.roots["ply"], "backlog"), "20261103-0badf00d", "{")
+	writeBacklogItem(t, filepath.Join(f.roots["ply"], "data", "backlog"), "20261103-0badf00d", "{")
 
 	all := decodeBacklogList(t, f.success(t, "", "list", "--project", "ply", "--format", "json"))
 	if len(all.Items) != 3 || len(all.Invalid) != 1 {
@@ -316,7 +315,7 @@ func TestBacklogItemWithoutValidStatusIsInvalidAndNeverRewritten(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			f := newBacklogFixture(t, "ply")
 			contents := "{\n  \"id\": \"" + id + "\",\n  \"title\": \"Gammel\",\n  \"text\": \"tekst\\n\",\n  \"created_at\": \"2026-11-04T10:00:00Z\",\n" + status + "  \"notes\": []\n}\n"
-			path := writeBacklogItem(t, filepath.Join(f.roots["ply"], "backlog"), id, contents)
+			path := writeBacklogItem(t, filepath.Join(f.roots["ply"], "data", "backlog"), id, contents)
 			for _, args := range [][]string{
 				{"list", "--project", "ply", "--format", "json"},
 				{"list", "--project", "ply", "--status", "open", "--format", "json"},
@@ -371,7 +370,7 @@ func TestBacklogRemovedReadyCommandIsRejected(t *testing.T) {
 func TestBacklogInvalidItemFileIsListedAndRejectedByShow(t *testing.T) {
 	f := newBacklogFixture(t, "ply")
 	item := decodeBacklogItem(t, f.success(t, "gyldig\n", "add", "--project", "ply", "--title", "Gyldig", "--format", "json"))
-	if err := os.WriteFile(filepath.Join(f.roots["ply"], "backlog", "20261103-0badf00d.json"), []byte("{"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(f.roots["ply"], "data", "backlog", "20261103-0badf00d.json"), []byte("{"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	list := decodeBacklogList(t, f.success(t, "", "list", "--project", "ply", "--format", "json"))
@@ -495,20 +494,15 @@ func TestBacklogDirectoryUsesProjectDataPathAndHidesWorkspacePaths(t *testing.T)
 		switch id {
 		case "ply":
 			return workspace.ProjectResult{Workspace: "/ws", Project: workspace.ProjectRecord{ID: "ply", Wrapper: wrapper}}, nil
-		case "configured":
-			return workspace.ProjectResult{Workspace: "/ws", Project: workspace.ProjectRecord{ID: "configured", Wrapper: wrapper, DataPaths: map[string]string{workspace.DataPathBacklog: "workflow/backlog"}}}, nil
 		case "broken":
 			return workspace.ProjectResult{}, &workspace.ProjectError{Class: workspace.ErrorWorkspaceNotFound, Detail: "no Ply workspace contains /secret/cwd"}
 		}
 		return workspace.ProjectResult{}, &workspace.ProjectError{Class: workspace.ErrorProjectNotFound, Detail: "project " + string(id) + " is not registered in Ply workspace /ws"}
 	}
 	resolve := backlogDirectory(show)
-	if paths, err := resolve("ply"); err != nil || paths.directory != filepath.Join(wrapper, "backlog") ||
-		paths.archive != filepath.Join(wrapper, "backlog-archive") || paths.wrapper != wrapper {
+	if paths, err := resolve("ply"); err != nil || paths.directory != filepath.Join(wrapper, "data", "backlog") ||
+		paths.archive != filepath.Join(wrapper, "data", "backlog-archive") || paths.wrapper != wrapper {
 		t.Fatalf("resolve ply = %+v, %v", paths, err)
-	}
-	if paths, err := resolve("configured"); err != nil || paths.directory != filepath.Join(wrapper, "workflow", "backlog") {
-		t.Fatalf("resolve configured = %+v, %v", paths, err)
 	}
 	if _, err := resolve("ghost"); err == nil || err.Error() != "workspace_project_not_found: project ghost is not registered" {
 		t.Fatalf("resolve ghost = %v", err)
@@ -550,16 +544,9 @@ func TestBacklogCommandsUseConfiguredDataPath(t *testing.T) {
   ]
 }
 `
-	for _, relative := range []string{"", "backlog", "workflow/backlog", "data/backlog"} {
-		t.Run("data-path="+relative, func(t *testing.T) {
+	for _, effective := range []string{"data/backlog"} {
+		t.Run("data-path="+effective, func(t *testing.T) {
 			f := newBacklogFixture(t, "ply", "empty")
-			effective := relative
-			if relative == "" {
-				effective = "backlog"
-			} else {
-				f.dataPaths["ply"] = map[string]string{workspace.DataPathBacklog: relative}
-				f.dataPaths["empty"] = map[string]string{workspace.DataPathBacklog: relative}
-			}
 			directory := filepath.Join(f.roots["ply"], filepath.FromSlash(effective))
 			path := writeBacklogItem(t, directory, existingID, existing)
 
@@ -609,10 +596,9 @@ func TestBacklogCommandsUseConfiguredDataPath(t *testing.T) {
 	}
 }
 
-func TestBacklogConfiguredDataPathKeepsErrors(t *testing.T) {
+func TestBacklogDataPathKeepsErrors(t *testing.T) {
 	f := newBacklogFixture(t, "ply")
-	f.dataPaths["ply"] = map[string]string{workspace.DataPathBacklog: "workflow/backlog"}
-	directory := filepath.Join(f.roots["ply"], "workflow", "backlog")
+	directory := filepath.Join(f.roots["ply"], "data", "backlog")
 	writeBacklogItem(t, directory, "20261103-0badf00d", "{")
 
 	if _, err := f.run("", "list", "--project", "ghost"); err == nil || err.Error() != "workspace_project_not_found: project ghost is not registered" {
@@ -632,13 +618,12 @@ func TestBacklogConfiguredDataPathKeepsErrors(t *testing.T) {
 
 func TestBacklogRejectsDataPathOutsideWrapperBeforeAccess(t *testing.T) {
 	outside := t.TempDir()
-	for name, relative := range map[string]string{"absolute": outside, "parent": "../backlog", "symlink": "escape/backlog"} {
+	for _, name := range []string{"symlink"} {
 		t.Run(name, func(t *testing.T) {
 			f := newBacklogFixture(t, "ply")
-			if err := os.Symlink(outside, filepath.Join(f.roots["ply"], "escape")); err != nil {
+			if err := os.Symlink(outside, filepath.Join(f.roots["ply"], "data")); err != nil {
 				t.Fatal(err)
 			}
-			f.dataPaths["ply"] = map[string]string{workspace.DataPathBacklog: relative}
 			for _, args := range [][]string{
 				{"list", "--project", "ply"},
 				{"add", "--project", "ply", "--title", "t"},

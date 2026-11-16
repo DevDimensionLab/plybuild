@@ -12,7 +12,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
-const epicCreateConfig = `{"format_version":1,"projects":[{"id":"sample","name":"Sample","wrapper":".","data_paths":{"backlog":"work/backlog"},"repos":[{"id":"code","path":"repo"}],"epics":[{"id":"feature","title":"Feature","repo":"code","path":"feature","ref":"refs/heads/feature"}]}]}`
+const epicCreateConfig = `{"format_version":1,"projects":[{"id":"sample","name":"Sample","wrapper":".","repos":[{"id":"code","path":"repo"}],"epics":[{"id":"feature","title":"Feature","repo":"code","path":"feature","ref":"refs/heads/feature"}]}]}`
 
 func epicCreateConfigFixture(t *testing.T) (string, Dependencies, EpicCreateInput) {
 	t.Helper()

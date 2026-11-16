@@ -19,7 +19,7 @@ func TestBacklogAttachListAndShowAttachments(t *testing.T) {
 		mustPlanWrite(t, filepath.Join(downloads, name), contents, 0o600)
 	}
 	item := decodeBacklogItem(t, f.success(t, "text", "add", "--project", "ply", "--title", "T", "--format", "json"))
-	directory := filepath.Join(f.roots["ply"], "backlog")
+	directory := filepath.Join(f.roots["ply"], "data", "backlog")
 	itemFile := filepath.Join(directory, item.ID+".json")
 	stored, _ := os.ReadFile(itemFile)
 	copied := func(name string) string { return filepath.Join(directory, "files", item.ID, name) }

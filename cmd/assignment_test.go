@@ -170,7 +170,7 @@ func TestAssignmentProjectsHaveSeparateNumbering(t *testing.T) {
 		t.Fatalf("show b %q %v", out, err)
 	}
 	for _, project := range []string{"a", "b"} {
-		if _, err := os.Stat(filepath.Join(root, project, "assignments", "ASSIGNMENT-1.json")); err != nil {
+		if _, err := os.Stat(filepath.Join(root, project, "data", "assignments", "ASSIGNMENT-1.json")); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -211,7 +211,7 @@ func TestAssignmentListReportsInvalidFilesWithExitZero(t *testing.T) {
 	if _, err := runAssignment(t, a, "x", "add", "--title", "T", "--repo", "a-app"); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(a, "assignments", "ASSIGNMENT-2.json"), []byte("{broken"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(a, "data", "assignments", "ASSIGNMENT-2.json"), []byte("{broken"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	out, err := runAssignment(t, a, "", "list", "--format", "json")
@@ -229,7 +229,7 @@ func TestAssignmentListReportsInvalidFilesWithExitZero(t *testing.T) {
 	if _, err := runAssignment(t, a, "x", "add", "--title", "T", "--repo", "a-app"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := os.Stat(filepath.Join(a, "assignments", "ASSIGNMENT-3.json")); err != nil {
+	if _, err := os.Stat(filepath.Join(a, "data", "assignments", "ASSIGNMENT-3.json")); err != nil {
 		t.Fatal(err)
 	}
 }

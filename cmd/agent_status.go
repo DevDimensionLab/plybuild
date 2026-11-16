@@ -26,7 +26,7 @@ func newAgentStatusCommand(d workspace.Dependencies) *cobra.Command {
 		Short: "Set, clear and list the status agents report about themselves in a Project",
 		Long: "An agent reports what a terminal cannot show: that it works, waits for its own background job, delegate or plan (waiting_background), waits for a human (needs_answer) or is done. Ply stores one post per actor and never contacts Herdr or the agent.\n" +
 			"Every post expires: --for is required, at most 4h, or 24h for needs_answer. list shows expired posts with expired: true; set removes other actors' posts expired for over 24 hours.\n" +
-			"Posts are files in the Project's data_paths.agent-status in ply-workspace.json, relative to the Project wrapper (default <project wrapper>/agent-status/).\n" +
+			"Posts are files in <project wrapper>/data/agent-status/.\n" +
 			"Without --project the single Project whose wrapper contains the current directory is used.",
 		Example: "  ply agent-status set --project ply --actor claude:<session-id> --pane w7:pT --state waiting_background --ref PLAN-40 --for 30m\n" +
 			"  ply agent-status list --project ply --format json\n" +

@@ -40,7 +40,7 @@ func recordingFixture(t *testing.T) (planCLIFixture, string) {
 	snapshot := `{"title":"Recorded plan","goal":"g","scope":"s","owner":"planner-a","selection":"selected","status":"active","summary":"s","next_action":"n","steps":[` +
 		`{"id":"impl","title":"Implement","outcome":"o","owner":"dev","status":"active","next_action":"n"},` +
 		`{"id":"review","title":"Review","outcome":"o","owner":"rev","status":"planned","next_action":"n"}]}`
-	if _, e := plan.Open(filepath.Join(f.root, "plans")).Add([]byte(snapshot), "planner-a", "fixture"); e != nil {
+	if _, e := plan.Open(filepath.Join(f.root, "data", "plans")).Add([]byte(snapshot), "planner-a", "fixture"); e != nil {
 		t.Fatal(e)
 	}
 	return f, oid

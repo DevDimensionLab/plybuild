@@ -38,7 +38,6 @@ type ProjectRecord struct {
 	Name      string            `yaml:"name"`
 	Wrapper   string            `yaml:"wrapper"`
 	RepoIDs   []RepoID          `yaml:"repo_ids"`
-	DataPaths map[string]string `yaml:"data_paths,omitempty"`
 }
 
 type RepoRecord struct {

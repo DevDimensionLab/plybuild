@@ -197,7 +197,7 @@ func registrationProjects(d Dependencies, root string) ([]ProjectRecord, []RepoR
 		return filepath.Join(root, value)
 	}
 	for _, p := range defs.Projects {
-		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: path(p.Wrapper), DataPaths: p.DataPaths}
+		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: path(p.Wrapper)}
 		for _, r := range p.Repos {
 			project.RepoIDs = append(project.RepoIDs, RepoID(r.ID))
 			if !seen[RepoID(r.ID)] {

@@ -122,9 +122,6 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 		if err := validateProjectAddInput(input); err != nil {
 			return err
 		}
-		if err := validateDataPaths(p.DataPaths); err != nil {
-			return err
-		}
 		if projects[p.ID] {
 			return ProjectInvalidArguments("duplicate Project in definitions")
 		}
@@ -151,36 +148,6 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 	return nil
 }
 
-// validateDataPaths checks the static rules of projects[].data_paths: each
-// category is a Ply identifier and each path is a non-empty relative path
-// without parent traversal.
-func validateDataPaths(dataPaths map[string]string) error {
-	for category, path := range dataPaths {
-		if err := validateIdentifier("data path category", category); err != nil {
-			return err
-		}
-		if detail := dataPathProblem(path); detail != "" {
-			return ProjectInvalidArguments(fmt.Sprintf("data path %s %s", category, detail))
-		}
-	}
-	return nil
-}
-
-func dataPathProblem(path string) string {
-	switch {
-	case path == "":
-		return "is empty"
-	case filepath.IsAbs(path):
-		return "must be relative to the project wrapper"
-	}
-	for _, element := range strings.Split(filepath.ToSlash(path), "/") {
-		if element == ".." {
-			return "must not contain parent traversal"
-		}
-	}
-	return ""
-}
-
 // Resolve definitions using the same physical paths, Git observer and identity
 // conflict checks as Project registration. No second copy is published in .ply.
 func definitionProjects(root string, defs workspacedef.Definitions) (projectRegistry, error) {
@@ -192,7 +159,7 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 		if err != nil {
 			return registry, err
 		}
-		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper, DataPaths: p.DataPaths}
+		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper}
 		repos := []RepoRecord{}
 		for _, r := range p.Repos {
 			path, err := canonicalDirectory(files, root, r.Path, "repository")
@@ -242,7 +209,7 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	snapshot := ProjectSnapshot{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
 	locators := map[RepoID]string{}
 	for _, p := range defs.Projects {
-		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: resolve(p.Wrapper), DataPaths: p.DataPaths}
+		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: resolve(p.Wrapper)}
 		for _, r := range p.Repos {
 			id, locator := RepoID(r.ID), resolve(r.Path)
 			project.RepoIDs = append(project.RepoIDs, id)

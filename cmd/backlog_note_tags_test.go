@@ -14,7 +14,7 @@ import (
 
 func TestBacklogNoteTagsThroughNoteTagsShowListAndGroup(t *testing.T) {
 	root := t.TempDir()
-	dir := filepath.Join(root, "backlog")
+	dir := filepath.Join(root, "data", "backlog")
 	run := func(args ...string) (string, error) {
 		command := newBacklogCommandWithDirectory(func(string) (backlogPaths, error) {
 			return backlogPaths{directory: dir, archive: filepath.Join(root, "archive"), wrapper: root, members: []workspace.RepoID{"code", "web"}}, nil

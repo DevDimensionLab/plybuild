@@ -89,7 +89,7 @@ func TestInboxVerbsTextAndJSON(t *testing.T) {
 	if put.Kind != inbox.PutResultKind || put.Effect != inbox.EffectUnchanged || put.Item.DerivedTitle != "Første svar" {
 		t.Fatalf("put json %+v", put)
 	}
-	if _, err := os.Stat(filepath.Join(f.roots["ply"], "inbox", "owner-1", "messages")); err != nil {
+	if _, err := os.Stat(filepath.Join(f.roots["ply"], "data", "inbox", "owner-1", "messages")); err != nil {
 		t.Fatalf("default data path not used: %v", err)
 	}
 	ids := []string{"--conversation", put.Item.ConversationID, "--message", put.Item.MessageID}
@@ -199,27 +199,13 @@ func TestInboxPutRequestLimits(t *testing.T) {
 			}
 		})
 	}
-	if _, err := os.Stat(filepath.Join(f.roots["ply"], "inbox")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(f.roots["ply"], "data", "inbox")); !os.IsNotExist(err) {
 		t.Fatal("rejected put created the store")
 	}
 	missing := filepath.Join(t.TempDir(), "secret-missing.json")
 	out, err := f.run("", withScope("put", "--file", missing, "--format", "json")...)
 	if result := inboxErrorOf(t, out); err == nil || result.Class != inbox.ClassInvalidArguments || strings.Contains(out, "secret") {
 		t.Fatalf("missing file %v %q", err, out)
-	}
-}
-
-func TestInboxUsesConfiguredDataPathInsideWrapper(t *testing.T) {
-	f := newInboxFixture(t, "ply")
-	f.dataPaths["ply"] = map[string]string{workspace.DataPathInbox: "data/agent-inbox"}
-	f.success(t, inboxRequest(1, "Hei"), withScope("put", "--file", "-")...)
-	if _, err := os.Stat(filepath.Join(f.roots["ply"], "data", "agent-inbox", "owner-1", "messages")); err != nil {
-		t.Fatal(err)
-	}
-	f.dataPaths["ply"] = map[string]string{workspace.DataPathInbox: "../outside"}
-	out, err := f.run("", withScope("list", "--format", "json")...)
-	if result := inboxErrorOf(t, out); err == nil || result.Class != string(workspace.ErrorProjectPath) {
-		t.Fatalf("%v %+v", err, result)
 	}
 }
 

@@ -23,8 +23,4 @@ func TestProjectRegistryRoundTripWithoutDataPaths(t *testing.T) {
 	if !bytes.Equal(again, raw) {
 		t.Fatalf("round trip changed bytes: %q", again)
 	}
-	clone := cloneProjects([]ProjectRecord{{ID: "ply", DataPaths: map[string]string{"backlog": "b"}}})
-	if clone[0].DataPaths["backlog"] != "b" {
-		t.Fatalf("clone %+v", clone)
-	}
 }

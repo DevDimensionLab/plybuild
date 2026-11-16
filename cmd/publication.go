@@ -19,7 +19,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		Use:   "publication",
 		Short: "Publish, list and show runs that other applications deliver through Ply",
 		Long: "A run is a finished result of an application, such as a code map or a workflow view, stored unchanged with publication.json written by Ply.\n" +
-			"Runs live in the Project's data_paths.publications in ply-workspace.json, relative to the Project wrapper (default <project wrapper>/publications/),\n" +
+			"Runs live in <project wrapper>/data/publications/,\n" +
 			"as <repo-id or _project>/<category>/[<agent>/]<run>/. A published run is never changed; Ply keeps every run with --plan and the newest five without plan per path.\n" +
 			"Without --project the single Project whose wrapper contains the current directory is used.",
 		Example: "  ply publication publish --project ply --repo ply-code-map --category code-map --dir out --entry index.html --title 'Kodekart'\n" +

@@ -110,12 +110,8 @@ func TestProjectDataPathOfAssignments(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if path, err := ProjectDataPath(project, "assignments"); err != nil || path != filepath.Join(f.root, "app", "assignments") {
-		t.Fatalf("default %s %v", path, err)
-	}
-	project.DataPaths = map[string]string{"assignments": "data/assignments"}
 	if path, err := ProjectDataPath(project, "assignments"); err != nil || path != filepath.Join(f.root, "app", "data", "assignments") {
-		t.Fatalf("configured %s %v", path, err)
+		t.Fatalf("default %s %v", path, err)
 	}
 	requireAbsent(t, filepath.Join(f.root, "app", "data"))
 }

@@ -229,7 +229,6 @@ const fixtureDefinitions = `{
       "id": "ply",
       "name": "Ply",
       "wrapper": "ply",
-      "data_paths": {"backlog": "planning/backlog"},
       "repos": [{"id": "ply", "path": "ply/main"}],
       "epics": [{"id": "ply-master", "title": "Ply master", "repo": "ply", "path": "ply/main", "ref": "refs/heads/master"}]
     },
@@ -471,7 +470,7 @@ func TestAddDefinitionRepoRejectsInvalidCurrentDefinitions(t *testing.T) {
 		"format":          {func(s string) string { return strings.Replace(s, `"format_version": 1`, `"format_version": 2`, 1) }, ErrorProjectStoreConflict},
 		"invalid JSON":    {func(s string) string { return s + "}" }, ErrorProjectStoreConflict},
 		"duplicate ID":    {func(s string) string { return strings.Replace(s, `"id": "app", "name"`, `"id": "ply", "name"`, 1) }, ErrorProjectInvalidArguments},
-		"data path":       {func(s string) string { return strings.Replace(s, "planning/backlog", "../backlog", 1) }, ErrorProjectInvalidArguments},
+		"data path":       {func(s string) string { return strings.Replace(s, `"wrapper": "ply",`, `"wrapper": "ply", "data_paths": {},`, 1) }, ErrorProjectStoreConflict},
 		"missing wrapper": {func(s string) string { return strings.Replace(s, `"wrapper": "app"`, `"wrapper": "gone"`, 1) }, ErrorProjectPath},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -581,8 +580,8 @@ func TestCheckDefinitionsValidatesCurrentFileWithoutLockOrWrite(t *testing.T) {
 
 	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), strings.Replace(fixtureDefinitions, `"wrapper": "app"`, `"wrapper": "gone"`, 1))
 	assertProjectErrorClass(t, CheckDefinitions(f.dependencies("/"), f.root), ErrorProjectPath)
-	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), strings.Replace(fixtureDefinitions, "planning/backlog", "../backlog", 1))
-	assertProjectErrorClass(t, CheckDefinitions(f.dependencies("/"), f.root), ErrorProjectInvalidArguments)
+	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), strings.Replace(fixtureDefinitions, `"wrapper": "ply",`, `"wrapper": "ply", "data_paths": {},`, 1))
+	assertProjectErrorClass(t, CheckDefinitions(f.dependencies("/"), f.root), ErrorProjectStoreConflict)
 	if err := os.Remove(filepath.Join(f.root, workspacedef.File)); err != nil {
 		t.Fatal(err)
 	}

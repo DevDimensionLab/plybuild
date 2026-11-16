@@ -24,7 +24,6 @@ const sample = `{
       "id": "ply",
       "name": "Ply",
       "wrapper": "ply",
-      "data_paths": {"backlog": "planning/backlog"},
       "repos": [{"id": "ply", "path": "ply/main"}],
       "epics": [{"id": "ply-master", "title": "Master", "repo": "ply", "path": "ply/main", "ref": "refs/heads/master"}]
     },
@@ -110,7 +109,7 @@ func TestReadAbsentAndPresent(t *testing.T) {
 	if digest != fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(sample))) {
 		t.Fatalf("digest %s", digest)
 	}
-	if len(defs.Projects) != 2 || defs.Projects[0].DataPaths["backlog"] != "planning/backlog" || defs.Projects[0].Epics[0].Ref != "refs/heads/master" || defs.Projects[1].Repos[0].Path != "app/main" {
+	if len(defs.Projects) != 2 || defs.Projects[0].Epics[0].Ref != "refs/heads/master" || defs.Projects[1].Repos[0].Path != "app/main" {
 		t.Fatalf("decoded %+v", defs)
 	}
 }
@@ -369,14 +368,13 @@ func TestUpdateMutatesACopy(t *testing.T) {
 	}
 	mutate := func(d *Definitions) (bool, error) {
 		d.Projects[0].Repos[0].Path = "changed"
-		d.Projects[0].DataPaths["backlog"] = "changed"
 		d.Projects[0].Epics[0].Title = "changed"
 		return false, errors.New("stop")
 	}
 	if _, err := Update(root, basisOf(t, root), mutate, check); err == nil {
 		t.Fatal("mutate error ignored")
 	}
-	if current.Projects[0].Repos[0].Path != "ply/main" || current.Projects[0].DataPaths["backlog"] != "planning/backlog" || current.Projects[0].Epics[0].Title != "Master" {
+	if current.Projects[0].Repos[0].Path != "ply/main" || current.Projects[0].Epics[0].Title != "Master" {
 		t.Fatalf("current definitions were mutated: %+v", current.Projects[0])
 	}
 }
