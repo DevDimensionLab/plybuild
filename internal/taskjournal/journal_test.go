@@ -633,3 +633,21 @@ func TestPlyRecordsAreIdempotentForRetries(t *testing.T) {
 		t.Fatalf("ply records %d, want 6 (register once, links A, B, A, two start attempts)", got)
 	}
 }
+
+// Each contribution source keeps the sequence of its own record.
+func TestContributionSourcesKeepTheirOwnSequence(t *testing.T) {
+	f := fixture(t)
+	second := f.input
+	second.PublicationKey = "test:2"
+	f.append(t, f.input)
+	f.append(t, second)
+	var sequences []int
+	for _, src := range f.show(t).Sources {
+		if src.Kind == "contribution" && src.Sequence != nil {
+			sequences = append(sequences, *src.Sequence)
+		}
+	}
+	if len(sequences) != 2 || sequences[0] == sequences[1] {
+		t.Fatalf("contribution sequences %v, want two different", sequences)
+	}
+}
