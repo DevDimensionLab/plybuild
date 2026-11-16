@@ -226,6 +226,47 @@ func ListTaskSpecs(d Dependencies, q TaskContentQuery) (TaskContentReadbackResul
 	}
 	return contentReadEnvelope("WorkspaceTaskSpecListReadback@1", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "spec_id": specID, "revisions": revisions, "selection": selected, "freshness": contentReadFreshness(d, work, r), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
 }
+
+// ReadTaskSpecDocument returns the preserved bytes of one document of an exact
+// Spec revision, verified against its descriptor.
+func ReadTaskSpecDocument(d Dependencies, q TaskContentQuery, id string) ([]byte, error) {
+	d = WithTaskContentScope(d, q.TaskID)
+	if contentSlug(q.SpecID) != nil || q.Revision < 1 || q.Revision > 2147483647 {
+		return nil, contentError("task_content_invalid_input", "--spec and --revision (1..2147483647) are required", nil)
+	}
+	work, r, _, e := readContentStart(d, q, false)
+	if e != nil {
+		return nil, e
+	}
+	for _, p := range r.TaskSpecRevisions {
+		if p.TaskID != q.TaskID || p.SpecID != q.SpecID || p.Revision != q.Revision {
+			continue
+		}
+		o, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.ManifestSHA256)
+		if e == nil {
+			e = verifyManifestDocuments(d.TaskContent, work, o)
+		}
+		if e != nil {
+			return nil, e
+		}
+		for _, v := range contentArray(contentFields(o), "documents") {
+			m := contentFields(v)
+			if contentString(m, "id") != id {
+				continue
+			}
+			b, e := d.TaskContent.Read(work, "objects", contentString(m, "sha256"))
+			if e != nil {
+				return nil, e
+			}
+			if len(b) != contentInt(m, "size_bytes") {
+				return nil, contentError("task_content_integrity_conflict", "snapshot descriptor differs", nil)
+			}
+			return b, nil
+		}
+		return nil, workError(ErrorWorkNotFound, "document is not part of this Spec revision", nil)
+	}
+	return nil, workError(ErrorWorkNotFound, "Spec revision is not registered", nil)
+}
 func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
 	d = WithTaskContentScope(d, q.TaskID)
 	if contentSlug(q.SpecID) != nil || q.Revision < 1 || q.Revision > 2147483647 {

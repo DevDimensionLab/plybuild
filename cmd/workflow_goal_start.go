@@ -28,6 +28,7 @@ type goalAgentPlan struct {
 	Model     *string         `json:"model,omitempty"`
 	Effort    *string         `json:"effort,omitempty"`
 	Goal      json.RawMessage `json:"goal"`
+	Documents string          `json:"document_instruction,omitempty"`
 	Journal   string          `json:"journal_instruction,omitempty"`
 }
 
@@ -43,6 +44,29 @@ func journalInstruction(task string, link *taskjournal.PlyAction) string {
 	}
 	return fmt.Sprintf("\n\nThis Task belongs to %s. Record each work step in the Task journal: ply workspace task journal step start %s --id <id> --kind <kind> --title <title> when it starts, and ply workspace task journal step finish %s with the same --id, --kind and --title plus --outcome <outcome> when it ends. Use --parent <id> for a step inside another, such as a correction or review. Kinds: %s; final reporting and cleanup use kind coordination. Outcomes: %s. When you return, record ply workspace task journal note %s --title <title>. Ply sets PLY_ACTOR in this terminal, so these entries name you; do not pass --actor.",
 		belongs, task, task, strings.Join(taskjournal.StepKinds, ", "), strings.Join(taskjournal.Outcomes, ", "), task)
+}
+
+// goalDocumentInstruction names the ply command that reads each document of
+// the Goal Spec revision; a Goal without documents gets none.
+func goalDocumentInstruction(task, spec string, revision int, goal json.RawMessage) (string, error) {
+	var g struct {
+		RequiredInputs []struct {
+			ID string `json:"id"`
+		} `json:"required_inputs"`
+	}
+	if err := json.Unmarshal(goal, &g); err != nil {
+		return "", err
+	}
+	var reads []string
+	for _, in := range g.RequiredInputs {
+		if id, ok := strings.CutPrefix(in.ID, workspace.GoalDocumentInputID); ok {
+			reads = append(reads, fmt.Sprintf("\n  ply workspace task spec show %s --spec %s --revision %d --document %s", task, spec, revision, id))
+		}
+	}
+	if len(reads) == 0 {
+		return "", nil
+	}
+	return "\n\nRead each Goal document with ply:" + strings.Join(reads, ""), nil
 }
 
 // goalExecutor is the registered Goal executor; model and effort are native
@@ -90,7 +114,7 @@ func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBi
 		Workspace:    plan.Workspace,
 		Label:        plan.Task,
 		Env:          []string{"PLY_ACTOR=" + goalAgentActor(plan)},
-		Prompt:       goalAgentPrompt + string(plan.Goal) + plan.Journal,
+		Prompt:       goalAgentPrompt + string(plan.Goal) + plan.Documents + plan.Journal,
 		Herdr:        herdr,
 		Precondition: precondition,
 	}
@@ -137,7 +161,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 	var spec, herdrWorkspace, actor string
 	var revision int
 	var apply, resume bool
-	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start. The agent tab gets PLY_ACTOR=<provider>:<task>, so the Ply commands the agent runs record it as actor; everything else is inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start. The agent tab gets PLY_ACTOR=<provider>:<task>, so the Ply commands the agent runs record it as actor. The prompt names the ply workspace task spec show --document command that reads each Goal document; everything else is inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if resume && !apply {
 			return fmt.Errorf("--resume requires --apply")
 		}
@@ -186,7 +210,11 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if e != nil {
 			return e
 		}
-		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Model: executor.Model, Effort: executor.Effort, Goal: read.Goal, Journal: journalInstruction(args[0], link)}
+		documents, e := goalDocumentInstruction(args[0], spec, revision, read.Goal)
+		if e != nil {
+			return e
+		}
+		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Model: executor.Model, Effort: executor.Effort, Goal: read.Goal, Documents: documents, Journal: journalInstruction(args[0], link)}
 		if !apply {
 			return json.NewEncoder(c.OutOrStdout()).Encode(plan)
 		}

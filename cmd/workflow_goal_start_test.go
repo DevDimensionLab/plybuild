@@ -384,3 +384,31 @@ func TestGoalStartPromptAsksAPlanLinkedTaskToRecordItsSteps(t *testing.T) {
 		}
 	}
 }
+
+// Goal documents are preserved Ply data; the prompt names the ply command
+// that reads each one, and a Goal without documents gets no instruction.
+func TestGoalStartPromptNamesTheReaderOfEachGoalDocument(t *testing.T) {
+	goal := json.RawMessage(`{"required_inputs":[{"id":"task-basis/goal"},{"id":"task-goal-doc/goal/spec"},{"id":"task-goal-doc/goal/jvm-plan"},{"id":"task-goal-doc/problem/problem"}]}`)
+	got, err := goalDocumentInstruction("task-1", "spec-v1", 2, goal)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document spec", "ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document jvm-plan"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("instruction lacks %q: %q", want, got)
+		}
+	}
+	if !strings.HasSuffix(got, "\n  ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document jvm-plan") {
+		t.Errorf("each command must stand alone on its line: %q", got)
+	}
+	if strings.Contains(got, "--document problem") {
+		t.Errorf("problem document is not a Goal document: %q", got)
+	}
+	if got, err = goalDocumentInstruction("task-1", "spec-v1", 2, json.RawMessage(`{"required_inputs":[{"id":"task-basis/goal"}]}`)); err != nil || got != "" {
+		t.Fatalf("%q %v", got, err)
+	}
+	plan := goalAgentPlan{Task: "task-1", Provider: "codex", Goal: goal, Documents: "\n\nDOCS", Journal: "\n\nJOURNAL"}
+	if prompt := goalStartInput(plan, "/r", agentstart.HerdrBinary{}, nil).Prompt; prompt != wantGoalPrompt+string(goal)+"\n\nDOCS\n\nJOURNAL" {
+		t.Fatalf("%q", prompt)
+	}
+}

@@ -64,3 +64,28 @@ func TestTaskCreateJSONLegacyRetryAndPublicationStreamFailure(t *testing.T) {
 		t.Fatalf("lost publication recovery after stdout failure: %v", err)
 	}
 }
+
+func TestWorkspaceTaskSpecShowDocumentWritesBytesNotFormat(t *testing.T) {
+	c := newWorkspaceTaskCommand(workspace.SystemDependencies())
+	var out bytes.Buffer
+	c.SetOut(&out)
+	c.SetErr(&bytes.Buffer{})
+	c.SetArgs([]string{"spec", "show", "--help"})
+	if err := c.Execute(); err != nil || !strings.Contains(out.String(), "--document") {
+		t.Fatalf("spec show lacks --document: %v %s", err, out.String())
+	}
+	c = newWorkspaceTaskCommand(workspace.SystemDependencies())
+	c.SetOut(&bytes.Buffer{})
+	c.SetErr(&bytes.Buffer{})
+	c.SetArgs([]string{"spec", "show", "task", "--spec", "s", "--revision", "1", "--document", "spec", "--format", "json"})
+	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "--format does not apply") {
+		t.Fatalf("document with format: %v", err)
+	}
+	c = newWorkspaceTaskCommand(workspace.SystemDependencies())
+	c.SetOut(&bytes.Buffer{})
+	c.SetErr(&bytes.Buffer{})
+	c.SetArgs([]string{"spec", "show", "task", "--spec", "s", "--revision", "1", "--document", ""})
+	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "--document") {
+		t.Fatalf("empty document: %v", err)
+	}
+}

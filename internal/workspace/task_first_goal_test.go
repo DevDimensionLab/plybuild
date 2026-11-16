@@ -636,3 +636,27 @@ func TestFirstGoalAndNativeWorktreeCreateRunConcurrently(t *testing.T) {
 		t.Fatalf("expected one bound Task with exactly one Goal: %#v", task)
 	}
 }
+
+func TestGoalDocumentsAreReadableByID(t *testing.T) {
+	f := newWorkItemJourneyFixture(t)
+	in := firstGoalFixture(t, f)
+	p, err := RegisterFirstGoal(f.dependencies, in, false, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = RegisterFirstGoal(f.dependencies, in, true, p.Confirmation); err != nil {
+		t.Fatal(err)
+	}
+	q := TaskContentQuery{TaskID: in.TaskID, SpecID: in.SpecID, Revision: 1}
+	got, err := ReadTaskSpecDocument(f.dependencies, q, "spec")
+	if err != nil || string(got) != "# Supplied design\nPreserve these exact bytes.\n" {
+		t.Fatalf("%q %v", got, err)
+	}
+	if _, err = ReadTaskSpecDocument(f.dependencies, q, "absent"); !isWorkNotFound(err) {
+		t.Fatalf("read an unregistered document: %v", err)
+	}
+	q.Revision = 2
+	if _, err = ReadTaskSpecDocument(f.dependencies, q, "spec"); err == nil {
+		t.Fatal("read a document of an unregistered revision")
+	}
+}

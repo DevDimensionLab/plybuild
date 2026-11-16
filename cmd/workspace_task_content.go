@@ -62,7 +62,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 	}
 	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", workspace.ShowTaskProblem}, {"spec", "list", "List goal and solution revisions and their assessments", workspace.ListTaskSpecs}, {"spec", "show", "Show an exact goal or solution revision and its preserved inputs", workspace.ShowTaskSpec}, {"publication", "show", "Inspect the outcome of a Task content publication", workspace.ShowTaskPublication}} {
 		entry := entry
-		var format, spec, key string
+		var format, spec, key, document string
 		var revision int
 		c := &cobra.Command{Use: entry.name + " <task-id>", Short: entry.short, Long: entry.short + ". This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.", Example: "  ply workspace task " + entry.parent + " " + entry.name + " explain-start-errors --format json", Args: cobra.ExactArgs(1), PreRunE: func(cmd *cobra.Command, args []string) error {
 			if _, e := workspace.ParseTaskID(args[0]); e != nil {
@@ -71,10 +71,24 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 			if cmd.Flags().Changed("revision") && revision < 1 {
 				return workspace.WorkInvalidArguments("--revision must be a positive integer")
 			}
+			if cmd.Flags().Changed("document") && document == "" {
+				return workspace.WorkInvalidArguments("--document needs a document ID")
+			}
+			if document != "" && cmd.Flags().Changed("format") {
+				return workspace.WorkInvalidArguments("--document writes the document bytes; --format does not apply")
+			}
 			return validateWorkFormat(format)
 		}, RunE: func(cmd *cobra.Command, args []string) error {
 			id, e := workspace.ParseTaskID(args[0])
 			if e != nil {
+				return e
+			}
+			if document != "" {
+				b, e := workspace.ReadTaskSpecDocument(d, workspace.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision}, document)
+				if e != nil {
+					return taskContentCommandError(cmd, format, e)
+				}
+				_, e = cmd.OutOrStdout().Write(b)
 				return e
 			}
 			r, e := entry.run(d, workspace.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision, PublicationKey: key})
@@ -98,9 +112,10 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 		}
 		if entry.parent == "spec" && entry.name == "show" {
 			c.Flags().StringVar(&spec, "spec", "", "Task-owned Spec ID")
+			c.Flags().StringVar(&document, "document", "", "write the exact bytes of this preserved document ID instead of the revision")
 			_ = c.MarkFlagRequired("spec")
 			_ = c.MarkFlagRequired("revision")
-			c.Example = "  ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --format json"
+			c.Example = "  ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --format json\n  ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --document spec"
 		}
 		if entry.parent == "publication" {
 			c.Flags().StringVar(&key, "key", "", "exact publication key")

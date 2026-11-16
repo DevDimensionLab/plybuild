@@ -23,6 +23,12 @@ type TaskExecutorAssignment struct {
 	AllowLocalInstall *bool `yaml:"allow_local_install,omitempty" json:"allow_local_install,omitempty"`
 }
 
+// goalDocumentInputPrefix starts the required input ID of each preserved
+// document; GoalDocumentInputID is followed by the ID of a document of the
+// Goal Spec revision.
+const goalDocumentInputPrefix = "task-goal-doc/"
+const GoalDocumentInputID = goalDocumentInputPrefix + "goal/"
+
 func (a TaskExecutorAssignment) LocalInstallAllowed() bool {
 	return a.AllowLocalInstall != nil && *a.AllowLocalInstall
 }
@@ -173,7 +179,7 @@ func loadTaskGoal(d Dependencies, work ProjectWork, r WorkItemRegistry, task Tas
 			if basis.name == "goal" {
 				role = "design"
 			}
-			out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-goal-doc/" + basis.name + "/" + contentString(x, "id"), Role: role, Locator: taskContentPath(work, "objects", hash), SHA256: hash, SizeBytes: int64(len(bytes)), MediaType: contentString(x, "media_type")})
+			out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: goalDocumentInputPrefix + basis.name + "/" + contentString(x, "id"), Role: role, Locator: taskContentPath(work, "objects", hash), SHA256: hash, SizeBytes: int64(len(bytes)), MediaType: contentString(x, "media_type")})
 		}
 	}
 	sort.Slice(out.RequiredInputs, func(i, j int) bool { return out.RequiredInputs[i].ID < out.RequiredInputs[j].ID })
