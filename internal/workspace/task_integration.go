@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -354,7 +353,7 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	if err := requireIntegrationDependencies(dependencies); err != nil {
 		return TaskIntegrationResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return TaskIntegrationResult{}, err
 	}
@@ -362,7 +361,11 @@ func CheckTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	if err != nil {
 		return TaskIntegrationResult{}, mapProjectWorkError(err)
 	}
-	registry, err := dependencies.WorkItems.Snapshot(root)
+	work, err := LocateTask(dependencies, root, input.TaskID)
+	if err != nil {
+		return TaskIntegrationResult{}, err
+	}
+	registry, err := dependencies.WorkItems.Snapshot(work)
 	if err != nil {
 		return TaskIntegrationResult{}, err
 	}
@@ -398,77 +401,75 @@ func ApplyTaskIntegration(dependencies Dependencies, input TaskIntegrationInput)
 	if err := requireIntegrationDependencies(dependencies); err != nil {
 		return TaskIntegrationResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return TaskIntegrationResult{}, err
 	}
 	var output WorkspaceTaskIntegrationReadback
-	err = dependencies.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
+	err = withTaskWork(dependencies, root, input.TaskID, func(projects ProjectSnapshot, work ProjectWork, session WorkItemStoreSession) error {
+		registry, err := session.Snapshot()
+		if err != nil {
+			return err
+		}
+		if authority := findAuthorityByPlan(registry, input.Confirmation, input); authority != nil {
+			intent := findIntentForAuthority(registry, authority.ID)
+			if intent == nil {
+				return workError(ErrorTaskIntegrationConflict, "integration authority has no exact intent", nil)
+			}
+			attempt := findAttemptForAuthority(registry, authority.ID)
+			stored := findIntegrationResultForAuthority(registry, authority.ID)
+			if authority.historical != nil && stored == nil {
+				// A plan new code does not understand is history; it never authorizes Git.
+				return workError(ErrorTaskIntegrationConflict, historicalPendingReason, nil)
+			}
+			ctx, err := contextFromPlan(registry, authority.Plan)
 			if err != nil {
 				return err
 			}
-			if authority := findAuthorityByPlan(registry, input.Confirmation, input); authority != nil {
-				intent := findIntentForAuthority(registry, authority.ID)
-				if intent == nil {
-					return workError(ErrorTaskIntegrationConflict, "integration authority has no exact intent", nil)
-				}
-				attempt := findAttemptForAuthority(registry, authority.ID)
-				stored := findIntegrationResultForAuthority(registry, authority.ID)
-				if authority.historical != nil && stored == nil {
-					// A plan new code does not understand is history; it never authorizes Git.
-					return workError(ErrorTaskIntegrationConflict, historicalPendingReason, nil)
-				}
-				ctx, err := contextFromPlan(registry, authority.Plan)
-				if err != nil {
-					return err
-				}
-				ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, stored)
-				if stored != nil {
-					output = newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, stored)
-					return nil
-				}
-				if attempt != nil {
-					return reconcileIntegrationAttempt(dependencies, session, &registry, root, ctx, *authority, *intent, *attempt, &output)
-				}
-				ctx.PreconditionReason = authorityProjectBindingReason(projects, authority.Plan)
-				return continueIntegrationAuthority(dependencies, session, &registry, root, ctx, *authority, *intent, &output, true)
-			}
-			plan, digest, ctx, err := buildIntegrationPlan(dependencies, root, projects, registry, input)
-			if err != nil {
-				return err
-			}
-			if digest != input.Confirmation {
-				return workError(ErrorTaskIntegrationConfirmationMismatch, fmt.Sprintf("fresh plan digest is %s", digest), nil)
-			}
-			ctx.PersistedBefore = integrationPersistedView(registry, nil, nil, nil, nil)
-			if plan.Readiness != "ready" && plan.Readiness != "already_integrated" {
-				output = newIntegrationReadback(root, registry, ctx, plan, digest, nil, nil, nil, nil)
+			ctx.PersistedBefore = integrationPersistedView(registry, authority, intent, attempt, stored)
+			if stored != nil {
+				output = newIntegrationReadback(root, registry, ctx, authority.Plan, authority.PlanSHA256, authority, intent, attempt, stored)
 				return nil
 			}
-			authorityID, err := dependencies.TaskLifecycleIDs.NewIntegrationAuthorityID()
-			if err != nil {
-				return err
+			if attempt != nil {
+				return reconcileIntegrationAttempt(dependencies, session, &registry, root, ctx, *authority, *intent, *attempt, &output)
 			}
-			intentID, err := dependencies.TaskLifecycleIDs.NewIntegrationIntentID()
-			if err != nil {
-				return err
-			}
-			now := dependencies.WorkClock.Now().UTC().Format(time.RFC3339Nano)
-			authority := IntegrationAuthority{ID: authorityID, CreatedAtUTC: now, PlanSHA256: digest, Plan: plan, RetryAfterResultID: input.RetryAfterResultID, TaskID: input.TaskID, AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: plan.Epic.ExpectedParentOID, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
-			intent := intentFromPlan(intentID, authorityID, plan, digest)
-			intent.IntentSHA256 = integrationIntentDigest(intent)
-			registry.IntegrationAuthorities = append(registry.IntegrationAuthorities, authority)
-			registry.IntegrationIntents = append(registry.IntegrationIntents, intent)
-			sortWorkRegistry(&registry)
-			published, err := publishWorkItemRegistryRecover(session, registry)
-			if err != nil {
-				return err
-			}
-			registry = published
-			return continueIntegrationAuthority(dependencies, session, &registry, root, ctx, authority, intent, &output, false)
-		})
+			ctx.PreconditionReason = authorityProjectBindingReason(projects, authority.Plan)
+			return continueIntegrationAuthority(dependencies, session, &registry, root, ctx, *authority, *intent, &output, true)
+		}
+		plan, digest, ctx, err := buildIntegrationPlan(dependencies, root, projects, registry, input)
+		if err != nil {
+			return err
+		}
+		if digest != input.Confirmation {
+			return workError(ErrorTaskIntegrationConfirmationMismatch, fmt.Sprintf("fresh plan digest is %s", digest), nil)
+		}
+		ctx.PersistedBefore = integrationPersistedView(registry, nil, nil, nil, nil)
+		if plan.Readiness != "ready" && plan.Readiness != "already_integrated" {
+			output = newIntegrationReadback(root, registry, ctx, plan, digest, nil, nil, nil, nil)
+			return nil
+		}
+		authorityID, err := dependencies.TaskLifecycleIDs.NewIntegrationAuthorityID()
+		if err != nil {
+			return err
+		}
+		intentID, err := dependencies.TaskLifecycleIDs.NewIntegrationIntentID()
+		if err != nil {
+			return err
+		}
+		now := dependencies.WorkClock.Now().UTC().Format(time.RFC3339Nano)
+		authority := IntegrationAuthority{ID: authorityID, CreatedAtUTC: now, PlanSHA256: digest, Plan: plan, RetryAfterResultID: input.RetryAfterResultID, TaskID: input.TaskID, AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: plan.Epic.ExpectedParentOID, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
+		intent := intentFromPlan(intentID, authorityID, plan, digest)
+		intent.IntentSHA256 = integrationIntentDigest(intent)
+		registry.IntegrationAuthorities = append(registry.IntegrationAuthorities, authority)
+		registry.IntegrationIntents = append(registry.IntegrationIntents, intent)
+		sortWorkRegistry(&registry)
+		published, err := publishWorkItemRegistryRecover(session, registry)
+		if err != nil {
+			return err
+		}
+		registry = published
+		return continueIntegrationAuthority(dependencies, session, &registry, root, ctx, authority, intent, &output, false)
 	})
 	if err != nil {
 		return TaskIntegrationResult{Readback: output}, mapMutationError(err)
@@ -514,9 +515,6 @@ func requireIntegrationDependencies(d Dependencies) error {
 }
 
 func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot, registry WorkItemRegistry, input TaskIntegrationInput) (WorkspaceTaskIntegrationPlan, string, integrationContext, error) {
-	if registry.FormatVersion < 2 || registry.FormatVersion > CurrentRegistryFormat {
-		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "work-item store must be format 2, 3 or 4", nil)
-	}
 	task, _ := findTask(registry, input.TaskID)
 	if task == nil || task.Worktree == nil || task.WorktreeState != WorkItemReady {
 		return WorkspaceTaskIntegrationPlan{}, "", integrationContext{}, workError(ErrorTaskIntegrationBlocked, "Task does not have a ready worktree", nil)
@@ -579,13 +577,13 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 		if err := refreshParentReasons(d, registry, &ctx, block, conflict); err != nil {
 			return WorkspaceTaskIntegrationPlan{}, "", ctx, workError(ErrorTaskIntegrationConflict, err.Error(), err)
 		}
-	} else if registry.FormatVersion >= 4 {
+	} else {
 		base := currentEpicBase(registry, *epic, *parent)
 		if task.Worktree.ParentOID != base.OID || task.Worktree.ParentTree != base.Tree {
 			block("epic_base_changed")
 		}
 	}
-	if registry.FormatVersion >= 4 && pendingBaseUpdate(registry, epic.ID, task.RepoID) {
+	if pendingBaseUpdate(registry, epic.ID, task.RepoID) {
 		block("epic_base_update_pending")
 	}
 	if input.ExpectedParentOID != ctx.ParentOID {
@@ -667,7 +665,7 @@ func buildIntegrationPlan(d Dependencies, root string, projects ProjectSnapshot,
 		}
 	}
 	reasons = sortedReasons(reasons)
-	markerBytes, err := d.Files.ReadFile(filepath.Join(root, MarkerDirectory, MarkerFile))
+	markerBytes, err := d.Files.ReadFile(MarkerPath(root))
 	if err != nil {
 		return WorkspaceTaskIntegrationPlan{}, "", ctx, workError(ErrorWorkIO, "read workspace marker", err)
 	}
@@ -692,10 +690,6 @@ func refreshParentReasons(d Dependencies, registry WorkItemRegistry, ctx *integr
 	}
 	if ctx.ParentOID == w.ParentOID {
 		conflict("refresh_parent_unchanged")
-	}
-	if registry.FormatVersion < 4 {
-		block("refresh_parent_not_registered_base")
-		return nil
 	}
 	base := currentEpicBase(registry, ctx.Epic, ctx.Parent)
 	if base.OID != ctx.ParentOID {
@@ -881,7 +875,7 @@ func observeAuthorityPrecondition(d Dependencies, root string, ctx integrationCo
 		ctx.Reflog = []IntegrationReflogEntry{}
 		return ctx, ctx.PreconditionReason
 	}
-	marker, err := d.Files.ReadFile(filepath.Join(root, MarkerDirectory, MarkerFile))
+	marker, err := d.Files.ReadFile(MarkerPath(root))
 	if err != nil || digestTaskBytes(marker) != authority.Plan.Workspace.MarkerSHA256 {
 		return ctx, "The workspace marker changed after confirmation."
 	}

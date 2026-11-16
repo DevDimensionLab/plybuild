@@ -109,7 +109,7 @@ type LocalConfigFile interface {
 }
 
 func OpenLocalConfig(absConfigDir string) (cfg LocalConfigDir) {
-	cfg.impl.Path = file.Path(absConfigDir)
+	cfg.impl.Path = file.Path("%s", absConfigDir)
 	return
 }
 

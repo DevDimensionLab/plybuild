@@ -46,7 +46,7 @@ func (f lockFixture) leaveUnresolved(t *testing.T) TaskIntegrationInput {
 	if _, err := ApplyTaskIntegration(d, input); err == nil || !hasWorkErrorClass(err, ErrorWorkIO) {
 		t.Fatalf("interrupted apply error = %v", err)
 	}
-	registry, err := f.dependencies.WorkItems.Snapshot(f.root)
+	registry, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 	if err != nil || len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationResults) != 0 {
 		t.Fatalf("fixture integration is not unresolved: %#v %v", registry.IntegrationAuthorities, err)
 	}
@@ -70,9 +70,7 @@ func (f lockFixture) addRepository(t *testing.T, id string, ref string) (EpicID,
 	epicPath := filepath.Join(wrapper, "epic")
 	runLocalGit(t, repository, "worktree", "add", "-b", strings.TrimPrefix(ref, "refs/heads/"), epicPath, oid)
 	project := ProjectRecord{ID: ProjectID(id), Name: id, Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{RepoID(id)}}
-	if _, _, _, err := f.dependencies.Projects.(*systemProjectStore).Add(f.root, project, []RepoRecord{{ID: RepoID(id), Locator: repository, GitCommonDir: physicalPath(t, filepath.Join(repository, ".git"))}}); err != nil {
-		t.Fatal(err)
-	}
+	defineTestProject(t, f.root, project, []RepoRecord{{ID: RepoID(id), Locator: repository}})
 	epic := EpicID(id + "-epic")
 	adopt, err := ParseEpicAdoptInput(string(epic), "Epic "+id, id, id, physicalPath(t, epicPath), ref, oid)
 	if err != nil {
@@ -149,7 +147,8 @@ func TestTaskIntegrationUnresolvedRepositoryDoesNotBlockOtherRepositorySameRef(t
 	if err != nil || recovered.Readback.Classification != "exact_effect" || git.count() != 1 {
 		t.Fatalf("recovered = %#v %v merges=%d", recovered.Readback, err, git.count())
 	}
-	registry, err := f.dependencies.WorkItems.Snapshot(f.root)
+	registries, err := SnapshotWorkspace(f.dependencies, f.root)
+	registry := MergeRegistries(registries)
 	if err != nil || len(registry.IntegrationAuthorities) != 2 || len(registry.IntegrationResults) != 2 {
 		t.Fatalf("registry authorities=%d results=%d %v", len(registry.IntegrationAuthorities), len(registry.IntegrationResults), err)
 	}

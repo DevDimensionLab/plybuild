@@ -38,7 +38,7 @@ func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID,
 	if err != nil {
 		return nil, err
 	}
-	directory, err := workspace.ProjectDataPath(resolved, plan.DataPathCategory)
+	directory, err := resolved.Data().Plans()
 	if err != nil {
 		return nil, err
 	}
@@ -97,11 +97,11 @@ func recordEpicIntegration(d workspace.Dependencies, input workspace.EpicIntegra
 			gitDir = b.GitCommonDir
 		}
 	}
-	w, err := workspace.ObserveContainingRoot(d)
+	w, err := workspace.ObserveContaining(d)
 	if err != nil {
 		return fmt.Errorf("%s; %w", done, err)
 	}
-	tasks, err := taskjournal.JournalTasks(w.Root)
+	journals, err := taskjournal.Journals(w.Root)
 	if err != nil {
 		return fmt.Errorf("%s; %w", done, err)
 	}
@@ -109,8 +109,9 @@ func recordEpicIntegration(d workspace.Dependencies, input workspace.EpicIntegra
 		return exec.Command("git", "--git-dir", gitDir, "merge-base", "--is-ancestor", commit, of).Run() == nil
 	}
 	refs := map[string]string{"epic": string(input.EpicID), "repo": string(input.RepoID), "target_ref": result.TargetRef, "before_oid": input.ExpectedTargetOID, "after_oid": result.TargetOID, "effect": result.Effect}
-	for _, task := range tasks {
-		records, _ := taskjournal.ReadContributions(w, task)
+	for _, journal := range journals {
+		task := journal.Task
+		records, _ := taskjournal.ReadContributions(w, journal.Work, task)
 		for _, r := range records {
 			p := r.Event
 			if p == nil || p.Ply == nil || p.Ply.Operation != "integration" || p.Ply.Refs["epic"] != string(input.EpicID) {

@@ -53,30 +53,40 @@ func contentIntegrityReason(integrity string) string {
 		return "task_content_observation_unknown"
 	}
 }
-func readContentStart(d Dependencies, q TaskContentQuery, missingTask bool) (string, WorkItemRegistry, *TaskRecord, error) {
+func readContentStart(d Dependencies, q TaskContentQuery, missingTask bool) (ProjectWork, WorkItemRegistry, *TaskRecord, error) {
 	d = WithTaskContentScope(d, q.TaskID)
 	if _, e := ParseTaskID(string(q.TaskID)); e != nil {
-		return "", WorkItemRegistry{}, nil, e
+		return ProjectWork{}, WorkItemRegistry{}, nil, e
 	}
-	root, e := containingWorkItemWorkspace(d)
+	root, e := containingRegistrationWorkspace(d)
 	if e != nil {
-		return "", WorkItemRegistry{}, nil, e
+		return ProjectWork{}, WorkItemRegistry{}, nil, e
 	}
 	if d.WorkItems == nil {
-		return root, WorkItemRegistry{}, nil, contentError("task_content_observation_unknown", "registry reader unavailable", nil)
+		return ProjectWork{Workspace: root}, WorkItemRegistry{}, nil, contentError("task_content_observation_unknown", "registry reader unavailable", nil)
 	}
-	r, e := d.WorkItems.Snapshot(root)
+	work, e := LocateTask(d, root, q.TaskID)
+	if missingTask && isWorkNotFound(e) {
+		return ProjectWork{Workspace: root}, emptyWorkItemRegistry(), nil, nil
+	}
 	if e != nil {
-		return root, r, nil, e
+		return ProjectWork{Workspace: root}, WorkItemRegistry{}, nil, e
+	}
+	r, e := d.WorkItems.Snapshot(work)
+	if e != nil {
+		return work, r, nil, e
 	}
 	t, _ := findTask(r, q.TaskID)
 	if t == nil && !missingTask {
-		return root, r, nil, workError(ErrorWorkNotFound, "Task is not registered", nil)
+		return work, r, nil, workError(ErrorWorkNotFound, "Task is not registered", nil)
 	}
-	return root, r, t, nil
+	return work, r, t, nil
 }
-func contentReadFreshness(d Dependencies, root string, r WorkItemRegistry) string {
-	after, e := d.WorkItems.Snapshot(root)
+func contentReadFreshness(d Dependencies, work ProjectWork, r WorkItemRegistry) string {
+	if work.Dir == "" {
+		return "fresh" // No Project holds the Task, so there is no registry to change.
+	}
+	after, e := d.WorkItems.Snapshot(work)
 	if e != nil || after.RawSHA256 != r.RawSHA256 {
 		return "unknown"
 	}
@@ -99,7 +109,7 @@ func ShowTaskProblem(d Dependencies, q TaskContentQuery) (TaskContentReadbackRes
 	if q.Revision < 0 || q.Revision > 2147483647 {
 		return TaskContentReadbackResult{}, contentError("task_content_invalid_input", "revision must be a positive integer", nil)
 	}
-	root, r, t, e := readContentStart(d, q, false)
+	work, r, t, e := readContentStart(d, q, false)
 	if e != nil {
 		return TaskContentReadbackResult{}, e
 	}
@@ -119,18 +129,18 @@ func ShowTaskProblem(d Dependencies, q TaskContentQuery) (TaskContentReadbackRes
 		}
 		legacy = contentObject(map[string]canonicaljson.Value{"title": t.Title, "description": t.Description})
 	} else {
-		o, err := readRegisteredTaskManifest(d.TaskContent, root, r, selected.ManifestSHA256)
+		o, err := readRegisteredTaskManifest(d.TaskContent, work, r, selected.ManifestSHA256)
 		integrity = contentIntegrity(err)
 		if err == nil {
 			revision = o
-			err = verifyManifestDocuments(d.TaskContent, root, o)
+			err = verifyManifestDocuments(d.TaskContent, work, o)
 			integrity = contentIntegrity(err)
 		}
 		if err != nil {
 			reasons = append(reasons, contentIntegrityReason(integrity))
 		}
 	}
-	return contentReadEnvelope("WorkspaceTaskProblemReadback@1", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": revision, "legacy_problem_summary": legacy, "integrity": integrity, "freshness": contentReadFreshness(d, root, r), "reasons": sortedContentStrings(reasons), "next_action": contentTaskAction(q.TaskID)}), nil
+	return contentReadEnvelope("WorkspaceTaskProblemReadback@1", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": revision, "legacy_problem_summary": legacy, "integrity": integrity, "freshness": contentReadFreshness(d, work, r), "reasons": sortedContentStrings(reasons), "next_action": contentTaskAction(q.TaskID)}), nil
 }
 func nullableDigest(s string) canonicaljson.Value {
 	if s == "" {
@@ -138,27 +148,27 @@ func nullableDigest(s string) canonicaljson.Value {
 	}
 	return s
 }
-func verifyManifestDocuments(s *TaskContentStorage, root string, o canonicaljson.Object) error {
+func verifyManifestDocuments(s *TaskContentStorage, work ProjectWork, o canonicaljson.Object) error {
 	for _, v := range contentArray(contentFields(o), "documents") {
 		m := contentFields(v)
 		digest := contentString(m, "sha256")
-		b, e := s.Read(root, "objects", digest)
+		b, e := s.Read(work, "objects", digest)
 		if e != nil {
 			return e
 		}
-		if len(b) != contentInt(m, "size_bytes") || contentString(m, "locator") != taskContentPath(root, "objects", digest) {
+		if len(b) != contentInt(m, "size_bytes") || contentString(m, "locator") != taskContentPath(work, "objects", digest) {
 			return contentError("task_content_integrity_conflict", "snapshot descriptor differs", nil)
 		}
 	}
 	return nil
 }
-func selectionReadback(d Dependencies, root string, r WorkItemRegistry, id TaskID) (canonicaljson.Value, string) {
+func selectionReadback(d Dependencies, work ProjectWork, r WorkItemRegistry, id TaskID) (canonicaljson.Value, string) {
 	state := taskContentState(r, id)
 	m := map[string]canonicaljson.Value{"event": contentRefValue(state.SelectionEvent), "action": nil, "solution": nil, "freshness": "none"}
 	if state.SelectionEvent == nil {
 		return contentObject(m), "none"
 	}
-	o, e := readRegisteredTaskManifest(d.TaskContent, root, r, state.SelectionEvent.ManifestSHA256)
+	o, e := readRegisteredTaskManifest(d.TaskContent, work, r, state.SelectionEvent.ManifestSHA256)
 	if e != nil {
 		m["freshness"] = "unknown"
 		return contentObject(m), "unknown"
@@ -183,11 +193,11 @@ func selectionReadback(d Dependencies, root string, r WorkItemRegistry, id TaskI
 }
 func ListTaskSpecs(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
 	d = WithTaskContentScope(d, q.TaskID)
-	root, r, _, e := readContentStart(d, q, false)
+	work, r, _, e := readContentStart(d, q, false)
 	if e != nil {
 		return TaskContentReadbackResult{}, e
 	}
-	selected, fresh := selectionReadback(d, root, r, q.TaskID)
+	selected, fresh := selectionReadback(d, work, r, q.TaskID)
 	sol := contentFields(contentFields(selected)["solution"])
 	selectedRef := valueRevision(sol["spec"])
 	revisions := []canonicaljson.Value{}
@@ -198,14 +208,14 @@ func ListTaskSpecs(d Dependencies, q TaskContentQuery) (TaskContentReadbackResul
 			continue
 		}
 		specID = p.SpecID
-		o, e := readRegisteredTaskManifest(d.TaskContent, root, r, p.ManifestSHA256)
+		o, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.ManifestSHA256)
 		m := contentFields(o)
 		if e != nil {
 			reasons = append(reasons, contentIntegrityReason(contentIntegrity(e)))
 		}
 		var assessment canonicaljson.Value
 		if last := lastTaskAssessment(r, q.TaskID, p.SpecID, p.Revision); last != nil {
-			a, e := readRegisteredTaskManifest(d.TaskContent, root, r, last.ManifestSHA256)
+			a, e := readRegisteredTaskManifest(d.TaskContent, work, r, last.ManifestSHA256)
 			if e == nil {
 				assessment = contentObject(map[string]canonicaljson.Value{"id": last.ID, "manifest_sha256": last.ManifestSHA256, "outcome": contentFields(a)["outcome"]})
 			} else {
@@ -214,14 +224,14 @@ func ListTaskSpecs(d Dependencies, q TaskContentQuery) (TaskContentReadbackResul
 		}
 		revisions = append(revisions, contentObject(map[string]canonicaljson.Value{"revision": int64(p.Revision), "manifest_sha256": p.ManifestSHA256, "title": m["title"], "problem": m["problem"], "assessment": assessment, "selected": fresh != "withdrawn" && selectedRef != nil && selectedRef.Revision == p.Revision && selectedRef.ManifestSHA256 == p.ManifestSHA256}))
 	}
-	return contentReadEnvelope("WorkspaceTaskSpecListReadback@1", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "spec_id": specID, "revisions": revisions, "selection": selected, "freshness": contentReadFreshness(d, root, r), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
+	return contentReadEnvelope("WorkspaceTaskSpecListReadback@1", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "spec_id": specID, "revisions": revisions, "selection": selected, "freshness": contentReadFreshness(d, work, r), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
 }
 func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
 	d = WithTaskContentScope(d, q.TaskID)
 	if contentSlug(q.SpecID) != nil || q.Revision < 1 || q.Revision > 2147483647 {
 		return TaskContentReadbackResult{}, contentError("task_content_invalid_input", "--spec and --revision (1..2147483647) are required", nil)
 	}
-	root, r, t, e := readContentStart(d, q, false)
+	work, r, t, e := readContentStart(d, q, false)
 	if e != nil {
 		return TaskContentReadbackResult{}, e
 	}
@@ -234,11 +244,11 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 	if ref == nil {
 		return TaskContentReadbackResult{}, workError(ErrorWorkNotFound, "Spec revision is not registered", nil)
 	}
-	o, err := readRegisteredTaskManifest(d.TaskContent, root, r, ref.ManifestSHA256)
+	o, err := readRegisteredTaskManifest(d.TaskContent, work, r, ref.ManifestSHA256)
 	integrity := contentIntegrity(err)
 	reasons := []string{}
 	if err == nil {
-		err = verifyManifestDocuments(d.TaskContent, root, o)
+		err = verifyManifestDocuments(d.TaskContent, work, o)
 		integrity = contentIntegrity(err)
 	}
 	if err != nil {
@@ -248,7 +258,7 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 	selections := []canonicaljson.Value{}
 	for _, p := range r.TaskSpecAssessments {
 		if p.TaskID == q.TaskID && p.SpecID == q.SpecID && p.SpecRevision == q.Revision {
-			v, e := readRegisteredTaskManifest(d.TaskContent, root, r, p.ManifestSHA256)
+			v, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.ManifestSHA256)
 			if e == nil {
 				assessments = append(assessments, v)
 			} else {
@@ -259,7 +269,7 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 	}
 	for _, p := range r.TaskSolutionSelections {
 		if p.TaskID == q.TaskID {
-			v, e := readRegisteredTaskManifest(d.TaskContent, root, r, p.ManifestSHA256)
+			v, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.ManifestSHA256)
 			if e == nil {
 				selections = append(selections, v)
 			} else {
@@ -269,22 +279,22 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 		}
 	}
 	if err == nil && isTaskGoalSpec(o) {
-		goal, e := loadTaskGoal(d, root, r, q.TaskID, TaskGoalRef{SpecID: q.SpecID, Spec: *ref})
+		goal, e := loadTaskGoal(d, work, r, q.TaskID, TaskGoalRef{SpecID: q.SpecID, Spec: *ref})
 		if e != nil {
 			return TaskContentReadbackResult{}, e
 		}
 		if !contentTypedEqual(taskContentState(r, q.TaskID).ProblemHead, &goal.Problem) {
 			reasons = append(reasons, "task_goal_problem_changed")
 		}
-		return contentReadEnvelope("WorkspaceTaskSpecReadback@2", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": o, "goal": contentRefValue(goal), "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": "not_selected", "target_freshness": "late_bound", "required_inputs": contentRefValue(goal.RequiredInputs), "task_spec_binding": nil, "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(TaskNextAction{Kind: "inspect", Reason: "Goal documents are available as input to an explicitly chosen operation.", Argv: []string{}})}), nil
+		return contentReadEnvelope("WorkspaceTaskSpecReadback@2", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": o, "goal": contentRefValue(goal), "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": "not_selected", "target_freshness": "late_bound", "required_inputs": contentRefValue(goal.RequiredInputs), "task_spec_binding": nil, "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(TaskNextAction{Kind: "inspect", Reason: "Goal documents are available as input to an explicitly chosen operation.", Argv: []string{}})}), nil
 	}
-	_, selectionFresh := selectionReadback(d, root, r, q.TaskID)
+	_, selectionFresh := selectionReadback(d, work, r, q.TaskID)
 	targetFresh := "unknown"
 	inputs := []TaskSpecRequiredInput{}
 	var basis *TaskSpecBasis
-	projects, repos, e := d.Projects.Snapshot(root)
+	projects, repos, e := d.Projects.Snapshot(work.Workspace)
 	if e == nil {
-		eval, e := currentTaskSpec(d, root, r, ProjectSnapshot{Projects: projects, Repos: repos}, *t, true)
+		eval, e := currentTaskSpec(d, work, r, ProjectSnapshot{Projects: projects, Repos: repos}, *t, true)
 		reasons = append(reasons, eval.Reasons...)
 		if e != nil {
 			selectionFresh = "unknown"
@@ -303,7 +313,7 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 		selectionFresh = "unknown"
 		reasons = append(reasons, "task_content_observation_unknown")
 	}
-	if contentReadFreshness(d, root, r) != "fresh" {
+	if contentReadFreshness(d, work, r) != "fresh" {
 		selectionFresh = "unknown"
 		targetFresh = "unknown"
 		basis = nil
@@ -313,15 +323,15 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 	if o != nil {
 		revision = o
 	}
-	return contentReadEnvelope("WorkspaceTaskSpecReadback@1", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": revision, "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": selectionFresh, "target_freshness": targetFresh, "required_inputs": contentRefValue(inputs), "task_spec_binding": contentRefValue(basis), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
+	return contentReadEnvelope("WorkspaceTaskSpecReadback@1", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": revision, "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": selectionFresh, "target_freshness": targetFresh, "required_inputs": contentRefValue(inputs), "task_spec_binding": contentRefValue(basis), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentTaskAction(q.TaskID)}), nil
 }
 func ShowTaskPublication(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
 	d = WithTaskContentScope(d, q.TaskID)
 	if e := contentKey(q.PublicationKey); e != nil {
 		return TaskContentReadbackResult{}, e
 	}
-	root, r, _, err := readContentStart(d, q, true)
-	if root == "" {
+	work, r, _, err := readContentStart(d, q, true)
+	if work.Workspace == "" {
 		return TaskContentReadbackResult{}, err
 	}
 	classification := "not_published"
@@ -335,10 +345,10 @@ func ShowTaskPublication(d Dependencies, q TaskContentQuery) (TaskContentReadbac
 			return TaskContentReadbackResult{}, contentError("task_content_publication_conflict", "publication key belongs to a different Task", nil)
 		}
 		publication = contentRefValue(p)
-		o, e := readRegisteredTaskManifest(d.TaskContent, root, r, p.OutcomeRef.ManifestSHA256)
+		o, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.OutcomeRef.ManifestSHA256)
 		if e == nil {
 			outcome = o
-			e = verifyManifestDocuments(d.TaskContent, root, o)
+			e = verifyManifestDocuments(d.TaskContent, work, o)
 		}
 		integrity = contentIntegrity(e)
 		classification = "published"
@@ -346,14 +356,14 @@ func ShowTaskPublication(d Dependencies, q TaskContentQuery) (TaskContentReadbac
 			classification = "unknown"
 		}
 	}
-	if err == nil && contentReadFreshness(d, root, r) != "fresh" {
+	if err == nil && contentReadFreshness(d, work, r) != "fresh" {
 		classification = "unknown"
 	}
-	return contentReadEnvelope("WorkspaceTaskPublicationReadback@1", map[string]canonicaljson.Value{"workspace": root, "task_id": string(q.TaskID), "publication_key": q.PublicationKey, "registry_sha256": nullableDigest(r.RawSHA256), "publication": publication, "outcome": outcome, "integrity": integrity, "classification": classification, "durability": "not_observed", "next_action": contentActionValue(contentInspectAction(q.TaskID, q.PublicationKey))}), nil
+	return contentReadEnvelope("WorkspaceTaskPublicationReadback@1", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "publication_key": q.PublicationKey, "registry_sha256": nullableDigest(r.RawSHA256), "publication": publication, "outcome": outcome, "integrity": integrity, "classification": classification, "durability": "not_observed", "next_action": contentActionValue(contentInspectAction(q.TaskID, q.PublicationKey))}), nil
 }
 
-func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects ProjectSnapshot, result TaskReadbackResult) canonicaljson.Object {
-	root, t := result.Workspace, result.Task
+func buildTaskContentReadback(d Dependencies, work ProjectWork, r WorkItemRegistry, projects ProjectSnapshot, result TaskReadbackResult) canonicaljson.Object {
+	t := result.Task
 	state := taskContentState(r, t.ID)
 	problem := map[string]canonicaljson.Value{"head": contentRefValue(state.ProblemHead), "title": nil, "summary": nil, "legacy_problem_summary": nil, "manifest_locator": nil, "integrity": "not_recorded"}
 	reasons := []string{}
@@ -362,10 +372,10 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 		problem["summary"] = t.Description
 		problem["legacy_problem_summary"] = contentObject(map[string]canonicaljson.Value{"title": t.Title, "description": t.Description})
 	} else {
-		problem["manifest_locator"] = taskContentPath(root, "manifests", state.ProblemHead.ManifestSHA256)
-		o, e := readRegisteredTaskManifest(d.TaskContent, root, r, state.ProblemHead.ManifestSHA256)
+		problem["manifest_locator"] = taskContentPath(work, "manifests", state.ProblemHead.ManifestSHA256)
+		o, e := readRegisteredTaskManifest(d.TaskContent, work, r, state.ProblemHead.ManifestSHA256)
 		if e == nil {
-			e = verifyManifestDocuments(d.TaskContent, root, o)
+			e = verifyManifestDocuments(d.TaskContent, work, o)
 		}
 		if e == nil {
 			problem["title"] = contentFields(o)["title"]
@@ -376,7 +386,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 			reasons = append(reasons, contentIntegrityReason(contentIntegrity(e)))
 		}
 	}
-	sel, sfresh := selectionReadback(d, root, r, t.ID)
+	sel, sfresh := selectionReadback(d, work, r, t.ID)
 	sol := contentFields(contentFields(sel)["solution"])
 	var specID canonicaljson.Value
 	for _, p := range r.TaskSpecRevisions {
@@ -386,7 +396,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 	}
 	selected := valueRevision(sol["spec"])
 	newer := selected != nil && state.SpecHead != nil && state.SpecHead.Revision > selected.Revision
-	eval, e := currentTaskSpec(d, root, r, projects, t, true)
+	eval, e := currentTaskSpec(d, work, r, projects, t, true)
 	if e != nil {
 		eval.ContentIntegrity = contentIntegrity(e)
 		eval.TargetFreshness = "unknown"
@@ -399,7 +409,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 		eval.ContentIntegrity = "not_recorded"
 	}
 	reasons = append(reasons, eval.Reasons...)
-	fresh := contentReadFreshness(d, root, r)
+	fresh := contentReadFreshness(d, work, r)
 	ready := fresh == "fresh" && sfresh == "current" && eval.ContentIntegrity == "valid" && eval.TargetFreshness == "fresh" && result.WorktreeReady
 	if fresh != "fresh" {
 		sfresh = "unknown"
@@ -424,7 +434,7 @@ func buildTaskContentReadback(d Dependencies, r WorkItemRegistry, projects Proje
 			integration, _ = canonicaljson.DecodeStrict(bytes)
 		}
 	}
-	m := map[string]canonicaljson.Value{"workspace": root, "registry_sha256": nullableDigest(r.RawSHA256), "observed_at_utc": d.WorkClock.Now().UTC().Format(time.RFC3339Nano), "resource": rv, "integration": integration, "problem": contentObject(problem), "solution": contentObject(map[string]canonicaljson.Value{"spec_id": specID, "head": contentRefValue(state.SpecHead), "selected_revision": contentRefValue(selected), "newer_draft_available": newer}), "selection": sel, "ready_for_spec_handoff": ready, "freshness": contentObject(map[string]canonicaljson.Value{"registry": fresh, "content": eval.ContentIntegrity, "selection": sfresh, "target": eval.TargetFreshness}), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(action), "next_transition_authorized": false}
+	m := map[string]canonicaljson.Value{"workspace": work.Workspace, "registry_sha256": nullableDigest(r.RawSHA256), "observed_at_utc": d.WorkClock.Now().UTC().Format(time.RFC3339Nano), "resource": rv, "integration": integration, "problem": contentObject(problem), "solution": contentObject(map[string]canonicaljson.Value{"spec_id": specID, "head": contentRefValue(state.SpecHead), "selected_revision": contentRefValue(selected), "newer_draft_available": newer}), "selection": sel, "ready_for_spec_handoff": ready, "freshness": contentObject(map[string]canonicaljson.Value{"registry": fresh, "content": eval.ContentIntegrity, "selection": sfresh, "target": eval.TargetFreshness}), "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(action), "next_transition_authorized": false}
 	o := contentFields(contentEnvelope("WorkspaceTaskReadback@3", m))
 	o["schema_version"] = int64(3)
 	return contentObject(o)

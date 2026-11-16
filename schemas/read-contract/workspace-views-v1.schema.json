@@ -116,6 +116,7 @@
         "schema_version",
         "workspace",
         "scope",
+        "creations",
         "epics",
         "freshness",
         "source_basis",
@@ -124,11 +125,17 @@
       "properties": {
         "kind": {
           "type": "string",
-          "const": "WorkspaceEpicListReadback@1"
+          "const": "WorkspaceEpicListReadback@2"
         },
         "schema_version": {
           "type": "integer",
-          "const": 1
+          "const": 2
+        },
+        "creations": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
         },
         "workspace": {
           "$ref": "#/$defs/workspace"

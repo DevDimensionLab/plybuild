@@ -10,7 +10,7 @@ import (
 // not retained: Snapshot validates it using the store's current scope each time.
 // The stat observation also drops reuse on out-of-protocol physical changes.
 func (s *systemWorkItemStoreSession) confirm(r WorkItemRegistry, observed os.FileInfo) {
-	info, err := os.Lstat(workItemsPath(s.root))
+	info, err := os.Lstat(s.work.Registry())
 	if err != nil || observed == nil || !os.SameFile(info, observed) || !sameRegistryFileState(info, observed) {
 		s.confirmed, s.observed = nil, nil
 		return
@@ -20,13 +20,9 @@ func (s *systemWorkItemStoreSession) confirm(r WorkItemRegistry, observed os.Fil
 }
 
 func cloneWorkItemRegistry(r WorkItemRegistry) WorkItemRegistry {
-	// The private upgrade permit is an ephemeral publication capability, never a
-	// part of a confirmed snapshot. All persisted reference-bearing fields are
-	// recursively copied, including queue requests with nested maps/interfaces.
-	r.upgradePermit = nil
+	// All persisted reference-bearing fields are recursively copied, including
+	// queue requests with nested maps/interfaces.
 	out := cloneRegistryValue(reflect.ValueOf(r)).Interface().(WorkItemRegistry)
-	out.integrationEvidence = r.integrationEvidence
-	out.publicationEvidence = r.publicationEvidence
 	out.integrationEvidenceRefs = append([]string(nil), r.integrationEvidenceRefs...)
 	return out
 }

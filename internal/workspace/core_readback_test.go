@@ -25,7 +25,7 @@ func TestRegisteredTaskListTitleFactsAndReadOnlyDependencies(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Seed a validated legacy registration without a problem head alongside modern Tasks.
-	err = f.dependencies.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+	err = f.dependencies.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		r, e := s.Snapshot()
 		if e != nil {
 			return e
@@ -105,9 +105,12 @@ func TestRegisteredTaskListTitleFactsAndReadOnlyDependencies(t *testing.T) {
 func TestRegisteredTaskListChecksAllFiltersBeforeIntersection(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	if _, _, _, err := f.dependencies.Projects.Add(root, ProjectRecord{ID: "other", Name: "Other", Wrapper: "/missing/ø (wrapper)", RepoIDs: []RepoID{"elsewhere"}}, []RepoRecord{{ID: "elsewhere", Locator: "/missing/ø (checkout)", GitCommonDir: "/missing/common.git"}}); err != nil {
+	otherRepo := filepath.Join(root, "other ø", "main")
+	if err := os.MkdirAll(otherRepo, 0o755); err != nil {
 		t.Fatal(err)
 	}
+	runLocalGit(t, otherRepo, "init", "-q")
+	defineTestProject(t, root, ProjectRecord{ID: "other", Name: "Other", Wrapper: filepath.Dir(otherRepo)}, []RepoRecord{{ID: "elsewhere", Locator: otherRepo}})
 	p, other, r, elsewhere, e := ProjectID("ply"), ProjectID("other"), RepoID("ply"), RepoID("elsewhere"), EpicID("epic")
 	f.dependencies.Repos = nil
 	f.dependencies.WorkGit = nil
@@ -192,9 +195,12 @@ func TestCoreReadsDoNotHideCorruptRegistries(t *testing.T) {
 	root := createProjectWorkspace(t)
 	d := SystemDependencies()
 	d.Files = projectCwdFileSystem{FileSystem: d.Files, cwd: root}
-	if err := os.WriteFile(workItemsPath(root), []byte("not: [valid yaml"), 0600); err != nil {
+	// One Project; listing reads its registry without observing Git.
+	if err := os.Mkdir(filepath.Join(root, "project"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	mustWriteFile(t, filepath.Join(root, DefinitionsFile), `{"format_version": 1, "projects": [{"id": "project", "name": "Project", "wrapper": "project", "repos": [{"id": "repo", "path": "project/repo"}]}]}`)
+	writeWorkItems(t, root, "not: [valid yaml")
 	if _, err := ListTasks(d, nil); err == nil {
 		t.Fatal("corrupt work registry hidden")
 	}
@@ -204,16 +210,13 @@ func TestRegisteredV4TaskListKeepsUnavailableTitleWhileReadyRemainsStrict(t *tes
 	f := newWorkItemJourneyFixture(t)
 	queueSetFixture(t, f, "list-v4", []TaskGoalQueueEntry{})
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.FormatVersion != 4 {
-		t.Fatal("fixture requires format 4")
-	}
 	head := taskContentState(r, "task").ProblemHead
 	// Corrupt the immutable manifest after constructing a fully valid v4 registry.
-	path := taskContentPath(root, "manifests", head.ManifestSHA256)
+	path := taskContentPath(testWork(t, root), "manifests", head.ManifestSHA256)
 	if err = os.Chmod(path, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -223,7 +226,7 @@ func TestRegisteredV4TaskListKeepsUnavailableTitleWhileReadyRemainsStrict(t *tes
 	if err = os.Chmod(path, 0400); err != nil {
 		t.Fatal(err)
 	}
-	before, err := os.ReadFile(workItemsPath(root))
+	before, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +234,7 @@ func TestRegisteredV4TaskListKeepsUnavailableTitleWhileReadyRemainsStrict(t *tes
 	if err != nil || len(list.Tasks) != 1 || list.Titles["task"].Title != nil || list.Titles["task"].Status != "unavailable" {
 		t.Fatalf("list=%+v err=%v", list, err)
 	}
-	if _, err = f.dependencies.WorkItems.Snapshot(root); err != nil {
+	if _, err = f.dependencies.WorkItems.Snapshot(testWork(t, root)); err != nil {
 		t.Fatalf("registry read required optional document content: %v", err)
 	}
 	if _, err = ListTaskQueue(f.dependencies, queueTargetFixture(), true); err == nil {
@@ -241,11 +244,11 @@ func TestRegisteredV4TaskListKeepsUnavailableTitleWhileReadyRemainsStrict(t *tes
 	if err != nil || shown.Content == nil || contentFields(contentFields(shown.Content)["problem"])["integrity"] == "valid" {
 		t.Fatalf("Task show must preserve unavailable document facts: %v", err)
 	}
-	after, err := os.ReadFile(workItemsPath(root))
+	after, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil || string(before) != string(after) {
 		t.Fatal("read changed registry")
 	}
-	if err = os.WriteFile(workItemsPath(root), []byte("format_version: 4\ntasks: [broken"), 0600); err != nil {
+	if err = os.WriteFile(testWork(t, root).Registry(), []byte("format_version: 4\ntasks: [broken"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = ListTasksWithFilters(f.dependencies, TaskListFilters{}); err == nil {
@@ -260,7 +263,7 @@ func TestRegisteredListRejectsUnverifiableProblemPublication(t *testing.T) {
 			queueSetFixture(t, f, "binding-test", []TaskGoalQueueEntry{})
 		}
 		root := filepath.Dir(f.wrapper)
-		r, err := f.dependencies.WorkItems.Snapshot(root)
+		r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -272,11 +275,8 @@ func TestRegisteredListRejectsUnverifiableProblemPublication(t *testing.T) {
 			}
 		}
 		sortWorkRegistry(&r)
-		data, err := encodeWorkItemRegistry(r)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err = os.WriteFile(workItemsPath(root), data, 0600); err != nil {
+		data := storedRegistryBytes(t, root, r)
+		if err = os.WriteFile(testWork(t, root).Registry(), data, 0600); err != nil {
 			t.Fatal(err)
 		}
 		result, err := ListTasksWithFilters(f.dependencies, TaskListFilters{})

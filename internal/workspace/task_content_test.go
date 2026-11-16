@@ -33,7 +33,7 @@ func contentFixtureDraftFor(t *testing.T, root string, id TaskID, kind, key stri
 func contentFixtureProblem(t *testing.T, f workItemJourneyFixture, key string) TaskContentInput {
 	t.Helper()
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +59,7 @@ func contentFixtureSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID, ke
 	t.Helper()
 	ensureFixtureTaskProblem(t, f, id)
 	root := filepath.Dir(f.wrapper)
-	r, e := f.dependencies.WorkItems.Snapshot(root)
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -98,7 +98,7 @@ func fixtureSelectTaskSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID,
 	if e != nil {
 		t.Fatal(e)
 	}
-	r, e := f.dependencies.WorkItems.Snapshot(root)
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -107,7 +107,7 @@ func fixtureSelectTaskSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID,
 	if e != nil {
 		t.Fatal(e)
 	}
-	r, e = f.dependencies.WorkItems.Snapshot(root)
+	r, e = f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -116,7 +116,7 @@ func fixtureSelectTaskSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID,
 	if e != nil {
 		t.Fatal(e)
 	}
-	eval, e := currentTaskSpec(f.dependencies, root, r, ProjectSnapshot{Projects: ps, Repos: rs}, *task, true)
+	eval, e := currentTaskSpec(f.dependencies, testWork(t, root), r, ProjectSnapshot{Projects: ps, Repos: rs}, *task, true)
 	if e != nil || eval.Basis == nil {
 		t.Fatalf("basis: %#v %v", eval, e)
 	}
@@ -125,14 +125,14 @@ func fixtureSelectTaskSpecFor(t *testing.T, f workItemJourneyFixture, id TaskID,
 func TestTaskContentCreatePreservesAtomicProblemAndIdenticalRetry(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	r, e := f.dependencies.WorkItems.Snapshot(root)
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
-	if r.FormatVersion != 3 || len(r.TaskProblemRevisions) != 1 || len(r.TaskContentPublications) != 1 {
+	if len(r.TaskProblemRevisions) != 1 || len(r.TaskContentPublications) != 1 {
 		t.Fatalf("incomplete initial problem: %#v", r)
 	}
-	before, e := os.ReadFile(workItemsPath(root))
+	before, e := os.ReadFile(testWork(t, root).Registry())
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -142,7 +142,7 @@ func TestTaskContentCreatePreservesAtomicProblemAndIdenticalRetry(t *testing.T) 
 	if e != nil || got.Created {
 		t.Fatalf("retry: %#v %v", got, e)
 	}
-	after, _ := os.ReadFile(workItemsPath(root))
+	after, _ := os.ReadFile(testWork(t, root).Registry())
 	if string(before) != string(after) {
 		t.Fatal("identical create rewrote registry")
 	}
@@ -167,11 +167,11 @@ func TestTaskContentSourceDeletionRetryCASAndSelection(t *testing.T) {
 	if e != nil || retry.Classification != "existing" {
 		t.Fatalf("retry requires deleted source: %#v %v", retry, e)
 	}
-	r, e := f.dependencies.WorkItems.Snapshot(root)
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
-	if _, e := historicalTaskSpec(f.dependencies, root, r, basis); e != nil {
+	if _, e := historicalTaskSpec(f.dependencies, testWork(t, root), r, basis); e != nil {
 		t.Fatal(e)
 	}
 	conflict, e := RecordTaskSpec(f.dependencies, contentFixtureSpec(t, f, "fixture/conflicting-spec", nil))
@@ -185,10 +185,10 @@ func TestTaskContentSourceDeletionRetryCASAndSelection(t *testing.T) {
 	if *r2.OutcomeRef.Revision != 2 {
 		t.Fatal("revision sequence")
 	}
-	r, _ = f.dependencies.WorkItems.Snapshot(root)
+	r, _ = f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	ps, rs, _ := f.dependencies.Projects.Snapshot(root)
 	task, _ := findTask(r, "task")
-	eval, e := currentTaskSpec(f.dependencies, root, r, ProjectSnapshot{Projects: ps, Repos: rs}, *task, true)
+	eval, e := currentTaskSpec(f.dependencies, testWork(t, root), r, ProjectSnapshot{Projects: ps, Repos: rs}, *task, true)
 	if e != nil || !contentTypedEqual(eval.Basis, &basis) || eval.SelectionFreshness != "current" {
 		t.Fatalf("new draft rebound selection: %#v %v", eval, e)
 	}
@@ -237,11 +237,11 @@ func TestTaskContentReselectAndWithdrawPreserveHistory(t *testing.T) {
 	if err != nil || *retry.OutcomeRef.ID != *withdrawn.OutcomeRef.ID {
 		t.Fatalf("withdraw retry: %#v %v", retry, err)
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil || len(r.TaskSolutionSelections) != 3 {
 		t.Fatalf("lost decision history: %#v %v", r, err)
 	}
-	if _, err = historicalTaskSpec(f.dependencies, root, r, basis); err != nil {
+	if _, err = historicalTaskSpec(f.dependencies, testWork(t, root), r, basis); err != nil {
 		t.Fatalf("withdraw erased old basis: %v", err)
 	}
 }
@@ -291,7 +291,7 @@ func TestTaskContentNegativeAssessmentIsRecordedWithoutTargetVeto(t *testing.T) 
 func ensureFixtureTaskProblem(t *testing.T, f workItemJourneyFixture, id TaskID) {
 	t.Helper()
 	root := filepath.Dir(f.wrapper)
-	registry, err := f.dependencies.WorkItems.SnapshotRegistrations(root)
+	registry, err := f.dependencies.WorkItems.SnapshotRegistrations(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}

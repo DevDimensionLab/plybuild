@@ -10,11 +10,18 @@ import (
 // not validate every historical content object or observe Git. Detailed reads
 // and mutations retain their stronger, separate validation contracts.
 type ReadViewBasisSnapshot struct {
-	Workspace WorkspaceObservation
-	Projects  ProjectSnapshot
-	Registry  WorkItemRegistry
-	Titles    map[TaskID]TaskListTitle
-	Sources   map[string]string
+	Workspace  WorkspaceObservation
+	Projects   ProjectSnapshot
+	Registries []ProjectRegistry // each Project's registry; content is read through it
+	Registry   WorkItemRegistry  // all registries merged, for listing
+	Titles     map[TaskID]TaskListTitle
+	Sources    map[string]string
+}
+
+// TaskJournal is the journal basis of a Task in its own Project's registry.
+func (b ReadViewBasisSnapshot) TaskJournal(task TaskRecord) TaskJournalBasis {
+	owner, _ := registryOf(b.Registries, task.ProjectID)
+	return TaskJournalBasis{Workspace: b.Workspace, Task: task, Registry: owner.Registry, Work: owner.Work}
 }
 
 func ReadViewBasis(d Dependencies) (ReadViewBasisSnapshot, error) {
@@ -36,42 +43,34 @@ func ReadViewBasis(d Dependencies) (ReadViewBasisSnapshot, error) {
 	if err != nil {
 		return out, err
 	}
-	projectsPath := filepath.Join(ws.Root, MarkerDirectory, ProjectsFile)
-	if defs, _, e := readDefinitions(ws.Root); e != nil {
-		return out, e
-	} else if defs != nil {
-		projectsPath = filepath.Join(ws.Root, DefinitionsFile)
-	}
-	out.Sources[projectsPath], err = readViewSource(d, projectsPath)
+	out.Registries, err = SnapshotWorkspace(d, ws.Root)
 	if err != nil {
 		return out, err
 	}
-	projects, repos, err := registrationProjects(d, ws.Root)
+	out.Registry = MergeRegistries(out.Registries)
+	projects, repos, err := registryProjects(ws.Root, out.Registry)
 	if err != nil {
 		return out, err
 	}
 	out.Projects = ProjectSnapshot{Projects: projects, Repos: repos}
-	out.Registry, err = d.WorkItems.SnapshotRegistrations(ws.Root)
-	if err != nil {
-		return out, err
-	}
-	itemsPath := filepath.Join(ws.Root, MarkerDirectory, WorkItemsFile)
-	if out.Registry.RawSHA256 == "" {
-		out.Sources[itemsPath] = "absent"
-	} else {
-		out.Sources[itemsPath] = out.Registry.RawSHA256
-	}
-	for _, source := range IntegrationEvidenceSources(ws.Root, out.Registry) {
-		out.Sources[source.Locator] = source.SHA256
-	}
-	out.Sources[filepath.Join(ws.Root, MarkerDirectory, MarkerFile)] = ws.MarkerSHA256
+	out.Sources[MarkerPath(ws.Root)] = ws.MarkerSHA256
 	out.Titles = make(map[TaskID]TaskListTitle, len(out.Registry.Tasks))
-	for _, task := range out.Registry.Tasks {
-		title := readTaskListTitle(d, ws.Root, out.Registry, task)
-		out.Titles[task.ID] = title
-		if title.Source == "problem_revision" && title.Status == "available" {
-			if head := taskContentState(out.Registry, task.ID).ProblemHead; head != nil {
-				out.Sources[taskContentPath(ws.Root, "manifests", head.ManifestSHA256)] = head.ManifestSHA256
+	for _, owner := range out.Registries {
+		if owner.Registry.RawSHA256 == "" {
+			out.Sources[owner.Work.Registry()] = "absent"
+		} else {
+			out.Sources[owner.Work.Registry()] = owner.Registry.RawSHA256
+		}
+		for _, source := range IntegrationEvidenceSources(owner.Work, owner.Registry) {
+			out.Sources[source.Locator] = source.SHA256
+		}
+		for _, task := range owner.Registry.Tasks {
+			title := readTaskListTitle(d, owner.Work, owner.Registry, task)
+			out.Titles[task.ID] = title
+			if title.Source == "problem_revision" && title.Status == "available" {
+				if head := taskContentState(owner.Registry, task.ID).ProblemHead; head != nil {
+					out.Sources[taskContentPath(owner.Work, "manifests", head.ManifestSHA256)] = head.ManifestSHA256
+				}
 			}
 		}
 	}
@@ -81,8 +80,10 @@ func ReadViewBasis(d Dependencies) (ReadViewBasisSnapshot, error) {
 // CheckReadViewBasis detects register drift without decoding the registers a
 // second time, taking locks, or claiming a transaction across independent files.
 func CheckReadViewBasis(d Dependencies, b ReadViewBasisSnapshot) (string, []string) {
-	if err := newSystemWorkItemStore().verifyIntegrationEvidence(b.Workspace.Root, b.Registry); err != nil {
-		return "unknown", []string{"registration_sources_changed_or_unavailable"}
+	for _, owner := range b.Registries {
+		if err := newSystemWorkItemStore().verifyIntegrationEvidence(owner.Work, owner.Registry); err != nil {
+			return "unknown", []string{"registration_sources_changed_or_unavailable"}
+		}
 	}
 	reasons := []string{}
 	for path, expected := range b.Sources {
@@ -118,7 +119,7 @@ func readViewSource(d Dependencies, path string) (string, error) {
 	return digestTaskBytes(b), nil
 }
 
-func readTaskListTitle(d Dependencies, root string, registry WorkItemRegistry, task TaskRecord) TaskListTitle {
+func readTaskListTitle(d Dependencies, work ProjectWork, registry WorkItemRegistry, task TaskRecord) TaskListTitle {
 	title := task.Title
 	result := TaskListTitle{Title: &title, Source: "registration", Status: "available"}
 	head := taskContentState(registry, task.ID).ProblemHead
@@ -126,7 +127,7 @@ func readTaskListTitle(d Dependencies, root string, registry WorkItemRegistry, t
 		return result
 	}
 	result = TaskListTitle{Source: "problem_revision", Status: "unavailable"}
-	m, err := readRegisteredTaskManifest(d.TaskContent, root, registry, head.ManifestSHA256)
+	m, err := readRegisteredTaskManifest(d.TaskContent, work, registry, head.ManifestSHA256)
 	if err != nil {
 		return result
 	}

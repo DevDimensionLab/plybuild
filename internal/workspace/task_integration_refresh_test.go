@@ -53,15 +53,11 @@ func newRefreshFixture(t *testing.T) refreshFixture {
 
 func refreshBaseUpdate(t *testing.T, f integrationJourneyFixture) {
 	t.Helper()
-	r := mustQueueRegistry(t, f.workItemJourneyFixture)
 	preview, err := UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply"})
 	if err != nil || preview.Confirmation == nil {
 		t.Fatalf("base preview = %#v err=%v", preview, err)
 	}
 	in := EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *preview.Confirmation}
-	if r.FormatVersion < 4 {
-		in.Upgrade = r.RawSHA256
-	}
 	if _, err = UpdateEpicBase(f.dependencies, in); err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +108,7 @@ func TestRefreshParentIntegratesAdaptedTaskFromRegisteredBase(t *testing.T) {
 	task, _ := findTask(r, "second")
 	originalTask := *task
 	originalPublications := slices.Clone(r.TaskContentPublications)
-	before, _ := os.ReadFile(workItemsPath(f.root))
+	before, _ := os.ReadFile(testWork(t, f.root).Registry())
 
 	plain := refreshCheck(t, f.dependencies, f.input(false))
 	if plain.Classification == "ready" || readbackMember(plain, "kind") != "WorkspaceTaskIntegrationReadback@6" || !strings.Contains(planReasons(t, plain), "expected_oid_mismatch") || !strings.Contains(plain.NextAction.Reason, "--refresh-parent") || !strings.Contains(plain.NextAction.Reason, f.b) {
@@ -128,7 +124,7 @@ func TestRefreshParentIntegratesAdaptedTaskFromRegisteredBase(t *testing.T) {
 	if !slices.Equal(checked.NextAction.Argv, want) {
 		t.Fatalf("argv = %v", checked.NextAction.Argv)
 	}
-	after, _ := os.ReadFile(workItemsPath(f.root))
+	after, _ := os.ReadFile(testWork(t, f.root).Registry())
 	if string(before) != string(after) || git.count() != 0 {
 		t.Fatal("check had an effect")
 	}
@@ -169,7 +165,7 @@ func TestRefreshParentIntegratesAdaptedTaskFromRegisteredBase(t *testing.T) {
 	if later.Classification != "exact_effect" || !later.HistoricalCompletion || git.count() != 1 {
 		t.Fatalf("later replay = %s historical=%t", later.Classification, later.HistoricalCompletion)
 	}
-	if _, err := f.dependencies.WorkItems.Snapshot(f.root); err != nil {
+	if _, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -222,12 +218,12 @@ func TestRefreshParentWithoutNewBasisIsRejected(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			f := newRefreshFixture(t)
 			in := tc.prepare(t, &f)
-			before, _ := os.ReadFile(workItemsPath(f.root))
+			before, _ := os.ReadFile(testWork(t, f.root).Registry())
 			out := refreshCheck(t, f.dependencies, in)
 			if out.Classification == "ready" || !strings.Contains(planReasons(t, out), tc.reason) {
 				t.Fatalf("check = %s\n%s", out.Classification, planReasons(t, out))
 			}
-			after, _ := os.ReadFile(workItemsPath(f.root))
+			after, _ := os.ReadFile(testWork(t, f.root).Registry())
 			if string(before) != string(after) {
 				t.Fatal("rejected refresh wrote state")
 			}
@@ -285,7 +281,7 @@ func TestRefreshParentRecoversExactEffectAfterCrash(t *testing.T) {
 	git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
 	f.dependencies.IntegrationGit = git
 	refreshApply(t, f.dependencies, f.input(true))
-	err := f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
+	err := f.dependencies.WorkItems.WithLock(testWork(t, f.root), func(session WorkItemStoreSession) error {
 		r, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -435,7 +431,7 @@ func TestPendingPlainAuthorityKeepsItsOwnContract(t *testing.T) {
 	runLocalGit(t, f.secondPath, "commit", "-m", "unadapted")
 	plain := TaskIntegrationInput{TaskID: "second", ExpectedResultOID: runLocalGit(t, f.secondPath, "rev-parse", "HEAD"), ExpectedParentOID: f.a}
 	err := f.dependencies.ProjectLocks.WithSnapshotLock(f.root, func(projects ProjectSnapshot) error {
-		return f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
+		return f.dependencies.WorkItems.WithLock(testWork(t, f.root), func(session WorkItemStoreSession) error {
 			r, err := session.Snapshot()
 			if err != nil {
 				return err

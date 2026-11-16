@@ -1,28 +1,19 @@
 package workspace
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
-	"io"
-	"io/fs"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 
-	"github.com/devdimensionlab/plybuild/internal/atomicfile"
 	"github.com/devdimensionlab/plybuild/internal/filelock"
-	"gopkg.in/yaml.v3"
 )
 
-const (
-	ProjectsFile = "projects.yaml"
-	projectsLock = "projects.lock"
-)
+const projectsLock = "projects.lock"
 
+// ProjectStore reads the Projects defined in ply-workspace.json.
 type ProjectStore interface {
-	Add(workspaceRoot string, project ProjectRecord, repositories []RepoRecord) (ProjectRecord, []RepoRecord, bool, error)
 	Snapshot(workspaceRoot string) ([]ProjectRecord, []RepoRecord, error)
 }
 
@@ -35,20 +26,13 @@ type ProjectSnapshotLocker interface {
 	WithSnapshotLock(string, func(ProjectSnapshot) error) error
 }
 
+// projectRegistry is the resolved form of the definitions.
 type projectRegistry struct {
-	FormatVersion int             `yaml:"format_version"`
-	Projects      []ProjectRecord `yaml:"projects"`
-	Repos         []RepoRecord    `yaml:"repos"`
+	Projects []ProjectRecord
+	Repos    []RepoRecord
 }
 
-type storeFaults struct {
-	fail func(string) error
-}
-
-type systemProjectStore struct {
-	faults      *storeFaults
-	replaceFile func(string, []byte, fs.FileMode) error
-}
+type systemProjectStore struct{}
 
 func newSystemProjectStore() *systemProjectStore { return &systemProjectStore{} }
 
@@ -74,65 +58,6 @@ func (store *systemProjectStore) WithSnapshotLock(workspaceRoot string, operatio
 	return releaseErr
 }
 
-func (store *systemProjectStore) Add(workspaceRoot string, project ProjectRecord, repositories []RepoRecord) (ProjectRecord, []RepoRecord, bool, error) {
-	return store.mutate(workspaceRoot, func(registry projectRegistry) (projectRegistry, ProjectRecord, []RepoRecord, bool, error) {
-		return applyProject(registry, project, repositories)
-	})
-}
-
-func (store *systemProjectStore) AddMember(workspaceRoot string, id ProjectID, repository RepoRecord) (ProjectRecord, []RepoRecord, bool, error) {
-	return store.mutate(workspaceRoot, func(registry projectRegistry) (projectRegistry, ProjectRecord, []RepoRecord, bool, error) {
-		return applyProjectMember(registry, id, repository)
-	})
-}
-
-// mutate serializes read, identity validation and atomic publication together.
-func (store *systemProjectStore) mutate(workspaceRoot string, apply func(projectRegistry) (projectRegistry, ProjectRecord, []RepoRecord, bool, error)) (ProjectRecord, []RepoRecord, bool, error) {
-	lock, err := store.acquire(workspaceRoot)
-	if err != nil {
-		return ProjectRecord{}, nil, false, err
-	}
-
-	var storedProject ProjectRecord
-	var storedRepositories []RepoRecord
-	var created bool
-	operationErr := func() error {
-		defs, _, err := readDefinitions(workspaceRoot)
-		if err != nil {
-			return err
-		}
-		if defs != nil {
-			return ProjectInvalidArguments("edit " + DefinitionsFile + " to change authoritative Project/repository definitions")
-		}
-		registry, err := store.read(workspaceRoot)
-		if err != nil {
-			return err
-		}
-		updated, resultProject, resultRepositories, wasCreated, err := apply(registry)
-		if err != nil {
-			return err
-		}
-		storedProject = resultProject
-		storedRepositories = resultRepositories
-		created = wasCreated
-		if !created {
-			return nil
-		}
-		return store.publish(workspaceRoot, updated)
-	}()
-	releaseErr := store.release(lock)
-	if operationErr != nil {
-		if releaseErr != nil {
-			return ProjectRecord{}, nil, false, projectIOError("release after failure", lock.Path(), fmt.Errorf("%v; %w", operationErr, releaseErr))
-		}
-		return ProjectRecord{}, nil, false, operationErr
-	}
-	if releaseErr != nil {
-		return ProjectRecord{}, nil, false, releaseErr
-	}
-	return storedProject, storedRepositories, created, nil
-}
-
 func (store *systemProjectStore) Snapshot(workspaceRoot string) ([]ProjectRecord, []RepoRecord, error) {
 	registry, err := store.read(workspaceRoot)
 	if err != nil {
@@ -143,7 +68,7 @@ func (store *systemProjectStore) Snapshot(workspaceRoot string) ([]ProjectRecord
 
 func (store *systemProjectStore) acquire(workspaceRoot string) (*filelock.Lock, error) {
 	lockPath := filepath.Join(workspaceRoot, MarkerDirectory, projectsLock)
-	lock, err := filelock.Acquire(lockPath, filelock.Options{Fail: store.fail})
+	lock, err := filelock.Acquire(lockPath, filelock.Options{})
 	var lockErr *filelock.Error
 	if errors.As(err, &lockErr) {
 		return nil, projectLockError(lockPath, lockErr)
@@ -193,71 +118,16 @@ func (store *systemProjectStore) read(workspaceRoot string) (projectRegistry, er
 	if err != nil {
 		return projectRegistry{}, err
 	}
-	if defs != nil {
-		return definitionProjects(workspaceRoot, *defs)
+	if defs == nil {
+		return projectRegistry{}, missingDefinitions(workspaceRoot)
 	}
-	registry, _, err := readLegacyProjectRegistry(workspaceRoot)
-	return registry, err
-}
-
-// readLegacyProjectRegistry reads .ply/projects.yaml itself, whether or not
-// definitions exist; exists is false when the file is absent.
-func readLegacyProjectRegistry(workspaceRoot string) (projectRegistry, bool, error) {
-	path := filepath.Join(workspaceRoot, MarkerDirectory, ProjectsFile)
-	info, err := os.Lstat(path)
-	if errors.Is(err, fs.ErrNotExist) {
-		return projectRegistry{FormatVersion: FormatVersion, Projects: []ProjectRecord{}, Repos: []RepoRecord{}}, false, nil
-	}
-	if err != nil {
-		return projectRegistry{}, false, projectStoreConflict(path, "cannot inspect project registry", err)
-	}
-	if !info.Mode().IsRegular() || info.Mode()&fs.ModeSymlink != 0 {
-		return projectRegistry{}, false, projectStoreConflict(path, "project registry is not a regular file", nil)
-	}
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return projectRegistry{}, false, projectStoreConflict(path, "cannot read project registry", err)
-	}
-	registry, err := decodeProjectRegistry(contents)
-	if err != nil {
-		return projectRegistry{}, false, projectStoreConflict(path, err.Error(), err)
-	}
-	return registry, true, nil
-}
-
-func (store *systemProjectStore) publish(workspaceRoot string, registry projectRegistry) error {
-	contents, err := encodeProjectRegistry(registry)
-	if err != nil {
-		return projectIOError("marshal registry", filepath.Join(workspaceRoot, MarkerDirectory, ProjectsFile), err)
-	}
-	destination := filepath.Join(workspaceRoot, MarkerDirectory, ProjectsFile)
-	replace := store.replaceFile
-	if replace == nil {
-		replace = atomicfile.Replace
-	}
-	if err := replace(destination, contents, 0o644); err != nil {
-		var failure *atomicfile.Error
-		if errors.As(err, &failure) {
-			return projectError(ErrorProjectIO, failure.Error(), err)
-		}
-		return projectIOError("replace", destination, err)
-	}
-	return nil
-}
-
-func (store *systemProjectStore) fail(operation string) error {
-	if store.faults == nil || store.faults.fail == nil {
-		return nil
-	}
-	return store.faults.fail(operation)
+	return definitionProjects(workspaceRoot, *defs)
 }
 
 func applyProject(registry projectRegistry, project ProjectRecord, repositories []RepoRecord) (projectRegistry, ProjectRecord, []RepoRecord, bool, error) {
 	existingProjects := make(map[ProjectID]ProjectRecord, len(registry.Projects))
-	projectByWrapper := make(map[string]ProjectRecord, len(registry.Projects))
 	for _, existing := range registry.Projects {
 		existingProjects[existing.ID] = existing
-		projectByWrapper[existing.Wrapper] = existing
 	}
 	repoByID := make(map[RepoID]RepoRecord, len(registry.Repos))
 	repoByCommon := make(map[string]RepoRecord, len(registry.Repos))
@@ -273,11 +143,13 @@ func applyProject(registry projectRegistry, project ProjectRecord, repositories 
 		}
 		return registry, existing, repositoriesForProject(existing, registry.Repos), false, nil
 	}
-	if owner, found := projectByWrapper[project.Wrapper]; found {
-		return registry, ProjectRecord{}, nil, false, projectError(ErrorProjectConflict, fmt.Sprintf("wrapper %s is already registered to project %s", project.Wrapper, owner.ID), nil)
+	for _, existing := range registry.Projects {
+		if err := wrapperConflict(project.Wrapper, existing.Wrapper, existing.ID); err != nil {
+			return registry, ProjectRecord{}, nil, false, err
+		}
 	}
 
-	updated := projectRegistry{FormatVersion: FormatVersion, Projects: cloneProjects(registry.Projects), Repos: cloneRepos(registry.Repos)}
+	updated := projectRegistry{Projects: cloneProjects(registry.Projects), Repos: cloneRepos(registry.Repos)}
 	for _, repository := range repositories {
 		if existing, found := repoByID[repository.ID]; found {
 			if existing.GitCommonDir != repository.GitCommonDir {
@@ -323,125 +195,6 @@ func projectDifference(existing, candidate ProjectRecord, repositoryByID map[Rep
 		}
 	}
 	return ""
-}
-
-func encodeProjectRegistry(registry projectRegistry) ([]byte, error) {
-	var output bytes.Buffer
-	encoder := yaml.NewEncoder(&output)
-	encoder.SetIndent(2)
-	if err := encoder.Encode(registry); err != nil {
-		return nil, err
-	}
-	return output.Bytes(), nil
-}
-
-func decodeProjectRegistry(contents []byte) (projectRegistry, error) {
-	decoder := yaml.NewDecoder(bytes.NewReader(contents))
-	var document yaml.Node
-	if err := decoder.Decode(&document); err != nil {
-		return projectRegistry{}, errors.New("project registry is invalid")
-	}
-	var extra yaml.Node
-	if err := decoder.Decode(&extra); err != io.EOF {
-		return projectRegistry{}, errors.New("project registry must contain exactly one YAML document")
-	}
-	if len(document.Content) != 1 || document.Content[0].Kind != yaml.MappingNode {
-		return projectRegistry{}, errors.New("project registry root must be a mapping")
-	}
-	root := document.Content[0]
-	fields, err := exactMapping(root, map[string]yaml.Kind{
-		"format_version": yaml.ScalarNode,
-		"projects":       yaml.SequenceNode,
-		"repos":          yaml.SequenceNode,
-	})
-	if err != nil {
-		return projectRegistry{}, err
-	}
-	if fields["format_version"].Tag != "!!int" || fields["format_version"].Value != "1" {
-		return projectRegistry{}, errors.New("unsupported format_version")
-	}
-	registry := projectRegistry{FormatVersion: FormatVersion, Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
-	for _, node := range fields["projects"].Content {
-		project, err := decodeProjectRecord(node)
-		if err != nil {
-			return projectRegistry{}, err
-		}
-		registry.Projects = append(registry.Projects, project)
-	}
-	for _, node := range fields["repos"].Content {
-		repository, err := decodeRepoRecord(node)
-		if err != nil {
-			return projectRegistry{}, err
-		}
-		registry.Repos = append(registry.Repos, repository)
-	}
-	if err := validateRegistry(registry); err != nil {
-		return projectRegistry{}, err
-	}
-	return registry, nil
-}
-
-func decodeProjectRecord(node *yaml.Node) (ProjectRecord, error) {
-	fields, err := exactMapping(node, map[string]yaml.Kind{
-		"id": yaml.ScalarNode, "name": yaml.ScalarNode, "wrapper": yaml.ScalarNode, "repo_ids": yaml.SequenceNode,
-	})
-	if err != nil {
-		return ProjectRecord{}, fmt.Errorf("invalid project record: %w", err)
-	}
-	for _, key := range []string{"id", "name", "wrapper"} {
-		if fields[key].Tag != "!!str" {
-			return ProjectRecord{}, fmt.Errorf("project %s must be a string", key)
-		}
-	}
-	project := ProjectRecord{ID: ProjectID(fields["id"].Value), Name: fields["name"].Value, Wrapper: fields["wrapper"].Value, RepoIDs: []RepoID{}}
-	for _, node := range fields["repo_ids"].Content {
-		if node.Kind != yaml.ScalarNode || node.Tag != "!!str" {
-			return ProjectRecord{}, errors.New("project repo_ids must contain strings")
-		}
-		project.RepoIDs = append(project.RepoIDs, RepoID(node.Value))
-	}
-	return project, nil
-}
-
-func decodeRepoRecord(node *yaml.Node) (RepoRecord, error) {
-	fields, err := exactMapping(node, map[string]yaml.Kind{
-		"id": yaml.ScalarNode, "locator": yaml.ScalarNode, "git_common_dir": yaml.ScalarNode,
-	})
-	if err != nil {
-		return RepoRecord{}, fmt.Errorf("invalid repository record: %w", err)
-	}
-	for _, key := range []string{"id", "locator", "git_common_dir"} {
-		if fields[key].Tag != "!!str" {
-			return RepoRecord{}, fmt.Errorf("repository %s must be a string", key)
-		}
-	}
-	return RepoRecord{ID: RepoID(fields["id"].Value), Locator: fields["locator"].Value, GitCommonDir: fields["git_common_dir"].Value}, nil
-}
-
-func exactMapping(node *yaml.Node, expected map[string]yaml.Kind) (map[string]*yaml.Node, error) {
-	if node.Kind != yaml.MappingNode {
-		return nil, errors.New("value must be a mapping")
-	}
-	if len(node.Content) != len(expected)*2 {
-		return nil, errors.New("mapping has missing or unknown fields")
-	}
-	fields := make(map[string]*yaml.Node, len(expected))
-	for index := 0; index < len(node.Content); index += 2 {
-		key := node.Content[index]
-		value := node.Content[index+1]
-		kind, known := expected[key.Value]
-		if key.Kind != yaml.ScalarNode || key.Tag != "!!str" || !known {
-			return nil, errors.New("mapping has an unknown field")
-		}
-		if _, duplicate := fields[key.Value]; duplicate {
-			return nil, errors.New("mapping has a duplicate field")
-		}
-		if value.Kind != kind {
-			return nil, fmt.Errorf("field %s has the wrong type", key.Value)
-		}
-		fields[key.Value] = value
-	}
-	return fields, nil
 }
 
 func validateRegistry(registry projectRegistry) error {

@@ -64,7 +64,7 @@ func goalQueueDraftRule() contentRule {
 		"expected_revision": contentInteger(0, 2147483647),
 		"entries":           contentList(256, entry, func(v canonicaljson.Value) string { return contentString(contentFields(v), "task_id") }, true),
 		"recorder":          contentRecorderRule(),
-		"registry_upgrade":  contentNullable(contentExact(map[string]contentRule{"from_version": contentInteger(1, 3), "registry_sha256": contentDigest})),
+		"registry_upgrade":  contentNoRegistryUpgrade,
 	})
 }
 
@@ -84,14 +84,14 @@ func decodeQueueDraft(v canonicaljson.Value) decodedTaskQueueDraft {
 	return out
 }
 
-func queueGoalEvaluation(d Dependencies, root string, r WorkItemRegistry, entry TaskGoalQueueEntry, rank int) QueuePending {
+func queueGoalEvaluation(d Dependencies, work ProjectWork, r WorkItemRegistry, entry TaskGoalQueueEntry, rank int) QueuePending {
 	row := QueuePending{Rank: rank, TaskID: entry.TaskID, Goal: entry.Goal, State: "blocked", Reasons: []QueueReason{}}
 	task, _ := findTask(r, entry.TaskID)
 	if task == nil {
 		row.Reasons = queueReasons("task_queue_task_missing", "queued Task is missing")
 		return row
 	}
-	goal, e := loadTaskGoal(d, root, r, entry.TaskID, *entry.Goal)
+	goal, e := loadTaskGoal(d, work, r, entry.TaskID, *entry.Goal)
 	if e != nil {
 		row.Reasons = queueErrorReasons(e)
 		return row

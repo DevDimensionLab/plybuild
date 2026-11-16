@@ -74,7 +74,7 @@ func (git *systemTaskIntegrationGit) ObserveBackupCommitted(path, common, ref, b
 
 // Bind adds a deterministic, Git-readable provenance header and validates the
 // existing document limit before any retirement or publication can happen.
-func (w *BackupCommittedWork) Bind(root string) error {
+func (w *BackupCommittedWork) Bind(work ProjectWork) error {
 	metadata := *w
 	metadata.Locator, metadata.SHA256, metadata.SizeBytes = "", "", 0
 	raw, err := canonicaljson.Marshal(contentRefValue(metadata))
@@ -87,7 +87,7 @@ func (w *BackupCommittedWork) Bind(root string) error {
 		return fmt.Errorf("backup_goal_committed_input_limit: %w", err)
 	}
 	w.SHA256, w.SizeBytes = digestTaskBytes(w.Bytes), len(w.Bytes)
-	w.Locator = taskContentPath(root, "objects", w.SHA256)
+	w.Locator = taskContentPath(work, "objects", w.SHA256)
 	return nil
 }
 
@@ -100,14 +100,14 @@ func (w *BackupCommittedWork) document() canonicaljson.Value {
 	return contentRefValue(map[string]any{"id": w.DocumentID(), "source": map[string]any{"kind": "file", "locator": w.Locator, "sha256": w.SHA256, "size_bytes": w.SizeBytes, "media_type": "text/plain", "git_provenance": nil}})
 }
 
-func validateBackupCommitted(w *BackupCommittedWork, root string) error {
+func validateBackupCommitted(w *BackupCommittedWork, work ProjectWork) error {
 	if w == nil {
 		return nil
 	}
 	if err := taskDocumentBytesValid(w.Bytes); err != nil {
 		return err
 	}
-	if digestTaskBytes(w.Bytes) != w.SHA256 || len(w.Bytes) != w.SizeBytes || w.Locator != taskContentPath(root, "objects", w.SHA256) || !strings.HasPrefix(string(w.Bytes), "# Preserved committed source;") {
+	if digestTaskBytes(w.Bytes) != w.SHA256 || len(w.Bytes) != w.SizeBytes || w.Locator != taskContentPath(work, "objects", w.SHA256) || !strings.HasPrefix(string(w.Bytes), "# Preserved committed source;") {
 		return WorkInvalidArguments("committed dry-run bytes or descriptor differ")
 	}
 	return nil

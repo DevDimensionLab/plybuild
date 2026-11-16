@@ -295,7 +295,7 @@ func mutateTaskContent(d Dependencies, in TaskContentInput, operation string) (T
 	if e = requireWorkMutationDependencies(d); e != nil {
 		return TaskContentMutationResult{}, e
 	}
-	root, e := containingWorkItemWorkspace(d)
+	root, e := containingRegistrationWorkspace(d)
 	if e != nil {
 		return TaskContentMutationResult{}, e
 	}
@@ -304,31 +304,37 @@ func mutateTaskContent(d Dependencies, in TaskContentInput, operation string) (T
 		return TaskContentMutationResult{}, e
 	}
 	result := newTaskContentMutation(root, in.TaskID, contentString(m, "publication_key"), digestTaskBytes(b))
-	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			r, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			result.PreState = taskContentState(r, in.TaskID)
-			result.PostState = result.PreState
-			task, _ := findTask(r, in.TaskID)
-			if task == nil {
-				return workError(ErrorWorkNotFound, "Task is not registered", nil)
-			}
-			if _, _, err = projectAndRepo(projects, task.ProjectID, task.RepoID); err != nil {
-				return err
-			}
-			return publishTaskContent(d, root, session, r, *task, projects, draft, operation, b, &result, false)
-		})
+	var located *ProjectWork
+	e = withTaskWork(d, root, in.TaskID, func(projects ProjectSnapshot, work ProjectWork, session WorkItemStoreSession) error {
+		located = &work
+		r, err := session.Snapshot()
+		if err != nil {
+			return err
+		}
+		result.PreState = taskContentState(r, in.TaskID)
+		result.PostState = result.PreState
+		task, _ := findTask(r, in.TaskID)
+		if task == nil {
+			return workError(ErrorWorkNotFound, "Task is not registered", nil)
+		}
+		if _, _, err = projectAndRepo(projects, task.ProjectID, task.RepoID); err != nil {
+			return err
+		}
+		return publishTaskContent(d, work, session, r, *task, projects, draft, operation, b, &result, false)
 	})
-	return finishTaskContentMutation(d, result, e)
+	return finishTaskContentMutation(d, located, result, e)
 }
 func newTaskContentMutation(root string, id TaskID, key, digest string) TaskContentMutationResult {
 	return TaskContentMutationResult{Workspace: root, TaskID: id, PublicationKey: key, IntentSHA256: digest, Classification: "not_published", Durability: "not_observed", PreState: TaskContentState{Freshness: "unknown"}, PostState: TaskContentState{Freshness: "unknown"}, Attempted: TaskContentAttempt{RegistryReplace: "not_attempted"}, NextAction: contentInspectAction(id, key)}
 }
-func finishTaskContentMutation(d Dependencies, result TaskContentMutationResult, err error) (TaskContentMutationResult, error) {
-	r, e := d.WorkItems.Snapshot(result.Workspace)
+
+// finishTaskContentMutation rereads the registry of work, which is nil when
+// the owning Project was never located.
+func finishTaskContentMutation(d Dependencies, work *ProjectWork, result TaskContentMutationResult, err error) (TaskContentMutationResult, error) {
+	r, e := WorkItemRegistry{}, err
+	if work != nil {
+		r, e = d.WorkItems.Snapshot(*work)
+	}
 	if e == nil {
 		result.PostState = taskContentState(r, result.TaskID)
 	} else {
@@ -352,8 +358,8 @@ func finishTaskContentMutation(d Dependencies, result TaskContentMutationResult,
 	result.NextAction = TaskNextAction{"inspect_task", "Inspect the preserved Task basis.", []string{"ply", "workspace", "task", "show", string(result.TaskID)}}
 	return result, nil
 }
-func syncTaskRegistry(root string) error {
-	f, e := os.Open(workItemsPath(root))
+func syncTaskRegistry(work ProjectWork) error {
+	f, e := os.Open(work.Registry())
 	if e != nil {
 		return e
 	}
@@ -362,11 +368,10 @@ func syncTaskRegistry(root string) error {
 	if e = firstError(e, c); e != nil {
 		return e
 	}
-	return platformSyncDirectory(filepathJoinMarker(root))
+	return platformSyncDirectory(work.Dir)
 }
-func filepathJoinMarker(root string) string { return root + string(os.PathSeparator) + MarkerDirectory }
 
-func publishTaskContent(d Dependencies, root string, session WorkItemStoreSession, r WorkItemRegistry, task TaskRecord, projects ProjectSnapshot, draft canonicaljson.Object, operation string, request []byte, result *TaskContentMutationResult, creating bool) error {
+func publishTaskContent(d Dependencies, work ProjectWork, session WorkItemStoreSession, r WorkItemRegistry, task TaskRecord, projects ProjectSnapshot, draft canonicaljson.Object, operation string, request []byte, result *TaskContentMutationResult, creating bool) error {
 	m := contentFields(draft)
 	key := result.PublicationKey
 	if existing := taskPublication(r, key); existing != nil {
@@ -375,47 +380,13 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		}
 		result.Classification = "existing"
 		result.OutcomeRef = &existing.OutcomeRef
-		if e := validateTaskContentClosure(d.TaskContent, root, r, true); e != nil {
+		if e := validateTaskContentClosure(d.TaskContent, work, r, true); e != nil {
 			return e
 		}
-		return syncTaskRegistry(root)
+		return syncTaskRegistry(work)
 	}
-	if e := validateTaskContentClosure(d.TaskContent, root, r, false); e != nil {
+	if e := validateTaskContentClosure(d.TaskContent, work, r, false); e != nil {
 		return e
-	}
-	var upgrade *TaskRegistryUpgrade
-	if m["registry_upgrade"] != nil {
-		if e := contentDecode(m["registry_upgrade"], &upgrade); e != nil {
-			return e
-		}
-	}
-	transition := "none"
-	var backup []byte
-	var backupHash *string
-	if r.FormatVersion < 3 {
-		if !creating && operation != "problem_record" {
-			return contentError("task_problem_reference_missing", "record a problem before recording a solution", nil)
-		}
-		if upgrade == nil {
-			return contentError("task_content_upgrade_required", "acknowledge registry "+r.RawSHA256+" before migrating format 1 or 2", nil)
-		}
-		if upgrade.FromVersion != r.FormatVersion || upgrade.RegistrySHA256 != r.RawSHA256 {
-			return contentError("task_content_upgrade_conflict", "upgrade acknowledgement does not match current registry", nil)
-		}
-		var e error
-		backup, e = os.ReadFile(workItemsPath(root))
-		if e != nil {
-			return e
-		}
-		if digestTaskBytes(backup) != r.RawSHA256 {
-			return contentError("task_content_upgrade_conflict", "registry changed before migration", nil)
-		}
-		transition = fmt.Sprintf("format_%d_to_3", r.FormatVersion)
-		value := r.RawSHA256
-		backupHash = &value
-		upgradeTaskContentRegistry(&r)
-	} else if upgrade != nil {
-		return contentError("task_content_upgrade_conflict", "registry is already format 3", nil)
 	}
 	if creating {
 		r.Tasks = append(r.Tasks, task)
@@ -473,7 +444,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		previous = m["expected_previous"]
 		removed := []string{}
 		if state.SpecHead != nil {
-			old, e := readContentManifest(d.TaskContent, root, state.SpecHead.ManifestSHA256)
+			old, e := readContentManifest(d.TaskContent, work, state.SpecHead.ManifestSHA256)
 			if e != nil {
 				return e
 			}
@@ -491,12 +462,12 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 			return contentError("task_content_invalid_input", "removed_requirement_ids must exactly describe removed predecessor requirements", nil)
 		}
 		if !isTaskGoalSpec(draft) {
-			if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], r.FormatVersion >= 4); e != nil {
+			if e := validateSpecImplementationBasis(d, projects, r, task, m["implementation_basis"], true); e != nil {
 				return e
 			}
 		}
 	case "spec_assess":
-		spec, e := registeredTaskSpec(d, root, r, task.ID, specID, valueRevision(m["spec"]))
+		spec, e := registeredTaskSpec(d, work, r, task.ID, specID, valueRevision(m["spec"]))
 		if e != nil {
 			return e
 		}
@@ -539,7 +510,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 			if state.SelectionEvent == nil {
 				return contentError("task_spec_selection_missing", "there is no selection to withdraw", nil)
 			}
-			last, e := readContentManifest(d.TaskContent, root, state.SelectionEvent.ManifestSHA256)
+			last, e := readContentManifest(d.TaskContent, work, state.SelectionEvent.ManifestSHA256)
 			if e != nil {
 				return e
 			}
@@ -549,7 +520,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		} else {
 			sol := contentFields(m["solution"])
 			specID = contentString(sol, "spec_id")
-			spec, e := registeredTaskSpec(d, root, r, task.ID, specID, valueRevision(sol["spec"]))
+			spec, e := registeredTaskSpec(d, work, r, task.ID, specID, valueRevision(sol["spec"]))
 			if e != nil {
 				return e
 			}
@@ -560,7 +531,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 			if last == nil || !contentTypedEqual(&TaskDecisionRef{last.ID, last.ManifestSHA256}, valueDecision(sol["assessment"])) {
 				return contentError("task_spec_assessment_conflict", "selection must bind the latest assessment of this revision", nil)
 			}
-			assessment, e := readContentManifest(d.TaskContent, root, last.ManifestSHA256)
+			assessment, e := readContentManifest(d.TaskContent, work, last.ManifestSHA256)
 			if e != nil {
 				return e
 			}
@@ -590,10 +561,10 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		b := []byte("# " + task.Title + "\n\n" + task.Description + "\n")
 		digest := digestTaskBytes(b)
 		objects[digest] = b
-		docs = append(docs, contentObject(map[string]canonicaljson.Value{"id": "problem", "locator": taskContentPath(root, "objects", digest), "sha256": digest, "size_bytes": int64(len(b)), "media_type": "text/markdown", "provenance": contentObject(map[string]canonicaljson.Value{"origin_locator": nil, "git": nil})}))
+		docs = append(docs, contentObject(map[string]canonicaljson.Value{"id": "problem", "locator": taskContentPath(work, "objects", digest), "sha256": digest, "size_bytes": int64(len(b)), "media_type": "text/markdown", "provenance": contentObject(map[string]canonicaljson.Value{"origin_locator": nil, "git": nil})}))
 	} else {
 		var e error
-		docs, objects, e = contentResolveDocuments(d, root, r, task.ID, contentArray(m, "documents"))
+		docs, objects, e = contentResolveDocuments(d, work, r, task.ID, contentArray(m, "documents"))
 		if e != nil {
 			return e
 		}
@@ -647,7 +618,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		return e
 	}
 	outcome.ManifestSHA256 = digestTaskBytes(manifestBytes)
-	pub := TaskContentPublication{PublicationKey: key, TaskID: task.ID, Operation: operation, IntentSHA256: result.IntentSHA256, RequestSHA256: digestTaskBytes(request), OutcomeRef: outcome, StoreTransition: transition, RegistryBeforeSHA256: result.PreState.RegistrySHA256, BackupSHA256: backupHash, RecordedAtUTC: contentString(manifest, "recorded_at_utc")}
+	pub := TaskContentPublication{PublicationKey: key, TaskID: task.ID, Operation: operation, IntentSHA256: result.IntentSHA256, RequestSHA256: digestTaskBytes(request), OutcomeRef: outcome, StoreTransition: "none", RegistryBeforeSHA256: result.PreState.RegistrySHA256, RecordedAtUTC: contentString(manifest, "recorded_at_utc")}
 	if creating {
 		pub.Operation = "task_create"
 	}
@@ -669,12 +640,7 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 		return e
 	}
 	result.Attempted.ObjectPublicationStarted = true
-	if backup != nil {
-		if _, e = d.TaskContent.Publish(root, "backups", backup); e != nil {
-			return e
-		}
-	}
-	if _, e = d.TaskContent.Publish(root, "requests", request); e != nil {
+	if _, e = d.TaskContent.Publish(work, "requests", request); e != nil {
 		return e
 	}
 	keys := make([]string, 0, len(objects))
@@ -683,11 +649,11 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 	}
 	sort.Strings(keys)
 	for _, k := range keys {
-		if _, e = d.TaskContent.Publish(root, "objects", objects[k]); e != nil {
+		if _, e = d.TaskContent.Publish(work, "objects", objects[k]); e != nil {
 			return e
 		}
 	}
-	if _, e = d.TaskContent.Publish(root, "manifests", manifestBytes); e != nil {
+	if _, e = d.TaskContent.Publish(work, "manifests", manifestBytes); e != nil {
 		return e
 	}
 	if e = d.TaskContent.check("before-registry-replace"); e != nil {
@@ -713,10 +679,10 @@ func publishTaskContent(d Dependencies, root string, session WorkItemStoreSessio
 	if actual == nil || !contentTypedEqual(*actual, pub) {
 		return contentError("task_content_publication_unknown", "published registry was not observed", nil)
 	}
-	if e = validateTaskContentClosure(d.TaskContent, root, observed, false); e != nil {
+	if e = validateTaskContentClosure(d.TaskContent, work, observed, false); e != nil {
 		return e
 	}
-	return platformSyncDirectory(filepathJoinMarker(root))
+	return platformSyncDirectory(work.Dir)
 }
 func valueRevision(v canonicaljson.Value) *TaskRevisionRef {
 	if v == nil {
@@ -748,11 +714,11 @@ func lastTaskAssessment(r WorkItemRegistry, id TaskID, spec string, revision int
 	}
 	return last
 }
-func registeredTaskSpec(d Dependencies, root string, r WorkItemRegistry, id TaskID, spec string, ref *TaskRevisionRef) (canonicaljson.Object, error) {
+func registeredTaskSpec(d Dependencies, work ProjectWork, r WorkItemRegistry, id TaskID, spec string, ref *TaskRevisionRef) (canonicaljson.Object, error) {
 	if ref != nil {
 		for _, s := range r.TaskSpecRevisions {
 			if s.TaskID == id && s.SpecID == spec && s.Revision == ref.Revision && s.ManifestSHA256 == ref.ManifestSHA256 {
-				return readContentManifest(d.TaskContent, root, s.ManifestSHA256)
+				return readContentManifest(d.TaskContent, work, s.ManifestSHA256)
 			}
 		}
 	}
@@ -766,56 +732,31 @@ func taskIntegrationAuthorityComplete(r WorkItemRegistry, id IntegrationAuthorit
 	}
 	return false
 }
-func upgradeTaskContentRegistry(r *WorkItemRegistry) {
-	r.FormatVersion = 3
-	if r.TaskResults == nil {
-		r.TaskResults = []HistoricalRecord{}
-		r.HumanQARecords = []HistoricalRecord{}
-		r.IntegrationAuthorities = []IntegrationAuthority{}
-		r.IntegrationIntents = []IntegrationIntent{}
-		r.IntegrationAttempts = []IntegrationAttempt{}
-		r.IntegrationResults = []IntegrationResult{}
-	}
-	r.TaskProblemRevisions = []TaskProblemReference{}
-	r.TaskSpecRevisions = []TaskSpecReference{}
-	r.TaskSpecAssessments = []TaskAssessmentReference{}
-	r.TaskSolutionSelections = []TaskSelectionReference{}
-	r.TaskResultSpecBindings = []HistoricalRecord{}
-	r.TaskContentPublications = []TaskContentPublication{}
-}
-func createTaskProblem(d Dependencies, root string, session WorkItemStoreSession, r WorkItemRegistry, projects ProjectSnapshot, task TaskRecord, upgrade *TaskRegistryUpgrade) (TaskContentMutationResult, error) {
+func createTaskProblem(d Dependencies, work ProjectWork, session WorkItemStoreSession, r WorkItemRegistry, projects ProjectSnapshot, task TaskRecord) (TaskContentMutationResult, error) {
 	if d.TaskContent == nil || d.WorkClock == nil {
 		return TaskContentMutationResult{}, contentError("task_content_observation_unknown", "content storage and clock dependencies are required", nil)
 	}
-	if upgrade != nil {
-		copy := *upgrade
-		upgrade = &copy
-		if upgrade.FromVersion == 0 {
-			upgrade.FromVersion = r.FormatVersion
-		}
-		if upgrade.FromVersion < 1 || upgrade.FromVersion > 2 || !digestPattern.MatchString(upgrade.RegistrySHA256) {
-			return TaskContentMutationResult{}, contentError("task_content_invalid_input", "invalid store upgrade acknowledgement", nil)
-		}
-	}
 	now := d.WorkClock.Now().UTC().Format(time.RFC3339Nano)
-	u, e := contentValue(upgrade)
+	intent, e := taskCreateIntent(task)
 	if e != nil {
 		return TaskContentMutationResult{}, e
 	}
-	intent, e := contentCanonical(map[string]any{"task_id": task.ID, "title": task.Title, "description": task.Description, "parent_epic_id": task.ParentEpicID, "project_id": task.ProjectID, "repo_id": task.RepoID, "registry_upgrade": upgrade})
-	if e != nil {
-		return TaskContentMutationResult{}, e
-	}
-	draft := contentEnvelope("WorkspaceTaskProblemDraft@1", map[string]canonicaljson.Value{"publication_key": "task-create/" + string(task.ID), "task_id": string(task.ID), "expected_previous": nil, "registry_upgrade": u, "origin": contentObject(map[string]canonicaljson.Value{"kind": "task_create_summary"}), "title": task.Title, "summary": task.Description, "problem_document_id": "problem", "documents": []canonicaljson.Value{}, "sources": []canonicaljson.Value{}, "claims": []canonicaljson.Value{}, "deadline": nil, "change_reason": "Record the initial Task problem.", "recorder": contentObject(map[string]canonicaljson.Value{"actor_claim": "local_cli_user", "control_surface": "ply workspace task create", "recorded_at_utc": now})})
+	draft := contentEnvelope("WorkspaceTaskProblemDraft@1", map[string]canonicaljson.Value{"publication_key": "task-create/" + string(task.ID), "task_id": string(task.ID), "expected_previous": nil, "registry_upgrade": nil, "origin": contentObject(map[string]canonicaljson.Value{"kind": "task_create_summary"}), "title": task.Title, "summary": task.Description, "problem_document_id": "problem", "documents": []canonicaljson.Value{}, "sources": []canonicaljson.Value{}, "claims": []canonicaljson.Value{}, "deadline": nil, "change_reason": "Record the initial Task problem.", "recorder": contentObject(map[string]canonicaljson.Value{"actor_claim": "local_cli_user", "control_surface": "ply workspace task create", "recorded_at_utc": now})})
 	request, e := canonicaljson.Marshal(draft)
 	if e != nil {
 		return TaskContentMutationResult{}, e
 	}
-	result := newTaskContentMutation(root, task.ID, "task-create/"+string(task.ID), digestTaskBytes(intent))
+	result := newTaskContentMutation(work.Workspace, task.ID, "task-create/"+string(task.ID), digestTaskBytes(intent))
 	result.PreState = taskContentState(r, task.ID)
 	result.PostState = result.PreState
-	e = publishTaskContent(d, root, session, r, task, projects, draft, "problem_record", request, &result, true)
+	e = publishTaskContent(d, work, session, r, task, projects, draft, "problem_record", request, &result, true)
 	return result, e
+}
+
+// The create intent keeps its published canonical shape; registry_upgrade is
+// always null because the registry has a single format.
+func taskCreateIntent(t TaskRecord) ([]byte, error) {
+	return contentCanonical(map[string]any{"task_id": t.ID, "title": t.Title, "description": t.Description, "parent_epic_id": t.ParentEpicID, "project_id": t.ProjectID, "repo_id": t.RepoID, "registry_upgrade": nil})
 }
 
 // MarshalTaskSpecValue provides the canonical bridge without reversing package dependencies.

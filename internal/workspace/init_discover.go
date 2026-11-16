@@ -6,7 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -34,8 +33,8 @@ type DiscoveryOmission struct {
 // the URL of origin as remote. The Project ID defaults to the directory name.
 // A rerun with the same repositories changes nothing.
 func InitDiscover(d Dependencies, project string) (InitDiscoverResult, error) {
-	if d.Files == nil || d.Repos == nil || d.Projects == nil {
-		return InitDiscoverResult{}, ProjectInvalidArguments("filesystem, repository observer and project store are required")
+	if d.Files == nil || d.Repos == nil {
+		return InitDiscoverResult{}, ProjectInvalidArguments("filesystem and repository observer are required")
 	}
 	remotes, ok := d.Repos.(RemoteObserver)
 	if !ok {
@@ -69,53 +68,9 @@ func InitDiscover(d Dependencies, project string) (InitDiscoverResult, error) {
 	if _, err = Init(d); err != nil {
 		return result, err
 	}
-	defs, _, err := readDefinitions(root)
-	if err != nil {
-		return result, err
-	}
-	if defs == nil {
-		projects, _, err := d.Projects.Snapshot(root)
-		if err != nil {
-			return result, err
-		}
-		if len(projects) > 0 {
-			return result, projectError(ErrorProjectConflict, fmt.Sprintf("workspace %s has Projects only in %s; a new %s would hide them", root, MarkerDirectory, workspacedef.File), nil)
-		}
-		if err = workspacedef.Create(root); err != nil {
-			return result, definitionUpdateError(err)
-		}
-	}
-	_, basis, err := workspacedef.Read(root)
-	if err != nil {
-		return result, definitionUpdateError(err)
-	}
-	defined := workspacedef.Project{ID: string(id), Name: string(id), Wrapper: ".", Repos: result.Repos, Epics: []workspacedef.Epic{}}
-	mutate := func(defs *workspacedef.Definitions) (bool, error) {
-		for _, p := range defs.Projects {
-			if p.ID != defined.ID {
-				continue
-			}
-			if p.Name == defined.Name && p.Wrapper == defined.Wrapper && reflect.DeepEqual(p.Repos, defined.Repos) {
-				return false, nil
-			}
-			return false, projectError(ErrorProjectConflict, fmt.Sprintf("Project %s is already defined in %s with other repositories or settings", id, workspacedef.File), nil)
-		}
-		defs.Projects = append(defs.Projects, defined)
-		return true, nil
-	}
-	check := func(defs workspacedef.Definitions) error {
-		if err := validateDefinitions(defs); err != nil {
-			return err
-		}
-		_, err := definitionProjects(root, defs)
-		return err
-	}
-	updated, err := workspacedef.Update(root, basis, mutate, check)
-	if err != nil {
-		return result, definitionUpdateError(err)
-	}
-	result.Changed = updated.Changed
-	return result, nil
+	defined := workspacedef.Project{ID: string(id), Name: string(id), Wrapper: ".", Repos: result.Repos}
+	result.Changed, err = updateDefinitions(root, defineProject(defined))
+	return result, err
 }
 
 // discoverRepos finds the Git worktree root in each child of root, <name> or

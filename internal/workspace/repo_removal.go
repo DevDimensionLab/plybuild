@@ -88,11 +88,6 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 				}
 			}
 		}
-		for _, e := range p.Epics {
-			if e.Repo == repo {
-				return referenced("Epic %s in %s names it", e.ID, workspacedef.File)
-			}
-		}
 	}
 	if wrapper == "" {
 		return ProjectInvalidArguments(fmt.Sprintf("Project %s is not defined", project))
@@ -134,11 +129,6 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 				return firstErr(err, referenced("repository %s of Project %s is inside wrapper %s", r.ID, p.ID, wrapper))
 			}
 		}
-		for _, e := range p.Epics {
-			if found, err := inside(resolve(e.Path)); err != nil || found {
-				return firstErr(err, referenced("Epic %s is inside wrapper %s", e.ID, wrapper))
-			}
-		}
 	}
 	metadata, err := readProjectMetadata(root)
 	if err != nil {
@@ -151,39 +141,39 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 			}
 		}
 	}
-	registry, err := d.WorkItems.SnapshotRegistrations(root)
+	// The repository belongs only to this Project, so only its registry can
+	// bind the repository.
+	work, err := projectWork(root, ProjectID(project))
+	if err != nil {
+		return err
+	}
+	registry, err := d.WorkItems.SnapshotRegistrations(work)
 	if err != nil {
 		return err
 	}
 	for _, e := range registry.Epics {
 		for _, b := range e.RepoBindings {
 			if string(b.RepoID) == repo {
-				return referenced("Epic %s in %s binds it", e.ID, workItemsPath(root))
+				return referenced("Epic %s in %s binds it", e.ID, work.Registry())
+			}
+			if found, err := inside(b.Worktree.Locator); err != nil || found {
+				return firstErr(err, referenced("Epic %s is inside wrapper %s", e.ID, wrapper))
 			}
 		}
 	}
 	for _, task := range registry.Tasks {
 		if string(task.RepoID) == repo {
-			return referenced("Task %s in %s binds it", task.ID, workItemsPath(root))
+			return referenced("Task %s in %s binds it", task.ID, work.Registry())
 		}
 	}
 	for _, operation := range registry.WorktreeOperations {
 		if string(operation.RepoID) == repo {
-			return referenced("worktree operation %s in %s names it", operation.ID, workItemsPath(root))
+			return referenced("worktree operation %s in %s names it", operation.ID, work.Registry())
 		}
 	}
 	for _, operation := range registry.EpicCreateOperations {
 		if string(operation.Request.RepoID) == repo {
-			return referenced("Epic create operation %s in %s names it", operation.ID, workItemsPath(root))
-		}
-	}
-	legacy, exists, err := readLegacyProjectRegistry(root)
-	if err != nil {
-		return err
-	}
-	for _, r := range legacy.Repos {
-		if exists && string(r.ID) == repo {
-			return referenced("the legacy registry %s lists it", filepath.Join(root, MarkerDirectory, ProjectsFile))
+			return referenced("Epic create operation %s in %s names it", operation.ID, work.Registry())
 		}
 	}
 	return nil

@@ -209,8 +209,9 @@ func TestTraceReadPreservesJournalPrefixMissingSourcesAndMtimeNulls(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if partial.Coverage.State != "partial" || partial.Freshness != "unknown" {
-		t.Fatalf("damaged history %+v", partial.Coverage)
+	// Damage is partial coverage; the registered sources themselves are intact.
+	if partial.Coverage.State != "partial" || partial.Freshness != "fresh" {
+		t.Fatalf("damaged history %+v freshness=%s", partial.Coverage, partial.Freshness)
 	}
 	eventByID(t, partial, first.EventID)
 	if len(partial.Events) < 2 {
@@ -307,7 +308,11 @@ func TestTraceCurrentGoalIsTheRegisteredHead(t *testing.T) {
 
 func TestTraceFatalRegistryDoesNotReturnPartialSuccess(t *testing.T) {
 	d, root := readFixture(t)
-	if err := os.WriteFile(filepath.Join(root, ".ply", "work-items.yaml"), []byte("not: [valid"), 0600); err != nil {
+	works, err := workspace.DefinedWork(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(works[0].Registry(), []byte("not: [valid"), 0600); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := Read(d, "task"); err == nil {
@@ -336,7 +341,11 @@ func TestTraceConcurrentJournalAppendMakesCapturedPrefixPartial(t *testing.T) {
 
 func TestTraceShowsGoalStartReceipt(t *testing.T) {
 	d, root := readFixture(t)
-	dir := filepath.Join(root, ".ply", "task-process", "goal-start")
+	works, err := workspace.DefinedWork(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := filepath.Dir(workspace.GoalStartReceiptPath(works[0], "task"))
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}

@@ -61,7 +61,7 @@ func TestTaskWorktreeCreateClassifiesGitOutcomesFromObservation(t *testing.T) {
 		if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil || !hasWorkErrorClass(err, ErrorWorkGitEffect) {
 			t.Fatalf("first error = %v", err)
 		}
-		registry, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+		registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 		if err != nil || registry.Tasks[0].WorktreeState != WorkItemCreating || registry.WorktreeOperations[0].LastObservation.Classification != "no_effect" {
 			t.Fatalf("creating registry = %#v, %v", registry, err)
 		}
@@ -98,7 +98,7 @@ func TestTaskWorktreeCreateClassifiesGitOutcomesFromObservation(t *testing.T) {
 		if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil || !hasWorkErrorClass(err, ErrorWorkReconciliation) {
 			t.Fatalf("error = %v", err)
 		}
-		registry, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+		registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 		if err != nil || registry.Tasks[0].WorktreeState != WorkItemReconciliationRequired || registry.WorktreeOperations[0].State != "reconciliation_required" {
 			t.Fatalf("registry = %#v, %v", registry, err)
 		}
@@ -296,7 +296,7 @@ func TestTaskWorktreeCreateRejectsInvalidGitBranchBeforeIntent(t *testing.T) {
 	if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil || !hasWorkErrorClass(err, ErrorWorkInvalidArguments) {
 		t.Fatalf("error = %v", err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 	if err != nil {
 		t.Fatal(err)
 	}

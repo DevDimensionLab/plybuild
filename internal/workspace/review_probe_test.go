@@ -1,58 +1,10 @@
 package workspace
 
 import (
-	"encoding/json"
 	"os"
-	"path/filepath"
 	"testing"
-
-	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
-func TestReviewConfigAppearanceMustStaleView(t *testing.T) {
-	root, _, d := durableFixture(t)
-	if _, err := ListProjects(d); err != nil {
-		t.Fatal(err)
-	}
-	path := filepath.Join(root, DefinitionsFile)
-	raw, err := os.ReadFile(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var defs workspacedef.Definitions
-	if err = json.Unmarshal(raw, &defs); err != nil {
-		t.Fatal(err)
-	}
-	defs.Projects[0].Epics = []workspacedef.Epic{}
-	raw, err = json.Marshal(defs)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = os.Remove(path); err != nil {
-		t.Fatal(err)
-	}
-	before, err := ReadViewBasis(d)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(before.Projects.Projects) != 0 {
-		t.Fatal("expected empty legacy registry")
-	}
-	if err = os.WriteFile(path, raw, 0600); err != nil {
-		t.Fatal(err)
-	}
-	after, err := ReadViewBasis(d)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(after.Projects.Projects) != 1 {
-		t.Fatal("config was not authoritative")
-	}
-	state, reasons := CheckReadViewBasis(d, before)
-	if state == "fresh" {
-		t.Fatalf("stale legacy view reported fresh after config appeared; before=%d projects after=%d state=%s reasons=%v", len(before.Projects.Projects), len(after.Projects.Projects), state, reasons)
-	}
-}
 func TestReviewTaskRegistrationReadSurvivesMissingCheckout(t *testing.T) {
 	root, repo, d := durableFixture(t)
 	if _, err := CreateTask(d, TaskCreateInput{TaskID: "task", Title: "Task", Description: "Fixture", ParentEpicID: "feature", ProjectID: "sample", RepoID: "code"}); err != nil {
@@ -62,7 +14,7 @@ func TestReviewTaskRegistrationReadSurvivesMissingCheckout(t *testing.T) {
 		t.Fatal(err)
 	}
 	d.Files = projectCwdFileSystem{FileSystem: d.Files, cwd: root}
-	registry, err := d.WorkItems.SnapshotRegistrations(root)
+	registry, err := d.WorkItems.SnapshotRegistrations(testWork(t, root))
 	if err != nil || len(registry.Tasks) != 1 {
 		t.Fatalf("registration missing: %v", err)
 	}

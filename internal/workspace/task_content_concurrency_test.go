@@ -21,7 +21,7 @@ func TestTaskContentConcurrentCASPublishesExactlyOneRevision(t *testing.T) {
 			wins++
 		}
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(filepath.Dir(f.wrapper))
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(f.wrapper)))
 	if err != nil || wins != 1 || len(r.TaskProblemRevisions) != 2 {
 		t.Fatalf("CAS wins=%d registry=%#v error=%v", wins, r, err)
 	}

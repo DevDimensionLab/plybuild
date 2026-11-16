@@ -509,7 +509,7 @@ func (gitCfg GitCloudConfig) templates(dependencies templatesDependencies) (temp
 
 	err = filesystem.Walk(dependencies.Files, root, func(path string, info os.FileInfo, err error) error {
 		if err == nil && (info.Name() == projectConfigFileName || info.Name() == legacyProjectConfigFileName) {
-			relPath := strings.Split(path, file.Path("/"+info.Name()))
+			relPath := strings.Split(path, file.Path("%s", "/"+info.Name()))
 			name := strings.Split(relPath[0], file.Path("/templates/"))
 			project, err := dependencies.Load(relPath[0])
 			if err != nil {

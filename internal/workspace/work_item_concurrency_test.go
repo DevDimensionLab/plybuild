@@ -84,14 +84,10 @@ type workItemJourneyFixture struct {
 }
 
 func newWorkItemJourneyFixture(t *testing.T) workItemJourneyFixture {
-	return newWorkItemJourneyFixtureVersion(t, false)
+	return newWorkItemJourneyFixtureHistory(t, false)
 }
 
-func newWorkItemJourneyFixtureVersion(t *testing.T, legacy bool) workItemJourneyFixture {
-	return newWorkItemJourneyFixtureHistory(t, legacy, false)
-}
-
-func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, parentBranch ...string) workItemJourneyFixture {
+func newWorkItemJourneyFixtureHistory(t *testing.T, priorEpicWork bool, parentBranch ...string) workItemJourneyFixture {
 	t.Helper()
 	root := createProjectWorkspace(t)
 	wrapper := filepath.Join(root, "ply")
@@ -135,9 +131,7 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 	projects := newSystemProjectStore()
 	project := ProjectRecord{ID: "ply", Name: "Ply", Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{"ply"}}
 	repo := RepoRecord{ID: "ply", Locator: repository, GitCommonDir: common}
-	if _, _, _, err := projects.Add(root, project, []RepoRecord{repo}); err != nil {
-		t.Fatal(err)
-	}
+	defineTestProject(t, root, project, []RepoRecord{repo})
 	dependencies := SystemDependencies()
 	dependencies.ProjectDataRoot = func(string) (string, error) { return "", nil }
 	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: root}
@@ -147,42 +141,9 @@ func newWorkItemJourneyFixtureHistory(t *testing.T, legacy, priorEpicWork bool, 
 	if _, err := AdoptEpic(dependencies, adopt); err != nil {
 		t.Fatal(err)
 	}
-	if legacy {
-		// Seed an explicit pre-WS05 registry; do not weaken the policy of new Tasks.
-		err := dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			r, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			r.FormatVersion = 1
-			r.TaskProblemRevisions = nil
-			r.TaskSpecRevisions = nil
-			r.TaskSpecAssessments = nil
-			r.TaskSolutionSelections = nil
-			r.TaskResultSpecBindings = nil
-			r.TaskContentPublications = nil
-			r.TaskResults = nil
-			r.HumanQARecords = nil
-			r.IntegrationAuthorities = nil
-			r.IntegrationIntents = nil
-			r.IntegrationAttempts = nil
-			r.IntegrationResults = nil
-			r.Tasks = append(r.Tasks, TaskRecord{ID: "task", Title: "Task", Description: "Description", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply", GitCommonDir: common, WorktreeState: WorkItemUnbound})
-			// Fixture seeding is not a production downgrade operation.
-			b, err := encodeWorkItemRegistry(r)
-			if err != nil {
-				return err
-			}
-			return os.WriteFile(workItemsPath(root), b, 0o644)
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-	} else {
-		task, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
-		if err := fixtureCreateTaskWithProblem(dependencies, root, task); err != nil {
-			t.Fatal(err)
-		}
+	task, _ := ParseTaskCreateInput("task", "Task", "Description", "epic", "ply", "ply")
+	if err := fixtureCreateTaskWithProblem(dependencies, root, task); err != nil {
+		t.Fatal(err)
 	}
 	return workItemJourneyFixture{dependencies: dependencies, wrapper: wrapper, oid: oid}
 }
@@ -193,18 +154,22 @@ func hasWorkErrorClass(err error, class WorkItemErrorClass) bool {
 }
 
 func fixtureCreateTaskWithProblem(d Dependencies, root string, in TaskCreateInput) error {
+	work, err := projectWork(root, in.ProjectID)
+	if err != nil {
+		return err
+	}
 	return d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
 		_, repo, err := projectAndRepo(projects, in.ProjectID, in.RepoID)
 		if err != nil {
 			return err
 		}
-		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+		return d.WorkItems.WithLock(work, func(session WorkItemStoreSession) error {
 			registry, err := session.Snapshot()
 			if err != nil {
 				return err
 			}
 			task := TaskRecord{ID: in.TaskID, Title: in.Title, Description: in.Description, ParentEpicID: in.ParentEpicID, ProjectID: in.ProjectID, RepoID: in.RepoID, GitCommonDir: repo.GitCommonDir, WorktreeState: WorkItemUnbound}
-			_, err = createTaskProblem(d, root, session, registry, projects, task, nil)
+			_, err = createTaskProblem(d, work, session, registry, projects, task)
 			return err
 		})
 	})

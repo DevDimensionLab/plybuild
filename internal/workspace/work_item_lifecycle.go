@@ -3,7 +3,6 @@ package workspace
 import (
 	"encoding/json"
 	"fmt"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -41,9 +40,11 @@ type WorkItemLifecycleEvent struct {
 	RecordedAtUTC string         `json:"recorded_at_utc"`
 }
 
-// WorkItemLifecycleSnapshot is an immutable, request-local read of the organizing
-// metadata. A missing file is valid: Revision is zero and SHA256 is empty.
+// WorkItemLifecycleSnapshot is an immutable, request-local read of one
+// Project's organizing metadata. A missing file is valid: Revision is zero and
+// SHA256 is empty.
 type WorkItemLifecycleSnapshot struct {
+	Project  ProjectID
 	Revision int
 	Events   []WorkItemLifecycleEvent
 	Locator  string
@@ -60,6 +61,41 @@ func (s WorkItemLifecycleSnapshot) State(kind, id string) LifecycleState {
 }
 func (s WorkItemLifecycleSnapshot) Task(id TaskID) LifecycleState { return s.State("task", string(id)) }
 func (s WorkItemLifecycleSnapshot) Epic(id EpicID) LifecycleState { return s.State("epic", string(id)) }
+
+// WorkItemLifecycles is the lifecycle of every defined Project, sorted by
+// Project ID. Epic and Task IDs are unique in the workspace, so a subject's
+// state comes from whichever Project records it.
+type WorkItemLifecycles []WorkItemLifecycleSnapshot
+
+func (l WorkItemLifecycles) State(kind, id string) LifecycleState {
+	for _, s := range l {
+		if state, ok := s.states[kind+"/"+id]; ok {
+			return state
+		}
+	}
+	return LifecycleActive
+}
+func (l WorkItemLifecycles) Task(id TaskID) LifecycleState { return l.State("task", string(id)) }
+func (l WorkItemLifecycles) Epic(id EpicID) LifecycleState { return l.State("epic", string(id)) }
+
+// Events are the lifecycle events of all Projects, Project by Project.
+func (l WorkItemLifecycles) Events() []WorkItemLifecycleEvent {
+	out := []WorkItemLifecycleEvent{}
+	for _, s := range l {
+		out = append(out, s.Events...)
+	}
+	return out
+}
+
+// Of is the lifecycle of project; a Project without one reads as empty.
+func (l WorkItemLifecycles) Of(project ProjectID) WorkItemLifecycleSnapshot {
+	for _, s := range l {
+		if s.Project == project {
+			return s
+		}
+	}
+	return WorkItemLifecycleSnapshot{Project: project, Events: []WorkItemLifecycleEvent{}, states: map[string]LifecycleState{}}
+}
 
 type WorkItemLifecycleInput struct {
 	SubjectKind      string
@@ -120,53 +156,70 @@ func lifecycleReadback(root, kind, id string, snapshot WorkItemLifecycleSnapshot
 	return WorkItemLifecycleReadback{WorkItemLifecycleReadbackKind, 1, MetadataWorkspace{root}, kind, id, snapshot.State(kind, id), snapshot.Revision, events, metadataSource(snapshot.Locator, snapshot.SHA256, snapshot.Exists)}
 }
 
-// ReadWorkItemLifecycle does not inspect Git, acquire locks, or create files.
-// Subject membership belongs to the caller's registry snapshot.
-func ReadWorkItemLifecycle(d Dependencies, root string) (WorkItemLifecycleSnapshot, error) {
+// ReadWorkItemLifecycle reads the lifecycle of every defined Project. It does
+// not inspect Git, acquire locks, or create files. Subject membership belongs
+// to the caller's registry snapshot.
+func ReadWorkItemLifecycle(d Dependencies, root string) (WorkItemLifecycles, error) {
 	observed, err := ObserveRoot(d, root)
 	if err != nil {
-		return WorkItemLifecycleSnapshot{}, err
+		return nil, err
 	}
-	return readWorkItemLifecycle(observed.Root)
+	works, err := DefinedWork(observed.Root)
+	if err != nil {
+		return nil, err
+	}
+	return readLifecycles(works)
+}
+
+func readLifecycles(works []ProjectWork) (WorkItemLifecycles, error) {
+	out := make(WorkItemLifecycles, 0, len(works))
+	for _, work := range works {
+		snapshot, err := readWorkItemLifecycle(work)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, snapshot)
+	}
+	return out, nil
+}
+
+// ReadProjectLifecycle reads the lifecycle of the Project of work only.
+func ReadProjectLifecycle(work ProjectWork) (WorkItemLifecycleSnapshot, error) {
+	return readWorkItemLifecycle(work)
 }
 
 func ShowWorkItemLifecycle(d Dependencies, kind, id string) (WorkItemLifecycleReadback, error) {
 	if err := validateLifecycleSubject(kind, id); err != nil {
 		return WorkItemLifecycleReadback{}, err
 	}
-	root, err := containingWorkItemWorkspace(d)
+	root, err := containingRegistrationWorkspace(d)
 	if err != nil {
 		return WorkItemLifecycleReadback{}, err
 	}
-	if err := registeredLifecycleSubject(d, root, kind, id); err != nil {
+	work, err := registeredLifecycleSubject(d, root, kind, id)
+	if err != nil {
 		return WorkItemLifecycleReadback{}, err
 	}
-	snapshot, err := readWorkItemLifecycle(root)
+	snapshot, err := readWorkItemLifecycle(work)
 	if err != nil {
 		return WorkItemLifecycleReadback{}, err
 	}
 	return lifecycleReadback(root, kind, id, snapshot), nil
 }
 
-func registeredLifecycleSubject(d Dependencies, root, kind, id string) error {
+// registeredLifecycleSubject is the work of the Project whose registry holds
+// the Epic or Task.
+func registeredLifecycleSubject(d Dependencies, root, kind, id string) (ProjectWork, error) {
 	if d.WorkItems == nil {
-		return workError(ErrorWorkIO, "work-item store dependency is required", nil)
+		return ProjectWork{}, workError(ErrorWorkIO, "work-item store dependency is required", nil)
 	}
-	r, err := d.WorkItems.SnapshotRegistrations(root)
-	if err != nil {
-		return err
+	switch kind {
+	case "task":
+		return LocateTask(d, root, TaskID(id))
+	case "epic":
+		return LocateEpic(d, root, EpicID(id))
 	}
-	if kind == "task" {
-		if found, _ := findTask(r, TaskID(id)); found != nil {
-			return nil
-		}
-	}
-	if kind == "epic" {
-		if found, _ := findEpic(r, EpicID(id)); found != nil {
-			return nil
-		}
-	}
-	return workError(ErrorWorkNotFound, fmt.Sprintf("%s %s is not registered", kind, id), nil)
+	return ProjectWork{}, workError(ErrorWorkNotFound, fmt.Sprintf("%s %s is not registered", kind, id), nil)
 }
 
 func SetWorkItemLifecycle(d Dependencies, input WorkItemLifecycleInput) (WorkItemLifecycleMutation, error) {
@@ -184,54 +237,59 @@ func setWorkItemLifecycle(d Dependencies, input WorkItemLifecycleInput, publishe
 	if d.WorkItems == nil || d.WorkClock == nil {
 		return result, workError(ErrorWorkIO, "work-item store and clock dependencies are required", nil)
 	}
-	root, err := containingWorkItemWorkspace(d)
+	root, err := containingRegistrationWorkspace(d)
 	if err != nil {
 		return result, err
 	}
-	err = d.WorkItems.WithLock(root, func(_ WorkItemStoreSession) error {
-		if err := registeredLifecycleSubject(d, root, input.SubjectKind, input.SubjectID); err != nil {
-			return err
-		}
-		snapshot, err := readWorkItemLifecycle(root)
-		if err != nil {
-			return err
-		}
-		result.WorkItemLifecycleReadback = lifecycleReadback(root, input.SubjectKind, input.SubjectID, snapshot)
-		result.Kind = WorkItemLifecycleMutationKind
-		if input.ExpectedRevision != nil && *input.ExpectedRevision != snapshot.Revision {
-			return workError(ErrorWorkIdentityConflict, fmt.Sprintf("lifecycle revision is %d, expected %d; read the current lifecycle before retrying", snapshot.Revision, *input.ExpectedRevision), nil)
-		}
-		if result.Lifecycle == input.State {
-			return nil
-		}
-		event := WorkItemLifecycleEvent{Sequence: snapshot.Revision + 1, SubjectKind: input.SubjectKind, SubjectID: input.SubjectID, From: result.Lifecycle, To: input.State, ActorClaim: input.ActorClaim, RecordedAtUTC: d.WorkClock.Now().UTC().Format(time.RFC3339Nano)}
-		event.ID = lifecycleEventID(event)
-		events := append(append([]WorkItemLifecycleEvent{}, snapshot.Events...), event)
-		bytes, err := encodeWorkItemLifecycle(events)
-		if err != nil {
-			return err
-		}
-		if err := publisher.publish(root, WorkItemLifecycleFile, bytes); err != nil {
-			return err
-		}
-		snapshot, err = readWorkItemLifecycle(root)
-		if err != nil {
-			return err
-		}
-		result.WorkItemLifecycleReadback = lifecycleReadback(root, input.SubjectKind, input.SubjectID, snapshot)
-		result.Kind = WorkItemLifecycleMutationKind
-		result.Changed, result.Event = true, &event
-		return nil
-	})
+	// Each Project's lifecycle file lives in its work, written under that
+	// Project's work lock. A subject never moves to another Project.
+	work, err := registeredLifecycleSubject(d, root, input.SubjectKind, input.SubjectID)
+	if err != nil {
+		return result, err
+	}
+	err = d.WorkItems.WithLock(work, func(WorkItemStoreSession) error { return publishLifecycle(d, work, input, publisher, &result) })
 	return result, err
+}
+
+func publishLifecycle(d Dependencies, work ProjectWork, input WorkItemLifecycleInput, publisher workspaceMetadataPublisher, result *WorkItemLifecycleMutation) error {
+	root := work.Workspace
+	snapshot, err := readWorkItemLifecycle(work)
+	if err != nil {
+		return err
+	}
+	result.WorkItemLifecycleReadback = lifecycleReadback(root, input.SubjectKind, input.SubjectID, snapshot)
+	result.Kind = WorkItemLifecycleMutationKind
+	if input.ExpectedRevision != nil && *input.ExpectedRevision != snapshot.Revision {
+		return workError(ErrorWorkIdentityConflict, fmt.Sprintf("lifecycle revision is %d, expected %d; read the current lifecycle before retrying", snapshot.Revision, *input.ExpectedRevision), nil)
+	}
+	if result.Lifecycle == input.State {
+		return nil
+	}
+	event := WorkItemLifecycleEvent{Sequence: snapshot.Revision + 1, SubjectKind: input.SubjectKind, SubjectID: input.SubjectID, From: result.Lifecycle, To: input.State, ActorClaim: input.ActorClaim, RecordedAtUTC: d.WorkClock.Now().UTC().Format(time.RFC3339Nano)}
+	event.ID = lifecycleEventID(event)
+	events := append(append([]WorkItemLifecycleEvent{}, snapshot.Events...), event)
+	bytes, err := encodeWorkItemLifecycle(events)
+	if err != nil {
+		return err
+	}
+	if err := work.Create(); err != nil {
+		return err
+	}
+	if err := publisher.publish(work.Dir, WorkItemLifecycleFile, bytes); err != nil {
+		return err
+	}
+	snapshot, err = readWorkItemLifecycle(work)
+	if err != nil {
+		return err
+	}
+	result.WorkItemLifecycleReadback = lifecycleReadback(root, input.SubjectKind, input.SubjectID, snapshot)
+	result.Kind = WorkItemLifecycleMutationKind
+	result.Changed, result.Event = true, &event
+	return nil
 }
 
 func lifecycleEventID(event WorkItemLifecycleEvent) string {
 	event.ID = ""
 	bytes, _ := json.Marshal(event)
 	return "lce_" + strings.TrimPrefix(digestTaskBytes(bytes), "sha256:")
-}
-
-func lifecycleLocator(root string) string {
-	return filepath.Join(root, MarkerDirectory, WorkItemLifecycleFile)
 }

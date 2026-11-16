@@ -21,12 +21,12 @@ func queueErrorReasons(e error) []QueueReason {
 	}
 	return queueReasons("task_queue_observation_unknown", e.Error())
 }
-func queueTaskTitle(d Dependencies, root string, r WorkItemRegistry, t TaskRecord) (string, error) {
+func queueTaskTitle(d Dependencies, work ProjectWork, r WorkItemRegistry, t TaskRecord) (string, error) {
 	p := taskContentState(r, t.ID).ProblemHead
 	if p == nil {
 		return t.Title, nil
 	}
-	m, e := readRegisteredTaskManifest(d.TaskContent, root, r, p.ManifestSHA256)
+	m, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.ManifestSHA256)
 	if e != nil {
 		return "", e
 	}
@@ -49,44 +49,40 @@ func queueTaskNames(qid string, id TaskID, title, parent string) (string, string
 
 // The queue is a prioritized list of Goal references. An entry that names
 // only a selected solution was input to the removed preparation.
-func queuePendingEvaluation(d Dependencies, root string, r WorkItemRegistry, entry TaskGoalQueueEntry, rank int) QueuePending {
+func queuePendingEvaluation(d Dependencies, work ProjectWork, r WorkItemRegistry, entry TaskGoalQueueEntry, rank int) QueuePending {
 	if entry.Goal != nil {
-		return queueGoalEvaluation(d, root, r, entry, rank)
+		return queueGoalEvaluation(d, work, r, entry, rank)
 	}
 	row := QueuePending{Rank: rank, TaskID: entry.TaskID, Selection: entry.Selection, State: "blocked", Reasons: queueReasons("task_queue_goal_required", "this entry names a selected solution; register a Goal for the Task")}
 	if t, _ := findTask(r, entry.TaskID); t != nil {
-		if title, e := queueTaskTitle(d, root, r, *t); e == nil {
+		if title, e := queueTaskTitle(d, work, r, *t); e == nil {
 			row.Title = title
 		}
 	}
 	return row
 }
-func buildQueueReadback(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, ready bool) (WorkspaceTaskQueueReadback, error) {
+func buildQueueReadback(d Dependencies, work ProjectWork, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, ready bool) (WorkspaceTaskQueueReadback, error) {
 	var out WorkspaceTaskQueueReadback
-	t, _, e := resolveQueueTarget(d, root, r, projects, in)
+	t, _, e := resolveQueueTarget(d, work, r, projects, in)
 	if e != nil {
 		return out, e
 	}
 	d = withQueueContentScope(d, r, t)
-	if e := validateTaskContentClosure(d.TaskContent, root, r, false); e != nil {
+	if e := validateTaskContentClosure(d.TaskContent, work, r, false); e != nil {
 		return out, e
 	}
-	if e := validateQueueClosure(d, root, r); e != nil {
+	if e := validateQueueClosure(d, work, r); e != nil {
 		return out, e
 	}
-	w, e := queueWorkspace(d, root)
+	w, e := queueWorkspace(d, work.Workspace)
 	if e != nil {
 		return out, e
 	}
-	id := queueID(root, t)
+	id := queueID(work.Workspace, t)
 	q := foldQueue(r, id)
-	out = WorkspaceTaskQueueReadback{Kind: "WorkspaceTaskQueueReadback@1", SchemaVersion: 1, Workspace: w, Target: t, Registry: QueueRegistryReadback{r.FormatVersion, r.RawSHA256, queueUpgrade(r)}, QueueID: id, Revision: q.Revision, Pending: []QueuePending{}, Reasons: []QueueReason{}}
+	out = WorkspaceTaskQueueReadback{Kind: "WorkspaceTaskQueueReadback@1", SchemaVersion: 1, Workspace: w, Target: t, Registry: registryReadback(r), QueueID: id, Revision: q.Revision, Pending: []QueuePending{}, Reasons: []QueueReason{}}
 	for i, v := range q.Pending {
-		row := queuePendingEvaluation(d, root, r, v, i+1)
-		if r.FormatVersion == ParallelRegistryFormat {
-			row.SerialReadiness = row.State
-			row.ParallelReadiness = row.State
-		}
+		row := queuePendingEvaluation(d, work, r, v, i+1)
 		if !ready || row.State == "ready" {
 			out.Pending = append(out.Pending, row)
 		}
@@ -105,14 +101,14 @@ func ListTaskQueueVersion(d Dependencies, in QueueTargetInput, ready bool, versi
 		return WorkspaceTaskQueueReadback{}, WorkInvalidArguments("queue schema-version must be 1 or 2")
 	}
 
-	root, e := containingWorkItemWorkspace(d)
+	work, e := queueTargetWork(d, in)
 	if e != nil {
 		return WorkspaceTaskQueueReadback{}, e
 	}
 	var out WorkspaceTaskQueueReadback
-	e = WithTaskSpecSnapshot(d, root, func(s *TaskSpecSession) error {
+	e = WithTaskSpecSnapshot(d, work, func(s *TaskSpecSession) error {
 		var e error
-		out, e = buildQueueReadback(d, root, s.Registry, s.Projects, in, ready)
+		out, e = buildQueueReadback(d, work, s.Registry, s.Projects, in, ready)
 		return e
 	})
 	if e == nil && version == 2 {
@@ -149,29 +145,29 @@ func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, erro
 		return out, queueError("task_queue_invalid_input", e.Error())
 	}
 	draft := decodeQueueDraft(v)
-	root, e := containingWorkItemWorkspace(d)
+	in := QueueTargetInput{draft.ProjectID, draft.RepoID, draft.EpicID}
+	work, e := queueTargetWork(d, in)
 	if e != nil {
 		return out, e
 	}
-	in := QueueTargetInput{draft.ProjectID, draft.RepoID, draft.EpicID}
 	request := queueRequest(v)
-	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+	e = d.ProjectLocks.WithSnapshotLock(work.Workspace, func(projects ProjectSnapshot) error {
+		return d.WorkItems.WithLock(work, func(session WorkItemStoreSession) error {
 			r, e := session.Snapshot()
 			if e != nil {
 				return e
 			}
-			t, _, e := resolveQueueTarget(d, root, r, projects, in)
+			t, _, e := resolveQueueTarget(d, work, r, projects, in)
 			if e != nil {
 				return e
 			}
-			id := queueID(root, t)
+			id := queueID(work.Workspace, t)
 			for _, event := range r.TaskQueueEvents {
 				if event.Kind == "set" && contentString(contentFields(queueRequestValue(event.Request)), "publication_key") == draft.PublicationKey {
 					if event.QueueID != id || event.RequestSHA256 != queueDigest(request) {
 						return queueError("task_queue_publication_conflict", "publication key is already bound to different inputs")
 					}
-					out, e = buildQueueReadback(d, root, r, projects, in, false)
+					out, e = buildQueueReadback(d, work, r, projects, in, false)
 					return e
 				}
 			}
@@ -200,19 +196,16 @@ func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, erro
 						return queueError("task_queue_task_bound", "Task already has an intent")
 					}
 				}
-				if _, e = loadTaskGoal(d, root, r, task.ID, *entry.Goal); e != nil {
+				if _, e = loadTaskGoal(d, work, r, task.ID, *entry.Goal); e != nil {
 					return e
 				}
-			}
-			if e = upgradeQueueRegistry(d, root, &r, draft.RegistryUpgrade); e != nil {
-				return e
 			}
 			r.TaskQueueEvents = append(r.TaskQueueEvents, TaskQueueEvent{id, q.Revision + 1, "set", queueDigest(request), request, queueNow(d)})
 			sortQueueRegistry(&r)
 			if e = session.Publish(r); e != nil {
 				observed, readErr := session.Snapshot()
 				if readErr == nil {
-					out, readErr = buildQueueReadback(d, root, observed, projects, in, false)
+					out, readErr = buildQueueReadback(d, work, observed, projects, in, false)
 				}
 				if readErr != nil {
 					return fmt.Errorf("queue publication failed (%w); after-state unknown (%v); inspect queue list before retry", e, readErr)
@@ -223,16 +216,13 @@ func SetTaskQueue(d Dependencies, file string) (WorkspaceTaskQueueReadback, erro
 			if e != nil {
 				return e
 			}
-			out, e = buildQueueReadback(d, root, r, projects, in, false)
+			out, e = buildQueueReadback(d, work, r, projects, in, false)
 			return e
 		})
 	})
 	return out, e
 }
-func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error {
-	if r.FormatVersion < 4 {
-		return nil
-	}
+func validateQueueClosure(d Dependencies, work ProjectWork, r WorkItemRegistry) error {
 	for _, ev := range r.TaskQueueEvents {
 		if ev.Kind != "set" {
 			continue
@@ -244,12 +234,12 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 				continue
 			}
 			if entry.Goal != nil {
-				if _, e := loadTaskGoal(d, root, r, entry.TaskID, *entry.Goal); e != nil {
+				if _, e := loadTaskGoal(d, work, r, entry.TaskID, *entry.Goal); e != nil {
 					return e
 				}
 			}
 			if entry.Selection != nil {
-				m, e := readRegisteredTaskManifest(d.TaskContent, root, r, entry.Selection.ManifestSHA256)
+				m, e := readRegisteredTaskManifest(d.TaskContent, work, r, entry.Selection.ManifestSHA256)
 				if e != nil {
 					return e
 				}
@@ -258,26 +248,16 @@ func validateQueueClosure(d Dependencies, root string, r WorkItemRegistry) error
 				}
 			}
 		}
-		if ev.QueueID != queueID(root, t) {
+		if ev.QueueID != queueID(work.Workspace, t) {
 			return queueError("task_queue_integrity_conflict", "queue identity differs from workspace")
-		}
-		if draft.RegistryUpgrade != nil && d.TaskContent.includesTarget(r, draft.EpicID, draft.RepoID) {
-			if _, e := d.TaskContent.Read(root, "backups", draft.RegistryUpgrade.RegistrySHA256); e != nil {
-				return e
-			}
 		}
 	}
 	for _, u := range r.EpicBaseUpdates {
 		if !d.TaskContent.includesTarget(r, u.Plan.Target.EpicID, u.Plan.Target.RepoID) {
 			continue
 		}
-		if u.Plan.Workspace.Root != root {
+		if u.Plan.Workspace.Root != work.Workspace {
 			return queueError("epic_base_integrity_conflict", "base workspace changed")
-		}
-		if u.Plan.RegistryUpgrade != nil {
-			if _, e := d.TaskContent.Read(root, "backups", u.Plan.RegistryUpgrade.RegistrySHA256); e != nil {
-				return e
-			}
 		}
 	}
 	return nil

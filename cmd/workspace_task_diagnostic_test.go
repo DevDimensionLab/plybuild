@@ -12,7 +12,6 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
-	"gopkg.in/yaml.v3"
 )
 
 func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T) {
@@ -32,8 +31,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	}
 	git("init", "-b", "epic")
 	git("-c", "user.email=fixture@example.invalid", "-c", "user.name=Fixture", "commit", "--allow-empty", "-m", "fixture")
-	common := filepath.Join(repo, ".git")
-	if _, _, _, err := d.Projects.Add(root, workspace.ProjectRecord{ID: "project", Name: "Project", Wrapper: root, RepoIDs: []workspace.RepoID{"repo"}}, []workspace.RepoRecord{{ID: "repo", Locator: repo, GitCommonDir: common}}); err != nil {
+	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Project", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); err != nil {
@@ -67,11 +65,15 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if _, err := workspace.RecordTaskProblem(d, workspace.TaskContentInput{TaskID: "task", File: problemPath}); err != nil {
 		t.Fatal(err)
 	}
-	r, err := d.WorkItems.Snapshot(root)
+	work, err := workspace.LocateTask(d, root, "task")
 	if err != nil {
 		t.Fatal(err)
 	}
-	draft := workspace.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/queue", ProjectID: "project", RepoID: "repo", EpicID: "epic", Entries: []workspace.TaskGoalQueueEntry{}, Recorder: workspace.TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-08T00:00:00Z"}, RegistryUpgrade: &workspace.TaskRegistryUpgrade{FromVersion: 3, RegistrySHA256: r.RawSHA256}}
+	r, err := d.WorkItems.Snapshot(work)
+	if err != nil {
+		t.Fatal(err)
+	}
+	draft := workspace.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/queue", ProjectID: "project", RepoID: "repo", EpicID: "epic", Entries: []workspace.TaskGoalQueueEntry{}, Recorder: workspace.TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-08T00:00:00Z"}}
 	raw, err := json.Marshal(draft)
 	if err != nil {
 		t.Fatal(err)
@@ -83,7 +85,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if _, err = workspace.SetTaskQueue(d, path); err != nil {
 		t.Fatal(err)
 	}
-	r, err = d.WorkItems.Snapshot(root)
+	r, err = d.WorkItems.Snapshot(work)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +94,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 		kind   string
 		digest *string
 	}{{"requests", &p.RequestSHA256}, {"manifests", &p.OutcomeRef.ManifestSHA256}} {
-		raw, err := d.TaskContent.Read(root, pair.kind, *pair.digest)
+		raw, err := d.TaskContent.Read(work, pair.kind, *pair.digest)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -105,20 +107,17 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 		if err != nil {
 			t.Fatal(err)
 		}
-		*pair.digest, err = d.TaskContent.Publish(root, pair.kind, raw)
+		*pair.digest, err = d.TaskContent.Publish(work, pair.kind, raw)
 		if err != nil {
 			t.Fatal(err)
 		}
 	}
 	r.TaskProblemRevisions[0].ManifestSHA256 = p.OutcomeRef.ManifestSHA256
-	raw, err = yaml.Marshal(r)
-	if err != nil {
+	// Store the changed references in the registry's own physical format.
+	if err = d.WorkItems.WithLock(work, func(session workspace.WorkItemStoreSession) error { return session.Publish(r) }); err != nil {
 		t.Fatal(err)
 	}
-	if err = os.WriteFile(filepath.Join(root, ".ply", "work-items.yaml"), raw, 0600); err != nil {
-		t.Fatal(err)
-	}
-	before, err := os.ReadFile(filepath.Join(root, ".ply", "work-items.yaml"))
+	before, err := os.ReadFile(work.Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +136,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if !strings.Contains(out, "task_content_reader_incompatible") || strings.Contains(out, "SECRET_FIXTURE_VALUE_NEVER_DISPLAY") {
 		t.Fatalf("diagnostic missing or content leaked: %s", out)
 	}
-	after, err := os.ReadFile(filepath.Join(root, ".ply", "work-items.yaml"))
+	after, err := os.ReadFile(work.Registry())
 	if err != nil || string(before) != string(after) {
 		t.Fatal("diagnostic changed registry", err)
 	}

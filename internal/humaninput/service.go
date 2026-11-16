@@ -37,9 +37,11 @@ func readRegistrations(d Dependencies, root string) (registrations, error) {
 	if r.projects, r.repos, e = d.Workspace.Projects.Snapshot(root); e != nil {
 		return r, invalidState("project registrations cannot be read")
 	}
-	if r.registry, e = d.Workspace.WorkItems.SnapshotRegistrations(root); e != nil {
+	registries, e := workspace.SnapshotWorkspace(d.Workspace, root)
+	if e != nil {
 		return r, invalidState("work-item registrations cannot be read")
 	}
+	r.registry = workspace.MergeRegistries(registries)
 	return r, nil
 }
 
@@ -153,8 +155,15 @@ func AskDraft(d Dependencies, root string, draft QuestionDraft) (Question, error
 	}
 	record := questionRecord{Workspace: root, QuestionID: questionIDFor(root, draft.ProjectID, draft.PublicationKey), PublicationKey: draft.PublicationKey, Scope: scope, Source: Source{draft.Provider, draft.SessionID, draft.OriginCWD, ProvenanceAgent}, Text: draft.Text, Reason: draft.Reason, AnswerKind: draft.AnswerKind, Options: draft.Options}
 	record.QuestionSHA256 = questionDigest(record)
+	st, found, e := projectStore(root, draft.ProjectID)
+	if e != nil {
+		return Question{}, e
+	}
+	if !found {
+		return Question{}, fail(CodeScopeInvalid, "project "+draft.ProjectID+" is not defined in the workspace")
+	}
 	existing := func() (Question, bool, error) {
-		q, e := view(root, record.QuestionID)
+		q, e := view(st, record.QuestionID)
 		if errorCode(e) == CodeNotFound {
 			return q, false, nil
 		}
@@ -170,17 +179,17 @@ func AskDraft(d Dependencies, root string, draft QuestionDraft) (Question, error
 		return q, e
 	}
 	var out Question
-	e = withLock(root, func() error {
+	e = withLock(st, func() error {
 		q, found, e := existing()
 		if found {
 			out = q
 			return e
 		}
 		record.CreatedAtUTC = d.now()
-		if e = publish(questionPath(root, record.QuestionID), record); e != nil {
+		if e = publish(questionPath(st, record.QuestionID), record); e != nil {
 			return e
 		}
-		out, e = view(root, record.QuestionID)
+		out, e = view(st, record.QuestionID)
 		return e
 	})
 	if e != nil && errorCode(e) == "" {
@@ -219,15 +228,21 @@ func List(d Dependencies, root string, in ListQuery) (ListResult, error) {
 	if e := observe(d, root); e != nil {
 		return out, e
 	}
-	ids, e := questionIDs(root)
+	st, found, e := projectStore(root, in.ProjectID)
 	if e != nil {
 		return out, e
+	}
+	ids := []string{}
+	if found {
+		if ids, e = questionIDs(st); e != nil {
+			return out, e
+		}
 	}
 	for _, id := range ids {
 		if in.Cursor != nil && id <= *in.Cursor {
 			continue
 		}
-		q, e := view(root, id)
+		q, e := view(st, id)
 		if e != nil {
 			return out, e
 		}
@@ -257,7 +272,11 @@ func Show(d Dependencies, root, id string) (Question, error) {
 	if e := checkQuestionArgs(d, root, id); e != nil {
 		return Question{}, e
 	}
-	return view(root, id)
+	st, e := locate(root, id)
+	if e != nil {
+		return Question{}, e
+	}
+	return view(st, id)
 }
 
 func validateAnswer(q Question, v AnswerValue) error {
@@ -316,7 +335,11 @@ func PreviewAnswer(d Dependencies, root, id, requestID string, v AnswerValue) (P
 	if !requestIDPattern.MatchString(requestID) {
 		return Preview{}, fail(CodeInvalidArguments, "--request-id must be 8-128 ASCII letters, digits, dots, underscores or hyphens")
 	}
-	q, e := view(root, id)
+	st, e := locate(root, id)
+	if e != nil {
+		return Preview{}, e
+	}
+	q, e := view(st, id)
 	if e != nil {
 		return Preview{}, e
 	}
@@ -385,7 +408,11 @@ func Status(d Dependencies, root, id, requestID string) (AnswerStatus, error) {
 		}
 		return s, e
 	}
-	q, e := view(root, id)
+	st, e := locate(root, id)
+	if e != nil {
+		return classify(s, Question{}, e), nil
+	}
+	q, e := view(st, id)
 	return classify(s, q, e), nil
 }
 
@@ -413,9 +440,13 @@ func Apply(d Dependencies, root string, r AnswerRequest) (AnswerStatus, error) {
 		return s, e
 	}
 	id := r.QuestionID
+	st, located := locate(root, id)
 	// decide returns a final status, or (zero, nil) when this request may win.
 	decide := func() (AnswerStatus, error) {
-		q, e := view(root, id)
+		q, e := Question{}, located
+		if e == nil {
+			q, e = view(st, id)
+		}
 		out := classify(s, q, e)
 		switch out.State {
 		case StatusRecorded:
@@ -456,7 +487,7 @@ func Apply(d Dependencies, root string, r AnswerRequest) (AnswerStatus, error) {
 		return out, e
 	}
 	var out AnswerStatus
-	e := withLock(root, func() error {
+	e := withLock(st, func() error {
 		var e error
 		if out, e = decide(); out.Kind != "" {
 			return e
@@ -464,20 +495,20 @@ func Apply(d Dependencies, root string, r AnswerRequest) (AnswerStatus, error) {
 		if e = d.fault("before_answer_publish"); e != nil {
 			return e
 		}
-		if e = publish(answerPath(root, id), answerRecord{Request: r, RequestSHA256: sha, RecordedAtUTC: d.now()}); e != nil {
+		if e = publish(answerPath(st, id), answerRecord{Request: r, RequestSHA256: sha, RecordedAtUTC: d.now()}); e != nil {
 			return e
 		}
 		return d.fault("after_answer_publish")
 	})
 	if e == nil {
-		q, e := view(root, id)
+		q, e := view(st, id)
 		return classify(s, q, e), nil
 	}
 	if out.Kind != "" {
 		return out, e
 	}
 	// An interrupted write reports only what a fresh read proves.
-	q, ve := view(root, id)
+	q, ve := view(st, id)
 	if observed := classify(s, q, ve); observed.State == StatusRecorded || observed.State == StatusOtherWinner {
 		return observed, e
 	}
@@ -495,9 +526,13 @@ func Wait(d Dependencies, root, id string, timeout time.Duration) (WaitResult, e
 	if poll <= 0 {
 		poll = 500 * time.Millisecond
 	}
+	st, e := locate(root, id)
+	if e != nil {
+		return WaitResult{}, e
+	}
 	deadline := time.Now().Add(timeout)
 	for {
-		q, e := view(root, id)
+		q, e := view(st, id)
 		if e != nil {
 			return WaitResult{}, e
 		}
@@ -524,30 +559,34 @@ func Wait(d Dependencies, root, id string, timeout time.Duration) (WaitResult, e
 // transition decides on a fresh view, first without and then under the store
 // lock. decide returns the fact to publish, or a nil fact when the current
 // question already holds it (idempotent replay).
-func transition(d Dependencies, root, id string, decide func(Question) (any, string, error)) (Question, error) {
+func transition(d Dependencies, root, id string, decide func(store, Question) (any, string, error)) (Question, error) {
 	if e := checkQuestionArgs(d, root, id); e != nil {
 		return Question{}, e
 	}
-	q, e := view(root, id)
+	st, e := locate(root, id)
+	if e != nil {
+		return Question{}, e
+	}
+	q, e := view(st, id)
 	if e != nil {
 		return q, e
 	}
-	fact, _, e := decide(q)
+	fact, _, e := decide(st, q)
 	if e != nil || fact == nil {
 		return q, e
 	}
-	e = withLock(root, func() error {
-		if q, e = view(root, id); e != nil {
+	e = withLock(st, func() error {
+		if q, e = view(st, id); e != nil {
 			return e
 		}
-		fact, path, e := decide(q)
+		fact, path, e := decide(st, q)
 		if e != nil || fact == nil {
 			return e
 		}
 		if e = publish(path, fact); e != nil {
 			return e
 		}
-		q, e = view(root, id)
+		q, e = view(st, id)
 		return e
 	})
 	if e != nil && errorCode(e) == "" {
@@ -581,11 +620,11 @@ func Acknowledge(d Dependencies, root, id, requestID, sha string) (Question, err
 	if e := checkReportArgs(requestID, sha); e != nil {
 		return Question{}, e
 	}
-	return transition(d, root, id, func(q Question) (any, string, error) {
+	return transition(d, root, id, func(st store, q Question) (any, string, error) {
 		if e := matchesWinner(q, requestID, sha); e != nil || q.Receipt != nil {
 			return nil, "", e
 		}
-		return Receipt{requestID, sha, d.now(), ProvenanceAgent}, receiptPath(root, id), nil
+		return Receipt{requestID, sha, d.now(), ProvenanceAgent}, receiptPath(st, id), nil
 	})
 }
 
@@ -598,7 +637,7 @@ func Continue(d Dependencies, root, id, requestID, sha, summary string) (Questio
 	if !ValidReport(summary) {
 		return Question{}, fail(CodeInvalidArguments, "--summary must be non-blank text of at most 1000 codepoints without control characters other than tab and newline")
 	}
-	return transition(d, root, id, func(q Question) (any, string, error) {
+	return transition(d, root, id, func(st store, q Question) (any, string, error) {
 		if e := matchesWinner(q, requestID, sha); e != nil {
 			return nil, "", e
 		}
@@ -608,7 +647,7 @@ func Continue(d Dependencies, root, id, requestID, sha, summary string) (Questio
 			}
 			return nil, "", nil
 		}
-		return Continuation{requestID, sha, summary, d.now(), ProvenanceAgent}, continuationPath(root, id), nil
+		return Continuation{requestID, sha, summary, d.now(), ProvenanceAgent}, continuationPath(st, id), nil
 	})
 }
 
@@ -617,7 +656,7 @@ func Withdraw(d Dependencies, root, id, reason string) (Question, error) {
 	if !ValidReport(reason) {
 		return Question{}, fail(CodeInvalidArguments, "--reason must be non-blank text of at most 1000 codepoints without control characters other than tab and newline")
 	}
-	return transition(d, root, id, func(q Question) (any, string, error) {
+	return transition(d, root, id, func(st store, q Question) (any, string, error) {
 		if q.Answer != nil {
 			return nil, "", failOn(q, CodeAlreadyAnswered, "an answered question cannot be withdrawn")
 		}
@@ -627,7 +666,7 @@ func Withdraw(d Dependencies, root, id, reason string) (Question, error) {
 			}
 			return nil, "", nil
 		}
-		return Withdrawal{reason, d.now(), ProvenanceAgent}, withdrawalPath(root, id), nil
+		return Withdrawal{reason, d.now(), ProvenanceAgent}, withdrawalPath(st, id), nil
 	})
 }
 

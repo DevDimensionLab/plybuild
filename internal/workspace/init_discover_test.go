@@ -57,7 +57,7 @@ func TestInitDiscoverDefinesProjectFromRepositories(t *testing.T) {
 	if err != nil || defs == nil {
 		t.Fatalf("definitions %v %v", defs, err)
 	}
-	want := []workspacedef.Project{{ID: "trip", Name: "trip", Wrapper: ".", Epics: []workspacedef.Epic{}, Repos: []workspacedef.Repo{
+	want := []workspacedef.Project{{ID: "trip", Name: "trip", Wrapper: ".", Repos: []workspacedef.Repo{
 		{ID: "api", Path: "api", Remote: "git@example.invalid:api.git"},
 		{ID: "notes", Path: "notes"},
 		{ID: "web", Path: "web/main", Remote: "git@example.invalid:web.git"},
@@ -88,25 +88,6 @@ func TestInitDiscoverDefinesProjectFromRepositories(t *testing.T) {
 	discoverRepo(t, filepath.Join(root, "extra"), "")
 	if _, err := InitDiscover(d, ""); err == nil || !strings.Contains(err.Error(), "already defined") {
 		t.Fatalf("changed repositories: %v", err)
-	}
-}
-
-// Writing ply-workspace.json into a workspace whose Projects live only in .ply
-// would hide them, so discovery refuses and writes nothing.
-func TestInitDiscoverRefusesWorkspaceWithProjectsOnlyInPly(t *testing.T) {
-	d, root := discoverFixture(t)
-	discoverRepo(t, filepath.Join(root, "api"), "")
-	if _, err := Init(d); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := AddProject(d, ProjectAddInput{ProjectID: "legacy", Name: "Legacy", Wrapper: root, Repos: []RepoInput{{RepoID: "api", Path: "api"}}}); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := InitDiscover(d, ""); err == nil || !strings.Contains(err.Error(), workspacedef.File) {
-		t.Fatalf("legacy workspace: %v", err)
-	}
-	if _, err := os.Lstat(filepath.Join(root, workspacedef.File)); !os.IsNotExist(err) {
-		t.Fatalf("definitions written: %v", err)
 	}
 }
 

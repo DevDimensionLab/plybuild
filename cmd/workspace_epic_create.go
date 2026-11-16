@@ -31,7 +31,7 @@ func newWorkspaceEpicCreateCommand(d workspace.Dependencies) *cobra.Command {
 				return write
 			}
 		} else {
-			text := fmt.Sprintf("Epic creation %s: %s\nEffects: worktree %s, config %s\n", id, result.Outcome, result.Effects.Worktree, result.Effects.Config)
+			text := fmt.Sprintf("Epic creation %s: %s\nEffects: worktree %s\n", id, result.Outcome, result.Effects.Worktree)
 			if result.Operation.ID != "" {
 				text += fmt.Sprintf("Operation: %s\nWorktree: %s\n%s\n", result.Operation.ID, result.Operation.Request.Path, result.NextAction)
 			}

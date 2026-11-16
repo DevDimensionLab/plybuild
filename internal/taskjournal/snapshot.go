@@ -357,7 +357,7 @@ func (s Service) Show(task string, o Options) (Snapshot, error) {
 	if e != nil {
 		return Snapshot{}, e
 	}
-	records, readErr := readStore(b.Workspace.Root, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
+	records, readErr := readStore(b.Work, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
 	out, e := s.build(b, records)
 	if e != nil {
 		return out, e

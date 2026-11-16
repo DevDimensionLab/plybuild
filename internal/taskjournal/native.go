@@ -3,7 +3,6 @@ package taskjournal
 import (
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -39,7 +38,7 @@ func (s *Snapshot) source(kind, path string, expected *string, seq *int, prev *s
 	}
 	if status != "valid" && kind == "artifact" && expected != nil {
 		// The original is gone or changed; Ply's copy keeps the recorded bytes.
-		kept := sourceCopyPath(s.Workspace.Root, *expected)
+		kept := sourceCopyPath(s.work, *expected)
 		if h, e := sourceHash(kept); e == nil && h == *expected {
 			path, observed, status = kept, &h, "valid"
 		}
@@ -73,11 +72,12 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
 	root := b.Workspace.Root
 	t := b.Task
 	out := Snapshot{Kind: "ply.workspace.task-journal-snapshot", SchemaVersion: 1, AsOf: s.Now().UTC().Format(time.RFC3339Nano), Workspace: Workspace{workspaceID(root, b.Workspace.MarkerSHA256), root, b.Workspace.MarkerSHA256}, Task: Task{string(t.ID), t.Title, string(t.ProjectID), string(t.RepoID), string(t.ParentEpicID), t.Worktree, digest(t)}, Sources: []Source{}, Events: []Event{}, Steps: []Step{}, Lanes: []Lane{}, Observations: []Observation{}, Coverage: Coverage{"complete", []Reason{}, []string{}, []string{}}, Selection: Selection{Order: "occurred", EventIDs: []string{}}, Current: Current{Axes: map[string]Axis{}, NextAction: NextAction{"Inspect the evidence and clarify the next action with the Task owner.", nil, []string{}}}}
+	out.work = b.Work
 	if s.readBatch != nil {
 		out.sourceCache = s.readBatch.sources
 	}
-	marker := out.source("workspace", filepath.Join(root, ".ply", "workspace.yaml"), &b.Workspace.MarkerSHA256, nil, nil)
-	registry := out.source("task_registry", b.RegistryLocator, &b.Registry.RawSHA256, nil, nil)
+	marker := out.source("workspace", workspace.MarkerPath(root), &b.Workspace.MarkerSHA256, nil, nil)
+	registry := out.source("task_registry", b.Work.Registry(), &b.Registry.RawSHA256, nil, nil)
 	state := nativeEvent("task_state", string(t.ID), "Task state: "+t.Title, t, registry, nil)
 	state.SourceIDs = append(state.SourceIDs, marker)
 	out.Events = append(out.Events, state)
@@ -89,7 +89,7 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
 			out.reason("candidate_unknown", "The Task worktree is missing, dirty, changed in identity, or could not be observed.", registry)
 		}
 	}
-	lifecycle, lifecycleErr := s.lifecycle(root)
+	lifecycle, lifecycleErr := s.lifecycle(b.Work)
 	if lifecycleErr != nil {
 		out.reason("lifecycle_unavailable", lifecycleErr.Error())
 	} else {
@@ -115,7 +115,7 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
 		out.Events = append(out.Events, ev)
 	}
 	integrationSources := []string{}
-	for _, source := range workspace.IntegrationEvidenceSources(root, b.Registry) {
+	for _, source := range workspace.IntegrationEvidenceSources(b.Work, b.Registry) {
 		integrationSources = append(integrationSources, out.source(source.Kind, source.Locator, &source.SHA256, nil, nil))
 	}
 	for _, ir := range b.Registry.IntegrationResults {

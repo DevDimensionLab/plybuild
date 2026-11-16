@@ -40,19 +40,17 @@ func RetireTaskWorktree(d Dependencies, input TaskWorktreeRetireInput) (TaskWork
 	if err := requireWorkMutationDependencies(d); err != nil {
 		return TaskWorktreeRetireResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(d)
+	root, err := containingRegistrationWorkspace(d)
 	if err != nil {
 		return TaskWorktreeRetireResult{}, err
 	}
 	result := TaskWorktreeRetireResult{Workspace: root, TaskID: input.TaskID}
-	err = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			return retireTaskWorktreeLocked(d, projects, session, registry, input, &result)
-		})
+	err = withTaskWork(d, root, input.TaskID, func(projects ProjectSnapshot, work ProjectWork, session WorkItemStoreSession) error {
+		registry, err := session.Snapshot()
+		if err != nil {
+			return err
+		}
+		return retireTaskWorktreeLocked(d, projects, session, registry, input, &result)
 	})
 	if err != nil {
 		return TaskWorktreeRetireResult{}, mapMutationError(err)

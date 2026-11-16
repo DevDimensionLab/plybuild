@@ -17,8 +17,8 @@ import (
 )
 
 const assignmentDefinitions = `{"format_version": 1, "projects": [
-  {"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a-app", "path": "a/app"}, {"id": "a-lib", "path": "a/lib"}], "epics": []},
-  {"id": "b", "name": "B", "wrapper": "b", "repos": [{"id": "b-app", "path": "b/app"}], "epics": []}
+  {"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a-app", "path": "a/app"}, {"id": "a-lib", "path": "a/lib"}]},
+  {"id": "b", "name": "B", "wrapper": "b", "repos": [{"id": "b-app", "path": "b/app"}]}
 ]}
 `
 
@@ -151,7 +151,7 @@ func TestAssignmentAddRequiresProjectRepos(t *testing.T) {
 	requireAssignmentError(t, err, "assignment_invalid_arguments: --repo is required")
 	_, err = runAssignment(t, a, "x", "add", "--repo", "a-app")
 	requireAssignmentError(t, err, "assignment_invalid_arguments: --title is required")
-	if _, err := os.Lstat(filepath.Join(a, assignment.DataPathCategory)); !errors.Is(err, fs.ErrNotExist) {
+	if _, err := os.Lstat(filepath.Join(a, "assignments")); !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("assignments directory created: %v", err)
 	}
 }

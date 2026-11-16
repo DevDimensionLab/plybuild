@@ -36,7 +36,7 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			if !regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`).MatchString(project) {
 				return fmt.Errorf("--project requires an explicit project identifier")
 			}
-			observed, err := workspace.ObserveContainingRoot(workspace.SystemDependencies())
+			observed, err := workspace.ObserveContaining(workspace.SystemDependencies())
 			if err != nil {
 				return err
 			}

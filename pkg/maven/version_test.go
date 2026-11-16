@@ -92,31 +92,31 @@ func TestVersionToString(t *testing.T) {
 	versionA := "1.2.3"
 	parsedVersionA, _ := ParseVersion(versionA)
 	if parsedVersionA.ToString() != versionA {
-		t.Errorf("VersionToString of parsedVersionA should be: " + versionA)
+		t.Errorf("VersionToString of parsedVersionA should be: %s", versionA)
 	}
 
 	versionB := "1.2.3-rc"
 	parsedVersionB, _ := ParseVersion(versionB)
 	if parsedVersionB.ToString() != versionB {
-		t.Errorf("VersionToString of parsedVersionB should be: " + versionB)
+		t.Errorf("VersionToString of parsedVersionB should be: %s", versionB)
 	}
 
 	versionC := "1.2.3.RELEASE"
 	parsedVersionC, _ := ParseVersion(versionC)
 	if parsedVersionC.ToString() != versionC {
-		t.Errorf("VersionToString of parsedVersionC should be: " + versionC)
+		t.Errorf("VersionToString of parsedVersionC should be: %s", versionC)
 	}
 
 	versionD := "5.3"
 	parsedVersionD, _ := ParseVersion(versionD)
 	if parsedVersionD.ToString() != versionD {
-		t.Errorf("VersionToString of parsedVersionD should be: " + versionD)
+		t.Errorf("VersionToString of parsedVersionD should be: %s", versionD)
 	}
 
 	versionE := "10"
 	parsedVersionE, _ := ParseVersion(versionE)
 	if parsedVersionE.ToString() != versionE {
-		t.Errorf("VersionToString of parsedVersionE should be: " + versionE)
+		t.Errorf("VersionToString of parsedVersionE should be: %s", versionE)
 	}
 
 	versionF := "90.1.0.12-SNAPSHOT"
@@ -124,7 +124,7 @@ func TestVersionToString(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	} else if parsedVersionF.ToString() != versionF {
-		t.Errorf("VersionToString of parsedVersionF should be: " + versionF)
+		t.Errorf("VersionToString of parsedVersionF should be: %s", versionF)
 	}
 }
 

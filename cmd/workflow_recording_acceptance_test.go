@@ -432,7 +432,7 @@ func TestEpicIntegrateRetiresTheEpic(t *testing.T) {
 		f.git(t, repo, "worktree", "add", "-b", "epic", epic, base)
 		f.success(t, f.root, "workspace", "init")
 		mustPlanWrite(t, filepath.Join(f.root, "ply-workspace.json"), `{"format_version": 1, "projects": [{"id": "example", "name": "Example", "wrapper": ".",
-  "repos": [{"id": "code", "path": "repo"}], "epics": [{"id": "work", "title": "Work", "repo": "code", "path": "epic", "ref": "refs/heads/epic"}]}]}
+  "repos": [{"id": "code", "path": "repo"}]}]}
 `, 0600)
 		f.success(t, f.root, "workspace", "epic", "adopt", "work", "--title", "Work", "--project", "example", "--repo", "code", "--worktree", epic, "--ref", "refs/heads/epic", "--expected-oid", base)
 		if defs, e := os.ReadFile(filepath.Join(f.root, "ply-workspace.json")); e != nil || !strings.Contains(string(defs), `"refs/heads/epic"`) {
@@ -512,7 +512,11 @@ func TestGoalStartReadsTheValidPrefixOfADamagedJournal(t *testing.T) {
 	f, oid := recordingFixture(t)
 	registerGoal(t, f, "damaged")
 	f.success(t, f.root, "workspace", "task", "worktree", "create", "damaged", "--branch", "damaged", "--path", filepath.Join(f.root, "damaged"), "--expected-parent-oid", oid)
-	if e := os.Remove(filepath.Join(f.root, ".ply", "task-process", "v1", "damaged", "000000001.json")); e != nil {
+	works, e := workspace.DefinedWork(f.root)
+	if e != nil || len(works) != 1 {
+		t.Fatalf("works %v %v", works, e)
+	}
+	if e := os.Remove(filepath.Join(taskjournal.JournalDir(works[0]), "damaged", "000000001.json")); e != nil {
 		t.Fatal(e)
 	}
 	preview := f.success(t, f.root, "workflow", "goal-start", "damaged", "--spec", "damaged-v1", "--revision", "1", "--herdr-workspace", "w1")

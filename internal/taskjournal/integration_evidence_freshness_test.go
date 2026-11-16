@@ -73,11 +73,12 @@ func integrationJournalFixture(t *testing.T) (Service, string) {
 }
 func corruptJournalEvidenceMode(t *testing.T, root string, directory bool) string {
 	t.Helper()
-	r, err := workspace.SystemDependencies().WorkItems.Snapshot(root)
+	work := taskWork(t, workspace.SystemDependencies(), root)
+	r, err := workspace.SystemDependencies().WorkItems.Snapshot(work)
 	if err != nil {
 		t.Fatal(err)
 	}
-	sources := workspace.IntegrationEvidenceSources(root, r)
+	sources := workspace.IntegrationEvidenceSources(work, r)
 	if len(sources) == 0 {
 		t.Fatal("missing referenced integration fixture")
 	}
@@ -155,7 +156,7 @@ func TestIntegrationEvidenceJournalBatchCapturedSnapshot(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			in := EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registry: basis.Registry}
+			in := EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registries: basis.Registries}
 			path := corruptJournalEvidenceMode(t, root, directory)
 			batch, err := ReadEventBatch(s.Workspace, in)
 			if err != nil {
@@ -178,7 +179,7 @@ func TestIntegrationEvidenceJournalBatchFinalFreshness(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			in := EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registry: basis.Registry}
+			in := EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registries: basis.Registries}
 			path := ""
 			s.fault = func(stage string) error {
 				if stage == "before_freshness" {
@@ -199,11 +200,12 @@ func TestIntegrationEvidenceJournalBatchFinalFreshness(t *testing.T) {
 }
 func TestIntegrationEvidenceCacheKeepsManagedValidation(t *testing.T) {
 	s, root := integrationJournalFixture(t)
-	r, err := s.Workspace.WorkItems.Snapshot(root)
+	work := taskWork(t, s.Workspace, root)
+	r, err := s.Workspace.WorkItems.Snapshot(work)
 	if err != nil {
 		t.Fatal(err)
 	}
-	path := workspace.IntegrationEvidenceSources(root, r)[0].Locator
+	path := workspace.IntegrationEvidenceSources(work, r)[0].Locator
 	cache := map[string]sourceRead{}
 	if _, err := cachedSourceHash(cache, root, "artifact", path); err != nil {
 		t.Fatal(err)
@@ -233,4 +235,14 @@ func TestIntegrationEvidenceCacheKeepsManagedValidation(t *testing.T) {
 	if _, err := journalSourceHash(root, cache[path].kind, path); err == nil {
 		t.Fatal("final cached-source recheck accepted writable evidence")
 	}
+}
+
+// taskWork is the work of the Project that owns the fixtures' Task "task".
+func taskWork(t *testing.T, d workspace.Dependencies, root string) workspace.ProjectWork {
+	t.Helper()
+	work, err := workspace.LocateTask(d, root, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return work
 }

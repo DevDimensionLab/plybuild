@@ -56,7 +56,7 @@ func readProcessHistory(d workspace.Dependencies, s *Snapshot) (*processHistory,
 	if s.process != nil {
 		return s.process, nil
 	}
-	j, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: s.Workspace, Projects: s.Projects, Registry: s.Registry, Lifecycle: s.Lifecycle})
+	j, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: s.Workspace, Projects: s.Projects, Registries: s.basis.Registries, Lifecycles: s.Lifecycle})
 	if err != nil {
 		return nil, err
 	}

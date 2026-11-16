@@ -24,10 +24,9 @@ const sample = `{
       "id": "ply",
       "name": "Ply",
       "wrapper": "ply",
-      "repos": [{"id": "ply", "path": "ply/main"}],
-      "epics": [{"id": "ply-master", "title": "Master", "repo": "ply", "path": "ply/main", "ref": "refs/heads/master"}]
+      "repos": [{"id": "ply", "path": "ply/main"}]
     },
-    {"id": "app", "name": "App", "wrapper": "app", "repos": [{"id": "app", "path": "app/main"}], "epics": []}
+    {"id": "app", "name": "App", "wrapper": "app", "repos": [{"id": "app", "path": "app/main"}]}
   ]
 }
 `
@@ -109,7 +108,7 @@ func TestReadAbsentAndPresent(t *testing.T) {
 	if digest != fmt.Sprintf("sha256:%x", sha256.Sum256([]byte(sample))) {
 		t.Fatalf("digest %s", digest)
 	}
-	if len(defs.Projects) != 2 || defs.Projects[0].Epics[0].Ref != "refs/heads/master" || defs.Projects[1].Repos[0].Path != "app/main" {
+	if len(defs.Projects) != 2 || defs.Projects[1].Repos[0].Path != "app/main" {
 		t.Fatalf("decoded %+v", defs)
 	}
 }
@@ -119,16 +118,17 @@ func TestReadRejectsInOrder(t *testing.T) {
 		contents string
 		kind     Kind
 	}{
-		"invalid JSON":        {`{"format_version": 1, "projects": [}`, KindInvalid},
-		"duplicate key":       {`{"format_version": 1, "format_version": 1, "projects": []}`, KindInvalid},
-		"unknown field":       {`{"format_version": 1, "projects": [], "extra": true}`, KindSchema},
-		"unknown nested":      {`{"format_version": 1, "projects": [{"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a", "path": "a", "url": "x"}], "epics": []}]}`, KindSchema},
-		"wrong type":          {`{"format_version": "1", "projects": []}`, KindSchema},
-		"format 2":            {`{"format_version": 2, "projects": []}`, KindFormat},
-		"projects null":       {`{"format_version": 1, "projects": null}`, KindFormat},
-		"projects missing":    {`{"format_version": 1}`, KindFormat},
-		"unknown then format": {`{"format_version": 2, "projects": [], "extra": 1}`, KindSchema},
-		"remote with space":   {`{"format_version": 1, "projects": [{"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a", "path": "a", "remote": "git@x:a b"}], "epics": []}]}`, KindSchema},
+		"invalid JSON":              {`{"format_version": 1, "projects": [}`, KindInvalid},
+		"duplicate key":             {`{"format_version": 1, "format_version": 1, "projects": []}`, KindInvalid},
+		"unknown field":             {`{"format_version": 1, "projects": [], "extra": true}`, KindSchema},
+		"Epics are not definitions": {`{"format_version": 1, "projects": [{"id": "p", "name": "P", "wrapper": ".", "repos": [], "epics": []}]}`, KindSchema},
+		"unknown nested":            {`{"format_version": 1, "projects": [{"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a", "path": "a", "url": "x"}]}]}`, KindSchema},
+		"wrong type":                {`{"format_version": "1", "projects": []}`, KindSchema},
+		"format 2":                  {`{"format_version": 2, "projects": []}`, KindFormat},
+		"projects null":             {`{"format_version": 1, "projects": null}`, KindFormat},
+		"projects missing":          {`{"format_version": 1}`, KindFormat},
+		"unknown then format":       {`{"format_version": 2, "projects": [], "extra": 1}`, KindSchema},
+		"remote with space":         {`{"format_version": 1, "projects": [{"id": "a", "name": "A", "wrapper": "a", "repos": [{"id": "a", "path": "a", "remote": "git@x:a b"}]}]}`, KindSchema},
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, _, err := Read(writeRoot(t, tc.contents))
@@ -368,13 +368,12 @@ func TestUpdateMutatesACopy(t *testing.T) {
 	}
 	mutate := func(d *Definitions) (bool, error) {
 		d.Projects[0].Repos[0].Path = "changed"
-		d.Projects[0].Epics[0].Title = "changed"
 		return false, errors.New("stop")
 	}
 	if _, err := Update(root, basisOf(t, root), mutate, check); err == nil {
 		t.Fatal("mutate error ignored")
 	}
-	if current.Projects[0].Repos[0].Path != "ply/main" || current.Projects[0].Epics[0].Title != "Master" {
+	if current.Projects[0].Repos[0].Path != "ply/main" {
 		t.Fatalf("current definitions were mutated: %+v", current.Projects[0])
 	}
 }

@@ -24,9 +24,6 @@ func outputEpicBase(c *cobra.Command, format string, r workspace.EpicBaseResult,
 			next = "ply workspace epic base operation show " + r.Operation.ID
 		} else if r.Confirmation != nil {
 			next = fmt.Sprintf("ply workspace epic base update %s --repo %s --apply --confirm %s", r.Target.EpicID, r.Target.RepoID, *r.Confirmation)
-			if r.Plan.RegistryUpgrade != nil {
-				next += " --upgrade-registry " + r.Plan.RegistryUpgrade.RegistrySHA256
-			}
 		}
 		if _, e := fmt.Fprintf(c.OutOrStdout(), "Epic base: %s, freshness %s.\nTarget: %s / %s / %s\nWorkplace: %s\n", r.State, r.Freshness, r.Target.ProjectID, r.Target.RepoID, r.Target.EpicID, r.Target.ParentLocator); e != nil {
 			return e
@@ -52,7 +49,7 @@ func addWorkspaceEpicBaseCommands(epic *cobra.Command, d workspace.Dependencies)
 	epic.AddCommand(base)
 	for _, name := range []string{"show", "update"} {
 		name := name
-		var repo, format, confirm, upgrade string
+		var repo, format, confirm string
 		var check, apply bool
 		c := &cobra.Command{Use: name + " <epic-id>", Short: map[string]string{"show": "Show adopted and current Epic bases", "update": "Preview or confirm a clean descendant as the new Epic base"}[name], Long: "Read the exact registered Epic and repository. Base updates publish append-only metadata after confirmation and never move Git refs. Old Specs, worktrees and results remain historical. New work requires a new Spec revision, ready assessment, explicit selection and queue binding on the current base.", Example: "  ply workspace epic base " + name + " agentic-workflow --repo ply --format json", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 			if e := validateWorkFormat(format); e != nil {
@@ -62,10 +59,10 @@ func addWorkspaceEpicBaseCommands(epic *cobra.Command, d workspace.Dependencies)
 			if e != nil {
 				return e
 			}
-			if check && apply || !apply && (confirm != "" || upgrade != "") || apply && confirm == "" {
+			if check && apply || !apply && confirm != "" || apply && confirm == "" {
 				return workspace.WorkInvalidArguments("--check and --apply are exclusive; confirmation is required only for apply")
 			}
-			in := workspace.EpicBaseInput{EpicID: id, RepoID: workspace.RepoID(repo), Apply: apply, Confirmation: confirm, Upgrade: upgrade}
+			in := workspace.EpicBaseInput{EpicID: id, RepoID: workspace.RepoID(repo), Apply: apply, Confirmation: confirm}
 			var r workspace.EpicBaseResult
 			if name == "show" {
 				r, e = workspace.ShowEpicBase(d, in)
@@ -81,7 +78,6 @@ func addWorkspaceEpicBaseCommands(epic *cobra.Command, d workspace.Dependencies)
 			c.Flags().BoolVar(&check, "check", false, "read-only preview (the default)")
 			c.Flags().BoolVar(&apply, "apply", false, "publish the confirmed metadata base")
 			c.Flags().StringVar(&confirm, "confirm", "", "exact sha256: preview digest")
-			c.Flags().StringVar(&upgrade, "upgrade-registry", "", "explicit legacy registry digest shown in the preview")
 		}
 		setWorkFlagErrors(c)
 		base.AddCommand(c)

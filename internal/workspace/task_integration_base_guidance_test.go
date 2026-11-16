@@ -77,9 +77,6 @@ func applyGuidedBaseUpdate(t *testing.T, fixture integrationJourneyFixture, guid
 	if err != nil || preview.Confirmation == nil {
 		t.Fatalf("preview = %#v, error = %v", preview, err)
 	}
-	if preview.Plan.RegistryUpgrade != nil {
-		in.Upgrade = preview.Plan.RegistryUpgrade.RegistrySHA256
-	}
 	in.Apply, in.Confirmation = true, *preview.Confirmation
 	applied, err := UpdateEpicBase(fixture.dependencies, in)
 	if err != nil {
@@ -90,7 +87,7 @@ func applyGuidedBaseUpdate(t *testing.T, fixture integrationJourneyFixture, guid
 
 func readRegistryBytes(t *testing.T, fixture integrationJourneyFixture) []byte {
 	t.Helper()
-	b, err := os.ReadFile(workItemsPath(fixture.root))
+	b, err := os.ReadFile(testWork(t, fixture.root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +102,7 @@ func TestIntegrationBaseGuidanceAfterExactEffectKeepsStoredResult(t *testing.T) 
 	}
 	assertBaseGuidance(t, applied)
 	assertStoredSuccessNextAction(t, applied)
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil || len(registry.IntegrationResults) != 1 {
 		t.Fatalf("registry results = %#v, error = %v", registry.IntegrationResults, err)
 	}
@@ -189,7 +186,7 @@ func TestIntegrationBaseGuidanceUsesCurrentParentNotHistoricalAfterObservation(t
 func TestIntegrationBaseGuidanceConcurrentReadsWriteNothingAndFreshBaseClearsIt(t *testing.T) {
 	fixture := newIntegrationJourneyFixture(t)
 	input, applied := applyIntegrationFixture(t, fixture)
-	original, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	original, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -221,7 +218,7 @@ func TestIntegrationBaseGuidanceConcurrentReadsWriteNothingAndFreshBaseClearsIt(
 	if err != nil || refreshed.Readback.NextAction.Kind != "none" {
 		t.Fatalf("refreshed = %#v, error = %v", refreshed.Readback.NextAction, err)
 	}
-	updated, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	updated, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -248,7 +245,7 @@ func TestIntegrationBaseGuidanceNewTaskUsesUpdatedBase(t *testing.T) {
 	if _, err := CreateTaskWorktree(fixture.dependencies, in); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -265,7 +262,7 @@ func baseGuidanceContext(t *testing.T) (WorkItemRegistry, integrationContext, In
 	t.Helper()
 	fixture := newIntegrationJourneyFixture(t)
 	_, applied := applyIntegrationFixture(t, fixture)
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -337,9 +334,6 @@ func TestIntegrationBaseGuidanceRequiresFreshQualifiedFactsAndNoPendingWork(t *t
 			result := r.IntegrationResults[0]
 			result.ID, result.AuthorityID = "int_res_other", other.ID
 			r.IntegrationResults = append(r.IntegrationResults, result)
-		}},
-		"fresh format 3 base": {ctx: func(c *integrationContext) {
-			c.Parent.Worktree.OID, c.Parent.Worktree.Tree = c.ParentObservation.OID, c.ParentObservation.Tree
 		}},
 	}
 	for name, c := range cases {

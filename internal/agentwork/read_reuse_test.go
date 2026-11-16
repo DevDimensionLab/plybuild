@@ -17,7 +17,7 @@ func TestOverviewReusesOneNativeRead(t *testing.T) {
 				d := draft
 				d.PublicationKey = fmt.Sprintf("read/%d", i)
 				d.WaitRef = fmt.Sprintf("wait-%d", i)
-				if _, err := s.Register(d); err != nil {
+				if _, err := s.Register(s.onlyProject(), d); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -94,7 +94,7 @@ func TestOverviewBasisDoesNotCrossOperationBoundary(t *testing.T) {
 		t.Run(state, func(t *testing.T) {
 			s, d, sends := fixture(t)
 			d.NextCheckAtUTC = s.now()
-			f, err := s.Register(d)
+			f, err := s.Register(s.onlyProject(), d)
 			if err != nil {
 				t.Fatal(err)
 			}

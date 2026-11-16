@@ -2,7 +2,6 @@ package workspace
 
 import (
 	"fmt"
-	"path/filepath"
 	"reflect"
 	"sort"
 	"strings"
@@ -104,7 +103,7 @@ func integrationPersistedView(registry WorkItemRegistry, authority *IntegrationA
 	if digestPattern.MatchString(registry.RawSHA256) {
 		observedHash, freshness = registry.RawSHA256, "fresh"
 	}
-	return canonicaljson.Object{{Name: "format_version", Value: int64(registry.FormatVersion)}, {Name: "sha256", Value: observedHash}, {Name: "authority_id", Value: nullableID(authority)}, {Name: "intent_id", Value: nullableID(intent)}, {Name: "attempt_id", Value: nullableID(attempt)}, {Name: "integration_result_id", Value: nullableID(result)}, {Name: "freshness", Value: freshness}}
+	return canonicaljson.Object{{Name: "format_version", Value: int64(RegistryFormat)}, {Name: "sha256", Value: observedHash}, {Name: "authority_id", Value: nullableID(authority)}, {Name: "intent_id", Value: nullableID(intent)}, {Name: "attempt_id", Value: nullableID(attempt)}, {Name: "integration_result_id", Value: nullableID(result)}, {Name: "freshness", Value: freshness}}
 }
 
 // Task show reads the Task's latest integration authority, or otherwise the
@@ -221,7 +220,7 @@ func newNullableIntegrationReadback(d Dependencies, root string, projects Projec
 	}
 	var markerDigest canonicaljson.Value
 	if d.Files != nil {
-		if marker, err := d.Files.ReadFile(filepath.Join(root, MarkerDirectory, MarkerFile)); err == nil {
+		if marker, err := d.Files.ReadFile(MarkerPath(root)); err == nil {
 			markerDigest = digestTaskBytes(marker)
 		}
 	}

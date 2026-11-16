@@ -104,7 +104,9 @@ func (f testFixture) show(t *testing.T) Snapshot {
 func nativeFingerprint(t *testing.T, root string) string {
 	t.Helper()
 	out := map[string]any{}
-	e := filepath.Walk(filepath.Join(root, ".ply"), func(p string, info os.FileInfo, e error) error {
+	// Native state is the marker area and the Project's data under its
+	// wrapper, which is root.
+	visit := func(p string, info os.FileInfo, e error) error {
 		if e != nil {
 			return e
 		}
@@ -122,9 +124,11 @@ func nativeFingerprint(t *testing.T, root string) string {
 			out[p] = []any{hash(b), info.Mode(), info.ModTime().UnixNano()}
 		}
 		return nil
-	})
-	if e != nil {
-		t.Fatal(e)
+	}
+	for _, dir := range []string{".ply", "data"} {
+		if e := filepath.Walk(filepath.Join(root, dir), visit); e != nil {
+			t.Fatal(e)
+		}
 	}
 	return digest(out)
 }
@@ -141,7 +145,7 @@ func TestNativeReadAndOfflineAreReadOnly(t *testing.T) {
 			t.Fatal("native state invented occurrence time")
 		}
 	}
-	if _, e := os.Lstat(storePath(f.root, "task")); !os.IsNotExist(e) {
+	if _, e := os.Lstat(storePath(f.work(t), "task")); !os.IsNotExist(e) {
 		t.Fatal("show created storage")
 	}
 	p := f.file(t, s)
@@ -180,7 +184,7 @@ func TestStrictInputRejectedBeforeJournalCreation(t *testing.T) {
 			}
 		})
 	}
-	if _, e := os.Lstat(filepath.Join(f.root, ".ply", "task-process")); !os.IsNotExist(e) {
+	if _, e := os.Lstat(f.work(t).TaskProcess()); !os.IsNotExist(e) {
 		t.Fatal("invalid input wrote journal")
 	}
 }
@@ -315,7 +319,7 @@ func TestBindingAndRelationRejections(t *testing.T) {
 	if _, e := f.s.Append("task", f.file(t, in), "event"); e == nil {
 		t.Fatal("future parent accepted")
 	}
-	if _, e := os.Lstat(storePath(f.root, "task")); !os.IsNotExist(e) {
+	if _, e := os.Lstat(storePath(f.work(t), "task")); !os.IsNotExist(e) {
 		t.Fatal("binding rejection created journal")
 	}
 }
@@ -369,7 +373,7 @@ func TestRetryAfterSourceLossAndCrossCommandConflict(t *testing.T) {
 	if e := os.Remove(f.input.Sources[0].Locator); e != nil {
 		t.Fatal(e)
 	}
-	if e := os.Remove(sourceCopyPath(f.root, f.input.Sources[0].SHA256)); e != nil {
+	if e := os.Remove(sourceCopyPath(f.work(t), f.input.Sources[0].SHA256)); e != nil {
 		t.Fatal(e)
 	}
 	again, e := f.s.Append("task", f.file(t, f.input), "event")
@@ -425,7 +429,7 @@ func TestSourceAndStorageSymlinks(t *testing.T) {
 	if e := os.Mkdir(outside, 0700); e != nil {
 		t.Fatal(e)
 	}
-	if e := os.Symlink(outside, filepath.Join(f.root, ".ply", "task-process")); e != nil {
+	if e := os.Symlink(outside, f.work(t).TaskProcess()); e != nil {
 		t.Fatal(e)
 	}
 	if _, e := f.s.Append("task", f.file(t, f.input), "event"); e == nil {

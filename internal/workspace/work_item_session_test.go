@@ -19,11 +19,11 @@ func TestWorkItemSessionConfirmedGeneration(t *testing.T) {
 		return nil
 	}}}
 	initial := minimalEpicRegistry(root)
-	if err := store.WithLock(root, func(s WorkItemStoreSession) error { return s.Publish(initial) }); err != nil {
+	if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error { return s.Publish(initial) }); err != nil {
 		t.Fatal(err)
 	}
 	reads = 0
-	err := store.WithLock(root, func(s WorkItemStoreSession) error {
+	err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		r, err := s.Snapshot()
 		if err != nil {
 			return err
@@ -40,7 +40,7 @@ func TestWorkItemSessionConfirmedGeneration(t *testing.T) {
 		if got.Epics[0].Title != "Published" {
 			t.Fatal("publication input aliases confirmed generation")
 		}
-		bytes, err := os.ReadFile(workItemsPath(root))
+		bytes, err := os.ReadFile(testWork(t, root).Registry())
 		if err != nil {
 			return err
 		}
@@ -63,7 +63,7 @@ func TestWorkItemSessionConfirmedGeneration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = store.WithLock(root, func(s WorkItemStoreSession) error { _, err := s.Snapshot(); return err }); err != nil {
+	if err = store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error { _, err := s.Snapshot(); return err }); err != nil {
 		t.Fatal(err)
 	}
 	if reads != 2 {
@@ -76,7 +76,7 @@ func TestWorkItemSessionPublicationRecovery(t *testing.T) {
 		t.Run(fault, func(t *testing.T) {
 			root := createProjectWorkspace(t)
 			store := newSystemWorkItemStore()
-			if err := store.WithLock(root, func(s WorkItemStoreSession) error { return s.Publish(minimalEpicRegistry(root)) }); err != nil {
+			if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error { return s.Publish(minimalEpicRegistry(root)) }); err != nil {
 				t.Fatal(err)
 			}
 			reads := 0
@@ -90,7 +90,7 @@ func TestWorkItemSessionPublicationRecovery(t *testing.T) {
 				}
 				return nil
 			}}
-			if err := store.WithLock(root, func(s WorkItemStoreSession) error {
+			if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 				r, err := s.Snapshot()
 				if err != nil {
 					return err
@@ -117,7 +117,7 @@ func TestWorkItemSessionPublicationRecovery(t *testing.T) {
 				if reads != 2 {
 					t.Fatalf("recovery reads=%d want 2", reads)
 				}
-				physical, err := store.Snapshot(root)
+				physical, err := store.Snapshot(testWork(t, root))
 				if err != nil {
 					return err
 				}
@@ -135,7 +135,7 @@ func TestWorkItemSessionPublicationRecovery(t *testing.T) {
 func TestWorkItemSessionDetectsRegistryDrift(t *testing.T) {
 	root := createProjectWorkspace(t)
 	store := newSystemWorkItemStore()
-	if err := store.WithLock(root, func(s WorkItemStoreSession) error {
+	if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		if err := s.Publish(minimalEpicRegistry(root)); err != nil {
 			return err
 		}
@@ -145,15 +145,12 @@ func TestWorkItemSessionDetectsRegistryDrift(t *testing.T) {
 		// Simulate an out-of-protocol replacement, including a same-size generation.
 		r := minimalEpicRegistry(root)
 		r.Epics[0].Title = "Replacement"
-		b, err := encodeWorkItemRegistry(r)
-		if err != nil {
-			return err
-		}
+		b := storedRegistryBytes(t, root, r)
 		temp := filepath.Join(root, MarkerDirectory, "replacement")
-		if err = os.WriteFile(temp, b, 0600); err != nil {
+		if err := os.WriteFile(temp, b, 0600); err != nil {
 			return err
 		}
-		if err = os.Rename(temp, workItemsPath(root)); err != nil {
+		if err := os.Rename(temp, testWork(t, root).Registry()); err != nil {
 			return err
 		}
 		got, err := s.Snapshot()
@@ -177,7 +174,7 @@ func TestWorkItemSessionCurrentScopeAndExternalFreshness(t *testing.T) {
 			root := filepath.Dir(f.wrapper)
 			scope := &taskContentScope{}
 			d := goalOperationContentScope(f.dependencies, scope)
-			if err := d.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+			if err := d.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 				r, err := s.Snapshot()
 				if err != nil {
 					return err
@@ -198,7 +195,7 @@ func TestWorkItemSessionCurrentScopeAndExternalFreshness(t *testing.T) {
 				if p == nil {
 					t.Fatal("publication missing")
 				}
-				if err = os.Remove(taskContentPath(root, "requests", p.RequestSHA256)); err != nil {
+				if err = os.Remove(taskContentPath(testWork(t, root), "requests", p.RequestSHA256)); err != nil {
 					return err
 				}
 				if boundary == "snapshot" {
@@ -209,7 +206,7 @@ func TestWorkItemSessionCurrentScopeAndExternalFreshness(t *testing.T) {
 				if err != nil {
 					t.Fatalf("registry operation required optional content: %v", err)
 				}
-				if err = validateTaskContentClosure(d.TaskContent, root, r, false); err == nil {
+				if err = validateTaskContentClosure(d.TaskContent, testWork(t, root), r, false); err == nil {
 					t.Fatal("explicit content validation hid removed input")
 				}
 				return nil
@@ -226,7 +223,7 @@ func TestWorkItemSessionLateScopeBinding(t *testing.T) {
 	root := filepath.Dir(f.wrapper)
 	scope := &taskContentScope{}
 	d := goalOperationContentScope(f.dependencies, scope)
-	if err := d.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+	if err := d.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		r, err := s.Snapshot()
 		if err != nil {
 			return err
@@ -235,7 +232,7 @@ func TestWorkItemSessionLateScopeBinding(t *testing.T) {
 		if p == nil {
 			t.Fatal("publication missing")
 		}
-		if err = os.Remove(taskContentPath(root, "requests", p.RequestSHA256)); err != nil {
+		if err = os.Remove(taskContentPath(testWork(t, root), "requests", p.RequestSHA256)); err != nil {
 			return err
 		}
 		scope.task = "task"
@@ -245,7 +242,7 @@ func TestWorkItemSessionLateScopeBinding(t *testing.T) {
 		if err = s.Publish(r); err != nil {
 			t.Fatalf("publish required optional content after scope binding: %v", err)
 		}
-		if err = validateTaskContentClosure(d.TaskContent, root, r, false); err == nil {
+		if err = validateTaskContentClosure(d.TaskContent, testWork(t, root), r, false); err == nil {
 			t.Fatal("explicit content validation ignored bound scope")
 		}
 		return nil
@@ -259,7 +256,7 @@ func TestWorkItemSessionNestedSnapshotOwnership(t *testing.T) {
 	g := goalFixture(t, f, "task", "owned/goal")
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &g}})
 	root := filepath.Dir(f.wrapper)
-	if err := f.dependencies.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+	if err := f.dependencies.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		r, err := s.Snapshot()
 		if err != nil {
 			return err
@@ -281,61 +278,29 @@ func TestWorkItemSessionNestedSnapshotOwnership(t *testing.T) {
 }
 
 func TestWorkItemSessionConfirmedMatchesPersistedShape(t *testing.T) {
-	for version := 1; version <= 4; version++ {
-		t.Run(string(rune('0'+version)), func(t *testing.T) {
-			root := createProjectWorkspace(t)
-			store := newSystemWorkItemStore()
-			r := emptyWorkItemRegistry()
-			r.FormatVersion = version
-			if version < 3 {
-				r.TaskProblemRevisions = nil
-				r.TaskSpecRevisions = nil
-				r.TaskSpecAssessments = nil
-				r.TaskSolutionSelections = nil
-				r.TaskResultSpecBindings = nil
-				r.TaskContentPublications = nil
+	root := createProjectWorkspace(t)
+	store := newSystemWorkItemStore()
+	r := emptyWorkItemRegistry()
+	for _, publish := range []WorkItemRegistry{r, minimalEpicRegistry(root)} {
+		if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
+			if err := s.Publish(publish); err != nil {
+				return err
 			}
-			if version == 1 {
-				r.TaskResults = nil
-				r.HumanQARecords = nil
-				r.IntegrationAuthorities = nil
-				r.IntegrationIntents = nil
-				r.IntegrationAttempts = nil
-				r.IntegrationResults = nil
-			}
-			if version == 4 {
-				r.EpicBaseVersions = []EpicBaseVersion{}
-				r.EpicBaseUpdates = []EpicBaseUpdate{}
-				r.TaskQueueEvents = []TaskQueueEvent{}
-				r.TaskPreparations = []HistoricalRecord{}
-			}
-			seed, err := encodeWorkItemRegistry(r)
+			got, err := s.Snapshot()
 			if err != nil {
-				t.Fatal(err)
+				return err
 			}
-			if err = os.WriteFile(workItemsPath(root), seed, 0600); err != nil {
-				t.Fatal(err)
+			disk, err := store.Snapshot(testWork(t, root))
+			if err != nil {
+				return err
 			}
-			if err := store.WithLock(root, func(s WorkItemStoreSession) error {
-				if err := s.Publish(r); err != nil {
-					return err
-				}
-				got, err := s.Snapshot()
-				if err != nil {
-					return err
-				}
-				disk, err := store.Snapshot(root)
-				if err != nil {
-					return err
-				}
-				if !reflect.DeepEqual(got, disk) {
-					t.Fatalf("confirmed differs from persisted format %d", version)
-				}
-				return nil
-			}); err != nil {
-				t.Fatal(err)
+			if !reflect.DeepEqual(got, disk) {
+				t.Fatal("confirmed differs from persisted registry")
 			}
-		})
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
 	}
 }
 
@@ -343,7 +308,7 @@ func TestWorkItemSessionDoesNotRetainAfterUnlock(t *testing.T) {
 	root := createProjectWorkspace(t)
 	store := newSystemWorkItemStore()
 	var escaped WorkItemStoreSession
-	if err := store.WithLock(root, func(s WorkItemStoreSession) error { escaped = s; return s.Publish(minimalEpicRegistry(root)) }); err != nil {
+	if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error { escaped = s; return s.Publish(minimalEpicRegistry(root)) }); err != nil {
 		t.Fatal(err)
 	}
 	concrete := escaped.(*systemWorkItemStoreSession)
@@ -361,15 +326,12 @@ func TestWorkItemSessionDoesNotConfirmReplacementDuringObservation(t *testing.T)
 			f := newWorkItemJourneyFixture(t)
 			goalQueueFixture(t, f, []TaskGoalQueueEntry{})
 			root := filepath.Dir(f.wrapper)
-			r, err := f.dependencies.WorkItems.Snapshot(root)
+			r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 			if err != nil {
 				t.Fatal(err)
 			}
 			r.Epics[0].Title = "Replacement"
-			replacement, err := encodeWorkItemRegistry(r)
-			if err != nil {
-				t.Fatal(err)
-			}
+			replacement := storedRegistryBytes(t, root, r)
 			replaced := false
 			armed := false
 			store := &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(op string) error {
@@ -380,11 +342,11 @@ func TestWorkItemSessionDoesNotConfirmReplacementDuringObservation(t *testing.T)
 					if err := os.WriteFile(temp, replacement, 0600); err != nil {
 						return err
 					}
-					return os.Rename(temp, workItemsPath(root))
+					return os.Rename(temp, testWork(t, root).Registry())
 				}
 				return nil
 			}}}
-			if err := store.WithLock(root, func(s WorkItemStoreSession) error {
+			if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 				if during == "post-rename" {
 					r, err = s.Snapshot()
 					if err != nil {
@@ -426,7 +388,7 @@ func TestWorkItemSessionPublishedArrayOwnership(t *testing.T) {
 	g := goalFixture(t, f, "task", "array/goal")
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &g}})
 	root := filepath.Dir(f.wrapper)
-	if err := f.dependencies.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+	if err := f.dependencies.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		r, err := s.Snapshot()
 		if err != nil {
 			return err
@@ -467,25 +429,22 @@ func TestWorkItemSessionPublishedArrayOwnership(t *testing.T) {
 func TestWorkItemSessionDetectsInPlaceDriftWithRestoredMtime(t *testing.T) {
 	root := createProjectWorkspace(t)
 	store := newSystemWorkItemStore()
-	if err := store.WithLock(root, func(s WorkItemStoreSession) error {
+	if err := store.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 		r := minimalEpicRegistry(root)
 		r.Epics[0].Title = "Original"
 		if err := s.Publish(r); err != nil {
 			return err
 		}
-		info, err := os.Stat(workItemsPath(root))
+		info, err := os.Stat(testWork(t, root).Registry())
 		if err != nil {
 			return err
 		}
 		r.Epics[0].Title = "Replaced"
-		b, err := encodeWorkItemRegistry(r)
-		if err != nil {
+		b := storedRegistryBytes(t, root, r)
+		if err = os.WriteFile(testWork(t, root).Registry(), b, 0644); err != nil {
 			return err
 		}
-		if err = os.WriteFile(workItemsPath(root), b, 0644); err != nil {
-			return err
-		}
-		if err = os.Chtimes(workItemsPath(root), info.ModTime(), info.ModTime()); err != nil {
+		if err = os.Chtimes(testWork(t, root).Registry(), info.ModTime(), info.ModTime()); err != nil {
 			return err
 		}
 		got, err := s.Snapshot()
@@ -507,7 +466,7 @@ func TestWorkItemSessionPreservesQueueTimestampScalars(t *testing.T) {
 			f := newWorkItemJourneyFixture(t)
 			queueSetFixture(t, f, "timestamp/queue", []TaskGoalQueueEntry{})
 			root := filepath.Dir(f.wrapper)
-			path := workItemsPath(root)
+			path := testWork(t, root).Registry()
 			raw, err := os.ReadFile(path)
 			if err != nil {
 				t.Fatal(err)
@@ -522,7 +481,7 @@ func TestWorkItemSessionPreservesQueueTimestampScalars(t *testing.T) {
 			if err = os.WriteFile(path, raw, 0600); err != nil {
 				t.Fatal(err)
 			}
-			if err = f.dependencies.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+			if err = f.dependencies.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 				first, err := s.Snapshot()
 				if err != nil {
 					return err
@@ -554,7 +513,7 @@ func TestWorkItemSessionPreservesQueueTimestampScalars(t *testing.T) {
 				if err = s.Publish(got); err != nil {
 					return err
 				}
-				disk, err := f.dependencies.WorkItems.Snapshot(root)
+				disk, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 				if err != nil {
 					return err
 				}

@@ -39,7 +39,7 @@ func TestProducerAnswerPrivacyBeforeStorage(t *testing.T) {
 		for _, value := range privateAnswerValues() {
 			t.Run(field+value, func(t *testing.T) {
 				s, d, _ := fixture(t)
-				f, e := s.Register(d)
+				f, e := s.Register(s.onlyProject(), d)
 				if e != nil {
 					t.Fatal(e)
 				}
@@ -130,7 +130,7 @@ func TestProducerQualifiedCallbackBeforeClaim(t *testing.T) {
 		t.Run(mode, func(t *testing.T) {
 			s, d, calls := fixture(t)
 			d.NextCheckAtUTC = s.now()
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -202,7 +202,7 @@ func TestProducerAnswerTextBoundaries(t *testing.T) {
 		for _, v := range []string{strings.Repeat("😀", 128), strings.Repeat("😀", 128) + "x", "bad\ntext"} {
 			t.Run(field+fmt.Sprint(len(v)), func(t *testing.T) {
 				s, d, _ := fixture(t)
-				f, e := s.Register(d)
+				f, e := s.Register(s.onlyProject(), d)
 				if e != nil {
 					t.Fatal(e)
 				}
@@ -229,7 +229,7 @@ func TestProducerAnswerTextBoundaries(t *testing.T) {
 
 func TestProducerHistoricalIdempotentAnswerUnchanged(t *testing.T) {
 	s, d, _ := fixture(t)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}

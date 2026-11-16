@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/inbox"
+	"github.com/devdimensionlab/plybuild/internal/projectdata"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -179,6 +180,22 @@ func TestInboxErrorsAreTypedAndLeakNothing(t *testing.T) {
 				t.Fatalf("path leaked: %q", out)
 			}
 		})
+	}
+}
+
+// A data path outside the wrapper is a typed InboxError@1 without paths.
+func TestInboxDataPathOutsideWrapperIsTypedError(t *testing.T) {
+	f := newInboxFixture(t, "ply")
+	outside := t.TempDir()
+	if err := os.Symlink(outside, filepath.Join(f.roots["ply"], "data")); err != nil {
+		t.Fatal(err)
+	}
+	out, err := f.run("", withScope("list", "--format", "json")...)
+	if err == nil || ExitCode(err) != 1 || !strings.HasPrefix(err.Error(), projectdata.ClassPath+": ") {
+		t.Fatalf("error %v", err)
+	}
+	if result := inboxErrorOf(t, out); result.Class != projectdata.ClassPath || strings.Contains(out, outside) || strings.Contains(out, f.roots["ply"]) {
+		t.Fatalf("result %q", out)
 	}
 }
 

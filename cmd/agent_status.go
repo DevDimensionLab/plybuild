@@ -75,7 +75,7 @@ func newAgentStatusCommand(d workspace.Dependencies) *cobra.Command {
 		if resolved, err = resolveAgentStatusProject(d, project); err != nil {
 			return agentstatus.Store{}, err
 		}
-		directory, err := workspace.ProjectDataPath(resolved, agentstatus.DataPathCategory)
+		directory, err := resolved.Data().AgentStatus()
 		if err != nil {
 			return agentstatus.Store{}, err
 		}

@@ -1,14 +1,12 @@
 package workspace
 
-import "path/filepath"
-
 // TaskJournalBasis is a read-only projection. Optional content is validated
 // separately so one unavailable document cannot hide independent registry facts.
 type TaskJournalBasis struct {
-	Workspace       WorkspaceObservation
-	Task            TaskRecord
-	Registry        WorkItemRegistry
-	RegistryLocator string
+	Workspace WorkspaceObservation
+	Task      TaskRecord
+	Registry  WorkItemRegistry
+	Work      ProjectWork // the work of the Project whose registry holds Task
 }
 
 func ReadTaskJournalBasis(d Dependencies, id TaskID) (TaskJournalBasis, error) {
@@ -20,12 +18,15 @@ func ReadTaskJournalBasis(d Dependencies, id TaskID) (TaskJournalBasis, error) {
 	if err != nil {
 		return out, err
 	}
-	p := filepath.Join(ws.Root, MarkerDirectory, WorkItemsFile)
-	b, err := contentReadBounded(p, 32<<20, false)
+	work, err := LocateTask(d, ws.Root, id)
 	if err != nil {
 		return out, err
 	}
-	r, err := newSystemWorkItemStore().decodeStoredRegistry(ws.Root, b)
+	b, err := contentReadBounded(work.Registry(), 32<<20, false)
+	if err != nil {
+		return out, err
+	}
+	r, err := newSystemWorkItemStore().decodeStoredRegistry(work, b)
 	if err != nil {
 		return out, err
 	}
@@ -45,7 +46,7 @@ func ReadTaskJournalBasis(d Dependencies, id TaskID) (TaskJournalBasis, error) {
 		return out, workError(ErrorWorkIdentityConflict, "Task repository binding differs", nil)
 	}
 	r.RawSHA256 = digestTaskBytes(b)
-	return TaskJournalBasis{ws, *t, r, p}, nil
+	return TaskJournalBasis{ws, *t, r, work}, nil
 }
 
 type TaskJournalSource struct{ Kind, Locator, SHA256 string }
@@ -53,13 +54,10 @@ type TaskJournalSource struct{ Kind, Locator, SHA256 string }
 // ReadTaskJournalContent exposes the versions read by the native validators,
 // including document bytes. It never repairs or copies the content store.
 func ReadTaskJournalContent(d Dependencies, b TaskJournalBasis, p TaskContentPublication) ([]TaskJournalSource, error) {
-	root := b.Workspace.Root
+	root := b.Work
 	sources := []TaskJournalSource{
 		{"task_content", taskContentPath(root, "manifests", p.OutcomeRef.ManifestSHA256), p.OutcomeRef.ManifestSHA256},
 		{"task_content_request", taskContentPath(root, "requests", p.RequestSHA256), p.RequestSHA256},
-	}
-	if p.BackupSHA256 != nil {
-		sources = append(sources, TaskJournalSource{"task_content_backup", taskContentPath(root, "backups", *p.BackupSHA256), *p.BackupSHA256})
 	}
 	o, err := readRegisteredTaskManifest(d.TaskContent, root, b.Registry, p.OutcomeRef.ManifestSHA256)
 	if err != nil {

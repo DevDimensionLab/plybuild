@@ -22,7 +22,7 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 	initCommand := &cobra.Command{
 		Use:     "init",
 		Short:   "Initialize a Ply workspace in the current directory",
-		Long:    "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.\nThe current directory does not need to be a Git repository.\nWith --discover it also writes ply-workspace.json with one Project (wrapper .) whose repositories are the Git worktree roots in <name> or <name>/main, with the URL of origin as remote.",
+		Long:    "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml and, when missing, ply-workspace.json without Projects.\nThe current directory does not need to be a Git repository.\nWith --discover it also defines one Project in ply-workspace.json (wrapper .) whose repositories are the Git worktree roots in <name> or <name>/main, with the URL of origin as remote.",
 		Example: "  ply workspace init\n  ply workspace init --discover",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 0 {
@@ -57,7 +57,6 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 	workspaceCommand.AddCommand(initCommand, newWorkspaceProjectCommand(dependencies), newWorkspaceEpicCommand(dependencies), newWorkspaceTaskCommand(dependencies))
 	workspaceCommand.AddCommand(newWorkspaceStatusCommand(dependencies), newWorkspaceAttentionCommand(dependencies), newWorkspaceActivityCommand(dependencies), newWorkspaceWorktreesCommand(dependencies))
 	workspaceCommand.AddCommand(newWorkspaceOverviewCommand(dependencies), newWorkspaceDefinitionCommand(dependencies))
-	workspaceCommand.AddCommand(newWorkspaceRegistryCommand(dependencies))
 	return workspaceCommand
 }
 

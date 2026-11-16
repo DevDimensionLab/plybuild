@@ -114,7 +114,7 @@ func newFollowupCommand(factory agentWorkFactory) *cobra.Command {
 	c.PersistentFlags().StringVar(&format, "format", "text", "text or json")
 	for _, op := range []string{"register", "show", "list", "request", "dispatch", "recheck", "cancel", "request-status"} {
 		op := op
-		var path, requestID string
+		var path, requestID, project string
 		var due bool
 		verb := &cobra.Command{Use: op, Short: "Status follow-up " + op, Args: func(_ *cobra.Command, args []string) error {
 			want := 1
@@ -138,7 +138,7 @@ func newFollowupCommand(factory agentWorkFactory) *cobra.Command {
 			case "register":
 				var d agentwork.Draft
 				if e = readAgentWorkInput(path, &d); e == nil {
-					result, e = s.Register(d)
+					result, e = s.Register(project, d)
 				}
 			case "list":
 				result, e = s.List(due)
@@ -165,6 +165,10 @@ func newFollowupCommand(factory agentWorkFactory) *cobra.Command {
 		if op == "register" || op == "request" || op == "recheck" || op == "cancel" {
 			verb.Flags().StringVar(&path, "file", "", "bounded JSON request file")
 			_ = verb.MarkFlagRequired("file")
+		}
+		if op == "register" {
+			verb.Flags().StringVar(&project, "project", "", "Project the follow-up belongs to")
+			_ = verb.MarkFlagRequired("project")
 		}
 		if op == "request-status" {
 			verb.Flags().StringVar(&requestID, "request-id", "", "exact stable mutation request ID")

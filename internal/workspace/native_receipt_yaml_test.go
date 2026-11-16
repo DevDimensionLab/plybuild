@@ -14,7 +14,7 @@ func TestNativeReceiptVersionRequiresYAMLInteger(t *testing.T) {
 	if _, err := CreateTaskWorktree(f.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestNativeReceiptVersionRequiresYAMLInteger(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	physical, err := os.ReadFile(workItemsPath(root))
+	physical, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,7 +33,7 @@ func TestNativeReceiptVersionRequiresYAMLInteger(t *testing.T) {
 	}{
 		{"logical", logical, decodeWorkItemRegistry},
 		{"store", physical, func(b []byte) (WorkItemRegistry, error) {
-			return newSystemWorkItemStore().decodeStoredRegistry(root, b)
+			return newSystemWorkItemStore().decodeStoredRegistry(testWork(t, root), b)
 		}},
 	} {
 		t.Run(reader.name, func(t *testing.T) {

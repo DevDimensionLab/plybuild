@@ -53,7 +53,7 @@ func newRepoRemoveCommand(env repoRemoveEnv) *cobra.Command {
 				return fmt.Errorf("%w: --apply and --expect <plan digest> must be given together", reporemove.ErrInvalid)
 			}
 			if req.Workspace == "" {
-				observed, err := workspace.ObserveContainingRoot(workspace.Dependencies{Files: env.files})
+				observed, err := workspace.ObserveContaining(workspace.Dependencies{Files: env.files})
 				if err != nil {
 					return err
 				}

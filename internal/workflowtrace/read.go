@@ -46,7 +46,8 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 		now = d.WorkClock.Now()
 	}
 	b := newBuilder(basis.Workspace.Root, *task, now.UTC().Format(time.RFC3339Nano))
-	journalPath := filepath.Join(basis.Workspace.Root, ".ply", "task-process", "v1", taskID)
+	selected := basis.TaskJournal(*task)
+	journalPath := filepath.Join(taskjournal.JournalDir(selected.Work), taskID)
 	journalBefore, journalBeforeErr := directoryDigest(journalPath)
 	if title := basis.Titles[id]; title.Title != nil {
 		b.out.Task.Title = *title.Title
@@ -58,12 +59,11 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 	if err != nil {
 		b.diagnostic("lifecycle_unavailable", err.Error(), nil, nil)
 	}
-	selected := basis.Registry
-	selected.Tasks = []workspace.TaskRecord{*task}
+	selected.Registry.Tasks = []workspace.TaskRecord{*task}
 	// Journal history needs this Task's content closure, not the readiness of
 	// historical queues and Epic base updates for other work.
-	selected.TaskQueueEvents, selected.EpicBaseUpdates = nil, nil
-	batch, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registry: selected, Lifecycle: lifecycle})
+	selected.Registry.TaskQueueEvents, selected.Registry.EpicBaseUpdates = nil, nil
+	batch, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registries: []workspace.ProjectRegistry{{Work: selected.Work, Registry: selected.Registry}}, Lifecycles: lifecycle})
 	if err != nil {
 		b.diagnostic("journal_unavailable", err.Error(), nil, nil)
 	} else {
@@ -73,7 +73,7 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 		}
 	}
 	b.goals(d, basis, *task)
-	b.goalStart(workspace.GoalStartReceiptPath(basis.Workspace.Root, id))
+	b.goalStart(workspace.GoalStartReceiptPath(selected.Work, id))
 	if afterHistory != nil {
 		afterHistory()
 	}
@@ -121,7 +121,7 @@ func directoryDigest(path string) (string, error) {
 func (b *builder) goals(d workspace.Dependencies, basis workspace.ReadViewBasisSnapshot, task workspace.TaskRecord) {
 	latest := map[string]Goal{}
 	unclassified := map[string]int{}
-	j := workspace.TaskJournalBasis{Workspace: basis.Workspace, Task: task, Registry: basis.Registry, RegistryLocator: filepath.Join(basis.Workspace.Root, workspace.MarkerDirectory, workspace.WorkItemsFile)}
+	j := basis.TaskJournal(task)
 	for _, ref := range basis.Registry.TaskSpecRevisions {
 		if ref.TaskID != task.ID {
 			continue
@@ -146,7 +146,7 @@ func (b *builder) goals(d workspace.Dependencies, basis workspace.ReadViewBasisS
 		var fields map[string]json.RawMessage
 		if err == nil {
 			var data []byte
-			data, err = d.TaskContent.Read(basis.Workspace.Root, "manifests", ref.ManifestSHA256)
+			data, err = d.TaskContent.Read(j.Work, "manifests", ref.ManifestSHA256)
 			if err == nil {
 				err = json.Unmarshal(data, &fields)
 			}

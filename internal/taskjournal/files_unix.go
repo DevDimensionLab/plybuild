@@ -4,6 +4,7 @@ package taskjournal
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"golang.org/x/sys/unix"
 	"io"
 	"os"
@@ -42,10 +43,14 @@ func openDir(path string, create bool) (*os.File, error) {
 	return os.NewFile(uintptr(fd), path), nil
 }
 
-// Only journal-owned components can be created. Every parent is synced before
-// acknowledging a record; a missing workspace ancestor is never recreated.
-func createStore(root, task string) (*os.File, error) {
-	d, e := openDir(filepath.Join(root, ".ply"), false)
+// Only journal-owned components can be created below the Project's work
+// directory. Every parent is synced before acknowledging a record; a missing
+// wrapper is never recreated.
+func createStore(work workspace.ProjectWork, task string) (*os.File, error) {
+	if e := work.Create(); e != nil {
+		return nil, e
+	}
+	d, e := openDir(work.Dir, false)
 	if e != nil {
 		return nil, e
 	}

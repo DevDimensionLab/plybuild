@@ -95,7 +95,7 @@ func outsideTaskContentScope(r WorkItemRegistry, scope *taskContentScope) WorkIt
 }
 
 func validateTaskScopeTransition(old, next WorkItemRegistry, scope *taskContentScope) error {
-	if scope == nil || old.FormatVersion < 3 {
+	if scope == nil {
 		return nil
 	}
 	before, _ := findTask(old, scope.task)

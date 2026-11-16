@@ -86,27 +86,19 @@ type WorktreeOperationRecord struct {
 	LastObservation  WorktreeObservationRecord `yaml:"last_observation" json:"last_observation"`
 }
 
+// WorkItemRegistry is the logical registry. The store wraps it in the single
+// physical format (RegistryFormat) and keeps lifecycle evidence external.
 type WorkItemRegistry struct {
 	integrationEvidenceRefs []string                  `yaml:"-"`
-	publicationEvidence     bool                      `yaml:"-"`
-	integrationEvidence     bool                      `yaml:"-"`
-	ParallelActivation      *ParallelActivationPlan   `yaml:"parallel_activation,omitempty" json:"parallel_activation,omitempty"`
-	parallelPermit          *parallelActivationPermit `yaml:"-"`
-	ParallelBoundary        *RegistryFormatBoundary   `yaml:"parallel_boundary,omitempty" json:"parallel_boundary,omitempty"`
-	SourceReconciliations   []HistoricalRecord        `yaml:"source_reconciliations,omitempty" json:"source_reconciliations,omitempty"`
-	AdoptionBoundary        *RegistryFormatBoundary   `yaml:"adoption_boundary,omitempty" json:"adoption_boundary,omitempty"`
-	EpicCreateOperations    []EpicCreateOperation     `yaml:"epic_create_operations"`
-	EpicCreateBoundary      *RegistryFormatBoundary   `yaml:"epic_create_boundary,omitempty"`
-	FormatVersion           int                       `yaml:"format_version"`
 	Epics                   []EpicRecord              `yaml:"epics"`
 	Tasks                   []TaskRecord              `yaml:"tasks"`
 	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
-	TaskResults             []HistoricalRecord        `yaml:"task_results,omitempty"`
-	HumanQARecords          []HistoricalRecord        `yaml:"human_qa_records,omitempty"`
-	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities,omitempty"`
-	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents,omitempty"`
-	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts,omitempty"`
-	IntegrationResults      []IntegrationResult       `yaml:"integration_results,omitempty"`
+	TaskResults             []HistoricalRecord        `yaml:"task_results"`
+	HumanQARecords          []HistoricalRecord        `yaml:"human_qa_records"`
+	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities"`
+	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
+	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
+	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
 	TaskSpecPolicies        *[]TaskSpecPolicy         `yaml:"task_spec_policies,omitempty"`
 	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
 	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
@@ -118,9 +110,8 @@ type WorkItemRegistry struct {
 	EpicBaseUpdates         []EpicBaseUpdate          `yaml:"epic_base_updates"`
 	TaskQueueEvents         []TaskQueueEvent          `yaml:"task_queue_events"`
 	TaskPreparations        []HistoricalRecord        `yaml:"task_preparations"`
-	FormatBoundary          *RegistryFormatBoundary   `yaml:"format_boundary,omitempty"`
+	EpicCreateOperations    []EpicCreateOperation     `yaml:"epic_create_operations"`
 	RawSHA256               string                    `yaml:"-"`
-	upgradePermit           *registryUpgradePermit    `yaml:"-"`
 }
 
 type EpicAdoptInput struct {
@@ -177,7 +168,7 @@ type EpicListResult struct {
 	Epics     []EpicRecord
 }
 type TaskListResult struct {
-	Lifecycles    WorkItemLifecycleSnapshot
+	Lifecycles    WorkItemLifecycles
 	CurrentTitles map[TaskID]string
 	Titles        map[TaskID]TaskListTitle
 	Filters       TaskListFilters
@@ -406,17 +397,6 @@ func randomWorkItemID(reader io.Reader, prefix string) (string, error) {
 	return prefix + hex.EncodeToString(bytes), nil
 }
 
-func containingWorkItemWorkspace(dependencies Dependencies) (string, error) {
-	root, err := containingRegistrationWorkspace(dependencies)
-	if err != nil {
-		return "", err
-	}
-	if err := ensureDefinitionEpics(dependencies, root); err != nil {
-		return "", err
-	}
-	return root, nil
-}
-
 func containingRegistrationWorkspace(dependencies Dependencies) (string, error) {
 	if dependencies.Files == nil {
 		return "", workError(ErrorWorkIO, "filesystem dependency is required", nil)
@@ -574,7 +554,7 @@ func AdoptEpic(dependencies Dependencies, input EpicAdoptInput) (EpicMutationRes
 	if err := requireWorkMutationDependencies(dependencies); err != nil {
 		return EpicMutationResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return EpicMutationResult{}, err
 	}
@@ -592,66 +572,67 @@ func adoptEpicAtRoot(dependencies Dependencies, input EpicAdoptInput, root strin
 	}
 	result := EpicMutationResult{Workspace: root}
 	err = dependencies.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		if err := checkDefinedAdoption(dependencies, root, input, locator); err != nil {
-			return err
-		}
 		_, repository, err := projectAndRepo(projects, input.ProjectID, input.RepoID)
 		if err != nil {
 			return err
 		}
-		return dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			if err := epicCreateReservation(registry, repository.GitCommonDir, input.Ref, locator, input.EpicID); err != nil {
-				return err
-			}
-			if existing, _ := findEpic(registry, input.EpicID); existing != nil {
-				binding, _ := findEpicRepo(*existing, input.RepoID)
-				if existing.Title == input.Title && existing.ProjectID == input.ProjectID && binding != nil && binding.GitCommonDir == repository.GitCommonDir && binding.Worktree.Locator == locator && binding.Worktree.Ref == input.Ref && binding.Worktree.OID == input.ExpectedOID {
-					observation, validationErr := validateEpicAdoptionObservation(dependencies, repository, locator, input.Ref, input.ExpectedOID)
-					if validationErr != nil {
-						return validationErr
-					}
-					if observation.Tree != binding.Worktree.Tree {
-						return workError(ErrorWorkParentStale, fmt.Sprintf("Epic worktree %s tree differs from the recorded binding", locator), nil)
-					}
-					result.Epic = *existing
-					return nil
+		work, err := projectWork(root, input.ProjectID)
+		if err != nil {
+			return err
+		}
+		return withNewWorkID(dependencies, work, "Epic "+string(input.EpicID), func(r WorkItemRegistry) bool { return hasEpic(r, input.EpicID) }, func() error {
+			return dependencies.WorkItems.WithLock(work, func(session WorkItemStoreSession) error {
+				registry, err := session.Snapshot()
+				if err != nil {
+					return err
 				}
-				return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic %s is already registered with different identity or binding", input.EpicID), nil)
-			}
-			observation, err := validateEpicAdoptionObservation(dependencies, repository, locator, input.Ref, input.ExpectedOID)
-			if err != nil {
-				return err
-			}
-			if err := nativeReceiptReservation(registry, repository.GitCommonDir, input.Ref, locator); err != nil {
-				return err
-			}
-			// Several logical Epics may share one clean integration base. Only
-			// an exclusive Task copy (its operation path or branch) is reserved.
-			for _, operation := range registry.WorktreeOperations {
-				if operation.GitCommonDir == repository.GitCommonDir && (operation.TargetLocator == locator || operation.SourceRef == input.Ref) {
-					return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree or ref is reserved by Task %s", operation.TaskID), nil)
+				if err := epicCreateReservation(registry, repository.GitCommonDir, input.Ref, locator, input.EpicID); err != nil {
+					return err
 				}
-			}
-			id, err := dependencies.WorkIDs.NewWorktreeID()
-			if err != nil {
-				return err
-			}
-			epic := EpicRecord{ID: input.EpicID, Title: input.Title, ProjectID: input.ProjectID, RepoBindings: []EpicRepoBinding{{RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, Worktree: EpicWorktreeBinding{ID: id, OwnerKind: "epic", OwnerID: input.EpicID, Origin: "adopted", Locator: locator, Ref: input.Ref, OID: input.ExpectedOID, Tree: observation.Tree, GitCommonDir: repository.GitCommonDir}}}}
-			registry.Epics = append(registry.Epics, epic)
-			if registry.FormatVersion >= 4 {
+				if existing, _ := findEpic(registry, input.EpicID); existing != nil {
+					binding, _ := findEpicRepo(*existing, input.RepoID)
+					if existing.Title == input.Title && existing.ProjectID == input.ProjectID && binding != nil && binding.GitCommonDir == repository.GitCommonDir && binding.Worktree.Locator == locator && binding.Worktree.Ref == input.Ref && binding.Worktree.OID == input.ExpectedOID {
+						observation, validationErr := validateEpicAdoptionObservation(dependencies, repository, locator, input.Ref, input.ExpectedOID)
+						if validationErr != nil {
+							return validationErr
+						}
+						if observation.Tree != binding.Worktree.Tree {
+							return workError(ErrorWorkParentStale, fmt.Sprintf("Epic worktree %s tree differs from the recorded binding", locator), nil)
+						}
+						result.Epic = *existing
+						return nil
+					}
+					return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic %s is already registered with different identity or binding", input.EpicID), nil)
+				}
+				observation, err := validateEpicAdoptionObservation(dependencies, repository, locator, input.Ref, input.ExpectedOID)
+				if err != nil {
+					return err
+				}
+				if err := nativeReceiptReservation(registry, repository.GitCommonDir, input.Ref, locator); err != nil {
+					return err
+				}
+				// Several logical Epics may share one clean integration base. Only
+				// an exclusive Task copy (its operation path or branch) is reserved.
+				for _, operation := range registry.WorktreeOperations {
+					if operation.GitCommonDir == repository.GitCommonDir && (operation.TargetLocator == locator || operation.SourceRef == input.Ref) {
+						return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Epic worktree or ref is reserved by Task %s", operation.TaskID), nil)
+					}
+				}
+				id, err := dependencies.WorkIDs.NewWorktreeID()
+				if err != nil {
+					return err
+				}
+				epic := EpicRecord{ID: input.EpicID, Title: input.Title, ProjectID: input.ProjectID, RepoBindings: []EpicRepoBinding{{RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, Worktree: EpicWorktreeBinding{ID: id, OwnerKind: "epic", OwnerID: input.EpicID, Origin: "adopted", Locator: locator, Ref: input.Ref, OID: input.ExpectedOID, Tree: observation.Tree, GitCommonDir: repository.GitCommonDir}}}}
+				registry.Epics = append(registry.Epics, epic)
 				registry.EpicBaseVersions = append(registry.EpicBaseVersions, adoptedEpicBase(epic, epic.RepoBindings[0]))
-			}
-			sortWorkRegistry(&registry)
-			if err := session.Publish(registry); err != nil {
-				return err
-			}
-			result.Epic = epic
-			result.Created = true
-			return nil
+				sortWorkRegistry(&registry)
+				if err := session.Publish(registry); err != nil {
+					return err
+				}
+				result.Epic = epic
+				result.Created = true
+				return nil
+			})
 		})
 	})
 	if err != nil {
@@ -695,7 +676,7 @@ func CreateTask(dependencies Dependencies, input TaskCreateInput) (TaskMutationR
 	if err := requireWorkMutationDependencies(dependencies); err != nil {
 		return TaskMutationResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return TaskMutationResult{}, err
 	}
@@ -705,38 +686,44 @@ func CreateTask(dependencies Dependencies, input TaskCreateInput) (TaskMutationR
 		if err != nil {
 			return err
 		}
-		return dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			epic, _ := findEpic(registry, input.ParentEpicID)
-			if epic == nil {
-				return workError(ErrorWorkNotFound, fmt.Sprintf("Epic %s is not registered", input.ParentEpicID), nil)
-			}
-			binding, _ := findEpicRepo(*epic, input.RepoID)
-			if epic.ProjectID != input.ProjectID || binding == nil || binding.GitCommonDir != repository.GitCommonDir {
-				return workError(ErrorWorkProjectConflict, fmt.Sprintf("Task %s Project/repository does not match Epic %s", input.TaskID, input.ParentEpicID), nil)
-			}
-			if existing, _ := findTask(registry, input.TaskID); existing != nil {
-				if existing.Title == input.Title && existing.Description == input.Description && existing.ParentEpicID == input.ParentEpicID && existing.ProjectID == input.ProjectID && existing.RepoID == input.RepoID && existing.GitCommonDir == repository.GitCommonDir {
-					result.Task = *existing
-					result.Epic = *epic
-
-					return nil
+		work, err := projectWork(root, input.ProjectID)
+		if err != nil {
+			return err
+		}
+		return withNewWorkID(dependencies, work, "Task "+string(input.TaskID), func(r WorkItemRegistry) bool { return hasTask(r, input.TaskID) }, func() error {
+			return dependencies.WorkItems.WithLock(work, func(session WorkItemStoreSession) error {
+				registry, err := session.Snapshot()
+				if err != nil {
+					return err
 				}
-				return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Task %s already exists with different fields", input.TaskID), nil)
-			}
-			task := TaskRecord{ID: input.TaskID, Title: input.Title, Description: input.Description, ParentEpicID: input.ParentEpicID, ProjectID: input.ProjectID, RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, WorktreeState: WorkItemUnbound, Worktree: nil}
-			registry.Tasks = append(registry.Tasks, task)
-			sortWorkRegistry(&registry)
-			if _, err := publishWorkItemRegistryRecover(session, registry); err != nil {
-				return err
-			}
-			result.Task = task
-			result.Epic = *epic
-			result.Created = true
-			return nil
+				epic, _ := findEpic(registry, input.ParentEpicID)
+				if epic == nil {
+					return workError(ErrorWorkNotFound, fmt.Sprintf("Epic %s is not registered", input.ParentEpicID), nil)
+				}
+				binding, _ := findEpicRepo(*epic, input.RepoID)
+				if epic.ProjectID != input.ProjectID || binding == nil || binding.GitCommonDir != repository.GitCommonDir {
+					return workError(ErrorWorkProjectConflict, fmt.Sprintf("Task %s Project/repository does not match Epic %s", input.TaskID, input.ParentEpicID), nil)
+				}
+				if existing, _ := findTask(registry, input.TaskID); existing != nil {
+					if existing.Title == input.Title && existing.Description == input.Description && existing.ParentEpicID == input.ParentEpicID && existing.ProjectID == input.ProjectID && existing.RepoID == input.RepoID && existing.GitCommonDir == repository.GitCommonDir {
+						result.Task = *existing
+						result.Epic = *epic
+
+						return nil
+					}
+					return workError(ErrorWorkIdentityConflict, fmt.Sprintf("Task %s already exists with different fields", input.TaskID), nil)
+				}
+				task := TaskRecord{ID: input.TaskID, Title: input.Title, Description: input.Description, ParentEpicID: input.ParentEpicID, ProjectID: input.ProjectID, RepoID: input.RepoID, GitCommonDir: repository.GitCommonDir, WorktreeState: WorkItemUnbound, Worktree: nil}
+				registry.Tasks = append(registry.Tasks, task)
+				sortWorkRegistry(&registry)
+				if _, err := publishWorkItemRegistryRecover(session, registry); err != nil {
+					return err
+				}
+				result.Task = task
+				result.Epic = *epic
+				result.Created = true
+				return nil
+			})
 		})
 	})
 
@@ -756,7 +743,7 @@ func CreateTaskWorktree(dependencies Dependencies, input TaskWorktreeCreateInput
 	if err := dependencies.WorkGit.ValidateBranch(input.Branch); err != nil {
 		return TaskWorktreeMutationResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return TaskWorktreeMutationResult{}, err
 	}
@@ -769,14 +756,12 @@ func CreateTaskWorktree(dependencies Dependencies, input TaskWorktreeCreateInput
 		return TaskWorktreeMutationResult{}, err
 	}
 	result := TaskWorktreeMutationResult{Workspace: root}
-	err = dependencies.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			return createTaskWorktreeLocked(dependencies, root, projects, session, registry, input, target, targetExists, &result)
-		})
+	err = withTaskWork(dependencies, root, input.TaskID, func(projects ProjectSnapshot, work ProjectWork, session WorkItemStoreSession) error {
+		registry, err := session.Snapshot()
+		if err != nil {
+			return err
+		}
+		return createTaskWorktreeLocked(dependencies, root, projects, session, registry, input, target, targetExists, &result)
 	})
 	if err != nil {
 		return TaskWorktreeMutationResult{}, mapMutationError(err)
@@ -1011,17 +996,15 @@ func reconciliationError(taskID TaskID) error {
 }
 
 func ListEpics(dependencies Dependencies) (EpicListResult, error) {
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return EpicListResult{}, err
 	}
-	if dependencies.WorkItems == nil {
-		return EpicListResult{}, workError(ErrorWorkIO, "work-item store dependency is required", nil)
-	}
-	registry, err := dependencies.WorkItems.Snapshot(root)
+	registries, err := SnapshotWorkspace(dependencies, root)
 	if err != nil {
 		return EpicListResult{}, err
 	}
+	registry := MergeRegistries(registries)
 	return EpicListResult{Workspace: root, Epics: append([]EpicRecord(nil), registry.Epics...), Creations: registry.EpicCreateOperations}, nil
 }
 func ListTasks(dependencies Dependencies, epicID *EpicID) (TaskListResult, error) {
@@ -1038,17 +1021,19 @@ func ListTasksWithFilters(dependencies Dependencies, filters TaskListFilters) (T
 	if err != nil {
 		return TaskListResult{}, err
 	}
-	if dependencies.WorkItems == nil {
-		return TaskListResult{}, workError(ErrorWorkIO, "work-item store dependency is required", nil)
-	}
-	registry, err := dependencies.WorkItems.SnapshotRegistrations(root)
+	registries, err := SnapshotWorkspace(dependencies, root)
 	if err != nil {
 		return TaskListResult{}, err
 	}
+	registry := MergeRegistries(registries)
 	if err := validateTaskListProjectFilters(dependencies, root, filters); err != nil {
 		return TaskListResult{}, err
 	}
-	lifecycles, err := readWorkItemLifecycle(root)
+	works := make([]ProjectWork, len(registries))
+	for i, r := range registries {
+		works[i] = r.Work
+	}
+	lifecycles, err := readLifecycles(works)
 	if err != nil {
 		return TaskListResult{}, err
 	}
@@ -1067,7 +1052,8 @@ func ListTasksWithFilters(dependencies Dependencies, filters TaskListFilters) (T
 			(filters.ProjectID == nil || task.ProjectID == *filters.ProjectID) &&
 			(filters.RepoID == nil || task.RepoID == *filters.RepoID) {
 			result.Tasks = append(result.Tasks, task)
-			title := readTaskListTitle(dependencies, root, registry, task)
+			owner, _ := registryOf(registries, task.ProjectID)
+			title := readTaskListTitle(dependencies, owner.Work, owner.Registry, task)
 			if title.Source == "problem_revision" {
 				if title.Title != nil {
 					result.CurrentTitles[task.ID] = *title.Title

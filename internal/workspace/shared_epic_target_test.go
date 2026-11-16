@@ -30,9 +30,7 @@ func newSharedTargetFixture(t *testing.T) sharedTargetFixture {
 	runLocalGit(t, main, "config", "user.name", "Ply tests")
 	sharedTargetCommit(t, main, "README.md", "fixture\n")
 	projects := newSystemProjectStore()
-	if _, _, _, err := projects.Add(root, ProjectRecord{ID: "app", Name: "App", Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{"app"}}, []RepoRecord{{ID: "app", Locator: main, GitCommonDir: physicalPath(t, filepath.Join(main, ".git"))}}); err != nil {
-		t.Fatal(err)
-	}
+	defineTestProject(t, root, ProjectRecord{ID: "app", Name: "App", Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{"app"}}, []RepoRecord{{ID: "app", Locator: main}})
 	d := SystemDependencies()
 	d.Files = projectCwdFileSystem{FileSystem: d.Files, cwd: root}
 	d.ProjectLocks, d.Projects = projects, projects
@@ -76,7 +74,7 @@ func (f sharedTargetFixture) resolveFrom(t *testing.T, cwd string, in QueueTarge
 	t.Helper()
 	d := f.dependencies
 	d.Files = projectCwdFileSystem{FileSystem: SystemDependencies().Files, cwd: cwd}
-	r, err := d.WorkItems.Snapshot(f.root)
+	r, err := d.WorkItems.Snapshot(testWork(t, f.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,13 +82,13 @@ func (f sharedTargetFixture) resolveFrom(t *testing.T, cwd string, in QueueTarge
 	if err != nil {
 		t.Fatal(err)
 	}
-	target, _, err := resolveQueueTarget(d, f.root, r, ProjectSnapshot{Projects: projects, Repos: repos}, in)
+	target, _, err := resolveQueueTarget(d, testWork(t, f.root), r, ProjectSnapshot{Projects: projects, Repos: repos}, in)
 	return target, err
 }
 
 func sharedTargetEpicRecords(t *testing.T, f sharedTargetFixture, epic EpicID) (EpicRecord, []TaskRecord, []WorktreeOperationRecord, []EpicBaseVersion) {
 	t.Helper()
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +185,7 @@ func TestSharedEpicTargetTwoEpicsShareMainAndRequireExplicitSelection(t *testing
 	if retry, err := f.adopt(t, "beta", "refs/heads/main", oid); err != nil || retry.Created {
 		t.Fatalf("identical retry = %#v, %v", retry, err)
 	}
-	if _, err := f.dependencies.WorkItems.Snapshot(f.root); err != nil {
+	if _, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root)); err != nil {
 		t.Fatalf("strict registry read rejected shared target: %v", err)
 	}
 	alpha := f.task(t, "alpha-task", "alpha", oid)
@@ -216,7 +214,7 @@ func TestSharedEpicTargetTwoEpicsShareMainAndRequireExplicitSelection(t *testing
 		t.Fatalf("Epic adoption of a Task copy = %v", err)
 	}
 	// A Task copy still may not reuse a shared Epic path or ref.
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 	if err != nil {
 		t.Fatal(err)
 	}

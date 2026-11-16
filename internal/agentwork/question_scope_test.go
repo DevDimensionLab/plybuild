@@ -44,6 +44,17 @@ func questionWorkspace(t *testing.T) (workspace.Dependencies, humaninput.Depende
 	return d, humaninput.Dependencies{Workspace: d, Now: time.Now}, root, repo
 }
 
+// humanInputStore is the human-input store of Project ply in the workspace
+// at root.
+func humanInputStore(t *testing.T, root string) string {
+	t.Helper()
+	works, err := workspace.DefinedWork(root)
+	if err != nil || len(works) != 1 {
+		t.Fatalf("works %v %v", works, err)
+	}
+	return works[0].HumanInput()
+}
+
 func askQuestion(t *testing.T, h humaninput.Dependencies, root, origin, key string, session *string) humaninput.Question {
 	t.Helper()
 	q, err := humaninput.AskDraft(h, root, humaninput.QuestionDraft{Kind: humaninput.DraftKind, SchemaVersion: humaninput.SchemaVersion, PublicationKey: key, ProjectID: "ply", ActivityID: "ordinary/f03", ActivityTitle: "F03 fixture", Provider: "claude", SessionID: session, OriginCWD: origin, Text: "Which output should this task produce?", Reason: "The goal leaves this choice open.", AnswerKind: humaninput.AnswerChoice, Options: []humaninput.Option{{ID: "short", Label: "Short", Consequence: "One page."}, {ID: "full", Label: "Full", Consequence: "All sections."}}})
@@ -121,7 +132,7 @@ func TestQuestionHistoryDoesNotControlHumanFollowup(t *testing.T) {
 		t.Run(tc.damage, func(t *testing.T) {
 			d, h, root, repo := questionWorkspace(t)
 			b := askQuestion(t, h, root, repo, "f03/b", ptr("session-B"))
-			store := filepath.Join(root, ".ply", "human-input", "v1")
+			store := humanInputStore(t, root)
 			fact := func(kind string) string { return filepath.Join(store, kind, b.QuestionID+".json") }
 			switch tc.damage {
 			case "answer":
@@ -172,7 +183,7 @@ func TestQuestionHistoryDoesNotControlHumanFollowup(t *testing.T) {
 			s := &Service{Root: root, Now: func() time.Time { return now }, Runtime: rt, Native: func() NativeSnapshot { return readNative(d, root) }, Send: func(i Identity, _ string) error { sent[i]++; return nil }}
 			for _, target := range []Identity{a, bi} {
 				draft := Draft{PublicationKey: "f03/" + target.Session, OwnerRef: "owner", MandateRef: "mandate", Registrar: Registrar{Kind: HumanRequested, ActorRef: "human"}, TargetRef: target.Ref(), WaitKind: "status", WaitRef: target.Ref(), NextCheckAtUTC: now.Format(time.RFC3339)}
-				f, err := s.Register(draft)
+				f, err := s.Register(s.onlyProject(), draft)
 				if err != nil {
 					t.Fatal(err)
 				}

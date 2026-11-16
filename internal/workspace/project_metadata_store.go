@@ -20,7 +20,7 @@ func emptyProjectMetadata(root string) ProjectMetadataSnapshot {
 }
 func readProjectMetadata(root string) (ProjectMetadataSnapshot, error) {
 	out := emptyProjectMetadata(root)
-	bytes, exists, err := readWorkspaceMetadata(root, ProjectMetadataFile)
+	bytes, exists, err := readWorkspaceMetadata(filepath.Dir(out.Locator), ProjectMetadataFile)
 	if err != nil {
 		return out, err
 	}

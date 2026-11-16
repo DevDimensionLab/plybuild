@@ -40,7 +40,7 @@ git -C "$repository" worktree add -b epic "$epic" "$oid" >/dev/null
 	run workspace project add ply --name Ply --wrapper "$workspace/ply" --repo "ply=$repository" >/dev/null
 )
 marker_before=$(shasum -a 256 "$workspace/.ply/workspace.yaml")
-projects_before=$(shasum -a 256 "$workspace/.ply/projects.yaml")
+projects_before=$(shasum -a 256 "$workspace/ply-workspace.json")
 
 (
 	cd "$workspace"
@@ -56,7 +56,7 @@ projects_before=$(shasum -a 256 "$workspace/.ply/projects.yaml")
 grep -F 'Adopted Epic epic: Epic' "$temp_root/journey.stdout" >/dev/null || fail 'adopt output missing'
 grep -F 'Created Task task: Task' "$temp_root/journey.stdout" >/dev/null || fail 'Task output missing'
 grep -F 'Created Task worktree for task.' "$temp_root/journey.stdout" >/dev/null || fail 'worktree output missing'
-grep -F '"kind":"WorkspaceEpicReadback@1"' "$temp_root/journey.stdout" >/dev/null || fail 'Epic JSON missing'
+grep -F '"kind":"WorkspaceEpicReadback@2"' "$temp_root/journey.stdout" >/dev/null || fail 'Epic JSON missing'
 grep -F '"kind":"WorkspaceTaskIntegrationReadback@2"' "$temp_root/journey.stdout" >/dev/null || fail 'Task integration JSON missing'
 grep -F '"kind":"record_task_result"' "$temp_root/journey.stdout" >/dev/null || fail 'Task result next action missing'
 
@@ -66,10 +66,10 @@ grep -F '"kind":"record_task_result"' "$temp_root/journey.stdout" >/dev/null || 
 [[ $(git -C "$task_worktree" rev-parse HEAD) == "$oid" ]] || fail 'Task worktree does not use pinned base'
 [[ -z $(git -C "$task_worktree" status --porcelain=v1 --untracked-files=all) ]] || fail 'Task worktree is dirty'
 [[ $(shasum -a 256 "$workspace/.ply/workspace.yaml") == "$marker_before" ]] || fail 'workspace marker changed'
-[[ $(shasum -a 256 "$workspace/.ply/projects.yaml") == "$projects_before" ]] || fail 'Project registry changed'
+[[ $(shasum -a 256 "$workspace/ply-workspace.json") == "$projects_before" ]] || fail 'Project definitions changed'
 
-store="$workspace/.ply/work-items.yaml"
-grep -F 'format_version: 3' "$store" >/dev/null || fail 'work-item format version missing'
+store="$workspace/ply/data/work/work-items.yaml" # the registry of Project ply, under its wrapper
+grep -F 'format_version: 11' "$store" >/dev/null || fail 'work-item format version missing'
 grep -F 'task_results: []' "$store" >/dev/null || fail 'Task result collection missing'
 grep -F 'integration_results: []' "$store" >/dev/null || fail 'integration result collection missing'
 grep -F 'worktree_state: worktree_ready' "$store" >/dev/null || fail 'ready state missing'

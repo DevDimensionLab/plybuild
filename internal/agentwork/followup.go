@@ -85,7 +85,9 @@ func (s *Service) find(ref string) (Identity, *Work, error) {
 	w, _ := binding(s.native(), *target)
 	return *target, w, nil
 }
-func (s *Service) Register(d Draft) (Followup, error) {
+
+// Register records d as a follow-up of project.
+func (s *Service) Register(project string, d Draft) (Followup, error) {
 	var out Followup
 	if !regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_./:-]{0,127}$`).MatchString(d.PublicationKey) || !reference(d.OwnerRef) || !reference(d.MandateRef) || !reference(d.Registrar.ActorRef) || (d.Registrar.Kind != HumanRequested && d.Registrar.Kind != AgentSelfRegistered) || !reference(d.WaitKind) || !reference(d.WaitRef) || !regexp.MustCompile(`^agr_[a-f0-9]{64}$`).MatchString(d.TargetRef) || !timeValid(d.NextCheckAtUTC) {
 		return out, fmt.Errorf("followup_invalid_draft")
@@ -96,8 +98,12 @@ func (s *Service) Register(d Draft) (Followup, error) {
 	if d.WaitKind == "status" && d.WaitRef != d.TargetRef {
 		return out, fmt.Errorf("followup_status_requires_canonical_target_ref")
 	}
-	id := "fup_" + hash([]string{d.OwnerRef, d.MandateRef, d.WaitKind, d.WaitRef})
-	e := s.locked(func(db *database) error {
+	id := "fup_" + hash([]string{project, d.OwnerRef, d.MandateRef, d.WaitKind, d.WaitRef})
+	store, e := s.store(project)
+	if e != nil {
+		return out, e
+	}
+	e = locked(store, func(db *database) error {
 		if d.WaitKind == "status" {
 			for existingID, r := range db.Records {
 				if existingID == id || r.Value.OwnerRef != d.OwnerRef || r.Value.MandateRef != d.MandateRef || r.Value.WaitKind != "status" {
@@ -123,7 +129,7 @@ func (s *Service) Register(d Draft) (Followup, error) {
 			out = r.Value
 			if _, ok := db.Keys[d.PublicationKey]; !ok {
 				db.Keys[d.PublicationKey] = id
-				return s.save(db)
+				return save(store, db)
 			}
 			return nil
 		}
@@ -137,7 +143,7 @@ func (s *Service) Register(d Draft) (Followup, error) {
 		out = Followup{Kind: FollowupKind, SchemaVersion: 1, ID: id, Revision: 1, Generation: 1, OwnerRef: d.OwnerRef, MandateRef: d.MandateRef, Registrar: d.Registrar, TargetRef: d.TargetRef, WaitKind: d.WaitKind, WaitRef: d.WaitRef, Work: nil, NextCheckAtUTC: d.NextCheckAtUTC, State: "waiting", Cycle: 1, Transport: Transport{State: "not_sent", Reason: "Registered; no input attempted.", CycleRef: cycleRef(id, 1)}, RegisteredAtUTC: s.now()}
 		db.Records[id] = record{Value: out, Target: target, TargetRefs: []string{d.TargetRef}, Draft: d, Requests: map[string]operation{}}
 		db.Keys[d.PublicationKey] = id
-		return s.save(db)
+		return save(store, db)
 	})
 	return s.public(out), e
 }
@@ -192,7 +198,11 @@ func (s *Service) Mutate(id, op string, m Mutation) (Followup, error) {
 		Op       string
 		Mutation Mutation
 	}{op, m})
-	e := s.locked(func(db *database) error {
+	store, _, e := s.locate(id)
+	if e != nil {
+		return out, e
+	}
+	e = locked(store, func(db *database) error {
 		r, ok := db.Records[id]
 		if !ok {
 			return fmt.Errorf("followup_not_found")
@@ -258,7 +268,7 @@ func (s *Service) Mutate(id, op string, m Mutation) (Followup, error) {
 		r.Requests[m.RequestID] = operation{digest, f}
 		db.Records[id] = r
 		out = f
-		return s.save(db)
+		return save(store, db)
 	})
 	return s.public(out), e
 }
@@ -300,7 +310,11 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 	if !validID(id) {
 		return out, fmt.Errorf("followup_invalid_id")
 	}
-	e := s.locked(func(db *database) error {
+	store, _, e := s.locate(id)
+	if e != nil {
+		return out, e
+	}
+	e = locked(store, func(db *database) error {
 		r, ok := db.Records[id]
 		if !ok {
 			return fmt.Errorf("followup_not_found")
@@ -318,7 +332,7 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 			out.Revision++
 			r.Value = out
 			db.Records[id] = r
-			return s.save(db)
+			return save(store, db)
 		}
 		if s.Send == nil {
 			return fmt.Errorf("followup_transport_unavailable")
@@ -341,7 +355,7 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 		out.Transport.DispatchSubject = &attemptSubject
 		r.Value = out
 		db.Records[id] = r
-		if e := s.save(db); e != nil {
+		if e := save(store, db); e != nil {
 			return e
 		}
 		if s.Fault != nil {
@@ -373,7 +387,7 @@ func (s *Service) Dispatch(id string) (Followup, error) {
 		out.Revision++
 		r.Value = out
 		db.Records[id] = r
-		return s.save(db)
+		return save(store, db)
 	})
 	return s.public(out), e
 }

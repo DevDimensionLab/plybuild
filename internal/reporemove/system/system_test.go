@@ -98,7 +98,7 @@ func newFixture(t *testing.T, url func(f fixture) string) fixture {
 	}
 	runGit(t, filepath.Join(f.root, "anchor", "main"), "init", "-q")
 	write(t, filepath.Join(f.root, workspacedef.File), `{"format_version": 1, "projects": [
-  {"id": "ply", "name": "Ply", "wrapper": ".", "repos": [{"id": "anchor", "path": "anchor/main"}], "epics": []}]}
+  {"id": "ply", "name": "Ply", "wrapper": ".", "repos": [{"id": "anchor", "path": "anchor/main"}]}]}
 `)
 	runGit(t, base, "init", "-q", "--bare", f.remote)
 	f.url = f.remote

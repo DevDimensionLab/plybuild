@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"gopkg.in/yaml.v3"
 )
@@ -18,6 +19,9 @@ const (
 	MarkerFile      = "workspace.yaml"
 	FormatVersion   = 1
 )
+
+// MarkerPath is the path of the workspace marker of the workspace at root.
+func MarkerPath(root string) string { return filepath.Join(root, MarkerDirectory, MarkerFile) }
 
 const (
 	reasonReservedPath  = "reserved path is not a regular directory"
@@ -43,7 +47,6 @@ type ErrorClass string
 const (
 	ErrorInvalidArguments ErrorClass = "workspace_init_invalid_arguments"
 	ErrorPath             ErrorClass = "workspace_init_path_error"
-	ErrorNested           ErrorClass = "workspace_init_nested"
 	ErrorConflict         ErrorClass = "workspace_init_conflict"
 	ErrorIO               ErrorClass = "workspace_init_io_error"
 )
@@ -62,8 +65,6 @@ func (err *Error) Error() string {
 		detail = err.Err.Error()
 	}
 	switch err.Class {
-	case ErrorNested:
-		return fmt.Sprintf("%s: %s is inside Ply workspace %s", err.Class, err.Path, detail)
 	case ErrorConflict:
 		return fmt.Sprintf("%s: %s: %s", err.Class, err.Path, detail)
 	case ErrorPath:
@@ -125,7 +126,20 @@ const (
 	localCompatible
 )
 
+// Init makes the working directory a workspace: the .ply marker and, when
+// missing, ply-workspace.json without Projects.
 func Init(dependencies Dependencies) (InitResult, error) {
+	result, err := initMarker(dependencies)
+	if err != nil {
+		return result, err
+	}
+	if err := workspacedef.Create(result.Root); err != nil {
+		return result, ioError("create", filepath.Join(result.Root, DefinitionsFile), err)
+	}
+	return result, nil
+}
+
+func initMarker(dependencies Dependencies) (InitResult, error) {
 	files := dependencies.Files
 	if files == nil {
 		return InitResult{}, ioError("dependencies", "filesystem", errors.New("filesystem dependency is required"))
@@ -137,9 +151,6 @@ func Init(dependencies Dependencies) (InitResult, error) {
 	}
 	result := InitResult{Root: root}
 
-	if err := inspectAncestors(files, root); err != nil {
-		return result, err
-	}
 	state, err := inspectLocal(files, root)
 	if err != nil {
 		return result, err
@@ -150,7 +161,7 @@ func Init(dependencies Dependencies) (InitResult, error) {
 
 	markerBytes, err := yaml.Marshal(Marker{FormatVersion: FormatVersion, Root: root})
 	if err != nil {
-		return result, ioError("marshal", filepath.Join(root, MarkerDirectory, MarkerFile), err)
+		return result, ioError("marshal", MarkerPath(root), err)
 	}
 	staging, err := files.MkdirTemp(root, ".ply.init-*")
 	if err != nil {
@@ -244,38 +255,6 @@ func physicalWorkingDirectory(files FileSystem) (string, error) {
 		return "", pathError("stat", errors.New("working directory is not a directory"))
 	}
 	return physical, nil
-}
-
-func inspectAncestors(files FileSystem, root string) error {
-	for ancestor := filepath.Dir(root); ; ancestor = filepath.Dir(ancestor) {
-		reserved := filepath.Join(ancestor, MarkerDirectory)
-		info, err := files.Lstat(reserved)
-		if err != nil {
-			if !errors.Is(err, fs.ErrNotExist) {
-				return pathError("lstat", err)
-			}
-		} else if info.IsDir() && info.Mode()&fs.ModeSymlink == 0 {
-			markerPath := filepath.Join(reserved, MarkerFile)
-			markerInfo, markerErr := files.Lstat(markerPath)
-			switch {
-			case errors.Is(markerErr, fs.ErrNotExist):
-			case markerErr != nil:
-				return pathError("lstat", markerErr)
-			case !markerInfo.Mode().IsRegular() || markerInfo.Mode()&fs.ModeSymlink != 0:
-				return conflict(markerPath, reasonMarkerType)
-			default:
-				reason := readAndValidateMarker(files, markerPath, ancestor)
-				if reason != "" {
-					return conflict(markerPath, reason)
-				}
-				return &Error{Class: ErrorNested, Path: root, Reason: ancestor}
-			}
-		}
-		if ancestor == filepath.Dir(ancestor) {
-			break
-		}
-	}
-	return nil
 }
 
 func inspectLocal(files FileSystem, root string) (localState, error) {

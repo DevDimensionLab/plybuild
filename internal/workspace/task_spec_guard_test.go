@@ -36,7 +36,7 @@ func TestTaskIntegrationResumeIgnoresUnrelatedProblemChange(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 	if err != nil || git.count() != 1 || len(r.IntegrationAttempts) != 1 || resumed.Readback.Classification != "exact_effect" {
 		t.Fatalf("document update incorrectly vetoed the unchanged explicit Git effect: %#v %v merges=%d", resumed, err, git.count())
 	}

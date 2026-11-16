@@ -84,7 +84,7 @@ func newAssignmentCommand(d workspace.Dependencies) *cobra.Command {
 		if resolved, err = resolveAssignmentProject(rooted, project); err != nil {
 			return assignment.Store{}, err
 		}
-		directory, err := workspace.ProjectDataPath(resolved, assignment.DataPathCategory)
+		directory, err := resolved.Data().Assignments()
 		if err != nil {
 			return assignment.Store{}, err
 		}

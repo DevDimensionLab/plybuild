@@ -32,8 +32,13 @@ func hashStream(f *os.File) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 func workspaceID(root, marker string) string { return "ws_" + digest([]string{root, marker}) }
-func storePath(root, task string) string {
-	return filepath.Join(root, ".ply", "task-process", "v1", task)
+
+// JournalDir is the directory of the Task journals of the Project of work.
+func JournalDir(work workspace.ProjectWork) string {
+	return filepath.Join(work.TaskProcess(), "v1")
+}
+func storePath(work workspace.ProjectWork, task string) string {
+	return filepath.Join(JournalDir(work), task)
 }
 
 type stored struct {
@@ -44,9 +49,9 @@ type stored struct {
 	Locator, SHA256 string
 }
 
-func readStore(root, task, ws string) ([]stored, error) {
+func readStore(work workspace.ProjectWork, task, ws string) ([]stored, error) {
 	out := []stored{}
-	p := storePath(root, task)
+	p := storePath(work, task)
 	d, e := openDir(p, false)
 	if os.IsNotExist(e) {
 		return out, nil
@@ -160,8 +165,8 @@ const (
 	eventSourceLimit = 16 << 20
 )
 
-func sourceCopyPath(root, sha string) string {
-	return filepath.Join(root, ".ply", "task-process", "sources", sha)
+func sourceCopyPath(work workspace.ProjectWork, sha string) string {
+	return filepath.Join(work.TaskProcess(), "sources", sha)
 }
 
 // checkSourceSizes refuses sources over 4 MiB each or 16 MiB together.
@@ -183,8 +188,8 @@ func checkSourceSizes(sources []SourceRef) error {
 }
 
 // keepSource copies the bytes of src into Ply's source store, once per digest.
-func keepSource(root string, src SourceRef) error {
-	target := sourceCopyPath(root, src.SHA256)
+func keepSource(work workspace.ProjectWork, src SourceRef) error {
+	target := sourceCopyPath(work, src.SHA256)
 	if h, e := sourceHash(target); e == nil && h == src.SHA256 {
 		return nil
 	}
@@ -275,7 +280,7 @@ func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendR
 	if e != nil {
 		return AppendResult{}, e
 	}
-	records, e := readStore(b.Workspace.Root, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
+	records, e := readStore(b.Work, task, workspaceID(b.Workspace.Root, b.Workspace.MarkerSHA256))
 	if e != nil {
 		return AppendResult{}, e
 	}
@@ -325,7 +330,7 @@ func (s Service) PlanLink(task string) (*PlyAction, error) {
 	if e != nil {
 		return nil, e
 	}
-	records, _ := ReadContributions(b.Workspace, task)
+	records, _ := ReadContributions(b.Workspace, b.Work, task)
 	return LatestPlanLink(records), nil
 }
 
@@ -339,29 +344,42 @@ type Contribution struct {
 	Observation *ObservationInput
 }
 
-// JournalTasks lists the Tasks that have a journal in the workspace at root.
-func JournalTasks(root string) ([]string, error) {
-	entries, e := os.ReadDir(filepath.Join(root, ".ply", "task-process", "v1"))
-	if os.IsNotExist(e) {
-		return nil, nil
-	}
+// Journal names the journal of Task in the work of its Project.
+type Journal struct {
+	Work workspace.ProjectWork
+	Task string
+}
+
+// Journals lists the Task journals of every Project in the workspace at root,
+// Project by Project.
+func Journals(root string) ([]Journal, error) {
+	works, e := workspace.DefinedWork(root)
 	if e != nil {
 		return nil, e
 	}
-	tasks := []string{}
-	for _, entry := range entries {
-		if _, err := workspace.ParseTaskID(entry.Name()); err == nil && entry.IsDir() {
-			tasks = append(tasks, entry.Name())
+	out := []Journal{}
+	for _, work := range works {
+		entries, e := os.ReadDir(JournalDir(work))
+		if os.IsNotExist(e) {
+			continue
+		}
+		if e != nil {
+			return nil, e
+		}
+		for _, entry := range entries {
+			if _, err := workspace.ParseTaskID(entry.Name()); err == nil && entry.IsDir() {
+				out = append(out, Journal{work, entry.Name()})
+			}
 		}
 	}
-	return tasks, nil
+	return out, nil
 }
 
-// ReadContributions reads the validated journal records of task in w without
-// native facts, registry or source reads. A damaged journal returns its
-// validated prefix with the error.
-func ReadContributions(w workspace.WorkspaceObservation, task string) ([]Contribution, error) {
-	records, e := readStore(w.Root, task, workspaceID(w.Root, w.MarkerSHA256))
+// ReadContributions reads the validated journal records of task in the work
+// of its Project without native facts, registry or source reads. A damaged
+// journal returns its validated prefix with the error.
+func ReadContributions(w workspace.WorkspaceObservation, work workspace.ProjectWork, task string) ([]Contribution, error) {
+	records, e := readStore(work, task, workspaceID(w.Root, w.MarkerSHA256))
 	out := make([]Contribution, 0, len(records))
 	for _, r := range records {
 		out = append(out, Contribution{r.Record.EventID, r.Record.RecordedAt, r.Common, r.Event, r.Observation})
@@ -389,9 +407,9 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if e != nil {
 		return result, e
 	}
-	root := basis.Workspace.Root
-	ws := workspaceID(root, basis.Workspace.MarkerSHA256)
-	records, e := readStore(root, task, ws)
+	work := basis.Work
+	ws := workspaceID(basis.Workspace.Root, basis.Workspace.MarkerSHA256)
+	records, e := readStore(work, task, ws)
 	if e != nil {
 		return result, e
 	}
@@ -405,16 +423,16 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 		return result, e
 	}
 	// No directory or lock is created until the first append is fully validated.
-	p := storePath(root, task)
+	p := storePath(work, task)
 	if e = s.check("before_directories"); e != nil {
 		return result, e
 	}
-	d, e := createStore(root, task)
+	d, e := createStore(work, task)
 	if e != nil {
 		return result, e
 	}
 	defer d.Close()
-	for _, part := range []string{filepath.Join(root, ".ply", "task-process"), filepath.Join(root, ".ply", "task-process", "v1"), p} {
+	for _, part := range []string{work.TaskProcess(), JournalDir(work), p} {
 		if e = regularMode(part); e != nil {
 			return result, e
 		}
@@ -446,10 +464,10 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if e != nil {
 		return result, e
 	}
-	if nowBasis.Workspace != basis.Workspace {
+	if nowBasis.Workspace != basis.Workspace || nowBasis.Work != basis.Work {
 		return result, conflict("workspace identity changed")
 	}
-	records, e = readStore(root, task, ws)
+	records, e = readStore(work, task, ws)
 	if e != nil {
 		return result, e
 	}
@@ -460,7 +478,7 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 		return result, e
 	}
 	for _, src := range c.Sources {
-		if e = keepSource(root, src); e != nil {
+		if e = keepSource(work, src); e != nil {
 			return result, e
 		}
 	}

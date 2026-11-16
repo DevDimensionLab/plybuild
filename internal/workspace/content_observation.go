@@ -10,12 +10,12 @@ import "bytes"
 // callers receive owned copies so parsing or editing cannot poison later reads.
 func observeTaskContent(source *TaskContentStorage) *TaskContentStorage {
 	verified := map[capturedTaskContentKey][]byte{}
-	return &TaskContentStorage{scope: source.scope, readCaptured: func(root, kind, digest string) ([]byte, error) {
-		key := capturedTaskContentKey{root, kind, digest}
+	return &TaskContentStorage{scope: source.scope, readCaptured: func(work ProjectWork, kind, digest string) ([]byte, error) {
+		key := capturedTaskContentKey{work, kind, digest}
 		if b, ok := verified[key]; ok {
 			return bytes.Clone(b), nil
 		}
-		b, err := source.Read(root, kind, digest)
+		b, err := source.Read(work, kind, digest)
 		if err != nil {
 			return nil, err
 		}

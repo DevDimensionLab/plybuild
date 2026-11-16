@@ -55,7 +55,7 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 				return fmt.Errorf("%w: JSON output is not supported", repoestablish.ErrInvalid)
 			}
 			if req.Workspace == "" {
-				observed, err := workspace.ObserveContainingRoot(workspace.Dependencies{Files: env.files})
+				observed, err := workspace.ObserveContaining(workspace.Dependencies{Files: env.files})
 				if err != nil {
 					return err
 				}

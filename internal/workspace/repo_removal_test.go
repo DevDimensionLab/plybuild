@@ -17,7 +17,7 @@ type registrationsStore struct {
 	registry WorkItemRegistry
 }
 
-func (s registrationsStore) SnapshotRegistrations(string) (WorkItemRegistry, error) {
+func (s registrationsStore) SnapshotRegistrations(ProjectWork) (WorkItemRegistry, error) {
 	return s.registry, nil
 }
 
@@ -80,11 +80,6 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 		"clean": {setup: func(*testing.T, definitionFixture, *Dependencies) {}},
 		"last repository": {project: "app", repo: "app", class: ErrorProjectInvalidArguments, reason: "at least one",
 			setup: func(*testing.T, definitionFixture, *Dependencies) {}},
-		"defined Epic": {class: ErrorProjectConflict, reason: "Epic map in", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
-			f.editDefinitions(t, func(d *workspacedef.Definitions) {
-				d.Projects[0].Epics = append(d.Projects[0].Epics, workspacedef.Epic{ID: "map", Title: "Map", Repo: string(repo), Path: "ply/ply-code-map/main", Ref: "refs/heads/main"})
-			})
-		}},
 		"Epic binding": {class: ErrorProjectConflict, reason: "Epic e in", setup: func(_ *testing.T, _ definitionFixture, d *Dependencies) {
 			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{Epics: []EpicRecord{{ID: "e", RepoBindings: []EpicRepoBinding{{RepoID: repo}}}}}}
 		}},
@@ -98,28 +93,26 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{EpicCreateOperations: []EpicCreateOperation{{ID: "o", Request: EpicCreateInput{RepoID: repo}}}}}
 		}},
 		"invalid work-item registry": {workItem: ErrorWorkStoreConflict, reason: "invalid work-item registry", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
-			mustWriteFile(t, filepath.Join(f.ply, WorkItemsFile), "format_version: [\n")
-		}},
-		"legacy registry lists repository": {class: ErrorProjectConflict, reason: "legacy registry", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
-			f.addLegacyProject(t, ProjectAddInput{ProjectID: "legacy", Name: "Legacy", Wrapper: "ply", Repos: []RepoInput{{RepoID: repo, Path: "ply/ply-code-map/main"}}})
+			writeWorkItems(t, f.root, "format_version: [\n", "ply")
 		}},
 		"repository path inside wrapper": {class: ErrorProjectConflict, reason: "repository nested of Project app is inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
 			f.editDefinitions(t, func(d *workspacedef.Definitions) {
 				d.Projects[1].Repos = append(d.Projects[1].Repos, workspacedef.Repo{ID: "nested", Path: "ply/ply-code-map/nested"})
 			})
 		}},
-		"Epic path inside wrapper": {class: ErrorProjectConflict, reason: "Epic ply-master is inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
-			f.editDefinitions(t, func(d *workspacedef.Definitions) { d.Projects[0].Epics[0].Path = "ply/ply-code-map/epic" })
+		"Epic path inside wrapper": {class: ErrorProjectConflict, reason: "Epic e is inside", setup: func(_ *testing.T, f definitionFixture, d *Dependencies) {
+			locator := filepath.Join(f.root, "ply", "ply-code-map", "epic")
+			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{Epics: []EpicRecord{{ID: "e", RepoBindings: []EpicRepoBinding{{RepoID: "app", Worktree: EpicWorktreeBinding{Locator: locator}}}}}}}
 		}},
 		"Project root inside wrapper": {class: ErrorProjectConflict, reason: "Project inner has its root inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
 			f.editDefinitions(t, func(d *workspacedef.Definitions) {
-				d.Projects = append(d.Projects, workspacedef.Project{ID: "inner", Name: "Inner", Wrapper: "ply/ply-code-map/inner", Repos: []workspacedef.Repo{{ID: "app", Path: "app/main"}}, Epics: []workspacedef.Epic{}})
+				d.Projects = append(d.Projects, workspacedef.Project{ID: "inner", Name: "Inner", Wrapper: "ply/ply-code-map/inner", Repos: []workspacedef.Repo{{ID: "retired", Path: "retired"}}})
 			})
 		}},
 		"Project root alias resolving inside wrapper": {class: ErrorProjectConflict, reason: "Project inner has its root inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
 			f.alias(t, "inner-alias", filepath.Join(f.root, "ply", "ply-code-map", "inner"))
 			f.editDefinitions(t, func(d *workspacedef.Definitions) {
-				d.Projects = append(d.Projects, workspacedef.Project{ID: "inner", Name: "Inner", Wrapper: "inner-alias", Repos: []workspacedef.Repo{{ID: "app", Path: "app/main"}}, Epics: []workspacedef.Epic{}})
+				d.Projects = append(d.Projects, workspacedef.Project{ID: "inner", Name: "Inner", Wrapper: "inner-alias", Repos: []workspacedef.Repo{{ID: "retired", Path: "retired"}}})
 			})
 		}},
 		"repository alias resolving inside wrapper": {class: ErrorProjectConflict, reason: "repository nested of Project app is inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
@@ -177,7 +170,6 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 				t.Fatalf("error %v, want reason %q", err, tc.reason)
 			}
 			if name != "legacy registry lists repository" {
-				requireAbsent(t, filepath.Join(f.ply, ProjectsFile))
 			}
 		})
 	}
@@ -209,58 +201,5 @@ func TestRemoveDefinitionRepoUsesExpectedBasis(t *testing.T) {
 		if r.ID == "ply-code-map" {
 			t.Fatalf("member kept: %+v", f.definitions(t).Projects[0].Repos)
 		}
-	}
-}
-
-func TestClearRepositoryWrapperAtDoesNotBootstrapUnrelatedEpics(t *testing.T) {
-	for _, registry := range []string{"present", "absent"} {
-		t.Run(registry, func(t *testing.T) {
-			f := newMetadataFixture(t)
-			if _, err := f.add(t, f.root, "ply", "ply-code-map", "./ply-code-map"); err != nil {
-				t.Fatal(err)
-			}
-			if _, err := f.setWrapper("ply", "ply-code-map", filepath.Join(f.root, "ply-code-map")); err != nil {
-				t.Fatal(err)
-			}
-			app := filepath.Join(f.root, "app", "main")
-			runLocalGit(t, app, "symbolic-ref", "HEAD", "refs/heads/master")
-			runLocalGit(t, app, "-c", "user.name=Ply tests", "-c", "user.email=tests@example.invalid", "commit", "-q", "--allow-empty", "-m", "fixture")
-			f.editDefinitions(t, func(d *workspacedef.Definitions) {
-				d.Projects[1].Epics = append(d.Projects[1].Epics, workspacedef.Epic{ID: "app-master", Title: "App master", Repo: "app", Path: "app/main", Ref: "refs/heads/master"})
-			})
-			workItems := filepath.Join(f.ply, WorkItemsFile)
-			if registry == "absent" {
-				if err := os.Remove(workItems); err != nil {
-					t.Fatal(err)
-				}
-			}
-			before := snapshotTree(t, f.ply)
-			delete(before, f.metadataPath())
-
-			if _, err := ClearRepositoryWrapperAt(f.metadataDependencies(), f.root, "ply", "ply-code-map", "codex", 0); projectClass(err) != ErrorProjectConflict {
-				t.Fatalf("stale revision error %v", err)
-			}
-			out, err := ClearRepositoryWrapperAt(f.metadataDependencies(), f.root, "ply", "ply-code-map", "codex", 1)
-
-			if err != nil || !out.Changed || out.Revision != 2 || out.Event == nil || out.Event.Operation != ProjectRepoWrapperClear {
-				t.Fatalf("clear %+v %v", out, err)
-			}
-			if got := repositoryWrapper(out.ProjectMetadataReadback, "ply-code-map"); got != nil {
-				t.Fatalf("wrapper kept: %v", *got)
-			}
-			after := snapshotTree(t, f.ply)
-			delete(after, f.metadataPath())
-			if len(before) != len(after) {
-				t.Fatalf("files changed:\nbefore %v\nafter  %v", before, after)
-			}
-			for path, value := range before {
-				if after[path] != value {
-					t.Fatalf("%s changed", path)
-				}
-			}
-			if registry == "absent" {
-				requireAbsent(t, workItems)
-			}
-		})
 	}
 }

@@ -32,23 +32,15 @@ type Definitions struct {
 	Projects      []Project `json:"projects"`
 }
 type Project struct {
-	ID        string            `json:"id"`
-	Name      string            `json:"name"`
-	Wrapper   string            `json:"wrapper"`
-	Repos     []Repo            `json:"repos"`
-	Epics     []Epic            `json:"epics"`
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Wrapper string `json:"wrapper"`
+	Repos   []Repo `json:"repos"`
 }
 type Repo struct {
 	ID     string `json:"id"`
 	Path   string `json:"path"`
 	Remote string `json:"remote,omitempty"` // clone URL; absent when the repository has none
-}
-type Epic struct {
-	ID    string `json:"id"`
-	Title string `json:"title"`
-	Repo  string `json:"repo"`
-	Path  string `json:"path"`
-	Ref   string `json:"ref"`
 }
 
 // Effect is what an Update did to the definitions file.
@@ -260,6 +252,24 @@ func update(root, basis string, mutate func(*Definitions) (bool, error), check f
 	return result, err
 }
 
+// Apply is Update against the definitions as they are under the lock, so
+// concurrent Applies serialize instead of conflicting.
+func Apply(root string, mutate func(*Definitions) (bool, error), check func(Definitions) error) (Result, error) {
+	if mutate == nil || check == nil {
+		return Result{Effect: NotAttempted}, &Error{Kind: KindUsage, Detail: "mutate and check are required"}
+	}
+	result := Result{Effect: NotAttempted}
+	err := WithLock(root, func() error {
+		_, basis, err := Read(root)
+		if err != nil {
+			return err
+		}
+		result, err = updateLocked(root, basis, mutate, check, systemHooks())
+		return err
+	})
+	return result, err
+}
+
 // WithLock runs fn while holding <root>/.ply/projects.lock, the lock Update
 // takes. fn must not take projects.lock. Lock and release failures are
 // filelock errors; a release failure after fn failed is errors.Join(fnErr, releaseErr).
@@ -353,9 +363,6 @@ func clone(d Definitions) Definitions {
 		// Keep nil and empty slices apart: they marshal as null and [].
 		if p.Repos != nil {
 			p.Repos = append([]Repo{}, p.Repos...)
-		}
-		if p.Epics != nil {
-			p.Epics = append([]Epic{}, p.Epics...)
 		}
 		out.Projects[i] = p
 	}

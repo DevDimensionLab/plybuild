@@ -14,7 +14,7 @@ import (
 func TestProjectMetadataExplicitRegistrationSurvivesMissingDirectories(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	before, err := os.ReadFile(filepath.Join(root, MarkerDirectory, ProjectsFile))
+	before, err := os.ReadFile(filepath.Join(root, DefinitionsFile))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +49,7 @@ func TestProjectMetadataExplicitRegistrationSurvivesMissingDirectories(t *testin
 	if out, err := UpdateProjectMetadata(f.dependencies, input); err != nil || !out.Changed || len(out.Companions) != 0 {
 		t.Fatalf("remove missing directory = %#v %v", out, err)
 	}
-	after, err := os.ReadFile(filepath.Join(root, MarkerDirectory, ProjectsFile))
+	after, err := os.ReadFile(filepath.Join(root, DefinitionsFile))
 	if err != nil || !bytes.Equal(before, after) {
 		t.Fatalf("metadata changed project identities: %v", err)
 	}

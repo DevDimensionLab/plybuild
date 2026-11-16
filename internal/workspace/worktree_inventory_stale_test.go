@@ -17,8 +17,9 @@ func TestEpicAdoptWithUnrelatedPrunableWorktree(t *testing.T) {
 		t.Fatal(err)
 	}
 	ref := runLocalGit(t, repository, "symbolic-ref", "HEAD")
-	adopted, err := AdoptEpic(f.dependencies, EpicAdoptInput{EpicID: "second", Title: "Second Epic", ProjectID: "ply", RepoID: "ply", Worktree: repository, Ref: ref, ExpectedOID: f.oid})
-	if err != nil || !adopted.Created {
+	second := EpicAdoptInput{EpicID: "second", Title: "Second Epic", ProjectID: "ply", RepoID: "ply", Worktree: repository, Ref: ref, ExpectedOID: f.oid}
+	adopted, err := AdoptEpic(f.dependencies, second)
+	if err != nil || adopted.Epic.ID != "second" {
 		t.Fatalf("unrelated prunable worktree blocked clean Epic adoption: %+v, %v", adopted, err)
 	}
 	inventory, err := f.dependencies.WorkGit.ListWorktrees(RepoRecord{Locator: repository})

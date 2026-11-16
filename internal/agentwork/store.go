@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/privatestore"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -30,10 +31,48 @@ type database struct {
 	Keys     map[string]string `json:"keys"`
 }
 
-func (s *Service) dir() string { return filepath.Join(s.Root, ".ply", "agent-work", "v1") }
-func (s *Service) read() (database, error) {
+// stores are the agent-work directories of every defined Project, sorted by
+// Project. A follow-up lives in exactly one of them; its ID includes the
+// Project, so IDs are unique across the workspace.
+func (s *Service) stores() ([]workspace.ProjectWork, error) { return workspace.DefinedWork(s.Root) }
+
+// store is the agent-work directory of project. The wrapper must exist.
+func (s *Service) store(project string) (string, error) {
+	works, e := s.stores()
+	if e != nil {
+		return "", e
+	}
+	for _, w := range works {
+		if string(w.Project) == project {
+			if e := w.Create(); e != nil {
+				return "", e
+			}
+			return w.AgentWork(), nil
+		}
+	}
+	return "", fmt.Errorf("followup_project_not_found")
+}
+
+// locate is the store holding follow-up id, searched in every Project.
+func (s *Service) locate(id string) (string, record, error) {
+	works, e := s.stores()
+	if e != nil {
+		return "", record{}, e
+	}
+	for _, w := range works {
+		db, e := read(w.AgentWork())
+		if e != nil {
+			return "", record{}, e
+		}
+		if r, ok := db.Records[id]; ok {
+			return w.AgentWork(), r, nil
+		}
+	}
+	return "", record{}, fmt.Errorf("followup_not_found")
+}
+func read(store string) (database, error) {
 	db := database{Records: map[string]record{}, Keys: map[string]string{}}
-	dir := filepath.Join(s.dir(), "revisions")
+	dir := filepath.Join(store, "revisions")
 	if e := privatestore.PhysicalPath(dir); e != nil {
 		if os.IsNotExist(e) {
 			return db, nil
@@ -68,7 +107,7 @@ func (s *Service) read() (database, error) {
 	}
 	return db, nil
 }
-func (s *Service) save(db *database) error {
+func save(store string, db *database) error {
 	db.Sequence++
 	b, e := json.Marshal(db)
 	if e != nil {
@@ -77,11 +116,11 @@ func (s *Service) save(db *database) error {
 	if len(b) > maxStoreBytes {
 		return fmt.Errorf("followup_store_limit")
 	}
-	return privatestore.PrivateWriteOnce(filepath.Join(s.dir(), "revisions", fmt.Sprintf("%012d.json", db.Sequence)), b)
+	return privatestore.PrivateWriteOnce(filepath.Join(store, "revisions", fmt.Sprintf("%012d.json", db.Sequence)), b)
 }
-func (s *Service) locked(f func(*database) error) error {
-	return privatestore.WithPrivateLock(s.dir(), func() error {
-		db, e := s.read()
+func locked(store string, f func(*database) error) error {
+	return privatestore.WithPrivateLock(store, func() error {
+		db, e := read(store)
 		if e != nil {
 			return e
 		}
@@ -93,13 +132,9 @@ func (s *Service) Show(id string) (Followup, error) {
 	if !validID(id) {
 		return Followup{}, fmt.Errorf("followup_invalid_id")
 	}
-	db, e := s.read()
+	_, r, e := s.locate(id)
 	if e != nil {
 		return Followup{}, e
-	}
-	r, ok := db.Records[id]
-	if !ok {
-		return Followup{}, fmt.Errorf("followup_not_found")
 	}
 	return s.public(r.Value), nil
 }
@@ -110,18 +145,28 @@ func (s *Service) List(due bool) (List, error) {
 // list projects each row against one request-local native basis.
 func (s *Service) list(due bool, native func() NativeSnapshot) (List, error) {
 	o := List{ListKind, 1, s.now(), []Followup{}}
-	db, e := s.read()
+	works, e := s.stores()
 	if e != nil {
 		return o, e
 	}
+	records := map[string]record{}
+	for _, w := range works {
+		db, e := read(w.AgentWork())
+		if e != nil {
+			return o, e
+		}
+		for id, r := range db.Records {
+			records[id] = r
+		}
+	}
 	ids := []string{}
-	for id := range db.Records {
+	for id := range records {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 	n := native()
 	for _, id := range ids {
-		f := db.Records[id].Value
+		f := records[id].Value
 		if !due || f.State == "waiting" && f.Transport.State == "not_sent" && s.isDue(f) {
 			o.Items = append(o.Items, s.publicWithNative(f, n))
 		}
@@ -136,13 +181,9 @@ func (s *Service) RequestStatus(id, requestID string) (Followup, error) {
 	if !validID(id) || !reference(requestID) {
 		return Followup{}, fmt.Errorf("followup_invalid_request_identity")
 	}
-	db, e := s.read()
+	_, r, e := s.locate(id)
 	if e != nil {
 		return Followup{}, e
-	}
-	r, ok := db.Records[id]
-	if !ok {
-		return Followup{}, fmt.Errorf("followup_not_found")
 	}
 	p, ok := r.Requests[requestID]
 	if !ok {

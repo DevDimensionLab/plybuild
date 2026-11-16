@@ -199,7 +199,8 @@ func TestWorkflowStatusActualReadEmptyAndMissingWorkspace(t *testing.T) {
 		}
 	}
 	entries, err := os.ReadDir(filepath.Join(path, ".ply"))
-	if err != nil || len(entries) != 1 || entries[0].Name() != "workspace.yaml" {
+	// init leaves projects.lock beside the marker; reads add nothing.
+	if err != nil || len(entries) != 2 || entries[0].Name() != "projects.lock" || entries[1].Name() != "workspace.yaml" {
 		t.Fatalf("read created state: %v, %v", entries, err)
 	}
 	outside := t.TempDir()

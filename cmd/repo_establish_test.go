@@ -53,8 +53,8 @@ func createWorkspace(t *testing.T) string {
 		}
 	}
 	definitions := `{"format_version": 1, "projects": [
-  {"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [], "epics": []},
-  {"id": "app", "name": "App", "wrapper": "app", "repos": [], "epics": []}]}`
+  {"id": "ply", "name": "Ply", "wrapper": "ply", "repos": []},
+  {"id": "app", "name": "App", "wrapper": "app", "repos": []}]}`
 	if err := os.WriteFile(filepath.Join(root, workspacedef.File), []byte(definitions), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -184,8 +184,7 @@ func TestRepoCreateFromProjectRootLeavesEpicRuntimeUntouched(t *testing.T) {
 		t.Fatalf("git init: %v %s", err, out)
 	}
 	definitions := `{"format_version": 1, "projects": [
-  {"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "ply", "path": "ply/main"}],
-   "epics": [{"id": "ply-main", "title": "Ply main", "repo": "ply", "path": "ply/main", "ref": "refs/heads/main"}]}]}`
+  {"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "ply", "path": "ply/main"}]}]}`
 	if err := os.WriteFile(filepath.Join(root, workspacedef.File), []byte(definitions), 0o644); err != nil {
 		t.Fatal(err)
 	}

@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Format 4 keeps adopted bindings immutable and records append-only decisions.
+// The queue keeps adopted bindings immutable and records append-only decisions.
 type QueueTarget struct {
 	ProjectID        ProjectID  `yaml:"project_id" json:"project_id"`
 	RepoID           RepoID     `yaml:"repo_id" json:"repo_id"`
@@ -67,7 +67,6 @@ type WorkspaceEpicBaseUpdatePlan struct {
 	AffectedSelections    []EpicAffectedSelection  `yaml:"affected_selections" json:"affected_selections"`
 	CurrentPreparationID  *string                  `yaml:"current_preparation_id" json:"current_preparation_id"`
 	UnresolvedOperations  []string                 `yaml:"unresolved_operations" json:"unresolved_operations"`
-	ActivePreparationIDs  *[]string                `yaml:"active_preparation_ids,omitempty" json:"active_preparation_ids,omitempty"`
 }
 
 // A plan of the current schema has no member of the removed preparation;
@@ -124,20 +123,18 @@ type QueueRegistryReadback struct {
 }
 
 type QueuePending struct {
-	SerialReadiness   string                  `yaml:"serial_readiness,omitempty" json:"serial_readiness,omitempty"`
-	ParallelReadiness string                  `yaml:"parallel_readiness,omitempty" json:"parallel_readiness,omitempty"`
-	Goal              *TaskGoalRef            `yaml:"goal,omitempty" json:"goal,omitempty"`
-	Executor          *TaskExecutorAssignment `yaml:"executor,omitempty" json:"executor,omitempty"`
-	Rank              int                     `yaml:"rank" json:"rank"`
-	TaskID            TaskID                  `yaml:"task_id" json:"task_id"`
-	Title             string                  `yaml:"title" json:"title"`
-	Selection         *TaskDecisionRef        `yaml:"selection" json:"selection"`
-	SpecID            *string                 `yaml:"spec_id" json:"spec_id"`
-	SpecRevision      *int                    `yaml:"spec_revision" json:"spec_revision"`
-	BaseRevision      *int                    `yaml:"base_revision" json:"base_revision"`
-	ParentOID         *string                 `yaml:"parent_oid" json:"parent_oid"`
-	State             string                  `yaml:"state" json:"state"`
-	Reasons           []QueueReason           `yaml:"reasons" json:"reasons"`
+	Goal         *TaskGoalRef            `yaml:"goal,omitempty" json:"goal,omitempty"`
+	Executor     *TaskExecutorAssignment `yaml:"executor,omitempty" json:"executor,omitempty"`
+	Rank         int                     `yaml:"rank" json:"rank"`
+	TaskID       TaskID                  `yaml:"task_id" json:"task_id"`
+	Title        string                  `yaml:"title" json:"title"`
+	Selection    *TaskDecisionRef        `yaml:"selection" json:"selection"`
+	SpecID       *string                 `yaml:"spec_id" json:"spec_id"`
+	SpecRevision *int                    `yaml:"spec_revision" json:"spec_revision"`
+	BaseRevision *int                    `yaml:"base_revision" json:"base_revision"`
+	ParentOID    *string                 `yaml:"parent_oid" json:"parent_oid"`
+	State        string                  `yaml:"state" json:"state"`
+	Reasons      []QueueReason           `yaml:"reasons" json:"reasons"`
 }
 
 type WorkspaceTaskQueueReadback struct {

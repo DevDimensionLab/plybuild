@@ -18,7 +18,7 @@ Heads up!
   
 For a prebuilt macOS arm64 CLI, use the [consumer installation and recovery guide](docs/cli-installation.md).
 It needs neither Go nor a source checkout and can replace an old CLI that cannot read the workspace.
-See also [shared registry compatibility and controlled upgrades](docs/registry-compatibility.md).
+See also the [work-item registry format](docs/registry-compatibility.md).
 
 Building from source requires [Go 1.26.10](https://go.dev/doc/install).
 
@@ -91,7 +91,8 @@ ply workspace init
 The command creates `.ply/workspace.yaml` with format version 1 and the canonical physical
 directory path. The directory does not need to be a Git repository. Re-running the command is
 safe and leaves an existing compatible marker unchanged. It does not create a Git repository or
-create workflows.
+create workflows. A workspace may lie inside another one; as with Git
+repositories, every command uses the nearest `.ply` above the current directory.
 
 To use a directory of repositories as a workspace with one Project, run from that directory:
 
@@ -619,7 +620,7 @@ never changes the selected revision. A new problem, latest assessment, selection
 can make the previous basis stale. Changing a problem requires a new solution revision and
 human choice before another start; an old result remains historical evidence.
 
-Imports preserve exact source bytes under private `.ply/task-content` paths. The source may
+Imports preserve exact source bytes under the private task-content store of the Project, `<wrapper>/data/work/task-content`. The source may
 later move or disappear. Reads rehash snapshots and never repair or migrate them. A repeated
 publication key with identical draft content finds the original outcome before predecessor
 checks or source reads; different content conflicts. After an uncertain publication, inspect
@@ -825,7 +826,8 @@ An identical canonical retry returns the same event, registration time and diges
 with `created=false`, even after a source disappears. Different input conflicts.
 A post-publication error reports an unknown result and the key/readback path;
 retry only the contribution, not the work it describes. Records are published
-atomically under a local append lock in private `.ply/task-process/v1/` storage.
+atomically under a local append lock in private `task-process/v1/` storage in
+the work directory of the Task's Project, `<wrapper>/data/work/`.
 Sources are referenced and hashed, never executed or copied into the journal.
 Do not submit transcripts, credentials, secrets or arbitrary payloads.
 
@@ -950,6 +952,32 @@ replace the file atomically; reads take no lock and create nothing. A file that 
 be read is listed under `invalid` and never overwritten. A file is limited to 8 MiB
 including history; beyond it `update` returns `plan_full` and keeps the file. On
 `result unknown`, run `show` or `list` before writing again.
+
+## Intelligence
+
+Agents record what they learn in a Project as immutable posts, and read them back only
+through `ply intelligence`:
+
+```shell script
+ply intelligence draft --kind observation --repo ply --activity PLAN-77/spec --role author --provider claude > draft.json
+# fill in the empty fields of draft.json
+ply intelligence observe --file draft.json
+ply intelligence observations --after obs-<uuid> --format json
+ply intelligence show obs-<uuid>
+```
+
+A post's `schema` is its kind: `ply.observation/v1` (`observation`) or
+`ply.code-health-review/v1` (`code-health-review`). `draft` sets the ID, `recorded_at`
+and the origin, and checks that `--repo` belongs to the Project; the ID and time stay
+on every retry. `observe` validates the post against its schema and stores its
+canonical form (sorted keys, two-space indent, raw UTF-8) without ever replacing a
+post: the same post again is `already_recorded`, the same ID with other content a
+conflict. Links to `obs-` IDs must point to stored posts of any kind; a `uses` link
+to a knowledge post `k-<date>-<slug>` is checked for its form only. An observation is
+at most 32 KiB and a code-health review 4 MiB. `observations` lists posts by
+`recorded_at` and ID with `--kind`, `--repo`, `--role`, `--activity`, `--since`,
+`--after` and `--links-to`; its JSON holds each whole post and the `sha256` of its
+bytes. Posts live in `<project wrapper>/data/intelligence/`.
 
 ## Agent quota
 

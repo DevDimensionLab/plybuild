@@ -148,7 +148,7 @@ func BuildTaskList(s *Snapshot, filters workspace.TaskListFilters, process map[w
 			title = workspace.TaskListTitle{Title: &registeredTitle, Source: "registration", Status: "available"}
 		}
 		p := buildProgress(task, facts[task.ID], process[task.ID], s.Freshness, s.Reasons)
-		for _, event := range s.Lifecycle.Events {
+		for _, event := range s.Lifecycle.Events() {
 			if event.SubjectKind == "task" && event.SubjectID == string(task.ID) {
 				p.LastActivityUTC = latestTime(p.LastActivityUTC, &event.RecordedAtUTC)
 			}

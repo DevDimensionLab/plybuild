@@ -11,7 +11,7 @@ import (
 
 func persistedPhysicalDigest(t *testing.T, root string) string {
 	t.Helper()
-	raw, err := os.ReadFile(workItemsPath(root))
+	raw, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,7 +35,7 @@ func TestIntegrationEvidencePersistedReadbackUsesPhysicalDigest(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			f := newIntegrationJourneyFixture(t)
-			r, err := f.dependencies.WorkItems.Snapshot(f.root)
+			r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 			if err != nil {
 				t.Fatal(err)
 			}

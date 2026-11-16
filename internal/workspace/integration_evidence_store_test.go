@@ -30,7 +30,7 @@ func evidenceHistoryFixture(t *testing.T) WorkItemRegistry {
 		if err != nil || out.Readback.Classification != "no_effect" {
 			t.Fatalf("retry %d: %s %v", i, out.Readback.Classification, err)
 		}
-		r, err := f.dependencies.WorkItems.Snapshot(f.root)
+		r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -43,7 +43,7 @@ func evidenceHistoryFixture(t *testing.T) WorkItemRegistry {
 			}
 		}
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(f.root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -52,7 +52,7 @@ func evidenceHistoryFixture(t *testing.T) WorkItemRegistry {
 
 func publishEvidenceFixture(t *testing.T, s *systemWorkItemStore, root string, r WorkItemRegistry) {
 	t.Helper()
-	if err := s.WithLock(root, func(session WorkItemStoreSession) error { return session.Publish(r) }); err != nil {
+	if err := s.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(r) }); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -63,27 +63,16 @@ func TestIntegrationEvidenceTaskCreationDoesNotRewriteHistory(t *testing.T) {
 	s := newSystemWorkItemStore()
 	publishEvidenceFixture(t, s, root, r)
 	before := evidenceFileSnapshot(t, root)
-	legacyRoot := createProjectWorkspace(t)
-	baseline, err := encodeWorkItemRegistry(r)
+	inline, err := encodeWorkItemRegistry(r)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(workItemsPath(legacyRoot), baseline, 0600); err != nil {
-		t.Fatal(err)
-	}
-	legacyBefore := evidenceFileSnapshot(t, legacyRoot)
 	// A normal new unbound Task, without any integration operation.
 	r.Tasks = append(r.Tasks, TaskRecord{ID: "another-task", Title: "Another Task", Description: "Synthetic measurement", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply", GitCommonDir: r.Tasks[0].GitCommonDir, WorktreeState: WorkItemUnbound})
 	sortWorkRegistry(&r)
-	legacy, err := encodeWorkItemRegistry(r)
-	if err != nil {
-		t.Fatal(err)
-	}
 	publishEvidenceFixture(t, s, root, r)
-	publishEvidenceFixture(t, s, legacyRoot, r)
 	actualBytes, actualFiles := evidencePublishedDelta(t, before, evidenceFileSnapshot(t, root))
-	baselineBytes, baselineFiles := evidencePublishedDelta(t, legacyBefore, evidenceFileSnapshot(t, legacyRoot))
-	if actualFiles != 1 || baselineFiles != 1 || baselineBytes != int64(len(legacy)) {
+	if actualFiles != 1 {
 		t.Fatal("unexpected published files")
 	}
 	for path, info := range before {
@@ -95,24 +84,19 @@ func TestIntegrationEvidenceTaskCreationDoesNotRewriteHistory(t *testing.T) {
 			t.Fatalf("historical object rewritten: %s %v", path, err)
 		}
 	}
-	disk, err := os.ReadFile(workItemsPath(root))
+	disk, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf("MEASURE published Task payload: before=%d bytes/%d files; after=%d bytes/%d files; reduction=%.2f%%; authorities/intents/attempts/results=8/8/8/8; unchanged historical objects=%d", baselineBytes, baselineFiles, actualBytes, actualFiles, 100*(1-float64(actualBytes)/float64(baselineBytes)), 32+len(r.TaskContentPublications))
-	var stock int64
-	for _, info := range evidenceFileSnapshot(t, root) {
-		stock += info.Size()
-	}
-	t.Logf("STOCK new store=%d bytes (registry plus retained evidence); stock is not publication I/O", stock)
-	if bytes.Contains(disk, []byte("plan_sha256:")) || len(disk) >= len(legacy)/2 {
+	t.Logf("MEASURE published Task payload: %d bytes/%d files; authorities/intents/attempts/results=8/8/8/8; unchanged historical objects=%d", actualBytes, actualFiles, 32+len(r.TaskContentPublications))
+	if bytes.Contains(disk, []byte("plan_sha256:")) || len(disk) >= len(inline)/2 {
 		t.Fatal("ordinary Task publication serialized historical integration payloads again")
 	}
-	objects, err := filepath.Glob(filepath.Join(root, MarkerDirectory, "task-content", "v1", "integration-evidence", "sha256", "*"))
+	objects, err := filepath.Glob(filepath.Join(testWork(t, root).Dir, "task-content", "v1", "integration-evidence", "sha256", "*"))
 	if err != nil || len(objects) != 32+len(r.TaskContentPublications) {
 		t.Fatalf("want %d immutable records, got %d: %v", 32+len(r.TaskContentPublications), len(objects), err)
 	}
-	restored, err := s.Snapshot(root)
+	restored, err := s.Snapshot(testWork(t, root))
 	if err != nil || len(restored.IntegrationResults) != 8 {
 		t.Fatalf("history unavailable: %v", err)
 	}
@@ -124,7 +108,7 @@ func TestIntegrationEvidenceTaskCreationDoesNotRewriteHistory(t *testing.T) {
 func evidenceFileSnapshot(t *testing.T, root string) map[string]os.FileInfo {
 	t.Helper()
 	out := map[string]os.FileInfo{}
-	err := filepath.WalkDir(filepath.Join(root, MarkerDirectory), func(path string, e fs.DirEntry, err error) error {
+	err := filepath.WalkDir(testWork(t, root).Dir, func(path string, e fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -164,11 +148,11 @@ func TestIntegrationEvidenceFailClosed(t *testing.T) {
 			root := createProjectWorkspace(t)
 			s := newSystemWorkItemStore()
 			publishEvidenceFixture(t, s, root, r)
-			err := s.WithLock(root, func(session WorkItemStoreSession) error {
+			err := s.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 				if _, err := session.Snapshot(); err != nil {
 					return err
 				}
-				raw, err := os.ReadFile(workItemsPath(root))
+				raw, err := os.ReadFile(testWork(t, root).Registry())
 				if err != nil {
 					return err
 				}
@@ -178,7 +162,7 @@ func TestIntegrationEvidenceFailClosed(t *testing.T) {
 				}
 				logical := registryNodeField(node, "registry")
 				refs := registryNodeField(logical, "integration_authorities")
-				path := taskContentPath(root, integrationEvidenceKind, refs.Content[0].Value)
+				path := taskContentPath(testWork(t, root), integrationEvidenceKind, refs.Content[0].Value)
 				switch fault {
 				case "missing":
 					err = os.Remove(path)
@@ -214,7 +198,7 @@ func TestIntegrationEvidenceFailClosed(t *testing.T) {
 					if e != nil {
 						return e
 					}
-					refs.Content[0].Value, err = evidenceStorage(s).Publish(root, integrationEvidenceKind, data)
+					refs.Content[0].Value, err = evidenceStorage(s).Publish(testWork(t, root), integrationEvidenceKind, data)
 				case "unknown-envelope-field":
 					node.Content[2].Value = "unknown"
 				}
@@ -226,7 +210,7 @@ func TestIntegrationEvidenceFailClosed(t *testing.T) {
 					if err != nil {
 						return err
 					}
-					if err := os.WriteFile(workItemsPath(root), raw, 0600); err != nil {
+					if err := os.WriteFile(testWork(t, root).Registry(), raw, 0600); err != nil {
 						return err
 					}
 				}
@@ -241,7 +225,7 @@ func TestIntegrationEvidenceFailClosed(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if _, err := s.SnapshotRegistrations(root); err == nil {
+			if _, err := s.SnapshotRegistrations(testWork(t, root)); err == nil {
 				t.Fatal("registration reader accepted corruption")
 			}
 		})
@@ -261,12 +245,12 @@ func TestIntegrationEvidenceInterruptedPublicationAndLostReply(t *testing.T) {
 				}
 				return nil
 			}}
-			err := s.WithLock(root, func(session WorkItemStoreSession) error { return session.Publish(r) })
+			err := s.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(r) })
 			if err == nil {
 				t.Fatal("fault did not fire")
 			}
 			s.faults = nil
-			observed, err := s.Snapshot(root)
+			observed, err := s.Snapshot(testWork(t, root))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -289,7 +273,7 @@ func TestIntegrationEvidenceInterruptedPublicationAndLostReply(t *testing.T) {
 					t.Fatalf("retry rewrote an orphan object: %s", path)
 				}
 			}
-			err = s.WithLock(root, func(session WorkItemStoreSession) error {
+			err = s.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 				got, err := publishWorkItemRegistryRecover(session, r)
 				if err != nil {
 					return err
@@ -308,32 +292,33 @@ func TestIntegrationEvidenceInterruptedPublicationAndLostReply(t *testing.T) {
 	}
 }
 
-func TestIntegrationEvidenceLegacyBoundary(t *testing.T) {
+// The store has one physical format. An inline logical registry on disk is
+// rejected without writes, and the logical decoder rejects the envelope.
+func TestIntegrationEvidenceSingleStoredFormat(t *testing.T) {
 	r := evidenceHistoryFixture(t)
-	root := createProjectWorkspace(t)
-	raw, err := encodeWorkItemRegistry(r)
+	inlineRoot := createProjectWorkspace(t)
+	inline, err := encodeWorkItemRegistry(r)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(workItemsPath(root), raw, 0600); err != nil {
-		t.Fatal(err)
-	}
+	writeWorkItems(t, inlineRoot, string(inline))
 	s := newSystemWorkItemStore()
+	if _, err := s.Snapshot(testWork(t, inlineRoot)); RegistryError(err) == nil || RegistryError(err).Code != "registry_invalid_content" {
+		t.Fatalf("inline registry accepted: %v", err)
+	}
+	if err := s.WithLock(testWork(t, inlineRoot), func(session WorkItemStoreSession) error { return session.Publish(r) }); err == nil {
+		t.Fatal("inline registry overwritten")
+	}
+	if after, err := os.ReadFile(testWork(t, inlineRoot).Registry()); err != nil || !bytes.Equal(after, inline) {
+		t.Fatal("inline registry changed", err)
+	}
+	root := createProjectWorkspace(t)
 	publishEvidenceFixture(t, s, root, r)
-	after, err := os.ReadFile(workItemsPath(root))
-	if err != nil || !bytes.Equal(raw, after) {
-		t.Fatal("legacy registry silently migrated", err)
+	raw, _ := os.ReadFile(testWork(t, root).Registry())
+	if _, err := decodeWorkItemRegistry(raw); RegistryError(err) == nil {
+		t.Fatal("logical decoder accepted the physical envelope", err)
 	}
-	if _, err := os.Lstat(filepath.Join(root, MarkerDirectory, "task-content")); !os.IsNotExist(err) {
-		t.Fatal("legacy writer introduced external evidence")
-	}
-	fresh := createProjectWorkspace(t)
-	publishEvidenceFixture(t, s, fresh, r)
-	raw, _ = os.ReadFile(workItemsPath(fresh))
-	if _, err := decodeWorkItemRegistry(raw); RegistryError(err) == nil || RegistryError(err).Code != "registry_unsupported_format" {
-		t.Fatal("old reader must reject new physical format", err)
-	}
-	got, err := s.Snapshot(fresh)
+	got, err := s.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -367,7 +352,7 @@ func TestIntegrationEvidenceReaderFreshnessAndNoGitReplay(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			sources := IntegrationEvidenceSources(f.root, journal.Registry)
+			sources := IntegrationEvidenceSources(testWork(t, f.root), journal.Registry)
 			if len(sources) != 4+len(journal.Registry.TaskContentPublications) {
 				t.Fatalf("missing evidence sources: %d", len(sources))
 			}
@@ -412,7 +397,7 @@ func TestIntegrationEvidencePreservesUnchangedObjectReferences(t *testing.T) {
 	root := createProjectWorkspace(t)
 	s := newSystemWorkItemStore()
 	publishEvidenceFixture(t, s, root, r)
-	raw, err := os.ReadFile(workItemsPath(root))
+	raw, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -421,13 +406,13 @@ func TestIntegrationEvidencePreservesUnchangedObjectReferences(t *testing.T) {
 		t.Fatal(err)
 	}
 	refs := registryNodeField(registryNodeField(node, "registry"), "integration_authorities")
-	payload, err := evidenceStorage(s).Read(root, integrationEvidenceKind, refs.Content[0].Value)
+	payload, err := evidenceStorage(s).Read(testWork(t, root), integrationEvidenceKind, refs.Content[0].Value)
 	if err != nil {
 		t.Fatal(err)
 	}
 	// A valid pre-existing object may have another YAML spelling. Its exact
 	// digest remains authoritative; an unrelated Task write must not normalize it.
-	digest, err := evidenceStorage(s).Publish(root, integrationEvidenceKind, append(payload, []byte("\n# preserved historical spelling\n")...))
+	digest, err := evidenceStorage(s).Publish(testWork(t, root), integrationEvidenceKind, append(payload, []byte("\n# preserved historical spelling\n")...))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,10 +421,10 @@ func TestIntegrationEvidencePreservesUnchangedObjectReferences(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(workItemsPath(root), raw, 0600); err != nil {
+	if err := os.WriteFile(testWork(t, root).Registry(), raw, 0600); err != nil {
 		t.Fatal(err)
 	}
-	r, err = s.Snapshot(root)
+	r, err = s.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -450,7 +435,7 @@ func TestIntegrationEvidencePreservesUnchangedObjectReferences(t *testing.T) {
 	if files != 1 || changed == 0 {
 		t.Fatal("unexpected evidence publication")
 	}
-	r, err = s.Snapshot(root)
+	r, err = s.Snapshot(testWork(t, root))
 	if err != nil || r.integrationEvidenceRefs[0] != digest {
 		t.Fatal("unchanged historical reference was normalized", err)
 	}
@@ -479,7 +464,7 @@ func TestIntegrationEvidenceUnknownAndPartialNeverRepeatGitEffect(t *testing.T) 
 					t.Fatalf("apply/replay: %s %v effects=%d", out.Readback.Classification, err, git.count())
 				}
 			}
-			r, err := f.dependencies.WorkItems.Snapshot(f.root)
+			r, err := f.dependencies.WorkItems.Snapshot(testWork(t, f.root))
 			if err != nil || len(r.IntegrationResults) != 1 {
 				t.Fatal("uncertain history lost", err)
 			}
@@ -505,7 +490,7 @@ func TestIntegrationEvidenceConcurrentTasksPreserveHistory(t *testing.T) {
 	for _, id := range []TaskID{"concurrent-a", "concurrent-b"} {
 		go func(id TaskID) {
 			<-start
-			done <- s.WithLock(root, func(session WorkItemStoreSession) error {
+			done <- s.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 				current, err := session.Snapshot()
 				if err != nil {
 					return err
@@ -522,7 +507,7 @@ func TestIntegrationEvidenceConcurrentTasksPreserveHistory(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	got, err := s.Snapshot(root)
+	got, err := s.Snapshot(testWork(t, root))
 	if err != nil || len(got.Tasks) != len(r.Tasks)+2 || len(got.IntegrationResults) != 8 {
 		t.Fatal("concurrent Task/evidence update lost", err)
 	}

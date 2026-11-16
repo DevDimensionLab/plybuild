@@ -2,11 +2,9 @@ package workspace
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -25,7 +23,7 @@ func queueFixtureDraft(t *testing.T, f workItemJourneyFixture, id TaskID, key st
 		t.Fatal(e)
 	}
 	m := contentFields(v)
-	r, e := f.dependencies.WorkItems.Snapshot(filepath.Dir(f.wrapper))
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(f.wrapper)))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -87,7 +85,7 @@ func queueSelect(t *testing.T, f workItemJourneyFixture, id TaskID, key string, 
 	if e != nil {
 		t.Fatal(e)
 	}
-	r, e := f.dependencies.WorkItems.Snapshot(root)
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -102,14 +100,14 @@ func queueTargetFixture() QueueTargetInput { return QueueTargetInput{"ply", "ply
 func queueSetFixture(t *testing.T, f workItemJourneyFixture, key string, entries []TaskGoalQueueEntry) WorkspaceTaskQueueReadback {
 	t.Helper()
 	root := filepath.Dir(f.wrapper)
-	r, e := f.dependencies.WorkItems.Snapshot(root)
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if e != nil {
 		t.Fatal(e)
 	}
 	ep, b := queueTargetBinding(r, QueueTarget{EpicID: "epic", RepoID: "ply"})
 	tgt := QueueTarget{ProjectID: ep.ProjectID, RepoID: b.RepoID, EpicID: ep.ID}
 	q := foldQueue(r, queueID(root, tgt))
-	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: key, ProjectID: "ply", RepoID: "ply", EpicID: "epic", ExpectedRevision: q.Revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "synthetic fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-09-30T00:00:00Z"}, RegistryUpgrade: queueUpgrade(r)}
+	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: key, ProjectID: "ply", RepoID: "ply", EpicID: "epic", ExpectedRevision: q.Revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "synthetic fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-09-30T00:00:00Z"}}
 	raw, _ := contentCanonical(draft)
 	file := filepath.Join(root, "queue.json")
 	if e = os.WriteFile(file, raw, 0600); e != nil {
@@ -208,7 +206,7 @@ func TestTaskQueueQ1Q2Q3Q4(t *testing.T) {
 }
 func mustQueueRegistry(t *testing.T, f workItemJourneyFixture) WorkItemRegistry {
 	t.Helper()
-	r, e := f.dependencies.WorkItems.Snapshot(filepath.Dir(f.wrapper))
+	r, e := f.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(f.wrapper)))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -257,40 +255,8 @@ func TestEpicBaseB1B2AndCurrentSpecFreshness(t *testing.T) {
 	}
 	task, _ := findTask(r, "task")
 	ps, rs, _ := f.dependencies.Projects.Snapshot(filepath.Dir(f.wrapper))
-	eval, e := currentTaskSpec(f.dependencies, filepath.Dir(f.wrapper), r, ProjectSnapshot{Projects: ps, Repos: rs}, *task, false)
+	eval, e := currentTaskSpec(f.dependencies, testWork(t, filepath.Dir(f.wrapper)), r, ProjectSnapshot{Projects: ps, Repos: rs}, *task, false)
 	if e != nil || eval.TargetFreshness != "stale" || eval.ContentIntegrity != "valid" {
 		t.Fatalf("historical integrity confused with current: %#v %v", eval, e)
-	}
-}
-func TestTaskQueueH1StrictMigration(t *testing.T) {
-	for _, version := range []int{1, 3} {
-		t.Run(fmt.Sprint(version), func(t *testing.T) {
-			f := newWorkItemJourneyFixtureVersion(t, version < 3)
-			root := filepath.Dir(f.wrapper)
-			before, _ := os.ReadFile(workItemsPath(root))
-			old := mustQueueRegistry(t, f)
-			queueSetFixture(t, f, "migrate", []TaskGoalQueueEntry{})
-			r := mustQueueRegistry(t, f)
-			backup, e := f.dependencies.TaskContent.Read(root, "backups", digestTaskBytes(before))
-			if e != nil || !bytes.Equal(before, backup) || r.FormatVersion != 4 || !reflect.DeepEqual(old.Tasks, r.Tasks) || !reflect.DeepEqual(old.Epics, r.Epics) {
-				t.Fatal("migration lost preserved bytes")
-			}
-			encoded, e := encodeWorkItemRegistry(r)
-			if e != nil {
-				t.Fatal(e)
-			}
-			for _, change := range [][2]string{{"epic_base_versions:", "unknown_base_versions:"}, {"task_preparations: []", "task_preparations: null"}} {
-				bad := bytes.Replace(encoded, []byte(change[0]), []byte(change[1]), 1)
-				if _, e = decodeWorkItemRegistry(bad); e == nil {
-					t.Fatal("invalid format 4 accepted")
-				}
-			}
-			if _, e = CreateTask(f.dependencies, TaskCreateInput{TaskID: "new-task", Title: "New", Description: "New task", ProjectID: "ply", RepoID: "ply", ParentEpicID: "epic"}); e != nil {
-				t.Fatal(e)
-			}
-			if mustQueueRegistry(t, f).FormatVersion != 4 {
-				t.Fatal("legacy command downgraded registry")
-			}
-		})
 	}
 }

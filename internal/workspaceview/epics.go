@@ -6,7 +6,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-const EpicListKind = "WorkspaceEpicListReadback@1"
+const EpicListKind = "WorkspaceEpicListReadback@2"
 
 type EpicFilters struct {
 	ProjectID *workspace.ProjectID `json:"project_id"`
@@ -50,7 +50,7 @@ type EpicRow struct {
 }
 
 type EpicList struct {
-	Creations     []workspace.EpicCreateOperation `json:"creations,omitempty"`
+	Creations     []workspace.EpicCreateOperation `json:"creations"`
 	Kind          string                          `json:"kind"`
 	SchemaVersion int                             `json:"schema_version"`
 	Workspace     WorkspaceRef                    `json:"workspace"`
@@ -86,15 +86,10 @@ func BuildEpics(s *Snapshot, filters EpicFilters, process map[workspace.TaskID]P
 }
 
 func epicsFromTasks(s *Snapshot, filters EpicFilters, tasks TaskList) EpicList {
-	out := EpicList{nil, EpicListKind, 1, tasks.Workspace, filters, []EpicRow{}, tasks.Freshness, "registered", tasks.Reasons}
-	if s.Registry.FormatVersion >= 6 {
-		out.Kind = "WorkspaceEpicListReadback@2"
-		out.SchemaVersion = 2
-		out.Creations = []workspace.EpicCreateOperation{}
-		for _, op := range s.Registry.EpicCreateOperations {
-			if filters.ProjectID == nil || op.Request.ProjectID == *filters.ProjectID {
-				out.Creations = append(out.Creations, op)
-			}
+	out := EpicList{[]workspace.EpicCreateOperation{}, EpicListKind, 2, tasks.Workspace, filters, []EpicRow{}, tasks.Freshness, "registered", tasks.Reasons}
+	for _, op := range s.Registry.EpicCreateOperations {
+		if filters.ProjectID == nil || op.Request.ProjectID == *filters.ProjectID {
+			out.Creations = append(out.Creations, op)
 		}
 	}
 	tasksByEpic := map[workspace.EpicID][]TaskRow{}
@@ -125,7 +120,7 @@ func epicsFromTasks(s *Snapshot, filters EpicFilters, tasks TaskList) EpicList {
 			}
 			row.LastActivityUTC = latestTime(row.LastActivityUTC, task.Progress.LastActivityUTC)
 		}
-		for _, event := range s.Lifecycle.Events {
+		for _, event := range s.Lifecycle.Events() {
 			if event.SubjectKind == "epic" && event.SubjectID == string(epic.ID) {
 				row.LastActivityUTC = latestTime(row.LastActivityUTC, &event.RecordedAtUTC)
 			}

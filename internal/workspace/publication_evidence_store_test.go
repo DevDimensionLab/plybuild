@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -13,7 +12,7 @@ import (
 
 func publicationReferences(t *testing.T, root string) *yaml.Node {
 	t.Helper()
-	raw, err := os.ReadFile(workItemsPath(root))
+	raw, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +37,7 @@ func TestPublicationEvidenceNativeWritesPreserveHistory(t *testing.T) {
 	root := filepath.Dir(f.wrapper)
 	refs := publicationReferences(t, root)
 	before := evidenceFileSnapshot(t, root)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +81,7 @@ func TestPublicationEvidenceNativeWritesPreserveHistory(t *testing.T) {
 	if n, _ := evidencePublishedDelta(t, stable, evidenceFileSnapshot(t, root)); n != 0 {
 		t.Fatal("retry republished payloads")
 	}
-	r, err = f.dependencies.WorkItems.Snapshot(root)
+	r, err = f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil || len(r.TaskContentPublications) != len(prior)+1 {
 		t.Fatalf("read history: %v", err)
 	}
@@ -99,14 +98,14 @@ func TestPublicationEvidenceFailClosed(t *testing.T) {
 			root := filepath.Dir(f.wrapper)
 			s := f.dependencies.WorkItems
 			input := contentFixtureProblem(t, f, "fixture/check-corruption")
-			err := s.WithLock(root, func(session WorkItemStoreSession) error {
+			err := s.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 				r, err := session.Snapshot()
 				if err != nil {
 					return err
 				}
 				refs := publicationReferences(t, root)
-				path := taskContentPath(root, integrationEvidenceKind, refs.Content[0].Value)
-				raw, err := os.ReadFile(workItemsPath(root))
+				path := taskContentPath(testWork(t, root), integrationEvidenceKind, refs.Content[0].Value)
+				raw, err := os.ReadFile(testWork(t, root).Registry())
 				if err != nil {
 					return err
 				}
@@ -154,13 +153,13 @@ func TestPublicationEvidenceFailClosed(t *testing.T) {
 						return err
 					}
 					if fault != "inline-in-format10" {
-						refs.Content[0].Value, err = (&TaskContentStorage{}).Publish(root, integrationEvidenceKind, payload)
+						refs.Content[0].Value, err = (&TaskContentStorage{}).Publish(testWork(t, root), integrationEvidenceKind, payload)
 					}
 					if err == nil {
 						raw, err = marshalRegistryNode(node)
 					}
 					if err == nil {
-						err = os.WriteFile(workItemsPath(root), raw, 0600)
+						err = os.WriteFile(testWork(t, root).Registry(), raw, 0600)
 					}
 				}
 				if err != nil {
@@ -181,7 +180,7 @@ func TestPublicationEvidenceFailClosed(t *testing.T) {
 				t.Fatal(err)
 			}
 			if fault != "request-mismatch" {
-				if _, err := s.Snapshot(root); err == nil {
+				if _, err := s.Snapshot(testWork(t, root)); err == nil {
 					t.Fatal("fresh reader accepted corrupted publication")
 				}
 			}
@@ -214,7 +213,7 @@ func TestPublicationEvidenceInterruptedNativePublication(t *testing.T) {
 				t.Fatal("injected fault reported success")
 			}
 			s.faults = nil
-			r, err := s.Snapshot(root)
+			r, err := s.Snapshot(testWork(t, root))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -228,7 +227,7 @@ func TestPublicationEvidenceInterruptedNativePublication(t *testing.T) {
 			if _, err := RecordTaskProblem(f.dependencies, input); err != nil {
 				t.Fatal(err)
 			}
-			r, err = s.Snapshot(root)
+			r, err = s.Snapshot(testWork(t, root))
 			if err != nil || len(r.TaskProblemRevisions) != 2 || len(r.TaskContentPublications) != 2 {
 				t.Fatalf("recovery lost exact outcome: %v", err)
 			}
@@ -252,57 +251,11 @@ func TestPublicationEvidenceInterruptedNativePublication(t *testing.T) {
 	}
 }
 
-func TestPublicationEvidenceFormat9Boundary(t *testing.T) {
-	f := newWorkItemJourneyFixture(t)
-	root := filepath.Dir(f.wrapper)
-	s := newSystemWorkItemStore()
-	r, err := s.Snapshot(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	// Construct the prior physical format in a private fixture, never live data.
-	old := r
-	old.publicationEvidence = false
-	old.integrationEvidenceRefs = nil // This fixture has no integration records.
-	raw, err := s.encodeStoredRegistry(root, &r, old)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(workItemsPath(root), raw, 0600); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := RecordTaskProblem(f.dependencies, contentFixtureProblem(t, f, "fixture/format9")); err != nil {
-		t.Fatal(err)
-	}
-	raw, err = os.ReadFile(workItemsPath(root))
-	if err != nil {
-		t.Fatal(err)
-	}
-	node, err := parseRegistryYAML(raw)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if registryNodeField(node, "format_version").Value != "9" {
-		t.Fatal("existing format9 store migrated")
-	}
-	pubs := registryNodeField(registryNodeField(node, "registry"), "task_content_publications")
-	if len(pubs.Content) != 2 || pubs.Content[0].Kind != yaml.MappingNode {
-		t.Fatal("format9 publications must remain inline")
-	}
-	r, err = s.Snapshot(root)
-	if err != nil || r.publicationEvidence {
-		t.Fatalf("format9 read: %v", err)
-	}
-	if !reflect.DeepEqual(*taskPublication(r, old.TaskContentPublications[0].PublicationKey), old.TaskContentPublications[0]) {
-		t.Fatal("format9 history changed")
-	}
-}
-
 func TestPublicationEvidencePreservesExactHistoricalBytes(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
 	s := newSystemWorkItemStore()
-	raw, err := os.ReadFile(workItemsPath(root))
+	raw, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -311,11 +264,11 @@ func TestPublicationEvidencePreservesExactHistoricalBytes(t *testing.T) {
 		t.Fatal(err)
 	}
 	refs := registryNodeField(registryNodeField(node, "registry"), "task_content_publications")
-	payload, err := evidenceStorage(s).Read(root, integrationEvidenceKind, refs.Content[0].Value)
+	payload, err := evidenceStorage(s).Read(testWork(t, root), integrationEvidenceKind, refs.Content[0].Value)
 	if err != nil {
 		t.Fatal(err)
 	}
-	digest, err := evidenceStorage(s).Publish(root, integrationEvidenceKind, append(payload, []byte("\n# exact historical bytes\n")...))
+	digest, err := evidenceStorage(s).Publish(testWork(t, root), integrationEvidenceKind, append(payload, []byte("\n# exact historical bytes\n")...))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -324,7 +277,7 @@ func TestPublicationEvidencePreservesExactHistoricalBytes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(workItemsPath(root), raw, 0600); err != nil {
+	if err := os.WriteFile(testWork(t, root).Registry(), raw, 0600); err != nil {
 		t.Fatal(err)
 	}
 	prior := evidenceFileSnapshot(t, root)
@@ -352,7 +305,7 @@ func TestPublicationEvidencePreservesExactHistoricalBytes(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	path := taskContentPath(root, integrationEvidenceKind, digest)
+	path := taskContentPath(testWork(t, root), integrationEvidenceKind, digest)
 	if basis.Sources[path] != digest {
 		t.Fatal("read view omitted publication source")
 	}

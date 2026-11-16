@@ -1,20 +1,20 @@
 package taskjournal
 
 import (
-	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-// EventBatchInput binds one already-read registry snapshot. This event reader
-// projects history, not current candidate validity, and never probes Git.
+// EventBatchInput binds already-read registry snapshots, one per Project. This
+// event reader projects history, not current candidate validity, and never
+// probes Git.
 type EventBatchInput struct {
-	Workspace workspace.WorkspaceObservation
-	Projects  workspace.ProjectSnapshot
-	Registry  workspace.WorkItemRegistry
-	Lifecycle workspace.WorkItemLifecycleSnapshot
+	Workspace  workspace.WorkspaceObservation
+	Projects   workspace.ProjectSnapshot
+	Registries []workspace.ProjectRegistry
+	Lifecycles workspace.WorkItemLifecycles
 }
 
 type EventBatch struct {
@@ -34,8 +34,8 @@ type bytesRead struct {
 	err   error
 }
 type eventBatchReader struct {
-	lifecycle workspace.WorkItemLifecycleSnapshot
-	sources   map[string]sourceRead
+	lifecycles workspace.WorkItemLifecycles
+	sources    map[string]sourceRead
 }
 
 func journalSourceHash(root, kind, path string) (string, error) {
@@ -66,29 +66,12 @@ func ReadEventBatch(d workspace.Dependencies, in EventBatchInput) (EventBatch, e
 
 func (s Service) readEventBatch(in EventBatchInput) (EventBatch, error) {
 	out := EventBatch{Tasks: map[workspace.TaskID]Snapshot{}, EpicEvents: map[workspace.EpicID][]Event{}, EpicSources: map[workspace.EpicID][]Source{}, Reasons: []Reason{}}
-	reader := &eventBatchReader{lifecycle: in.Lifecycle, sources: map[string]sourceRead{}}
+	reader := &eventBatchReader{lifecycles: in.Lifecycles, sources: map[string]sourceRead{}}
 	s.readBatch = reader
-	registryPath := filepath.Join(in.Workspace.Root, workspace.MarkerDirectory, workspace.WorkItemsFile)
-	for _, t := range in.Registry.Tasks {
-		basis := workspace.TaskJournalBasis{Workspace: in.Workspace, Task: t, Registry: in.Registry, RegistryLocator: registryPath}
-		records, readErr := readStore(in.Workspace.Root, string(t.ID), workspaceID(in.Workspace.Root, in.Workspace.MarkerSHA256))
-		snap, err := s.build(basis, records)
-		if err != nil {
+	for _, owner := range in.Registries {
+		if err := s.readProjectEvents(in, reader, owner, &out); err != nil {
 			return out, err
 		}
-		if readErr != nil {
-			snap.reason("source_invalid", "Journal is damaged; showing the validated prefix and independent native facts: "+readErr.Error())
-		}
-		if !batchTaskIdentity(in.Projects, t) {
-			snap.reason("task_identity_unavailable", "Task repository does not match the captured project registration")
-		}
-		out.Tasks[t.ID] = snap
-	}
-	for _, epic := range in.Registry.Epics {
-		snap := Snapshot{Events: []Event{}, Sources: []Source{}, Coverage: Coverage{State: "complete", Reasons: []Reason{}}, sourceCache: reader.sources}
-		appendLifecycleEvents(&snap, in.Lifecycle, "epic", string(epic.ID))
-		out.EpicEvents[epic.ID] = snap.Events
-		out.EpicSources[epic.ID] = snap.Sources
 	}
 	// A single recheck per distinct source detects concurrent changes. This is
 	// explicitly not a cross-register transaction or a filesystem snapshot.
@@ -145,11 +128,12 @@ func batchTaskIdentity(p workspace.ProjectSnapshot, t workspace.TaskRecord) bool
 	return false
 }
 
-func (s Service) lifecycle(root string) (workspace.WorkItemLifecycleSnapshot, error) {
+// lifecycle is the lifecycle of the Project of work.
+func (s Service) lifecycle(work workspace.ProjectWork) (workspace.WorkItemLifecycleSnapshot, error) {
 	if s.readBatch != nil {
-		return s.readBatch.lifecycle, nil
+		return s.readBatch.lifecycles.Of(work.Project), nil
 	}
-	return workspace.ReadWorkItemLifecycle(s.Workspace, root)
+	return workspace.ReadProjectLifecycle(work)
 }
 
 func appendLifecycleEvents(out *Snapshot, l workspace.WorkItemLifecycleSnapshot, kind, id string) {
@@ -183,4 +167,29 @@ func StableBatchReasons(s Snapshot) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+func (s Service) readProjectEvents(in EventBatchInput, reader *eventBatchReader, owner workspace.ProjectRegistry, out *EventBatch) error {
+	for _, t := range owner.Registry.Tasks {
+		basis := workspace.TaskJournalBasis{Workspace: in.Workspace, Task: t, Registry: owner.Registry, Work: owner.Work}
+		records, readErr := readStore(owner.Work, string(t.ID), workspaceID(in.Workspace.Root, in.Workspace.MarkerSHA256))
+		snap, err := s.build(basis, records)
+		if err != nil {
+			return err
+		}
+		if readErr != nil {
+			snap.reason("source_invalid", "Journal is damaged; showing the validated prefix and independent native facts: "+readErr.Error())
+		}
+		if !batchTaskIdentity(in.Projects, t) {
+			snap.reason("task_identity_unavailable", "Task repository does not match the captured project registration")
+		}
+		out.Tasks[t.ID] = snap
+	}
+	for _, epic := range owner.Registry.Epics {
+		snap := Snapshot{Events: []Event{}, Sources: []Source{}, Coverage: Coverage{State: "complete", Reasons: []Reason{}}, sourceCache: reader.sources, work: owner.Work}
+		appendLifecycleEvents(&snap, in.Lifecycles.Of(owner.Work.Project), "epic", string(epic.ID))
+		out.EpicEvents[epic.ID] = snap.Events
+		out.EpicSources[epic.ID] = snap.Sources
+	}
+	return nil
 }

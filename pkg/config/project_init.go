@@ -86,7 +86,7 @@ func (project *Project) InitProjectConfiguration() (err error) {
 }
 
 func InitProjectFromPomFile(pomFile string) (project Project, err error) {
-	targetDir := file.Path(strings.Replace(pomFile, "pom.xml", "", 1))
+	targetDir := file.Path("%s", strings.Replace(pomFile, "pom.xml", "", 1))
 	return InitProjectFromDirectory(targetDir)
 }
 

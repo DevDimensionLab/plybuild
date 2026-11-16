@@ -68,6 +68,15 @@ func contentNullable(rule contentRule) contentRule {
 		return rule(v)
 	}
 }
+
+// Drafts keep their published registry_upgrade member, which must be null:
+// the registry has a single format and is never upgraded by a command.
+func contentNoRegistryUpgrade(v canonicaljson.Value) error {
+	if v != nil {
+		return fmt.Errorf("must be null; registry format %d has no upgrade", RegistryFormat)
+	}
+	return nil
+}
 func contentText(max int) contentRule {
 	return func(v canonicaljson.Value) error {
 		s, ok := v.(string)
@@ -269,7 +278,7 @@ func taskContentSchema(operation string, published bool, internal bool) map[stri
 	}
 	s := map[string]contentRule{"kind": contentEnum(kinds[operation]), "schema_version": contentInteger(1, 1), "format": contentEnum("json"), "format_version": contentInteger(1, 1), "canonicalization": contentEnum("RFC8785"), "publication_key": contentKey, "task_id": contentSlug, "recorder": contentRecorderRule()}
 	if !published {
-		s["registry_upgrade"] = contentNullable(contentExact(map[string]contentRule{"from_version": contentInteger(1, 2), "registry_sha256": contentDigest}))
+		s["registry_upgrade"] = contentNoRegistryUpgrade
 	} else {
 		s["source_draft_sha256"] = contentDigest
 		s["recorded_at_utc"] = contentUTC
@@ -663,14 +672,8 @@ func sortTaskContentRegistry(r *WorkItemRegistry) {
 	})
 }
 func validateTaskContentRegistry(r WorkItemRegistry) error {
-	if r.FormatVersion < 3 {
-		if r.TaskProblemRevisions != nil || r.TaskSpecRevisions != nil || r.TaskSpecAssessments != nil || r.TaskSolutionSelections != nil || r.TaskResultSpecBindings != nil || r.TaskContentPublications != nil {
-			return fmt.Errorf("legacy registry cannot contain Task content collections")
-		}
-		return nil
-	}
 	if r.TaskProblemRevisions == nil || r.TaskSpecRevisions == nil || r.TaskSpecAssessments == nil || r.TaskSolutionSelections == nil || r.TaskResultSpecBindings == nil || r.TaskContentPublications == nil {
-		return fmt.Errorf("format 3 requires explicit Task content arrays")
+		return fmt.Errorf("Task content arrays must be explicit")
 	}
 	tasks := map[TaskID]TaskRecord{}
 	for _, t := range r.Tasks {
@@ -769,12 +772,8 @@ func validateTaskContentRegistry(r WorkItemRegistry) error {
 		if p.RegistryBeforeSHA256 != nil && !digestPattern.MatchString(*p.RegistryBeforeSHA256) {
 			return fmt.Errorf("invalid prior registry digest")
 		}
-		if p.StoreTransition == "none" {
-			if p.BackupSHA256 != nil {
-				return fmt.Errorf("non-migration publication cannot have backup")
-			}
-		} else if (p.StoreTransition != "format_1_to_3" && p.StoreTransition != "format_2_to_3") || p.BackupSHA256 == nil || p.RegistryBeforeSHA256 == nil || *p.BackupSHA256 != *p.RegistryBeforeSHA256 || !digestPattern.MatchString(*p.BackupSHA256) {
-			return fmt.Errorf("invalid migration backup binding")
+		if p.StoreTransition != "none" || p.BackupSHA256 != nil {
+			return fmt.Errorf("publication cannot carry a registry migration")
 		}
 		pubs[p.PublicationKey] = p
 	}

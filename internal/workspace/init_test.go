@@ -225,12 +225,6 @@ func TestInitPublishesCanonicalMarkerAtomically(t *testing.T) {
 		t.Fatalf("staging directory chmod = %o, want 0755", mode)
 	}
 	wantOperations := []string{"getwd", "eval:" + root, "stat:" + root}
-	for ancestor := filepath.Dir(root); ; ancestor = filepath.Dir(ancestor) {
-		wantOperations = append(wantOperations, "lstat:"+filepath.Join(ancestor, MarkerDirectory))
-		if ancestor == filepath.Dir(ancestor) {
-			break
-		}
-	}
 	stagedMarkerPath := filepath.Join(staging, MarkerFile)
 	wantOperations = append(wantOperations,
 		"lstat:"+filepath.Join(root, MarkerDirectory),
@@ -401,59 +395,30 @@ func TestInitRejectsReservedPathAndMarkerTypes(t *testing.T) {
 	})
 }
 
-func TestInitChecksAncestorsBeforeLocalState(t *testing.T) {
+// A workspace inside another one is allowed; the nearest .ply wins, as with
+// Git repositories. Ancestors are not inspected at all.
+func TestInitInsideAnotherWorkspaceCreatesTheNearest(t *testing.T) {
 	parent := physicalPath(t, t.TempDir())
 	child := filepath.Join(parent, "child")
 	if err := os.Mkdir(child, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	writeMarkerForTest(t, parent, markerBytesForTest(parent))
-	if err := os.WriteFile(filepath.Join(child, MarkerDirectory), []byte("local conflict"), 0o600); err != nil {
+	writeMarkerForTest(t, parent, []byte("invalid: true\n"))
+	filesystem := newRecordingFileSystem(child)
+	result, err := Init(Dependencies{Files: filesystem})
+	if err != nil || !result.Created || result.Root != child {
+		t.Fatalf("init inside a workspace = %#v, %v", result, err)
+	}
+	if operationContains(filesystem.operations, "lstat:"+filepath.Join(parent, MarkerDirectory)) {
+		t.Fatalf("ancestor inspected: %#v", filesystem.operations)
+	}
+	nested := filepath.Join(child, "deeper")
+	if err := os.Mkdir(nested, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	filesystem := newRecordingFileSystem(child)
-	_, err := Init(Dependencies{Files: filesystem})
-	assertWorkspaceError(t, err, ErrorNested, parent)
-	if operationContains(filesystem.operations, "lstat:"+filepath.Join(child, MarkerDirectory)) {
-		t.Fatalf("local state inspected before nested result: %#v", filesystem.operations)
+	if root, err := locateContainingWorkspace(SystemDependencies().Files, nested); err != nil || root != child {
+		t.Fatalf("nearest workspace = %q, %v", root, err)
 	}
-}
-
-func TestInitClassifiesAncestorFailures(t *testing.T) {
-	t.Run("invalid marker", func(t *testing.T) {
-		parent := physicalPath(t, t.TempDir())
-		child := filepath.Join(parent, "child")
-		if err := os.Mkdir(child, 0o755); err != nil {
-			t.Fatal(err)
-		}
-		writeMarkerForTest(t, parent, []byte("invalid: true\n"))
-		_, err := Init(Dependencies{Files: newRecordingFileSystem(child)})
-		assertWorkspaceError(t, err, ErrorConflict, reasonMarkerInvalid)
-	})
-	t.Run("unreadable marker", func(t *testing.T) {
-		parent := physicalPath(t, t.TempDir())
-		child := filepath.Join(parent, "child")
-		if err := os.Mkdir(child, 0o755); err != nil {
-			t.Fatal(err)
-		}
-		writeMarkerForTest(t, parent, markerBytesForTest(parent))
-		markerPath := filepath.Join(parent, MarkerDirectory, MarkerFile)
-		filesystem := newRecordingFileSystem(child)
-		filesystem.fail["read:"+markerPath] = fs.ErrPermission
-		_, err := Init(Dependencies{Files: filesystem})
-		assertWorkspaceError(t, err, ErrorConflict, reasonMarkerInvalid)
-	})
-	t.Run("observation error", func(t *testing.T) {
-		parent := physicalPath(t, t.TempDir())
-		child := filepath.Join(parent, "child")
-		if err := os.Mkdir(child, 0o755); err != nil {
-			t.Fatal(err)
-		}
-		filesystem := newRecordingFileSystem(child)
-		filesystem.fail["lstat:"+filepath.Join(parent, MarkerDirectory)] = fs.ErrPermission
-		_, err := Init(Dependencies{Files: filesystem})
-		assertWorkspaceError(t, err, ErrorPath, "lstat")
-	})
 }
 
 func TestInitClassifiesPathFailures(t *testing.T) {
@@ -641,4 +606,28 @@ func firstOperationWithPrefix(operations []string, prefix string) string {
 		}
 	}
 	return ""
+}
+
+// Every workspace has ply-workspace.json; init creates it without Projects
+// and a rerun leaves existing definitions untouched.
+func TestInitCreatesEmptyDefinitions(t *testing.T) {
+	root := physicalPath(t, t.TempDir())
+	if _, err := Init(Dependencies{Files: newRecordingFileSystem(root)}); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, DefinitionsFile)
+	contents, err := os.ReadFile(path)
+	if err != nil || string(contents) != "{\n  \"format_version\": 1,\n  \"projects\": []\n}\n" {
+		t.Fatalf("definitions = %q, %v", contents, err)
+	}
+	edited := []byte("{\"format_version\": 1, \"projects\": []}\n")
+	if err := os.WriteFile(path, edited, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Init(Dependencies{Files: newRecordingFileSystem(root)}); err != nil {
+		t.Fatal(err)
+	}
+	if after, _ := os.ReadFile(path); string(after) != string(edited) {
+		t.Fatalf("rerun rewrote definitions: %q", after)
+	}
 }

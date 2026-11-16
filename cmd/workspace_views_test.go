@@ -72,13 +72,14 @@ func TestWorkspaceViewsEmptyCollectionsAreJSONAndReadOnly(t *testing.T) {
 	for _, tt := range []struct {
 		args             []string
 		kind, collection string
+		version          float64
 	}{
-		{[]string{"task", "list", "--progress"}, "WorkspaceTaskProgressListReadback@1", "tasks"},
-		{[]string{"epic", "list"}, "WorkspaceEpicListReadback@1", "epics"},
-		{[]string{"attention"}, "WorkspaceAttentionReadback@1", "items"},
-		{[]string{"overview"}, "WorkspaceOverviewReadback@1", "tasks"},
-		{[]string{"journal", "recent"}, "WorkspaceActivityReadback@1", "events"},
-		{[]string{"worktree", "list"}, "WorkspaceWorktreeListReadback@1", "worktrees"},
+		{[]string{"task", "list", "--progress"}, "WorkspaceTaskProgressListReadback@1", "tasks", 1},
+		{[]string{"epic", "list"}, "WorkspaceEpicListReadback@2", "epics", 2},
+		{[]string{"attention"}, "WorkspaceAttentionReadback@1", "items", 1},
+		{[]string{"overview"}, "WorkspaceOverviewReadback@1", "tasks", 1},
+		{[]string{"journal", "recent"}, "WorkspaceActivityReadback@1", "events", 1},
+		{[]string{"worktree", "list"}, "WorkspaceWorktreeListReadback@1", "worktrees", 1},
 	} {
 		t.Run(strings.Join(tt.args, " "), func(t *testing.T) {
 			out, err := runWorkspaceView(t, d, append(tt.args, "--format", "json")...)
@@ -89,7 +90,7 @@ func TestWorkspaceViewsEmptyCollectionsAreJSONAndReadOnly(t *testing.T) {
 			if err := json.Unmarshal([]byte(out), &v); err != nil {
 				t.Fatal(err)
 			}
-			if v["kind"] != tt.kind || v["schema_version"] != float64(1) {
+			if v["kind"] != tt.kind || v["schema_version"] != tt.version {
 				t.Fatalf("wrong envelope: %s", out)
 			}
 			rows, ok := v[tt.collection].([]any)
@@ -102,7 +103,8 @@ func TestWorkspaceViewsEmptyCollectionsAreJSONAndReadOnly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(entries) != 1 || entries[0].Name() != "workspace.yaml" {
+	// init leaves projects.lock beside the marker; reads add nothing.
+	if len(entries) != 2 || entries[0].Name() != "projects.lock" || entries[1].Name() != "workspace.yaml" {
 		t.Fatalf("reads created state: %v", entries)
 	}
 }

@@ -116,7 +116,7 @@ grep -F '  ply workspace init' "$temp_root/workspace-help.stdout" >/dev/null ||
 	fail 'workspace help lost its example' "$temp_root/workspace-help.stdout"
 grep -F '  ply workspace project list' "$temp_root/workspace-help.stdout" >/dev/null ||
 	fail 'workspace help lost its project example' "$temp_root/workspace-help.stdout"
-grep -F 'Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.' \
+grep -F 'Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml and, when missing, ply-workspace.json without Projects.' \
 	"$temp_root/workspace-init-help.stdout" >/dev/null || fail 'workspace init help lost its action' "$temp_root/workspace-init-help.stdout"
 grep -F 'The current directory does not need to be a Git repository.' \
 	"$temp_root/workspace-init-help.stdout" >/dev/null || fail 'workspace init help lost its Git boundary' "$temp_root/workspace-init-help.stdout"
@@ -344,27 +344,17 @@ cmp -s "$temp_root/symlink-marker.expected" "$physical/.ply/workspace.yaml" ||
 nested_parent="$temp_root/nested-parent"
 nested_child="$nested_parent/child"
 mkdir -p "$nested_child"
-nested_parent_root=$(cd "$nested_parent" && pwd -P)
-nested_child_root=$(cd "$nested_child" && pwd -P)
 (
 	cd "$nested_parent"
 	HOME="$temp_root/home" "$binary" workspace init
 ) >"$temp_root/nested-parent.stdout" 2>"$temp_root/nested-parent.stderr" ||
 	fail 'nested parent init returned non-zero' "$temp_root/nested-parent.stdout" "$temp_root/nested-parent.stderr"
-set +e
 (
 	cd "$nested_child"
 	HOME="$temp_root/home" "$binary" workspace init
-) >"$temp_root/nested.stdout" 2>"$temp_root/nested.stderr"
-nested_exit=$?
-set -e
-[[ "$nested_exit" -eq 1 ]] || fail "nested workspace exit is $nested_exit, expected 1" "$temp_root/nested.stdout" "$temp_root/nested.stderr"
-[[ ! -s "$temp_root/nested.stdout" ]] || fail 'nested workspace wrote to stdout' "$temp_root/nested.stdout"
-printf 'Error: workspace_init_nested: %s is inside Ply workspace %s\n' \
-	"$nested_child_root" "$nested_parent_root" >"$temp_root/nested.expected"
-cmp -s "$temp_root/nested.expected" "$temp_root/nested.stderr" ||
-	fail 'nested workspace stderr changed' "$temp_root/nested.expected" "$temp_root/nested.stderr"
-[[ ! -e "$nested_child/.ply" ]] || fail 'nested workspace created child .ply' "$nested_child/.ply"
+) >"$temp_root/nested.stdout" 2>"$temp_root/nested.stderr" ||
+	fail 'workspace inside a workspace returned non-zero' "$temp_root/nested.stdout" "$temp_root/nested.stderr"
+[[ -f "$nested_child/.ply/workspace.yaml" ]] || fail 'workspace inside a workspace was not created' "$nested_child"
 
 compatible="$temp_root/compatible"
 mkdir -p "$compatible/.ply"
@@ -486,11 +476,9 @@ printf 'Added project single (Single) to Ply workspace %s.\nWrapper: %s\nReposit
 cmp -s "$temp_root/project-single.expected" "$temp_root/project-single.stdout" ||
 	fail 'single-repository project add stdout changed' "$temp_root/project-single.expected" "$temp_root/project-single.stdout"
 [[ ! -s "$temp_root/project-single.stderr" ]] || fail 'single-repository project add wrote to stderr' "$temp_root/project-single.stderr"
-printf 'format_version: 1\nprojects:\n  - id: single\n    name: Single\n    wrapper: %s\n    repo_ids:\n      - single\nrepos:\n  - id: single\n    locator: %s\n    git_common_dir: %s\n' \
-	"$single_wrapper_root" "$single_repo_root" "$single_common" >"$temp_root/projects-single.expected"
-cmp -s "$temp_root/projects-single.expected" "$work/.ply/projects.yaml" ||
-	fail 'single-repository registry bytes changed' "$temp_root/projects-single.expected" "$work/.ply/projects.yaml"
-[[ $(file_mode "$work/.ply/projects.yaml") == 644 ]] || fail 'project registry mode is not 0644' "$work/.ply/projects.yaml"
+grep -F '"id": "single"' "$work/ply-workspace.json" >/dev/null ||
+	fail 'single-repository project add did not define the Project' "$work/ply-workspace.json"
+[[ $(file_mode "$work/ply-workspace.json") == 644 ]] || fail 'definitions mode is not 0644' "$work/ply-workspace.json"
 [[ $(file_mode "$work/.ply/projects.lock") == 600 ]] || fail 'project lock mode is not 0600' "$work/.ply/projects.lock"
 
 (
@@ -505,9 +493,9 @@ cmp -s "$temp_root/project-show.expected" "$temp_root/project-show.stdout" ||
 	fail 'project show stdout changed' "$temp_root/project-show.expected" "$temp_root/project-show.stdout"
 [[ ! -s "$temp_root/project-show.stderr" ]] || fail 'project show wrote to stderr' "$temp_root/project-show.stderr"
 
-touch -t 200001010000 "$work/.ply/projects.yaml"
-project_mtime=$(file_mtime "$work/.ply/projects.yaml")
-cp "$work/.ply/projects.yaml" "$temp_root/projects.before-retry"
+touch -t 200001010000 "$work/ply-workspace.json"
+project_mtime=$(file_mtime "$work/ply-workspace.json")
+cp "$work/ply-workspace.json" "$temp_root/projects.before-retry"
 single_alias="$temp_root/single-alias"
 ln -s "$single_repo_root" "$single_alias"
 (
@@ -521,10 +509,10 @@ sed '1s/^Added project/Project/; 1s/ to Ply workspace/ is already registered in 
 cmp -s "$temp_root/project-retry.expected" "$temp_root/project-retry.stdout" ||
 	fail 'idempotent project retry stdout changed' "$temp_root/project-retry.expected" "$temp_root/project-retry.stdout"
 [[ ! -s "$temp_root/project-retry.stderr" ]] || fail 'idempotent project retry wrote to stderr' "$temp_root/project-retry.stderr"
-cmp -s "$temp_root/projects.before-retry" "$work/.ply/projects.yaml" ||
-	fail 'idempotent project retry changed registry bytes' "$temp_root/projects.before-retry" "$work/.ply/projects.yaml"
-[[ $(file_mtime "$work/.ply/projects.yaml") == "$project_mtime" ]] ||
-	fail 'idempotent project retry changed registry mtime' "$work/.ply/projects.yaml"
+cmp -s "$temp_root/projects.before-retry" "$work/ply-workspace.json" ||
+	fail 'idempotent project retry changed definitions bytes' "$temp_root/projects.before-retry" "$work/ply-workspace.json"
+[[ $(file_mtime "$work/ply-workspace.json") == "$project_mtime" ]] ||
+	fail 'idempotent project retry changed definitions mtime' "$work/ply-workspace.json"
 
 (
 	cd "$work"
@@ -572,7 +560,7 @@ find "$external_repo" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/external.a
 cmp -s "$temp_root/single.before" "$temp_root/single.after" || fail 'Ply changed the single wrapper or repository' "$temp_root/single.before" "$temp_root/single.after"
 cmp -s "$temp_root/multi.before" "$temp_root/multi.after" || fail 'Ply changed the multi wrapper or repository' "$temp_root/multi.before" "$temp_root/multi.after"
 cmp -s "$temp_root/external.before" "$temp_root/external.after" || fail 'Ply changed the external repository' "$temp_root/external.before" "$temp_root/external.after"
-[[ $(cd "$work" && find . -mindepth 1 -print | LC_ALL=C sort) == $'./.ply\n./.ply/projects.lock\n./.ply/projects.yaml\n./.ply/workspace.yaml' ]] ||
+[[ $(cd "$work" && find . -mindepth 1 -print | LC_ALL=C sort) == $'./.ply\n./.ply/projects.lock\n./.ply/workspace.yaml\n./ply-workspace.json' ]] ||
 	fail 'project journey created unexpected workspace files'
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'project journey created a global Ply profile' "$temp_root/home/.ply"
 

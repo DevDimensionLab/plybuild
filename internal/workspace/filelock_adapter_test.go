@@ -23,9 +23,6 @@ func TestLockAdaptersPreserveErrorParity(t *testing.T) {
 	work := func(class WorkItemErrorClass, detail string, err error) error {
 		return &WorkItemError{Class: class, Detail: detail, Err: err}
 	}
-	content := func(detail string, err error) error {
-		return &TaskContentError{Code: "task_spec_lock_unavailable", Detail: detail, Err: err}
-	}
 	tests := []struct {
 		name      string
 		got, want error
@@ -53,12 +50,6 @@ func TestLockAdaptersPreserveErrorParity(t *testing.T) {
 		{"work lock", workItemLockError(p, lockErr("lock", false, e)), work(ErrorWorkIO, "lock work-item registry", e)},
 		{"work release both", workItemReleaseError(&filelock.ReleaseError{Path: p, Unlock: u, Close: c}), work(ErrorWorkIO, "unlock work-item lock "+p, u)},
 		{"work release close", workItemReleaseError(&filelock.ReleaseError{Path: p, Close: c, CloseInjected: true}), work(ErrorWorkIO, "close work-item lock "+p, c)},
-		{"content stat-opened", contentLockError(lockErr("stat-opened", false, e)), content("existing lock identity differs", e)},
-		{"content lstat-path", contentLockError(lockErr("lstat-path", false, e)), content("existing lock identity differs", e)},
-		{"content changed", contentLockError(lockErr("changed", false, nil)), content("existing lock identity differs", nil)},
-		{"content lock", contentLockError(lockErr("lock", false, e)), content("cannot acquire existing lock", e)},
-		{"content release both", contentReleaseError(&filelock.ReleaseError{Path: p, Unlock: u, Close: c}), u},
-		{"content release close", contentReleaseError(&filelock.ReleaseError{Path: p, Close: c}), c},
 	}
 	for _, test := range tests {
 		if !reflect.DeepEqual(test.got, test.want) {
@@ -68,16 +59,11 @@ func TestLockAdaptersPreserveErrorParity(t *testing.T) {
 }
 
 func TestProjectsLockContentionBetweenFilelockAndConsumers(t *testing.T) {
-	root, err := filepath.EvalSymlinks(emptyStoreRoot(t))
-	if err != nil {
-		t.Fatal(err)
-	}
+	root := createProjectWorkspace(t)
 	path := filepath.Join(root, MarkerDirectory, projectsLock)
 	store := newSystemProjectStore()
-	project, repositories := storeFixture(root, "one", "One", "one")
 	consumers := []func() error{
-		func() error { _, _, _, err := store.Add(root, project, repositories); return err },
-		func() error { lock, err := acquireExistingContentLock(path); releaseContent(lock); return err },
+		func() error { return store.WithSnapshotLock(root, func(ProjectSnapshot) error { return nil }) },
 	}
 	for _, consumer := range consumers {
 		held, err := filelock.Acquire(path, filelock.Options{})
@@ -88,10 +74,6 @@ func TestProjectsLockContentionBetweenFilelockAndConsumers(t *testing.T) {
 	}
 	holders := []func() (func(), error){
 		func() (func(), error) { lock, err := store.acquire(root); return func() { store.release(lock) }, err },
-		func() (func(), error) {
-			lock, err := acquireExistingContentLock(path)
-			return func() { releaseContent(lock) }, err
-		},
 	}
 	for _, holder := range holders {
 		release, err := holder()
@@ -105,12 +87,6 @@ func TestProjectsLockContentionBetweenFilelockAndConsumers(t *testing.T) {
 			}
 			return err
 		}, release)
-	}
-}
-
-func releaseContent(lock *filelock.Lock) {
-	if lock != nil {
-		_ = releaseContentLock(lock)
 	}
 }
 

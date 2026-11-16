@@ -86,7 +86,7 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		if resolved, err = resolvePlanProject(d, project); err != nil {
 			return plan.Store{}, err
 		}
-		directory, err := workspace.ProjectDataPath(resolved, plan.DataPathCategory)
+		directory, err := resolved.Data().Plans()
 		if err != nil {
 			return plan.Store{}, err
 		}

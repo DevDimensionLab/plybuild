@@ -85,7 +85,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 	ops[4].ResultSchemas = []capabilitySchema{{"WorkspaceTaskReadback@1", nil}, {"WorkspaceTaskIntegrationReadback@1", &one}, {"WorkspaceTaskReadback@3", &three}}
 	extensions := []capabilityOperation{
 		operation("attention", "default", "WorkspaceAttentionReadback@1", []string{}, []string{"project", "repo", "epic"}, "independent_and"),
-		operation("epic.list", "default", "WorkspaceEpicListReadback@1", []string{}, []string{"project"}, "independent_and"),
+		operation("epic.list", "default", workspaceview.EpicListKind, []string{}, []string{"project"}, "independent_and"),
 		operation("epic.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
 		operation("journal.recent", "default", "WorkspaceActivityReadback@1", []string{}, []string{"project", "since", "limit"}, "independent_and"),
 		operation("overview", "default", "WorkspaceOverviewReadback@1", []string{}, []string{"project"}, "independent_and"),
@@ -96,6 +96,8 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("task.show", "progress", "WorkspaceTaskProgressReadback@1", []string{"--progress"}, []string{}, "none"),
 		operation("worktree.list", "default", "WorkspaceWorktreeListReadback@1", []string{}, []string{"project", "repo"}, "independent_and"),
 	}
+	two := 2
+	extensions[1].ResultSchemas = []capabilitySchema{{workspaceview.EpicListKind, &two}}
 	extensions = append(extensions, capabilityOperation{ID: "workflow.agents", Command: []string{"workflow", "agents"}, Mode: "default", Selectors: []string{"--workspace"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"AgentWorkReadback@1", &one}}, Effect: "read"})
 	extensions = append(extensions, capabilityOperation{ID: "workflow.agents", Command: []string{"workflow", "agents"}, Mode: "metadata-only", Selectors: []string{"--metadata-only"}, Formats: []string{"text", "json"}, Filters: []string{}, FilterPolicy: "none", ResultSchemas: []capabilitySchema{{"AgentStatusMetadataReadback@1", &one}}, Effect: "read"})
 	extensions = append(extensions, capabilityOperation{

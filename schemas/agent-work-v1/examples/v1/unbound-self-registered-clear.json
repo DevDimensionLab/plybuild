@@ -2,7 +2,7 @@
   "history": [],
   "kind": "AgentFollowup@1",
   "schema_version": 1,
-  "id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+  "id": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d",
   "revision": 3,
   "generation": 1,
   "owner_ref": "owner-fixture",
@@ -21,14 +21,14 @@
   "transport": {
     "dispatch_subject": {
       "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
-      "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+      "followup_id": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d",
       "revision": 2,
       "generation": 1,
       "cycle": 1
     },
     "state": "sent",
     "reason": "Herdr acknowledged or queued input; no recipient recheck observed.",
-    "cycle_ref": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2/cycle/1",
+    "cycle_ref": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d/cycle/1",
     "attempted_at_utc": "2026-10-23T13:00:00Z",
     "acknowledged_at_utc": "2026-10-23T13:00:00Z"
   },
@@ -40,7 +40,7 @@
       "reason": "Owner declaration and expected revision are required.",
       "subject": {
         "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
-        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "followup_id": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d",
         "revision": 3,
         "generation": 1,
         "cycle": 1
@@ -51,7 +51,7 @@
       "reason": "Cycle consumed; no replay, including unknown possible send.",
       "subject": {
         "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
-        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "followup_id": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d",
         "revision": 3,
         "generation": 1,
         "cycle": 1
@@ -62,7 +62,7 @@
       "reason": "Matching recipient, generation and revision are required; report is self-reported.",
       "subject": {
         "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
-        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "followup_id": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d",
         "revision": 3,
         "generation": 1,
         "cycle": 1
@@ -73,7 +73,7 @@
       "reason": "A recipient waiting recheck is required to create a new cycle.",
       "subject": {
         "agent_ref": "agr_70b55b85ecb5c489f1c2e75cc83da6534d34778391af64695d438332757bdd44",
-        "followup_id": "fup_47cb02180426873631869257dcb93701d05419386e08cd5080d01a3dc8c137c2",
+        "followup_id": "fup_c14d34f98e3bfa2b19e501cab6236b91bdbd1615c6688284d7276a5aac26f91d",
         "revision": 3,
         "generation": 1,
         "cycle": 1

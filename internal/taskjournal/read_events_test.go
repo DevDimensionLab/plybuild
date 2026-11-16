@@ -28,7 +28,7 @@ func eventBatchInput(t *testing.T, f testFixture) EventBatchInput {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return EventBatchInput{b.Workspace, workspace.ProjectSnapshot{Projects: p, Repos: r}, b.Registry, l}
+	return EventBatchInput{b.Workspace, workspace.ProjectSnapshot{Projects: p, Repos: r}, []workspace.ProjectRegistry{{Work: b.Work, Registry: b.Registry}}, l}
 }
 
 func TestEventBatchMatchesJournalEventsWithoutGitOrWrites(t *testing.T) {
@@ -58,7 +58,7 @@ func TestEventBatchKeepsTaskAfterMissingContributionArtifact(t *testing.T) {
 	f := fixture(t)
 	f.append(t, f.input)
 	// Without Ply's copy too, as for a record made before copies were kept.
-	for _, path := range []string{f.input.Sources[0].Locator, sourceCopyPath(f.root, f.input.Sources[0].SHA256)} {
+	for _, path := range []string{f.input.Sources[0].Locator, sourceCopyPath(f.work(t), f.input.Sources[0].SHA256)} {
 		if err := os.Remove(path); err != nil {
 			t.Fatal(err)
 		}

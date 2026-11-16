@@ -94,19 +94,27 @@ func TestMissingNativeRelationRemainsOfflineReadable(t *testing.T) {
 	}
 }
 
-func TestStorageCreationDoesNotRecreateMissingWorkspace(t *testing.T) {
+// The journal lives in the Project's work; storage creation never recreates
+// a wrapper that disappeared (here the wrapper is the workspace root).
+func TestStorageCreationDoesNotRecreateMissingWrapper(t *testing.T) {
 	f := fixture(t)
+	saved := f.root + "-saved"
 	f.s.fault = func(stage string) error {
 		if stage == "before_directories" {
-			return os.Rename(filepath.Join(f.root, ".ply"), filepath.Join(f.root, "saved-ply"))
+			return os.Rename(f.root, saved)
 		}
 		return nil
 	}
-	if _, e := f.s.Append("task", f.file(t, f.input), "event"); e == nil {
-		t.Fatal("append proceeded after workspace marker disappeared")
+	_, e := f.s.Append("task", f.file(t, f.input), "event")
+	_, missing := os.Lstat(f.root)
+	if err := os.Rename(saved, f.root); err != nil {
+		t.Fatal(err)
 	}
-	if _, e := os.Lstat(filepath.Join(f.root, ".ply")); !os.IsNotExist(e) {
-		t.Fatal("journal recreated a workspace ancestor")
+	if e == nil {
+		t.Fatal("append proceeded after the Project wrapper disappeared")
+	}
+	if !os.IsNotExist(missing) {
+		t.Fatal("journal recreated the Project wrapper")
 	}
 }
 
@@ -171,7 +179,7 @@ func TestCorruptSemanticRecordBlocksNewAppend(t *testing.T) {
 
 func TestCandidateObjectAndTaskBinding(t *testing.T) {
 	f := fixture(t)
-	r, e := f.s.Workspace.WorkItems.Snapshot(f.root)
+	r, e := f.s.Workspace.WorkItems.Snapshot(taskWork(t, f.s.Workspace, f.root))
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -194,7 +202,7 @@ func TestCandidateObjectAndTaskBinding(t *testing.T) {
 
 func TestSourceDisappearanceAtFreshnessInvalidatesOutcome(t *testing.T) {
 	f := fixture(t)
-	r, e := f.s.Workspace.WorkItems.Snapshot(f.root)
+	r, e := f.s.Workspace.WorkItems.Snapshot(taskWork(t, f.s.Workspace, f.root))
 	if e != nil {
 		t.Fatal(e)
 	}

@@ -68,12 +68,12 @@ func TestGoalDeliveryFastForwardsEpicWithoutProcessDocuments(t *testing.T) {
 	f := newGoalDeliveryFixture(t, nil)
 	git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
 	f.dependencies.IntegrationGit = git
-	before, _ := os.ReadFile(workItemsPath(f.root))
+	before, _ := os.ReadFile(testWork(t, f.root).Registry())
 	checked, err := CheckTaskIntegration(f.dependencies, f.input)
 	if err != nil {
 		t.Fatal(err)
 	}
-	after, _ := os.ReadFile(workItemsPath(f.root))
+	after, _ := os.ReadFile(testWork(t, f.root).Registry())
 	if string(before) != string(after) || git.count() != 0 || runLocalGit(t, f.epicPath, "rev-parse", "HEAD") != f.oid {
 		t.Fatal("check had an effect")
 	}
@@ -156,7 +156,7 @@ func TestGoalDeliveryResumesAfterCrashBetweenMergeAndResult(t *testing.T) {
 	git := &countingIntegrationGit{TaskIntegrationGit: f.dependencies.IntegrationGit}
 	f.dependencies.IntegrationGit = git
 	f.apply(t)
-	err := f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
+	err := f.dependencies.WorkItems.WithLock(testWork(t, f.root), func(session WorkItemStoreSession) error {
 		r, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -191,7 +191,7 @@ func TestGoalDeliveryLetsTheEpicBaseAdvanceForTheNextTask(t *testing.T) {
 	if err != nil || preview.Confirmation == nil {
 		t.Fatalf("base preview = %#v err=%v", preview, err)
 	}
-	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Upgrade: r.RawSHA256, Apply: true, Confirmation: *preview.Confirmation}); err != nil {
+	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *preview.Confirmation}); err != nil {
 		t.Fatal(err)
 	}
 	r = mustQueueRegistry(t, f.workItemJourneyFixture)

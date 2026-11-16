@@ -24,9 +24,6 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/filelock"
 )
 
-// DataPathCategory is the data directory category of a Project's agent statuses.
-const DataPathCategory = "agent-status"
-
 // Error classes shared with the CLI contract.
 const (
 	ClassInvalidArguments = "agent_status_invalid_arguments"

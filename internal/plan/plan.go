@@ -27,9 +27,6 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/filelock"
 )
 
-// DataPathCategory is the data directory category of a Project's plans.
-const DataPathCategory = "plans"
-
 // Error classes shared with the CLI contract.
 const (
 	ClassInvalidArguments = "plan_invalid_arguments"

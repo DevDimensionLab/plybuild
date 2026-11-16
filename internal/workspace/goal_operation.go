@@ -32,25 +32,25 @@ func goalOperationContentScope(d Dependencies, scope *taskContentScope) Dependen
 // Begin with structural validation under the existing operation lock, then bind
 // and validate the Task resolved by the planner before any publication. The
 // pointer is private to this synchronous operation; it retains no content bytes.
-func beginGoalOperationContent(d Dependencies) (Dependencies, func(string, WorkItemRegistry, TaskID) error) {
+func beginGoalOperationContent(d Dependencies) (Dependencies, func(ProjectWork, WorkItemRegistry, TaskID) error) {
 	scope := &taskContentScope{}
 	d = goalOperationContentScope(d, scope)
-	return d, func(root string, r WorkItemRegistry, task TaskID) error {
+	return d, func(work ProjectWork, r WorkItemRegistry, task TaskID) error {
 		if task == "" || (scope.task != "" && scope.task != task) {
 			return queueError("task_goal_execution_conflict", "selected Task changed before execution")
 		}
 		scope.task = task
-		return validateGoalOperationContent(d, root, r, task)
+		return validateGoalOperationContent(d, work, r, task)
 	}
 }
 
-func validateGoalOperationContent(d Dependencies, root string, r WorkItemRegistry, task TaskID) error {
+func validateGoalOperationContent(d Dependencies, work ProjectWork, r WorkItemRegistry, task TaskID) error {
 	d = goalOperationContent(d, task)
 	storage := observeTaskContent(d.TaskContent)
-	if err := validateTaskContentClosure(storage, root, r, false); err != nil {
+	if err := validateTaskContentClosure(storage, work, r, false); err != nil {
 		return err
 	}
-	return validateQueueClosure(Dependencies{TaskContent: storage}, root, r)
+	return validateQueueClosure(Dependencies{TaskContent: storage}, work, r)
 }
 
 // Recovery candidates come from authoritative target/queue relationships before

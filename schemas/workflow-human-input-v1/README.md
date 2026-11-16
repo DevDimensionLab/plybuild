@@ -152,9 +152,12 @@ Nothing is repaired silently.
   Never create a new request to retry.
 - Requests have no native expiry. Consumer passkey or page validity is separate
   and never withdraws the question.
-- When a project, repository or Task leaves the registers, new previews and
-  applies are refused (`human_input_scope_unavailable`). History stays readable
-  and listed.
+- Questions are stored in the work directory of their project,
+  `<wrapper>/data/work/human-input/v1/`. When a repository or Task leaves the
+  registers, new previews and applies are refused
+  (`human_input_scope_unavailable`); history stays readable and listed. When the
+  project itself leaves the definitions, its questions leave the workspace with
+  it: they are `human_input_not_found`, and their files stay under the wrapper.
 
 ## Discovery
 

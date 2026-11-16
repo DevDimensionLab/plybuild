@@ -11,7 +11,7 @@ import (
 func TestFollowupFailedSendKeepsClaimWithoutAnotherSnapshot(t *testing.T) {
 	s, d, calls := fixture(t)
 	d.NextCheckAtUTC = s.now()
-	f, err := s.Register(d)
+	f, err := s.Register(s.onlyProject(), d)
 	if err != nil {
 		t.Fatal(err)
 	}

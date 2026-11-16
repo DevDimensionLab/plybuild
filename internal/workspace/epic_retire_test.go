@@ -115,7 +115,8 @@ func definedEpicRetireFixture(t *testing.T) epicRetireFixture {
 	base := runLocalGit(t, x.repository, "rev-parse", "HEAD")
 	second := filepath.Join(x.f.wrapper, "second")
 	runLocalGit(t, x.repository, "worktree", "add", "-b", "second", second, base)
-	if _, err := AdoptEpic(x.f.dependencies, EpicAdoptInput{EpicID: "second", Title: "Second", ProjectID: "ply", RepoID: "ply", Worktree: physicalPath(t, second), Ref: "refs/heads/second", ExpectedOID: base}); err != nil {
+	input := EpicAdoptInput{EpicID: "second", Title: "Second", ProjectID: "ply", RepoID: "ply", Worktree: physicalPath(t, second), Ref: "refs/heads/second", ExpectedOID: base}
+	if _, err := AdoptEpic(x.f.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
 	finalReviewInstallDefinitions(t, x.f)

@@ -24,6 +24,7 @@ func fixture(t *testing.T) (*Service, Draft, *atomic.Int32) {
 	if e != nil {
 		t.Fatal(e)
 	}
+	defineProjects(t, root, "project-fixture")
 	s := &Service{Root: root, Now: func() time.Time { return now }, Runtime: rt, Native: func() NativeSnapshot {
 		return NativeSnapshot{Available: true, Bindings: []Binding{{Identity: target, Work: Work{ProjectID: "project-fixture", RepoID: "repo-fixture", EpicID: "epic-fixture", TaskID: "task-fixture", RunID: "run-fixture", AttemptRef: "run-fixture", Phase: "working", NextActor: "agent", NextAction: "continue_delivery", Reason: "Read the registered native action before continuing.", DetailRef: "workflow.trace:task-fixture", Source: "registered", Freshness: "fresh"}, Veto: "clear"}}}
 	}, Send: func(Identity, string) error { calls.Add(1); return nil }}
@@ -56,24 +57,24 @@ func mutation(f Followup, id string) Mutation {
 }
 func TestFollowupCycleNoReplayAndExplicitRecheck(t *testing.T) {
 	s, d, calls := fixture(t)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
-	again, e := s.Register(d)
+	again, e := s.Register(s.onlyProject(), d)
 	if e != nil || again.ID != f.ID {
 		t.Fatal(again, e)
 	}
 	alias := d
 	alias.PublicationKey = "alias"
-	again, e = s.Register(alias)
+	again, e = s.Register(s.onlyProject(), alias)
 	if e != nil || again.ID != f.ID {
 		t.Fatal("alias escaped canonical obligation", e)
 	}
 	changed := d
 	changed.OwnerRef = "other"
 	changed.PublicationKey = d.PublicationKey
-	if _, e = s.Register(changed); e == nil {
+	if _, e = s.Register(s.onlyProject(), changed); e == nil {
 		t.Fatal("key takeover")
 	}
 	f, e = s.Dispatch(f.ID)
@@ -109,7 +110,7 @@ func TestFollowupCycleNoReplayAndExplicitRecheck(t *testing.T) {
 func TestFollowupConcurrentDispatchAndLostACK(t *testing.T) {
 	s, d, calls := fixture(t)
 	d.NextCheckAtUTC = s.Now().Format(time.RFC3339)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -131,7 +132,7 @@ func TestFollowupConcurrentDispatchAndLostACK(t *testing.T) {
 	}
 	alias := d
 	alias.PublicationKey = "new-ui-id"
-	got, e = s.Register(alias)
+	got, e = s.Register(s.onlyProject(), alias)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -169,7 +170,7 @@ func TestFollowupVetoAndTargetRevalidation(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s, d, c := fixture(t)
 			d.NextCheckAtUTC = s.Now().Format(time.RFC3339)
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -184,7 +185,7 @@ func TestFollowupVetoAndTargetRevalidation(t *testing.T) {
 func TestFollowupCrashClaimSurvivesAndCancelWins(t *testing.T) {
 	s, d, c := fixture(t)
 	d.NextCheckAtUTC = s.Now().Format(time.RFC3339)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -217,7 +218,7 @@ func TestFollowupFaultBoundariesAndRecipientRevision(t *testing.T) {
 		t.Run(stage, func(t *testing.T) {
 			s, d, c := fixture(t)
 			d.NextCheckAtUTC = s.now()
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -247,7 +248,7 @@ func TestFollowupFaultBoundariesAndRecipientRevision(t *testing.T) {
 		})
 	}
 	s, d, c := fixture(t)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -270,7 +271,7 @@ func TestFollowupFaultBoundariesAndRecipientRevision(t *testing.T) {
 }
 func TestFollowupLostMutationReplyAndNoTaskStatusCopy(t *testing.T) {
 	s, d, _ := fixture(t)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -299,7 +300,7 @@ func TestFollowupUnboundSelfRegisteredRuntime(t *testing.T) {
 	s.Native = func() NativeSnapshot {
 		return NativeSnapshot{Available: true, VetoCoverageComplete: true, Vetoes: map[string]string{}}
 	}
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -321,7 +322,7 @@ func TestFollowupUnboundSelfRegisteredRuntime(t *testing.T) {
 				n.VetoCoverageComplete = false
 			}
 			s.Native = func() NativeSnapshot { return n }
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -354,7 +355,7 @@ func TestFollowupTargetSpecificVetoCoverage(t *testing.T) {
 				n.Bindings = nil
 			}
 			s.Native = func() NativeSnapshot { return n }
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -418,7 +419,7 @@ func TestFollowupHistoricalRetarget(t *testing.T) {
 			if unknown {
 				s.Send = func(Identity, string) error { calls.Add(1); return errors.New("lost ACK") }
 			}
-			f, err := s.Register(d)
+			f, err := s.Register(s.onlyProject(), d)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -510,7 +511,7 @@ func TestFollowupHistoricalRetarget(t *testing.T) {
 				t.Fatal("replayed dispatch", err, calls.Load())
 			}
 			d.PublicationKey, d.TargetRef, d.WaitRef = "alias-new-target", next.Ref(), next.Ref()
-			if _, err = s.Register(d); err == nil || err.Error() != "followup_status_target_already_registered" {
+			if _, err = s.Register(s.onlyProject(), d); err == nil || err.Error() != "followup_status_target_already_registered" {
 				t.Fatal("historical lineage", err)
 			}
 			if !bytes.Equal(before, snapshot()) {
@@ -527,7 +528,7 @@ func TestFollowupHistoricalRetarget(t *testing.T) {
 func TestFollowupStatusCancelRegisterNewTarget(t *testing.T) {
 	s, d, calls := fixture(t)
 	d.WaitKind, d.WaitRef, d.NextCheckAtUTC = "status", d.TargetRef, s.now()
-	f, err := s.Register(d)
+	f, err := s.Register(s.onlyProject(), d)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -548,7 +549,7 @@ func TestFollowupStatusCancelRegisterNewTarget(t *testing.T) {
 		return nil
 	}
 	d.PublicationKey, d.TargetRef, d.WaitRef = "new-status-target", next.Ref(), next.Ref()
-	replacement, err := s.Register(d)
+	replacement, err := s.Register(s.onlyProject(), d)
 	if err != nil || replacement.ID == f.ID {
 		t.Fatal(replacement, err)
 	}
@@ -573,7 +574,7 @@ func TestFollowupExplicitStatusRequestAfterFulfilled(t *testing.T) {
 	d.WaitKind = "status"
 	d.WaitRef = d.TargetRef
 	d.NextCheckAtUTC = s.now()
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -590,7 +591,7 @@ func TestFollowupExplicitStatusRequestAfterFulfilled(t *testing.T) {
 		t.Fatal(e)
 	}
 	// Register/read/dispatch are not an automatic rearm after fulfillment.
-	again, e := s.Register(d)
+	again, e := s.Register(s.onlyProject(), d)
 	if e != nil || again.State != "fulfilled" || again.Cycle != 1 {
 		t.Fatal(again, e)
 	}
@@ -641,7 +642,7 @@ func TestFollowupExplicitNewStatusCycleStillRejectsUnknownAndCancellation(t *tes
 			if state == "unknown" {
 				s.Send = func(Identity, string) error { return errors.New("lost ACK") }
 			}
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}

@@ -20,6 +20,7 @@ func workflowFixture() *Snapshot {
 	s.Projects.Repos = append(s.Projects.Repos, workspace.RepoRecord{ID: "second-repo"}, workspace.RepoRecord{ID: "other-repo"})
 	s.Registry.Epics[0].RepoBindings = []workspace.EpicRepoBinding{{RepoID: "repo"}, {RepoID: "second-repo"}}
 	s.Registry.Epics = append(s.Registry.Epics, workspace.EpicRecord{ID: "empty-epic", ProjectID: "other", Title: "Empty Epic", RepoBindings: []workspace.EpicRepoBinding{{RepoID: "other-repo"}}})
+	s.Registry.EpicBaseVersions = []workspace.EpicBaseVersion{{ProjectID: "project", RepoID: "repo", EpicID: "epic", Revision: 1}, {ProjectID: "project", RepoID: "second-repo", EpicID: "epic", Revision: 1}, {ProjectID: "other", RepoID: "other-repo", EpicID: "empty-epic", Revision: 1}}
 	return s
 }
 
@@ -79,7 +80,7 @@ func TestWorkflowStatusHiddenCountsDoNotOverlapOrHideDiagnostics(t *testing.T) {
 	d, items, _ := viewDiskFixture(t)
 	items.registry.IntegrationAuthorities = []workspace.IntegrationAuthority{fixtureAuthority()}
 	items.registry.IntegrationResults = []workspace.IntegrationResult{{ID: "integration", AuthorityID: "authority", Outcome: "exact_effect"}}
-	if _, err := workspace.SetWorkItemLifecycle(d, workspace.WorkItemLifecycleInput{SubjectKind: "epic", SubjectID: "epic", State: workspace.LifecycleParked, ActorClaim: "fixture owner"}); err != nil {
+	if _, err := workspace.SetWorkItemLifecycle(withViewLocks(d), workspace.WorkItemLifecycleInput{SubjectKind: "epic", SubjectID: "epic", State: workspace.LifecycleParked, ActorClaim: "fixture owner"}); err != nil {
 		t.Fatal(err)
 	}
 	s, err := LoadSnapshot(d)
@@ -116,7 +117,7 @@ func TestWorkflowStatusRepeatedReadsAreBatchedAndDoNotWrite(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if out.Workspace.Root != root || out.Counts.Hidden.Backlog != 1 || items.reads != n+1 || projects.reads != n+1 || items.fullReads != 0 || items.locks != 0 {
+		if out.Workspace.Root != root || out.Counts.Hidden.Backlog != 1 || items.reads != n+1 || projects.reads != 0 || items.fullReads != 0 || items.locks != 0 {
 			t.Fatalf("not one read per registry or accidental live/lock dependency: %+v items=%+v projects=%+v", out, items, projects)
 		}
 	}

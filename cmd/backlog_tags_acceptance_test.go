@@ -30,7 +30,7 @@ func TestBacklogAuthorTagsAndFiltersAcceptance(t *testing.T) {
 		f.git(t, dir, "commit", "--allow-empty", "-m", "fixture")
 	}
 	f.success(t, ws, "workspace", "init")
-	mustPlanWrite(t, filepath.Join(ws, "ply-workspace.json"), `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","repos":[{"id":"code","path":"code"},{"id":"web","path":"web"}],"epics":[]}]}`, 0o644)
+	mustPlanWrite(t, filepath.Join(ws, "ply-workspace.json"), `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","repos":[{"id":"code","path":"code"},{"id":"web","path":"web"}]}]}`, 0o644)
 	backlogDir := filepath.Join(ws, "data", "backlog")
 	run := func(stdin string, args ...string) string {
 		c := exec.Command(binary, append([]string{"backlog", "--workspace", ws}, append(args, "--project", "ply")...)...)

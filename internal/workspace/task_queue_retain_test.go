@@ -11,7 +11,7 @@ import (
 
 func retainQueueDraft(t *testing.T, f workItemJourneyFixture, key string, revision int, entries []TaskGoalQueueEntry) string {
 	t.Helper()
-	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: key, ProjectID: "ply", RepoID: "ply", EpicID: "epic", ExpectedRevision: revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}, RegistryUpgrade: queueUpgrade(mustQueueRegistry(t, f))}
+	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: key, ProjectID: "ply", RepoID: "ply", EpicID: "epic", ExpectedRevision: revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}}
 	raw, err := contentCanonical(draft)
 	if err != nil {
 		t.Fatal(err)
@@ -85,7 +85,7 @@ func TestTaskQueueRetainStillValidatesReferencesAndTarget(t *testing.T) {
 			if err = os.WriteFile(file, raw, 0600); err != nil {
 				t.Fatal(err)
 			}
-			path := taskContentPath(filepath.Dir(f.wrapper), "manifests", digest)
+			path := taskContentPath(testWork(t, filepath.Dir(f.wrapper)), "manifests", digest)
 			if err = os.Chmod(path, 0600); err != nil {
 				t.Fatal(err)
 			}

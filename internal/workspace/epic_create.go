@@ -54,7 +54,6 @@ type EpicCreateResult struct {
 
 type EpicCreateEffects struct {
 	Worktree string `json:"worktree"`
-	Config   string `json:"config"`
 }
 
 func validateEpicCreateInput(in EpicCreateInput) error {
@@ -90,40 +89,12 @@ func epicCreateReservation(r WorkItemRegistry, common, ref, path string, id Epic
 func pathOverlap(a, b string) bool { return pathWithin(a, b) || pathWithin(b, a) }
 
 func CreateEpic(d Dependencies, in EpicCreateInput) (EpicCreateResult, error) {
-	out, basis, e := createEpic(d, in)
-	if e != nil || basis == "" {
-		return out, e
-	}
-	config, e := recordEpicDefinition(out.Workspace, basis, out.Operation.Request)
-	if e != nil {
-		out.Effects.Config = config
-		out.NextAction = e.Error()
-		return out, e
-	}
-	final, basis, e := createEpic(d, in)
-	if e == nil && basis != "" {
-		e = workError(ErrorWorkIdentityConflict, fmt.Sprintf("%s changed after the Epic definition was written; inspect it, then repeat the identical create request", filepath.Join(out.Workspace, DefinitionsFile)), nil)
-	}
-	if final.Operation.ID == "" {
-		final.Workspace, final.Operation, final.Outcome = out.Workspace, out.Operation, out.Outcome
-	}
-	if final.Effects.Worktree == "not_attempted" {
-		final.Effects.Worktree = out.Effects.Worktree
-	}
-	if e != nil && final.NextAction == "" {
-		final.NextAction = e.Error()
-	}
-	final.Effects.Config = config
-	return final, e
-}
-
-func createEpic(d Dependencies, in EpicCreateInput) (EpicCreateResult, string, error) {
-	out := EpicCreateResult{Kind: "WorkspaceEpicCreate@1", Effects: EpicCreateEffects{Worktree: "not_attempted", Config: "not_attempted"}}
+	out := EpicCreateResult{Kind: "WorkspaceEpicCreate@1", Effects: EpicCreateEffects{Worktree: "not_attempted"}}
 	if e := validateEpicCreateInput(in); e != nil {
-		return out, "", e
+		return out, e
 	}
 	if e := requireWorkMutationDependencies(d); e != nil {
-		return out, "", e
+		return out, e
 	}
 	// Reuse the native Git adapter, with a bounded environment for every read and write.
 	if g, ok := d.WorkGit.(*systemWorkItemGit); ok {
@@ -132,252 +103,34 @@ func createEpic(d Dependencies, in EpicCreateInput) (EpicCreateResult, string, e
 		d.WorkGit = &copy
 	}
 	if e := d.WorkGit.ValidateBranch(in.Branch); e != nil {
-		return out, "", e
+		return out, e
 	}
-	root, e := containingWorkItemWorkspace(d)
+	root, e := containingRegistrationWorkspace(d)
 	if e != nil {
-		return out, "", e
-	}
-	defs, basis, e := readDefinitions(root)
-	if e != nil {
-		return out, "", e
+		return out, e
 	}
 	out.Workspace = root
 	cwd, e := projectPhysicalWorkingDirectory(d.Files)
 	if e != nil {
-		return out, "", e
+		return out, e
 	}
 	target, exists, e := canonicalTaskTarget(d.Files, cwd, in.Path)
 	if e != nil {
-		return out, "", e
+		return out, e
 	}
 	in.Path = target
-	if defs != nil {
-		if _, e = epicDefined(defs, root, in); e != nil {
-			return out, "", e
-		}
-	}
-	record := false
 	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return d.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
-			r, e := s.Snapshot()
-			if e != nil {
-				return e
-			}
-			if r.FormatVersion < 6 {
-				return registryDiagnostic("registry_upgrade_required", "Epic creation requires format 6; ordinary existing operations remain available. From format 4 first run ply workspace registry upgrade --to-format 5, then --to-format 6, each with --package <release-directory> --sha256 <manifest-digest> --check --format json and then its exact --confirm (docs/workspace-epic-create.md)", r.FormatVersion)
-			}
-			op, index := findEpicCreate(r, in.EpicID)
-			if op != nil {
-				if !reflect.DeepEqual(op.Request, in) {
-					return workError(ErrorWorkIdentityConflict, "Epic create request differs from the preserved intent; inspect epic show --format json", nil)
-				}
-				out.Operation = *op
-				if op.State == "completed" {
-					epic, _ := findEpic(r, in.EpicID)
-					out.Epic = epic
-					out.Outcome = "already_created"
-					out.NextAction = "Inspect current readiness with ply workspace epic show; creation is historical and will not repair or reset Git."
-					return nil
-				}
-				if op.State == "reconciliation_required" {
-					return epicCreatePending(&out, *op, "Preserved partial/unknown effect requires inspection; no supported automatic retry until producer reconciliation.")
-				}
-			}
-			_, repo, e := projectAndRepo(projects, in.ProjectID, in.RepoID)
-			if e != nil {
-				return e
-			}
-			observedRepo, e := d.WorkGit.ObserveRepo(repo)
-			if e != nil {
-				return e
-			}
-			if observedRepo.GitCommonDir != repo.GitCommonDir || observedRepo.Locator != repo.Locator {
-				return workError(ErrorWorkProjectConflict, "registered repository changed; inspect Project binding", nil)
-			}
-			if op == nil {
-				parent, e := d.WorkGit.ObserveRef(repo, in.ParentRef)
-				if e != nil {
-					return e
-				}
-				if !parent.Exists {
-					return workError(ErrorWorkParentStale, fmt.Sprintf("parent %s has no commit; a repository without commits needs a first commit on that branch before Epic create or adopt", in.ParentRef), nil)
-				}
-			}
-			if g, ok := d.WorkGit.(*systemWorkItemGit); ok {
-				if e = g.checkEpicMaterialization(repo, in.ExpectedParentOID); e != nil {
-					return e
-				}
-			}
-			if op == nil {
-				if ep, _ := findEpic(r, in.EpicID); ep != nil {
-					return workError(ErrorWorkIdentityConflict, "Epic ID already registered; use epic show or select a new ID", nil)
-				}
-				if exists {
-					return workError(ErrorWorkPathConflict, "target already exists; select a vacant leaf without moving or deleting it", nil)
-				}
-				if e = epicCreateReservation(r, repo.GitCommonDir, "refs/heads/"+in.Branch, target, in.EpicID); e != nil {
-					return e
-				}
-				parent, e := d.WorkGit.ObserveRef(repo, in.ParentRef)
-				if e != nil {
-					return e
-				}
-				if !parent.Exists || parent.OID != in.ExpectedParentOID || parent.CheckedOutAt == "" {
-					return workError(ErrorWorkParentStale, "explicit parent must match expected OID and have one ordinary symbolic checkout; inspect Git worktree list", nil)
-				}
-				if e = epicCreateReservation(r, repo.GitCommonDir, in.ParentRef, parent.CheckedOutAt, in.EpicID); e != nil {
-					return e
-				}
-				for _, ep := range r.Epics {
-					for _, b := range ep.RepoBindings {
-						if b.GitCommonDir == repo.GitCommonDir && (b.Worktree.Ref == in.ParentRef || b.Worktree.Locator == parent.CheckedOutAt || b.Worktree.Ref == "refs/heads/"+in.Branch || pathOverlap(b.Worktree.Locator, target)) {
-							return workError(ErrorWorkIdentityConflict, "parent or target belongs to an Epic; select an ordinary parent and vacant target", nil)
-						}
-					}
-				}
-				if e = nativeReceiptReservation(r, repo.GitCommonDir, in.ParentRef, parent.CheckedOutAt); e != nil {
-					return e
-				}
-				if e = nativeReceiptReservation(r, repo.GitCommonDir, "refs/heads/"+in.Branch, target); e != nil {
-					return e
-				}
-				for _, t := range r.WorktreeOperations {
-					if t.GitCommonDir == repo.GitCommonDir && (t.SourceRef == in.ParentRef || t.SourceRef == "refs/heads/"+in.Branch || pathOverlap(t.TargetLocator, target) || t.TargetLocator == parent.CheckedOutAt) {
-						return workError(ErrorWorkIdentityConflict, "parent or target reserved by a Task; inspect task show", nil)
-					}
-				}
-				inventory, e := d.WorkGit.ListWorktrees(repo)
-				if e != nil {
-					return e
-				}
-				for _, entry := range inventory.Entries {
-					if pathWithin(entry.Locator, target) {
-						return workError(ErrorWorkPathConflict, "target is nested inside a Git worktree; select a sibling path", nil)
-					}
-				}
-				if pathOverlap(repo.GitCommonDir, target) || pathOverlap(filepath.Join(root, MarkerDirectory), target) {
-					return workError(ErrorWorkPathConflict, "target overlaps Git administration or .ply; select a vacant sibling path", nil)
-				}
-				id, e := d.WorkIDs.NewOperationID()
-				if e != nil {
-					return e
-				}
-				wid, e := d.WorkIDs.NewWorktreeID()
-				if e != nil {
-					return e
-				}
-				created := EpicCreateOperation{ID: id, WorktreeID: wid, Request: in, GitCommonDir: repo.GitCommonDir, ParentLocator: parent.CheckedOutAt, ParentTree: parent.Tree, State: "pending", Attempts: []EpicCreateAttempt{}, Observations: []WorktreeObservationRecord{}}
-				created.IntentDigest = epicCreateDigest(created)
-				class, obs := observeEpicCreate(d, repo, created)
-				if class != "no_effect" {
-					return workError(ErrorWorkParentStale, "parent or target is not exact and vacant; inspect parent status, branch and inventory before retrying", nil)
-				}
-				created.Observations = append(created.Observations, obs)
-				r.EpicCreateOperations = append(r.EpicCreateOperations, created)
-				sort.Slice(r.EpicCreateOperations, func(i, j int) bool { return r.EpicCreateOperations[i].ID < r.EpicCreateOperations[j].ID })
-				if e = s.Publish(r); e != nil {
-					return e
-				}
-				op, index = findEpicCreate(r, in.EpicID)
-			}
-			class, obs := observeEpicCreate(d, repo, *op)
-			out.Effects.Worktree = epicCreateWorktreeEffects[class]
-			// An ordinary parent validation failure is not an unknown Git effect.
-			// Before any attempt in this invocation, freshly prove the effect absent;
-			// retain the intent, failed attempts and bounded validation observation.
-			if class == "partial_or_unknown" && epicCreateKnownAbsentParentValidation(d, repo, *op, obs) {
-				reason := "parent_worktree_stale"
-				errorClass := ErrorWorkParentStale
-				if !*obs.ParentWorktreeClean {
-					reason = "parent_worktree_dirty"
-					errorClass = ErrorWorkParentDirty
-				}
-				obs.Reasons = []string{reason}
-				r.EpicCreateOperations[index].Observations = append(r.EpicCreateOperations[index].Observations, obs)
-				if e = s.Publish(r); e != nil {
-					return e
-				}
-				out.Operation = r.EpicCreateOperations[index]
-				out.Outcome = "pending"
-				out.NextAction = "The selected branch and target are still absent; no Git attempt was made. Restore the recorded ordinary parent to a clean matching checkout, then retry the identical create request."
-				return workError(errorClass, out.NextAction, nil)
-			}
-			if class == "no_effect" || class == "branch_only" {
-				input := GitCreateInput{Repository: repo, Branch: in.Branch, SourceRef: "refs/heads/" + in.Branch, TargetLocator: target, ParentOID: in.ExpectedParentOID}
-				var outcome GitCommandOutcome
-				if class == "branch_only" {
-					outcome = d.WorkGit.AddWorktreeForExistingBranch(input)
-				} else {
-					outcome = d.WorkGit.CreateBranchAndWorktree(input)
-				}
-				attempt := EpicCreateAttempt{Exit: outcome.Exit, Stdout: string(outcome.Stdout), Stderr: string(outcome.Stderr)}
-				if outcome.Err != nil {
-					attempt.Error = outcome.Err.Error()
-				}
-				r.EpicCreateOperations[index].Attempts = append(r.EpicCreateOperations[index].Attempts, attempt)
-				// The actual effect, including a lost/nonzero response, determines recovery.
-				class, obs = observeEpicCreate(d, repo, *op)
-				out.Effects.Worktree = epicCreateWorktreeEffects[class]
-			}
-			r.EpicCreateOperations[index].Observations = append(r.EpicCreateOperations[index].Observations, obs)
-			switch class {
-			case "exact_effect":
-				if defs != nil {
-					current, digest, e := readDefinitions(root)
-					if e != nil {
-						return e
-					}
-					if digest != basis {
-						out.Operation = r.EpicCreateOperations[index]
-						out.Outcome = "pending"
-						if publish := s.Publish(r); publish != nil {
-							return workError(ErrorWorkIdentityConflict, epicDefinitionsChanged(root).Error()+"; this attempt and observation were not recorded because the change happened inside the runtime lock period", publish)
-						}
-						return epicDefinitionsChanged(root)
-					}
-					if defined, e := epicDefined(current, root, in); e != nil || !defined {
-						if publish := s.Publish(r); publish != nil {
-							return publish
-						}
-						out.Operation = r.EpicCreateOperations[index]
-						out.Outcome = "pending"
-						record = e == nil
-						return e
-					}
-					out.Effects.Config = "completed"
-				}
-				epic := EpicRecord{ID: in.EpicID, Title: in.Title, ProjectID: in.ProjectID, RepoBindings: []EpicRepoBinding{{RepoID: in.RepoID, GitCommonDir: op.GitCommonDir, Worktree: EpicWorktreeBinding{ID: op.WorktreeID, OwnerKind: "epic", OwnerID: in.EpicID, Origin: "ply_created", Locator: target, Ref: "refs/heads/" + in.Branch, OID: in.ExpectedParentOID, Tree: op.ParentTree, GitCommonDir: op.GitCommonDir}}}}
-				r.Epics = append(r.Epics, epic)
-				r.EpicBaseVersions = append(r.EpicBaseVersions, adoptedEpicBase(epic, epic.RepoBindings[0]))
-				r.EpicCreateOperations[index].State = "completed"
-				sortWorkRegistry(&r)
-				sortQueueRegistry(&r)
-				if e = s.Publish(r); e != nil {
-					return e
-				}
-				out.Operation = r.EpicCreateOperations[index]
-				out.Epic = &epic
-				out.Outcome = "created"
-				return nil
-			case "no_effect", "branch_only":
-				if e = s.Publish(r); e != nil {
-					return e
-				}
-				return epicCreatePending(&out, r.EpicCreateOperations[index], "Inspect epic show --format json, then repeat the identical create request to resume the observed no-effect or branch-only state.")
-			default:
-				r.EpicCreateOperations[index].State = "reconciliation_required"
-				if e = s.Publish(r); e != nil {
-					return e
-				}
-				return epicCreatePending(&out, r.EpicCreateOperations[index], "Inspect epic show --format json; preserve the partial/unknown effect for producer reconciliation without cleanup or blind retry.")
-			}
+		work, e := projectWork(root, in.ProjectID)
+		if e != nil {
+			return e
+		}
+		return withNewWorkID(d, work, "Epic "+string(in.EpicID), func(r WorkItemRegistry) bool { return hasEpic(r, in.EpicID) }, func() error {
+			return d.WorkItems.WithLock(work, func(s WorkItemStoreSession) error {
+				return createEpicLocked(d, s, projects, root, target, exists, in, &out)
+			})
 		})
 	})
-	if record {
-		return out, basis, e
-	}
-	return out, "", e
+	return out, e
 }
 func epicCreatePending(out *EpicCreateResult, op EpicCreateOperation, next string) error {
 	out.Operation = op
@@ -385,6 +138,9 @@ func epicCreatePending(out *EpicCreateResult, op EpicCreateOperation, next strin
 	out.NextAction = next
 	return workError(ErrorWorkReconciliation, next, nil)
 }
+
+var epicCreateWorktreeEffects = map[string]string{"no_effect": "no_effect", "branch_only": "partial", "exact_effect": "completed", "partial_or_unknown": "unknown"}
+
 func observeEpicCreate(d Dependencies, repo RepoRecord, op EpicCreateOperation) (string, WorktreeObservationRecord) {
 	surrogate := WorktreeOperationRecord{ParentRef: op.Request.ParentRef, ParentOID: op.Request.ExpectedParentOID, ParentTree: op.ParentTree, GitCommonDir: op.GitCommonDir, SourceRef: "refs/heads/" + op.Request.Branch, TargetLocator: op.Request.Path}
 	binding := EpicRepoBinding{Worktree: EpicWorktreeBinding{Locator: op.ParentLocator}}
@@ -402,11 +158,8 @@ func observeEpicCreate(d Dependencies, repo RepoRecord, op EpicCreateOperation) 
 }
 
 func validateEpicCreates(r WorkItemRegistry) error {
-	if r.FormatVersion < 6 {
-		if len(r.EpicCreateOperations) > 0 || r.EpicCreateBoundary != nil {
-			return fmt.Errorf("legacy format cannot contain Epic creation data")
-		}
-		return nil
+	if r.EpicCreateOperations == nil {
+		return fmt.Errorf("epic_create_operations must be an explicit array")
 	}
 	seen := map[EpicID]bool{}
 	ids := map[WorktreeOperationID]bool{}
@@ -511,4 +264,192 @@ func epicCreateKnownAbsentParentValidation(d Dependencies, repo RepoRecord, op E
 		}
 	}
 	return true
+}
+
+func createEpicLocked(d Dependencies, s WorkItemStoreSession, projects ProjectSnapshot, root, target string, exists bool, in EpicCreateInput, out *EpicCreateResult) error {
+	r, e := s.Snapshot()
+	if e != nil {
+		return e
+	}
+	op, index := findEpicCreate(r, in.EpicID)
+	if op != nil {
+		if !reflect.DeepEqual(op.Request, in) {
+			return workError(ErrorWorkIdentityConflict, "Epic create request differs from the preserved intent; inspect epic show --format json", nil)
+		}
+		out.Operation = *op
+		if op.State == "completed" {
+			epic, _ := findEpic(r, in.EpicID)
+			out.Epic = epic
+			out.Outcome = "already_created"
+			out.NextAction = "Inspect current readiness with ply workspace epic show; creation is historical and will not repair or reset Git."
+			return nil
+		}
+		if op.State == "reconciliation_required" {
+			return epicCreatePending(out, *op, "Preserved partial/unknown effect requires inspection; no supported automatic retry until producer reconciliation.")
+		}
+	}
+	_, repo, e := projectAndRepo(projects, in.ProjectID, in.RepoID)
+	if e != nil {
+		return e
+	}
+	observedRepo, e := d.WorkGit.ObserveRepo(repo)
+	if e != nil {
+		return e
+	}
+	if observedRepo.GitCommonDir != repo.GitCommonDir || observedRepo.Locator != repo.Locator {
+		return workError(ErrorWorkProjectConflict, "registered repository changed; inspect Project binding", nil)
+	}
+	if op == nil {
+		parent, e := d.WorkGit.ObserveRef(repo, in.ParentRef)
+		if e != nil {
+			return e
+		}
+		if !parent.Exists {
+			return workError(ErrorWorkParentStale, fmt.Sprintf("parent %s has no commit; a repository without commits needs a first commit on that branch before Epic create or adopt", in.ParentRef), nil)
+		}
+	}
+	if g, ok := d.WorkGit.(*systemWorkItemGit); ok {
+		if e = g.checkEpicMaterialization(repo, in.ExpectedParentOID); e != nil {
+			return e
+		}
+	}
+	if op == nil {
+		if ep, _ := findEpic(r, in.EpicID); ep != nil {
+			return workError(ErrorWorkIdentityConflict, "Epic ID already registered; use epic show or select a new ID", nil)
+		}
+		if exists {
+			return workError(ErrorWorkPathConflict, "target already exists; select a vacant leaf without moving or deleting it", nil)
+		}
+		if e = epicCreateReservation(r, repo.GitCommonDir, "refs/heads/"+in.Branch, target, in.EpicID); e != nil {
+			return e
+		}
+		parent, e := d.WorkGit.ObserveRef(repo, in.ParentRef)
+		if e != nil {
+			return e
+		}
+		if !parent.Exists || parent.OID != in.ExpectedParentOID || parent.CheckedOutAt == "" {
+			return workError(ErrorWorkParentStale, "explicit parent must match expected OID and have one ordinary symbolic checkout; inspect Git worktree list", nil)
+		}
+		if e = epicCreateReservation(r, repo.GitCommonDir, in.ParentRef, parent.CheckedOutAt, in.EpicID); e != nil {
+			return e
+		}
+		for _, ep := range r.Epics {
+			for _, b := range ep.RepoBindings {
+				if b.GitCommonDir == repo.GitCommonDir && (b.Worktree.Ref == in.ParentRef || b.Worktree.Locator == parent.CheckedOutAt || b.Worktree.Ref == "refs/heads/"+in.Branch || pathOverlap(b.Worktree.Locator, target)) {
+					return workError(ErrorWorkIdentityConflict, "parent or target belongs to an Epic; select an ordinary parent and vacant target", nil)
+				}
+			}
+		}
+		if e = nativeReceiptReservation(r, repo.GitCommonDir, in.ParentRef, parent.CheckedOutAt); e != nil {
+			return e
+		}
+		if e = nativeReceiptReservation(r, repo.GitCommonDir, "refs/heads/"+in.Branch, target); e != nil {
+			return e
+		}
+		for _, t := range r.WorktreeOperations {
+			if t.GitCommonDir == repo.GitCommonDir && (t.SourceRef == in.ParentRef || t.SourceRef == "refs/heads/"+in.Branch || pathOverlap(t.TargetLocator, target) || t.TargetLocator == parent.CheckedOutAt) {
+				return workError(ErrorWorkIdentityConflict, "parent or target reserved by a Task; inspect task show", nil)
+			}
+		}
+		inventory, e := d.WorkGit.ListWorktrees(repo)
+		if e != nil {
+			return e
+		}
+		for _, entry := range inventory.Entries {
+			if pathWithin(entry.Locator, target) {
+				return workError(ErrorWorkPathConflict, "target is nested inside a Git worktree; select a sibling path", nil)
+			}
+		}
+		if pathOverlap(repo.GitCommonDir, target) || pathOverlap(filepath.Join(root, MarkerDirectory), target) {
+			return workError(ErrorWorkPathConflict, "target overlaps Git administration or .ply; select a vacant sibling path", nil)
+		}
+		id, e := d.WorkIDs.NewOperationID()
+		if e != nil {
+			return e
+		}
+		wid, e := d.WorkIDs.NewWorktreeID()
+		if e != nil {
+			return e
+		}
+		created := EpicCreateOperation{ID: id, WorktreeID: wid, Request: in, GitCommonDir: repo.GitCommonDir, ParentLocator: parent.CheckedOutAt, ParentTree: parent.Tree, State: "pending", Attempts: []EpicCreateAttempt{}, Observations: []WorktreeObservationRecord{}}
+		created.IntentDigest = epicCreateDigest(created)
+		class, obs := observeEpicCreate(d, repo, created)
+		if class != "no_effect" {
+			return workError(ErrorWorkParentStale, "parent or target is not exact and vacant; inspect parent status, branch and inventory before retrying", nil)
+		}
+		created.Observations = append(created.Observations, obs)
+		r.EpicCreateOperations = append(r.EpicCreateOperations, created)
+		sort.Slice(r.EpicCreateOperations, func(i, j int) bool { return r.EpicCreateOperations[i].ID < r.EpicCreateOperations[j].ID })
+		if e = s.Publish(r); e != nil {
+			return e
+		}
+		op, index = findEpicCreate(r, in.EpicID)
+	}
+	class, obs := observeEpicCreate(d, repo, *op)
+	out.Effects.Worktree = epicCreateWorktreeEffects[class]
+	// An ordinary parent validation failure is not an unknown Git effect.
+	// Before any attempt in this invocation, freshly prove the effect absent;
+	// retain the intent, failed attempts and bounded validation observation.
+	if class == "partial_or_unknown" && epicCreateKnownAbsentParentValidation(d, repo, *op, obs) {
+		reason := "parent_worktree_stale"
+		errorClass := ErrorWorkParentStale
+		if !*obs.ParentWorktreeClean {
+			reason = "parent_worktree_dirty"
+			errorClass = ErrorWorkParentDirty
+		}
+		obs.Reasons = []string{reason}
+		r.EpicCreateOperations[index].Observations = append(r.EpicCreateOperations[index].Observations, obs)
+		if e = s.Publish(r); e != nil {
+			return e
+		}
+		out.Operation = r.EpicCreateOperations[index]
+		out.Outcome = "pending"
+		out.NextAction = "The selected branch and target are still absent; no Git attempt was made. Restore the recorded ordinary parent to a clean matching checkout, then retry the identical create request."
+		return workError(errorClass, out.NextAction, nil)
+	}
+	if class == "no_effect" || class == "branch_only" {
+		input := GitCreateInput{Repository: repo, Branch: in.Branch, SourceRef: "refs/heads/" + in.Branch, TargetLocator: target, ParentOID: in.ExpectedParentOID}
+		var outcome GitCommandOutcome
+		if class == "branch_only" {
+			outcome = d.WorkGit.AddWorktreeForExistingBranch(input)
+		} else {
+			outcome = d.WorkGit.CreateBranchAndWorktree(input)
+		}
+		attempt := EpicCreateAttempt{Exit: outcome.Exit, Stdout: string(outcome.Stdout), Stderr: string(outcome.Stderr)}
+		if outcome.Err != nil {
+			attempt.Error = outcome.Err.Error()
+		}
+		r.EpicCreateOperations[index].Attempts = append(r.EpicCreateOperations[index].Attempts, attempt)
+		// The actual effect, including a lost/nonzero response, determines recovery.
+		class, obs = observeEpicCreate(d, repo, *op)
+		out.Effects.Worktree = epicCreateWorktreeEffects[class]
+	}
+	r.EpicCreateOperations[index].Observations = append(r.EpicCreateOperations[index].Observations, obs)
+	switch class {
+	case "exact_effect":
+		epic := EpicRecord{ID: in.EpicID, Title: in.Title, ProjectID: in.ProjectID, RepoBindings: []EpicRepoBinding{{RepoID: in.RepoID, GitCommonDir: op.GitCommonDir, Worktree: EpicWorktreeBinding{ID: op.WorktreeID, OwnerKind: "epic", OwnerID: in.EpicID, Origin: "ply_created", Locator: target, Ref: "refs/heads/" + in.Branch, OID: in.ExpectedParentOID, Tree: op.ParentTree, GitCommonDir: op.GitCommonDir}}}}
+		r.Epics = append(r.Epics, epic)
+		r.EpicBaseVersions = append(r.EpicBaseVersions, adoptedEpicBase(epic, epic.RepoBindings[0]))
+		r.EpicCreateOperations[index].State = "completed"
+		sortWorkRegistry(&r)
+		sortQueueRegistry(&r)
+		if e = s.Publish(r); e != nil {
+			return e
+		}
+		out.Operation = r.EpicCreateOperations[index]
+		out.Epic = &epic
+		out.Outcome = "created"
+		return nil
+	case "no_effect", "branch_only":
+		if e = s.Publish(r); e != nil {
+			return e
+		}
+		return epicCreatePending(out, r.EpicCreateOperations[index], "Inspect epic show --format json, then repeat the identical create request to resume the observed no-effect or branch-only state.")
+	default:
+		r.EpicCreateOperations[index].State = "reconciliation_required"
+		if e = s.Publish(r); e != nil {
+			return e
+		}
+		return epicCreatePending(out, r.EpicCreateOperations[index], "Inspect epic show --format json; preserve the partial/unknown effect for producer reconciliation without cleanup or blind retry.")
+	}
 }

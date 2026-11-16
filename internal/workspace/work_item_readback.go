@@ -72,14 +72,18 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 	if _, err := ParseEpicID(string(id)); err != nil {
 		return EpicReadbackResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return EpicReadbackResult{}, err
 	}
 	if dependencies.WorkItems == nil {
 		return EpicReadbackResult{}, workError(ErrorWorkIO, "work-item store dependency is required", nil)
 	}
-	registry, err := dependencies.WorkItems.Snapshot(root)
+	work, err := LocateEpic(dependencies, root, id)
+	if err != nil {
+		return EpicReadbackResult{}, err
+	}
+	registry, err := dependencies.WorkItems.Snapshot(work)
 	if err != nil {
 		return EpicReadbackResult{}, err
 	}
@@ -90,7 +94,7 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 		}
 		return EpicReadbackResult{}, workError(ErrorWorkNotFound, fmt.Sprintf("Epic %s is not registered", id), nil)
 	}
-	lifecycles, err := readWorkItemLifecycle(root)
+	lifecycles, err := readWorkItemLifecycle(work)
 	if err != nil {
 		return EpicReadbackResult{}, err
 	}
@@ -157,15 +161,13 @@ func ShowEpic(dependencies Dependencies, id EpicID) (EpicReadbackResult, error) 
 		}
 		result.Observed = append(result.Observed, observed)
 		result.Freshness = append(result.Freshness, fresh)
-		if registry.FormatVersion >= 4 {
-			base := currentEpicBase(registry, *epic, binding)
-			baseFreshness := "unknown"
-			if observed.OID != nil {
-				baseFreshness = freshness(fresh.Locator == "fresh" && fresh.Ref == "fresh" && fresh.OID == "fresh" && fresh.Tree == "fresh" && fresh.GitCommonDir == "fresh" && fresh.Clean == "fresh" && fresh.InventoryMatch == "fresh")
-			}
-			result.Base = append(result.Base, EpicBaseSummary{binding.RepoID, base.Revision, base.OID, base.Tree, baseFreshness})
-			result.Ready = result.Ready && baseFreshness == "fresh" && !pendingBaseUpdate(registry, epic.ID, binding.RepoID)
+		base := currentEpicBase(registry, *epic, binding)
+		baseFreshness := "unknown"
+		if observed.OID != nil {
+			baseFreshness = freshness(fresh.Locator == "fresh" && fresh.Ref == "fresh" && fresh.OID == "fresh" && fresh.Tree == "fresh" && fresh.GitCommonDir == "fresh" && fresh.Clean == "fresh" && fresh.InventoryMatch == "fresh")
 		}
+		result.Base = append(result.Base, EpicBaseSummary{binding.RepoID, base.Revision, base.OID, base.Tree, baseFreshness})
+		result.Ready = result.Ready && baseFreshness == "fresh" && !pendingBaseUpdate(registry, epic.ID, binding.RepoID)
 	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.Ready = result.Ready && len(result.Reasons) == 0
@@ -178,14 +180,18 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	if _, err := ParseTaskID(string(id)); err != nil {
 		return TaskReadbackResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(dependencies)
+	root, err := containingRegistrationWorkspace(dependencies)
 	if err != nil {
 		return TaskReadbackResult{}, err
 	}
 	if dependencies.WorkItems == nil {
 		return TaskReadbackResult{}, workError(ErrorWorkIO, "work-item store dependency is required", nil)
 	}
-	registry, err := dependencies.WorkItems.Snapshot(root)
+	work, err := LocateTask(dependencies, root, id)
+	if err != nil {
+		return TaskReadbackResult{}, err
+	}
+	registry, err := dependencies.WorkItems.Snapshot(work)
 	if err != nil {
 		return TaskReadbackResult{}, err
 	}
@@ -202,7 +208,7 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 		return TaskReadbackResult{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("Task %s has no parent repository binding", id), nil)
 	}
 	result := TaskReadbackResult{Workspace: root, Task: *task, Epic: *epic, ProjectFreshness: "unknown", ParentFreshness: unknownWorktreeFreshness(), SourceFreshness: TaskFreshnessSource{Ref: "unknown", OID: "unknown", Tree: "unknown", CheckedOutAt: "unknown"}, TargetFreshness: unknownTargetFreshness(), Reasons: []string{}, WorktreeReady: task.WorktreeState == WorkItemReady && task.Worktree != nil}
-	lifecycles, err := readWorkItemLifecycle(root)
+	lifecycles, err := readWorkItemLifecycle(work)
 	if err != nil {
 		return TaskReadbackResult{}, err
 	}
@@ -334,13 +340,9 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	}
 	result.Reasons = sortedReasons(result.Reasons)
 	result.ReadyForHandoff = result.WorktreeReady && len(result.Reasons) == 0 && result.ProjectFreshness == "fresh"
-	if registry.FormatVersion >= 2 {
-		integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, *task, *epic, *binding)
-		result.Integration = &integration
-	}
-	if registry.FormatVersion >= 3 {
-		result.Content = buildTaskContentReadback(dependencies, registry, ProjectSnapshot{Projects: projects, Repos: repositories}, result)
-	}
+	integration := buildTaskShowIntegrationReadback(dependencies, root, ProjectSnapshot{Projects: projects, Repos: repositories}, registry, *task, *epic, *binding)
+	result.Integration = &integration
+	result.Content = buildTaskContentReadback(dependencies, work, registry, ProjectSnapshot{Projects: projects, Repos: repositories}, result)
 	return result, nil
 }
 

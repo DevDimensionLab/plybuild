@@ -58,12 +58,12 @@ def decision(out):
 
 def state_bytes():
     files = {str(p.relative_to(workspace)): hashlib.sha256(p.read_bytes()).hexdigest()
-             for p in (workspace / '.ply').rglob('*') if p.is_file()}
+             for d in (workspace / '.ply', workspace / 'ply/data/work') for p in d.rglob('*') if p.is_file()}
     return files, git(repo, 'show-ref'), git(repo, 'worktree', 'list', '--porcelain')
 
 def contents():
     return {str(p): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in (workspace / '.ply/task-content/v1').rglob('*') if p.is_file()}
+            for p in (workspace / 'ply/data/work/task-content/v1').rglob('*') if p.is_file()}
 
 ply('workspace', 'init')
 git(repo, 'init', '-b', 'main')
@@ -165,7 +165,7 @@ if '--removed-source' in sys.argv[2:]:
     assert shown['preparation'] == previous['preparation'] and shown['disposition'] == 'released'
     assert js('workspace', 'task', 'show', 'task')['resource']['persisted'] == persisted
     assert js('workspace', 'task', 'queue', 'list', *target) == released
-    assert all(after[0][p] == h for p, h in before[0].items() if p != '.ply/work-items.yaml'), 'historical bytes changed'
+    assert all(after[0][p] == h for p, h in before[0].items() if p != 'ply/data/work/work-items.yaml'), 'historical bytes changed'
     print('QR-01: passed; removed source, advanced ref and Epic base, unchanged history, idempotent public readback')
     sys.exit(0)
 for item in prepared_a['plan']['required_inputs']:

@@ -2,8 +2,8 @@ package workspace
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -14,9 +14,6 @@ func adoptedEpicBase(e EpicRecord, b EpicRepoBinding) EpicBaseVersion {
 	return EpicBaseVersion{ProjectID: e.ProjectID, RepoID: b.RepoID, EpicID: e.ID, Revision: 1, WorktreeID: w.ID, Locator: w.Locator, Ref: w.Ref, GitCommonDir: b.GitCommonDir, OID: w.OID, Tree: w.Tree}
 }
 func epicBases(r WorkItemRegistry, e EpicRecord, b EpicRepoBinding) []EpicBaseVersion {
-	if r.FormatVersion < 4 {
-		return []EpicBaseVersion{adoptedEpicBase(e, b)}
-	}
 	out := []EpicBaseVersion{}
 	for _, v := range r.EpicBaseVersions {
 		if v.EpicID == e.ID && v.RepoID == b.RepoID {
@@ -59,6 +56,11 @@ func historicalEpicBinding(r WorkItemRegistry, e EpicRecord, b EpicRepoBinding, 
 	b.Worktree.Tree = tree
 	return b, true
 }
+
+// Readbacks keep their published shape: a stored registry never requires an upgrade.
+func registryReadback(r WorkItemRegistry) QueueRegistryReadback {
+	return QueueRegistryReadback{RegistryFormat, r.RawSHA256, nil}
+}
 func queueError(code, detail string) error { return contentError(code, detail, nil) }
 func queueNow(d Dependencies) string       { return d.WorkClock.Now().UTC().Format(time.RFC3339Nano) }
 func queueDigest(v any) string {
@@ -72,53 +74,8 @@ func queueID(root string, t QueueTarget) string {
 	return "que_" + strings.TrimPrefix(queueDigest(map[string]any{"workspace_root": root, "project_id": t.ProjectID, "repo_id": t.RepoID, "epic_id": t.EpicID}), "sha256:")
 }
 func queueWorkspace(d Dependencies, root string) (IntegrationPlanWorkspace, error) {
-	b, e := d.Files.ReadFile(filepath.Join(root, MarkerDirectory, MarkerFile))
+	b, e := d.Files.ReadFile(MarkerPath(root))
 	return IntegrationPlanWorkspace{Root: root, MarkerSHA256: digestTaskBytes(b)}, e
-}
-func queueUpgrade(r WorkItemRegistry) *TaskRegistryUpgrade {
-	if r.FormatVersion >= 4 {
-		return nil
-	}
-	return &TaskRegistryUpgrade{FromVersion: r.FormatVersion, RegistrySHA256: r.RawSHA256}
-}
-func upgradeQueueRegistry(d Dependencies, root string, r *WorkItemRegistry, u *TaskRegistryUpgrade) error {
-	if r.FormatVersion >= 4 {
-		if u != nil {
-			return queueError("registry_upgrade_conflict", "format 4 requires a null upgrade")
-		}
-		return nil
-	}
-	if u == nil {
-		return queueError("registry_upgrade_required", "explicit format and registry digest are required")
-	}
-	if !contentTypedEqual(u, queueUpgrade(*r)) {
-		return queueError("registry_upgrade_conflict", "registry changed since the upgrade was confirmed")
-	}
-	b, e := os.ReadFile(workItemsPath(root))
-	if e != nil {
-		return e
-	}
-	if digestTaskBytes(b) != u.RegistrySHA256 {
-		return queueError("registry_upgrade_conflict", "registry bytes changed")
-	}
-	if _, e = d.TaskContent.Publish(root, "backups", b); e != nil {
-		return e
-	}
-	if r.FormatVersion < 3 {
-		upgradeTaskContentRegistry(r)
-	}
-	r.FormatVersion = 4
-	r.EpicBaseVersions = []EpicBaseVersion{}
-	r.EpicBaseUpdates = []EpicBaseUpdate{}
-	r.TaskQueueEvents = []TaskQueueEvent{}
-	r.TaskPreparations = []HistoricalRecord{}
-	for _, ep := range r.Epics {
-		for _, b := range ep.RepoBindings {
-			r.EpicBaseVersions = append(r.EpicBaseVersions, adoptedEpicBase(ep, b))
-		}
-	}
-	sortQueueRegistry(r)
-	return nil
 }
 
 type QueueTargetInput struct {
@@ -127,20 +84,64 @@ type QueueTargetInput struct {
 	EpicID    EpicID    `json:"epic_id"`
 }
 
-func resolveQueueTarget(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput) (QueueTarget, RepoRecord, error) {
-	return resolveGoalQueueTarget(d, root, r, projects, in, "")
+// queueTargetWork is the work of the Project a queue target belongs to: the
+// named Project, or else the one whose repository holds the Git worktree of
+// the current directory. A repository belongs to exactly one Project.
+func queueTargetWork(d Dependencies, in QueueTargetInput) (ProjectWork, error) {
+	root, e := containingRegistrationWorkspace(d)
+	if e != nil {
+		return ProjectWork{}, e
+	}
+	if in.ProjectID != "" {
+		return projectWork(root, in.ProjectID)
+	}
+	cwd, e := projectPhysicalWorkingDirectory(d.Files)
+	if e != nil {
+		return ProjectWork{}, e
+	}
+	for dir := cwd; dir == root || strings.HasPrefix(dir, root+string(filepath.Separator)); dir = filepath.Dir(dir) {
+		if _, err := d.Files.Lstat(filepath.Join(dir, ".git")); err == nil {
+			o, err := d.WorkGit.ObserveWorktree(dir)
+			if err != nil {
+				break
+			}
+			projects, repos, err := d.Projects.Snapshot(root)
+			if err != nil {
+				return ProjectWork{}, err
+			}
+			for _, repo := range repos {
+				if repo.GitCommonDir != o.GitCommonDir {
+					continue
+				}
+				for _, project := range projects {
+					if slices.Contains(project.RepoIDs, repo.ID) {
+						return projectWork(root, project.ID)
+					}
+				}
+			}
+			break
+		}
+		if dir == root {
+			break
+		}
+	}
+	return ProjectWork{}, queueError("task_queue_context_required", "provide --project <id> --repo <id> --epic <id> for exactly one registered Epic worktree")
+}
+
+func resolveQueueTarget(d Dependencies, work ProjectWork, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput) (QueueTarget, RepoRecord, error) {
+	return resolveGoalQueueTarget(d, work, r, projects, in, "")
 }
 
 // queueHasGoalSpec includes a goal's selected execution solution: publication
 // may have completed before its Task preparation was reserved.
-func queueHasGoalSpec(d Dependencies, r WorkItemRegistry, root string, t QueueTarget, specID string) (bool, error) {
-	q := foldQueue(r, queueID(root, t))
+func queueHasGoalSpec(d Dependencies, r WorkItemRegistry, work ProjectWork, t QueueTarget, specID string) (bool, error) {
+	q := foldQueue(r, queueID(work.Workspace, t))
 	for _, entry := range q.Pending {
 		if entry.Goal != nil && entry.Goal.SpecID == specID {
 			return true, nil
 		}
 		if entry.Selection != nil {
-			selection, err := readRegisteredTaskManifest(d.TaskContent, root, r, entry.Selection.ManifestSHA256)
+			selection, err := readRegisteredTaskManifest(d.TaskContent, work, r, entry.Selection.ManifestSHA256)
 			if err != nil {
 				return false, err
 			}
@@ -149,7 +150,7 @@ func queueHasGoalSpec(d Dependencies, r WorkItemRegistry, root string, t QueueTa
 			if contentString(solution, "spec_id") != specID || ref == nil {
 				continue
 			}
-			spec, err := registeredTaskSpec(d, root, r, entry.TaskID, specID, ref)
+			spec, err := registeredTaskSpec(d, work, r, entry.TaskID, specID, ref)
 			if err != nil {
 				return false, err
 			}
@@ -164,7 +165,7 @@ func queueHasGoalSpec(d Dependencies, r WorkItemRegistry, root string, t QueueTa
 // resolveGoalQueueTarget also lets a unique goal Spec choose among Epics that
 // share the caller's directory. Explicit flags and unshared directories behave
 // exactly as resolveQueueTarget.
-func resolveGoalQueueTarget(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, specID string) (QueueTarget, RepoRecord, error) {
+func resolveGoalQueueTarget(d Dependencies, work ProjectWork, r WorkItemRegistry, projects ProjectSnapshot, in QueueTargetInput, specID string) (QueueTarget, RepoRecord, error) {
 	explicit := in.ProjectID != "" || in.RepoID != "" || in.EpicID != ""
 	if explicit && (in.ProjectID == "" || in.RepoID == "" || in.EpicID == "") {
 		return QueueTarget{}, RepoRecord{}, queueError("task_queue_context_required", "provide all of --project <id> --repo <id> --epic <id>")
@@ -175,7 +176,7 @@ func resolveGoalQueueTarget(d Dependencies, root string, r WorkItemRegistry, pro
 	}
 	actualRoot := ""
 	if !explicit {
-		for dir := cwd; dir == root || strings.HasPrefix(dir, root+string(filepath.Separator)); dir = filepath.Dir(dir) {
+		for dir := cwd; dir == work.Workspace || strings.HasPrefix(dir, work.Workspace+string(filepath.Separator)); dir = filepath.Dir(dir) {
 			if _, err := d.Files.Lstat(filepath.Join(dir, ".git")); err == nil {
 				o, err := d.WorkGit.ObserveWorktree(dir)
 				if err != nil {
@@ -184,7 +185,7 @@ func resolveGoalQueueTarget(d Dependencies, root string, r WorkItemRegistry, pro
 				actualRoot = o.Locator
 				break
 			}
-			if dir == root {
+			if dir == work.Workspace {
 				break
 			}
 		}
@@ -220,7 +221,7 @@ func resolveGoalQueueTarget(d Dependencies, root string, r WorkItemRegistry, pro
 	if len(matches) > 1 && specID != "" {
 		withSpec := []QueueTarget{}
 		for _, m := range matches {
-			hasSpec, err := queueHasGoalSpec(d, r, root, m, specID)
+			hasSpec, err := queueHasGoalSpec(d, r, work, m, specID)
 			if err != nil {
 				return QueueTarget{}, RepoRecord{}, err
 			}
@@ -328,7 +329,6 @@ type EpicBaseInput struct {
 	RepoID       RepoID
 	Apply        bool
 	Confirmation string
-	Upgrade      string
 }
 type EpicBaseResult struct {
 	Observed        *PlanWorktreeObservation     `json:"observed"`
@@ -348,10 +348,10 @@ type EpicBaseResult struct {
 	BackupSHA256    *string                      `json:"backup_sha256"`
 }
 
-func baseResult(d Dependencies, root string, r WorkItemRegistry, t QueueTarget) EpicBaseResult {
+func baseResult(d Dependencies, work ProjectWork, r WorkItemRegistry, t QueueTarget) EpicBaseResult {
 	ep, b := queueTargetBinding(r, t)
 	v := epicBases(r, ep, b)
-	out := EpicBaseResult{Kind: "WorkspaceEpicBaseReadback@1", SchemaVersion: 1, Workspace: root, Target: t, Versions: v, State: "recorded", Freshness: "unknown", Reasons: []QueueReason{}}
+	out := EpicBaseResult{Kind: "WorkspaceEpicBaseReadback@1", SchemaVersion: 1, Workspace: work.Workspace, Target: t, Versions: v, State: "recorded", Freshness: "unknown", Reasons: []QueueReason{}}
 	if d.IntegrationGit != nil {
 		if full, e := d.IntegrationGit.ObserveIntegrationWorktree(t.ParentLocator, t.ParentRef); e == nil {
 			o := planObservation(full)
@@ -364,16 +364,16 @@ func baseResult(d Dependencies, root string, r WorkItemRegistry, t QueueTarget) 
 	}
 	return out
 }
-func buildBasePlan(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, in EpicBaseInput) (EpicBaseResult, error) {
+func buildBasePlan(d Dependencies, work ProjectWork, r WorkItemRegistry, projects ProjectSnapshot, in EpicBaseInput) (EpicBaseResult, error) {
 	ep, _ := findEpic(r, in.EpicID)
 	if ep == nil {
 		return EpicBaseResult{}, queueError("epic_not_found", "Epic is not registered")
 	}
-	t, repo, e := resolveQueueTarget(d, root, r, projects, QueueTargetInput{ep.ProjectID, in.RepoID, in.EpicID})
+	t, repo, e := resolveQueueTarget(d, work, r, projects, QueueTargetInput{ep.ProjectID, in.RepoID, in.EpicID})
 	if e != nil {
 		return EpicBaseResult{}, e
 	}
-	out := baseResult(d, root, r, t)
+	out := baseResult(d, work, r, t)
 	obs, e := queueParentObservation(d, t)
 	if e != nil {
 		return out, e
@@ -397,7 +397,7 @@ func buildBasePlan(d Dependencies, root string, r WorkItemRegistry, projects Pro
 	if len(unresolved) > 0 {
 		return out, queueError("epic_base_blocked", "resolve pending operations before updating the base: "+strings.Join(unresolved, ", "))
 	}
-	w, e := queueWorkspace(d, root)
+	w, e := queueWorkspace(d, work.Workspace)
 	if e != nil {
 		return out, e
 	}
@@ -407,43 +407,57 @@ func buildBasePlan(d Dependencies, root string, r WorkItemRegistry, projects Pro
 			affected = append(affected, EpicAffectedSelection{task.ID, taskContentState(r, task.ID).SelectionEvent})
 		}
 	}
-	p := WorkspaceEpicBaseUpdatePlan{Kind: "WorkspaceEpicBaseUpdatePlan@3", SchemaVersion: currentEpicBaseUpdatePlanSchema, Workspace: w, Target: t, RegistryUpgrade: queueUpgrade(r), RegistryFormatVersion: r.FormatVersion, ExpectedRevision: b.Revision, PreviousOID: b.OID, PreviousTree: b.Tree, NextOID: obs.OID, NextTree: obs.Tree, ObservedParent: obs, AffectedSelections: affected, UnresolvedOperations: unresolved}
+	p := WorkspaceEpicBaseUpdatePlan{Kind: "WorkspaceEpicBaseUpdatePlan@3", SchemaVersion: currentEpicBaseUpdatePlanSchema, Workspace: w, Target: t, RegistryFormatVersion: RegistryFormat, ExpectedRevision: b.Revision, PreviousOID: b.OID, PreviousTree: b.Tree, NextOID: obs.OID, NextTree: obs.Tree, ObservedParent: obs, AffectedSelections: affected, UnresolvedOperations: unresolved}
 	h := queueDigest(p)
 	out.Plan = &p
 	out.Confirmation = &h
 	out.State = "preview"
 	return out, nil
 }
+
+// locateBaseEpic is the work of the Project that owns the Epic of a base
+// read or update.
+func locateBaseEpic(d Dependencies, id EpicID) (ProjectWork, error) {
+	root, e := containingRegistrationWorkspace(d)
+	if e != nil {
+		return ProjectWork{}, e
+	}
+	work, e := LocateEpic(d, root, id)
+	if isWorkNotFound(e) {
+		return ProjectWork{}, queueError("epic_not_found", "Epic is not registered")
+	}
+	return work, e
+}
 func ShowEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
-	root, e := containingWorkItemWorkspace(d)
+	work, e := locateBaseEpic(d, in.EpicID)
 	if e != nil {
 		return EpicBaseResult{}, e
 	}
 	var out EpicBaseResult
-	e = WithTaskSpecSnapshot(d, root, func(s *TaskSpecSession) error {
+	e = WithTaskSpecSnapshot(d, work, func(s *TaskSpecSession) error {
 		ep, _ := findEpic(s.Registry, in.EpicID)
 		if ep == nil {
 			return queueError("epic_not_found", "Epic is not registered")
 		}
-		t, _, e := resolveQueueTarget(d, root, s.Registry, s.Projects, QueueTargetInput{ep.ProjectID, in.RepoID, in.EpicID})
+		t, _, e := resolveQueueTarget(d, work, s.Registry, s.Projects, QueueTargetInput{ep.ProjectID, in.RepoID, in.EpicID})
 		if e != nil {
 			return e
 		}
-		out = baseResult(d, root, s.Registry, t)
+		out = baseResult(d, work, s.Registry, t)
 		return nil
 	})
 	return out, e
 }
 func UpdateEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
-	root, e := containingWorkItemWorkspace(d)
+	work, e := locateBaseEpic(d, in.EpicID)
 	if e != nil {
 		return EpicBaseResult{}, e
 	}
 	var out EpicBaseResult
 	if !in.Apply {
-		e = WithTaskSpecSnapshot(d, root, func(s *TaskSpecSession) error {
+		e = WithTaskSpecSnapshot(d, work, func(s *TaskSpecSession) error {
 			var e error
-			out, e = buildBasePlan(d, root, s.Registry, s.Projects, in)
+			out, e = buildBasePlan(d, work, s.Registry, s.Projects, in)
 			return e
 		})
 		return out, e
@@ -451,17 +465,18 @@ func UpdateEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
 	if !digestPattern.MatchString(in.Confirmation) {
 		return out, queueError("epic_base_confirmation_required", "apply requires the exact preview digest")
 	}
-	e = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+	e = d.ProjectLocks.WithSnapshotLock(work.Workspace, func(projects ProjectSnapshot) error {
+		return d.WorkItems.WithLock(work, func(session WorkItemStoreSession) error {
 			r, e := session.Snapshot()
 			if e != nil {
 				return e
 			}
-			before := QueueRegistryReadback{r.FormatVersion, r.RawSHA256, queueUpgrade(r)}
+			before := registryReadback(r)
 			defer func() {
 				out.PersistedBefore = &before
 				if after, err := session.Snapshot(); err == nil {
-					out.PersistedAfter = &QueueRegistryReadback{after.FormatVersion, after.RawSHA256, queueUpgrade(after)}
+					after := registryReadback(after)
+					out.PersistedAfter = &after
 				}
 			}()
 			id := "ebu_" + strings.TrimPrefix(in.Confirmation, "sha256:")
@@ -470,7 +485,7 @@ func UpdateEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
 					if u.Plan.Target.EpicID != in.EpicID || u.Plan.Target.RepoID != in.RepoID {
 						return queueError("epic_base_conflict", "confirmation belongs to another target")
 					}
-					out = baseResult(d, root, r, u.Plan.Target)
+					out = baseResult(d, work, r, u.Plan.Target)
 					out.Operation = &u
 					out.State = u.Phase
 					if u.Phase == "conflict" {
@@ -479,10 +494,10 @@ func UpdateEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
 					if u.Phase != "intent" {
 						return nil
 					}
-					return finishBaseUpdate(d, root, projects, session, &r, i, &out)
+					return finishBaseUpdate(d, work, projects, session, &r, i, &out)
 				}
 			}
-			out, e = buildBasePlan(d, root, r, projects, in)
+			out, e = buildBasePlan(d, work, r, projects, in)
 			if e != nil {
 				return e
 			}
@@ -490,24 +505,15 @@ func UpdateEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
 				return queueError("epic_base_conflict", "preview changed; inspect a new preview")
 			}
 			p := *out.Plan
-			if p.RegistryUpgrade != nil && in.Upgrade != p.RegistryUpgrade.RegistrySHA256 {
-				return queueError("registry_upgrade_required", "confirm the exact registry upgrade digest")
-			}
-			if p.RegistryUpgrade == nil && in.Upgrade != "" {
-				return queueError("registry_upgrade_conflict", "format 4 needs no upgrade")
-			}
-			if e = upgradeQueueRegistry(d, root, &r, p.RegistryUpgrade); e != nil {
-				return e
-			}
 			r.EpicBaseUpdates = append(r.EpicBaseUpdates, EpicBaseUpdate{ID: id, PlanSHA256: in.Confirmation, Plan: p, Phase: "intent", RecordedAtUTC: queueNow(d)})
 			sortQueueRegistry(&r)
 			if e = session.Publish(r); e != nil {
-				observeBasePublication(d, root, session, p.Target, id, &out)
+				observeBasePublication(d, work, session, p.Target, id, &out)
 				return fmt.Errorf("%w; inspect ply workspace epic base operation show %s", e, id)
 			}
 			for i := range r.EpicBaseUpdates {
 				if r.EpicBaseUpdates[i].ID == id {
-					return finishBaseUpdate(d, root, projects, session, &r, i, &out)
+					return finishBaseUpdate(d, work, projects, session, &r, i, &out)
 				}
 			}
 			return fmt.Errorf("missing published base request")
@@ -515,7 +521,7 @@ func UpdateEpicBase(d Dependencies, in EpicBaseInput) (EpicBaseResult, error) {
 	})
 	return out, e
 }
-func finishBaseUpdate(d Dependencies, root string, projects ProjectSnapshot, session WorkItemStoreSession, r *WorkItemRegistry, index int, out *EpicBaseResult) error {
+func finishBaseUpdate(d Dependencies, work ProjectWork, projects ProjectSnapshot, session WorkItemStoreSession, r *WorkItemRegistry, index int, out *EpicBaseResult) error {
 	u := r.EpicBaseUpdates[index]
 	p := u.Plan
 	ep, b := queueTargetBinding(*r, p.Target)
@@ -530,12 +536,10 @@ func finishBaseUpdate(d Dependencies, root string, projects ProjectSnapshot, ses
 				candidate.EpicBaseUpdates = append(candidate.EpicBaseUpdates, v)
 			}
 		}
-		fresh, err := buildBasePlan(d, root, candidate, projects, EpicBaseInput{EpicID: p.Target.EpicID, RepoID: p.Target.RepoID})
+		fresh, err := buildBasePlan(d, work, candidate, projects, EpicBaseInput{EpicID: p.Target.EpicID, RepoID: p.Target.RepoID})
 		if err != nil || fresh.Plan == nil {
 			conflict = true
 		} else {
-			fresh.Plan.RegistryUpgrade = p.RegistryUpgrade
-			fresh.Plan.RegistryFormatVersion = p.RegistryFormatVersion
 			conflict = !contentTypedEqual(*fresh.Plan, p)
 		}
 	}
@@ -558,34 +562,45 @@ func finishBaseUpdate(d Dependencies, root string, projects ProjectSnapshot, ses
 	out.Operation = &u
 	out.State = "unknown"
 	if e = session.Publish(*r); e != nil {
-		observeBasePublication(d, root, session, p.Target, u.ID, out)
+		observeBasePublication(d, work, session, p.Target, u.ID, out)
 		return fmt.Errorf("%w; inspect ply workspace epic base operation show %s", e, u.ID)
 	}
 	actual, e := session.Snapshot()
 	if e != nil {
 		return e
 	}
-	*out = baseResult(d, root, actual, p.Target)
+	*out = baseResult(d, work, actual, p.Target)
 	out.Operation = &u
 	out.State = u.Phase
-	if p.RegistryUpgrade != nil {
-		out.BackupSHA256 = &p.RegistryUpgrade.RegistrySHA256
-	}
 	if conflict {
 		return queueError("epic_base_conflict", "preserved request closed without a new base; inspect a new preview")
 	}
 	return nil
 }
 func ShowEpicBaseOperation(d Dependencies, id string) (EpicBaseResult, error) {
-	root, e := containingWorkItemWorkspace(d)
+	root, e := containingRegistrationWorkspace(d)
+	if e != nil {
+		return EpicBaseResult{}, e
+	}
+	work, e := locate(d, root, "base request "+id, func(r WorkItemRegistry) bool {
+		for _, u := range r.EpicBaseUpdates {
+			if u.ID == id {
+				return true
+			}
+		}
+		return false
+	})
+	if isWorkNotFound(e) {
+		return EpicBaseResult{}, queueError("epic_base_operation_not_found", "base request is not recorded")
+	}
 	if e != nil {
 		return EpicBaseResult{}, e
 	}
 	var out EpicBaseResult
-	e = WithTaskSpecSnapshot(d, root, func(s *TaskSpecSession) error {
+	e = WithTaskSpecSnapshot(d, work, func(s *TaskSpecSession) error {
 		for _, u := range s.Registry.EpicBaseUpdates {
 			if u.ID == id {
-				out = baseResult(d, root, s.Registry, u.Plan.Target)
+				out = baseResult(d, work, s.Registry, u.Plan.Target)
 				out.Operation = &u
 				out.State = u.Phase
 				if u.Phase == "intent" {
@@ -599,15 +614,16 @@ func ShowEpicBaseOperation(d Dependencies, id string) (EpicBaseResult, error) {
 	return out, e
 }
 
-func observeBasePublication(d Dependencies, root string, session WorkItemStoreSession, target QueueTarget, id string, out *EpicBaseResult) {
+func observeBasePublication(d Dependencies, work ProjectWork, session WorkItemStoreSession, target QueueTarget, id string, out *EpicBaseResult) {
 	r, e := session.Snapshot()
 	if e != nil {
 		out.State = "unknown"
 		return
 	}
-	*out = baseResult(d, root, r, target)
+	*out = baseResult(d, work, r, target)
 	out.State = "not_recorded"
-	out.PersistedAfter = &QueueRegistryReadback{r.FormatVersion, r.RawSHA256, queueUpgrade(r)}
+	after := registryReadback(r)
+	out.PersistedAfter = &after
 	for _, u := range r.EpicBaseUpdates {
 		if u.ID == id {
 			out.Operation = &u

@@ -22,7 +22,7 @@ func ReadWorkflowStatus(d workspace.Dependencies, o WorkflowStatusOptions) (Work
 		return WorkflowStatus{}, err
 	}
 	process := readProgressProcess(d, s)
-	queues := workspace.ReadRegisteredTaskQueues(d, s.Workspace, s.Projects, s.Registry)
+	queues := workspace.ReadRegisteredTaskQueues(d, s.Projects, s.basis.Registries)
 	s.RefreshFreshness(d)
 	return BuildWorkflowStatus(s, o, process, queues)
 }

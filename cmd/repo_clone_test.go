@@ -37,8 +37,8 @@ func cloneWorkspace(t *testing.T) (root, source string) {
   {"id": "a", "name": "A", "wrapper": "a", "repos": [
     {"id": "src", "path": "a/src/main", "remote": "` + source + `"},
     {"id": "local", "path": "a/local/main"},
-    {"id": "app", "path": "a/app", "remote": "` + source + `"}], "epics": []},
-  {"id": "b", "name": "B", "wrapper": "b", "repos": [], "epics": []}
+    {"id": "app", "path": "a/app", "remote": "` + source + `"}]},
+  {"id": "b", "name": "B", "wrapper": "b", "repos": []}
 ]}
 `
 	if err := os.WriteFile(filepath.Join(root, workspacedef.File), []byte(definitions), 0o644); err != nil {

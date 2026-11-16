@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -40,8 +41,12 @@ type ChangesResult struct {
 }
 
 type changeOwner struct {
-	id           string
-	files, trees []string
+	id    string
+	files []string // relative to the workspace root
+	trees []string // absolute directories, such as each Project's journals
+	// external are absolute files outside the workspace marker area, such as
+	// each Project's work-item registry and lifecycle under its wrapper.
+	external []string
 }
 
 // ReadChanges fingerprints only owners of registered read-model facts. It does
@@ -57,10 +62,19 @@ func readChanges(d workspace.Dependencies, betweenPasses func()) (ChangesResult,
 	if err != nil {
 		return ChangesResult{}, err
 	}
+	works, err := workspace.DefinedWork(w.Root)
+	if err != nil {
+		return ChangesResult{}, err
+	}
+	workItems, journals := []string{}, []string{}
+	for _, work := range works {
+		workItems = append(workItems, work.Registry(), work.Lifecycle())
+		journals = append(journals, taskjournal.JournalDir(work))
+	}
 	owners := []changeOwner{
-		{"projects", []string{"projects.yaml", "project-metadata.json"}, nil},
-		{"work_items", []string{"work-items.yaml", "work-item-lifecycle.json"}, nil},
-		{"journal", nil, []string{"task-process/v1"}},
+		{"projects", []string{"ply-workspace.json", ".ply/project-metadata.json"}, nil, nil},
+		{"work_items", nil, nil, workItems},
+		{"journal", nil, journals, nil},
 	}
 	first := make([]RegisterChange, len(owners))
 	for i, owner := range owners {
@@ -119,11 +133,11 @@ func fingerprintOwner(root string, owner changeOwner) RegisterChange {
 		return fail(fmt.Errorf("open workspace: %w", err))
 	}
 	defer func() { _ = bounded.Close() }()
-	readFile := func(relative string, info fs.FileInfo) error {
+	readFile := func(bounded *os.Root, relative string, info fs.FileInfo) error {
 		if !info.Mode().IsRegular() {
 			return fmt.Errorf("%s is not a regular file", relative)
 		}
-		f, err := bounded.Open(filepath.Join(".ply", filepath.FromSlash(relative)))
+		f, err := bounded.Open(filepath.FromSlash(relative))
 		if err != nil {
 			return fmt.Errorf("read %s: %w", relative, err)
 		}
@@ -159,13 +173,18 @@ func fingerprintOwner(root string, owner changeOwner) RegisterChange {
 		if err != nil {
 			return fail(err)
 		}
-		if err := readFile(relative, info); err != nil {
+		if err := readFile(bounded, relative, info); err != nil {
 			return fail(err)
 		}
 	}
-	var walk func(string) error
-	walk = func(relative string) error {
-		directory, err := bounded.Open(filepath.Join(".ply", filepath.FromSlash(relative)))
+	for _, path := range owner.external {
+		if err := fingerprintExternal(path, &manifest, readFile); err != nil {
+			return fail(err)
+		}
+	}
+	var walk func(*os.Root, string) error
+	walk = func(bounded *os.Root, relative string) error {
+		directory, err := bounded.Open(filepath.FromSlash(relative))
 		if err != nil {
 			return fmt.Errorf("open %s: %w", relative, err)
 		}
@@ -196,7 +215,7 @@ func fingerprintOwner(root string, owner changeOwner) RegisterChange {
 					return fmt.Errorf("inspect %s: %w", child, err)
 				}
 				manifest = append(manifest, [2]string{child, fmt.Sprintf("directory:%d", info.Mode())})
-				if err := walk(child); err != nil {
+				if err := walk(bounded, child); err != nil {
 					return err
 				}
 				continue
@@ -218,25 +237,14 @@ func fingerprintOwner(root string, owner changeOwner) RegisterChange {
 			if err != nil {
 				return fmt.Errorf("inspect %s: %w", child, err)
 			}
-			if err := readFile(child, info); err != nil {
+			if err := readFile(bounded, child, info); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
-	for _, relative := range owner.trees {
-		info, err := inspectChangePath(bounded, relative)
-		if errors.Is(err, fs.ErrNotExist) {
-			continue
-		}
-		if err != nil {
-			return fail(err)
-		}
-		if !info.IsDir() {
-			return fail(fmt.Errorf("%s is not a directory", relative))
-		}
-		manifest = append(manifest, [2]string{relative, fmt.Sprintf("directory:%d", info.Mode())})
-		if err := walk(relative); err != nil {
+	for _, tree := range owner.trees {
+		if err := fingerprintTree(tree, &manifest, walk); err != nil {
 			return fail(err)
 		}
 	}
@@ -246,12 +254,68 @@ func fingerprintOwner(root string, owner changeOwner) RegisterChange {
 	return result
 }
 
+// fingerprintTree walks an absolute directory through a root at its parent.
+// A missing parent or directory is absent and adds nothing. Manifest entries
+// name the walked files relative to that parent.
+func fingerprintTree(tree string, manifest *[][2]string, walk func(*os.Root, string) error) error {
+	bounded, err := os.OpenRoot(filepath.Dir(tree))
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("open %s: %w", filepath.Dir(tree), err)
+	}
+	defer func() { _ = bounded.Close() }()
+	name := filepath.Base(tree)
+	info, err := inspectChangePath(bounded, name)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("%s is not a directory", tree)
+	}
+	*manifest = append(*manifest, [2]string{tree, fmt.Sprintf("directory:%d", info.Mode())})
+	return walk(bounded, name)
+}
+
+// fingerprintExternal reads an absolute file through a root at its directory.
+// A missing directory or file is absent.
+func fingerprintExternal(path string, manifest *[][2]string, readFile func(*os.Root, string, fs.FileInfo) error) error {
+	bounded, err := os.OpenRoot(filepath.Dir(path))
+	if errors.Is(err, fs.ErrNotExist) {
+		*manifest = append(*manifest, [2]string{path, "absent"})
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("open %s: %w", filepath.Dir(path), err)
+	}
+	defer func() { _ = bounded.Close() }()
+	name := filepath.Base(path)
+	info, err := inspectChangePath(bounded, name)
+	if errors.Is(err, fs.ErrNotExist) {
+		*manifest = append(*manifest, [2]string{path, "absent"})
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	before := len(*manifest)
+	if err := readFile(bounded, name, info); err != nil {
+		return err
+	}
+	(*manifest)[before][0] = path
+	return nil
+}
+
 // Check every component: Lstat of only the final file would follow a linked
 // parent directory. The fixed relative inputs never contain .. or absolute paths.
 func inspectChangePath(root *os.Root, relative string) (fs.FileInfo, error) {
 	p := ""
 	var info fs.FileInfo
-	for _, part := range strings.Split(".ply/"+relative, "/") {
+	for _, part := range strings.Split(relative, "/") {
 		p = filepath.Join(p, part)
 		var err error
 		info, err = root.Lstat(p)

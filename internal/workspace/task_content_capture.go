@@ -5,7 +5,10 @@ import (
 	"sort"
 )
 
-type capturedTaskContentKey struct{ root, kind, digest string }
+type capturedTaskContentKey struct {
+	work         ProjectWork
+	kind, digest string
+}
 type capturedTaskContentValue struct {
 	bytes  []byte
 	err    error
@@ -30,12 +33,12 @@ func captureTaskContent(source *TaskContentStorage) *taskContentCapture {
 	return c
 }
 
-func (c *taskContentCapture) read(root, kind, digest string) ([]byte, error) {
-	key := capturedTaskContentKey{root, kind, digest}
+func (c *taskContentCapture) read(work ProjectWork, kind, digest string) ([]byte, error) {
+	key := capturedTaskContentKey{work, kind, digest}
 	v := c.values[key]
 	if v == nil {
 		v = &capturedTaskContentValue{owners: map[string]bool{}}
-		v.bytes, v.err = c.source.Read(root, kind, digest)
+		v.bytes, v.err = c.source.Read(work, kind, digest)
 		c.values[key] = v
 	}
 	v.owners[c.owner] = true
@@ -51,8 +54,8 @@ func (c *taskContentCapture) changedOwners() map[string][]string {
 	}
 	sort.Slice(keys, func(i, j int) bool {
 		a, b := keys[i], keys[j]
-		if a.root != b.root {
-			return a.root < b.root
+		if a.work.Dir != b.work.Dir {
+			return a.work.Dir < b.work.Dir
 		}
 		if a.kind != b.kind {
 			return a.kind < b.kind
@@ -65,7 +68,7 @@ func (c *taskContentCapture) changedOwners() map[string][]string {
 		if v.err != nil {
 			continue
 		}
-		now, err := c.source.Read(key.root, key.kind, key.digest)
+		now, err := c.source.Read(key.work, key.kind, key.digest)
 		if err != nil || !bytes.Equal(v.bytes, now) {
 			for owner := range v.owners {
 				changed[owner] = append(changed[owner], key.digest)

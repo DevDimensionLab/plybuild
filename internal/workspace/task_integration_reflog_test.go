@@ -17,11 +17,10 @@ func TestTaskIntegrationReflogStorageCompatibility(t *testing.T) {
 		name          string
 		legacy        bool
 		priorEpicWork bool
-		format        int
 		entries       int
 	}{
-		{"current initial", false, false, 3, 1},
-		{"current prior work", false, true, 3, 2},
+		{"current initial", false, false, 1},
+		{"current prior work", false, true, 2},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			fixture := newIntegrationJourneyFixtureHistory(t, scenario.priorEpicWork)
@@ -38,20 +37,20 @@ func TestTaskIntegrationReflogStorageCompatibility(t *testing.T) {
 			if applied, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil || applied.Readback.Classification != "exact_effect" {
 				t.Fatalf("apply = %#v, %v", applied, err)
 			}
-			stored, err := os.ReadFile(workItemsPath(fixture.root))
+			stored, err := os.ReadFile(testWork(t, fixture.root).Registry())
 			if err != nil {
 				t.Fatal(err)
 			}
-			registry, err := newSystemWorkItemStore().decodeStoredRegistry(fixture.root, stored)
+			registry, err := newSystemWorkItemStore().decodeStoredRegistry(testWork(t, fixture.root), stored)
 			if err != nil {
 				t.Fatal(err)
 			}
 			plan := registry.IntegrationAuthorities[0].Plan
-			if registry.FormatVersion != scenario.format || plan.FormatVersion != 1 || plan.Format != "json" || plan.Canonicalization != "RFC8785" || !reflect.DeepEqual(plan.ObservedReflog, reflog) {
+			if plan.FormatVersion != 1 || plan.Format != "json" || plan.Canonicalization != "RFC8785" || !reflect.DeepEqual(plan.ObservedReflog, reflog) {
 				t.Fatalf("stored plan changed format or history: %#v", plan)
 			}
-			err = fixture.dependencies.WorkItems.WithLock(fixture.root, func(session WorkItemStoreSession) error { return session.Publish(registry) })
-			encoded, readErr := os.ReadFile(workItemsPath(fixture.root))
+			err = fixture.dependencies.WorkItems.WithLock(testWork(t, fixture.root), func(session WorkItemStoreSession) error { return session.Publish(registry) })
+			encoded, readErr := os.ReadFile(testWork(t, fixture.root).Registry())
 			if err != nil || readErr != nil || !bytes.Equal(encoded, stored) {
 				t.Fatalf("stored registry did not round-trip unchanged: %v", err)
 			}
@@ -98,7 +97,7 @@ func TestTaskIntegrationOnePostEffectEntryRequiresRecovery(t *testing.T) {
 			t.Fatalf("apply/replay = %#v, %v, merges = %d", applied, err, git.merges)
 		}
 	}
-	registry, err := newSystemWorkItemStore().Snapshot(fixture.root)
+	registry, err := newSystemWorkItemStore().Snapshot(testWork(t, fixture.root))
 	if err != nil || len(registry.IntegrationResults) != 1 || registry.IntegrationResults[0].Outcome != "partial" || len(registry.IntegrationResults[0].Reflog) != 1 {
 		t.Fatalf("persisted recovery = %#v, %v", registry, err)
 	}
@@ -118,7 +117,7 @@ func TestTaskIntegrationStoredExactEffectRequiresReflogProof(t *testing.T) {
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	stored, err := os.ReadFile(workItemsPath(fixture.root))
+	stored, err := os.ReadFile(testWork(t, fixture.root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +130,7 @@ func TestTaskIntegrationStoredExactEffectRequiresReflogProof(t *testing.T) {
 		"wrong result": func(r *IntegrationResult) { r.Reflog[0].OID = r.Reflog[1].OID },
 	} {
 		t.Run(name, func(t *testing.T) {
-			registry, err := newSystemWorkItemStore().decodeStoredRegistry(fixture.root, stored)
+			registry, err := newSystemWorkItemStore().decodeStoredRegistry(testWork(t, fixture.root), stored)
 			if err != nil {
 				t.Fatal(err)
 			}

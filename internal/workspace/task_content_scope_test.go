@@ -15,7 +15,7 @@ import (
 func scopedFuturePublication(t *testing.T, f workItemJourneyFixture, task TaskID) string {
 	t.Helper()
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func scopedFuturePublication(t *testing.T, f workItemJourneyFixture, task TaskID
 		if p.TaskID != task || p.OutcomeRef.Kind != "spec" {
 			continue
 		}
-		request, err := f.dependencies.TaskContent.Read(root, "requests", p.RequestSHA256)
+		request, err := f.dependencies.TaskContent.Read(testWork(t, root), "requests", p.RequestSHA256)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -38,11 +38,11 @@ func scopedFuturePublication(t *testing.T, f workItemJourneyFixture, task TaskID
 		if err != nil {
 			t.Fatal(err)
 		}
-		requestDigest, err := f.dependencies.TaskContent.Publish(root, "requests", request)
+		requestDigest, err := f.dependencies.TaskContent.Publish(testWork(t, root), "requests", request)
 		if err != nil {
 			t.Fatal(err)
 		}
-		manifest, err := readContentManifest(f.dependencies.TaskContent, root, p.OutcomeRef.ManifestSHA256)
+		manifest, err := readContentManifest(f.dependencies.TaskContent, testWork(t, root), p.OutcomeRef.ManifestSHA256)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -53,7 +53,7 @@ func scopedFuturePublication(t *testing.T, f workItemJourneyFixture, task TaskID
 		if err != nil {
 			t.Fatal(err)
 		}
-		digest, err := f.dependencies.TaskContent.Publish(root, "manifests", raw)
+		digest, err := f.dependencies.TaskContent.Publish(testWork(t, root), "manifests", raw)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -63,11 +63,8 @@ func scopedFuturePublication(t *testing.T, f workItemJourneyFixture, task TaskID
 			}
 		}
 		p.RequestSHA256, p.IntentSHA256, p.OutcomeRef.ManifestSHA256 = requestDigest, requestDigest, digest
-		raw, err = encodeWorkItemRegistry(r)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err = os.WriteFile(workItemsPath(root), raw, 0600); err != nil {
+		raw = storedRegistryBytes(t, root, r)
+		if err = os.WriteFile(testWork(t, root).Registry(), raw, 0600); err != nil {
 			t.Fatal(err)
 		}
 		return digest
@@ -87,11 +84,11 @@ func TestTaskScopedContentRequiresItsArtifactsAndPreservesOutsideRecords(t *test
 			next := contentFixtureProblem(t, f, "task/scoped-revision")
 			root := filepath.Dir(f.wrapper)
 			d := WithTaskContentScope(f.dependencies, "task")
-			r, err := d.WorkItems.Snapshot(root)
+			r, err := d.WorkItems.Snapshot(testWork(t, root))
 			if err != nil {
 				t.Fatal(err)
 			}
-			before, err := os.ReadFile(workItemsPath(root))
+			before, err := os.ReadFile(testWork(t, root).Registry())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -102,16 +99,16 @@ func TestTaskScopedContentRequiresItsArtifactsAndPreservesOutsideRecords(t *test
 			want := "task_content_missing"
 			switch failure {
 			case "missing_manifest":
-				err = os.Remove(taskContentPath(root, "manifests", p.OutcomeRef.ManifestSHA256))
+				err = os.Remove(taskContentPath(testWork(t, root), "manifests", p.OutcomeRef.ManifestSHA256))
 			case "missing_request":
-				err = os.Remove(taskContentPath(root, "requests", p.RequestSHA256))
+				err = os.Remove(taskContentPath(testWork(t, root), "requests", p.RequestSHA256))
 			case "tampered_document":
-				m, e := readContentManifest(d.TaskContent, root, p.OutcomeRef.ManifestSHA256)
+				m, e := readContentManifest(d.TaskContent, testWork(t, root), p.OutcomeRef.ManifestSHA256)
 				if e != nil {
 					t.Fatal(e)
 				}
 				doc := contentFields(contentArray(contentFields(m), "documents")[0])
-				path := taskContentPath(root, "objects", contentString(doc, "sha256"))
+				path := taskContentPath(testWork(t, root), "objects", contentString(doc, "sha256"))
 				if err = os.Chmod(path, 0600); err != nil {
 					t.Fatal(err)
 				}
@@ -127,7 +124,7 @@ func TestTaskScopedContentRequiresItsArtifactsAndPreservesOutsideRecords(t *test
 				t.Fatal(err)
 			}
 			if failure == "outside_write" {
-				err = d.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
+				err = d.WorkItems.WithLock(testWork(t, root), func(s WorkItemStoreSession) error {
 					r, e := s.Snapshot()
 					if e != nil {
 						return e
@@ -149,7 +146,7 @@ func TestTaskScopedContentRequiresItsArtifactsAndPreservesOutsideRecords(t *test
 			if failure != "outside_write" && (contentErr.Artifact == "" || contentErr.Operation == "" || contentErr.ReaderCapability == "" || contentErr.NextAction == "") {
 				t.Fatalf("diagnostic lacks artifact/operation/capability/action: %#v", contentErr)
 			}
-			after, e := os.ReadFile(workItemsPath(root))
+			after, e := os.ReadFile(testWork(t, root).Registry())
 			if e != nil || string(before) != string(after) {
 				t.Fatal("blocked operation changed registry", e)
 			}
@@ -167,7 +164,7 @@ func TestTaskScopedConcurrentPublicationsPreserveBothWritersAndUnknownSibling(t 
 	goalFixture(t, f, "future", "future/goal")
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{})
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,7 +203,7 @@ func TestTaskScopedConcurrentPublicationsPreserveBothWritersAndUnknownSibling(t 
 			t.Fatal(err)
 		}
 	}
-	after, err := f.dependencies.WorkItems.SnapshotRegistrations(root)
+	after, err := f.dependencies.WorkItems.SnapshotRegistrations(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -222,10 +219,10 @@ func TestTaskScopedConcurrentPublicationsPreserveBothWritersAndUnknownSibling(t 
 	if got := taskContentState(after, "future").SpecHead; got == nil || got.ManifestSHA256 != future {
 		t.Fatal("rewrote unknown sibling")
 	}
-	if _, err = f.dependencies.WorkItems.Snapshot(root); err != nil {
+	if _, err = f.dependencies.WorkItems.Snapshot(testWork(t, root)); err != nil {
 		t.Fatalf("registry observation required unrelated document semantics: %v", err)
 	}
-	if _, err = readRegisteredTaskManifest(f.dependencies.TaskContent, root, after, future); err == nil || !strings.Contains(err.Error(), "future_review_policy") {
+	if _, err = readRegisteredTaskManifest(f.dependencies.TaskContent, testWork(t, root), after, future); err == nil || !strings.Contains(err.Error(), "future_review_policy") {
 		t.Fatalf("explicit document read accepted unsupported semantics: %v", err)
 	}
 }
@@ -236,11 +233,12 @@ func TestQueueReadbackDoesNotInterpretAnotherEpicsContent(t *testing.T) {
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{})
 	r := mustQueueRegistry(t, f)
 	parent := r.Epics[0].RepoBindings[0].Worktree
-	if _, err := AdoptEpic(f.dependencies, EpicAdoptInput{EpicID: "other", Title: "Other", ProjectID: "ply", RepoID: "ply", Worktree: parent.Locator, Ref: parent.Ref, ExpectedOID: parent.OID}); err != nil {
+	other := EpicAdoptInput{EpicID: "other", Title: "Other", ProjectID: "ply", RepoID: "ply", Worktree: parent.Locator, Ref: parent.Ref, ExpectedOID: parent.OID}
+	if _, err := AdoptEpic(f.dependencies, other); err != nil {
 		t.Fatal(err)
 	}
 	scopedFuturePublication(t, f, "task")
-	before, err := os.ReadFile(workItemsPath(filepath.Dir(f.wrapper)))
+	before, err := os.ReadFile(testWork(t, filepath.Dir(f.wrapper)).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -250,41 +248,8 @@ func TestQueueReadbackDoesNotInterpretAnotherEpicsContent(t *testing.T) {
 	if _, err := ListTaskQueue(f.dependencies, queueTargetFixture(), false); err == nil {
 		t.Fatal("selected target's unknown content was accepted")
 	}
-	after, err := os.ReadFile(workItemsPath(filepath.Dir(f.wrapper)))
+	after, err := os.ReadFile(testWork(t, filepath.Dir(f.wrapper)).Registry())
 	if err != nil || string(before) != string(after) {
 		t.Fatal("queue read changed registry", err)
-	}
-}
-
-func TestEmptyQueueStillRequiresItsUpgradeBackup(t *testing.T) {
-	f := newWorkItemJourneyFixture(t)
-	r := mustQueueRegistry(t, f)
-	parent := r.Epics[0].RepoBindings[0].Worktree
-	if _, err := AdoptEpic(f.dependencies, EpicAdoptInput{EpicID: "other", Title: "Other", ProjectID: "ply", RepoID: "ply", Worktree: parent.Locator, Ref: parent.Ref, ExpectedOID: parent.OID}); err != nil {
-		t.Fatal(err)
-	}
-	r = mustQueueRegistry(t, f)
-	upgrade := queueUpgrade(r)
-	if upgrade == nil {
-		t.Fatal("fixture must require upgrade")
-	}
-	root := filepath.Dir(f.wrapper)
-	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "other/queue", ProjectID: "ply", RepoID: "ply", EpicID: "other", ExpectedRevision: 0, Entries: []TaskGoalQueueEntry{}, Recorder: TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "test", RecordedAtUTC: "2026-10-31T12:00:00Z"}, RegistryUpgrade: upgrade}
-	raw, err := contentCanonical(draft)
-	if err != nil {
-		t.Fatal(err)
-	}
-	file := filepath.Join(root, "other-queue.json")
-	if err := os.WriteFile(file, raw, 0600); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := SetTaskQueue(f.dependencies, file); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Remove(taskContentPath(root, "backups", upgrade.RegistrySHA256)); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := ListTaskQueue(f.dependencies, QueueTargetInput{ProjectID: "ply", RepoID: "ply", EpicID: "other"}, false); err == nil {
-		t.Fatal("empty target accepted missing upgrade backup")
 	}
 }

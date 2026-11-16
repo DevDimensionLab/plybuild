@@ -60,7 +60,7 @@ func TestFollowupConcurrentProcessesAndProcessDeath(t *testing.T) {
 		t.Run(fmt.Sprint(crash), func(t *testing.T) {
 			s, d, _ := fixture(t)
 			d.NextCheckAtUTC = s.now()
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -100,7 +100,7 @@ func TestFollowupConcurrentProcessesAndProcessDeath(t *testing.T) {
 }
 func TestFollowupMalformedStorePreservesOtherStatusSources(t *testing.T) {
 	s, d, _ := fixture(t)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}

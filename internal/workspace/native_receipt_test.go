@@ -16,7 +16,7 @@ func TestNativeReceiptSingleCompletionSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -33,14 +33,14 @@ func TestNativeReceiptSingleCompletionSource(t *testing.T) {
 	if err != nil || !show.WorktreeReady || !show.ReadyForHandoff || show.Operation != nil {
 		t.Fatalf("readback: %#v, %v", show, err)
 	}
-	before, _ := os.ReadFile(workItemsPath(root))
+	before, _ := os.ReadFile(testWork(t, root).Registry())
 	// An exact replay needs neither a Git reader nor a Git writer.
 	f.dependencies.WorkGit = receiptReplayGit{}
 	retry, err := CreateTaskWorktree(f.dependencies, in)
 	if err != nil || retry.Outcome != "already_ready" || retry.Task.Worktree.ID != ready.Task.Worktree.ID {
 		t.Fatalf("replay: %#v, %v", retry, err)
 	}
-	after, _ := os.ReadFile(workItemsPath(root))
+	after, _ := os.ReadFile(testWork(t, root).Registry())
 	if string(before) != string(after) {
 		t.Fatal("replay published registry")
 	}
@@ -56,7 +56,7 @@ func TestNativeReceiptRejectsInvalidBindings(t *testing.T) {
 	if _, err := CreateTaskWorktree(f.dependencies, in); err != nil {
 		t.Fatal(err)
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(filepath.Dir(f.wrapper))
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(f.wrapper)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -135,7 +135,7 @@ func TestNativeReceiptWriterBytesAndFreshReadback(t *testing.T) {
 	if _, err := CreateTaskWorktree(f.dependencies, in); err != nil {
 		t.Fatal(err)
 	}
-	b, err := os.ReadFile(workItemsPath(filepath.Dir(f.wrapper)))
+	b, err := os.ReadFile(testWork(t, filepath.Dir(f.wrapper)).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -214,7 +214,7 @@ func TestNativeReceiptAtomicReadyPublicationAndLostReply(t *testing.T) {
 			}
 			f.dependencies.WorkItems = newSystemWorkItemStore()
 			root := filepath.Dir(f.wrapper)
-			r, err := f.dependencies.WorkItems.Snapshot(root)
+			r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -237,7 +237,7 @@ func TestNativeReceiptAtomicReadyPublicationAndLostReply(t *testing.T) {
 			if err != nil || ready.Task.Worktree.ID != id {
 				t.Fatalf("recovery %#v %v", ready, err)
 			}
-			r, err = f.dependencies.WorkItems.Snapshot(root)
+			r, err = f.dependencies.WorkItems.Snapshot(testWork(t, root))
 			if err != nil || len(r.WorktreeOperations) != 0 || r.Tasks[0].Worktree == nil {
 				t.Fatalf("completion %#v %v", r, err)
 			}
@@ -268,14 +268,14 @@ func TestNativeReceiptReplayAndReservationsAfterCheckoutRemoval(t *testing.T) {
 	repo := filepath.Join(f.wrapper, "main")
 	runLocalGit(t, repo, "worktree", "remove", in.Path)
 	runLocalGit(t, repo, "branch", "-D", in.Branch)
-	before, _ := os.ReadFile(workItemsPath(root))
+	before, _ := os.ReadFile(testWork(t, root).Registry())
 	deps := f.dependencies
 	deps.WorkGit = receiptReplayGit{}
 	replay, err := CreateTaskWorktree(deps, in)
 	if err != nil || replay.Outcome != "already_ready" || replay.Operation != nil {
 		t.Fatalf("missing checkout replay: %#v %v", replay, err)
 	}
-	after, _ := os.ReadFile(workItemsPath(root))
+	after, _ := os.ReadFile(testWork(t, root).Registry())
 	if string(before) != string(after) {
 		t.Fatal("replay rewrote registry")
 	}

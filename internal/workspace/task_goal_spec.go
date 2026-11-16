@@ -128,12 +128,12 @@ func validateRegisteredGoalRef(r WorkItemRegistry, task TaskID, ref *TaskGoalRef
 	return queueError("task_goal_invalid_reference", "goal reference is not registered to this Task")
 }
 
-func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, ref TaskGoalRef) (TaskGoalContract, error) {
+func loadTaskGoal(d Dependencies, work ProjectWork, r WorkItemRegistry, task TaskID, ref TaskGoalRef) (TaskGoalContract, error) {
 	out := TaskGoalContract{TaskID: task, Goal: ref, Requirements: []TaskGoalRequirement{}, Constraints: []string{}, RequiredInputs: []TaskSpecRequiredInput{}}
 	if e := validateRegisteredGoalRef(r, task, &ref); e != nil {
 		return out, e
 	}
-	v, e := registeredTaskSpec(d, root, r, task, ref.SpecID, &ref.Spec)
+	v, e := registeredTaskSpec(d, work, r, task, ref.SpecID, &ref.Spec)
 	if e != nil {
 		return out, e
 	}
@@ -153,7 +153,7 @@ func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, 
 		return out, e
 	}
 	for _, basis := range []struct{ name, hash string }{{"goal", ref.Spec.ManifestSHA256}, {"problem", out.Problem.ManifestSHA256}} {
-		manifest, e := readRegisteredTaskManifest(d.TaskContent, root, r, basis.hash)
+		manifest, e := readRegisteredTaskManifest(d.TaskContent, work, r, basis.hash)
 		if e != nil {
 			return out, e
 		}
@@ -161,11 +161,11 @@ func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, 
 		if e != nil {
 			return out, e
 		}
-		out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-basis/" + basis.name, Role: "other", Locator: taskContentPath(root, "manifests", basis.hash), SHA256: basis.hash, SizeBytes: int64(len(bytes)), MediaType: "application/json"})
+		out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-basis/" + basis.name, Role: "other", Locator: taskContentPath(work, "manifests", basis.hash), SHA256: basis.hash, SizeBytes: int64(len(bytes)), MediaType: "application/json"})
 		for _, doc := range contentArray(contentFields(manifest), "documents") {
 			x := contentFields(doc)
 			hash := contentString(x, "sha256")
-			bytes, e := d.TaskContent.Read(root, "objects", hash)
+			bytes, e := d.TaskContent.Read(work, "objects", hash)
 			if e != nil || len(bytes) != contentInt(x, "size_bytes") {
 				return out, contentError("task_content_integrity_conflict", "goal document differs", e)
 			}
@@ -173,7 +173,7 @@ func loadTaskGoal(d Dependencies, root string, r WorkItemRegistry, task TaskID, 
 			if basis.name == "goal" {
 				role = "design"
 			}
-			out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-goal-doc/" + basis.name + "/" + contentString(x, "id"), Role: role, Locator: taskContentPath(root, "objects", hash), SHA256: hash, SizeBytes: int64(len(bytes)), MediaType: contentString(x, "media_type")})
+			out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-goal-doc/" + basis.name + "/" + contentString(x, "id"), Role: role, Locator: taskContentPath(work, "objects", hash), SHA256: hash, SizeBytes: int64(len(bytes)), MediaType: contentString(x, "media_type")})
 		}
 	}
 	sort.Slice(out.RequiredInputs, func(i, j int) bool { return out.RequiredInputs[i].ID < out.RequiredInputs[j].ID })

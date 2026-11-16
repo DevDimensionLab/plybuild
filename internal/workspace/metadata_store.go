@@ -34,9 +34,14 @@ func metadataSource(locator, hash string, exists bool) MetadataSource {
 	return MetadataSource{Locator: locator, SHA256: digest, Exists: exists}
 }
 
-func readWorkspaceMetadata(root, name string) ([]byte, bool, error) {
-	dir := filepath.Join(root, MarkerDirectory)
-	if err := contentPhysical(dir); err != nil {
+// readWorkspaceMetadata reads file name in dir. A missing dir or file is
+// absence.
+func readWorkspaceMetadata(dir, name string) ([]byte, bool, error) {
+	err := contentPhysical(dir)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil, false, nil
+	}
+	if err != nil {
 		return nil, false, metadataStoreError(dir, err)
 	}
 	path := filepath.Join(dir, name)
@@ -81,13 +86,14 @@ func (p workspaceMetadataPublisher) check(stage string) error {
 	return nil
 }
 
-func (p workspaceMetadataPublisher) publish(root, name string, b []byte) (err error) {
-	dir, destination := filepath.Join(root, MarkerDirectory), filepath.Join(root, MarkerDirectory, name)
+// publish replaces file name in dir, which must exist.
+func (p workspaceMetadataPublisher) publish(dir, name string, b []byte) (err error) {
+	destination := filepath.Join(dir, name)
 	if len(b) > workspaceMetadataLimit {
 		return WorkInvalidArguments("workspace metadata exceeds 16 MiB")
 	}
 	// Check the destination even for a first write: a dangling symlink is not absence.
-	if _, _, err = readWorkspaceMetadata(root, name); err != nil {
+	if _, _, err = readWorkspaceMetadata(dir, name); err != nil {
 		return err
 	}
 	if err = p.check("temp-open"); err != nil {
@@ -139,7 +145,7 @@ func (p workspaceMetadataPublisher) publish(root, name string, b []byte) (err er
 		return err
 	}
 	// Recheck the physical parent and destination before the effect.
-	if _, _, err = readWorkspaceMetadata(root, name); err != nil {
+	if _, _, err = readWorkspaceMetadata(dir, name); err != nil {
 		return err
 	}
 	if err = platformReplace(temp, destination); err != nil {

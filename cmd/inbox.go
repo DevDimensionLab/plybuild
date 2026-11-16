@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/inbox"
+	"github.com/devdimensionlab/plybuild/internal/projectdata"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -195,7 +196,7 @@ func inboxDirectory(show func(workspace.ProjectID) (workspace.ProjectResult, err
 		}
 		result, err := show(id)
 		if err == nil {
-			return workspace.ProjectDataPath(result.Project, workspace.DataPathInbox)
+			return result.Project.Data().Inbox()
 		}
 		var projectError *workspace.ProjectError
 		switch {
@@ -228,7 +229,8 @@ func readInboxRequest(cmd *cobra.Command, file string) ([]byte, error) {
 	return raw, nil
 }
 
-// inboxErrorResult is the InboxError@1 of an inbox or workspace project error.
+// inboxErrorResult is the InboxError@1 of an inbox, workspace project or
+// project data error.
 func inboxErrorResult(err error) (inbox.ErrorResult, bool) {
 	var inboxError *inbox.Error
 	if errors.As(err, &inboxError) {
@@ -237,6 +239,10 @@ func inboxErrorResult(err error) (inbox.ErrorResult, bool) {
 	var projectError *workspace.ProjectError
 	if errors.As(err, &projectError) {
 		return inbox.ErrorResult{Kind: inbox.ErrorKind, SchemaVersion: inbox.SchemaVersion, Class: string(projectError.Class), Detail: projectError.Detail}, true
+	}
+	var dataError *projectdata.Error
+	if errors.As(err, &dataError) {
+		return inbox.ErrorResult{Kind: inbox.ErrorKind, SchemaVersion: inbox.SchemaVersion, Class: dataError.Class, Detail: dataError.Detail}, true
 	}
 	return inbox.ErrorResult{}, false
 }

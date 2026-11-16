@@ -48,7 +48,7 @@ func TestHerdrRuntimeSerializerDefaultsAndPrivacy(t *testing.T) {
 		t.Fatal("private source metadata escaped")
 	}
 	d.TargetRef = agents[0].Ref()
-	if _, e = s.Register(d); e != nil {
+	if _, e = s.Register(s.onlyProject(), d); e != nil {
 		t.Fatal(e)
 	}
 }

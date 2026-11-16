@@ -66,7 +66,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		if resolved, err = resolvePublicationProject(d, project); err != nil {
 			return publication.Store{}, err
 		}
-		directory, err := workspace.ProjectDataPath(resolved, publication.DataPathCategory)
+		directory, err := resolved.Data().Publications()
 		if err != nil {
 			return publication.Store{}, err
 		}
@@ -191,7 +191,7 @@ func resolvePublicationProject(d workspace.Dependencies, value string) (workspac
 }
 
 func checkPublicationPlan(project workspace.ProjectRecord, id string) error {
-	directory, err := workspace.ProjectDataPath(project, plan.DataPathCategory)
+	directory, err := project.Data().Plans()
 	if err != nil {
 		return err
 	}

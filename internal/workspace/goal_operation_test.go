@@ -11,12 +11,12 @@ func TestGoalOperationUnboundSessionCannotPublish(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{})
 	root := filepath.Dir(f.wrapper)
-	before, err := os.ReadFile(workItemsPath(root))
+	before, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
 	d, _ := beginGoalOperationContent(f.dependencies)
-	err = d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+	err = d.WorkItems.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 		r, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -26,7 +26,7 @@ func TestGoalOperationUnboundSessionCannotPublish(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "dependencies are not bound") {
 		t.Fatalf("unbound publication accepted: %v", err)
 	}
-	after, err := os.ReadFile(workItemsPath(root))
+	after, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}

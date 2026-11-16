@@ -16,11 +16,11 @@ func TestTaskContentRejectsManifestWhoseBytesDisagreeWithPreservedRequest(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
-	m, err := readContentManifest(f.dependencies.TaskContent, root, first.OutcomeRef.ManifestSHA256)
+	m, err := readContentManifest(f.dependencies.TaskContent, testWork(t, root), first.OutcomeRef.ManifestSHA256)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +30,7 @@ func TestTaskContentRejectsManifestWhoseBytesDisagreeWithPreservedRequest(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	digest, err := f.dependencies.TaskContent.Publish(root, "manifests", b)
+	digest, err := f.dependencies.TaskContent.Publish(testWork(t, root), "manifests", b)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,11 +40,8 @@ func TestTaskContentRejectsManifestWhoseBytesDisagreeWithPreservedRequest(t *tes
 			r.TaskContentPublications[i].OutcomeRef.ManifestSHA256 = digest
 		}
 	}
-	b, err = encodeWorkItemRegistry(r)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = os.WriteFile(workItemsPath(root), b, 0644); err != nil {
+	b = storedRegistryBytes(t, root, r)
+	if err = os.WriteFile(testWork(t, root).Registry(), b, 0644); err != nil {
 		t.Fatal(err)
 	}
 	_, err = RecordTaskSpec(f.dependencies, contentFixtureSpec(t, f, "fixture/spec-2", &TaskRevisionRef{1, digest}))
@@ -84,7 +81,7 @@ func TestTaskContentPublicationFaultsPreserveOutcomeAndExactRetry(t *testing.T) 
 			if retry.OutcomeRef == nil || *retry.OutcomeRef.Revision != 2 {
 				t.Fatalf("retry allocated another revision: %#v", retry)
 			}
-			r, err := f.dependencies.WorkItems.Snapshot(root)
+			r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 			if err != nil || len(r.TaskProblemRevisions) != 2 {
 				t.Fatalf("registry after recovery: %#v %v", r, err)
 			}
@@ -122,7 +119,7 @@ func TestTaskContentSourceHashAndSymlinkRejectedBeforePublication(t *testing.T) 
 					return nil
 				}}
 			} else {
-				r, _ := f.dependencies.WorkItems.Snapshot(root)
+				r, _ := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 				parent := r.Epics[0].RepoBindings[0].Worktree
 				raw, _ := os.ReadFile(in.File)
 				v, _ := canonicaljson.DecodeStrict(raw)
@@ -138,9 +135,9 @@ func TestTaskContentSourceHashAndSymlinkRejectedBeforePublication(t *testing.T) 
 					t.Fatal(err)
 				}
 			}
-			before, _ := os.ReadFile(workItemsPath(root))
+			before, _ := os.ReadFile(testWork(t, root).Registry())
 			out, err := RecordTaskSpec(f.dependencies, in)
-			after, _ := os.ReadFile(workItemsPath(root))
+			after, _ := os.ReadFile(testWork(t, root).Registry())
 			if err == nil || out.Attempted.ObjectPublicationStarted || string(before) != string(after) {
 				t.Fatalf("source drift published: %#v %v", out, err)
 			}
@@ -165,9 +162,9 @@ func TestTaskContentRegistrySyncAndUnlockFailuresRemainUnknown(t *testing.T) {
 				t.Fatalf("false success or lost poststate: %#v %v", out, err)
 			}
 			f.dependencies.WorkItems = newSystemWorkItemStore()
-			before, _ := os.ReadFile(workItemsPath(root))
+			before, _ := os.ReadFile(testWork(t, root).Registry())
 			retry, err := RecordTaskProblem(f.dependencies, in)
-			after, _ := os.ReadFile(workItemsPath(root))
+			after, _ := os.ReadFile(testWork(t, root).Registry())
 			if err != nil || retry.Classification != "existing" || string(before) != string(after) {
 				t.Fatalf("recovery rewrote: %#v %v", retry, err)
 			}
@@ -178,11 +175,11 @@ func TestTaskContentRegistrySyncAndUnlockFailuresRemainUnknown(t *testing.T) {
 func TestTaskCreateRetryDoesNotRequireOptionalDocumentContent(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, err := readContentManifest(f.dependencies.TaskContent, root, r.TaskProblemRevisions[0].ManifestSHA256)
+	p, err := readContentManifest(f.dependencies.TaskContent, testWork(t, root), r.TaskProblemRevisions[0].ManifestSHA256)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +192,7 @@ func TestTaskCreateRetryDoesNotRequireOptionalDocumentContent(t *testing.T) {
 	if err != nil || out.Created || out.Content != nil {
 		t.Fatalf("registration retry required optional document content: %#v %v", out, err)
 	}
-	if err = verifyManifestDocuments(f.dependencies.TaskContent, root, p); err == nil {
+	if err = verifyManifestDocuments(f.dependencies.TaskContent, testWork(t, root), p); err == nil {
 		t.Fatal("explicit document verification hid missing immutable content")
 	}
 }
@@ -203,11 +200,11 @@ func TestTaskCreateRetryDoesNotRequireOptionalDocumentContent(t *testing.T) {
 func TestTaskContentGeneratedProblemIsBoundToOriginalSummary(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
-	m, err := readContentManifest(f.dependencies.TaskContent, root, r.TaskProblemRevisions[0].ManifestSHA256)
+	m, err := readContentManifest(f.dependencies.TaskContent, testWork(t, root), r.TaskProblemRevisions[0].ManifestSHA256)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -215,24 +212,21 @@ func TestTaskContentGeneratedProblemIsBoundToOriginalSummary(t *testing.T) {
 	docs := contentArray(fields, "documents")
 	doc := contentFields(docs[0])
 	raw := []byte("# Unrequested replacement problem\n")
-	digest, err := f.dependencies.TaskContent.Publish(root, "objects", raw)
+	digest, err := f.dependencies.TaskContent.Publish(testWork(t, root), "objects", raw)
 	if err != nil {
 		t.Fatal(err)
 	}
-	doc["locator"], doc["sha256"], doc["size_bytes"] = taskContentPath(root, "objects", digest), digest, int64(len(raw))
+	doc["locator"], doc["sha256"], doc["size_bytes"] = taskContentPath(testWork(t, root), "objects", digest), digest, int64(len(raw))
 	fields["documents"] = []canonicaljson.Value{contentObject(doc)}
 	raw, _ = canonicaljson.Marshal(contentObject(fields))
-	digest, err = f.dependencies.TaskContent.Publish(root, "manifests", raw)
+	digest, err = f.dependencies.TaskContent.Publish(testWork(t, root), "manifests", raw)
 	if err != nil {
 		t.Fatal(err)
 	}
 	r.TaskProblemRevisions[0].ManifestSHA256 = digest
 	r.TaskContentPublications[0].OutcomeRef.ManifestSHA256 = digest
-	raw, err = encodeWorkItemRegistry(r)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err = os.WriteFile(workItemsPath(root), raw, 0644); err != nil {
+	raw = storedRegistryBytes(t, root, r)
+	if err = os.WriteFile(testWork(t, root).Registry(), raw, 0644); err != nil {
 		t.Fatal(err)
 	}
 	shown, err := ShowTaskProblem(f.dependencies, TaskContentQuery{TaskID: "task"})

@@ -62,7 +62,11 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 	if err = validateFirstGoalInput(in); err != nil {
 		return out, err
 	}
-	root, err := containingWorkItemWorkspace(d)
+	root, err := containingRegistrationWorkspace(d)
+	if err != nil {
+		return out, err
+	}
+	work, err := projectWork(root, in.Target.ProjectID)
 	if err != nil {
 		return out, err
 	}
@@ -83,7 +87,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 	}
 	sort.Slice(docs, func(i, j int) bool { return contentIDKey(docs[i]) < contentIDKey(docs[j]) })
 	run := func(projects ProjectSnapshot, session WorkItemStoreSession, r WorkItemRegistry) (runErr error) {
-		target, _, e := resolveQueueTarget(d, root, r, projects, in.Target)
+		target, _, e := resolveQueueTarget(d, work, r, projects, in.Target)
 		if e != nil {
 			return e
 		}
@@ -116,7 +120,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		if existing != nil {
 			marker, hasMarker := strings.CutPrefix(existing.Description, "First Goal registration ")
 			if create := taskPublication(r, "task-create/"+string(in.TaskID)); hasMarker && digestPattern.MatchString(marker) && create != nil {
-				v, err := readRegisteredTaskManifest(d.TaskContent, root, r, create.OutcomeRef.ManifestSHA256)
+				v, err := readRegisteredTaskManifest(d.TaskContent, work, r, create.OutcomeRef.ManifestSHA256)
 				if err != nil {
 					return err
 				}
@@ -129,7 +133,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		var goalManifest map[string]canonicaljson.Value
 		basis := state.ProblemHead
 		if goalPub != nil {
-			v, err := readRegisteredTaskManifest(d.TaskContent, root, r, goalPub.OutcomeRef.ManifestSHA256)
+			v, err := readRegisteredTaskManifest(d.TaskContent, work, r, goalPub.OutcomeRef.ManifestSHA256)
 			if err != nil {
 				return err
 			}
@@ -180,7 +184,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 			}
 			if pub := taskPublication(r, key+"/goal"); pub != nil {
 				out.Goal.Spec = TaskRevisionRef{Revision: *pub.OutcomeRef.Revision, ManifestSHA256: pub.OutcomeRef.ManifestSHA256}
-				c, e := loadTaskGoal(d, root, r, in.TaskID, out.Goal)
+				c, e := loadTaskGoal(d, work, r, in.TaskID, out.Goal)
 				if e != nil {
 					return e
 				}
@@ -188,7 +192,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 				out.Problem = &c.Problem
 			}
 			var e error
-			out.Queue, e = buildQueueReadback(d, root, r, projects, in.Target, false)
+			out.Queue, e = buildQueueReadback(d, work, r, projects, in.Target, false)
 			return e
 		}
 		if e = readback(); e != nil {
@@ -214,7 +218,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		for _, ev := range r.TaskQueueEvents {
 			if ev.Kind == "set" && contentString(contentFields(queueRequestValue(ev.Request)), "publication_key") == key+"/queue" {
 				entries := decodeQueueDraft(queueRequestValue(ev.Request)).Entries
-				if out.Contract == nil || ev.QueueID != queueID(root, target) || len(entries) == 0 || !contentTypedEqual(entries[len(entries)-1], TaskGoalQueueEntry{TaskID: in.TaskID, Goal: &out.Goal}) {
+				if out.Contract == nil || ev.QueueID != queueID(work.Workspace, target) || len(entries) == 0 || !contentTypedEqual(entries[len(entries)-1], TaskGoalQueueEntry{TaskID: in.TaskID, Goal: &out.Goal}) {
 					return queueError("first_goal_publication_conflict", "append receipt differs from the exact registered Goal")
 				}
 				completed = true
@@ -224,7 +228,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 			return queueError("first_goal_confirmation_conflict", "preview confirmation differs from supplied product, document bytes, current Problem or selected target/policy/executor; preview again and inspect the changed basis")
 		}
 		if !completed {
-			lifecycle, e := readWorkItemLifecycle(root)
+			lifecycle, e := readWorkItemLifecycle(work)
 			if e != nil {
 				return e
 			}
@@ -250,7 +254,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 				}
 			}
 		}
-		q := foldQueue(r, queueID(root, target))
+		q := foldQueue(r, queueID(work.Workspace, target))
 		if !completed && len(q.Pending) >= 256 {
 			return queueError("first_goal_queue_full", "queue append exceeds 256 entries")
 		}
@@ -312,11 +316,7 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		// inspect these and repeat identical input; no rollback or dependent retry.
 		effectsStarted = true
 		if existing == nil {
-			var upgrade *TaskRegistryUpgrade
-			if r.FormatVersion < 3 {
-				upgrade = &TaskRegistryUpgrade{FromVersion: r.FormatVersion, RegistrySHA256: r.RawSHA256}
-			}
-			_, e = createTaskProblem(d, root, session, r, projects, task, upgrade)
+			_, e = createTaskProblem(d, work, session, r, projects, task)
 			if e != nil {
 				return fmt.Errorf("Task/Problem may be published; inspect Task %s, then repeat identical registration: %w", in.TaskID, e)
 			}
@@ -333,8 +333,8 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		if e != nil {
 			return e
 		}
-		mutation := newTaskContentMutation(root, in.TaskID, key+"/goal", digestTaskBytes(raw))
-		e = publishTaskContent(d, root, session, r, task, projects, draft(), "spec_record", raw, &mutation, false)
+		mutation := newTaskContentMutation(work.Workspace, in.TaskID, key+"/goal", digestTaskBytes(raw))
+		e = publishTaskContent(d, work, session, r, task, projects, draft(), "spec_record", raw, &mutation, false)
 		if e != nil {
 			return fmt.Errorf("Goal may be published; inspect Task %s key %s/goal, then repeat identical registration: %w", in.TaskID, key, e)
 		}
@@ -348,17 +348,14 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 		out.Phase = "goal_published"
 		// The same registry lock encloses read + append. CAS in Publish protects
 		// against stale replacement; unrelated current/pending entries survive.
-		if e = upgradeQueueRegistry(d, root, &r, queueUpgrade(r)); e != nil {
-			return e
-		}
-		q = foldQueue(r, queueID(root, target))
+		q = foldQueue(r, queueID(work.Workspace, target))
 		entries := append(append([]TaskGoalQueueEntry{}, q.Pending...), TaskGoalQueueEntry{TaskID: in.TaskID, Goal: &out.Goal})
 		v := contentRefValue(WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: key + "/queue", ProjectID: target.ProjectID, RepoID: target.RepoID, EpicID: target.EpicID, ExpectedRevision: q.Revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "local_cli_user", ControlSurface: "ply workspace task goal register", RecordedAtUTC: when}})
 		if e = goalQueueDraftRule()(v); e != nil {
 			return e
 		}
 		request := queueRequest(v)
-		r.TaskQueueEvents = append(r.TaskQueueEvents, TaskQueueEvent{queueID(root, target), q.Revision + 1, "set", queueDigest(request), request, queueNow(d)})
+		r.TaskQueueEvents = append(r.TaskQueueEvents, TaskQueueEvent{queueID(work.Workspace, target), q.Revision + 1, "set", queueDigest(request), request, queueNow(d)})
 		sortQueueRegistry(&r)
 		if e = session.Publish(r); e != nil {
 			return fmt.Errorf("queue append may be published; inspect Task %s and queue, then repeat identical registration: %w", in.TaskID, e)
@@ -373,16 +370,18 @@ func RegisterFirstGoal(d Dependencies, in FirstGoalInput, apply bool, confirmati
 	}
 	if apply {
 		err = d.ProjectLocks.WithSnapshotLock(root, func(p ProjectSnapshot) error {
-			return d.WorkItems.WithLock(root, func(s WorkItemStoreSession) error {
-				r, e := s.Snapshot()
-				if e != nil {
-					return e
-				}
-				return run(p, s, r)
+			return withNewWorkID(d, work, "Task "+string(in.TaskID), func(r WorkItemRegistry) bool { return hasTask(r, in.TaskID) }, func() error {
+				return d.WorkItems.WithLock(work, func(s WorkItemStoreSession) error {
+					r, e := s.Snapshot()
+					if e != nil {
+						return e
+					}
+					return run(p, s, r)
+				})
 			})
 		})
 	} else {
-		err = WithTaskSpecSnapshot(d, root, func(s *TaskSpecSession) error { return run(s.Projects, nil, s.Registry) })
+		err = WithTaskSpecSnapshot(d, work, func(s *TaskSpecSession) error { return run(s.Projects, nil, s.Registry) })
 	}
 	return out, err
 }

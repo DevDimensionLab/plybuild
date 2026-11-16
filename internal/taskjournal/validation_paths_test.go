@@ -384,8 +384,8 @@ func TestReadStoreErrorPaths(t *testing.T) {
 			in.PublicationKey = "second"
 			f.append(t, in)
 			ws := f.show(t).Workspace.ID
-			c.edit(t, storePath(f.root, "task"))
-			records, e := readStore(f.root, "task", ws)
+			c.edit(t, storePath(f.work(t), "task"))
+			records, e := readStore(f.work(t), "task", ws)
 			assertError(t, e, c.want)
 			if name == "chain" && len(records) != 1 {
 				t.Fatalf("validated prefix = %d records, want 1", len(records))

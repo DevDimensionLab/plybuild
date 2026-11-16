@@ -18,7 +18,7 @@ func TestQualifiedCallbackRejectsNonregularBeforeClaimWithoutBlocking(t *testing
 		t.Run(mode, func(t *testing.T) {
 			s, d, calls := fixture(t)
 			d.NextCheckAtUTC = s.now()
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}

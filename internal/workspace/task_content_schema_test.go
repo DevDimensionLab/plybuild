@@ -15,7 +15,7 @@ func TestTaskContentRejectsOversizedDraftAndSourceBeforePublication(t *testing.T
 			f := newWorkItemJourneyFixture(t)
 			root := filepath.Dir(f.wrapper)
 			in := contentFixtureSpec(t, f, "fixture/oversized", nil)
-			before, err := os.ReadFile(workItemsPath(root))
+			before, err := os.ReadFile(testWork(t, root).Registry())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -40,7 +40,7 @@ func TestTaskContentRejectsOversizedDraftAndSourceBeforePublication(t *testing.T
 			if !errors.As(err, &contentErr) || contentErr.Code != "task_content_invalid_input" || out.Attempted.ObjectPublicationStarted {
 				t.Fatalf("oversized %s crossed the publication boundary: %#v %v", kind, out, err)
 			}
-			after, err := os.ReadFile(workItemsPath(root))
+			after, err := os.ReadFile(testWork(t, root).Registry())
 			if err != nil || !bytes.Equal(before, after) {
 				t.Fatal("oversized input changed the registry")
 			}
@@ -102,7 +102,7 @@ func TestTaskContentVersionThreeEmptyRoundTrip(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, err := decodeWorkItemRegistry(b)
-	if err != nil || got.FormatVersion != 3 || got.TaskContentPublications == nil {
+	if err != nil || got.TaskContentPublications == nil {
 		t.Fatalf("v3 shape: %#v %v", got, err)
 	}
 	again, err := encodeWorkItemRegistry(got)
@@ -131,7 +131,7 @@ func TestTaskSpecRequirementRemovalAndOrderedPhases(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	saved, err := readContentManifest(f.dependencies.TaskContent, root, first.OutcomeRef.ManifestSHA256)
+	saved, err := readContentManifest(f.dependencies.TaskContent, testWork(t, root), first.OutcomeRef.ManifestSHA256)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestTaskSpecRequirementRemovalAndOrderedPhases(t *testing.T) {
 	if err != nil || *secondRevision.OutcomeRef.Revision != 2 {
 		t.Fatalf("explicit draft removal failed: %#v %v", secondRevision, err)
 	}
-	saved, err = readContentManifest(f.dependencies.TaskContent, root, secondRevision.OutcomeRef.ManifestSHA256)
+	saved, err = readContentManifest(f.dependencies.TaskContent, testWork(t, root), secondRevision.OutcomeRef.ManifestSHA256)
 	if err != nil {
 		t.Fatal(err)
 	}

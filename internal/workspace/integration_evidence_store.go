@@ -10,28 +10,15 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// The physical envelope is deliberately newer than every inline reader. Its
-// nested registry retains its own lifecycle format and validators. Only fresh
-// stores use this representation; existing inline registries are never migrated.
-const integrationEvidenceEnvelopeFormat = 9
-const publicationEvidenceEnvelopeFormat = 10
-
 // IntegrationEvidenceSourceKind identifies workspace-managed journal sources.
 const IntegrationEvidenceSourceKind = "integration-evidence"
 const integrationEvidenceKind = IntegrationEvidenceSourceKind
 const integrationEvidenceLimit = 64 << 20
 
+// The physical registry keeps these collections as references to immutable
+// evidence objects, identified per record.
 var integrationEvidenceCollections = []string{
-	"integration_authorities", "integration_intents", "integration_attempts", "integration_results",
-}
-
-// Format 9 keeps publication records inline. Only format 10 includes them in
-// the existing evidence store; physical representation never changes on write.
-func evidenceCollections(publications bool) []string {
-	if publications {
-		return append(append([]string(nil), integrationEvidenceCollections...), "task_content_publications")
-	}
-	return integrationEvidenceCollections
+	"integration_authorities", "integration_intents", "integration_attempts", "integration_results", "task_content_publications",
 }
 
 func evidenceIdentity(name string) (yamlField, goField string) {
@@ -70,12 +57,11 @@ func evidenceStorage(store *systemWorkItemStore) *TaskContentStorage {
 	return &TaskContentStorage{fault: func(stage string) error { return store.fail("integration-evidence-" + stage) }}
 }
 
-func (store *systemWorkItemStore) encodeStoredRegistry(root string, registry *WorkItemRegistry, old WorkItemRegistry) ([]byte, error) {
+func (store *systemWorkItemStore) encodeStoredRegistry(work ProjectWork, registry *WorkItemRegistry, old WorkItemRegistry) ([]byte, error) {
 	// Validate the complete logical state before publishing even an orphan object.
-	external := old.integrationEvidence || old.RawSHA256 == ""
 	raw, err := encodeWorkItemRegistry(*registry)
-	if err != nil || !external {
-		return raw, err
+	if err != nil {
+		return nil, err
 	}
 	node, err := parseRegistryYAML(raw)
 	if err != nil {
@@ -84,12 +70,8 @@ func (store *systemWorkItemStore) encodeStoredRegistry(root string, registry *Wo
 	storage := evidenceStorage(store)
 	retained := retainedIntegrationEvidence(old, *registry)
 	registry.integrationEvidenceRefs = nil
-	registry.publicationEvidence = old.publicationEvidence || old.RawSHA256 == ""
-	for _, name := range evidenceCollections(registry.publicationEvidence) {
+	for _, name := range integrationEvidenceCollections {
 		collection := registryNodeField(node, name)
-		if collection == nil {
-			continue
-		} // Logical format 1 has no lifecycle evidence.
 		for i, record := range collection.Content {
 			identity, _ := evidenceIdentity(name)
 			id := registryNodeField(record, identity)
@@ -99,7 +81,7 @@ func (store *systemWorkItemStore) encodeStoredRegistry(root string, registry *Wo
 			if digest := retained[name+"/"+id.Value]; digest != "" {
 				// Retain the exact historical bytes and reference, even if another
 				// compatible writer used a different valid YAML spelling.
-				if _, err := storage.Read(root, integrationEvidenceKind, digest); err != nil {
+				if _, err := storage.Read(work, integrationEvidenceKind, digest); err != nil {
 					return nil, err
 				}
 				registry.integrationEvidenceRefs = append(registry.integrationEvidenceRefs, digest)
@@ -113,7 +95,7 @@ func (store *systemWorkItemStore) encodeStoredRegistry(root string, registry *Wo
 			if len(payload) > integrationEvidenceLimit {
 				return nil, fmt.Errorf("integration evidence exceeds %d bytes", integrationEvidenceLimit)
 			}
-			digest, err := storage.Publish(root, integrationEvidenceKind, payload)
+			digest, err := storage.Publish(work, integrationEvidenceKind, payload)
 			if err != nil {
 				return nil, err
 			}
@@ -121,39 +103,30 @@ func (store *systemWorkItemStore) encodeStoredRegistry(root string, registry *Wo
 			collection.Content[i] = &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: digest}
 		}
 	}
-	format := integrationEvidenceEnvelopeFormat
-	if registry.publicationEvidence {
-		format = publicationEvidenceEnvelopeFormat
-	}
 	envelope := &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map", Content: []*yaml.Node{
 		{Kind: yaml.ScalarNode, Tag: "!!str", Value: "format_version"},
-		{Kind: yaml.ScalarNode, Tag: "!!int", Value: strconv.Itoa(format)},
+		{Kind: yaml.ScalarNode, Tag: "!!int", Value: strconv.Itoa(RegistryFormat)},
 		{Kind: yaml.ScalarNode, Tag: "!!str", Value: "registry"}, node,
 	}}
 	return marshalRegistryNode(envelope)
 }
 
-func (store *systemWorkItemStore) decodeStoredRegistry(root string, raw []byte) (WorkItemRegistry, error) {
+func (store *systemWorkItemStore) decodeStoredRegistry(work ProjectWork, raw []byte) (WorkItemRegistry, error) {
 	node, err := parseRegistryYAML(raw)
 	if err != nil {
 		return WorkItemRegistry{}, err
 	}
-	version := registryNodeField(node, "format_version")
-	if version == nil || version.Kind != yaml.ScalarNode || version.Tag != "!!int" || (version.Value != strconv.Itoa(integrationEvidenceEnvelopeFormat) && version.Value != strconv.Itoa(publicationEvidenceEnvelopeFormat)) {
-		return decodeWorkItemRegistry(raw)
+	// Reject any other format before touching referenced objects.
+	if err := registryDeclaredFormat(node); err != nil {
+		return WorkItemRegistry{}, err
 	}
 	logical := registryNodeField(node, "registry")
-	if len(node.Content) != 4 || logical == nil || logical.Kind != yaml.MappingNode {
-		return WorkItemRegistry{}, fmt.Errorf("invalid integration evidence envelope")
-	}
-	// Reject unsupported lifecycle formats before touching any referenced objects.
-	if _, err := registryDeclaredFormat(logical); err != nil {
-		return WorkItemRegistry{}, err
+	if len(node.Content) != 4 || node.Content[0].Value != "format_version" || logical == nil || logical.Kind != yaml.MappingNode {
+		return WorkItemRegistry{}, registryDiagnostic("registry_invalid_content", "registry must contain exactly format_version and a registry mapping", RegistryFormat)
 	}
 	storage := evidenceStorage(store)
 	var refs []string
-	publications := version.Value == strconv.Itoa(publicationEvidenceEnvelopeFormat)
-	for _, name := range evidenceCollections(publications) {
+	for _, name := range integrationEvidenceCollections {
 		collection := registryNodeField(logical, name)
 		if collection == nil {
 			continue
@@ -166,7 +139,7 @@ func (store *systemWorkItemStore) decodeStoredRegistry(root string, raw []byte) 
 				return WorkItemRegistry{}, fmt.Errorf("invalid %s evidence reference", name)
 			}
 			refs = append(refs, ref.Value)
-			payload, err := storage.Read(root, integrationEvidenceKind, ref.Value)
+			payload, err := storage.Read(work, integrationEvidenceKind, ref.Value)
 			if err != nil {
 				return WorkItemRegistry{}, err
 			}
@@ -182,34 +155,26 @@ func (store *systemWorkItemStore) decodeStoredRegistry(root string, raw []byte) 
 		return WorkItemRegistry{}, err
 	}
 	registry, err := decodeWorkItemRegistry(hydrated)
-	registry.integrationEvidence = err == nil
-	registry.publicationEvidence = publications && err == nil
 	registry.integrationEvidenceRefs = refs
 	return registry, err
 }
 
 // IntegrationEvidenceSources binds read-view and journal freshness to the actual
 // immutable bytes consumed by the store, not a reserialization of their values.
-func IntegrationEvidenceSources(root string, r WorkItemRegistry) []TaskJournalSource {
+func IntegrationEvidenceSources(work ProjectWork, r WorkItemRegistry) []TaskJournalSource {
 	out := []TaskJournalSource{}
-	if !r.integrationEvidence {
-		return out
-	}
 	for _, digest := range r.integrationEvidenceRefs {
-		out = append(out, TaskJournalSource{integrationEvidenceKind, taskContentPath(root, integrationEvidenceKind, digest), digest})
+		out = append(out, TaskJournalSource{integrationEvidenceKind, taskContentPath(work, integrationEvidenceKind, digest), digest})
 	}
 	return out
 }
 
 // Confirmed in-memory values may be reused only while all their external bytes
 // still match. Immutable records are read and hashed on every locked snapshot.
-func (store *systemWorkItemStore) verifyIntegrationEvidence(root string, r WorkItemRegistry) error {
-	if !r.integrationEvidence {
-		return nil
-	}
+func (store *systemWorkItemStore) verifyIntegrationEvidence(work ProjectWork, r WorkItemRegistry) error {
 	storage := evidenceStorage(store)
 	for _, digest := range r.integrationEvidenceRefs {
-		if _, err := storage.Read(root, integrationEvidenceKind, digest); err != nil {
+		if _, err := storage.Read(work, integrationEvidenceKind, digest); err != nil {
 			return err
 		}
 	}
@@ -221,19 +186,15 @@ func (store *systemWorkItemStore) verifyIntegrationEvidence(root string, r WorkI
 // A changed attempt gets a new object; an unchanged record retains its bytes.
 func retainedIntegrationEvidence(old, next WorkItemRegistry) map[string]string {
 	out := map[string]string{}
-	if !old.integrationEvidence {
+	if old.RawSHA256 == "" {
 		return out
-	}
+	} // A registry that was never stored has no evidence objects to retain.
 	collections := func(r WorkItemRegistry) []reflect.Value {
-		values := []reflect.Value{reflect.ValueOf(r.IntegrationAuthorities), reflect.ValueOf(r.IntegrationIntents), reflect.ValueOf(r.IntegrationAttempts), reflect.ValueOf(r.IntegrationResults)}
-		if old.publicationEvidence {
-			values = append(values, reflect.ValueOf(r.TaskContentPublications))
-		}
-		return values
+		return []reflect.Value{reflect.ValueOf(r.IntegrationAuthorities), reflect.ValueOf(r.IntegrationIntents), reflect.ValueOf(r.IntegrationAttempts), reflect.ValueOf(r.IntegrationResults), reflect.ValueOf(r.TaskContentPublications)}
 	}
 	before, after := collections(old), collections(next)
 	offset := 0
-	for c, name := range evidenceCollections(old.publicationEvidence) {
+	for c, name := range integrationEvidenceCollections {
 		_, field := evidenceIdentity(name)
 		type prior struct {
 			value  any
@@ -259,14 +220,25 @@ func retainedIntegrationEvidence(old, next WorkItemRegistry) map[string]string {
 
 // IntegrationEvidenceSourceDigest revalidates a captured source through the same
 // physical-path, directory-mode, immutable-mode, bound and digest checks as the
-// authoritative store. A byte hash alone cannot establish managed validity.
+// authoritative store. A byte hash alone cannot establish managed validity. The
+// source must be managed by the work of a Project of the workspace at root.
 func IntegrationEvidenceSourceDigest(root, locator string) (string, error) {
 	digest := "sha256:" + filepath.Base(locator)
-	if !digestPattern.MatchString(digest) || locator != taskContentPath(root, integrationEvidenceKind, digest) {
+	if !digestPattern.MatchString(digest) {
 		return "", contentError("task_content_integrity_conflict", "integration evidence source is outside its managed binding", nil)
 	}
-	if _, err := evidenceStorage(newSystemWorkItemStore()).Read(root, integrationEvidenceKind, digest); err != nil {
+	works, err := DefinedWork(root)
+	if err != nil {
 		return "", err
 	}
-	return digest, nil
+	for _, work := range works {
+		if locator != taskContentPath(work, integrationEvidenceKind, digest) {
+			continue
+		}
+		if _, err := evidenceStorage(newSystemWorkItemStore()).Read(work, integrationEvidenceKind, digest); err != nil {
+			return "", err
+		}
+		return digest, nil
+	}
+	return "", contentError("task_content_integrity_conflict", "integration evidence source is outside its managed binding", nil)
 }

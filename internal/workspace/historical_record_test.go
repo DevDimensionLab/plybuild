@@ -14,7 +14,7 @@ func TestRegistryWithHistoricalDeliveryRecordsOpensAndKeepsThem(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
 	queueSetFixture(t, f, "historical", []TaskGoalQueueEntry{})
-	raw, err := os.ReadFile(workItemsPath(root))
+	raw, err := os.ReadFile(testWork(t, root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestRegistryWithHistoricalDeliveryRecordsOpensAndKeepsThem(t *testing.T) {
 		t.Fatalf("fixture has no empty task_results section:\n%s", text)
 	}
 	text = strings.Replace(text, "task_results: []\n", historical, 1)
-	if err := os.WriteFile(workItemsPath(root), []byte(text), 0o600); err != nil {
+	if err := os.WriteFile(testWork(t, root).Registry(), []byte(text), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	r := mustQueueRegistry(t, f)
@@ -34,7 +34,7 @@ func TestRegistryWithHistoricalDeliveryRecordsOpensAndKeepsThem(t *testing.T) {
 	if _, err := CreateTask(f.dependencies, TaskCreateInput{TaskID: "after", Title: "After", Description: "A later write", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
-	after, _ := os.ReadFile(workItemsPath(root))
+	after, _ := os.ReadFile(testWork(t, root).Registry())
 	if !strings.Contains(string(after), historical) {
 		t.Fatalf("a later write changed historical records:\n%s", after)
 	}
@@ -114,7 +114,7 @@ func TestNewEpicBaseUpdatePlanHasNoPreparationMembers(t *testing.T) {
 	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *preview.Confirmation}); err != nil {
 		t.Fatal(err)
 	}
-	stored, _ := os.ReadFile(workItemsPath(filepath.Dir(f.wrapper)))
+	stored, _ := os.ReadFile(testWork(t, filepath.Dir(f.wrapper)).Registry())
 	if strings.Contains(string(stored), "preparation_id") {
 		t.Fatalf("stored base update names a preparation:\n%s", stored)
 	}
@@ -140,7 +140,7 @@ func pendingAuthority(t *testing.T, forged bool) (goalDeliveryFixture, TaskInteg
 	if !forged {
 		return f, in
 	}
-	err = f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
+	err = f.dependencies.WorkItems.WithLock(testWork(t, f.root), func(session WorkItemStoreSession) error {
 		registry, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -173,7 +173,7 @@ func pendingAuthority(t *testing.T, forged bool) (goalDeliveryFixture, TaskInteg
 // edited to look old.
 func TestPendingAuthorityWithOldPlanKindNeverRunsGit(t *testing.T) {
 	f, in := pendingAuthority(t, true)
-	raw, err := os.ReadFile(workItemsPath(f.root))
+	raw, err := os.ReadFile(testWork(t, f.root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestPendingAuthorityWithOldPlanKindNeverRunsGit(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "reconcile") || strings.Contains(err.Error(), "new check") {
 		t.Fatalf("historical authority apply reason: %v", err)
 	}
-	after, readErr := os.ReadFile(workItemsPath(f.root))
+	after, readErr := os.ReadFile(testWork(t, f.root).Registry())
 	if readErr != nil || string(after) != string(raw) {
 		t.Fatalf("refused apply wrote the register: %v", readErr)
 	}
@@ -222,7 +222,7 @@ func TestSecondPublishInOneSessionKeepsHistoricalRecords(t *testing.T) {
 	f := taskWithoutGoalFixture(t)
 	expectIntegratedOnce(t, f)
 	historical := "task_results:\n    - id: trs_11111111111111111111111111111111\n      task_id: task\n      technical_gate: passed\n      verifier_results: []\n"
-	err := f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
+	err := f.dependencies.WorkItems.WithLock(testWork(t, f.root), func(session WorkItemStoreSession) error {
 		registry, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -242,7 +242,7 @@ func TestSecondPublishInOneSessionKeepsHistoricalRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = f.dependencies.WorkItems.WithLock(f.root, func(session WorkItemStoreSession) error {
+	err = f.dependencies.WorkItems.WithLock(testWork(t, f.root), func(session WorkItemStoreSession) error {
 		for publish := 1; publish <= 2; publish++ {
 			registry, err := session.Snapshot()
 			if err != nil {

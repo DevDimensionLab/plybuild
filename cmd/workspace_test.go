@@ -52,7 +52,7 @@ func TestNewWorkspaceCommandShape(t *testing.T) {
 	if initCommand == command ||
 		initCommand.Use != "init" ||
 		initCommand.Short != "Initialize a Ply workspace in the current directory" ||
-		initCommand.Long != "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml.\nThe current directory does not need to be a Git repository.\nWith --discover it also writes ply-workspace.json with one Project (wrapper .) whose repositories are the Git worktree roots in <name> or <name>/main, with the URL of origin as remote." ||
+		initCommand.Long != "Initialize a Ply workspace in the current directory by creating .ply/workspace.yaml and, when missing, ply-workspace.json without Projects.\nThe current directory does not need to be a Git repository.\nWith --discover it also defines one Project in ply-workspace.json (wrapper .) whose repositories are the Git worktree roots in <name> or <name>/main, with the URL of origin as remote." ||
 		initCommand.Example != "  ply workspace init\n  ply workspace init --discover" ||
 		initCommand.CommandPath() != "ply workspace init" ||
 		!initCommand.Runnable() {

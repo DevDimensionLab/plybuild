@@ -13,7 +13,7 @@ func TestHumanFollowupIgnoresQuestionAndProcessNextActor(t *testing.T) {
 			d, h, root, repo := questionWorkspace(t)
 			target := Identity{"claude", "human-chosen-session", "workspace", "tab", "pane", "terminal"}
 			askQuestion(t, h, root, repo, "human-followup", &target.Session)
-			before := treeSnapshot(t, root+"/.ply/human-input")
+			before := treeSnapshot(t, humanInputStore(t, root))
 			binary, err := os.Executable()
 			if err != nil {
 				t.Fatal(err)
@@ -32,7 +32,7 @@ func TestHumanFollowupIgnoresQuestionAndProcessNextActor(t *testing.T) {
 				sends++
 				return nil
 			}}
-			f, err := s.Register(Draft{PublicationKey: "human-followup", OwnerRef: "owner", MandateRef: "mandate", Registrar: Registrar{Kind: HumanRequested, ActorRef: "human"}, TargetRef: target.Ref(), WaitKind: "status", WaitRef: target.Ref(), NextCheckAtUTC: s.now()})
+			f, err := s.Register(s.onlyProject(), Draft{PublicationKey: "human-followup", OwnerRef: "owner", MandateRef: "mandate", Registrar: Registrar{Kind: HumanRequested, ActorRef: "human"}, TargetRef: target.Ref(), WaitKind: "status", WaitRef: target.Ref(), NextCheckAtUTC: s.now()})
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -45,7 +45,7 @@ func TestHumanFollowupIgnoresQuestionAndProcessNextActor(t *testing.T) {
 			if sends != 1 || f.Transport.State != "sent" {
 				t.Fatalf("human follow-up vetoed by process state: sends=%d transport=%+v", sends, f.Transport)
 			}
-			if !reflect.DeepEqual(before, treeSnapshot(t, root+"/.ply/human-input")) {
+			if !reflect.DeepEqual(before, treeSnapshot(t, humanInputStore(t, root))) {
 				t.Fatal("follow-up changed the separate question history")
 			}
 		})

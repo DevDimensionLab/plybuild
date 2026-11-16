@@ -11,15 +11,15 @@ type countingViewWorkItems struct {
 	snapshots, registrations, locks int
 }
 
-func (s *countingViewWorkItems) Snapshot(root string) (WorkItemRegistry, error) {
+func (s *countingViewWorkItems) Snapshot(root ProjectWork) (WorkItemRegistry, error) {
 	s.snapshots++
 	return s.WorkItemStore.Snapshot(root)
 }
-func (s *countingViewWorkItems) SnapshotRegistrations(root string) (WorkItemRegistry, error) {
+func (s *countingViewWorkItems) SnapshotRegistrations(root ProjectWork) (WorkItemRegistry, error) {
 	s.registrations++
 	return s.WorkItemStore.SnapshotRegistrations(root)
 }
-func (s *countingViewWorkItems) WithLock(root string, fn func(WorkItemStoreSession) error) error {
+func (s *countingViewWorkItems) WithLock(root ProjectWork, fn func(WorkItemStoreSession) error) error {
 	s.locks++
 	return s.WorkItemStore.WithLock(root, fn)
 }
@@ -45,7 +45,7 @@ func TestReadViewBasisReadsEachRegistryOnceWithoutGitOrLocks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if items.registrations != 1 || items.snapshots != 0 || items.locks != 0 || projects.snapshots != 1 {
+	if items.registrations != 1 || items.snapshots != 0 || items.locks != 0 || projects.snapshots != 0 {
 		t.Fatalf("unexpected reads or effects: items=%+v projects=%+v", items, projects)
 	}
 	if len(b.Registry.Tasks) != 1 || len(b.Projects.Projects) != 1 || b.Titles["task"].Title == nil {
@@ -71,7 +71,7 @@ func TestReadViewRejectsSymlinkSourcesAndDetectsReplacedFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	path := filepath.Join(b.Workspace.Root, MarkerDirectory, ProjectsFile)
+	path := filepath.Join(b.Workspace.Root, DefinitionsFile)
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

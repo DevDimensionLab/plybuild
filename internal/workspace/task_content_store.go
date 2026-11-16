@@ -17,7 +17,7 @@ import (
 type TaskContentStorage struct {
 	scope        *taskContentScope
 	fault        func(string) error
-	readCaptured func(root, kind, digest string) ([]byte, error)
+	readCaptured func(work ProjectWork, kind, digest string) ([]byte, error)
 }
 
 func (s *TaskContentStorage) check(stage string) error {
@@ -29,18 +29,12 @@ func (s *TaskContentStorage) check(stage string) error {
 	}
 	return nil
 }
-func taskContentRoot(root string) string {
-	return filepath.Join(root, MarkerDirectory, "task-content", "v1")
-}
-func taskContentPath(root, kind, digest string) string {
+func taskContentPath(work ProjectWork, kind, digest string) string {
 	suffix := ""
 	if kind == "manifests" || kind == "requests" {
 		suffix = ".json"
 	}
-	if kind == "backups" {
-		suffix = ".yaml"
-	}
-	return filepath.Join(taskContentRoot(root), kind, "sha256", strings.TrimPrefix(digest, "sha256:")+suffix)
+	return filepath.Join(work.content(), kind, "sha256", strings.TrimPrefix(digest, "sha256:")+suffix)
 }
 func (s *TaskContentStorage) ReadSource(path string, limit int) ([]byte, error) {
 	if e := s.check("source-read"); e != nil {
@@ -48,14 +42,19 @@ func (s *TaskContentStorage) ReadSource(path string, limit int) ([]byte, error) 
 	}
 	return contentReadBounded(path, limit, false)
 }
-func contentDirectories(root, kind string) []string {
-	return []string{filepath.Join(root, MarkerDirectory, "task-content"), taskContentRoot(root), filepath.Join(taskContentRoot(root), kind), filepath.Join(taskContentRoot(root), kind, "sha256")}
+func contentDirectories(work ProjectWork, kind string) []string {
+	return []string{filepath.Dir(work.content()), work.content(), filepath.Join(work.content(), kind), filepath.Join(work.content(), kind, "sha256")}
 }
-func (s *TaskContentStorage) directories(root, kind string, create bool) error {
-	if e := contentPhysical(filepath.Join(root, MarkerDirectory)); e != nil {
+func (s *TaskContentStorage) directories(work ProjectWork, kind string, create bool) error {
+	if create {
+		if e := work.Create(); e != nil {
+			return e
+		}
+	}
+	if e := contentPhysical(work.Dir); e != nil {
 		return e
 	}
-	for _, dir := range contentDirectories(root, kind) {
+	for _, dir := range contentDirectories(work, kind) {
 		info, e := os.Lstat(dir)
 		if errors.Is(e, fs.ErrNotExist) && create {
 			if e = s.check("mkdir"); e != nil {
@@ -78,14 +77,14 @@ func (s *TaskContentStorage) directories(root, kind string, create bool) error {
 	}
 	return nil
 }
-func (s *TaskContentStorage) Read(root, kind, digest string) (out []byte, err error) {
+func (s *TaskContentStorage) Read(work ProjectWork, kind, digest string) (out []byte, err error) {
 	defer func() {
 		if err != nil {
-			err = contentArtifactError(root, kind, digest, "read content", err)
+			err = contentArtifactError(work, kind, digest, "read content", err)
 		}
 	}()
 	if s != nil && s.readCaptured != nil {
-		return s.readCaptured(root, kind, digest)
+		return s.readCaptured(work, kind, digest)
 	}
 	if !digestPattern.MatchString(digest) {
 		return nil, contentError("task_content_integrity_conflict", "invalid managed digest", nil)
@@ -93,7 +92,7 @@ func (s *TaskContentStorage) Read(root, kind, digest string) (out []byte, err er
 	if e := s.check("managed-read"); e != nil {
 		return nil, e
 	}
-	if e := s.directories(root, kind, false); e != nil {
+	if e := s.directories(work, kind, false); e != nil {
 		return nil, e
 	}
 	limit := taskManifestLimit
@@ -103,10 +102,7 @@ func (s *TaskContentStorage) Read(root, kind, digest string) (out []byte, err er
 	if kind == integrationEvidenceKind {
 		limit = integrationEvidenceLimit
 	}
-	if kind == "backups" {
-		limit = int(^uint(0)>>1) - 1
-	}
-	b, e := contentReadBounded(taskContentPath(root, kind, digest), limit, true)
+	b, e := contentReadBounded(taskContentPath(work, kind, digest), limit, true)
 	if e != nil {
 		return nil, e
 	}
@@ -115,24 +111,24 @@ func (s *TaskContentStorage) Read(root, kind, digest string) (out []byte, err er
 	}
 	return b, nil
 }
-func (s *TaskContentStorage) Publish(root, kind string, b []byte) (string, error) {
+func (s *TaskContentStorage) Publish(work ProjectWork, kind string, b []byte) (string, error) {
 	if s != nil && s.readCaptured != nil {
 		return "", contentError("task_content_read_only", "captured content is read-only", nil)
 	}
 	digest := digestTaskBytes(b)
-	if e := s.directories(root, kind, true); e != nil {
+	if e := s.directories(work, kind, true); e != nil {
 		return "", e
 	}
-	dest := taskContentPath(root, kind, digest)
+	dest := taskContentPath(work, kind, digest)
 	if _, e := os.Lstat(dest); e == nil {
-		old, e := s.Read(root, kind, digest)
+		old, e := s.Read(work, kind, digest)
 		if e != nil {
 			return "", e
 		}
 		if string(old) != string(b) {
 			return "", contentError("task_content_integrity_conflict", "immutable destination differs", nil)
 		}
-		return digest, s.Sync(root, kind, digest)
+		return digest, s.Sync(work, kind, digest)
 	} else if !errors.Is(e, fs.ErrNotExist) {
 		return "", e
 	}
@@ -192,14 +188,14 @@ func (s *TaskContentStorage) Publish(root, kind string, b []byte) (string, error
 	}
 	return digest, nil
 }
-func (s *TaskContentStorage) Sync(root, kind, digest string) error {
+func (s *TaskContentStorage) Sync(work ProjectWork, kind, digest string) error {
 	if s != nil && s.readCaptured != nil {
 		return contentError("task_content_read_only", "captured content is read-only", nil)
 	}
-	if _, e := s.Read(root, kind, digest); e != nil {
+	if _, e := s.Read(work, kind, digest); e != nil {
 		return e
 	}
-	f, e := os.Open(taskContentPath(root, kind, digest))
+	f, e := os.Open(taskContentPath(work, kind, digest))
 	if e != nil {
 		return e
 	}
@@ -208,36 +204,36 @@ func (s *TaskContentStorage) Sync(root, kind, digest string) error {
 	if e = firstError(syncErr, closeErr, s.check("recovery-sync")); e != nil {
 		return e
 	}
-	for _, d := range contentDirectories(root, kind) {
+	for _, d := range contentDirectories(work, kind) {
 		if e = platformSyncDirectory(d); e != nil {
 			return e
 		}
 	}
-	return platformSyncDirectory(filepath.Join(root, MarkerDirectory))
+	return platformSyncDirectory(work.Dir)
 }
 
-func (s *TaskContentStorage) retainCloseout(root, origin string, b []byte) (string, error) {
+func (s *TaskContentStorage) retainCloseout(work ProjectWork, origin string, b []byte) (string, error) {
 	digest := digestTaskBytes(b)
 	for _, kind := range []string{"objects", "manifests", "requests"} {
-		if origin != taskContentPath(root, kind, digest) {
+		if origin != taskContentPath(work, kind, digest) {
 			continue
 		}
-		if err := s.Sync(root, kind, digest); err != nil {
+		if err := s.Sync(work, kind, digest); err != nil {
 			return "", err
 		}
-		if err := s.directories(root, "closeout", true); err != nil {
+		if err := s.directories(work, "closeout", true); err != nil {
 			return "", err
 		}
 		err := s.check("object-link")
 		if err == nil {
-			err = os.Link(origin, taskContentPath(root, "closeout", digest))
+			err = os.Link(origin, taskContentPath(work, "closeout", digest))
 		}
 		if err == nil {
-			return digest, s.Sync(root, "closeout", digest)
+			return digest, s.Sync(work, "closeout", digest)
 		}
 		break
 	}
-	return s.Publish(root, "closeout", b)
+	return s.Publish(work, "closeout", b)
 }
 
 func contentManifestOperation(kind string) string {
@@ -253,13 +249,13 @@ func contentManifestOperation(kind string) string {
 	}
 	return ""
 }
-func readContentManifest(s *TaskContentStorage, root, digest string) (out canonicaljson.Object, err error) {
+func readContentManifest(s *TaskContentStorage, work ProjectWork, digest string) (out canonicaljson.Object, err error) {
 	defer func() {
 		if err != nil {
-			err = contentArtifactError(root, "manifests", digest, "read publication", err)
+			err = contentArtifactError(work, "manifests", digest, "read publication", err)
 		}
 	}()
-	b, e := s.Read(root, "manifests", digest)
+	b, e := s.Read(work, "manifests", digest)
 	if e != nil {
 		return nil, e
 	}
@@ -303,7 +299,7 @@ func contentManifestOwned(r WorkItemRegistry, id TaskID, digest string) bool {
 	}
 	return false
 }
-func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id TaskID, inputs []canonicaljson.Value) ([]canonicaljson.Value, map[string][]byte, error) {
+func contentResolveDocuments(d Dependencies, work ProjectWork, r WorkItemRegistry, id TaskID, inputs []canonicaljson.Value) ([]canonicaljson.Value, map[string][]byte, error) {
 	out := []canonicaljson.Value{}
 	objects := map[string][]byte{}
 	for _, v := range inputs {
@@ -321,7 +317,7 @@ func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id
 			if !contentManifestOwned(r, owner, digest) {
 				return nil, nil, contentError("task_content_integrity_conflict", "snapshot manifest is not registered to this Task", nil)
 			}
-			manifest, e := readContentManifest(d.TaskContent, root, digest)
+			manifest, e := readContentManifest(d.TaskContent, work, digest)
 			if e != nil {
 				return nil, nil, e
 			}
@@ -335,11 +331,11 @@ func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id
 			if descriptor == nil {
 				return nil, nil, contentError("task_content_missing", "snapshot document does not exist", nil)
 			}
-			bytes, err = d.TaskContent.Read(root, "objects", contentString(descriptor, "sha256"))
+			bytes, err = d.TaskContent.Read(work, "objects", contentString(descriptor, "sha256"))
 			if err != nil {
 				return nil, nil, err
 			}
-			if contentInt(descriptor, "size_bytes") != len(bytes) || contentString(descriptor, "locator") != taskContentPath(root, "objects", contentString(descriptor, "sha256")) {
+			if contentInt(descriptor, "size_bytes") != len(bytes) || contentString(descriptor, "locator") != taskContentPath(work, "objects", contentString(descriptor, "sha256")) {
 				return nil, nil, contentError("task_content_integrity_conflict", "snapshot descriptor differs", nil)
 			}
 			descriptor["id"] = m["id"]
@@ -356,7 +352,7 @@ func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id
 					return nil, nil, err
 				}
 			}
-			descriptor = map[string]canonicaljson.Value{"id": m["id"], "locator": taskContentPath(root, "objects", digestTaskBytes(bytes)), "sha256": digestTaskBytes(bytes), "size_bytes": int64(len(bytes)), "media_type": src["media_type"], "provenance": contentObject(map[string]canonicaljson.Value{"origin_locator": src["locator"], "git": src["git_provenance"]})}
+			descriptor = map[string]canonicaljson.Value{"id": m["id"], "locator": taskContentPath(work, "objects", digestTaskBytes(bytes)), "sha256": digestTaskBytes(bytes), "size_bytes": int64(len(bytes)), "media_type": src["media_type"], "provenance": contentObject(map[string]canonicaljson.Value{"origin_locator": src["locator"], "git": src["git_provenance"]})}
 		}
 		if err = taskDocumentBytesValid(bytes); err != nil {
 			return nil, nil, err
@@ -367,15 +363,12 @@ func contentResolveDocuments(d Dependencies, root string, r WorkItemRegistry, id
 	return out, objects, nil
 }
 
-func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRegistry, sync bool) error {
-	if r.FormatVersion < 3 {
-		return nil
-	}
+func validateTaskContentClosure(s *TaskContentStorage, work ProjectWork, r WorkItemRegistry, sync bool) error {
 	for _, pub := range r.TaskContentPublications {
 		if !s.includesTask(pub.TaskID) {
 			continue
 		}
-		manifest, e := readContentManifest(s, root, pub.OutcomeRef.ManifestSHA256)
+		manifest, e := readContentManifest(s, work, pub.OutcomeRef.ManifestSHA256)
 		if e != nil {
 			return e
 		}
@@ -383,49 +376,39 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 		if contentString(m, "task_id") != string(pub.TaskID) || contentString(m, "publication_key") != pub.PublicationKey || contentString(m, "source_draft_sha256") != pub.IntentSHA256 {
 			return contentError("task_content_integrity_conflict", "publication and manifest binding differ", nil)
 		}
-		request, e := s.Read(root, "requests", pub.RequestSHA256)
+		request, e := s.Read(work, "requests", pub.RequestSHA256)
 		if e != nil {
 			return e
 		}
-		if e = validateContentPublicationChain(s, root, r, pub, m, request); e != nil {
+		if e = validateContentPublicationChain(s, work, r, pub, m, request); e != nil {
 			var classified *TaskContentError
 			if errors.As(e, &classified) {
-				return contentArtifactError(root, "requests", pub.RequestSHA256, pub.Operation, e)
+				return contentArtifactError(work, "requests", pub.RequestSHA256, pub.Operation, e)
 			}
-			return contentArtifactError(root, "requests", pub.RequestSHA256, pub.Operation, contentError("task_content_integrity_conflict", "preserved publication chain differs: "+e.Error(), e))
-		}
-		if pub.BackupSHA256 != nil {
-			if _, e = s.Read(root, "backups", *pub.BackupSHA256); e != nil {
-				return e
-			}
+			return contentArtifactError(work, "requests", pub.RequestSHA256, pub.Operation, contentError("task_content_integrity_conflict", "preserved publication chain differs: "+e.Error(), e))
 		}
 		for _, v := range contentArray(m, "documents") {
 			doc := contentFields(v)
 			digest := contentString(doc, "sha256")
-			b, e := s.Read(root, "objects", digest)
+			b, e := s.Read(work, "objects", digest)
 			if e != nil {
 				return e
 			}
 			if e = taskDocumentBytesValid(b); e != nil {
 				return e
 			}
-			if len(b) != contentInt(doc, "size_bytes") || contentString(doc, "locator") != taskContentPath(root, "objects", digest) {
+			if len(b) != contentInt(doc, "size_bytes") || contentString(doc, "locator") != taskContentPath(work, "objects", digest) {
 				return contentError("task_content_integrity_conflict", "document descriptor differs from managed object", nil)
 			}
 			if sync {
-				if e = s.Sync(root, "objects", digest); e != nil {
+				if e = s.Sync(work, "objects", digest); e != nil {
 					return e
 				}
 			}
 		}
 		if sync {
 			for _, pair := range [][2]string{{"manifests", pub.OutcomeRef.ManifestSHA256}, {"requests", pub.RequestSHA256}} {
-				if e = s.Sync(root, pair[0], pair[1]); e != nil {
-					return e
-				}
-			}
-			if pub.BackupSHA256 != nil {
-				if e = s.Sync(root, "backups", *pub.BackupSHA256); e != nil {
+				if e = s.Sync(work, pair[0], pair[1]); e != nil {
 					return e
 				}
 			}
@@ -434,7 +417,7 @@ func validateTaskContentClosure(s *TaskContentStorage, root string, r WorkItemRe
 	return nil
 }
 
-func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkItemRegistry, pub TaskContentPublication, manifest map[string]canonicaljson.Value, request []byte) error {
+func validateContentPublicationChain(s *TaskContentStorage, work ProjectWork, r WorkItemRegistry, pub TaskContentPublication, manifest map[string]canonicaljson.Value, request []byte) error {
 	op := pub.Operation
 	if op == "task_create" {
 		op = "problem_record"
@@ -453,11 +436,7 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 		if t == nil {
 			return fmt.Errorf("missing Task")
 		}
-		var upgrade *TaskRegistryUpgrade
-		if err := contentDecode(dm["registry_upgrade"], &upgrade); err != nil {
-			return err
-		}
-		intent, err := contentCanonical(map[string]any{"task_id": t.ID, "title": t.Title, "description": t.Description, "parent_epic_id": t.ParentEpicID, "project_id": t.ProjectID, "repo_id": t.RepoID, "registry_upgrade": upgrade})
+		intent, err := taskCreateIntent(*t)
 		if err != nil || digestTaskBytes(intent) != pub.IntentSHA256 {
 			return fmt.Errorf("create intent differs")
 		}
@@ -555,7 +534,7 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 		if !found {
 			return fmt.Errorf("selection assessment is not registered")
 		}
-		assessment, err := readContentManifest(s, root, a.ManifestSHA256)
+		assessment, err := readContentManifest(s, work, a.ManifestSHA256)
 		if err != nil {
 			return err
 		}
@@ -563,7 +542,7 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 		if contentString(am, "outcome") != "ready" || !contentTypedEqual(valueRevision(am["spec"]), sp) {
 			return fmt.Errorf("selection does not bind a ready assessment")
 		}
-		spec, err := readContentManifest(s, root, sp.ManifestSHA256)
+		spec, err := readContentManifest(s, work, sp.ManifestSHA256)
 		if err != nil {
 			return err
 		}
@@ -579,7 +558,7 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 		}
 		body := []byte("# " + t.Title + "\n\n" + t.Description + "\n")
 		digest := digestTaskBytes(body)
-		expected := contentObject(map[string]canonicaljson.Value{"id": "problem", "locator": taskContentPath(root, "objects", digest), "sha256": digest, "size_bytes": int64(len(body)), "media_type": "text/markdown", "provenance": contentObject(map[string]canonicaljson.Value{"origin_locator": nil, "git": nil})})
+		expected := contentObject(map[string]canonicaljson.Value{"id": "problem", "locator": taskContentPath(work, "objects", digest), "sha256": digest, "size_bytes": int64(len(body)), "media_type": "text/markdown", "provenance": contentObject(map[string]canonicaljson.Value{"origin_locator": nil, "git": nil})})
 		docs := contentArray(manifest, "documents")
 		if len(docs) != 1 || !contentEqual(docs[0], expected) {
 			return fmt.Errorf("generated problem document differs from the original Task summary")
@@ -623,7 +602,7 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 			if !contentManifestOwned(r, owner, digest) {
 				return fmt.Errorf("snapshot source is not owned by Task")
 			}
-			origin, err := readContentManifest(s, root, digest)
+			origin, err := readContentManifest(s, work, digest)
 			if err != nil {
 				return err
 			}
@@ -646,23 +625,23 @@ func validateContentPublicationChain(s *TaskContentStorage, root string, r WorkI
 	return nil
 }
 
-func readRegisteredTaskManifest(s *TaskContentStorage, root string, r WorkItemRegistry, digest string) (canonicaljson.Object, error) {
-	m, err := readContentManifest(s, root, digest)
+func readRegisteredTaskManifest(s *TaskContentStorage, work ProjectWork, r WorkItemRegistry, digest string) (canonicaljson.Object, error) {
+	m, err := readContentManifest(s, work, digest)
 	if err != nil {
 		return nil, err
 	}
 	for _, p := range r.TaskContentPublications {
 		if p.OutcomeRef.ManifestSHA256 == digest {
-			request, err := s.Read(root, "requests", p.RequestSHA256)
+			request, err := s.Read(work, "requests", p.RequestSHA256)
 			if err != nil {
 				return nil, err
 			}
-			if err = validateContentPublicationChain(s, root, r, p, contentFields(m), request); err != nil {
+			if err = validateContentPublicationChain(s, work, r, p, contentFields(m), request); err != nil {
 				var classified *TaskContentError
 				if errors.As(err, &classified) {
-					return nil, contentArtifactError(root, "requests", p.RequestSHA256, p.Operation, err)
+					return nil, contentArtifactError(work, "requests", p.RequestSHA256, p.Operation, err)
 				}
-				return nil, contentArtifactError(root, "requests", p.RequestSHA256, p.Operation, contentError("task_content_integrity_conflict", "manifest publication chain differs: "+err.Error(), err))
+				return nil, contentArtifactError(work, "requests", p.RequestSHA256, p.Operation, contentError("task_content_integrity_conflict", "manifest publication chain differs: "+err.Error(), err))
 			}
 			return m, nil
 		}

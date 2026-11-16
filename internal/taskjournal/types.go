@@ -251,6 +251,7 @@ type Snapshot struct {
 	Selection                Selection             `json:"selection"`
 	NextTransitionAuthorized bool                  `json:"next_transition_authorized"`
 	sourceCache              map[string]sourceRead `json:"-"`
+	work                     workspace.ProjectWork `json:"-"` // whose task-process keeps source copies
 }
 type Options struct{ View, Order, RunID, ActorID string }
 type Service struct {

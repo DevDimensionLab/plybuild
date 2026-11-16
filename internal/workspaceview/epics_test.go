@@ -8,7 +8,6 @@ import (
 
 func TestEpicsIncludeEmptyAndUseCurrentRecordedBaseAndSharedCounts(t *testing.T) {
 	s := progressFixture()
-	s.Registry.FormatVersion = 4
 	s.Registry.Epics[0].RepoBindings = []workspace.EpicRepoBinding{{RepoID: "repo", Worktree: workspace.EpicWorktreeBinding{OID: "adopted"}}}
 	s.Registry.Epics = append(s.Registry.Epics, workspace.EpicRecord{ID: "empty", ProjectID: "project", Title: "Empty Epic"})
 	s.Registry.EpicBaseVersions = []workspace.EpicBaseVersion{{EpicID: "epic", RepoID: "repo", Revision: 1, OID: "adopted"}, {EpicID: "epic", RepoID: "repo", Revision: 2, OID: "current", Tree: "current-tree", Locator: "/work/project/epic", Ref: "refs/heads/epic", WorktreeID: "worktree"}}

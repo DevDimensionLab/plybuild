@@ -21,7 +21,7 @@ func TestOverviewUsesOneSnapshotAndMatchesItsComponentViews(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if items.reads != 1 || items.fullReads != 0 || items.locks != 0 || projects.reads != 1 {
+	if items.reads != 1 || items.fullReads != 0 || items.locks != 0 || projects.reads != 0 {
 		t.Fatalf("overview did not share one registry read: items=%+v projects=%+v", items, projects)
 	}
 	if !reflect.DeepEqual(before, viewTree(t, root)) {
@@ -62,8 +62,11 @@ func TestOverviewUsesOneSnapshotAndMatchesItsComponentViews(t *testing.T) {
 
 func TestOverviewFiltersKeepEmptyEpicsAndEmptyCollections(t *testing.T) {
 	d, items, projects := viewDiskFixture(t)
-	projects.projects.Projects = append(projects.projects.Projects, workspace.ProjectRecord{ID: "other"})
-	items.registry.Epics = append(items.registry.Epics, workspace.EpicRecord{ID: "empty", ProjectID: "other", Title: "Empty"})
+	root, err := d.Files.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defineViewEpic(t, root, items, projects, "other", "other-repo", "empty", "Empty")
 	id := workspace.ProjectID("other")
 	out, err := ReadOverview(d, EpicFilters{ProjectID: &id})
 	if err != nil {

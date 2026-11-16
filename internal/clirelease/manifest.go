@@ -61,7 +61,8 @@ func (m Manifest) Validate() error {
 	if m.Qualification != nil || m.Kind != "PlyRelease@1" || m.SchemaVersion != 1 || !versionPattern.MatchString(m.Version) || !commitPattern.MatchString(m.SourceCommit) || m.OS != "darwin" || m.Arch != "arm64" || !digestPattern.MatchString(m.SHA256) || !digestPattern.MatchString(m.InstallerSHA256) || m.SizeBytes <= 0 || m.SizeBytes > 128<<20 {
 		return fmt.Errorf("release_invalid_manifest: expected an identified macOS arm64 release")
 	}
-	if !reflect.DeepEqual(m.RegistryFormats, []int{1, 2, 3, 4, 5}) && !reflect.DeepEqual(m.RegistryFormats, []int{1, 2, 3, 4, 5, 6}) && !reflect.DeepEqual(m.RegistryFormats, []int{1, 2, 3, 4, 5, 6, 7}) && !reflect.DeepEqual(m.RegistryFormats, []int{1, 2, 3, 4, 5, 6, 7, 8}) && !reflect.DeepEqual(m.RegistryFormats, []int{1, 2, 3, 4, 5, 6, 7, 8, 9}) && !reflect.DeepEqual(m.RegistryFormats, []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}) {
+	// A release reads exactly one work-item registry format; there are no upgrades.
+	if !reflect.DeepEqual(m.RegistryFormats, []int{11}) {
 		return fmt.Errorf("release_invalid_manifest: unsupported registry capability declaration")
 	}
 	return nil

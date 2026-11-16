@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
+	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
 type projectCwdFileSystem struct {
@@ -26,6 +27,8 @@ type fakeRepoObserver struct {
 	errors       map[string]error
 	calls        []string
 }
+
+func (observer *fakeRepoObserver) Remote(string) (string, error) { return "", nil }
 
 func (observer *fakeRepoObserver) Observe(path string) (RepoObservation, error) {
 	observer.calls = append(observer.calls, path)
@@ -183,56 +186,6 @@ func TestLocateContainingWorkspaceStopsAtFirstInvalidCandidate(t *testing.T) {
 	}
 }
 
-func TestAddProjectCanonicalizesSortsAndIsIdempotentByGitIdentity(t *testing.T) {
-	root := createProjectWorkspace(t)
-	child := filepath.Join(root, "child")
-	wrapper := filepath.Join(t.TempDir(), "wrapper")
-	repoA := filepath.Join(t.TempDir(), "repo-a")
-	repoB := filepath.Join(t.TempDir(), "repo-b")
-	repoAlias := filepath.Join(t.TempDir(), "repo-alias")
-	for _, path := range []string{child, wrapper, repoA, repoB, repoAlias} {
-		if err := os.Mkdir(path, 0o755); err != nil {
-			t.Fatal(err)
-		}
-	}
-	child = physicalPath(t, child)
-	wrapper = physicalPath(t, wrapper)
-	repoA = physicalPath(t, repoA)
-	repoB = physicalPath(t, repoB)
-	repoAlias = physicalPath(t, repoAlias)
-	commonA := physicalPath(t, t.TempDir())
-	commonB := physicalPath(t, t.TempDir())
-	observer := &fakeRepoObserver{observations: map[string]RepoObservation{
-		repoA:     {Locator: repoA, GitCommonDir: commonA},
-		repoAlias: {Locator: repoAlias, GitCommonDir: commonA},
-		repoB:     {Locator: repoB, GitCommonDir: commonB},
-	}, errors: map[string]error{}}
-	dependencies := SystemDependencies()
-	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: child}
-	dependencies.Repos = observer
-
-	input := ProjectAddInput{ProjectID: "trip", Name: "Trip", Wrapper: wrapper, Repos: []RepoInput{{RepoID: "service", Path: repoB}, {RepoID: "api", Path: repoA}}}
-	result, err := AddProject(dependencies, input)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !result.Created || result.Workspace != root || !reflect.DeepEqual(result.Project.RepoIDs, []RepoID{"api", "service"}) {
-		t.Fatalf("created result = %#v", result)
-	}
-	if got := []RepoID{result.Repos[0].ID, result.Repos[1].ID}; !reflect.DeepEqual(got, []RepoID{"api", "service"}) {
-		t.Fatalf("sorted repositories = %#v", got)
-	}
-
-	input.Repos = []RepoInput{{RepoID: "api", Path: repoAlias}, {RepoID: "service", Path: repoB}}
-	retry, err := AddProject(dependencies, input)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if retry.Created || retry.Repos[0].Locator != repoA {
-		t.Fatalf("idempotent result = %#v", retry)
-	}
-}
-
 func TestAddProjectRejectsDuplicateObservedCommonDirectoryBeforeStore(t *testing.T) {
 	root := createProjectWorkspace(t)
 	repoA := filepath.Join(root, "repo-a")
@@ -254,63 +207,6 @@ func TestAddProjectRejectsDuplicateObservedCommonDirectoryBeforeStore(t *testing
 	dependencies.Repos = observer
 	_, err := AddProject(dependencies, ProjectAddInput{ProjectID: "trip", Name: "Trip", Wrapper: root, Repos: []RepoInput{{RepoID: "a", Path: repoA}, {RepoID: "b", Path: repoB}}})
 	assertProjectErrorClass(t, err, ErrorProjectDuplicateRepo)
-	if _, err := os.Lstat(filepath.Join(root, MarkerDirectory, ProjectsFile)); !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("registry exists after duplicate input: %v", err)
-	}
-}
-
-func TestRelativeAddPathsUsePhysicalCWDAndReadbackDoesNotReobserve(t *testing.T) {
-	root := createProjectWorkspace(t)
-	cwd := filepath.Join(root, "nested", "cwd")
-	wrapper := filepath.Join(root, "wrapper")
-	repository := physicalPath(t, t.TempDir())
-	for _, path := range []string{cwd, wrapper} {
-		if err := os.MkdirAll(path, 0o755); err != nil {
-			t.Fatal(err)
-		}
-	}
-	cwd = physicalPath(t, cwd)
-	wrapper = physicalPath(t, wrapper)
-	common := filepath.Join(root, "observed-common")
-	observer := &fakeRepoObserver{observations: map[string]RepoObservation{
-		repository: {Locator: repository, GitCommonDir: common},
-	}, errors: map[string]error{}}
-	dependencies := SystemDependencies()
-	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: cwd}
-	dependencies.Repos = observer
-	relativeWrapper, err := filepath.Rel(cwd, wrapper)
-	if err != nil {
-		t.Fatal(err)
-	}
-	relativeRepository, err := filepath.Rel(cwd, repository)
-	if err != nil {
-		t.Fatal(err)
-	}
-	result, err := AddProject(dependencies, ProjectAddInput{ProjectID: "relative", Name: "Relative", Wrapper: relativeWrapper, Repos: []RepoInput{{RepoID: "repo", Path: relativeRepository}}})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if result.Project.Wrapper != wrapper || result.Repos[0].Locator != repository || !reflect.DeepEqual(observer.calls, []string{repository}) {
-		t.Fatalf("relative result = %#v, observer calls = %#v", result, observer.calls)
-	}
-	if err := os.RemoveAll(wrapper); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.RemoveAll(repository); err != nil {
-		t.Fatal(err)
-	}
-	observer.errors[repository] = errors.New("readback must not observe Git")
-	shown, err := ShowProject(dependencies, "relative")
-	if err != nil || shown.Project.Wrapper != wrapper || shown.Repos[0].Locator != repository {
-		t.Fatalf("show after deletion = %#v, %v", shown, err)
-	}
-	listed, err := ListProjects(dependencies)
-	if err != nil || len(listed.Projects) != 1 {
-		t.Fatalf("list after deletion = %#v, %v", listed, err)
-	}
-	if !reflect.DeepEqual(observer.calls, []string{repository}) {
-		t.Fatalf("readback reobserved repositories: %#v", observer.calls)
-	}
 }
 
 func TestSystemRepoObserverUsesOnlyLocalIdentityCommands(t *testing.T) {
@@ -483,6 +379,7 @@ func createProjectWorkspace(t *testing.T) string {
 		t.Fatal(err)
 	}
 	mustWriteFile(t, filepath.Join(root, MarkerDirectory, MarkerFile), fmt.Sprintf("format_version: 1\nroot: %s\n", root))
+	mustWriteFile(t, filepath.Join(root, DefinitionsFile), "{\"format_version\": 1, \"projects\": []}\n")
 	return root
 }
 
@@ -520,5 +417,144 @@ func TestParseRepoIDUsesTheIdentifierRule(t *testing.T) {
 		if _, err := ParseRepoID(value); err == nil || !strings.HasPrefix(err.Error(), string(ErrorProjectInvalidArguments)+": repository ID") {
 			t.Fatalf("invalid ID %q error = %v", value, err)
 		}
+	}
+}
+
+// project add writes the Project to ply-workspace.json with paths relative to
+// the workspace and the origin remote. A repeat is no change; a difference is
+// a conflict that leaves the file untouched.
+func TestAddProjectWritesDefinitions(t *testing.T) {
+	d, root := discoverFixture(t)
+	discoverRepo(t, filepath.Join(root, "api", "main"), "git@example.invalid:api.git")
+	discoverRepo(t, filepath.Join(root, "web"), "")
+	if _, err := Init(d); err != nil {
+		t.Fatal(err)
+	}
+	input := ProjectAddInput{ProjectID: "trip", Name: "Trip", Wrapper: ".", Repos: []RepoInput{{RepoID: "web", Path: "web"}, {RepoID: "api", Path: "api/main"}}}
+	result, err := AddProject(d, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Created || result.Project.Wrapper != root || !reflect.DeepEqual(result.Project.RepoIDs, []RepoID{"api", "web"}) || result.Repos[0].Locator != filepath.Join(root, "api", "main") || result.Repos[0].Remote != "git@example.invalid:api.git" {
+		t.Fatalf("result = %#v", result)
+	}
+	defs, _, err := workspacedef.Read(root)
+	if err != nil || defs == nil {
+		t.Fatalf("definitions %v %v", defs, err)
+	}
+	want := []workspacedef.Project{{ID: "trip", Name: "Trip", Wrapper: ".", Repos: []workspacedef.Repo{
+		{ID: "api", Path: "api/main", Remote: "git@example.invalid:api.git"},
+		{ID: "web", Path: "web"},
+	}}}
+	if !reflect.DeepEqual(defs.Projects, want) {
+		t.Fatalf("projects %#v", defs.Projects)
+	}
+	path := filepath.Join(root, DefinitionsFile)
+	before, _ := os.ReadFile(path)
+	retry, err := AddProject(d, input)
+	if err != nil || retry.Created {
+		t.Fatalf("retry = %#v, %v", retry, err)
+	}
+	alias := filepath.Join(t.TempDir(), "alias")
+	if err := os.Symlink(filepath.Join(root, "api", "main"), alias); err != nil {
+		t.Fatal(err)
+	}
+	input.Repos[1].Path = alias
+	if retry, err := AddProject(d, input); err != nil || retry.Created {
+		t.Fatalf("retry through alias = %#v, %v", retry, err)
+	}
+	input.Name = "Other"
+	_, err = AddProject(d, input)
+	assertProjectErrorClass(t, err, ErrorProjectConflict)
+	if after, _ := os.ReadFile(path); string(after) != string(before) {
+		t.Fatal("retry or conflict rewrote the definitions")
+	}
+}
+
+// project add-member appends to the defined Project in ply-workspace.json.
+func TestAddProjectMemberWritesDefinitions(t *testing.T) {
+	d, root := discoverFixture(t)
+	discoverRepo(t, filepath.Join(root, "api"), "")
+	discoverRepo(t, filepath.Join(root, "web"), "git@example.invalid:web.git")
+	if _, err := Init(d); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddProject(d, ProjectAddInput{ProjectID: "trip", Name: "Trip", Wrapper: ".", Repos: []RepoInput{{RepoID: "api", Path: "api"}}}); err != nil {
+		t.Fatal(err)
+	}
+	result, err := AddProjectMember(d, "trip", RepoInput{RepoID: "web", Path: "web"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Created || !reflect.DeepEqual(result.Project.RepoIDs, []RepoID{"api", "web"}) {
+		t.Fatalf("result = %#v", result)
+	}
+	defs, _, err := workspacedef.Read(root)
+	if err != nil || defs == nil || !reflect.DeepEqual(defs.Projects[0].Repos, []workspacedef.Repo{{ID: "api", Path: "api"}, {ID: "web", Path: "web", Remote: "git@example.invalid:web.git"}}) {
+		t.Fatalf("definitions %#v %v", defs, err)
+	}
+	path := filepath.Join(root, DefinitionsFile)
+	before, _ := os.ReadFile(path)
+	if retry, err := AddProjectMember(d, "trip", RepoInput{RepoID: "web", Path: "web"}); err != nil || retry.Created {
+		t.Fatalf("retry = %#v, %v", retry, err)
+	}
+	if _, err := AddProjectMember(d, "trip", RepoInput{RepoID: "web", Path: "api"}); err == nil {
+		t.Fatal("other path for a defined member was accepted")
+	}
+	if after, _ := os.ReadFile(path); string(after) != string(before) {
+		t.Fatal("retry or conflict rewrote the definitions")
+	}
+}
+
+// A workspace without ply-workspace.json has no Projects to read.
+func TestProjectsWithoutDefinitionsFail(t *testing.T) {
+	root := createProjectWorkspace(t)
+	if err := os.Remove(filepath.Join(root, DefinitionsFile)); err != nil {
+		t.Fatal(err)
+	}
+	d := SystemDependencies()
+	d.Files = projectCwdFileSystem{FileSystem: d.Files, cwd: root}
+	_, err := ListProjects(d)
+	if err == nil || !strings.Contains(err.Error(), DefinitionsFile) || !strings.Contains(err.Error(), "ply workspace init") {
+		t.Fatalf("list without definitions: %v", err)
+	}
+}
+
+// defineTestProject writes project and its repository locators into
+// ply-workspace.json, creating the file when the fixture has none.
+func defineTestProject(t *testing.T, root string, project ProjectRecord, repos []RepoRecord) {
+	t.Helper()
+	if err := workspacedef.Create(root); err != nil {
+		t.Fatal(err)
+	}
+	defined := workspacedef.Project{ID: string(project.ID), Name: project.Name, Wrapper: definitionPath(root, project.Wrapper), Repos: []workspacedef.Repo{}}
+	for _, r := range repos {
+		defined.Repos = append(defined.Repos, workspacedef.Repo{ID: string(r.ID), Path: definitionPath(root, r.Locator)})
+	}
+	if _, err := updateDefinitions(root, defineProject(defined)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// ply-workspace.json holds only workspace structure: an Epic is adopted
+// without any definition of it, and the definitions stay unchanged.
+func TestAdoptEpicNeedsNoDefinition(t *testing.T) {
+	d, root := discoverFixture(t)
+	repo := filepath.Join(root, "api")
+	discoverRepo(t, repo, "")
+	if _, err := Init(d); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddProject(d, ProjectAddInput{ProjectID: "trip", Name: "Trip", Wrapper: ".", Repos: []RepoInput{{RepoID: "api", Path: "api"}}}); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(filepath.Join(root, DefinitionsFile))
+	oid := strings.TrimSpace(runLocalGit(t, repo, "rev-parse", "HEAD"))
+	adopted, err := AdoptEpic(d, EpicAdoptInput{EpicID: "main", Title: "Main", ProjectID: "trip", RepoID: "api", Worktree: repo, Ref: "refs/heads/main", ExpectedOID: oid})
+	if err != nil || !adopted.Created {
+		t.Fatalf("adopt = %#v, %v", adopted, err)
+	}
+	if after, _ := os.ReadFile(filepath.Join(root, DefinitionsFile)); string(after) != string(before) {
+		t.Fatalf("adoption changed the definitions: %s", after)
 	}
 }

@@ -5,13 +5,16 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/devdimensionlab/plybuild/internal/projectdata"
 	"github.com/devdimensionlab/plybuild/internal/workitem"
+	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
 const identifierRule = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$ (1..63 ASCII bytes)"
@@ -34,17 +37,22 @@ type RepoInput struct {
 }
 
 type ProjectRecord struct {
-	ID        ProjectID         `yaml:"id"`
-	Name      string            `yaml:"name"`
-	Wrapper   string            `yaml:"wrapper"`
-	RepoIDs   []RepoID          `yaml:"repo_ids"`
+	ID      ProjectID `yaml:"id"`
+	Name    string    `yaml:"name"`
+	Wrapper string    `yaml:"wrapper"`
+	RepoIDs []RepoID  `yaml:"repo_ids"`
+}
+
+// Data is the Project's data area under its wrapper.
+func (project ProjectRecord) Data() projectdata.Area {
+	return projectdata.For(string(project.ID), project.Wrapper)
 }
 
 type RepoRecord struct {
 	ID           RepoID `yaml:"id"`
 	Locator      string `yaml:"locator"`
 	GitCommonDir string `yaml:"git_common_dir"`
-	Remote       string `yaml:"-"` // from ply-workspace.json; not part of the legacy registry
+	Remote       string `yaml:"-"` // from ply-workspace.json
 }
 
 type ProjectResult struct {
@@ -208,8 +216,11 @@ func AddProject(dependencies Dependencies, input ProjectAddInput) (ProjectResult
 		return ProjectResult{}, err
 	}
 
-	project := ProjectRecord{ID: input.ProjectID, Name: input.Name, Wrapper: wrapper}
-	repositories := make([]RepoRecord, 0, len(input.Repos))
+	remotes, ok := dependencies.Repos.(RemoteObserver)
+	if !ok {
+		return ProjectResult{}, projectError(ErrorProjectIO, "dependencies: the repository observer cannot read remotes", nil)
+	}
+	defined := workspacedef.Project{ID: string(input.ProjectID), Name: input.Name, Wrapper: definitionPath(workspaceRoot, wrapper), Repos: []workspacedef.Repo{}}
 	commonDirectories := make(map[string]RepoID, len(input.Repos))
 	for _, repository := range input.Repos {
 		locator, err := canonicalDirectory(dependencies.Files, cwd, repository.Path, fmt.Sprintf("repository %s", repository.RepoID))
@@ -231,17 +242,41 @@ func AddProject(dependencies Dependencies, input ProjectAddInput) (ProjectResult
 			return ProjectResult{}, projectError(ErrorProjectDuplicateRepo, fmt.Sprintf("repositories %s and %s resolve to Git common directory %s", existing, repository.RepoID, observation.GitCommonDir), nil)
 		}
 		commonDirectories[observation.GitCommonDir] = repository.RepoID
-		project.RepoIDs = append(project.RepoIDs, repository.RepoID)
-		repositories = append(repositories, RepoRecord{ID: repository.RepoID, Locator: observation.Locator, GitCommonDir: observation.GitCommonDir})
+		remote, err := remotes.Remote(locator)
+		if err != nil {
+			return ProjectResult{}, err
+		}
+		defined.Repos = append(defined.Repos, workspacedef.Repo{ID: string(repository.RepoID), Path: definitionPath(workspaceRoot, locator), Remote: remote})
 	}
-	sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
-	sort.Slice(repositories, func(i, j int) bool { return repositories[i].ID < repositories[j].ID })
+	sort.Slice(defined.Repos, func(i, j int) bool { return defined.Repos[i].ID < defined.Repos[j].ID })
 
-	storedProject, storedRepositories, created, err := dependencies.Projects.Add(workspaceRoot, project, repositories)
+	created, err := updateDefinitions(workspaceRoot, defineProject(defined))
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	return ProjectResult{Workspace: workspaceRoot, Project: storedProject, Repos: storedRepositories, Created: created}, nil
+	project, repositories, err := definedProject(workspaceRoot, input.ProjectID)
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	return ProjectResult{Workspace: workspaceRoot, Project: project, Repos: repositories, Created: created}, nil
+}
+
+// defineProject appends defined to the definitions. The same Project with the
+// same name, wrapper and repositories is no change; any difference is a conflict.
+func defineProject(defined workspacedef.Project) func(*workspacedef.Definitions) (bool, error) {
+	return func(defs *workspacedef.Definitions) (bool, error) {
+		for _, p := range defs.Projects {
+			if p.ID != defined.ID {
+				continue
+			}
+			if p.Name == defined.Name && p.Wrapper == defined.Wrapper && reflect.DeepEqual(p.Repos, defined.Repos) {
+				return false, nil
+			}
+			return false, projectError(ErrorProjectConflict, fmt.Sprintf("project %s is already defined in %s with other name, wrapper or repositories", defined.ID, workspacedef.File), nil)
+		}
+		defs.Projects = append(defs.Projects, defined)
+		return true, nil
+	}
 }
 
 func ShowProject(dependencies Dependencies, id ProjectID) (ProjectResult, error) {

@@ -37,7 +37,7 @@ func (f definitionFixture) metadataPath() string {
 func newMetadataFixture(t *testing.T) definitionFixture {
 	t.Helper()
 	f := newDefinitionFixture(t)
-	if err := os.Remove(filepath.Join(f.ply, WorkItemsFile)); err != nil {
+	if err := os.Remove(testWork(t, f.root, "ply").Registry()); err != nil {
 		t.Fatal(err)
 	}
 	repo := filepath.Join(f.root, "ply", "main")
@@ -47,23 +47,6 @@ func newMetadataFixture(t *testing.T) definitionFixture {
 		t.Fatal(err)
 	}
 	return f
-}
-
-// addLegacyProject seeds the legacy registry, which native Project add refuses
-// to change while definitions exist.
-func (f definitionFixture) addLegacyProject(t *testing.T, input ProjectAddInput) {
-	t.Helper()
-	definitions, aside := filepath.Join(f.root, workspacedef.File), filepath.Join(f.root, workspacedef.File+".aside")
-	if err := os.Rename(definitions, aside); err != nil {
-		t.Fatal(err)
-	}
-	_, err := AddProject(f.metadataDependencies(), input)
-	if renameErr := os.Rename(aside, definitions); renameErr != nil {
-		t.Fatal(renameErr)
-	}
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func requireAbsent(t *testing.T, path string) {
@@ -112,7 +95,6 @@ func TestDefinitionMetadataAddSetShowAndRerun(t *testing.T) {
 	if !reflect.DeepEqual(before, after) {
 		t.Fatalf("other files changed:\nbefore %v\nafter  %v", before, after)
 	}
-	requireAbsent(t, filepath.Join(f.ply, ProjectsFile))
 
 	published := f.state(t)
 	rerun, err := f.setWrapper("ply", "ply-code-map", wrapper)
@@ -142,49 +124,30 @@ func TestDefinitionMetadataRejectsBeforeWriting(t *testing.T) {
 		wrapper string
 	}
 	plyRequest := request{"ply", "ply", "ply"}
-	legacyPly := func(t *testing.T, f definitionFixture) {
-		input := ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: "ply", Repos: []RepoInput{{RepoID: "ply", Path: "ply/main"}}}
-		f.addLegacyProject(t, input)
-	}
 	for name, tc := range map[string]struct {
 		edit    func(string) string
-		legacy  func(*testing.T, definitionFixture)
 		request request
 		check   func(*testing.T, error)
 	}{
-		"invalid JSON":                     {edit: func(s string) string { return s + "}" }, request: plyRequest},
-		"invalid JSON with legacy Project": {edit: func(s string) string { return s + "}" }, legacy: legacyPly, request: plyRequest},
+		"invalid JSON": {edit: func(s string) string { return s + "}" }, request: plyRequest},
 		"unknown field": {edit: func(s string) string {
 			return strings.Replace(s, `"format_version": 1,`, `"format_version": 1, "extra": 1,`, 1)
 		}, request: plyRequest},
 		"format version": {edit: func(s string) string { return strings.Replace(s, `"format_version": 1`, `"format_version": 2`, 1) }, request: plyRequest},
 		"duplicate Project": {edit: func(s string) string { return strings.Replace(s, `"id": "app", "name"`, `"id": "ply", "name"`, 1) }, request: plyRequest,
 			check: func(t *testing.T, err error) { assertProjectErrorClass(t, err, ErrorProjectInvalidArguments) }},
-		"Project only in legacy": {legacy: func(t *testing.T, f definitionFixture) {
-			input := ProjectAddInput{ProjectID: "legacy", Name: "Legacy", Wrapper: "retired", Repos: []RepoInput{{RepoID: "retired", Path: "retired"}}}
-			f.addLegacyProject(t, input)
-		}, request: request{"legacy", "retired", "retired"},
-			check: func(t *testing.T, err error) { assertProjectErrorClass(t, err, ErrorProjectNotFound) }},
 		"repository not a member": {request: request{"ply", "app", "app"},
 			check: func(t *testing.T, err error) { assertWorkErrorClass(t, err, ErrorWorkProjectConflict) }},
 		"missing wrapper": {request: request{"ply", "ply", "gone"},
 			check: func(t *testing.T, err error) { assertProjectErrorClass(t, err, ErrorProjectPath) }},
 		"wrapper without repository": {request: request{"ply", "ply", "app"},
 			check: func(t *testing.T, err error) { assertProjectErrorClass(t, err, ErrorProjectInvalidArguments) }},
-		"repository with different paths": {edit: func(s string) string {
+		"repository in two Projects": {edit: func(s string) string {
 			return strings.Replace(s, `"repos": [{"id": "app", "path": "app/main"}]`, `"repos": [{"id": "app", "path": "app/main"}, {"id": "ply", "path": "app/main"}]`, 1)
-		}, request: plyRequest, check: func(t *testing.T, err error) {
-			assertProjectErrorClass(t, err, ErrorProjectConflict)
-			if !strings.Contains(err.Error(), "repository ply is defined with different paths in "+workspacedef.File) {
-				t.Fatalf("error %v", err)
-			}
-		}},
+		}, request: plyRequest, check: func(t *testing.T, err error) { assertProjectErrorClass(t, err, ErrorProjectDuplicateRepo) }},
 	} {
 		t.Run(name, func(t *testing.T) {
 			f := newMetadataFixture(t)
-			if tc.legacy != nil {
-				tc.legacy(t, f)
-			}
 			if tc.edit != nil {
 				mustWriteFile(t, filepath.Join(f.root, workspacedef.File), tc.edit(fixtureDefinitions))
 			}
@@ -201,34 +164,6 @@ func TestDefinitionMetadataRejectsBeforeWriting(t *testing.T) {
 	}
 }
 
-func TestDefinitionMetadataIgnoresLegacyRegistry(t *testing.T) {
-	t.Run("corrupt", func(t *testing.T) {
-		f := newMetadataFixture(t)
-		legacy := filepath.Join(f.ply, ProjectsFile)
-		mustWriteFile(t, legacy, "{{{ not yaml")
-		if out, err := f.setWrapper("ply", "ply", filepath.Join(f.root, "ply")); err != nil || !out.Changed {
-			t.Fatalf("set %+v %v", out, err)
-		}
-		if show, err := ShowProjectMetadata(f.metadataDependencies(), "ply"); err != nil || show.Revision != 1 {
-			t.Fatalf("show %+v %v", show, err)
-		}
-		if raw, err := os.ReadFile(legacy); err != nil || string(raw) != "{{{ not yaml" {
-			t.Fatalf("legacy registry changed: %q %v", raw, err)
-		}
-	})
-	t.Run("same Project ID", func(t *testing.T) {
-		f := newMetadataFixture(t)
-		input := ProjectAddInput{ProjectID: "ply", Name: "Legacy Ply", Wrapper: "app", Repos: []RepoInput{{RepoID: "app", Path: "app/main"}}}
-		f.addLegacyProject(t, input)
-		show, err := ShowProjectMetadata(f.metadataDependencies(), "ply")
-		if err != nil || len(show.Repositories) != 1 || show.Repositories[0].RepoID != "ply" {
-			t.Fatalf("show %+v %v", show, err)
-		}
-		_, err = f.setWrapper("ply", "app", filepath.Join(f.root, "app"))
-		assertWorkErrorClass(t, err, ErrorWorkProjectConflict)
-	})
-}
-
 func TestDefinitionMetadataShowNotFound(t *testing.T) {
 	f := newMetadataFixture(t)
 	_, err := ShowProjectMetadata(f.metadataDependencies(), "other")
@@ -238,10 +173,8 @@ func TestDefinitionMetadataShowNotFound(t *testing.T) {
 	}
 }
 
-func TestDefinitionMetadataShowRejectsInvalidDefinitionsWithoutLegacyFallback(t *testing.T) {
+func TestDefinitionMetadataShowRejectsInvalidDefinitions(t *testing.T) {
 	f := newMetadataFixture(t)
-	input := ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: "ply", Repos: []RepoInput{{RepoID: "ply", Path: "ply/main"}}}
-	f.addLegacyProject(t, input)
 	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), fixtureDefinitions+"}")
 	_, err := ShowProjectMetadata(f.metadataDependencies(), "ply")
 	assertProjectErrorClass(t, err, ErrorProjectStoreConflict)

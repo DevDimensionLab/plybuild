@@ -9,22 +9,24 @@ import (
 )
 
 func TestProjectMemberAddPreservesIdentityAndDirtyRepository(t *testing.T) {
-	root := createProjectWorkspace(t)
-	deps := SystemDependencies()
-	deps.Files = projectCwdFileSystem{FileSystem: deps.Files, cwd: root}
-	wrapper := t.TempDir()
-	first := physicalPath(t, t.TempDir())
-	extra := physicalPath(t, t.TempDir())
-	for _, repo := range []string{first, extra} {
-		runGitForTest(t, repo, "init", "-q")
+	deps, root := discoverFixture(t)
+	first, extra, owned := filepath.Join(root, "first"), filepath.Join(root, "extra"), filepath.Join(root, "owned")
+	discoverRepo(t, first, "")
+	discoverRepo(t, extra, "")
+	discoverRepo(t, owned, "")
+	if _, err := Init(deps); err != nil {
+		t.Fatal(err)
 	}
-	original, err := AddProject(deps, ProjectAddInput{ProjectID: "shared", Name: "Shared", Wrapper: wrapper, Repos: []RepoInput{{RepoID: "first", Path: first}}})
+	original, err := AddProject(deps, ProjectAddInput{ProjectID: "shared", Name: "Shared", Wrapper: ".", Repos: []RepoInput{{RepoID: "first", Path: first}}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Reuse a repository registered by another Project, preserving its original locator.
-	_, err = AddProject(deps, ProjectAddInput{ProjectID: "other", Name: "Other", Wrapper: t.TempDir(), Repos: []RepoInput{{RepoID: "extra", Path: extra}}})
-	if err != nil {
+	// Project shared's wrapper is the workspace root; wrappers may not overlap.
+	other := filepath.Join(physicalPath(t, t.TempDir()), "other")
+	if err := os.Mkdir(other, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = AddProject(deps, ProjectAddInput{ProjectID: "other", Name: "Other", Wrapper: other, Repos: []RepoInput{{RepoID: "owned", Path: owned}}}); err != nil {
 		t.Fatal(err)
 	}
 	mustWriteFile(t, filepath.Join(extra, "dirty"), "untracked source")
@@ -39,48 +41,49 @@ func TestProjectMemberAddPreservesIdentityAndDirtyRepository(t *testing.T) {
 	if !result.Created || result.Project.Name != original.Project.Name || result.Project.Wrapper != original.Project.Wrapper || !reflect.DeepEqual(result.Project.RepoIDs, []RepoID{"extra", "first"}) || result.Repos[0].Locator != extra {
 		t.Fatalf("result = %#v", result)
 	}
-	path := filepath.Join(root, MarkerDirectory, ProjectsFile)
+	path := filepath.Join(root, DefinitionsFile)
 	before, _ := os.ReadFile(path)
 	retry, err := AddProjectMember(deps, "shared", RepoInput{RepoID: "extra", Path: extra})
 	if err != nil || retry.Created {
 		t.Fatalf("retry = %#v, %v", retry, err)
 	}
-	after, _ := os.ReadFile(path)
-	if string(after) != string(before) {
-		t.Fatal("retry rewrote registry")
-	}
 	dirty, err := os.ReadFile(filepath.Join(extra, "dirty"))
 	if err != nil || string(dirty) != "untracked source" {
 		t.Fatalf("dirty source changed: %q %v", dirty, err)
 	}
-	other, err := ShowProject(deps, "other")
-	if err != nil || !reflect.DeepEqual(other.Project.RepoIDs, []RepoID{"extra"}) {
-		t.Fatalf("other = %#v %v", other, err)
+	shown, err := ShowProject(deps, "other")
+	if err != nil || !reflect.DeepEqual(shown.Project.RepoIDs, []RepoID{"owned"}) {
+		t.Fatalf("other = %#v %v", shown, err)
 	}
 	for _, test := range []struct {
 		id    ProjectID
 		repo  RepoInput
-		class ErrorClass
+		check func(error)
 	}{
-		{"shared", RepoInput{RepoID: "alias", Path: alias}, ErrorProjectConflict},
-		{"shared", RepoInput{RepoID: "extra", Path: first}, ErrorProjectConflict},
-		{"missing", RepoInput{RepoID: "extra", Path: extra}, ErrorProjectNotFound},
-		{"shared", RepoInput{RepoID: "missing", Path: filepath.Join(root, "absent")}, ErrorProjectPath},
+		{"shared", RepoInput{RepoID: "alias", Path: alias}, func(err error) { assertProjectErrorClass(t, err, ErrorProjectConflict) }},
+		{"shared", RepoInput{RepoID: "extra", Path: first}, func(err error) { assertWorkErrorClass(t, err, ErrorWorkIdentityConflict) }},
+		{"missing", RepoInput{RepoID: "extra", Path: extra}, func(err error) { assertProjectErrorClass(t, err, ErrorProjectInvalidArguments) }},
+		// A repository belongs to exactly one Project.
+		{"other", RepoInput{RepoID: "extra", Path: extra}, func(err error) { assertProjectErrorClass(t, err, ErrorProjectDuplicateRepo) }},
+		{"shared", RepoInput{RepoID: "missing", Path: filepath.Join(root, "absent")}, func(err error) { assertProjectErrorClass(t, err, ErrorProjectPath) }},
 	} {
 		_, err := AddProjectMember(deps, test.id, test.repo)
-		assertProjectErrorClass(t, err, test.class)
-		after, _ := os.ReadFile(path)
-		if string(after) != string(before) {
-			t.Fatal("failure changed registry")
+		test.check(err)
+		if after, _ := os.ReadFile(path); string(after) != string(before) {
+			t.Fatal("retry or failure changed the definitions")
 		}
 	}
 }
 
 func TestProjectMemberConcurrentAppendAndIdentityConflict(t *testing.T) {
-	root := emptyStoreRoot(t)
-	store := newSystemProjectStore()
-	project, repos := storeFixture(root, "shared", "Shared", "first")
-	if _, _, _, err := store.Add(root, project, repos); err != nil {
+	deps, root := discoverFixture(t)
+	for _, name := range []string{"first", "a", "b", "c"} {
+		discoverRepo(t, filepath.Join(root, name), "")
+	}
+	if _, err := Init(deps); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddProject(deps, ProjectAddInput{ProjectID: "shared", Name: "Shared", Wrapper: ".", Repos: []RepoInput{{RepoID: "first", Path: "first"}}}); err != nil {
 		t.Fatal(err)
 	}
 	var wg sync.WaitGroup
@@ -89,7 +92,7 @@ func TestProjectMemberConcurrentAppendAndIdentityConflict(t *testing.T) {
 		wg.Add(1)
 		go func(id RepoID) {
 			defer wg.Done()
-			_, _, _, err := store.AddMember(root, "shared", RepoRecord{ID: id, Locator: filepath.Join(root, string(id)), GitCommonDir: filepath.Join(root, "common-"+string(id))})
+			_, err := AddProjectMember(deps, "shared", RepoInput{RepoID: id, Path: string(id)})
 			errs <- err
 		}(id)
 	}
@@ -100,9 +103,9 @@ func TestProjectMemberConcurrentAppendAndIdentityConflict(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	projects, repositories, err := store.Snapshot(root)
-	if err != nil || len(repositories) != 3 || !reflect.DeepEqual(projects[0].RepoIDs, []RepoID{"a", "b", "first"}) {
-		t.Fatalf("snapshot = %#v %#v %v", projects, repositories, err)
+	shown, err := ShowProject(deps, "shared")
+	if err != nil || !reflect.DeepEqual(shown.Project.RepoIDs, []RepoID{"a", "b", "first"}) {
+		t.Fatalf("show = %#v %v", shown, err)
 	}
 	// Competing IDs for the same new Git identity: exactly one can publish.
 	errs = make(chan error, 2)
@@ -110,7 +113,7 @@ func TestProjectMemberConcurrentAppendAndIdentityConflict(t *testing.T) {
 		wg.Add(1)
 		go func(id RepoID) {
 			defer wg.Done()
-			_, _, _, err := store.AddMember(root, "shared", RepoRecord{ID: id, Locator: filepath.Join(root, string(id)), GitCommonDir: filepath.Join(root, "same-common")})
+			_, err := AddProjectMember(deps, "shared", RepoInput{RepoID: id, Path: "c"})
 			errs <- err
 		}(id)
 	}

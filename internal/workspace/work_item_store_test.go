@@ -11,57 +11,31 @@ import (
 )
 
 func TestWorkItemRegistryEncodingIsDeterministicAndStrict(t *testing.T) {
-	legacy := []byte("format_version: 2\nepics: []\ntasks: []\nworktree_operations: []\ntask_results: []\nhuman_qa_records: []\nintegration_authorities: []\nintegration_intents: []\nintegration_attempts: []\nintegration_results: []\n")
-	registry, err := decodeWorkItemRegistry(legacy)
+	want := "epics: []\ntasks: []\nworktree_operations: []\ntask_results: []\nhuman_qa_records: []\nintegration_authorities: []\nintegration_intents: []\nintegration_attempts: []\nintegration_results: []\ntask_problem_revisions: []\ntask_spec_revisions: []\ntask_spec_assessments: []\ntask_solution_selections: []\ntask_result_spec_bindings: []\ntask_content_publications: []\nepic_base_versions: []\nepic_base_updates: []\ntask_queue_events: []\ntask_preparations: []\nepic_create_operations: []\n"
+	got, err := encodeWorkItemRegistry(emptyWorkItemRegistry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := encodeWorkItemRegistry(registry)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := "format_version: 2\nepics: []\ntasks: []\nworktree_operations: []\ntask_results: []\nhuman_qa_records: []\nintegration_authorities: []\nintegration_intents: []\nintegration_attempts: []\nintegration_results: []\n"
 	if string(got) != want {
 		t.Fatalf("registry bytes:\n%s\nwant:\n%s", got, want)
 	}
 	decoded, err := decodeWorkItemRegistry(got)
-	if err != nil || decoded.FormatVersion != 2 {
+	if err != nil || !reflect.DeepEqual(decoded, emptyWorkItemRegistry()) {
 		t.Fatalf("decode = %#v, %v", decoded, err)
 	}
 	for name, invalid := range map[string]string{
-		"unknown field":   strings.Replace(want, "format_version: 2", "format_version: 2\nunknown: true", 1),
-		"wrong version":   strings.Replace(want, "format_version: 2", "format_version: 3", 1),
+		"unknown field":   strings.Replace(want, "epics: []", "epics: []\nunknown: true", 1),
+		"inner version":   "format_version: 11\n" + want,
 		"missing list":    strings.Replace(want, "epics: []\n", "", 1),
-		"missing v2 list": strings.Replace(want, "task_results: []\n", "", 1),
+		"missing queue":   strings.Replace(want, "task_preparations: []\n", "", 1),
+		"null list":       strings.Replace(want, "task_preparations: []", "task_preparations: null", 1),
+		"missing creates": strings.Replace(want, "epic_create_operations: []\n", "", 1),
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := decodeWorkItemRegistry([]byte(invalid)); err == nil {
 				t.Fatalf("invalid registry accepted:\n%s", invalid)
 			}
 		})
-	}
-}
-
-func TestWorkItemRegistryDecodesAndPreservesFormatOne(t *testing.T) {
-	legacy := []byte("format_version: 1\nepics: []\ntasks: []\nworktree_operations: []\n")
-	registry, err := decodeWorkItemRegistry(legacy)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if registry.FormatVersion != 1 || registry.TaskResults != nil || registry.HumanQARecords != nil || registry.IntegrationAuthorities != nil || registry.IntegrationIntents != nil || registry.IntegrationAttempts != nil || registry.IntegrationResults != nil {
-		t.Fatalf("legacy registry changed shape: %#v", registry)
-	}
-	encoded, err := encodeWorkItemRegistry(registry)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(encoded) != string(legacy) {
-		t.Fatalf("format-1 round trip:\n%s\nwant:\n%s", encoded, legacy)
-	}
-
-	withLifecycleCollection := append(append([]byte(nil), legacy...), []byte("task_results: []\n")...)
-	if _, err := decodeWorkItemRegistry(withLifecycleCollection); err == nil {
-		t.Fatal("format-1 registry with a lifecycle collection was accepted")
 	}
 }
 
@@ -73,7 +47,7 @@ func TestWorkItemRegistryRejectsInvalidObservationShapes(t *testing.T) {
 	if _, err := CreateTaskWorktree(fixture.dependencies, input); !hasWorkErrorClass(err, ErrorWorkGitEffect) {
 		t.Fatalf("preserve create intent: %v", err)
 	}
-	creating, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+	creating, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +56,7 @@ func TestWorkItemRegistryRejectsInvalidObservationShapes(t *testing.T) {
 	if _, err := CreateTaskWorktree(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +112,7 @@ func TestWorkItemRegistryRejectsIntegrationPlanWithDifferentGitArgv(t *testing.T
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -162,7 +136,7 @@ func TestWorkItemRegistryRejectsIntegrationPlanWithDifferentRetryBinding(t *test
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -187,7 +161,7 @@ func TestWorkItemRegistryRejectsMalformedIntegrationCommandEvidence(t *testing.T
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +193,7 @@ func TestWorkItemRegistryRejectsContradictoryIntegrationRecoveryActions(t *testi
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +231,7 @@ func TestWorkItemRegistryRejectsBrokenIntegrationObservationChain(t *testing.T) 
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,7 +276,7 @@ func TestWorkItemRegistryRequiresExactNestedFieldsExplicitArraysAndNulls(t *test
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -335,7 +309,7 @@ func TestWorkItemRegistryRejectsTaskOperationStateMismatches(t *testing.T) {
 		t.Fatalf("creating error = %v", err)
 	}
 	root := filepath.Dir(fixture.wrapper)
-	creating, err := fixture.dependencies.WorkItems.Snapshot(root)
+	creating, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -398,10 +372,10 @@ func TestWorkItemStoreFaultsLeaveOldOrCompleteNewRegistry(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			root := createProjectWorkspace(t)
 			healthy := newSystemWorkItemStore()
-			if err := healthy.WithLock(root, func(session WorkItemStoreSession) error { return session.Publish(emptyWorkItemRegistry()) }); err != nil {
+			if err := healthy.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(emptyWorkItemRegistry()) }); err != nil {
 				t.Fatal(err)
 			}
-			before, err := os.ReadFile(workItemsPath(root))
+			before, err := os.ReadFile(testWork(t, root).Registry())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -412,21 +386,21 @@ func TestWorkItemStoreFaultsLeaveOldOrCompleteNewRegistry(t *testing.T) {
 				}
 				return nil
 			}}}
-			err = faulty.WithLock(root, func(session WorkItemStoreSession) error { return session.Publish(candidate) })
+			err = faulty.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(candidate) })
 			if err == nil || !hasWorkErrorClass(err, ErrorWorkIO) {
 				t.Fatalf("error = %v", err)
 			}
-			after, readErr := os.ReadFile(workItemsPath(root))
+			after, readErr := os.ReadFile(testWork(t, root).Registry())
 			if readErr != nil {
 				t.Fatal(readErr)
 			}
 			if test.expectPublish == reflect.DeepEqual(before, after) {
 				t.Fatalf("expect publish=%t bytes equal=%t", test.expectPublish, reflect.DeepEqual(before, after))
 			}
-			if err := healthy.WithLock(root, func(session WorkItemStoreSession) error { return session.Publish(candidate) }); err != nil {
+			if err := healthy.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(candidate) }); err != nil {
 				t.Fatal(err)
 			}
-			final, err := healthy.Snapshot(root)
+			final, err := healthy.Snapshot(testWork(t, root))
 			if err != nil || len(final.Epics) != 1 {
 				t.Fatalf("final=%#v error=%v", final, err)
 			}
@@ -442,17 +416,20 @@ func TestWorkItemStoreRejectsRegistryAndLockSymlinks(t *testing.T) {
 			if err := os.WriteFile(target, []byte("target"), 0o644); err != nil {
 				t.Fatal(err)
 			}
-			if err := os.Symlink(target, filepath.Join(root, MarkerDirectory, name)); err != nil {
+			if err := os.MkdirAll(testWork(t, root).Dir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(target, filepath.Join(testWork(t, root).Dir, name)); err != nil {
 				t.Fatal(err)
 			}
 			store := newSystemWorkItemStore()
 			if name == WorkItemsFile {
-				_, err := store.Snapshot(root)
+				_, err := store.Snapshot(testWork(t, root))
 				if err == nil || !hasWorkErrorClass(err, ErrorWorkStoreConflict) {
 					t.Fatalf("error=%v", err)
 				}
 			} else {
-				err := store.WithLock(root, func(WorkItemStoreSession) error { return errors.New("must not run") })
+				err := store.WithLock(testWork(t, root), func(WorkItemStoreSession) error { return errors.New("must not run") })
 				if err == nil || !hasWorkErrorClass(err, ErrorWorkStoreConflict) {
 					t.Fatalf("error=%v", err)
 				}
@@ -523,19 +500,20 @@ func minimalEpicRegistry(root string) WorkItemRegistry {
 	tree := strings.Repeat("b", 40)
 	registry := emptyWorkItemRegistry()
 	registry.Epics = []EpicRecord{{ID: "epic", Title: "Epic", ProjectID: "ply", RepoBindings: []EpicRepoBinding{{RepoID: "ply", GitCommonDir: filepath.Join(root, "repo.git"), Worktree: EpicWorktreeBinding{ID: "wt_11111111111111111111111111111111", OwnerKind: "epic", OwnerID: "epic", Origin: "adopted", Locator: filepath.Join(root, "epic"), Ref: "refs/heads/epic", OID: oid, Tree: tree, GitCommonDir: filepath.Join(root, "repo.git")}}}}}
+	registry.EpicBaseVersions = []EpicBaseVersion{adoptedEpicBase(registry.Epics[0], registry.Epics[0].RepoBindings[0])}
 	return registry
 }
 
 func TestWorkItemStoreTreatsMissingRegistryAsEmpty(t *testing.T) {
 	root := createProjectWorkspace(t)
-	registry, err := newSystemWorkItemStore().Snapshot(root)
+	registry, err := newSystemWorkItemStore().Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if registry.FormatVersion != 3 || len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 || registry.TaskResults == nil || registry.IntegrationResults == nil {
+	if len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 || registry.TaskResults == nil || registry.IntegrationResults == nil {
 		t.Fatalf("registry = %#v", registry)
 	}
-	if filepath.Base(workItemsPath(root)) != "work-items.yaml" {
-		t.Fatalf("path = %s", workItemsPath(root))
+	if filepath.Base(testWork(t, root).Registry()) != "work-items.yaml" {
+		t.Fatalf("path = %s", testWork(t, root).Registry())
 	}
 }

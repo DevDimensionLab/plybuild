@@ -106,7 +106,7 @@ type firstGoalLostAckSession struct {
 	owner *firstGoalLostAckStore
 }
 
-func (s *firstGoalLostAckStore) WithLock(root string, fn func(WorkItemStoreSession) error) error {
+func (s *firstGoalLostAckStore) WithLock(root ProjectWork, fn func(WorkItemStoreSession) error) error {
 	return s.WorkItemStore.WithLock(root, func(inner WorkItemStoreSession) error { return fn(firstGoalLostAckSession{inner, s}) })
 }
 func (s firstGoalLostAckSession) Publish(r WorkItemRegistry) error {
@@ -175,7 +175,7 @@ func TestFirstGoalRegistrationRecoversNativePublicationBoundaries(t *testing.T) 
 				t.Fatal("recovery restored old unrelated queue")
 			}
 			pub := taskPublication(r, "first-goal/fresh/goal")
-			manifest, e := readRegisteredTaskManifest(f.dependencies.TaskContent, filepath.Dir(f.wrapper), r, pub.OutcomeRef.ManifestSHA256)
+			manifest, e := readRegisteredTaskManifest(f.dependencies.TaskContent, testWork(t, filepath.Dir(f.wrapper)), r, pub.OutcomeRef.ManifestSHA256)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -343,7 +343,7 @@ func TestExistingFirstGoalRejectsDriftAndUsedTasks(t *testing.T) {
 				e = os.WriteFile(in.Documents[0].Locator, []byte("changed source bytes\n"), 0600)
 			case "retired":
 				nativeFirstGoalWorktree(t, f)
-				e = f.dependencies.WorkItems.WithLock(filepath.Dir(f.wrapper), func(s WorkItemStoreSession) error {
+				e = f.dependencies.WorkItems.WithLock(testWork(t, filepath.Dir(f.wrapper)), func(s WorkItemStoreSession) error {
 					r, err := s.Snapshot()
 					if err != nil {
 						return err
@@ -363,7 +363,7 @@ func TestExistingFirstGoalRejectsDriftAndUsedTasks(t *testing.T) {
 				persistReconciliationFixture(t, &f)
 			case "invalid-receipt":
 				digest := nativeFirstGoalWorktree(t, f).Worktree.IntentDigest
-				path := workItemsPath(filepath.Dir(f.wrapper))
+				path := testWork(t, filepath.Dir(f.wrapper)).Registry()
 				b, err := os.ReadFile(path)
 				if err != nil || strings.Count(string(b), digest) != 1 {
 					t.Fatalf("receipt digest is not unique: %v", err)

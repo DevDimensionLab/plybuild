@@ -32,7 +32,7 @@ workspace="$temp_root/workspace"
 repository="$workspace/repo"
 epic="$workspace/epic"
 task="$workspace/task"
-store="$workspace/.ply/work-items.yaml"
+store="$workspace/data/work/work-items.yaml" # the Project wrapper is the workspace
 mkdir -p "$repository"
 git -C "$repository" init -q -b main
 git -C "$repository" config user.email fixture@example.invalid

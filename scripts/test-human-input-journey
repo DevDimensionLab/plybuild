@@ -36,7 +36,7 @@ mkdir -p "$repo"
 git -C "$repo" init -q -b main
 git -C "$repo" -c user.name=HI08 -c user.email=hi08@example.invalid commit -q --allow-empty -m base
 (cd "$ws" && "$ply" workspace init >/dev/null && "$ply" workspace project add demo --name Demo --wrapper demo --repo demo=demo/main >/dev/null) || fail "workspace setup"
-registers() { cat "$ws/.ply/projects.yaml" "$ws/.ply/workspace.yaml" "$ws/.ply/work-items.yaml" 2>/dev/null | shasum -a 256; }
+registers() { cat "$ws/ply-workspace.json" "$ws/.ply/workspace.yaml" "$ws/.ply/work-items.yaml" 2>/dev/null | shasum -a 256; }
 registers_before=$(registers)
 
 # Agent, skill steps 1-4: derive context from cwd and publish.

@@ -61,7 +61,7 @@ func goalQueueFixture(t *testing.T, f workItemJourneyFixture, entries []TaskGoal
 	root := filepath.Dir(f.wrapper)
 	r := mustQueueRegistry(t, f)
 	q := foldQueue(r, queueID(root, QueueTarget{ProjectID: "ply", RepoID: "ply", EpicID: "epic"}))
-	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: fmt.Sprintf("goals/queue/%d", q.Revision), ProjectID: "ply", RepoID: "ply", EpicID: "epic", ExpectedRevision: q.Revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "fixture planner", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}, RegistryUpgrade: queueUpgrade(r)}
+	draft := WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: fmt.Sprintf("goals/queue/%d", q.Revision), ProjectID: "ply", RepoID: "ply", EpicID: "epic", ExpectedRevision: q.Revision, Entries: entries, Recorder: TaskGoalQueueRecorder{ActorClaim: "fixture planner", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"}}
 	raw, e := contentCanonical(draft)
 	if e != nil {
 		t.Fatal(e)

@@ -185,11 +185,15 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if resume {
 			run = resumeGoal
 		}
+		work, e := workspace.LocateTask(d, task.Workspace, id)
+		if e != nil {
+			return e
+		}
 		goalRefs := map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "provider": provider, "resume": fmt.Sprint(resume)}
 		if e = recordPly(d, args[0], plyActor(actor), "nothing was started", taskjournal.PlyAction{Operation: "goal_start_reserved", Refs: goalRefs}); e != nil {
 			return e
 		}
-		out, e := run(c.Context(), plan, workspace.GoalStartReceiptPath(task.Workspace, workspace.TaskID(args[0])), herdr, func() error { return checkGoalGit(wt) })
+		out, e := run(c.Context(), plan, workspace.GoalStartReceiptPath(work, id), herdr, func() error { return checkGoalGit(wt) })
 		reached := taskjournal.PlyAction{Operation: "goal_start_started", Refs: map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "reached": out.Reached}}
 		if out.Reached == "prompt_submitted" {
 			reached.Operation = "goal_start_prompt_submitted"

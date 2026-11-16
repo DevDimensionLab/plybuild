@@ -61,7 +61,7 @@ func decodeStoredTaskContent(raw []byte, operation string, published, internal b
 	return nil, err
 }
 
-func contentArtifactError(root, kind, digest, operation string, err error) error {
+func contentArtifactError(work ProjectWork, kind, digest, operation string, err error) error {
 	if err == nil {
 		return nil
 	}
@@ -75,7 +75,7 @@ func contentArtifactError(root, kind, digest, operation string, err error) error
 	if errors.Is(err, fs.ErrNotExist) {
 		code = "task_content_missing"
 	}
-	artifact := taskContentPath(root, kind, digest)
+	artifact := taskContentPath(work, kind, digest)
 	next := "Inspect the required artifact and its preserved publication before retrying."
 	if code == "task_content_reader_incompatible" {
 		next = "Use a compatible installed Ply and the native active-run continuation; preserve the original control and publication."

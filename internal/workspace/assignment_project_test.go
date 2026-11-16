@@ -26,7 +26,6 @@ func requireProjectDetail(t *testing.T, err error, class ErrorClass, detail stri
 
 func TestResolveDefinedProjectFromDefinitionsWithoutLegacyRegistry(t *testing.T) {
 	f := newDefinitionFixture(t)
-	requireAbsent(t, filepath.Join(f.ply, ProjectsFile))
 	project, err := ResolveDefinedProject(cwdDependencies(f.root), "app")
 	want := ProjectRecord{ID: "app", Name: "App", Wrapper: filepath.Join(f.root, "app"), RepoIDs: []RepoID{"app"}}
 	if err != nil || !reflect.DeepEqual(project, want) {
@@ -36,10 +35,9 @@ func TestResolveDefinedProjectFromDefinitionsWithoutLegacyRegistry(t *testing.T)
 	requireProjectDetail(t, err, ErrorProjectNotFound, "project nope is not registered")
 	_, err = ResolveDefinedProject(cwdDependencies(f.root), "Not Valid")
 	assertProjectErrorClass(t, err, ErrorProjectInvalidArguments)
-	requireAbsent(t, filepath.Join(f.ply, ProjectsFile))
 }
 
-func TestResolveDefinedProjectFromLegacyRegistry(t *testing.T) {
+func TestResolveDefinedProjectAfterProjectAdd(t *testing.T) {
 	root := physicalPath(t, t.TempDir())
 	d := cwdDependencies(root)
 	if _, err := Init(d); err != nil {
@@ -54,7 +52,6 @@ func TestResolveDefinedProjectFromLegacyRegistry(t *testing.T) {
 	if _, err := AddProject(d, input); err != nil {
 		t.Fatal(err)
 	}
-	requireAbsent(t, filepath.Join(root, workspacedef.File))
 	project, err := ResolveDefinedProject(d, "legacy")
 	if err != nil || project.Wrapper != filepath.Join(root, "legacy") || !reflect.DeepEqual(project.RepoIDs, []RepoID{"core"}) {
 		t.Fatalf("project %+v %v", project, err)
@@ -87,9 +84,9 @@ func TestResolveDefinedProjectSelectsTheProjectContainingTheWorkingDirectory(t *
 func TestResolveDefinedProjectRefusesNestedWrappersAndSkipsMissingOnes(t *testing.T) {
 	f := newDefinitionFixture(t)
 	definitions := `{"format_version": 1, "projects": [
-  {"id": "outer", "name": "Outer", "wrapper": ".", "repos": [{"id": "ply", "path": "ply/main"}], "epics": []},
-  {"id": "app", "name": "App", "wrapper": "app", "repos": [{"id": "app", "path": "app/main"}], "epics": []},
-  {"id": "gone", "name": "Gone", "wrapper": "gone", "repos": [{"id": "gone", "path": "gone/main"}], "epics": []}
+  {"id": "outer", "name": "Outer", "wrapper": ".", "repos": [{"id": "ply", "path": "ply/main"}]},
+  {"id": "app", "name": "App", "wrapper": "app", "repos": [{"id": "app", "path": "app/main"}]},
+  {"id": "gone", "name": "Gone", "wrapper": "gone", "repos": [{"id": "gone", "path": "gone/main"}]}
 ]}
 `
 	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), definitions)
@@ -102,16 +99,4 @@ func TestResolveDefinedProjectRefusesNestedWrappersAndSkipsMissingOnes(t *testin
 	if err != nil || project.ID != "outer" {
 		t.Fatalf("outer only: %+v %v", project, err)
 	}
-}
-
-func TestProjectDataPathOfAssignments(t *testing.T) {
-	f := newDefinitionFixture(t)
-	project, err := ResolveDefinedProject(cwdDependencies(f.root), "app")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if path, err := ProjectDataPath(project, "assignments"); err != nil || path != filepath.Join(f.root, "app", "data", "assignments") {
-		t.Fatalf("default %s %v", path, err)
-	}
-	requireAbsent(t, filepath.Join(f.root, "app", "data"))
 }

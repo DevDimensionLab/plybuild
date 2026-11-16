@@ -34,7 +34,7 @@ func newRepoCloneCommand(runner process.Runner) *cobra.Command {
 			if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
 				return fmt.Errorf("%w: JSON output is not supported", gitrepo.ErrInvalid)
 			}
-			observed, err := workspace.ObserveContainingRoot(workspace.SystemDependencies())
+			observed, err := workspace.ObserveContaining(workspace.SystemDependencies())
 			if err != nil {
 				return err
 			}

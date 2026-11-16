@@ -57,6 +57,20 @@ func hiWorkspace(t *testing.T, root string) (humaninput.Dependencies, string) {
 }
 
 // hiRun executes one public command in process and returns stdout and error.
+// hiStoreDirs are the human-input stores of the Projects of root, by ID.
+func hiStoreDirs(t *testing.T, root string) map[workspace.ProjectID]string {
+	t.Helper()
+	works, err := workspace.DefinedWork(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := map[workspace.ProjectID]string{}
+	for _, work := range works {
+		out[work.Project] = work.HumanInput()
+	}
+	return out
+}
+
 func hiRun(t *testing.T, d humaninput.Dependencies, args ...string) (json.RawMessage, error) {
 	t.Helper()
 	c := newWorkflowInputCommand(d)
@@ -209,7 +223,7 @@ func hiJourney(t *testing.T, d humaninput.Dependencies, root, repo string) []hiE
 	run("status-unavailable", "status", append([]string{"answer", "status", "app-none-0001", "--question-id", missing}, ws...)...)
 	run("error-not-found", "error", append([]string{"show", missing}, ws...)...)
 	// Damaged stored state is reported, never repaired.
-	answer := filepath.Join(root, ".ply", "human-input", "v1", "answers", tid+".json")
+	answer := filepath.Join(hiStoreDirs(t, root)["ply"], "answers", tid+".json")
 	if err := os.WriteFile(answer, []byte(`{"truncated":`), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -361,7 +375,7 @@ print(len(items),'checked')
 // of the same definitions.
 func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	locked := map[string]string{
-		"README.md":                           "f9711f041f15a348df11e2b11e26a96be9751c2bb2d5e59b14d6a07f491d5216",
+		"README.md":                           "ae7255418a6aed91073da125e9eab273c415a50dd9fafd324e543dc58fa296c9",
 		"workflow-human-input-v1.schema.json": "202fddcbee1af761b890d1a99a6ad8ea1343be826ea11f71a67836a8a2fbb46e",
 		"examples.json":                       "8f21910ae0d5ff7f8311f0e0f79f8f2c53cec55759e90ddb3a8c88835f6944cd",
 	}
@@ -557,7 +571,9 @@ func TestHI07ArgumentErrorsPrintNoResult(t *testing.T) {
 			t.Fatalf("%v: out=%s err=%v", args, out, err)
 		}
 	}
-	if _, err := os.Lstat(filepath.Join(root, ".ply", "human-input")); !errors.Is(err, os.ErrNotExist) {
-		t.Fatal("argument errors created human-input state")
+	for _, dir := range hiStoreDirs(t, root) {
+		if _, err := os.Lstat(dir); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("argument errors created human-input state")
+		}
 	}
 }

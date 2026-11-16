@@ -58,7 +58,7 @@ func queueDraftRule() contentRule {
 		"kind": contentEnum("WorkspaceTaskQueueDraft@1"), "schema_version": contentInteger(1, 1), "publication_key": contentKey, "project_id": contentSlug, "repo_id": contentSlug, "epic_id": contentSlug, "expected_revision": contentInteger(0, 2147483647),
 		"entries":          contentList(256, contentExact(map[string]contentRule{"task_id": contentSlug, "selection": contentNullable(contentDecisionRule("sel_"))}), func(v canonicaljson.Value) string { return contentString(contentFields(v), "task_id") }, true),
 		"human_decision":   contentExact(map[string]contentRule{"actor_claim": contentText(256), "decided_at_utc": contentUTC, "source": contentEnum("human_cli", "explicit_human_instruction"), "statement": contentText(2000)}),
-		"registry_upgrade": contentNullable(contentExact(map[string]contentRule{"from_version": contentInteger(1, 3), "registry_sha256": contentDigest})),
+		"registry_upgrade": contentNoRegistryUpgrade,
 	})
 	return func(v canonicaljson.Value) error {
 		if contentInt(contentFields(v), "schema_version") == 2 {
@@ -151,27 +151,14 @@ func validateQueuePlanEnvelope(r WorkItemRegistry, w IntegrationPlanWorkspace, t
 	if e := validateQueueTarget(r, t); e != nil {
 		return e
 	}
-	if version < 1 || version > CurrentRegistryFormat {
-		return fmt.Errorf("invalid plan registry version")
-	}
-	if version >= 4 {
-		if u != nil {
-			return fmt.Errorf("format 4 upgrade must be null")
-		}
-	} else if u == nil || u.FromVersion != version || !digestPattern.MatchString(u.RegistrySHA256) {
-		return fmt.Errorf("invalid upgrade binding")
+	if version != RegistryFormat || u != nil {
+		return fmt.Errorf("plan must bind registry format %d without an upgrade", RegistryFormat)
 	}
 	return nil
 }
 func validateQueueRegistry(r WorkItemRegistry) error {
-	if r.FormatVersion < 4 {
-		if r.EpicBaseVersions != nil || r.EpicBaseUpdates != nil || r.TaskQueueEvents != nil || r.TaskPreparations != nil {
-			return fmt.Errorf("legacy registry contains format 4 records")
-		}
-		return nil
-	}
 	if r.EpicBaseVersions == nil || r.EpicBaseUpdates == nil || r.TaskQueueEvents == nil || r.TaskPreparations == nil {
-		return fmt.Errorf("format 4 requires explicit arrays")
+		return fmt.Errorf("queue arrays must be explicit")
 	}
 	copy := r
 	copy.EpicBaseVersions = append([]EpicBaseVersion{}, r.EpicBaseVersions...)
@@ -179,7 +166,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 	copy.TaskQueueEvents = append([]TaskQueueEvent{}, r.TaskQueueEvents...)
 	sortQueueRegistry(&copy)
 	if !reflect.DeepEqual(copy.EpicBaseVersions, r.EpicBaseVersions) || !reflect.DeepEqual(copy.EpicBaseUpdates, r.EpicBaseUpdates) || !reflect.DeepEqual(copy.TaskQueueEvents, r.TaskQueueEvents) {
-		return fmt.Errorf("format 4 arrays must be sorted")
+		return fmt.Errorf("queue arrays must be sorted")
 	}
 	updates := map[string]EpicBaseUpdate{}
 	for _, u := range r.EpicBaseUpdates {
@@ -190,10 +177,7 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 		if e := validateQueuePlanEnvelope(r, p.Workspace, p.Target, p.RegistryFormatVersion, p.RegistryUpgrade); e != nil {
 			return e
 		}
-		versionOK := p.Kind == "WorkspaceEpicBaseUpdatePlan@1" && p.SchemaVersion == 1 && p.ActivePreparationIDs == nil || p.Kind == "WorkspaceEpicBaseUpdatePlan@3" && p.SchemaVersion == currentEpicBaseUpdatePlanSchema && p.CurrentPreparationID == nil && p.ActivePreparationIDs == nil
-		if p.SchemaVersion == 2 {
-			versionOK = r.FormatVersion == ParallelRegistryFormat && p.RegistryFormatVersion == ParallelRegistryFormat && p.Kind == "WorkspaceEpicBaseUpdatePlan@2" && p.CurrentPreparationID == nil && p.ActivePreparationIDs != nil && *p.ActivePreparationIDs != nil
-		}
+		versionOK := p.Kind == "WorkspaceEpicBaseUpdatePlan@1" && p.SchemaVersion == 1 || p.Kind == "WorkspaceEpicBaseUpdatePlan@3" && p.SchemaVersion == currentEpicBaseUpdatePlanSchema && p.CurrentPreparationID == nil
 		if !versionOK || p.ExpectedRevision < 1 || p.ExpectedRevision >= 2147483647 || !validOIDText(p.NextOID) || !validOIDText(p.NextTree) || p.NextOID == p.PreviousOID || p.AffectedSelections == nil || p.UnresolvedOperations == nil || len(p.UnresolvedOperations) != 0 || !p.ObservedParent.Clean || p.ObservedParent.OID != p.NextOID || p.ObservedParent.Tree != p.NextTree {
 			return fmt.Errorf("invalid base update plan")
 		}
@@ -352,12 +336,6 @@ func validateQueueRegistry(r WorkItemRegistry) error {
 
 // Registry publication enforces append-only history, independently of public commands.
 func validateQueueTransition(old, next WorkItemRegistry) error {
-	if old.FormatVersion < 4 {
-		return nil
-	}
-	if next.FormatVersion < 4 {
-		return fmt.Errorf("format 4 cannot be downgraded")
-	}
 	for _, v := range old.EpicBaseVersions {
 		found := false
 		for _, n := range next.EpicBaseVersions {

@@ -3,14 +3,10 @@ package workspace
 import (
 	"errors"
 	"fmt"
-	"io/fs"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
-	"github.com/devdimensionlab/plybuild/internal/filelock"
 )
 
 type TaskContentGit interface {
@@ -170,20 +166,20 @@ type TaskSpecEvaluation struct {
 	Reasons                                               []string
 }
 
-func historicalTaskSpec(d Dependencies, root string, r WorkItemRegistry, b TaskSpecBasis) (TaskSpecEvaluation, error) {
+func historicalTaskSpec(d Dependencies, work ProjectWork, r WorkItemRegistry, b TaskSpecBasis) (TaskSpecEvaluation, error) {
 	if e := validateTaskSpecBasisRegistry(r, b); e != nil {
 		return TaskSpecEvaluation{}, e
 	}
-	return loadTaskSpecContent(d, root, r, b)
+	return loadTaskSpecContent(d, work, r, b)
 }
-func loadTaskSpecContent(d Dependencies, root string, r WorkItemRegistry, b TaskSpecBasis) (TaskSpecEvaluation, error) {
+func loadTaskSpecContent(d Dependencies, work ProjectWork, r WorkItemRegistry, b TaskSpecBasis) (TaskSpecEvaluation, error) {
 	out := TaskSpecEvaluation{Basis: &b, RequiredInputs: []TaskSpecRequiredInput{}, SelectionFreshness: "unknown", ContentIntegrity: "unknown", TargetFreshness: "unknown", Reasons: []string{}}
 	refs := []struct {
 		name, digest string
 		target       *canonicaljson.Object
 	}{{"problem", b.Problem.ManifestSHA256, &out.Problem}, {"spec", b.Spec.ManifestSHA256, &out.Spec}, {"assessment", b.Assessment.ManifestSHA256, &out.Assessment}, {"selection", b.Selection.ManifestSHA256, &out.Selection}}
 	for _, ref := range refs {
-		v, e := readRegisteredTaskManifest(d.TaskContent, root, r, ref.digest)
+		v, e := readRegisteredTaskManifest(d.TaskContent, work, r, ref.digest)
 		if e != nil {
 			return out, e
 		}
@@ -195,7 +191,7 @@ func loadTaskSpecContent(d Dependencies, root string, r WorkItemRegistry, b Task
 		if e != nil {
 			return out, e
 		}
-		out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-basis/" + ref.name, Role: "other", Locator: taskContentPath(root, "manifests", ref.digest), SHA256: ref.digest, SizeBytes: int64(len(bytes)), MediaType: "application/json"})
+		out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: "task-basis/" + ref.name, Role: "other", Locator: taskContentPath(work, "manifests", ref.digest), SHA256: ref.digest, SizeBytes: int64(len(bytes)), MediaType: "application/json"})
 	}
 	pm, sm, am, cm := contentFields(out.Problem), contentFields(out.Spec), contentFields(out.Assessment), contentFields(out.Selection)
 	if contentInt(pm, "revision") != b.Problem.Revision || contentInt(sm, "revision") != b.Spec.Revision || contentString(sm, "spec_id") != b.SpecID || !contentTypedEqual(valueRevision(sm["problem"]), &b.Problem) || !contentTypedEqual(valueRevision(am["spec"]), &b.Spec) || contentString(am, "spec_id") != b.SpecID || contentString(am, "id") != b.Assessment.ID || contentString(am, "outcome") != "ready" || contentString(cm, "id") != b.Selection.ID || contentString(cm, "action") != "select" {
@@ -229,11 +225,11 @@ func loadTaskSpecContent(d Dependencies, root string, r WorkItemRegistry, b Task
 			if index == 1 && documentRoles[contentString(doc, "id")] != "" {
 				role = documentRoles[contentString(doc, "id")]
 			}
-			bytes, e := d.TaskContent.Read(root, "objects", digest)
+			bytes, e := d.TaskContent.Read(work, "objects", digest)
 			if e != nil {
 				return out, e
 			}
-			if len(bytes) != contentInt(doc, "size_bytes") || contentString(doc, "locator") != taskContentPath(root, "objects", digest) {
+			if len(bytes) != contentInt(doc, "size_bytes") || contentString(doc, "locator") != taskContentPath(work, "objects", digest) {
 				return out, contentError("task_content_integrity_conflict", "closure document descriptor differs", nil)
 			}
 			if old, ok := objects[digest]; ok {
@@ -244,7 +240,7 @@ func loadTaskSpecContent(d Dependencies, root string, r WorkItemRegistry, b Task
 				continue
 			}
 			total += int64(len(bytes))
-			objects[digest] = TaskSpecRequiredInput{ID: "task-doc/" + strings.TrimPrefix(digest, "sha256:"), Role: role, Locator: taskContentPath(root, "objects", digest), SHA256: digest, SizeBytes: int64(len(bytes)), MediaType: contentString(doc, "media_type")}
+			objects[digest] = TaskSpecRequiredInput{ID: "task-doc/" + strings.TrimPrefix(digest, "sha256:"), Role: role, Locator: taskContentPath(work, "objects", digest), SHA256: digest, SizeBytes: int64(len(bytes)), MediaType: contentString(doc, "media_type")}
 		}
 	}
 	if len(objects) > 96 || total > 64<<20 {
@@ -257,13 +253,13 @@ func loadTaskSpecContent(d Dependencies, root string, r WorkItemRegistry, b Task
 	out.ContentIntegrity = "valid"
 	return out, nil
 }
-func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects ProjectSnapshot, t TaskRecord, fresh bool) (TaskSpecEvaluation, error) {
+func currentTaskSpec(d Dependencies, work ProjectWork, r WorkItemRegistry, projects ProjectSnapshot, t TaskRecord, fresh bool) (TaskSpecEvaluation, error) {
 	out := TaskSpecEvaluation{RequiredInputs: []TaskSpecRequiredInput{}, SelectionFreshness: "none", ContentIntegrity: "not_recorded", TargetFreshness: "unknown", Reasons: []string{}}
 	state := taskContentState(r, t.ID)
 	if state.SelectionEvent == nil {
 		return out, nil
 	}
-	selected, e := readContentManifest(d.TaskContent, root, state.SelectionEvent.ManifestSHA256)
+	selected, e := readContentManifest(d.TaskContent, work, state.SelectionEvent.ManifestSHA256)
 	if e != nil {
 		return out, e
 	}
@@ -276,7 +272,7 @@ func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects P
 	sol := contentFields(m["solution"])
 	b := TaskSpecBasis{TaskID: t.ID, Problem: *valueRevision(sol["problem"]), SpecID: contentString(sol, "spec_id"), Spec: *valueRevision(sol["spec"]), Assessment: *valueDecision(sol["assessment"]), Selection: *state.SelectionEvent, Dependencies: []string{}}
 	if t.Worktree == nil {
-		out, e = loadTaskSpecContent(d, root, r, b)
+		out, e = loadTaskSpecContent(d, work, r, b)
 		out.Basis = nil
 		out.TargetFreshness = "stale"
 	} else {
@@ -286,7 +282,7 @@ func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects P
 		}
 		b.TaskWorktreeID = t.Worktree.ID
 		b.DeliveryBindingSHA256 = digest
-		out, e = historicalTaskSpec(d, root, r, b)
+		out, e = historicalTaskSpec(d, work, r, b)
 		out.TargetFreshness = "fresh"
 	}
 	if e != nil {
@@ -313,16 +309,10 @@ func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects P
 	if fresh {
 		if e = validateSpecImplementationBasis(d, projects, r, t, contentFields(out.Spec)["implementation_basis"], true); e != nil {
 			out.TargetFreshness = "unknown"
-			if r.FormatVersion < 4 {
-				out.SelectionFreshness = "unknown"
-			}
 			reason := "task_content_observation_unknown"
 			var contentErr *TaskContentError
 			if errors.As(e, &contentErr) && (contentErr.Code == "task_spec_basis_stale" || contentErr.Code == "task_spec_binding_conflict" || contentErr.Code == "epic_base_changed") {
 				out.TargetFreshness = "stale"
-				if r.FormatVersion < 4 {
-					out.SelectionFreshness = "stale"
-				}
 				reason = contentErr.Code
 			}
 			out.Reasons = append(out.Reasons, reason)
@@ -331,93 +321,25 @@ func currentTaskSpec(d Dependencies, root string, r WorkItemRegistry, projects P
 	return out, nil
 }
 
-// Read-only handles take the same advisory locks as ordinary metadata writers.
-// No file or directory is created, truncated or chmodded by this guard.
-func acquireExistingContentLock(path string) (*filelock.Lock, error) {
-	if e := contentPhysical(path); e != nil {
-		return nil, contentError("task_spec_lock_unavailable", "existing lock is unavailable: "+path, e)
-	}
-	lock, e := filelock.AcquireExisting(path)
-	var lockErr *filelock.Error
-	if errors.As(e, &lockErr) {
-		return nil, contentLockError(lockErr)
-	}
-	return lock, e
-}
-
-func contentLockError(e *filelock.Error) error {
-	if e.Op == "lock" {
-		return contentError("task_spec_lock_unavailable", "cannot acquire existing lock", e.Err)
-	}
-	return contentError("task_spec_lock_unavailable", "existing lock identity differs", e.Err)
-}
-
-func releaseContentLock(lock *filelock.Lock) error {
-	if e := lock.Release(); e != nil {
-		return contentReleaseError(e)
-	}
-	return nil
-}
-
-func contentReleaseError(e *filelock.ReleaseError) error { return firstError(e.Unlock, e.Close) }
-
 type TaskSpecSession struct {
 	Dependencies Dependencies
-	Root         string
+	Work         ProjectWork
 	Registry     WorkItemRegistry
 	Projects     ProjectSnapshot
 }
 
-func WithTaskSpecSnapshot(d Dependencies, root string, operation func(*TaskSpecSession) error) (err error) {
-	return withTaskSpecSnapshot(d, root, false, operation)
-}
-
-// WithTaskSpecRegistrationSnapshot keeps the same locks and full structural
-// registry checks. ValidateTarget validates the resolved Task's content before
-// any handoff effect; historical reads independently validate their exact basis.
-func WithTaskSpecRegistrationSnapshot(d Dependencies, root string, operation func(*TaskSpecSession) error) error {
-	return withTaskSpecSnapshot(d, root, true, operation)
-}
-
-func withTaskSpecSnapshot(d Dependencies, root string, registrations bool, operation func(*TaskSpecSession) error) (err error) {
-	project, e := acquireExistingContentLock(filepath.Join(root, MarkerDirectory, "projects.lock"))
-	if e != nil {
-		return e
-	}
-	defer func() {
-		if e := releaseContentLock(project); err == nil {
-			err = e
-		}
-	}()
-	lockPath := filepath.Join(root, MarkerDirectory, workItemsLock)
-	_, lockErr := os.Lstat(lockPath)
-	_, storeErr := os.Lstat(workItemsPath(root))
-	if errors.Is(lockErr, fs.ErrNotExist) && errors.Is(storeErr, fs.ErrNotExist) {
-	} else {
-		work, e := acquireExistingContentLock(lockPath)
-		if e != nil {
-			return e
-		}
-		defer func() {
-			if e := releaseContentLock(work); err == nil {
-				err = e
+// WithTaskSpecSnapshot holds the definitions lock and the work lock of one
+// Project while operation reads its registry.
+func WithTaskSpecSnapshot(d Dependencies, work ProjectWork, operation func(*TaskSpecSession) error) error {
+	return d.ProjectLocks.WithSnapshotLock(work.Workspace, func(projects ProjectSnapshot) error {
+		return d.WorkItems.WithLock(work, func(session WorkItemStoreSession) error {
+			registry, e := session.Snapshot()
+			if e != nil {
+				return e
 			}
-		}()
-	}
-	projects, repos, e := d.Projects.Snapshot(root)
-	if e != nil {
-		return e
-	}
-	var registry WorkItemRegistry
-	if registrations {
-		registry, e = d.WorkItems.SnapshotRegistrations(root)
-	} else {
-		registry, e = d.WorkItems.Snapshot(root)
-	}
-	if e != nil {
-		return e
-	}
-	return operation(&TaskSpecSession{d, root, registry, ProjectSnapshot{Projects: projects, Repos: repos}})
+			return operation(&TaskSpecSession{d, work, registry, projects})
+		})
+	})
 }
 
 func ValidateTaskSpecBasisValue(v canonicaljson.Value) (*TaskSpecBasis, error) {

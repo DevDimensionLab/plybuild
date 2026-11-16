@@ -44,19 +44,17 @@ func IntegrateEpic(d Dependencies, input EpicIntegrateInput) (EpicIntegrateResul
 	if err := requireWorkMutationDependencies(d); err != nil {
 		return EpicIntegrateResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(d)
+	root, err := containingRegistrationWorkspace(d)
 	if err != nil {
 		return EpicIntegrateResult{}, err
 	}
 	result := EpicIntegrateResult{Workspace: root, EpicID: input.EpicID, RepoID: input.RepoID, TargetRef: input.TargetRef}
-	err = d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-		return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-			registry, err := session.Snapshot()
-			if err != nil {
-				return err
-			}
-			return integrateEpicLocked(d, projects, registry, input, &result)
-		})
+	err = withEpicWork(d, root, input.EpicID, func(projects ProjectSnapshot, work ProjectWork, session WorkItemStoreSession) error {
+		registry, err := session.Snapshot()
+		if err != nil {
+			return err
+		}
+		return integrateEpicLocked(d, projects, registry, input, &result)
 	})
 	if err != nil {
 		return EpicIntegrateResult{}, mapMutationError(err)

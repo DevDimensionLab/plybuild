@@ -101,7 +101,7 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 		Repositories: map[string][]readContractExpectedRepo{}, ProtectedPaths: []string{},
 		Provenance: []string{
 			"Expected Project, Repository and Task values are seeded in read_contract_fixture_test.go independently of CLI output.",
-			"Workspace markers use Init; project registrations use the validated ProjectStore.Add path.",
+			"Workspace markers use Init; projects are defined in ply-workspace.json.",
 			"Three Epics use AdoptEpic against local committed Git repositories; current Tasks use CreateTask.",
 			"The legacy Task and reconciliation state use WorkItemStoreSession.Publish, including registry and content-closure validation.",
 			"The revised problem uses RecordTaskProblem; creating uses the existing noEffectGit fixture; ready uses CreateTaskWorktree.",
@@ -146,9 +146,7 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 	// Reverse insertion order ensures expectations do not inherit write order.
 	for i := len(projectSeeds) - 1; i >= 0; i-- {
 		seed := projectSeeds[i]
-		if _, _, _, err := d.Projects.Add(f.Root, seed.project, seed.repos); err != nil {
-			t.Fatal(err)
-		}
+		defineTestProject(t, f.Root, seed.project, seed.repos)
 	}
 	for _, seed := range projectSeeds {
 		p := seed.project
@@ -248,13 +246,11 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 		op.LastObservation.Reasons = []string{"task_worktree_reconciliation_required"}
 	})
 	if withQueue {
-		r := readContractRegistry(t, d, f.Root)
 		queue := WorkspaceTaskGoalQueueDraft{
 			Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "rl01/queue",
 			ProjectID: "alpha", RepoID: "alpha-main", EpicID: "epic-alpha", ExpectedRevision: 0,
-			Entries:         []TaskGoalQueueEntry{},
-			Recorder:        TaskGoalQueueRecorder{ActorClaim: "isolated fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"},
-			RegistryUpgrade: queueUpgrade(r),
+			Entries:  []TaskGoalQueueEntry{},
+			Recorder: TaskGoalQueueRecorder{ActorClaim: "isolated fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-05T00:00:00Z"},
 		}
 		queueBytes, err := contentCanonical(queue)
 		if err != nil {
@@ -267,10 +263,10 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 		}
 	}
 	r := readContractRegistry(t, d, f.Root)
-	if err := validateTaskContentClosure(d.TaskContent, f.Root, r, false); err != nil {
+	if err := validateTaskContentClosure(d.TaskContent, testWork(t, f.Root), r, false); err != nil {
 		t.Fatal(err)
 	}
-	if err := validateQueueClosure(d, f.Root, r); err != nil {
+	if err := validateQueueClosure(d, testWork(t, f.Root), r); err != nil {
 		t.Fatal(err)
 	}
 	if withQueue && len(r.TaskQueueEvents) != 1 || !withQueue && len(r.TaskQueueEvents) != 0 || len(r.Tasks) != 8 || len(r.Epics) != 3 {
@@ -290,7 +286,7 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 		}
 		for _, id := range []TaskID{"task-f-corrupt", "task-h-missing"} {
 			head := taskContentState(r, id).ProblemHead
-			path := taskContentPath(f.Root, "manifests", head.ManifestSHA256)
+			path := taskContentPath(testWork(t, f.Root), "manifests", head.ManifestSHA256)
 			if err := os.Rename(path, filepath.Join(preserved, string(id)+".json")); err != nil {
 				t.Fatal(err)
 			}
@@ -300,12 +296,12 @@ func readContractBuildFixture(t *testing.T, base string, withQueue, unavailableC
 		}
 	}
 	readContractValidateSeeds(t, d, f)
-	readContractWrite(t, filepath.Join(f.CorruptProjectsRoot, MarkerDirectory, ProjectsFile), []byte("format_version: 999\nprojects: []\nrepos: []\n"), 0o644)
-	readContractWrite(t, workItemsPath(f.CorruptTasksRoot), []byte("format_version: 999\nepics: []\ntasks: []\nworktree_operations: []\n"), 0o644)
+	readContractWrite(t, filepath.Join(f.CorruptProjectsRoot, DefinitionsFile), []byte("{\"format_version\": 999, \"projects\": []}\n"), 0o644)
+	readContractWrite(t, testWork(t, f.CorruptTasksRoot).Registry(), []byte("format_version: 999\nepics: []\ntasks: []\nworktree_operations: []\n"), 0o644)
 	if _, _, err := d.Projects.Snapshot(f.CorruptProjectsRoot); err == nil {
 		t.Fatal("corrupt project registry must be rejected")
 	}
-	if _, err := d.WorkItems.Snapshot(f.CorruptTasksRoot); err == nil {
+	if _, err := d.WorkItems.Snapshot(testWork(t, f.CorruptTasksRoot)); err == nil {
 		t.Fatal("corrupt Task registry must be rejected")
 	}
 	manifest, err := json.MarshalIndent(f, "", "  ")
@@ -347,7 +343,7 @@ func readContractWrite(t *testing.T, path string, contents []byte, mode os.FileM
 
 func readContractRegistry(t *testing.T, d Dependencies, root string) WorkItemRegistry {
 	t.Helper()
-	r, err := d.WorkItems.Snapshot(root)
+	r, err := d.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -359,7 +355,7 @@ func readContractRegistry(t *testing.T, d Dependencies, root string) WorkItemReg
 
 func readContractPublish(t *testing.T, d Dependencies, root string, mutate func(*WorkItemRegistry)) {
 	t.Helper()
-	err := d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+	err := d.WorkItems.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 		r, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -414,11 +410,11 @@ func readContractValidateSeeds(t *testing.T, d Dependencies, f readContractFixtu
 	}
 	// Validate registry bytes independently of format-4's deliberately strict
 	// Snapshot content-closure check. The read contract owns per-Task title faults.
-	raw, err := os.ReadFile(workItemsPath(f.Root))
+	raw, err := os.ReadFile(testWork(t, f.Root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	r, err := newSystemWorkItemStore().decodeStoredRegistry(f.Root, raw)
+	r, err := newSystemWorkItemStore().decodeStoredRegistry(testWork(t, f.Root), raw)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -430,7 +426,7 @@ func readContractValidateSeeds(t *testing.T, d Dependencies, f readContractFixtu
 		got := readContractExpectedTask{string(task.ID), string(task.ProjectID), string(task.RepoID), string(task.ParentEpicID), string(task.WorktreeState), &task.Title, "registration", "available"}
 		if head := taskContentState(r, task.ID).ProblemHead; head != nil {
 			got.TitleSource = "problem_revision"
-			manifest, err := readRegisteredTaskManifest(d.TaskContent, f.Root, r, head.ManifestSHA256)
+			manifest, err := readRegisteredTaskManifest(d.TaskContent, testWork(t, f.Root), r, head.ManifestSHA256)
 			if err != nil {
 				got.Title = nil
 				got.TitleStatus = "unavailable"

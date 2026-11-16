@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -20,10 +19,11 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// WorkItemStore reads and writes the work-item registry of one Project.
 type WorkItemStore interface {
-	Snapshot(string) (WorkItemRegistry, error)
-	SnapshotRegistrations(string) (WorkItemRegistry, error)
-	WithLock(string, func(WorkItemStoreSession) error) error
+	Snapshot(ProjectWork) (WorkItemRegistry, error)
+	SnapshotRegistrations(ProjectWork) (WorkItemRegistry, error)
+	WithLock(ProjectWork, func(WorkItemStoreSession) error) error
 }
 
 type WorkItemStoreSession interface {
@@ -43,144 +43,28 @@ type systemWorkItemStore struct {
 }
 type systemWorkItemStoreSession struct {
 	store             *systemWorkItemStore
-	root              string
+	work              ProjectWork
 	confirmed         *WorkItemRegistry
 	observed          os.FileInfo
 	closed            bool
 	definitionsDigest string
 }
 
-type workItemRegistryV1Wire struct {
-	FormatVersion      int                       `yaml:"format_version"`
-	Epics              []EpicRecord              `yaml:"epics"`
-	Tasks              []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations []WorktreeOperationRecord `yaml:"worktree_operations"`
-}
-type workItemRegistryV2Wire struct {
-	FormatVersion          int                       `yaml:"format_version"`
-	Epics                  []EpicRecord              `yaml:"epics"`
-	Tasks                  []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations     []WorktreeOperationRecord `yaml:"worktree_operations"`
-	TaskResults            []HistoricalRecord        `yaml:"task_results"`
-	HumanQARecords         []HistoricalRecord        `yaml:"human_qa_records"`
-	IntegrationAuthorities []IntegrationAuthority    `yaml:"integration_authorities"`
-	IntegrationIntents     []IntegrationIntent       `yaml:"integration_intents"`
-	IntegrationAttempts    []IntegrationAttempt      `yaml:"integration_attempts"`
-	IntegrationResults     []IntegrationResult       `yaml:"integration_results"`
-}
-type workItemRegistryV3Wire struct {
-	FormatVersion           int                       `yaml:"format_version"`
-	Epics                   []EpicRecord              `yaml:"epics"`
-	Tasks                   []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
-	TaskResults             []HistoricalRecord        `yaml:"task_results"`
-	HumanQARecords          []HistoricalRecord        `yaml:"human_qa_records"`
-	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities"`
-	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
-	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
-	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
-	TaskSpecPolicies        *[]TaskSpecPolicy         `yaml:"task_spec_policies,omitempty"`
-	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
-	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
-	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
-	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
-	TaskResultSpecBindings  []HistoricalRecord        `yaml:"task_result_spec_bindings"`
-	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
-}
-
-func (registry WorkItemRegistry) MarshalYAML() (any, error) {
-	if registry.FormatVersion == ParallelRegistryFormat {
-		if registry.ParallelBoundary == nil {
-			return nil, fmt.Errorf("missing parallel boundary")
-		}
-		predecessor := registry
-		predecessor.FormatVersion = registry.ParallelBoundary.FromVersion
-		value, err := predecessor.MarshalYAML()
-		if err != nil {
-			return nil, err
-		}
-		raw, err := yaml.Marshal(value)
-		if err != nil {
-			return nil, err
-		}
-		var document yaml.Node
-		if err = yaml.Unmarshal(raw, &document); err != nil {
-			return nil, err
-		}
-		fields := document.Content[0]
-		fields.Content[1].Value = "8"
-		for _, field := range []struct {
-			name  string
-			value any
-		}{{"parallel_boundary", registry.ParallelBoundary}, {"source_reconciliations", registry.SourceReconciliations}} {
-			var value yaml.Node
-			if err = value.Encode(field.value); err != nil {
-				return nil, err
-			}
-			fields.Content = append(fields.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: field.name}, &value)
-		}
-		if registry.ParallelActivation != nil {
-			var value yaml.Node
-			if err = value.Encode(registry.ParallelActivation); err != nil {
-				return nil, err
-			}
-			fields.Content = append(fields.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "parallel_activation"}, &value)
-		}
-		return fields, nil
-	}
-
-	if registry.FormatVersion == 7 {
-		return struct {
-			Content              workItemRegistryV4Wire  `yaml:",inline"`
-			FormatBoundary       *RegistryFormatBoundary `yaml:"format_boundary"`
-			EpicCreateBoundary   *RegistryFormatBoundary `yaml:"epic_create_boundary"`
-			EpicCreateOperations []EpicCreateOperation   `yaml:"epic_create_operations"`
-			AdoptionBoundary     *RegistryFormatBoundary `yaml:"adoption_boundary"`
-		}{workItemRegistryV4(registry), registry.FormatBoundary, registry.EpicCreateBoundary, registry.EpicCreateOperations, registry.AdoptionBoundary}, nil
-	}
-	if registry.FormatVersion == 6 {
-		return struct {
-			Content              workItemRegistryV4Wire  `yaml:",inline"`
-			FormatBoundary       *RegistryFormatBoundary `yaml:"format_boundary"`
-			EpicCreateBoundary   *RegistryFormatBoundary `yaml:"epic_create_boundary"`
-			EpicCreateOperations []EpicCreateOperation   `yaml:"epic_create_operations"`
-		}{workItemRegistryV4(registry), registry.FormatBoundary, registry.EpicCreateBoundary, registry.EpicCreateOperations}, nil
-	}
-	if registry.FormatVersion == 5 {
-		return struct {
-			Content        workItemRegistryV4Wire  `yaml:",inline"`
-			FormatBoundary *RegistryFormatBoundary `yaml:"format_boundary"`
-		}{workItemRegistryV4(registry), registry.FormatBoundary}, nil
-	}
-	if registry.FormatVersion >= 4 {
-		return workItemRegistryV4(registry), nil
-	}
-	if registry.FormatVersion == 1 {
-		return workItemRegistryV1Wire{FormatVersion: 1, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations}, nil
-	}
-	if registry.FormatVersion == 3 {
-		return workItemRegistryV3Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults, TaskSpecPolicies: registry.TaskSpecPolicies, TaskProblemRevisions: registry.TaskProblemRevisions, TaskSpecRevisions: registry.TaskSpecRevisions, TaskSpecAssessments: registry.TaskSpecAssessments, TaskSolutionSelections: registry.TaskSolutionSelections, TaskResultSpecBindings: registry.TaskResultSpecBindings, TaskContentPublications: registry.TaskContentPublications}, nil
-	}
-	return workItemRegistryV2Wire{FormatVersion: registry.FormatVersion, Epics: registry.Epics, Tasks: registry.Tasks, WorktreeOperations: registry.WorktreeOperations, TaskResults: registry.TaskResults, HumanQARecords: registry.HumanQARecords, IntegrationAuthorities: registry.IntegrationAuthorities, IntegrationIntents: registry.IntegrationIntents, IntegrationAttempts: registry.IntegrationAttempts, IntegrationResults: registry.IntegrationResults}, nil
-}
-
 func newSystemWorkItemStore() *systemWorkItemStore { return &systemWorkItemStore{} }
 func emptyWorkItemRegistry() WorkItemRegistry {
-	return WorkItemRegistry{FormatVersion: 3, TaskProblemRevisions: []TaskProblemReference{}, TaskSpecRevisions: []TaskSpecReference{}, TaskSpecAssessments: []TaskAssessmentReference{}, TaskSolutionSelections: []TaskSelectionReference{}, TaskResultSpecBindings: []HistoricalRecord{}, TaskContentPublications: []TaskContentPublication{}, Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []HistoricalRecord{}, HumanQARecords: []HistoricalRecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}}
+	return WorkItemRegistry{Epics: []EpicRecord{}, Tasks: []TaskRecord{}, WorktreeOperations: []WorktreeOperationRecord{}, TaskResults: []HistoricalRecord{}, HumanQARecords: []HistoricalRecord{}, IntegrationAuthorities: []IntegrationAuthority{}, IntegrationIntents: []IntegrationIntent{}, IntegrationAttempts: []IntegrationAttempt{}, IntegrationResults: []IntegrationResult{}, TaskProblemRevisions: []TaskProblemReference{}, TaskSpecRevisions: []TaskSpecReference{}, TaskSpecAssessments: []TaskAssessmentReference{}, TaskSolutionSelections: []TaskSelectionReference{}, TaskResultSpecBindings: []HistoricalRecord{}, TaskContentPublications: []TaskContentPublication{}, EpicBaseVersions: []EpicBaseVersion{}, EpicBaseUpdates: []EpicBaseUpdate{}, TaskQueueEvents: []TaskQueueEvent{}, TaskPreparations: []HistoricalRecord{}, EpicCreateOperations: []EpicCreateOperation{}}
 }
-func workItemsPath(root string) string { return filepath.Join(root, MarkerDirectory, WorkItemsFile) }
-
-func (store *systemWorkItemStore) Snapshot(root string) (WorkItemRegistry, error) {
-	return store.read(root)
+func (store *systemWorkItemStore) Snapshot(work ProjectWork) (WorkItemRegistry, error) {
+	return store.read(work)
 }
 
-func (store *systemWorkItemStore) WithLock(root string, operation func(WorkItemStoreSession) error) error {
-	lock, err := store.acquire(root)
+func (store *systemWorkItemStore) WithLock(work ProjectWork, operation func(WorkItemStoreSession) error) error {
+	lock, err := store.acquire(work)
 	if err != nil {
 		return err
 	}
-	session := &systemWorkItemStoreSession{store: store, root: root}
-	_, session.definitionsDigest, err = readDefinitions(root)
+	session := &systemWorkItemStoreSession{store: store, work: work}
+	_, session.definitionsDigest, err = readDefinitions(work.Workspace)
 	var opErr error
 	if err != nil {
 		opErr = err
@@ -201,18 +85,18 @@ func (store *systemWorkItemStore) WithLock(root string, operation func(WorkItemS
 
 func (session *systemWorkItemStoreSession) Snapshot() (WorkItemRegistry, error) {
 	if session.closed {
-		return session.store.read(session.root)
+		return session.store.read(session.work)
 	}
-	info, err := os.Lstat(workItemsPath(session.root))
+	info, err := os.Lstat(session.work.Registry())
 	if session.confirmed != nil && err == nil && session.observed != nil && os.SameFile(info, session.observed) && sameRegistryFileState(info, session.observed) {
-		if err := session.store.verifyIntegrationEvidence(session.root, *session.confirmed); err != nil {
+		if err := session.store.verifyIntegrationEvidence(session.work, *session.confirmed); err != nil {
 			session.confirmed, session.observed = nil, nil
 			return WorkItemRegistry{}, err
 		}
 		return cloneWorkItemRegistry(*session.confirmed), nil
 	}
 	session.confirmed, session.observed = nil, nil
-	registry, err := session.store.read(session.root)
+	registry, err := session.store.read(session.work)
 	if err != nil {
 		return WorkItemRegistry{}, err
 	}
@@ -223,7 +107,7 @@ func (session *systemWorkItemStoreSession) Publish(registry WorkItemRegistry) er
 	if session.closed {
 		return workError(ErrorWorkStoreConflict, "work-item session lock period has ended", nil)
 	}
-	_, digest, err := readDefinitions(session.root)
+	_, digest, err := readDefinitions(session.work.Workspace)
 	if err != nil {
 		return err
 	}
@@ -256,8 +140,11 @@ func publishWorkItemRegistryRecover(session WorkItemStoreSession, registry WorkI
 	return WorkItemRegistry{}, err
 }
 
-func (store *systemWorkItemStore) acquire(root string) (*filelock.Lock, error) {
-	path := filepath.Join(root, MarkerDirectory, workItemsLock)
+func (store *systemWorkItemStore) acquire(work ProjectWork) (*filelock.Lock, error) {
+	if err := work.Create(); err != nil {
+		return nil, err
+	}
+	path := work.lock()
 	lock, err := filelock.Acquire(path, filelock.Options{Fail: store.fail})
 	var lockErr *filelock.Error
 	if errors.As(err, &lockErr) {
@@ -298,8 +185,8 @@ func workItemReleaseError(err *filelock.ReleaseError) error {
 	return workError(ErrorWorkIO, fmt.Sprintf("close work-item lock %s", err.Path), err.Close)
 }
 
-func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
-	return store.readRegistry(root)
+func (store *systemWorkItemStore) read(work ProjectWork) (WorkItemRegistry, error) {
+	return store.readRegistry(work)
 }
 
 // SnapshotRegistrations validates the registry itself without requiring the
@@ -307,12 +194,12 @@ func (store *systemWorkItemStore) read(root string) (WorkItemRegistry, error) {
 // problem heads individually so an unavailable title does not hide its Task.
 // Operations validate the document inputs they actually consume; Git operations
 // do not depend on the availability of optional document history.
-func (store *systemWorkItemStore) SnapshotRegistrations(root string) (WorkItemRegistry, error) {
-	return store.readRegistry(root)
+func (store *systemWorkItemStore) SnapshotRegistrations(work ProjectWork) (WorkItemRegistry, error) {
+	return store.readRegistry(work)
 }
 
-func (store *systemWorkItemStore) readRegistry(root string) (WorkItemRegistry, error) {
-	path := workItemsPath(root)
+func (store *systemWorkItemStore) readRegistry(work ProjectWork) (WorkItemRegistry, error) {
+	path := work.Registry()
 	info, err := os.Lstat(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return emptyWorkItemRegistry(), nil
@@ -330,7 +217,7 @@ func (store *systemWorkItemStore) readRegistry(root string) (WorkItemRegistry, e
 	if err != nil {
 		return WorkItemRegistry{}, workError(ErrorWorkStoreConflict, fmt.Sprintf("cannot read work-item registry %s", path), err)
 	}
-	registry, err := store.decodeStoredRegistry(root, contents)
+	registry, err := store.decodeStoredRegistry(work, contents)
 	if err != nil {
 		if d := RegistryError(err); d != nil {
 			d.Artifact = path
@@ -342,7 +229,7 @@ func (store *systemWorkItemStore) readRegistry(root string) (WorkItemRegistry, e
 }
 
 func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) error {
-	store, root := session.store, session.root
+	store, work := session.store, session.work
 	if store.contentScope != nil && store.contentScope.task == "" {
 		return queueError("task_goal_execution_conflict", "operation content dependencies are not bound")
 	}
@@ -353,21 +240,18 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	if err := validateEpicCreateTransition(old, registry); err != nil {
 		return err
 	}
-	if err := validateRegistryFormatTransition(old, registry); err != nil {
-		return err
-	}
 	if err := validateQueueTransition(old, registry); err != nil {
 		return workError(ErrorWorkStoreConflict, err.Error(), err)
 	}
 	if err := validateTaskScopeTransition(old, registry, store.scope); err != nil {
 		return err
 	}
-	contents, err := store.encodeStoredRegistry(root, &registry, old)
+	contents, err := store.encodeStoredRegistry(work, &registry, old)
 	if err != nil {
 		return workError(ErrorWorkStoreConflict, fmt.Sprintf("cannot encode work-item registry: %v", err), err)
 	}
-	directory := filepath.Join(root, MarkerDirectory)
-	destination := workItemsPath(root)
+	directory := work.Dir
+	destination := work.Registry()
 	if fault := store.fail("temp-open"); fault != nil {
 		return workError(ErrorWorkIO, "open work-item temporary file", fault)
 	}
@@ -432,15 +316,6 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	if fault := store.fail("replace"); fault != nil {
 		return abort("replace", fault)
 	}
-	if registry.upgradePermit != nil {
-		fresh, err := os.ReadFile(destination)
-		if err != nil || digestTaskBytes(fresh) != old.RawSHA256 {
-			return abort("replace", registryDiagnostic("registry_upgrade_conflict", "registry bytes changed before publication", old.FormatVersion))
-		}
-		if err := validateRegistryFormatTransition(old, registry); err != nil {
-			return abort("replace", err)
-		}
-	}
 	if err := platformReplace(temporaryPath, destination); err != nil {
 		return abort("replace", err)
 	}
@@ -458,10 +333,7 @@ func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) er
 	if err := platformSyncDirectory(directory); err != nil {
 		return workError(ErrorWorkIO, "sync work-item registry directory", err)
 	}
-	registry.integrationEvidence = old.integrationEvidence || old.RawSHA256 == ""
 	registry.RawSHA256 = digestTaskBytes(contents)
-	registry.upgradePermit = nil
-	registry.parallelPermit = nil
 	session.confirm(registry, publishedInfo)
 	return nil
 }
@@ -495,7 +367,7 @@ func encodeWorkItemRegistry(registry WorkItemRegistry) ([]byte, error) {
 		return nil, err
 	}
 	contents := output.Bytes()
-	if err := validateWorkItemRegistryYAMLShape(contents, registry.FormatVersion); err != nil {
+	if err := validateWorkItemRegistryYAMLShape(contents); err != nil {
 		return nil, err
 	}
 	return contents, nil
@@ -506,11 +378,7 @@ func decodeWorkItemRegistry(contents []byte) (registry WorkItemRegistry, err err
 	if err != nil {
 		return registry, err
 	}
-	version, err := registryDeclaredFormat(root)
-	if err != nil {
-		return registry, err
-	}
-	defer func() { err = classifyRegistryDecode(err, version) }()
+	defer func() { err = classifyRegistryDecode(err, RegistryFormat) }()
 	if err := rejectRemovedTaskAdoption(root); err != nil {
 		return registry, err
 	}
@@ -531,16 +399,10 @@ func decodeWorkItemRegistry(contents []byte) (registry WorkItemRegistry, err err
 	if registry.Epics == nil || registry.Tasks == nil || registry.WorktreeOperations == nil {
 		return WorkItemRegistry{}, errors.New("epics, tasks, and worktree_operations must be explicit arrays")
 	}
-	if registry.FormatVersion == 1 {
-		if registry.TaskResults != nil || registry.HumanQARecords != nil || registry.IntegrationAuthorities != nil || registry.IntegrationIntents != nil || registry.IntegrationAttempts != nil || registry.IntegrationResults != nil {
-			return WorkItemRegistry{}, errors.New("format 1 must not contain Task lifecycle collections")
-		}
-	} else if registry.FormatVersion >= 2 {
-		if registry.TaskResults == nil || registry.HumanQARecords == nil || registry.IntegrationAuthorities == nil || registry.IntegrationIntents == nil || registry.IntegrationAttempts == nil || registry.IntegrationResults == nil {
-			return WorkItemRegistry{}, errors.New("format 2 Task lifecycle collections must be explicit arrays")
-		}
+	if registry.TaskResults == nil || registry.HumanQARecords == nil || registry.IntegrationAuthorities == nil || registry.IntegrationIntents == nil || registry.IntegrationAttempts == nil || registry.IntegrationResults == nil {
+		return WorkItemRegistry{}, errors.New("Task lifecycle collections must be explicit arrays")
 	}
-	if err := validateWorkItemRegistryNodeShape(root, registry.FormatVersion); err != nil {
+	if err := validateWorkItemRegistryNodeShape(root); err != nil {
 		return WorkItemRegistry{}, err
 	}
 	if err := validateWorkItemRegistry(registry); err != nil {
@@ -593,7 +455,7 @@ type yamlShapeField struct {
 	typeOf reflect.Type
 }
 
-func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
+func validateWorkItemRegistryYAMLShape(contents []byte) error {
 	var document yaml.Node
 	if err := yaml.Unmarshal(contents, &document); err != nil || len(document.Content) != 1 {
 		if err == nil {
@@ -601,73 +463,27 @@ func validateWorkItemRegistryYAMLShape(contents []byte, version int) error {
 		}
 		return err
 	}
-	return validateWorkItemRegistryNodeShape(document.Content[0], version)
+	return validateWorkItemRegistryNodeShape(document.Content[0])
 }
 
-func validateWorkItemRegistryNodeShape(root *yaml.Node, version int) error {
-	fields := []yamlShapeField{
-		{name: "format_version", typeOf: reflect.TypeOf(int(0))},
-		{name: "epics", typeOf: reflect.TypeOf([]EpicRecord{})},
-		{name: "tasks", typeOf: reflect.TypeOf([]TaskRecord{})},
-		{name: "worktree_operations", typeOf: reflect.TypeOf([]WorktreeOperationRecord{})},
+// The logical registry has one shape: every collection is an explicit array in
+// declaration order; only the Task Spec policy list may be absent.
+func validateWorkItemRegistryNodeShape(root *yaml.Node) error {
+	present := false
+	for i := 0; i < len(root.Content); i += 2 {
+		if root.Content[i].Value == "task_spec_policies" {
+			present = true
+		}
 	}
-	if version >= 2 {
-		fields = append(fields,
-			yamlShapeField{name: "task_results", typeOf: reflect.TypeOf([]HistoricalRecord{})},
-			yamlShapeField{name: "human_qa_records", typeOf: reflect.TypeOf([]HistoricalRecord{})},
-			yamlShapeField{name: "integration_authorities", typeOf: reflect.TypeOf([]IntegrationAuthority{})},
-			yamlShapeField{name: "integration_intents", typeOf: reflect.TypeOf([]IntegrationIntent{})},
-			yamlShapeField{name: "integration_attempts", typeOf: reflect.TypeOf([]IntegrationAttempt{})},
-			yamlShapeField{name: "integration_results", typeOf: reflect.TypeOf([]IntegrationResult{})},
-		)
-	}
-	if version >= 3 {
-		for i := 0; i < len(root.Content); i += 2 {
-			if root.Content[i].Value == "task_spec_policies" {
-				fields = append(fields, yamlShapeField{name: "task_spec_policies", typeOf: reflect.TypeOf([]TaskSpecPolicy{})})
+	fields := []yamlShapeField{}
+	for _, f := range yamlStructShapeFields(reflect.TypeOf(WorkItemRegistry{})) {
+		if f.name == "task_spec_policies" {
+			if !present {
+				continue
 			}
+			f.typeOf = reflect.TypeOf([]TaskSpecPolicy{})
 		}
-		fields = append(fields, yamlShapeField{name: "task_problem_revisions", typeOf: reflect.TypeOf([]TaskProblemReference{})}, yamlShapeField{name: "task_spec_revisions", typeOf: reflect.TypeOf([]TaskSpecReference{})}, yamlShapeField{name: "task_spec_assessments", typeOf: reflect.TypeOf([]TaskAssessmentReference{})}, yamlShapeField{name: "task_solution_selections", typeOf: reflect.TypeOf([]TaskSelectionReference{})}, yamlShapeField{name: "task_result_spec_bindings", typeOf: reflect.TypeOf([]HistoricalRecord{})}, yamlShapeField{name: "task_content_publications", typeOf: reflect.TypeOf([]TaskContentPublication{})})
-	}
-	if version >= 4 {
-		for _, f := range yamlStructShapeFields(reflect.TypeOf(WorkItemRegistry{})) {
-			if f.name == "epic_base_versions" || f.name == "epic_base_updates" || f.name == "task_queue_events" || f.name == "task_preparations" {
-				fields = append(fields, f)
-			}
-		}
-	}
-	capabilities := version
-	if version == ParallelRegistryFormat {
-		for i := 0; i < len(root.Content); i += 2 {
-			if root.Content[i].Value == "parallel_boundary" {
-				var boundary RegistryFormatBoundary
-				if err := root.Content[i+1].Decode(&boundary); err != nil {
-					return err
-				}
-				capabilities = boundary.FromVersion
-			}
-		}
-		if capabilities < 4 || capabilities > 7 {
-			return fmt.Errorf("invalid parallel predecessor")
-		}
-
-	}
-	if capabilities >= 5 {
-		fields = append(fields, yamlShapeField{name: "format_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
-	}
-	if capabilities >= 6 {
-		fields = append(fields, yamlShapeField{name: "epic_create_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})}, yamlShapeField{name: "epic_create_operations", typeOf: reflect.TypeOf([]EpicCreateOperation{})})
-	}
-	if capabilities >= 7 {
-		fields = append(fields, yamlShapeField{name: "adoption_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})})
-	}
-	if version == ParallelRegistryFormat {
-		fields = append(fields, yamlShapeField{name: "parallel_boundary", typeOf: reflect.TypeOf(RegistryFormatBoundary{})}, yamlShapeField{name: "source_reconciliations", typeOf: reflect.TypeOf([]HistoricalRecord{})})
-		for i := 0; i < len(root.Content); i += 2 {
-			if root.Content[i].Value == "parallel_activation" {
-				fields = append(fields, yamlShapeField{name: "parallel_activation", typeOf: reflect.TypeOf(ParallelActivationPlan{})})
-			}
-		}
+		fields = append(fields, f)
 	}
 	return validateYAMLMappingShape(root, fields, "work-item registry")
 }
@@ -701,7 +517,7 @@ func validateYAMLNodeShape(node *yaml.Node, expected reflect.Type, context strin
 			}
 			filtered := []yamlShapeField{}
 			for _, f := range fields {
-				if f.name != "active_preparation_ids" && f.name != "current_preparation_id" || present[f.name] {
+				if f.name != "current_preparation_id" || present[f.name] {
 					filtered = append(filtered, f)
 				}
 			}
@@ -806,12 +622,6 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 	if err := validateTaskContentRegistry(registry); err != nil {
 		return err
 	}
-	if registry.FormatVersion < 1 || registry.FormatVersion > CurrentRegistryFormat {
-		return fmt.Errorf("unsupported format_version %d", registry.FormatVersion)
-	}
-	if err := validateRegistryBoundary(registry); err != nil {
-		return err
-	}
 	if !sortedUniqueEpics(registry.Epics) || !sortedUniqueTasks(registry.Tasks) || !sortedUniqueOperations(registry.WorktreeOperations) {
 		return errors.New("work-item arrays must be sorted by unique IDs")
 	}
@@ -847,7 +657,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 				return fmt.Errorf("Epic %s has invalid common directory", epic.ID)
 			}
 			wt := binding.Worktree
-			if !worktreeIDPattern.MatchString(string(wt.ID)) || wt.OwnerKind != "epic" || wt.OwnerID != epic.ID || (wt.Origin != "adopted" && !(registry.FormatVersion >= 6 && wt.Origin == "ply_created")) || wt.GitCommonDir != binding.GitCommonDir || !validStoredPath(wt.Locator) || !validFullBranchRef(wt.Ref) || !validOIDText(wt.OID) || !validOIDText(wt.Tree) {
+			if !worktreeIDPattern.MatchString(string(wt.ID)) || wt.OwnerKind != "epic" || wt.OwnerID != epic.ID || (wt.Origin != "adopted" && wt.Origin != "ply_created") || wt.GitCommonDir != binding.GitCommonDir || !validStoredPath(wt.Locator) || !validFullBranchRef(wt.Ref) || !validOIDText(wt.OID) || !validOIDText(wt.Tree) {
 				return fmt.Errorf("Epic %s has invalid worktree binding", epic.ID)
 			}
 			if owner, ok := worktreeIDs[wt.ID]; ok {
@@ -983,12 +793,7 @@ func validateWorkItemRegistry(registry WorkItemRegistry) error {
 			return fmt.Errorf("operation refers to missing Task %s", taskID)
 		}
 	}
-	if registry.FormatVersion >= 2 {
-		if err := validateTaskLifecycleRegistry(registry); err != nil {
-			return err
-		}
-	}
-	return nil
+	return validateTaskLifecycleRegistry(registry)
 }
 
 func validateTaskLifecycleRegistry(registry WorkItemRegistry) error {
@@ -1445,32 +1250,4 @@ func sortedUniqueOperations(values []WorktreeOperationRecord) bool {
 		}
 	}
 	return true
-}
-
-type workItemRegistryV4Wire struct {
-	FormatVersion           int                       `yaml:"format_version"`
-	Epics                   []EpicRecord              `yaml:"epics"`
-	Tasks                   []TaskRecord              `yaml:"tasks"`
-	WorktreeOperations      []WorktreeOperationRecord `yaml:"worktree_operations"`
-	TaskResults             []HistoricalRecord        `yaml:"task_results"`
-	HumanQARecords          []HistoricalRecord        `yaml:"human_qa_records"`
-	IntegrationAuthorities  []IntegrationAuthority    `yaml:"integration_authorities"`
-	IntegrationIntents      []IntegrationIntent       `yaml:"integration_intents"`
-	IntegrationAttempts     []IntegrationAttempt      `yaml:"integration_attempts"`
-	IntegrationResults      []IntegrationResult       `yaml:"integration_results"`
-	TaskSpecPolicies        *[]TaskSpecPolicy         `yaml:"task_spec_policies,omitempty"`
-	TaskProblemRevisions    []TaskProblemReference    `yaml:"task_problem_revisions"`
-	TaskSpecRevisions       []TaskSpecReference       `yaml:"task_spec_revisions"`
-	TaskSpecAssessments     []TaskAssessmentReference `yaml:"task_spec_assessments"`
-	TaskSolutionSelections  []TaskSelectionReference  `yaml:"task_solution_selections"`
-	TaskResultSpecBindings  []HistoricalRecord        `yaml:"task_result_spec_bindings"`
-	TaskContentPublications []TaskContentPublication  `yaml:"task_content_publications"`
-	EpicBaseVersions        []EpicBaseVersion         `yaml:"epic_base_versions"`
-	EpicBaseUpdates         []EpicBaseUpdate          `yaml:"epic_base_updates"`
-	TaskQueueEvents         []TaskQueueEvent          `yaml:"task_queue_events"`
-	TaskPreparations        []HistoricalRecord        `yaml:"task_preparations"`
-}
-
-func workItemRegistryV4(r WorkItemRegistry) workItemRegistryV4Wire {
-	return workItemRegistryV4Wire{FormatVersion: r.FormatVersion, Epics: r.Epics, Tasks: r.Tasks, WorktreeOperations: r.WorktreeOperations, TaskResults: r.TaskResults, HumanQARecords: r.HumanQARecords, IntegrationAuthorities: r.IntegrationAuthorities, IntegrationIntents: r.IntegrationIntents, IntegrationAttempts: r.IntegrationAttempts, IntegrationResults: r.IntegrationResults, TaskSpecPolicies: r.TaskSpecPolicies, TaskProblemRevisions: r.TaskProblemRevisions, TaskSpecRevisions: r.TaskSpecRevisions, TaskSpecAssessments: r.TaskSpecAssessments, TaskSolutionSelections: r.TaskSolutionSelections, TaskResultSpecBindings: r.TaskResultSpecBindings, TaskContentPublications: r.TaskContentPublications, EpicBaseVersions: r.EpicBaseVersions, EpicBaseUpdates: r.EpicBaseUpdates, TaskQueueEvents: r.TaskQueueEvents, TaskPreparations: r.TaskPreparations}
 }

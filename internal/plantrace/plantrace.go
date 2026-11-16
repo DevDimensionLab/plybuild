@@ -79,16 +79,17 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 		return Trace{}, err
 	}
 	out := Trace{Kind: Kind, SchemaVersion: 1, Project: project, Plan: Plan{planID, view.Plan.Title, view.Plan.Status, history}, Tasks: []Task{}, Events: []Event{}, Reasons: []Reason{}}
-	w, err := workspace.ObserveContainingRoot(d)
+	w, err := workspace.ObserveContaining(d)
 	if err != nil {
 		return Trace{}, err
 	}
-	tasks, err := taskjournal.JournalTasks(w.Root)
+	journals, err := taskjournal.Journals(w.Root)
 	if err != nil {
 		return Trace{}, err
 	}
-	for _, task := range tasks {
-		records, readErr := taskjournal.ReadContributions(w, task)
+	for _, journal := range journals {
+		task := journal.Task
+		records, readErr := taskjournal.ReadContributions(w, journal.Work, task)
 		link := taskjournal.LatestPlanLink(records)
 		if link == nil || link.Plan == nil || *link.Plan != planID || link.Refs["project"] != string(project) {
 			continue

@@ -14,9 +14,10 @@ type workItemLifecycleStore struct {
 	Events        []WorkItemLifecycleEvent `json:"events"`
 }
 
-func readWorkItemLifecycle(root string) (WorkItemLifecycleSnapshot, error) {
-	out := WorkItemLifecycleSnapshot{Locator: lifecycleLocator(root), Events: []WorkItemLifecycleEvent{}, states: map[string]LifecycleState{}}
-	bytes, exists, err := readWorkspaceMetadata(root, WorkItemLifecycleFile)
+// readWorkItemLifecycle reads the lifecycle history of the Project of work.
+func readWorkItemLifecycle(work ProjectWork) (WorkItemLifecycleSnapshot, error) {
+	out := WorkItemLifecycleSnapshot{Project: work.Project, Locator: work.Lifecycle(), Events: []WorkItemLifecycleEvent{}, states: map[string]LifecycleState{}}
+	bytes, exists, err := readWorkspaceMetadata(work.Dir, WorkItemLifecycleFile)
 	if err != nil {
 		return out, err
 	}

@@ -10,10 +10,12 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/privatestore"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-// Layout below <workspace>/.ply/human-input/v1. Each fact is its own
-// write-once file, so no crash can leave a half-applied multi-file change:
+// store is the human-input store of one Project, in its work directory
+// (ProjectWork.HumanInput). Each fact is its own write-once file, so no crash
+// can leave a half-applied multi-file change:
 //
 //	questions/<id>.json      immutable question
 //	answers/<id>.json        the one winning answer request
@@ -21,15 +23,62 @@ import (
 //	continuations/<id>.json  agent-reported use of that answer
 //	withdrawals/<id>.json    agent withdrawal of an unanswered question
 //	store.lock               held only while one write decides; never while waiting
-func storeRoot(root string) string { return filepath.Join(root, ".ply", "human-input", "v1") }
-func factPath(root, kind, id string) string {
-	return filepath.Join(storeRoot(root), kind, id+".json")
+type store struct{ work workspace.ProjectWork }
+
+func (s store) root() string { return s.work.Workspace }
+func (s store) dir() string  { return s.work.HumanInput() }
+func factPath(s store, kind, id string) string {
+	return filepath.Join(s.dir(), kind, id+".json")
 }
-func questionPath(root, id string) string     { return factPath(root, "questions", id) }
-func answerPath(root, id string) string       { return factPath(root, "answers", id) }
-func receiptPath(root, id string) string      { return factPath(root, "receipts", id) }
-func continuationPath(root, id string) string { return factPath(root, "continuations", id) }
-func withdrawalPath(root, id string) string   { return factPath(root, "withdrawals", id) }
+func questionPath(s store, id string) string     { return factPath(s, "questions", id) }
+func answerPath(s store, id string) string       { return factPath(s, "answers", id) }
+func receiptPath(s store, id string) string      { return factPath(s, "receipts", id) }
+func continuationPath(s store, id string) string { return factPath(s, "continuations", id) }
+func withdrawalPath(s store, id string) string   { return factPath(s, "withdrawals", id) }
+
+// projectStore is the store of project; found is false when the workspace
+// defines no such Project.
+func projectStore(root, project string) (s store, found bool, err error) {
+	works, e := workspace.DefinedWork(root)
+	if e != nil {
+		return store{}, false, invalidState("the Projects of the workspace cannot be read")
+	}
+	for _, work := range works {
+		if string(work.Project) == project {
+			return store{work}, true, nil
+		}
+	}
+	return store{}, false, nil
+}
+
+// locate finds the store of the Project whose work holds question id. IDs
+// are unique in the workspace: they bind its root and the question's Project.
+func locate(root, id string) (store, error) {
+	works, e := workspace.DefinedWork(root)
+	if e != nil {
+		return store{}, invalidState("the Projects of the workspace cannot be read")
+	}
+	var found []store
+	for _, work := range works {
+		s := store{work}
+		_, e := os.Lstat(questionPath(s, id))
+		if os.IsNotExist(e) {
+			continue
+		}
+		if e != nil {
+			return store{}, invalidState("question " + id + " cannot be inspected in Project " + string(work.Project))
+		}
+		found = append(found, s)
+	}
+	switch len(found) {
+	case 0:
+		return store{}, fail(CodeNotFound, "no question "+id+" exists in this workspace")
+	case 1:
+		return found[0], nil
+	default:
+		return store{}, invalidState("question " + id + " is stored in Projects " + string(found[0].work.Project) + " and " + string(found[1].work.Project))
+	}
+}
 
 const maxFactBytes = 512 << 10
 
@@ -131,9 +180,10 @@ func readFact(path string, out any) (bool, error) {
 	return true, nil
 }
 
-func readQuestionRecord(root, id string) (questionRecord, error) {
+func readQuestionRecord(s store, id string) (questionRecord, error) {
+	root := s.root()
 	var r questionRecord
-	found, e := readFact(questionPath(root, id), &r)
+	found, e := readFact(questionPath(s, id), &r)
 	if e != nil {
 		return r, e
 	}
@@ -141,7 +191,7 @@ func readQuestionRecord(root, id string) (questionRecord, error) {
 		return r, fail(CodeNotFound, "no question "+id+" exists in this workspace")
 	}
 	draft := QuestionDraft{Kind: DraftKind, SchemaVersion: SchemaVersion, PublicationKey: r.PublicationKey, ProjectID: r.Scope.ProjectID, RepoID: r.Scope.RepoID, TaskID: r.Scope.TaskID, ActivityID: r.Scope.ActivityID, ActivityTitle: r.Scope.ActivityTitle, Provider: r.Source.Provider, SessionID: r.Source.SessionID, OriginCWD: r.Source.OriginCWD, Text: r.Text, Reason: r.Reason, AnswerKind: r.AnswerKind, Options: r.Options}
-	if r.Workspace != root || r.QuestionID != id || questionIDFor(root, r.Scope.ProjectID, r.PublicationKey) != id || r.QuestionSHA256 != questionDigest(r) || r.Source.Provenance != ProvenanceAgent || validateDraft(draft) != nil {
+	if r.Workspace != root || r.QuestionID != id || r.Scope.ProjectID != string(s.work.Project) || questionIDFor(root, r.Scope.ProjectID, r.PublicationKey) != id || r.QuestionSHA256 != questionDigest(r) || r.Source.Provenance != ProvenanceAgent || validateDraft(draft) != nil {
 		return r, invalidState("question " + id + " does not match its immutable identity or digest")
 	}
 	return r, nil
@@ -149,14 +199,15 @@ func readQuestionRecord(root, id string) (questionRecord, error) {
 
 // view derives the current public question from its immutable facts. Reads
 // take no lock and create nothing.
-func view(root, id string) (Question, error) {
-	r, e := readQuestionRecord(root, id)
+func view(s store, id string) (Question, error) {
+	root := s.root()
+	r, e := readQuestionRecord(s, id)
 	if e != nil {
 		return Question{}, e
 	}
 	q := Question{Kind: QuestionKind, SchemaVersion: SchemaVersion, Mode: Mode, Workspace: root, QuestionID: id, QuestionSHA256: r.QuestionSHA256, PublicationKey: r.PublicationKey, Scope: r.Scope, Source: r.Source, Text: r.Text, Reason: r.Reason, AnswerKind: r.AnswerKind, Options: r.Options, CreatedAtUTC: r.CreatedAtUTC, State: StateWaiting}
 	var a answerRecord
-	if found, e := readFact(answerPath(root, id), &a); e != nil {
+	if found, e := readFact(answerPath(s, id), &a); e != nil {
 		return q, e
 	} else if found {
 		req := a.Request
@@ -167,7 +218,7 @@ func view(root, id string) (Question, error) {
 		q.State = StateAnswered
 	}
 	var receipt Receipt
-	if found, e := readFact(receiptPath(root, id), &receipt); e != nil {
+	if found, e := readFact(receiptPath(s, id), &receipt); e != nil {
 		return q, e
 	} else if found {
 		if q.Answer == nil || receipt.RequestID != q.Answer.RequestID || receipt.RequestSHA256 != q.Answer.RequestSHA256 || receipt.Provenance != ProvenanceAgent {
@@ -176,7 +227,7 @@ func view(root, id string) (Question, error) {
 		q.Receipt, q.State = &receipt, StateReceived
 	}
 	var cont Continuation
-	if found, e := readFact(continuationPath(root, id), &cont); e != nil {
+	if found, e := readFact(continuationPath(s, id), &cont); e != nil {
 		return q, e
 	} else if found {
 		if q.Answer == nil || cont.RequestID != q.Answer.RequestID || cont.RequestSHA256 != q.Answer.RequestSHA256 || cont.Provenance != ProvenanceAgent || !ValidReport(cont.Summary) {
@@ -185,7 +236,7 @@ func view(root, id string) (Question, error) {
 		q.Continuation, q.State = &cont, StateContinued
 	}
 	var w Withdrawal
-	if found, e := readFact(withdrawalPath(root, id), &w); e != nil {
+	if found, e := readFact(withdrawalPath(s, id), &w); e != nil {
 		return q, e
 	} else if found {
 		if q.Answer != nil || w.Provenance != ProvenanceAgent || !ValidReport(w.Reason) {
@@ -221,8 +272,8 @@ var inventoryName = regexp.MustCompile(`^hiq_[a-f0-9]{32}\.json$`)
 
 // questionIDs lists question IDs in their immutable sort order. Interrupted
 // publication temporaries are not questions; any other entry is unsafe state.
-func questionIDs(root string) ([]string, error) {
-	dir := filepath.Join(storeRoot(root), "questions")
+func questionIDs(s store) ([]string, error) {
+	dir := filepath.Join(s.dir(), "questions")
 	e := privatestore.PhysicalPath(dir)
 	if os.IsNotExist(e) {
 		return []string{}, nil
@@ -257,6 +308,12 @@ func questionIDs(root string) ([]string, error) {
 func publish(path string, v any) error {
 	return privatestore.PrivateWriteOnce(path, canonical(v))
 }
-func withLock(root string, fn func() error) error {
-	return privatestore.WithPrivateLock(storeRoot(root), fn)
+
+// withLock holds the store lock of s. The Project's work directory is made
+// first, so a missing wrapper is never created.
+func withLock(s store, fn func() error) error {
+	if e := s.work.Create(); e != nil {
+		return e
+	}
+	return privatestore.WithPrivateLock(s.dir(), fn)
 }

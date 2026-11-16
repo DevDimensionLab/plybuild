@@ -39,8 +39,8 @@ func writeAuditSections(t *testing.T, b []byte) (map[string][]byte, []string) {
 	}
 	root := doc.Content[0]
 	version := registryNodeField(root, "format_version")
-	if version == nil || (version.Value != "9" && version.Value != "10") {
-		t.Fatal("measurement requires physical format 9 or 10")
+	if version == nil || version.Value != fmt.Sprint(RegistryFormat) {
+		t.Fatal("measurement requires the stored registry format")
 	}
 	reg := registryNodeField(root, "registry")
 	lines := bytes.SplitAfter(b, []byte("\n"))
@@ -92,7 +92,7 @@ func TestPublicationEvidenceWriteMeasurement(t *testing.T) {
 		if err != nil || out.Readback.Classification != "no_effect" {
 			t.Fatalf("retry: %s %v", out.Readback.Classification, err)
 		}
-		r, err := native.Snapshot(f.root)
+		r, err := native.Snapshot(testWork(t, f.root))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -133,7 +133,7 @@ func TestPublicationEvidenceWriteMeasurement(t *testing.T) {
 	for _, info := range evidenceFileSnapshot(t, f.root) {
 		stock += info.Size()
 	}
-	final, err := native.Snapshot(f.root)
+	final, err := native.Snapshot(testWork(t, f.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +164,7 @@ type writeAuditStore struct {
 	steps *[]writeAuditStep
 }
 
-func (s *writeAuditStore) WithLock(root string, fn func(WorkItemStoreSession) error) error {
+func (s *writeAuditStore) WithLock(root ProjectWork, fn func(WorkItemStoreSession) error) error {
 	return s.WorkItemStore.WithLock(root, func(session WorkItemStoreSession) error {
 		return fn(&writeAuditSession{WorkItemStoreSession: session, store: s, root: root})
 	})
@@ -173,16 +173,16 @@ func (s *writeAuditStore) WithLock(root string, fn func(WorkItemStoreSession) er
 type writeAuditSession struct {
 	WorkItemStoreSession
 	store *writeAuditStore
-	root  string
+	root  ProjectWork
 }
 
 func (s *writeAuditSession) Publish(r WorkItemRegistry) error {
 	t := s.store.t
-	before, err := os.ReadFile(workItemsPath(s.root))
+	before, err := os.ReadFile(s.root.Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	files := evidenceFileSnapshot(t, s.root)
+	files := evidenceFileSnapshot(t, s.root.Workspace)
 	if err := s.WorkItemStoreSession.Publish(r); err != nil {
 		return err
 	}
@@ -195,11 +195,11 @@ func (s *writeAuditSession) Publish(r WorkItemRegistry) error {
 			t.Fatalf("publication rewrote historical payload: %s %v", path, err)
 		}
 	}
-	after, err := os.ReadFile(workItemsPath(s.root))
+	after, err := os.ReadFile(s.root.Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
-	n, count := evidencePublishedDelta(t, files, evidenceFileSnapshot(t, s.root))
+	n, count := evidencePublishedDelta(t, files, evidenceFileSnapshot(t, s.root.Workspace))
 	b, order := writeAuditSections(t, before)
 	a, afterOrder := writeAuditSections(t, after)
 	if len(order) != len(afterOrder) {
@@ -233,7 +233,7 @@ func writeAuditInventory(t *testing.T, root string) map[string]writeAuditInvento
 	t.Helper()
 	out := map[string]writeAuditInventoryEntry{}
 	for path, info := range evidenceFileSnapshot(t, root) {
-		relative, err := filepath.Rel(filepath.Join(root, MarkerDirectory), path)
+		relative, err := filepath.Rel(testWork(t, root).Dir, path)
 		if err != nil {
 			t.Fatal(err)
 		}

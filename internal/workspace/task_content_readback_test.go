@@ -36,8 +36,8 @@ func TestTaskContentReadbackUsesNormativeIntegrityReasons(t *testing.T) {
 func TestTaskContentReadDoesNotCreateMissingLocksOrStore(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	before, _ := os.ReadFile(workItemsPath(root))
-	lock := filepath.Join(root, MarkerDirectory, workItemsLock)
+	before, _ := os.ReadFile(testWork(t, root).Registry())
+	lock := testWork(t, root).lock()
 	if err := os.Remove(lock); err != nil {
 		t.Fatal(err)
 	}
@@ -47,29 +47,27 @@ func TestTaskContentReadDoesNotCreateMissingLocksOrStore(t *testing.T) {
 	if _, err := os.Lstat(lock); !os.IsNotExist(err) {
 		t.Fatalf("read created a lock: %v", err)
 	}
-	after, _ := os.ReadFile(workItemsPath(root))
+	after, _ := os.ReadFile(testWork(t, root).Registry())
 	if string(before) != string(after) {
 		t.Fatal("read rewrote store")
 	}
-	if err := WithTaskSpecSnapshot(f.dependencies, root, func(*TaskSpecSession) error { return nil }); err == nil {
-		t.Fatal("guard accepted missing work-item lock")
-	}
+
 }
 
 func TestTaskContentMissingProblemDocumentClearsSummaryAndRequiresInspection(t *testing.T) {
 	f := newWorkItemJourneyFixture(t)
 	root := filepath.Dir(f.wrapper)
-	r, err := f.dependencies.WorkItems.Snapshot(root)
+	r, err := f.dependencies.WorkItems.Snapshot(testWork(t, root))
 	if err != nil {
 		t.Fatal(err)
 	}
 	head := taskContentState(r, "task").ProblemHead
-	manifest, err := readRegisteredTaskManifest(f.dependencies.TaskContent, root, r, head.ManifestSHA256)
+	manifest, err := readRegisteredTaskManifest(f.dependencies.TaskContent, testWork(t, root), r, head.ManifestSHA256)
 	if err != nil {
 		t.Fatal(err)
 	}
 	doc := contentFields(contentArray(contentFields(manifest), "documents")[0])
-	if err := os.Remove(taskContentPath(root, "objects", contentString(doc, "sha256"))); err != nil {
+	if err := os.Remove(taskContentPath(testWork(t, root), "objects", contentString(doc, "sha256"))); err != nil {
 		t.Fatal(err)
 	}
 	show, err := ShowTask(f.dependencies, "task")

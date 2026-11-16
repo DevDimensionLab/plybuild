@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"path/filepath"
 )
 
 type WorkspaceObservation struct {
@@ -15,19 +14,6 @@ type WorkspaceObservation struct {
 }
 
 func ObserveContaining(dependencies Dependencies) (WorkspaceObservation, error) {
-	root, err := containingWorkspaceRoot(dependencies)
-	if err != nil {
-		return WorkspaceObservation{}, err
-	}
-	if err := ensureDefinitionEpics(dependencies, root); err != nil {
-		return WorkspaceObservation{}, err
-	}
-	return observeWorkspaceRoot(dependencies.Files, root)
-}
-
-// ObserveContainingRoot locates and observes the containing workspace like
-// ObserveContaining, without bootstrapping runtime Epics from definitions.
-func ObserveContainingRoot(dependencies Dependencies) (WorkspaceObservation, error) {
 	root, err := containingWorkspaceRoot(dependencies)
 	if err != nil {
 		return WorkspaceObservation{}, err
@@ -58,7 +44,7 @@ func ObserveRoot(dependencies Dependencies, root string) (WorkspaceObservation, 
 }
 
 func observeWorkspaceRoot(files FileSystem, root string) (WorkspaceObservation, error) {
-	markerPath := filepath.Join(root, MarkerDirectory, MarkerFile)
+	markerPath := MarkerPath(root)
 	info, err := files.Lstat(markerPath)
 	if errors.Is(err, fs.ErrNotExist) {
 		return WorkspaceObservation{}, projectError(ErrorWorkspaceNotFound, fmt.Sprintf("no Ply workspace exists at %s", root), nil)

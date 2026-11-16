@@ -163,8 +163,9 @@ what happens when you are interrupted.
 - Resolve the existing Ply executable once as absolute `PLY_BIN`. Commands above
   use `ply` as shorthand for that executable; use the assignment's existing path
   when it is absent from PATH. Do not install or change global configuration.
-- Publishing writes only under `WS/.ply/human-input/v1`. Ask for local write
-  access there if your runtime needs it, and nothing broader.
+- Publishing writes only under `data/work/human-input/v1` in the wrapper of the
+  question's Project (`wrapper` from `ply workspace project list --format json`).
+  Ask for local write access there if your runtime needs it, and nothing broader.
 - Limits: question 2000 characters, reason and consequence 1000, label 120,
   title 160, 2-6 options. A text answer is at most 4000 characters.
 - For the full contract, read `schemas/workflow-human-input-v1/README.md` in the

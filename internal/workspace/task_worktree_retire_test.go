@@ -44,7 +44,7 @@ func (x taskRetireFixture) integrate(t *testing.T) {
 
 func (x taskRetireFixture) state(t *testing.T) WorkItemState {
 	t.Helper()
-	r, err := x.f.dependencies.WorkItems.Snapshot(filepath.Dir(x.f.wrapper))
+	r, err := x.f.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(x.f.wrapper)))
 	if err != nil {
 		t.Fatal(err)
 	}

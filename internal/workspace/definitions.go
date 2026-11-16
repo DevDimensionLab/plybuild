@@ -80,7 +80,11 @@ func AddDefinitionRepo(d Dependencies, project, repo, path, remote string) (Defi
 		if err != nil || !added {
 			return err
 		}
-		return checkHistoricalIdentity(root, registry, RepoID(repo))
+		work, err := projectWork(root, projectID)
+		if err != nil {
+			return err
+		}
+		return checkHistoricalIdentity(work, registry, RepoID(repo))
 	}
 	result, err := workspacedef.Update(root, basis, mutate, check)
 	if err != nil {
@@ -102,7 +106,7 @@ func CheckDefinitions(d Dependencies, root string) error {
 		return definitionUpdateError(err)
 	}
 	if defs == nil {
-		return definitionUpdateError(&workspacedef.Error{Kind: workspacedef.KindMissing, Path: filepath.Join(observed.Root, workspacedef.File), Detail: "definitions do not exist"})
+		return missingDefinitions(observed.Root)
 	}
 	if err := validateDefinitions(*defs); err != nil {
 		return err
@@ -111,13 +115,19 @@ func CheckDefinitions(d Dependencies, root string) error {
 	return err
 }
 
+// validateDefinitions checks definitions without Git. A repository belongs to
+// exactly one Project, so its work items live in one Project's registry.
 func validateDefinitions(defs workspacedef.Definitions) error {
 	projects := map[string]bool{}
-	epics := map[string]bool{}
+	owners := map[string]string{}
 	for _, p := range defs.Projects {
 		input := ProjectAddInput{ProjectID: ProjectID(p.ID), Name: p.Name, Wrapper: p.Wrapper}
 		for _, r := range p.Repos {
 			input.Repos = append(input.Repos, RepoInput{RepoID: RepoID(r.ID), Path: r.Path})
+			if owner, found := owners[r.ID]; found && owner != p.ID {
+				return projectError(ErrorProjectDuplicateRepo, fmt.Sprintf("repository %s belongs to both Project %s and Project %s; a repository belongs to exactly one Project", r.ID, owner, p.ID), nil)
+			}
+			owners[r.ID] = p.ID
 		}
 		if err := validateProjectAddInput(input); err != nil {
 			return err
@@ -126,24 +136,6 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 			return ProjectInvalidArguments("duplicate Project in definitions")
 		}
 		projects[p.ID] = true
-		for _, e := range p.Epics {
-			if err := validateWorkIdentifier("Epic", e.ID); err != nil {
-				return err
-			}
-			if err := validateWorkText("Epic title", e.Title, 128); err != nil {
-				return err
-			}
-			member := false
-			for _, r := range p.Repos {
-				if r.ID == e.Repo {
-					member = true
-				}
-			}
-			if !member || e.Path == "" || !validFullBranchRef(e.Ref) || epics[e.ID] {
-				return WorkInvalidArguments("invalid or duplicate Epic definition")
-			}
-			epics[e.ID] = true
-		}
 	}
 	return nil
 }
@@ -153,7 +145,7 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 func definitionProjects(root string, defs workspacedef.Definitions) (projectRegistry, error) {
 	files := systemFileSystem{}
 	observer := newSystemRepoObserver(files)
-	registry := projectRegistry{FormatVersion: FormatVersion, Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
+	registry := projectRegistry{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
 	for _, p := range defs.Projects {
 		wrapper, err := canonicalDirectory(files, root, p.Wrapper, "wrapper")
 		if err != nil {
@@ -183,19 +175,63 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 	return registry, validateRegistry(registry)
 }
 
+// updateDefinitions applies mutate to ply-workspace.json as it is under
+// projects.lock and validates the result against live Git before it is
+// written. It reports whether the file changed.
+func updateDefinitions(root string, mutate func(*workspacedef.Definitions) (bool, error)) (bool, error) {
+	check := func(defs workspacedef.Definitions) error {
+		if err := validateDefinitions(defs); err != nil {
+			return err
+		}
+		_, err := definitionProjects(root, defs)
+		return err
+	}
+	result, err := workspacedef.Apply(root, mutate, check)
+	if err != nil {
+		return false, definitionUpdateError(err)
+	}
+	return result.Changed, nil
+}
+
+// definedProject resolves one Project of ply-workspace.json and its repositories.
+func definedProject(root string, id ProjectID) (ProjectRecord, []RepoRecord, error) {
+	projects, repos, err := newSystemProjectStore().Snapshot(root)
+	if err != nil {
+		return ProjectRecord{}, nil, err
+	}
+	for _, project := range projects {
+		if project.ID == id {
+			return project, repositoriesForProject(project, repos), nil
+		}
+	}
+	return ProjectRecord{}, nil, projectError(ErrorProjectNotFound, fmt.Sprintf("project %s is not defined in %s", id, workspacedef.File), nil)
+}
+
+// definitionPath is the stored form of a physical path: relative to the
+// workspace root when inside it, otherwise absolute.
+func definitionPath(root, path string) string {
+	relative, err := filepath.Rel(root, path)
+	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+		return path
+	}
+	return filepath.ToSlash(relative)
+}
+
+func missingDefinitions(root string) error {
+	return definitionError(&workspacedef.Error{Kind: workspacedef.KindMissing, Path: filepath.Join(root, workspacedef.File), Detail: "definitions do not exist"})
+}
+
 // metadataProjects is the Project lookup of project metadata only. When
 // ply-workspace.json exists it alone is authoritative and is projected
 // statically, without Git observation or existence checks; repositories carry
-// no GitCommonDir, so the snapshot must not leave metadata. Without the file
-// the legacy store answers as before. It takes no lock.
+// no GitCommonDir, so the snapshot must not leave metadata. It takes no lock.
 func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	defs, _, err := workspacedef.Read(root)
 	if err != nil {
 		return ProjectSnapshot{}, definitionUpdateError(err)
 	}
 	if defs == nil {
-		projects, repos, err := d.Projects.Snapshot(root)
-		return ProjectSnapshot{Projects: projects, Repos: repos}, err
+		return ProjectSnapshot{}, missingDefinitions(root)
 	}
 	if err := validateDefinitions(*defs); err != nil {
 		return ProjectSnapshot{}, err
@@ -207,20 +243,12 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 		return filepath.Join(root, filepath.FromSlash(path))
 	}
 	snapshot := ProjectSnapshot{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
-	locators := map[RepoID]string{}
 	for _, p := range defs.Projects {
 		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: resolve(p.Wrapper)}
 		for _, r := range p.Repos {
-			id, locator := RepoID(r.ID), resolve(r.Path)
+			id := RepoID(r.ID)
 			project.RepoIDs = append(project.RepoIDs, id)
-			if existing, found := locators[id]; found {
-				if existing != locator {
-					return ProjectSnapshot{}, projectError(ErrorProjectConflict, fmt.Sprintf("repository %s is defined with different paths in %s", id, workspacedef.File), nil)
-				}
-				continue
-			}
-			locators[id] = locator
-			snapshot.Repos = append(snapshot.Repos, RepoRecord{ID: id, Locator: locator})
+			snapshot.Repos = append(snapshot.Repos, RepoRecord{ID: id, Locator: resolve(r.Path)})
 		}
 		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
 		snapshot.Projects = append(snapshot.Projects, project)
@@ -228,34 +256,35 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	return snapshot, nil
 }
 
-// checkHistoricalIdentity rejects a repository ID that the work-item registry
-// recorded with another Git common directory than the one observed now.
-func checkHistoricalIdentity(root string, registry projectRegistry, repo RepoID) error {
-	bindings, err := historicalBindings(root)
+// checkHistoricalIdentity rejects a repository ID that the Project's
+// work-item registry recorded with another Git common directory than the one
+// observed now.
+func checkHistoricalIdentity(work ProjectWork, registry projectRegistry, repo RepoID) error {
+	bindings, err := historicalBindings(work)
 	if err != nil {
 		return err
 	}
 	identities, err := repohistory.CommonDirs(bindings)
 	var conflict *repohistory.ConflictError
 	if errors.As(err, &conflict) {
-		return workError(ErrorWorkIdentityConflict, fmt.Sprintf("work-item registry %s records repository %s with conflicting Git common directories", workItemsPath(root), conflict.RepoID), err)
+		return workError(ErrorWorkIdentityConflict, fmt.Sprintf("work-item registry %s records repository %s with conflicting Git common directories", work.Registry(), conflict.RepoID), err)
 	}
 	if err != nil {
 		return err
 	}
 	for _, r := range registry.Repos {
 		if historical := identities[string(r.ID)]; r.ID == repo && historical != "" && historical != r.GitCommonDir {
-			return workError(ErrorWorkIdentityConflict, fmt.Sprintf("repository %s was bound to Git common directory %s in %s, not %s; choose another repository ID", repo, historical, workItemsPath(root), r.GitCommonDir), nil)
+			return workError(ErrorWorkIdentityConflict, fmt.Sprintf("repository %s was bound to Git common directory %s in %s, not %s; choose another repository ID", repo, historical, work.Registry(), r.GitCommonDir), nil)
 		}
 	}
 	return nil
 }
 
 // historicalBindings projects the repository identities recorded in the Epic
-// and Task records of .ply/work-items.yaml, inline formats 1-8 or envelopes 9
-// and 10. All other registry content is ignored.
-func historicalBindings(root string) ([]repohistory.Binding, error) {
-	path := workItemsPath(root)
+// and Task records of the Project's registry in its single format. All other
+// registry content is ignored.
+func historicalBindings(work ProjectWork) ([]repohistory.Binding, error) {
+	path := work.Registry()
 	info, err := os.Lstat(path)
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
@@ -296,18 +325,14 @@ func projectHistory(contents []byte) ([]repohistory.Binding, error) {
 	if err := validateQueueYAMLMap(registry); err != nil {
 		return nil, err
 	}
-	version, ok := yamlInt(yamlField(registry, "format_version"))
-	if ok && (version == 9 || version == 10) {
-		inner := yamlField(registry, "registry")
-		if len(registry.Content) != 4 || inner == nil || inner.Kind != yaml.MappingNode {
-			return nil, errors.New("registry envelope must contain exactly format_version and a registry mapping")
-		}
-		registry = inner
-		version, ok = yamlInt(yamlField(registry, "format_version"))
-	}
-	if !ok || version < 1 || version > 8 {
+	if version, ok := yamlInt(yamlField(registry, "format_version")); !ok || version != RegistryFormat {
 		return nil, errors.New("unsupported format_version")
 	}
+	inner := yamlField(registry, "registry")
+	if len(registry.Content) != 4 || inner == nil || inner.Kind != yaml.MappingNode {
+		return nil, errors.New("registry envelope must contain exactly format_version and a registry mapping")
+	}
+	registry = inner
 	var bindings []repohistory.Binding
 	epics, err := yamlMappings(registry, "epics")
 	if err != nil {
@@ -450,6 +475,8 @@ func definitionError(e *workspacedef.Error) error {
 		return workError(ErrorWorkReconciliation, fmt.Sprintf("%s holds unexpected content after the repository definition update; inspect it before repeating the request", e.Path), e)
 	case workspacedef.KindUsage:
 		return ProjectInvalidArguments(e.Error())
+	case workspacedef.KindMissing:
+		return projectStoreConflict(e.Path, e.Detail+"; run ply workspace init", e)
 	default:
 		return projectStoreConflict(e.Path, e.Detail, e)
 	}

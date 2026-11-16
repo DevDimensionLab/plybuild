@@ -40,7 +40,7 @@ func TestBacklogFileImportAcceptance(t *testing.T) {
 	f.git(t, repo, "init", "-b", "main")
 	f.git(t, repo, "commit", "--allow-empty", "-m", "fixture")
 	f.success(t, ws, "workspace", "init")
-	definitions := `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","repos":[{"id":"code","path":"repo"}],"epics":[]}]}`
+	definitions := `{"format_version":1,"projects":[{"id":"ply","name":"Ply","wrapper":".","repos":[{"id":"code","path":"repo"}]}]}`
 	mustPlanWrite(t, filepath.Join(ws, "ply-workspace.json"), definitions, 0o644)
 	backlogDir := filepath.Join(ws, "data", "backlog")
 	original := []byte("# Min spec\n\xff not UTF-8\n")

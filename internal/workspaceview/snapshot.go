@@ -22,7 +22,7 @@ type Snapshot struct {
 	Projects      workspace.ProjectSnapshot
 	Registry      workspace.WorkItemRegistry
 	Titles        map[workspace.TaskID]workspace.TaskListTitle
-	Lifecycle     workspace.WorkItemLifecycleSnapshot
+	Lifecycle     workspace.WorkItemLifecycles
 	Freshness     string
 	Reasons       []string
 	ObservedAtUTC string
@@ -63,7 +63,7 @@ func LoadSnapshot(d workspace.Dependencies) (*Snapshot, error) {
 	for _, epic := range basis.Registry.Epics {
 		known["epic/"+string(epic.ID)] = true
 	}
-	for _, event := range lifecycle.Events {
+	for _, event := range lifecycle.Events() {
 		if !known[event.SubjectKind+"/"+event.SubjectID] {
 			return nil, &workspace.WorkItemError{Class: workspace.ErrorWorkStoreConflict, Detail: "lifecycle history refers to an unregistered subject"}
 		}
@@ -85,22 +85,29 @@ func (s *Snapshot) RefreshFreshness(d workspace.Dependencies) {
 		s.Freshness = "unknown"
 		s.Reasons = append(s.Reasons, reasons...)
 	}
-	if s.Lifecycle.Locator != "" {
-		info, inspectErr := d.Files.Lstat(s.Lifecycle.Locator)
-		if inspectErr != nil && !os.IsNotExist(inspectErr) || inspectErr == nil && !info.Mode().IsRegular() {
-			s.Freshness = "unknown"
-			s.Reasons = sortedUnique(append(s.Reasons, "lifecycle_source_changed_or_unavailable"))
-			return
-		}
-		b, err := d.Files.ReadFile(s.Lifecycle.Locator)
-		if !s.Lifecycle.Exists && os.IsNotExist(err) {
-			// Absence is the valid, read-only default.
-		} else if err != nil || !s.Lifecycle.Exists || fmt.Sprintf("sha256:%x", sha256.Sum256(b)) != s.Lifecycle.SHA256 {
+	for _, lifecycle := range s.Lifecycle {
+		if !lifecycleFresh(d, lifecycle) {
 			s.Freshness = "unknown"
 			s.Reasons = append(s.Reasons, "lifecycle_source_changed_or_unavailable")
+			break
 		}
 	}
 	s.Reasons = sortedUnique(s.Reasons)
+}
+
+// lifecycleFresh reports whether a Project's lifecycle file still has the
+// bytes, or the absence, that the snapshot read.
+func lifecycleFresh(d workspace.Dependencies, l workspace.WorkItemLifecycleSnapshot) bool {
+	info, inspectErr := d.Files.Lstat(l.Locator)
+	if inspectErr != nil && !os.IsNotExist(inspectErr) || inspectErr == nil && !info.Mode().IsRegular() {
+		return false
+	}
+	b, err := d.Files.ReadFile(l.Locator)
+	if !l.Exists && os.IsNotExist(err) {
+		// Absence is the valid, read-only default.
+		return true
+	}
+	return err == nil && l.Exists && fmt.Sprintf("sha256:%x", sha256.Sum256(b)) == l.SHA256
 }
 
 func ValidateTaskFilters(s *Snapshot, filters workspace.TaskListFilters) error {

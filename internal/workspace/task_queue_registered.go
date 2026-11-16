@@ -61,19 +61,26 @@ type registeredQueueIndex struct {
 // Only referenced queue content is read, once per unique managed source plus a
 // final integrity check. The caller remains responsible for checking drift in
 // the supplied registration snapshot (CheckReadViewBasis).
-func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects ProjectSnapshot, r WorkItemRegistry) RegisteredTaskQueues {
+// Each Project's queues are read from its own registry.
+func ReadRegisteredTaskQueues(d Dependencies, projects ProjectSnapshot, registries []ProjectRegistry) RegisteredTaskQueues {
 	out := RegisteredTaskQueues{SchemaVersion: 1, Queues: []RegisteredTaskQueue{}, Freshness: "fresh", Diagnostics: []RegisteredQueueDiagnostic{}}
-	if r.FormatVersion == ParallelRegistryFormat {
-		out.SchemaVersion = 2
-	}
-	index := indexRegisteredQueues(ws.Root, r)
 	content := captureTaskContent(d.TaskContent)
 	d.TaskContent = content.store
+	for _, registry := range registries {
+		out.readProject(d, content, projects, registry.Work, registry.Registry)
+	}
+	out.applyContentChanges(content.changedOwners())
+	out.finish()
+	return out
+}
+
+func (out *RegisteredTaskQueues) readProject(d Dependencies, content *taskContentCapture, projects ProjectSnapshot, work ProjectWork, r WorkItemRegistry) {
+	index := indexRegisteredQueues(work.Workspace, r)
 	knownQueues := map[string]bool{}
 	for _, epic := range r.Epics {
 		for _, repo := range epic.RepoBindings {
 			target := QueueTarget{ProjectID: epic.ProjectID, RepoID: repo.RepoID, EpicID: epic.ID, GitCommonDir: repo.GitCommonDir, ParentWorktreeID: repo.Worktree.ID, ParentLocator: repo.Worktree.Locator, ParentRef: repo.Worktree.Ref}
-			id := queueID(ws.Root, target)
+			id := queueID(work.Workspace, target)
 			knownQueues[id] = true
 			events := index.events[id]
 			if len(events) == 0 && len(index.effects[id]) == 0 {
@@ -120,7 +127,7 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 					continue
 				}
 				content.owner = registeredQueueOwner(id, task.ID)
-				pending, err := registeredQueuePending(d, ws.Root, r, index, target, task, entry, rank+1)
+				pending, err := registeredQueuePending(d, work, r, index, target, task, entry, rank+1)
 				pending.SinceUTC = pendingSince
 				pending.EvidenceIDs = registeredQueueEvidence(append(pending.EvidenceIDs, pendingEvidence...))
 				if err != nil {
@@ -137,10 +144,6 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 				}
 				if q.Freshness != "fresh" && pending.State == "ready" {
 					pending.State, pending.Freshness = "unknown", "unknown"
-				}
-				if r.FormatVersion == ParallelRegistryFormat {
-					pending.SerialReadiness = pending.State
-					pending.ParallelReadiness = pending.State
 				}
 				pending.Reasons = sortQueueReasons(pending.Reasons)
 				q.Pending = append(q.Pending, pending)
@@ -164,9 +167,6 @@ func ReadRegisteredTaskQueues(d Dependencies, ws WorkspaceObservation, projects 
 		diagnostic.EvidenceIDs = registeredQueueEvidence(diagnostic.EvidenceIDs)
 		out.Diagnostics = append(out.Diagnostics, diagnostic)
 	}
-	out.applyContentChanges(content.changedOwners())
-	out.finish()
-	return out
 }
 
 func registeredQueueOwns(target QueueTarget, task TaskRecord) bool {
@@ -222,7 +222,7 @@ func indexRegisteredQueues(root string, r WorkItemRegistry) registeredQueueIndex
 	return x
 }
 
-func registeredQueuePending(d Dependencies, root string, r WorkItemRegistry, index registeredQueueIndex, target QueueTarget, task TaskRecord, entry TaskGoalQueueEntry, rank int) (RegisteredQueuePending, error) {
+func registeredQueuePending(d Dependencies, work ProjectWork, r WorkItemRegistry, index registeredQueueIndex, target QueueTarget, task TaskRecord, entry TaskGoalQueueEntry, rank int) (RegisteredQueuePending, error) {
 	row := RegisteredQueuePending{QueuePending: QueuePending{TaskID: task.ID, Title: task.Title, Goal: entry.Goal, Selection: entry.Selection, Rank: rank, State: "ready", Reasons: []QueueReason{}}, Freshness: "fresh", EvidenceIDs: []string{}}
 	_, operated := index.operations[task.ID]
 	if task.Worktree != nil || task.WorktreeState != WorkItemUnbound || operated {
@@ -232,7 +232,7 @@ func registeredQueuePending(d Dependencies, root string, r WorkItemRegistry, ind
 	if entry.Goal != nil {
 		row.SpecID, row.SpecRevision, row.Spec = &entry.Goal.SpecID, &entry.Goal.Spec.Revision, &entry.Goal.Spec
 		row.EvidenceIDs = append(row.EvidenceIDs, entry.Goal.Spec.ManifestSHA256)
-		goal, err := loadTaskGoal(d, root, r, task.ID, *entry.Goal)
+		goal, err := loadTaskGoal(d, work, r, task.ID, *entry.Goal)
 		if err != nil {
 			return unknownRegisteredPending(row, err)
 		}

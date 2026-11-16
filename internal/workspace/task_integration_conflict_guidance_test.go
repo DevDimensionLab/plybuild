@@ -12,7 +12,7 @@ import (
 func TestIntegrationConflictGuidanceUsesFreshQualifiedFacts(t *testing.T) {
 	fixture := newIntegrationJourneyFixture(t)
 	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestIntegrationConflictGuidanceUsesFreshQualifiedFacts(t *testing.T) {
 func TestIntegrationConflictGuidanceNamesOtherTaskBlockingParent(t *testing.T) {
 	fixture := newIntegrationJourneyFixture(t)
 	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,7 +185,7 @@ func TestIntegrationConflictGuidanceRechecksObservedOIDsWithoutOldDigest(t *test
 func TestIntegrationConflictGuidanceAfterConfirmationPreservesStoredResult(t *testing.T) {
 	fixture := newIntegrationJourneyFixture(t)
 	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil {
 		t.Fatal(err)
 	}

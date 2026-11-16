@@ -320,7 +320,7 @@ func TestTabLabelRenamePreservesDispatchAndFreshVeto(t *testing.T) {
 			s.Runtime = h
 			s.Send = h.Prompt
 			d.NextCheckAtUTC = s.now()
-			f, e := s.Register(d)
+			f, e := s.Register(s.onlyProject(), d)
 			if e != nil {
 				t.Fatal(e)
 			}

@@ -109,8 +109,8 @@ func newFixture(t *testing.T) *fixture {
 	write(t, filepath.Join(root, workspacedef.File), fmt.Sprintf(`{
   "format_version": 1,
   "projects": [
-    {"id": "ply", "name": "Ply", "wrapper": "projects", "repos": [{"id": "ply", "path": "projects/ply/main"}], "epics": []},
-    {"id": "app", "name": "App", "wrapper": %q, "repos": [{"id": "app", "path": "apps/app/main"}], "epics": []}
+    {"id": "ply", "name": "Ply", "wrapper": "projects", "repos": [{"id": "ply", "path": "projects/ply/main"}]},
+    {"id": "app", "name": "App", "wrapper": %q, "repos": [{"id": "app", "path": "apps/app/main"}]}
   ]
 }
 `, filepath.Join(root, "apps")))

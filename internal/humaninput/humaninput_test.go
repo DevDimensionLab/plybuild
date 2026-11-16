@@ -10,13 +10,16 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
 // HI01: an ordinary named activity, without a new Task, publishes, lists and
 // shows one valid question; an existing Task scope is checked against the registry.
 func TestHI01OrdinaryActivityPublishesListsAndShowsWithoutTask(t *testing.T) {
 	f := newFixture(t)
-	before, err := os.ReadFile(filepath.Join(f.root, ".ply", "work-items.yaml"))
+	before, err := registryBytes(f.root)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +30,7 @@ func TestHI01OrdinaryActivityPublishesListsAndShowsWithoutTask(t *testing.T) {
 	if q.Source.Provenance != ProvenanceAgent || q.Source.Provider != "claude" || q.Answer != nil || q.Receipt != nil || q.Continuation != nil || q.Withdrawal != nil {
 		t.Fatalf("source or nullable observations are wrong: %+v", q)
 	}
-	after, err := os.ReadFile(filepath.Join(f.root, ".ply", "work-items.yaml"))
+	after, err := registryBytes(f.root)
 	if err != nil || !bytes.Equal(before, after) {
 		t.Fatal("publishing a question must not create or rewrite a Task registration")
 	}
@@ -67,10 +70,10 @@ func TestHI01ExistingTaskScopeIsValidatedAgainstRegistry(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			q := f.choice("task/" + strings.ReplaceAll(name, " ", "-"))
 			change(&q)
-			before := snapshot(t, filepath.Join(f.root, ".ply"))
+			before := snapshot(t, f.root)
 			_, err := AskDraft(f.d, f.root, q)
 			wantCode(t, err, CodeScopeInvalid)
-			sameSnapshot(t, before, snapshot(t, filepath.Join(f.root, ".ply")))
+			sameSnapshot(t, before, snapshot(t, f.root))
 		})
 	}
 	planning := filepath.Join(f.root, "ply", "planning")
@@ -117,7 +120,7 @@ func TestHI01DraftValidationRejectsBeforeAnyStoreIsCreated(t *testing.T) {
 			change(&q)
 			_, err := AskDraft(f.d, f.root, q)
 			wantCode(t, err, CodeInvalidDraft)
-			if _, err := os.Lstat(storeRoot(f.root)); !os.IsNotExist(err) {
+			if _, err := os.Lstat(f.store("ply").dir()); !os.IsNotExist(err) {
 				t.Fatal("a rejected draft created the store")
 			}
 		})
@@ -187,12 +190,12 @@ func TestHI02IdempotentPublicationAndConflictingContent(t *testing.T) {
 	if again.QuestionID != q.QuestionID || again.QuestionSHA256 != q.QuestionSHA256 || again.CreatedAtUTC != q.CreatedAtUTC || again.Source.Provider != "claude" {
 		t.Fatalf("same key and content must find the original question: %+v", again)
 	}
-	before := snapshot(t, storeRoot(f.root))
+	before := snapshot(t, f.store("ply").dir())
 	changed := f.choice("idem/one")
 	changed.Text = "Which output should this task produce now?"
 	_, err := AskDraft(f.d, f.root, changed)
 	wantCode(t, err, CodePublicationConflict)
-	sameSnapshot(t, before, snapshot(t, storeRoot(f.root)))
+	sameSnapshot(t, before, snapshot(t, f.store("ply").dir()))
 	if list, _ := List(f.d, f.root, ListQuery{ProjectID: "ply"}); len(list.Questions) != 1 {
 		t.Fatalf("conflict created a duplicate: %d", len(list.Questions))
 	}
@@ -420,7 +423,10 @@ func TestHI03InvalidAnswersAreRejectedBeforeChange(t *testing.T) {
 	}
 }
 
-func TestHI03RemovedScopeBlocksNewAnswersAndKeepsHistory(t *testing.T) {
+// Questions live in their Project's work, so removing the Project from the
+// definitions removes its questions from the workspace: they take no answer
+// and are no longer found, while their files stay under the wrapper.
+func TestHI03RemovedProjectHidesItsQuestionsAndKeepsTheirFiles(t *testing.T) {
 	f := newFixture(t)
 	other := func(key string) QuestionDraft {
 		q := f.choice(key)
@@ -431,31 +437,38 @@ func TestHI03RemovedScopeBlocksNewAnswersAndKeepsHistory(t *testing.T) {
 	r := f.answer(answered.QuestionID, "request-scope-1", "short")
 	waiting := f.ask(other("scope/waiting"))
 	p := f.preview(waiting.QuestionID, "request-scope-2", AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr("short")})
-	path := filepath.Join(f.root, ".ply", "projects.yaml")
-	raw, err := os.ReadFile(path)
+	kept := answerPath(f.store("other"), answered.QuestionID)
+	// Remove project other (it has no Tasks) as an operator would.
+	_, basis, err := workspacedef.Read(f.root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Remove project other (it has no Tasks) as an operator would.
-	removed := strings.Replace(string(raw), "  - id: other\n    name: Other\n    wrapper: "+filepath.Join(f.root, "other")+"\n    repo_ids:\n      - other\n", "", 1)
-	removed = strings.Replace(removed, "  - id: other\n    locator: "+f.otherOrigin+"\n    git_common_dir: "+filepath.Join(f.otherOrigin, ".git")+"\n", "", 1)
-	if removed == string(raw) {
-		t.Fatalf("fixture registry layout changed:\n%s", raw)
+	remove := func(d *workspacedef.Definitions) (bool, error) {
+		for i, p := range d.Projects {
+			if p.ID == "other" {
+				d.Projects = append(d.Projects[:i], d.Projects[i+1:]...)
+				return true, nil
+			}
+		}
+		return false, fmt.Errorf("fixture has no Project other")
 	}
-	if err := os.WriteFile(path, []byte(removed), 0o644); err != nil {
+	if _, err = workspacedef.Update(f.root, basis, remove, func(workspacedef.Definitions) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
 	_, err = PreviewAnswer(f.d, f.root, waiting.QuestionID, "request-scope-3", AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr("short")})
-	wantCode(t, err, CodeScopeUnavailable)
+	wantCode(t, err, CodeNotFound)
 	s, err := Apply(f.d, f.root, p.Request)
-	if err == nil || s.State != StatusNotRecorded || codeOfReasons(s) != CodeScopeUnavailable {
-		t.Fatalf("removed scope accepted an answer: %+v %v", s, err)
+	if err == nil || s.State != StatusUnavailable || codeOfReasons(s) != CodeNotFound {
+		t.Fatalf("removed Project accepted an answer: %+v %v", s, err)
 	}
-	if s, err := Status(f.d, f.root, answered.QuestionID, r.RequestID); err != nil || s.State != StatusRecorded {
-		t.Fatalf("history lost after scope removal: %+v %v", s, err)
+	if s, err := Status(f.d, f.root, answered.QuestionID, r.RequestID); err != nil || s.State != StatusUnavailable {
+		t.Fatalf("removed Project's question still answers status: %+v %v", s, err)
 	}
-	if list, err := List(f.d, f.root, ListQuery{ProjectID: "other"}); err != nil || len(list.Questions) != 2 {
-		t.Fatalf("history not listed after scope removal: %+v %v", list, err)
+	if list, err := List(f.d, f.root, ListQuery{ProjectID: "other"}); err != nil || len(list.Questions) != 0 {
+		t.Fatalf("removed Project's questions are listed: %+v %v", list, err)
+	}
+	if _, err := os.Stat(kept); err != nil {
+		t.Fatalf("history under the wrapper was removed: %v", err)
 	}
 }
 
@@ -505,7 +518,7 @@ func TestHI04ConcurrentApplyHasOneImmutableWinner(t *testing.T) {
 			t.Fatalf("loser names a wrong winner: %+v", s)
 		}
 	}
-	before := snapshot(t, storeRoot(f.root))
+	before := snapshot(t, f.store("ply").dir())
 	if s, err := Apply(f.d, f.root, winner); err != nil || s.State != StatusRecorded {
 		t.Fatalf("replay of the winner is not idempotent: %+v %v", s, err)
 	}
@@ -526,7 +539,7 @@ func TestHI04ConcurrentApplyHasOneImmutableWinner(t *testing.T) {
 	if s, err := Apply(f.d, f.root, sameRequestOtherBytes); err == nil || s.State != StatusOtherWinner || codeOfReasons(s) != CodeRequestConflict {
 		t.Fatalf("same request ID with other bytes: %+v %v", s, err)
 	}
-	sameSnapshot(t, before, snapshot(t, storeRoot(f.root)))
+	sameSnapshot(t, before, snapshot(t, f.store("ply").dir()))
 }
 
 func TestHI04LostReturnRecoversTheSameOutcome(t *testing.T) {
@@ -720,33 +733,33 @@ func TestHI06UnsafeOrInvalidStateFailsWithoutRepair(t *testing.T) {
 	}
 	cases := map[string]func(*testing.T, *hiFixture, Question){
 		"symlinked store": func(t *testing.T, f *hiFixture, q Question) {
-			moved := storeRoot(f.root) + ".real"
-			mustDo(t, os.Rename(storeRoot(f.root), moved))
-			mustDo(t, os.Symlink(moved, storeRoot(f.root)))
+			moved := f.store("ply").dir() + ".real"
+			mustDo(t, os.Rename(f.store("ply").dir(), moved))
+			mustDo(t, os.Symlink(moved, f.store("ply").dir()))
 		},
 		"question file is a directory": func(t *testing.T, f *hiFixture, q Question) {
-			p := questionPath(f.root, q.QuestionID)
+			p := questionPath(f.store("ply"), q.QuestionID)
 			mustDo(t, os.Rename(p, p+".moved"))
 			mustDo(t, os.Mkdir(p, 0o700))
 		},
 		"corrupt answer": func(t *testing.T, f *hiFixture, q Question) {
-			mustDo(t, os.WriteFile(answerPath(f.root, q.QuestionID), []byte(`{"truncated":`), 0o600))
+			mustDo(t, os.WriteFile(answerPath(f.store("ply"), q.QuestionID), []byte(`{"truncated":`), 0o600))
 		},
 		"question digest drift": func(t *testing.T, f *hiFixture, q Question) {
-			p := questionPath(f.root, q.QuestionID)
+			p := questionPath(f.store("ply"), q.QuestionID)
 			raw, err := os.ReadFile(p)
 			mustDo(t, err)
 			mustDo(t, os.WriteFile(p, bytes.Replace(raw, []byte("Which output"), []byte("Which outpuT"), 1), 0o600))
 		},
 		"public permissions": func(t *testing.T, f *hiFixture, q Question) {
-			mustDo(t, os.Chmod(answerPath(f.root, q.QuestionID), 0o644))
+			mustDo(t, os.Chmod(answerPath(f.store("ply"), q.QuestionID), 0o644))
 		},
 		"answer for another question": func(t *testing.T, f *hiFixture, q Question) {
 			other := f.ask(f.choice("unsafe/other"))
 			f.answer(other.QuestionID, "request-unsafe-2", "full")
-			raw, err := os.ReadFile(answerPath(f.root, other.QuestionID))
+			raw, err := os.ReadFile(answerPath(f.store("ply"), other.QuestionID))
 			mustDo(t, err)
-			mustDo(t, os.WriteFile(answerPath(f.root, q.QuestionID), raw, 0o600))
+			mustDo(t, os.WriteFile(answerPath(f.store("ply"), q.QuestionID), raw, 0o600))
 		},
 	}
 	for name, damage := range cases {
@@ -772,7 +785,7 @@ func TestHI06UnsafeOrInvalidStateFailsWithoutRepair(t *testing.T) {
 }
 
 func (f *hiFixture) preview2(id string) AnswerRequest {
-	q, _ := readQuestionRecord(f.root, id)
+	q, _ := readQuestionRecord(f.store("ply"), id)
 	r := AnswerRequest{Kind: RequestKind, SchemaVersion: SchemaVersion, Mode: Mode, Purpose: PurposeAnswer, Workspace: f.root, QuestionID: id, QuestionSHA256: q.QuestionSHA256, Scope: q.Scope, RequestID: "request-unsafe-9", Answer: AnswerValue{AnswerKind: AnswerChoice, OptionID: ptr("full")}}
 	r.BindingSHA256 = bindingOf(r)
 	return r
@@ -819,7 +832,7 @@ func TestHI02ListHasNoHiddenInventoryCeiling(t *testing.T) {
 	other := f.choice("inventory/other")
 	other.ProjectID, other.OriginCWD = "other", f.otherOrigin
 	theirs := f.ask(other)
-	dir := filepath.Join(storeRoot(f.root), "questions")
+	dir := filepath.Join(f.store("ply").dir(), "questions")
 	for i := 0; i < 16500; i++ {
 		mustDo(t, os.WriteFile(filepath.Join(dir, fmt.Sprintf(".publish-%032x", i)), nil, 0o600))
 	}
@@ -835,4 +848,21 @@ func TestHI02ListHasNoHiddenInventoryCeiling(t *testing.T) {
 	if page, err := List(f.d, f.root, ListQuery{ProjectID: "ply"}); err != nil || len(page.Questions) != 2 {
 		t.Fatalf("a question published later is not discoverable: %+v %v", page, err)
 	}
+}
+
+// registryBytes are the contents of every Project's work-item registry.
+func registryBytes(root string) ([]byte, error) {
+	works, err := workspace.DefinedWork(root)
+	if err != nil {
+		return nil, err
+	}
+	var all []byte
+	for _, work := range works {
+		b, err := os.ReadFile(work.Registry())
+		if err != nil && !os.IsNotExist(err) {
+			return nil, err
+		}
+		all = append(append(all, work.Registry()...), b...)
+	}
+	return all, nil
 }

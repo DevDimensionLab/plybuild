@@ -56,9 +56,7 @@ func TestWorkspaceWorkItemsHappyPathAndIdenticalRetries(t *testing.T) {
 	project := ProjectRecord{ID: "ply", Name: "Ply", Wrapper: physicalPath(t, wrapper), RepoIDs: []RepoID{"ply"}}
 	repo := RepoRecord{ID: "ply", Locator: repository, GitCommonDir: common}
 	projects := newSystemProjectStore()
-	if _, _, _, err := projects.Add(root, project, []RepoRecord{repo}); err != nil {
-		t.Fatal(err)
-	}
+	defineTestProject(t, root, project, []RepoRecord{repo})
 
 	dependencies := SystemDependencies()
 	dependencies.Files = projectCwdFileSystem{FileSystem: dependencies.Files, cwd: root}
@@ -68,7 +66,7 @@ func TestWorkspaceWorkItemsHappyPathAndIdenticalRetries(t *testing.T) {
 
 	adoptInput, _ := ParseEpicAdoptInput("epic", "Epic", "ply", "ply", epicPath, "refs/heads/epic", oid)
 	adopted, err := AdoptEpic(dependencies, adoptInput)
-	if err != nil || !adopted.Created || adopted.Epic.RepoBindings[0].Worktree.Tree != tree {
+	if err != nil || adopted.Epic.RepoBindings[0].Worktree.Tree != tree {
 		t.Fatalf("adopt = %#v, %v", adopted, err)
 	}
 	taskInput, _ := ParseTaskCreateInput("task", "Task", "Task description", "epic", "ply", "ply")
@@ -94,7 +92,7 @@ func TestWorkspaceWorkItemsHappyPathAndIdenticalRetries(t *testing.T) {
 		t.Fatalf("Task readback = %#v, %v", taskReadback, err)
 	}
 
-	registryPath := workItemsPath(root)
+	registryPath := testWork(t, root).Registry()
 	before, err := os.ReadFile(registryPath)
 	if err != nil {
 		t.Fatal(err)
@@ -150,7 +148,7 @@ func TestTaskWorktreeCreateFailsClosedForPersistedReconciliation(t *testing.T) {
 	t.Run("exact external effect does not authorize store recovery", func(t *testing.T) {
 		fixture := newWorkItemJourneyFixture(t)
 		input, _, _ := persistReconciliationFixture(t, &fixture)
-		registry, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+		registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -160,12 +158,12 @@ func TestTaskWorktreeCreateFailsClosedForPersistedReconciliation(t *testing.T) {
 		if outcome.Err != nil {
 			t.Fatalf("external exact effect = %#v", outcome)
 		}
-		before, err := os.ReadFile(workItemsPath(filepath.Dir(fixture.wrapper)))
+		before, err := os.ReadFile(testWork(t, filepath.Dir(fixture.wrapper)).Registry())
 		if err != nil {
 			t.Fatal(err)
 		}
 		oldTime := time.Unix(946684800, 0)
-		if err := os.Chtimes(workItemsPath(filepath.Dir(fixture.wrapper)), oldTime, oldTime); err != nil {
+		if err := os.Chtimes(testWork(t, filepath.Dir(fixture.wrapper)).Registry(), oldTime, oldTime); err != nil {
 			t.Fatal(err)
 		}
 
@@ -187,7 +185,7 @@ func persistReconciliationFixture(t *testing.T, fixture *workItemJourneyFixture)
 	}
 	fixture.dependencies.WorkGit = base
 	root := filepath.Dir(fixture.wrapper)
-	if err := fixture.dependencies.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
+	if err := fixture.dependencies.WorkItems.WithLock(testWork(t, root), func(session WorkItemStoreSession) error {
 		registry, err := session.Snapshot()
 		if err != nil {
 			return err
@@ -200,7 +198,7 @@ func persistReconciliationFixture(t *testing.T, fixture *workItemJourneyFixture)
 	}); err != nil {
 		t.Fatal(err)
 	}
-	path := workItemsPath(root)
+	path := testWork(t, root).Registry()
 	before, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -214,7 +212,7 @@ func persistReconciliationFixture(t *testing.T, fixture *workItemJourneyFixture)
 
 func assertReconciliationRetryUnchanged(t *testing.T, fixture workItemJourneyFixture, before []byte, oldTime time.Time) {
 	t.Helper()
-	path := workItemsPath(filepath.Dir(fixture.wrapper))
+	path := testWork(t, filepath.Dir(fixture.wrapper)).Registry()
 	after, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)
@@ -226,7 +224,7 @@ func assertReconciliationRetryUnchanged(t *testing.T, fixture workItemJourneyFix
 	if string(after) != string(before) || !info.ModTime().Equal(oldTime) {
 		t.Fatalf("reconciliation retry rewrote registry: bytes equal=%t mtime=%v", string(after) == string(before), info.ModTime())
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(filepath.Dir(fixture.wrapper))
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
 	if err != nil {
 		t.Fatal(err)
 	}

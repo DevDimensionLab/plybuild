@@ -256,7 +256,7 @@ func newIntegrationJourneyFixture(t *testing.T) integrationJourneyFixture {
 }
 func newIntegrationJourneyFixtureHistory(t *testing.T, priorEpicWork bool) integrationJourneyFixture {
 	t.Helper()
-	base := newWorkItemJourneyFixtureHistory(t, false, priorEpicWork)
+	base := newWorkItemJourneyFixtureHistory(t, priorEpicWork)
 	taskPath := filepath.Join(base.wrapper, "task")
 	input, _ := ParseTaskWorktreeCreateInput("task", "task", taskPath, base.oid)
 	if _, err := CreateTaskWorktree(base.dependencies, input); err != nil {
@@ -285,7 +285,7 @@ func TestTaskIntegrationCheckAndSingleConfirmedApply(t *testing.T) {
 	git := &countingIntegrationGit{TaskIntegrationGit: fixture.dependencies.IntegrationGit}
 	fixture.dependencies.IntegrationGit = git
 	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
-	before, err := os.ReadFile(workItemsPath(fixture.root))
+	before, err := os.ReadFile(testWork(t, fixture.root).Registry())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,7 +305,7 @@ func TestTaskIntegrationCheckAndSingleConfirmedApply(t *testing.T) {
 	if integrationDigest(t, checked.Readback) != integrationDigest(t, rechecked.Readback) || string(firstBytes) != string(secondBytes) {
 		t.Fatal("read-only check or canonical plan digest was not stable")
 	}
-	afterCheck, _ := os.ReadFile(workItemsPath(fixture.root))
+	afterCheck, _ := os.ReadFile(testWork(t, fixture.root).Registry())
 	if string(before) != string(afterCheck) || runLocalGit(t, filepath.Join(fixture.wrapper, "epic"), "rev-parse", "HEAD") != fixture.oid {
 		t.Fatal("check changed persisted or Git state")
 	}
@@ -324,16 +324,16 @@ func TestTaskIntegrationCheckAndSingleConfirmedApply(t *testing.T) {
 	if got := runLocalGit(t, filepath.Join(fixture.wrapper, "epic"), "rev-parse", "HEAD"); got != fixture.resultOID {
 		t.Fatalf("parent HEAD = %s", got)
 	}
-	storedBeforeRetry, _ := os.ReadFile(workItemsPath(fixture.root))
+	storedBeforeRetry, _ := os.ReadFile(testWork(t, fixture.root).Registry())
 	retry, err := ApplyTaskIntegration(fixture.dependencies, input)
 	if err != nil {
 		t.Fatal(err)
 	}
-	storedAfterRetry, _ := os.ReadFile(workItemsPath(fixture.root))
+	storedAfterRetry, _ := os.ReadFile(testWork(t, fixture.root).Registry())
 	if retry.Readback.Classification != "exact_effect" || string(storedBeforeRetry) != string(storedAfterRetry) {
 		t.Fatal("identical apply retry was not a read-only replay")
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil || len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationAttempts) != 1 || len(registry.IntegrationResults) != 1 {
 		t.Fatalf("registry = %#v, %v", registry, err)
 	}
@@ -356,7 +356,7 @@ func TestTaskIntegrationConfirmationMismatchStartsNoAuthorityOrGit(t *testing.T)
 	if err == nil || !hasWorkErrorClass(err, ErrorTaskIntegrationConfirmationMismatch) {
 		t.Fatalf("error = %v", err)
 	}
-	registry, _ := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, _ := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if len(registry.IntegrationAuthorities) != 0 || runLocalGit(t, filepath.Join(fixture.wrapper, "epic"), "rev-parse", "HEAD") != fixture.oid {
 		t.Fatal("mismatched confirmation changed state")
 	}
@@ -393,7 +393,7 @@ func TestTaskIntegrationAuthorityRecoveryRejectsProjectBindingDrift(t *testing.T
 	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err == nil {
 		t.Fatal("injected attempt ID failure was not returned")
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil || len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationAttempts) != 0 || git.count() != 0 {
 		t.Fatalf("registry=%#v error=%v merges=%d", registry, err, git.count())
 	}
@@ -411,7 +411,7 @@ func TestTaskIntegrationAuthorityRecoveryRejectsProjectBindingDrift(t *testing.T
 	if recovered.Readback.Classification != "conflict" || git.count() != 0 {
 		t.Fatalf("recovered=%#v merges=%d", recovered.Readback, git.count())
 	}
-	registry, err = fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err = fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil || len(registry.IntegrationAttempts) != 0 || len(registry.IntegrationResults) != 1 {
 		t.Fatalf("registry=%#v error=%v", registry, err)
 	}
@@ -436,7 +436,7 @@ func TestTaskIntegrationRechecksConfirmedStateBeforeAttempt(t *testing.T) {
 	if applied.Readback.Classification != "conflict" || applied.Readback.GitChanged == nil || *applied.Readback.GitChanged || git.merged {
 		t.Fatalf("drift result = %#v, merged=%t", applied.Readback, git.merged)
 	}
-	registry, _ := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, _ := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationAttempts) != 0 || len(registry.IntegrationResults) != 1 {
 		t.Fatalf("registry = %#v", registry)
 	}
@@ -460,7 +460,7 @@ func TestTaskIntegrationNoEffectNamesExactRetryPredecessor(t *testing.T) {
 	if applied.Readback.Classification != "no_effect" || applied.Readback.NextAction.Kind != "retry_after_no_effect" || git.merges != 1 {
 		t.Fatalf("result = %#v, merges=%d", applied.Readback, git.merges)
 	}
-	registry, _ := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, _ := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	want := string(registry.IntegrationResults[0].ID)
 	argv := applied.Readback.NextAction.Argv
 	found := false
@@ -494,7 +494,7 @@ func TestTaskIntegrationRetriesAfterNamedNoEffectWithOneNewAttempt(t *testing.T)
 	if err != nil || first.Readback.Classification != "no_effect" {
 		t.Fatalf("first=%#v error=%v", first, err)
 	}
-	registry, _ := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, _ := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	prior := registry.IntegrationResults[0].ID
 	fixture.dependencies.IntegrationGit = base
 	input.Apply, input.Confirmation, input.RetryAfterResultID = false, "", &prior
@@ -507,7 +507,7 @@ func TestTaskIntegrationRetriesAfterNamedNoEffectWithOneNewAttempt(t *testing.T)
 	if err != nil || retried.Readback.Classification != "exact_effect" || retried.Readback.GitChanged == nil || !*retried.Readback.GitChanged {
 		t.Fatalf("retried=%#v error=%v", retried, err)
 	}
-	registry, _ = fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, _ = fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if len(registry.IntegrationAuthorities) != 2 || len(registry.IntegrationAttempts) != 2 || len(registry.IntegrationResults) != 2 || registry.IntegrationAuthorities[1].RetryAfterResultID == nil || *registry.IntegrationAuthorities[1].RetryAfterResultID != prior {
 		t.Fatalf("retry registry = %#v", registry)
 	}
@@ -573,7 +573,7 @@ func TestTaskIntegrationRecoversDurableAuthorityAndAttemptPublicationBoundaries(
 			if err != nil || recovered.Readback.Classification != "exact_effect" || git.count() != 1 {
 				t.Fatalf("recovered=%#v error=%v merges=%d", recovered, err, git.count())
 			}
-			registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+			registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 			if err != nil || len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationAttempts) != 1 || len(registry.IntegrationResults) != 1 {
 				t.Fatalf("registry=%#v error=%v", registry, err)
 			}
@@ -612,7 +612,7 @@ func TestTaskIntegrationConcurrentIdenticalApplyProducesOneAttempt(t *testing.T)
 			t.Fatalf("result = %#v", result)
 		}
 	}
-	registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 	if err != nil || git.count() != 1 || len(registry.IntegrationAuthorities) != 1 || len(registry.IntegrationAttempts) != 1 || len(registry.IntegrationResults) != 1 {
 		t.Fatalf("registry=%#v error=%v merges=%d", registry, err, git.count())
 	}
@@ -760,7 +760,7 @@ func TestTaskIntegrationClassifiesAlreadyIntegratedBlockedConflictAndPartial(t *
 		if applied.Readback.Classification != "unknown" || !strings.Contains(string(encoded), `"observed_inventory":{"entries":[],"freshness":"unknown"}`) {
 			t.Fatalf("readback = %s", encoded)
 		}
-		registry, err := fixture.dependencies.WorkItems.Snapshot(fixture.root)
+		registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
 		if err != nil || len(registry.IntegrationResults) != 1 || len(registry.IntegrationResults[0].AfterObservation.InventoryEntries) != 0 {
 			t.Fatalf("registry=%#v error=%v", registry, err)
 		}

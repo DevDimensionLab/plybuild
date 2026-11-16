@@ -23,7 +23,7 @@ func readRegisteredQueueFixture(f workItemJourneyFixture, basis ReadViewBasisSna
 	d.WorkGit, d.IntegrationGit, d.Repos = nil, nil, nil
 	d.Files, d.ProjectLocks, d.Projects, d.WorkItems = nil, nil, nil, nil
 	d.WorkIDs, d.TaskContentIDs, d.WorkClock = nil, nil, nil
-	return ReadRegisteredTaskQueues(d, basis.Workspace, basis.Projects, basis.Registry)
+	return ReadRegisteredTaskQueues(d, basis.Projects, basis.Registries)
 }
 
 func createRegisteredQueueTask(t *testing.T, f workItemJourneyFixture, id TaskID) {
@@ -52,13 +52,14 @@ func TestRegisteredQueuesUnresolvedEffectsBlockGoal(t *testing.T) {
 	for _, kind := range []string{"worktree", "integration", "base"} {
 		t.Run(kind, func(t *testing.T) {
 			b := basis
+			b.Registries = []ProjectRegistry{basis.Registries[0]}
 			switch kind {
 			case "worktree":
-				b.Registry.WorktreeOperations = []WorktreeOperationRecord{{ID: "preserved-effect", TaskID: "another", State: "reconciliation_required", ProjectID: "ply", RepoID: "ply", ParentEpicID: "epic"}}
+				b.Registries[0].Registry.WorktreeOperations = []WorktreeOperationRecord{{ID: "preserved-effect", TaskID: "another", State: "reconciliation_required", ProjectID: "ply", RepoID: "ply", ParentEpicID: "epic"}}
 			case "integration":
-				b.Registry.IntegrationAuthorities = []IntegrationAuthority{{ID: "preserved-effect", Plan: WorkspaceTaskIntegrationPlan{Project: IntegrationPlanProject{ProjectID: "ply"}, Repository: IntegrationPlanRepository{RepoID: "ply"}, Epic: IntegrationPlanEpic{EpicID: "epic"}}}}
+				b.Registries[0].Registry.IntegrationAuthorities = []IntegrationAuthority{{ID: "preserved-effect", Plan: WorkspaceTaskIntegrationPlan{Project: IntegrationPlanProject{ProjectID: "ply"}, Repository: IntegrationPlanRepository{RepoID: "ply"}, Epic: IntegrationPlanEpic{EpicID: "epic"}}}}
 			case "base":
-				b.Registry.EpicBaseUpdates = []EpicBaseUpdate{{ID: "preserved-effect", Phase: "intent", Plan: WorkspaceEpicBaseUpdatePlan{Target: target}}}
+				b.Registries[0].Registry.EpicBaseUpdates = []EpicBaseUpdate{{ID: "preserved-effect", Phase: "intent", Plan: WorkspaceEpicBaseUpdatePlan{Target: target}}}
 			}
 			out := readRegisteredQueueFixture(f, b)
 			q := out.Queues[0]
@@ -93,7 +94,7 @@ func TestRegisteredQueuesInvalidGoalReferenceNeverBecomesReady(t *testing.T) {
 	basis := registeredQueueBasis(t, f)
 	goal.Spec.Revision++
 	index := indexRegisteredQueues(basis.Workspace.Root, basis.Registry)
-	row, err := registeredQueuePending(f.dependencies, basis.Workspace.Root, basis.Registry, index, QueueTarget{}, index.tasks["task"], TaskGoalQueueEntry{TaskID: "task", Goal: &goal}, 1)
+	row, err := registeredQueuePending(f.dependencies, testWork(t, basis.Workspace.Root), basis.Registry, index, QueueTarget{}, index.tasks["task"], TaskGoalQueueEntry{TaskID: "task", Goal: &goal}, 1)
 	if err == nil || row.State != "unknown" || !hasRegisteredQueueReason(row.Reasons, "task_goal_invalid_reference") || row.Goal == nil || row.Goal.Spec != goal.Spec {
 		t.Fatalf("unregistered exact goal revision gained readiness or lost evidence: %+v, %v", row, err)
 	}
@@ -106,7 +107,7 @@ func TestRegisteredQueuesCorruptGoalKeepsValidSibling(t *testing.T) {
 	valid := goalFixture(t, f, "sibling", "valid-goal")
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &broken}, {TaskID: "sibling", Goal: &valid}})
 	basis := registeredQueueBasis(t, f)
-	path := taskContentPath(basis.Workspace.Root, "manifests", broken.Spec.ManifestSHA256)
+	path := taskContentPath(testWork(t, basis.Workspace.Root), "manifests", broken.Spec.ManifestSHA256)
 	if err := os.Chmod(path, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -134,7 +135,7 @@ func TestRegisteredQueuesDetectSourceChangeDuringRead(t *testing.T) {
 			if reads == 2 {
 				// The goal manifest has already been captured. Replace it while
 				// the reader is gathering another source in the same request.
-				path := taskContentPath(basis.Workspace.Root, "manifests", goal.Spec.ManifestSHA256)
+				path := taskContentPath(testWork(t, basis.Workspace.Root), "manifests", goal.Spec.ManifestSHA256)
 				if err := os.Chmod(path, 0600); err != nil {
 					t.Fatal(err)
 				}
@@ -157,9 +158,10 @@ func TestRegisteredQueuesOrphanedQueueIsDiagnosticWithoutTask(t *testing.T) {
 	goal := goalFixture(t, f, "task", "goal")
 	goalQueueFixture(t, f, []TaskGoalQueueEntry{{TaskID: "task", Goal: &goal}})
 	basis := registeredQueueBasis(t, f)
-	orphan := basis.Registry.TaskQueueEvents[0]
+	owner := &basis.Registries[0].Registry
+	orphan := owner.TaskQueueEvents[0]
 	orphan.QueueID = "que_" + strings.Repeat("a", 64)
-	basis.Registry.TaskQueueEvents = append(basis.Registry.TaskQueueEvents, orphan)
+	owner.TaskQueueEvents = append(owner.TaskQueueEvents, orphan)
 	out := readRegisteredQueueFixture(f, basis)
 	if len(out.Queues) != 1 || out.Queues[0].Pending[0].State != "ready" || len(out.Diagnostics) != 1 || out.Diagnostics[0].Code != "task_queue_orphaned" || out.Diagnostics[0].TaskID != nil || out.Diagnostics[0].Target != nil || out.Diagnostics[0].QueueID != orphan.QueueID {
 		t.Fatalf("orphaned queue became a Task or hid valid queue: %+v", out)
@@ -198,7 +200,7 @@ func TestRegisteredQueueContentCaptureBatchesSharedSources(t *testing.T) {
 	for repeat := 0; repeat < 3; repeat++ {
 		for task, goal := range map[TaskID]TaskGoalRef{"task": first, "sibling": second} {
 			capture.owner = string(task)
-			if _, err := loadTaskGoal(d, filepath.Dir(f.wrapper), basis.Registry, task, goal); err != nil {
+			if _, err := loadTaskGoal(d, testWork(t, filepath.Dir(f.wrapper)), basis.Registry, task, goal); err != nil {
 				t.Fatal(err)
 			}
 		}

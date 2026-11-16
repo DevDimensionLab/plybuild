@@ -23,18 +23,15 @@ def run(argv, cwd, env=None, success=True, structured=True):
     return p
 
 
-def empty_registry(version):
-    fields = ["epics", "tasks", "worktree_operations"]
-    if version >= 2:
-        fields += ["task_results", "human_qa_records", "integration_authorities", "integration_intents", "integration_attempts", "integration_results"]
-    if version >= 3:
-        fields += ["task_spec_policies", "task_problem_revisions", "task_spec_revisions", "task_spec_assessments", "task_solution_selections", "task_result_spec_bindings", "task_content_publications"]
-    if version >= 4:
-        fields += ["epic_base_versions", "epic_base_updates", "task_queue_events", "task_preparations"]
-    return f"format_version: {version}\n" + "".join(f"{key}: []\n" for key in fields)
+REGISTRY_FORMAT = 11
+REGISTRY_FIELDS = ["epics", "tasks", "worktree_operations", "task_results", "human_qa_records", "integration_authorities", "integration_intents", "integration_attempts", "integration_results", "task_problem_revisions", "task_spec_revisions", "task_spec_assessments", "task_solution_selections", "task_result_spec_bindings", "task_content_publications", "epic_base_versions", "epic_base_updates", "task_queue_events", "task_preparations", "epic_create_operations"]
 
 
-def registration(ply, root, version, package, pin):
+def empty_registry(version=REGISTRY_FORMAT):
+    return f"format_version: {version}\nregistry:\n" + "".join(f"  {key}: []\n" for key in REGISTRY_FIELDS)
+
+
+def registration(ply, root):
     root.mkdir()
     run([ply, "workspace", "init"], root, structured=False)
     repo = root / "example/main"
@@ -45,19 +42,17 @@ def registration(ply, root, version, package, pin):
     run(["git", "-c", "user.name=CB01A fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "Fixture baseline"], repo, structured=False)
     oid = run(["git", "rev-parse", "HEAD"], repo, structured=False).stdout.strip()
     run([ply, "workspace", "project", "add", "example", "--name", "Example", "--wrapper", repo.parent, "--repo", f"example={repo}"], root, structured=False)
-    registry = root / ".ply/work-items.yaml"
-    # Seed historical formats only in this disposable fixture, before registrations.
-    registry.write_text(empty_registry(version))
+    registry = repo.parent / "data/work/work-items.yaml"  # the Project's registry, under its wrapper
+    assert not registry.exists()
     run([ply, "workspace", "epic", "adopt", "greetings", "--title", "Greetings", "--project", "example", "--repo", "example", "--worktree", repo, "--ref", "refs/heads/main", "--expected-oid", oid], root, structured=False)
     create = [ply, "workspace", "task", "create", "greeting", "--title", "Named greeting", "--description", "Add an optional name", "--project", "example", "--repo", "example", "--epic", "greetings", "--format", "json"]
     run(create, root)
-    # Task create stores into the existing format; it never migrates silently.
-    assert registry.read_text().startswith(f"format_version: {version}\n")
+    # A fresh registry is written in the single supported format.
+    assert registry.read_text().startswith(f"format_version: {REGISTRY_FORMAT}\nregistry:\n")
     recorder = dict(actor_claim="CB-01A isolated acceptance", control_surface="fixture only", recorded_at_utc="2026-10-09T00:00:00Z")
     problem_doc = root / "problem.md"
     problem_doc.write_text("# Greeting\n\nThe greeting cannot name the reader.\n")
-    upgrade = dict(from_version=version, registry_sha256=digest(registry)) if version < 3 else None
-    problem_draft = dict(kind="WorkspaceTaskProblemDraft@1", schema_version=1, format="json", format_version=1, canonicalization="RFC8785", publication_key="fixture/problem", task_id="greeting", registry_upgrade=upgrade, expected_previous=None, origin=dict(kind="authored"), title="Named greeting", summary="Support an optional name", problem_document_id="problem", documents=[dict(id="problem", source=dict(kind="file", locator=str(problem_doc), sha256=digest(problem_doc), size_bytes=problem_doc.stat().st_size, media_type="text/markdown", git_provenance=None))], sources=[], claims=[], deadline=None, change_reason="Record the fixture problem", recorder=recorder)
+    problem_draft = dict(kind="WorkspaceTaskProblemDraft@1", schema_version=1, format="json", format_version=1, canonicalization="RFC8785", publication_key="fixture/problem", task_id="greeting", registry_upgrade=None, expected_previous=None, origin=dict(kind="authored"), title="Named greeting", summary="Support an optional name", problem_document_id="problem", documents=[dict(id="problem", source=dict(kind="file", locator=str(problem_doc), sha256=digest(problem_doc), size_bytes=problem_doc.stat().st_size, media_type="text/markdown", git_provenance=None))], sources=[], claims=[], deadline=None, change_reason="Record the fixture problem", recorder=recorder)
     path = root / "problem.json"
     path.write_text(json.dumps(problem_draft))
     problem = run([ply, "workspace", "task", "problem", "record", "greeting", "--file", path, "--format", "json"], root)["outcome_ref"]
@@ -69,34 +64,19 @@ def registration(ply, root, version, package, pin):
     spec = run([ply, "workspace", "task", "spec", "record", "greeting", "--file", path, "--format", "json"], root)["outcome_ref"]
     scope = ["--project", "example", "--repo", "example", "--epic", "greetings"]
     queue = run([ply, "workspace", "task", "queue", "list", *scope, "--format", "json"], root)
-    q = dict(kind="WorkspaceTaskQueueDraft@2", schema_version=2, publication_key="fixture/queue", project_id="example", repo_id="example", epic_id="greetings", expected_revision=queue["revision"], entries=[dict(task_id="greeting", goal=dict(spec_id=spec["spec_id"], spec={key: spec[key] for key in ("revision", "manifest_sha256")}))], recorder=recorder, registry_upgrade=queue["registry"]["required_upgrade"])
+    assert queue["registry"]["format_version"] == REGISTRY_FORMAT and queue["registry"]["required_upgrade"] is None
+    q = dict(kind="WorkspaceTaskQueueDraft@2", schema_version=2, publication_key="fixture/queue", project_id="example", repo_id="example", epic_id="greetings", expected_revision=queue["revision"], entries=[dict(task_id="greeting", goal=dict(spec_id=spec["spec_id"], spec={key: spec[key] for key in ("revision", "manifest_sha256")}))], recorder=recorder, registry_upgrade=None)
     path = root / "queue.json"
     path.write_text(json.dumps(q))
     run([ply, "workspace", "task", "queue", "set", "--file", path, "--format", "json"], root)
-    baseline = registry.read_bytes()
     before_queue = run([ply, "workspace", "task", "queue", "list", *scope, "--format", "json"], root)
     assert before_queue["pending"][0]["state"] == "ready"
-    assert before_queue["registry"]["format_version"] == 4
-    args = [ply, "workspace", "registry", "upgrade", "--package", package, "--sha256", pin, "--format", "json"]
-    preview = run([*args, "--check"], root)
-    assert registry.read_bytes() == baseline
-    run([*args, "--apply"], root, success=False)
-    assert registry.read_bytes() == baseline
-    result = run([*args, "--apply", "--confirm", preview["confirmation"]], root)
-    assert result["state"] == "upgraded"
-    assert Path(result["backup"]).read_bytes() == baseline
-    after = registry.read_bytes()
-    assert run([*args, "--apply", "--confirm", preview["confirmation"]], root)["state"] == "already_upgraded"
-    assert registry.read_bytes() == after
-    after_queue = run([ply, "workspace", "task", "queue", "list", *scope, "--format", "json"], root)
-    assert before_queue["pending"] == after_queue["pending"]
-    assert before_queue["revision"] == after_queue["revision"]
     run([ply, "workspace", "task", "create", "second", "--title", "Unrelated task", "--description", "Retain first goal", *scope, "--format", "json"], root)
     assert run([ply, "workspace", "task", "queue", "list", *scope, "--format", "json"], root)["pending"] == before_queue["pending"]
     run([ply, "workspace", "task", "spec", "show", "greeting", "--spec", "greeting-v1", "--revision", "1", "--format", "json"], root)
     assert run(["git", "worktree", "list", "--porcelain"], repo, structured=False).stdout.count("worktree ") == 1
     assert run(["git", "rev-parse", "HEAD"], repo, structured=False).stdout.strip() == oid
-    print(f"CBA-02/04: native registration format {version} -> 4 -> 5, history and retry PASS", flush=True)
+    print(f"CBA-02/04: native registration in registry format {REGISTRY_FORMAT} without upgrade PASS", flush=True)
 
 
 def main():
@@ -147,13 +127,16 @@ def main():
         run([*install, "--sha256", pin], consumer, env)
         assert {p.name: digest(p) for p in protected.iterdir()} == before
         print("CBA-05/06: no-Go consumer install, identity, failures, mode repair, rollback, no state writes PASS", flush=True)
-        for version in range(1, 5):
-            registration(dest, root / f"workspace-v{version}", version, package, pin)
+        registration(dest, root / "workspace")
         broken = root / "diagnostics"
         broken.mkdir()
         run([dest, "workspace", "init"], broken, structured=False)
-        registry = broken / ".ply/work-items.yaml"
-        for raw, code in ((empty_registry(1).replace("version: 1", "version: 99"), "registry_unsupported_format"), (empty_registry(1) + "authorization_override: true\n", "registry_unknown_field"), (empty_registry(1) + "broken: [", "registry_malformed_yaml"), (empty_registry(1).replace("epics: []", "epics: null"), "registry_invalid_content")):
+        # One Project; reading its registry observes no Git.
+        (broken / "project").mkdir()
+        (broken / "ply-workspace.json").write_text(json.dumps({"format_version": 1, "projects": [{"id": "project", "name": "Project", "wrapper": "project", "repos": [{"id": "repo", "path": "project/repo"}]}]}))
+        registry = broken / "project/data/work/work-items.yaml"
+        registry.parent.mkdir(parents=True)
+        for raw, code in ((empty_registry(10), "registry_unsupported_format"), (empty_registry() + "  authorization_override: true\n", "registry_unknown_field"), (empty_registry() + "broken: [", "registry_malformed_yaml"), (empty_registry().replace("epics: []", "epics: null"), "registry_invalid_content")):
             registry.write_text(raw)
             before = registry.read_bytes()
             result = run([dest, "workspace", "epic", "list", "--format", "json"], broken, success=False)

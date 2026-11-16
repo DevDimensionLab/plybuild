@@ -49,7 +49,7 @@ func RetireEpic(d Dependencies, input EpicRetireInput) (EpicRetireResult, error)
 	if err := requireWorkMutationDependencies(d); err != nil {
 		return EpicRetireResult{}, err
 	}
-	root, err := containingWorkItemWorkspace(d)
+	root, err := containingRegistrationWorkspace(d)
 	if err != nil {
 		return EpicRetireResult{}, err
 	}
@@ -57,14 +57,12 @@ func RetireEpic(d Dependencies, input EpicRetireInput) (EpicRetireResult, error)
 		result := EpicRetireResult{Workspace: root, EpicID: input.EpicID, RepoID: input.RepoID, TargetRef: input.TargetRef}
 		step := input
 		step.Apply = apply
-		err := d.ProjectLocks.WithSnapshotLock(root, func(projects ProjectSnapshot) error {
-			return d.WorkItems.WithLock(root, func(session WorkItemStoreSession) error {
-				registry, err := session.Snapshot()
-				if err != nil {
-					return err
-				}
-				return retireEpicLocked(d, projects, registry, step, &result)
-			})
+		err := withEpicWork(d, root, input.EpicID, func(projects ProjectSnapshot, work ProjectWork, session WorkItemStoreSession) error {
+			registry, err := session.Snapshot()
+			if err != nil {
+				return err
+			}
+			return retireEpicLocked(d, projects, registry, step, &result)
 		})
 		if err != nil {
 			return EpicRetireResult{}, mapMutationError(err)

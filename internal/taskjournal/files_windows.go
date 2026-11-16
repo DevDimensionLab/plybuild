@@ -2,9 +2,13 @@
 
 package taskjournal
 
-import "os"
+import (
+	"os"
 
-func createStore(string, string) (*os.File, error) { return nil, unsupported() }
+	"github.com/devdimensionlab/plybuild/internal/workspace"
+)
+
+func createStore(workspace.ProjectWork, string) (*os.File, error) { return nil, unsupported() }
 
 // Fail closed until descriptor-relative no-reparse-point storage is available.
 func unsupported() error                       { return invalid("physical journal storage is unavailable on Windows") }

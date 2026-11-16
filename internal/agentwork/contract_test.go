@@ -35,7 +35,7 @@ func TestAgentWorkContractFixtures(t *testing.T) {
 	s, d, _ := fixture(t)
 	d.PublicationKey = "review-1"
 	artifact(t, "register-request", d)
-	f, e := s.Register(d)
+	f, e := s.Register(s.onlyProject(), d)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -85,7 +85,7 @@ func TestAgentWorkContractFixtures(t *testing.T) {
 	sd.WaitKind = "status"
 	sd.WaitRef = sd.TargetRef
 	sd.NextCheckAtUTC = status.now()
-	sf, err := status.Register(sd)
+	sf, err := status.Register(status.onlyProject(), sd)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,7 +111,7 @@ func TestAgentWorkContractFixtures(t *testing.T) {
 
 	u, ud, _ := fixture(t)
 	ud.NextCheckAtUTC = u.now()
-	uf, e := u.Register(ud)
+	uf, e := u.Register(u.onlyProject(), ud)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -151,7 +151,7 @@ func TestAgentWorkContractFixtures(t *testing.T) {
 			coverage.Partial = true
 		}
 		self.Native = func() NativeSnapshot { return coverage }
-		sf, err := self.Register(sd)
+		sf, err := self.Register(self.onlyProject(), sd)
 		if err != nil {
 			t.Fatal(err)
 		}

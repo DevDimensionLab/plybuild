@@ -298,7 +298,7 @@ func applyProjectMetadata(d Dependencies, root, cwd string, in ProjectMetadataIn
 		if err != nil {
 			return err
 		}
-		if err := publisher.publish(root, ProjectMetadataFile, bytes); err != nil {
+		if err := publisher.publish(filepath.Dir(snapshot.Locator), ProjectMetadataFile, bytes); err != nil {
 			return err
 		}
 		snapshot, err = readProjectMetadata(root)

@@ -13,61 +13,59 @@ import (
 )
 
 func TestWorkItemLifecycleAbsentReadAndTransitionsPreserveRegistry(t *testing.T) {
-	for _, legacy := range []bool{true, false} {
-		f := newWorkItemJourneyFixtureVersion(t, legacy)
-		root := filepath.Dir(f.wrapper)
-		registryBefore, err := os.ReadFile(workItemsPath(root))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if err := os.Remove(filepath.Join(root, MarkerDirectory, workItemsLock)); err != nil {
-			t.Fatal(err)
-		}
-		snapshot, err := ReadWorkItemLifecycle(f.dependencies, root)
-		if err != nil || snapshot.Exists || snapshot.Revision != 0 || snapshot.Task("task") != LifecycleActive || snapshot.Epic("epic") != LifecycleActive {
-			t.Fatalf("absent read = %#v, %v", snapshot, err)
-		}
-		if _, err := os.Stat(filepath.Join(root, MarkerDirectory, workItemsLock)); !os.IsNotExist(err) {
-			t.Fatalf("read created lock: %v", err)
-		}
-		for _, subject := range []struct{ kind, id string }{{"task", "task"}, {"epic", "epic"}} {
-			for _, state := range []LifecycleState{LifecycleParked, LifecycleFrozen, LifecycleArchived, LifecycleActive} {
-				result, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: state, ActorClaim: "fixture-agent"})
-				if err != nil || !result.Changed || result.Lifecycle != state || result.Event == nil || result.Event.ActorClaim != "fixture-agent" {
-					t.Fatalf("set %s %s = %#v, %v", subject.kind, state, result, err)
-				}
-				before, err := os.ReadFile(result.Source.Locator)
-				if err != nil {
-					t.Fatal(err)
-				}
-				info, err := os.Stat(result.Source.Locator)
-				if err != nil {
-					t.Fatal(err)
-				}
-				repeat, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: state, ActorClaim: "another-agent"})
-				if err != nil || repeat.Changed || repeat.Revision != result.Revision || repeat.Event != nil {
-					t.Fatalf("repeat = %#v, %v", repeat, err)
-				}
-				after, err := os.ReadFile(result.Source.Locator)
-				if err != nil {
-					t.Fatal(err)
-				}
-				afterInfo, err := os.Stat(result.Source.Locator)
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !bytes.Equal(before, after) || !info.ModTime().Equal(afterInfo.ModTime()) {
-					t.Fatal("no-op rewrote metadata")
-				}
+	f := newWorkItemJourneyFixture(t)
+	root := filepath.Dir(f.wrapper)
+	registryBefore, err := os.ReadFile(testWork(t, root).Registry())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(testWork(t, root).lock()); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := ReadProjectLifecycle(testWork(t, root))
+	if err != nil || snapshot.Exists || snapshot.Revision != 0 || snapshot.Task("task") != LifecycleActive || snapshot.Epic("epic") != LifecycleActive {
+		t.Fatalf("absent read = %#v, %v", snapshot, err)
+	}
+	if _, err := os.Stat(testWork(t, root).lock()); !os.IsNotExist(err) {
+		t.Fatalf("read created lock: %v", err)
+	}
+	for _, subject := range []struct{ kind, id string }{{"task", "task"}, {"epic", "epic"}} {
+		for _, state := range []LifecycleState{LifecycleParked, LifecycleFrozen, LifecycleArchived, LifecycleActive} {
+			result, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: state, ActorClaim: "fixture-agent"})
+			if err != nil || !result.Changed || result.Lifecycle != state || result.Event == nil || result.Event.ActorClaim != "fixture-agent" {
+				t.Fatalf("set %s %s = %#v, %v", subject.kind, state, result, err)
+			}
+			before, err := os.ReadFile(result.Source.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			info, err := os.Stat(result.Source.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			repeat, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: state, ActorClaim: "another-agent"})
+			if err != nil || repeat.Changed || repeat.Revision != result.Revision || repeat.Event != nil {
+				t.Fatalf("repeat = %#v, %v", repeat, err)
+			}
+			after, err := os.ReadFile(result.Source.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			afterInfo, err := os.Stat(result.Source.Locator)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !bytes.Equal(before, after) || !info.ModTime().Equal(afterInfo.ModTime()) {
+				t.Fatal("no-op rewrote metadata")
 			}
 		}
-		after, err := os.ReadFile(workItemsPath(root))
-		if err != nil {
-			t.Fatal(err)
-		}
-		if !bytes.Equal(registryBefore, after) {
-			t.Fatal("lifecycle changed historical registry bytes")
-		}
+	}
+	after, err := os.ReadFile(testWork(t, root).Registry())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(registryBefore, after) {
+		t.Fatal("lifecycle changed historical registry bytes")
 	}
 }
 
@@ -78,7 +76,7 @@ func TestWorkItemLifecycleRejectsCorruptionWithoutDefaultingToActive(t *testing.
 	if _, err := SetWorkItemLifecycle(f.dependencies, input); err != nil {
 		t.Fatal(err)
 	}
-	good, err := os.ReadFile(lifecycleLocator(root))
+	good, err := os.ReadFile(testWork(t, root).Lifecycle())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,16 +89,16 @@ func TestWorkItemLifecycleRejectsCorruptionWithoutDefaultingToActive(t *testing.
 		"changed event":   []byte(strings.Replace(string(good), `"to": "archived"`, `"to": "active"`, 1)),
 	} {
 		t.Run(name, func(t *testing.T) {
-			if err := os.WriteFile(lifecycleLocator(root), bad, 0o600); err != nil {
+			if err := os.WriteFile(testWork(t, root).Lifecycle(), bad, 0o600); err != nil {
 				t.Fatal(err)
 			}
-			if _, err := ReadWorkItemLifecycle(f.dependencies, root); err == nil {
+			if _, err := ReadProjectLifecycle(testWork(t, root)); err == nil {
 				t.Fatal("corrupt lifecycle read as active")
 			}
 			if _, err := SetWorkItemLifecycle(f.dependencies, input); err == nil {
 				t.Fatal("corrupt store was overwritten")
 			}
-			after, err := os.ReadFile(lifecycleLocator(root))
+			after, err := os.ReadFile(testWork(t, root).Lifecycle())
 			if err != nil || !bytes.Equal(after, bad) {
 				t.Fatalf("corruption changed: %v", err)
 			}
@@ -118,16 +116,19 @@ func TestWorkItemLifecycleRejectsSymlinksIncludingDanglingLinks(t *testing.T) {
 				t.Fatal(err)
 			}
 		}
-		if err := os.Symlink(target, lifecycleLocator(root)); err != nil {
+		if err := os.MkdirAll(testWork(t, root).Dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if _, err := ReadWorkItemLifecycle(f.dependencies, root); err == nil {
+		if err := os.Symlink(target, testWork(t, root).Lifecycle()); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := ReadProjectLifecycle(testWork(t, root)); err == nil {
 			t.Fatal("symlink read accepted")
 		}
 		if _, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: "task", SubjectID: "task", State: LifecycleArchived, ActorClaim: "actor"}); err == nil {
 			t.Fatal("symlink write accepted")
 		}
-		if _, err := os.Readlink(lifecycleLocator(root)); err != nil {
+		if _, err := os.Readlink(testWork(t, root).Lifecycle()); err != nil {
 			t.Fatalf("symlink replaced: %v", err)
 		}
 		if !dangling {
@@ -158,7 +159,7 @@ func TestWorkItemLifecycleFaultsLeaveOldOrCompleteNewHistory(t *testing.T) {
 			if !errors.Is(err, injected) {
 				t.Fatalf("fault = %v", err)
 			}
-			snapshot, err := ReadWorkItemLifecycle(f.dependencies, root)
+			snapshot, err := ReadProjectLifecycle(testWork(t, root))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -173,7 +174,7 @@ func TestWorkItemLifecycleFaultsLeaveOldOrCompleteNewHistory(t *testing.T) {
 			if err != nil || result.Revision != 2 || result.Changed != (stage != "directory-sync") {
 				t.Fatalf("recovery duplicated or lost event: %#v %v", result, err)
 			}
-			matches, err := filepath.Glob(filepath.Join(root, MarkerDirectory, ".metadata-*.tmp"))
+			matches, err := filepath.Glob(filepath.Join(testWork(t, root).Dir, ".metadata-*.tmp"))
 			if err != nil || len(matches) != 0 {
 				t.Fatalf("temporary files left: %v %v", matches, err)
 			}
@@ -208,7 +209,7 @@ func TestWorkItemLifecycleConcurrentChangesAndCompareAndSet(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	snapshot, err := ReadWorkItemLifecycle(f.dependencies, root)
+	snapshot, err := ReadProjectLifecycle(testWork(t, root))
 	if err != nil || snapshot.Revision != count {
 		t.Fatalf("lost concurrent changes: %#v %v", snapshot, err)
 	}
@@ -241,7 +242,7 @@ func TestWorkItemLifecycleConcurrentChangesAndCompareAndSet(t *testing.T) {
 }
 
 func TestWorkItemLifecycleDoesNotGateExistingWorktreeWorkflow(t *testing.T) {
-	f := newWorkItemJourneyFixtureVersion(t, true)
+	f := newWorkItemJourneyFixture(t)
 	for _, subject := range []struct{ kind, id string }{{"task", "task"}, {"epic", "epic"}} {
 		if _, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: LifecycleArchived, ActorClaim: "actor"}); err != nil {
 			t.Fatal(err)
@@ -258,50 +259,48 @@ func TestWorkItemLifecycleDoesNotGateExistingWorktreeWorkflow(t *testing.T) {
 }
 
 func TestWorkItemLifecycleAppearsInExistingListAndShowJSON(t *testing.T) {
-	for _, legacy := range []bool{true, false} {
-		f := newWorkItemJourneyFixtureVersion(t, legacy)
-		for _, subject := range []struct{ kind, id string }{{"task", "task"}, {"epic", "epic"}} {
-			if _, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: LifecycleFrozen, ActorClaim: "actor"}); err != nil {
-				t.Fatal(err)
-			}
+	f := newWorkItemJourneyFixture(t)
+	for _, subject := range []struct{ kind, id string }{{"task", "task"}, {"epic", "epic"}} {
+		if _, err := SetWorkItemLifecycle(f.dependencies, WorkItemLifecycleInput{SubjectKind: subject.kind, SubjectID: subject.id, State: LifecycleFrozen, ActorClaim: "actor"}); err != nil {
+			t.Fatal(err)
 		}
-		task, err := ShowTask(f.dependencies, "task")
+	}
+	task, err := ShowTask(f.dependencies, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ep, err := ShowEpic(f.dependencies, "epic")
+	if err != nil {
+		t.Fatal(err)
+	}
+	list, err := ListTasksWithFilters(f.dependencies, TaskListFilters{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, marshal := range []func() ([]byte, error){func() ([]byte, error) { return MarshalTaskReadback(task) }, func() ([]byte, error) { return MarshalEpicReadback(ep) }} {
+		b, err := marshal()
 		if err != nil {
 			t.Fatal(err)
 		}
-		ep, err := ShowEpic(f.dependencies, "epic")
-		if err != nil {
+		var value map[string]any
+		if err := json.Unmarshal(b, &value); err != nil {
 			t.Fatal(err)
 		}
-		list, err := ListTasksWithFilters(f.dependencies, TaskListFilters{})
-		if err != nil {
-			t.Fatal(err)
+		if value["lifecycle"] != "frozen" {
+			t.Fatalf("missing lifecycle: %s", b)
 		}
-		for _, marshal := range []func() ([]byte, error){func() ([]byte, error) { return MarshalTaskReadback(task) }, func() ([]byte, error) { return MarshalEpicReadback(ep) }} {
-			b, err := marshal()
-			if err != nil {
-				t.Fatal(err)
-			}
-			var value map[string]any
-			if err := json.Unmarshal(b, &value); err != nil {
-				t.Fatal(err)
-			}
-			if value["lifecycle"] != "frozen" {
-				t.Fatalf("missing lifecycle: %s", b)
-			}
-		}
-		b, err := MarshalTaskList(list)
-		if err != nil {
-			t.Fatal(err)
-		}
-		var value struct {
-			Tasks []struct {
-				Lifecycle string `json:"lifecycle"`
-			} `json:"tasks"`
-		}
-		if err := json.Unmarshal(b, &value); err != nil || len(value.Tasks) != 1 || value.Tasks[0].Lifecycle != "frozen" {
-			t.Fatalf("list lifecycle: %s %v", b, err)
-		}
+	}
+	b, err := MarshalTaskList(list)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var value struct {
+		Tasks []struct {
+			Lifecycle string `json:"lifecycle"`
+		} `json:"tasks"`
+	}
+	if err := json.Unmarshal(b, &value); err != nil || len(value.Tasks) != 1 || value.Tasks[0].Lifecycle != "frozen" {
+		t.Fatalf("list lifecycle: %s %v", b, err)
 	}
 }
 
@@ -320,7 +319,7 @@ func TestWorkItemLifecycleInvalidInputsAndExpectedRevisionDoNotPublish(t *testin
 			t.Fatalf("accepted invalid input %#v", input)
 		}
 	}
-	if snapshot, err := ReadWorkItemLifecycle(f.dependencies, root); err != nil || snapshot.Exists {
+	if snapshot, err := ReadProjectLifecycle(testWork(t, root)); err != nil || snapshot.Exists {
 		t.Fatalf("invalid input wrote metadata: %#v %v", snapshot, err)
 	}
 	zero := 0
@@ -333,7 +332,7 @@ func TestWorkItemLifecycleInvalidInputsAndExpectedRevisionDoNotPublish(t *testin
 	if _, err := SetWorkItemLifecycle(f.dependencies, input); err == nil {
 		t.Fatal("stale expected revision accepted")
 	}
-	snapshot, err := ReadWorkItemLifecycle(f.dependencies, root)
+	snapshot, err := ReadProjectLifecycle(testWork(t, root))
 	if err != nil || snapshot.Task("task") != LifecycleParked || len(snapshot.Events) != 1 {
 		t.Fatalf("conflict altered state: %#v %v", snapshot, err)
 	}

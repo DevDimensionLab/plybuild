@@ -1,6 +1,6 @@
 module github.com/devdimensionlab/plybuild
 
-go 1.22
+go 1.26
 
 toolchain go1.26.10
 

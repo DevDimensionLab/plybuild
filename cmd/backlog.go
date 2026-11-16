@@ -473,10 +473,10 @@ func backlogDirectory(show func(workspace.ProjectID) (workspace.ProjectResult, e
 		result, err := show(id)
 		if err == nil {
 			paths := backlogPaths{wrapper: result.Project.Wrapper, members: result.Project.RepoIDs}
-			if paths.directory, err = workspace.ProjectDataPath(result.Project, workspace.DataPathBacklog); err != nil {
+			if paths.directory, err = result.Project.Data().Backlog(); err != nil {
 				return backlogPaths{}, err
 			}
-			paths.archive, err = workspace.ProjectDataPath(result.Project, workspace.DataPathBacklogArchive)
+			paths.archive, err = result.Project.Data().BacklogArchive()
 			return paths, err
 		}
 		var projectError *workspace.ProjectError

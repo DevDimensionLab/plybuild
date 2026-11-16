@@ -33,34 +33,6 @@ func TestTaskReadbackSeparatesPersistedReadyFromFreshHandoffReadiness(t *testing
 	}
 }
 
-func TestReadbackMarksRemovedProjectMembershipStale(t *testing.T) {
-	fixture := newWorkItemJourneyFixture(t)
-	_, repositories, err := fixture.dependencies.Projects.Snapshot(filepath.Dir(fixture.wrapper))
-	if err != nil {
-		t.Fatal(err)
-	}
-	fixture.dependencies.Projects = projectSnapshotOverride{ProjectStore: fixture.dependencies.Projects, repositories: repositories}
-
-	epic, err := ShowEpic(fixture.dependencies, "epic")
-	if err != nil || epic.Ready || !containsReason(epic.Reasons, "project_binding_stale") {
-		t.Fatalf("Epic readback = %#v, %v", epic, err)
-	}
-	task, err := ShowTask(fixture.dependencies, "task")
-	if err != nil || task.ReadyForHandoff || !containsReason(task.Reasons, "project_binding_stale") {
-		t.Fatalf("Task readback = %#v, %v", task, err)
-	}
-}
-
-type projectSnapshotOverride struct {
-	ProjectStore
-	projects     []ProjectRecord
-	repositories []RepoRecord
-}
-
-func (store projectSnapshotOverride) Snapshot(string) ([]ProjectRecord, []RepoRecord, error) {
-	return store.projects, store.repositories, nil
-}
-
 func containsReason(reasons []string, expected string) bool {
 	for _, reason := range reasons {
 		if reason == expected {

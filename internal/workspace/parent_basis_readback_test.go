@@ -29,11 +29,7 @@ func advancedReadbackFixture(t *testing.T) (workItemJourneyFixture, string, stri
 	if err != nil {
 		t.Fatal(err)
 	}
-	upgrade := ""
-	if preview.Plan.RegistryUpgrade != nil {
-		upgrade = preview.Plan.RegistryUpgrade.RegistrySHA256
-	}
-	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Upgrade: upgrade, Apply: true, Confirmation: *preview.Confirmation}); err != nil {
+	if _, err = UpdateEpicBase(f.dependencies, EpicBaseInput{EpicID: "epic", RepoID: "ply", Apply: true, Confirmation: *preview.Confirmation}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err = CreateTask(f.dependencies, TaskCreateInput{TaskID: "new-task", Title: "New", Description: "New task", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
@@ -121,18 +117,6 @@ func TestParentBasisReadbackEpicUsesOneCurrentObservation(t *testing.T) {
 	}
 	if show.Epic.RepoBindings[0].Worktree.OID != f.oid {
 		t.Error("historical adoption anchor was replaced")
-	}
-	_, repos, err := f.dependencies.Projects.Snapshot(filepath.Dir(f.wrapper))
-	if err != nil {
-		t.Fatal(err)
-	}
-	f.dependencies.Projects = projectSnapshotOverride{ProjectStore: f.dependencies.Projects, repositories: repos}
-	show, err = ShowEpic(f.dependencies, "epic")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if show.Ready || !containsReason(show.Reasons, "project_binding_stale") || show.Base[0].Freshness != "unknown" {
-		t.Errorf("project conflict Epic = %+v", show)
 	}
 }
 
@@ -225,15 +209,11 @@ func TestParentBasisReadbackPreservesObservationGuards(t *testing.T) {
 		{"dirty", "epic_worktree_dirty", "parent_worktree_dirty", "Clean"},
 		{"inventory", "worktree_inventory_stale", "worktree_inventory_stale", "InventoryMatch"},
 		{"unknown", "epic_observation_unknown", "parent_observation_unknown", ""},
-		{"nil", "epic_observation_unknown", "parent_observation_unknown", ""},
 	} {
 		t.Run(tt.mode, func(t *testing.T) {
 			d := f.dependencies
 			git := &parentReadbackGit{WorkItemGit: d.WorkGit, mode: tt.mode}
 			d.WorkGit = git
-			if tt.mode == "nil" {
-				d.WorkGit = nil
-			}
 			show, err := ShowEpic(d, "epic")
 			if err != nil {
 				t.Fatal(err)
@@ -267,7 +247,7 @@ type parentReadbackStore struct {
 	mutate func(*WorkItemRegistry)
 }
 
-func (s parentReadbackStore) Snapshot(root string) (WorkItemRegistry, error) {
+func (s parentReadbackStore) Snapshot(root ProjectWork) (WorkItemRegistry, error) {
 	r, err := s.WorkItemStore.Snapshot(root)
 	if err == nil {
 		s.mutate(&r)
@@ -293,31 +273,5 @@ func TestParentBasisReadbackRejectsUnknownHistoricalParent(t *testing.T) {
 		if _, err := ShowTask(d, "new-task"); err == nil {
 			t.Fatalf("unknown history accepted (operation=%v)", operation)
 		}
-	}
-}
-
-func TestParentBasisReadbackLegacyFallback(t *testing.T) {
-	f := newWorkItemJourneyFixtureVersion(t, true)
-	show, err := ShowTask(f.dependencies, "task")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if show.ParentFreshness.OID != "fresh" || containsReason(show.Reasons, "parent_ref_stale") {
-		t.Fatalf("legacy unbound = %+v", show)
-	}
-	in, err := ParseTaskWorktreeCreateInput("task", "task", filepath.Join(f.wrapper, "task"), f.oid)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err = CreateTaskWorktree(f.dependencies, in); err != nil {
-		t.Fatal(err)
-	}
-	show, err = ShowTask(f.dependencies, "task")
-	if err != nil || !show.ReadyForHandoff {
-		t.Fatalf("legacy bound = %+v, %v", show, err)
-	}
-	epic, err := ShowEpic(f.dependencies, "epic")
-	if err != nil || !epic.Ready || len(epic.Base) != 0 || len(epic.Reasons) != 0 {
-		t.Fatalf("legacy Epic = %+v, %v", epic, err)
 	}
 }

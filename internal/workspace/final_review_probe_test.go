@@ -17,18 +17,11 @@ func finalReviewInstallDefinitions(t *testing.T, f workItemJourneyFixture) {
 	}
 	defs := workspacedef.Definitions{FormatVersion: 1, Projects: []workspacedef.Project{}}
 	for _, p := range b.Projects.Projects {
-		pd := workspacedef.Project{ID: string(p.ID), Name: p.Name, Wrapper: p.Wrapper, Repos: []workspacedef.Repo{}, Epics: []workspacedef.Epic{}}
+		pd := workspacedef.Project{ID: string(p.ID), Name: p.Name, Wrapper: p.Wrapper, Repos: []workspacedef.Repo{}}
 		for _, id := range p.RepoIDs {
 			for _, r := range b.Projects.Repos {
 				if r.ID == id {
 					pd.Repos = append(pd.Repos, workspacedef.Repo{ID: string(r.ID), Path: r.Locator})
-				}
-			}
-		}
-		for _, e := range b.Registry.Epics {
-			if e.ProjectID == p.ID {
-				for _, binding := range e.RepoBindings {
-					pd.Epics = append(pd.Epics, workspacedef.Epic{ID: string(e.ID), Title: e.Title, Repo: string(binding.RepoID), Path: binding.Worktree.Locator, Ref: binding.Worktree.Ref})
 				}
 			}
 		}
@@ -70,7 +63,9 @@ func TestFinalReviewFilterUnknownAndANDWithoutCheckout(t *testing.T) {
 	if err = json.Unmarshal(raw, &defs); err != nil {
 		t.Fatal(err)
 	}
-	defs.Projects = append(defs.Projects, workspacedef.Project{ID: "second", Name: "Second", Wrapper: ".", Repos: []workspacedef.Repo{{ID: "other", Path: "offline-other"}}, Epics: []workspacedef.Epic{}})
+	// Project sample's wrapper is the workspace root; wrappers may not overlap.
+	secondWrapper := physicalPath(t, t.TempDir())
+	defs.Projects = append(defs.Projects, workspacedef.Project{ID: "second", Name: "Second", Wrapper: secondWrapper, Repos: []workspacedef.Repo{{ID: "other", Path: "offline-other"}}})
 	raw, err = json.Marshal(defs)
 	if err != nil {
 		t.Fatal(err)
