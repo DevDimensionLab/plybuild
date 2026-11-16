@@ -53,6 +53,26 @@ func TestBacklogAttachListAndShowAttachments(t *testing.T) {
 	if listed.ID != item.ID || !reflect.DeepEqual(names, []string{"a.txt", "b.png", "c.md"}) {
 		t.Fatalf("attachments = %#v", listed)
 	}
+	var withPaths struct {
+		Attachments []struct {
+			Name string `json:"name"`
+			Path string `json:"path"`
+		} `json:"attachments"`
+	}
+	for _, args := range [][]string{{"attachments", "--project", "ply", "--format", "json", item.ID}, {"show", "--project", "ply", "--format", "json", item.ID}} {
+		withPaths.Attachments = nil
+		if err := json.Unmarshal([]byte(f.success(t, "", args...)), &withPaths); err != nil {
+			t.Fatal(err)
+		}
+		if len(withPaths.Attachments) != 3 {
+			t.Fatalf("%v attachments = %#v", args[0], withPaths.Attachments)
+		}
+		for _, attachment := range withPaths.Attachments {
+			if attachment.Path != copied(attachment.Name) {
+				t.Fatalf("%v path of %s = %q, want %q", args[0], attachment.Name, attachment.Path, copied(attachment.Name))
+			}
+		}
+	}
 	lines := f.success(t, "", "attachments", "--project", "ply", item.ID)
 	wantLine := fmt.Sprintf("c.md  3 bytes  %s  present  %s\n", listed.Attachments[2].AddedAt, copied("c.md"))
 	if strings.Count(lines, "\n") != 3 || !strings.HasPrefix(lines, "a.txt  1 bytes  ") || !strings.HasSuffix(lines, wantLine) {

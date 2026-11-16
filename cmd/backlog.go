@@ -127,10 +127,14 @@ func newBacklogCommandWithDirectory(resolve func(string) (backlogPaths, error)) 
 		if format != "json" {
 			return writeBacklogItemText(cmd.OutOrStdout(), store, item, attachments)
 		}
+		views, err := backlogAttachmentViews(store, item.ID, attachments)
+		if err != nil {
+			return err
+		}
 		return writeBacklogJSON(cmd.OutOrStdout(), struct {
 			backlog.Item
-			Attachments []backlog.Attachment `json:"attachments,omitempty"`
-		}{item, attachments})
+			Attachments []backlogAttachmentView `json:"attachments,omitempty"`
+		}{item, views})
 	}
 
 	listCommand := addFlags(&cobra.Command{
@@ -217,7 +221,7 @@ func newBacklogCommandWithDirectory(resolve func(string) (backlogPaths, error)) 
 				}
 			}
 			if format == "json" {
-				return writeBacklogJSON(cmd.OutOrStdout(), backlogAttachments{args[0], attachments})
+				return writeBacklogAttachmentsJSON(cmd.OutOrStdout(), store, args[0], attachments)
 			}
 			item, err := store.Read(args[0])
 			if err != nil {
@@ -240,7 +244,7 @@ func newBacklogCommandWithDirectory(resolve func(string) (backlogPaths, error)) 
 				return err
 			}
 			if format == "json" {
-				return writeBacklogJSON(cmd.OutOrStdout(), backlogAttachments{args[0], attachments})
+				return writeBacklogAttachmentsJSON(cmd.OutOrStdout(), store, args[0], attachments)
 			}
 			return writeBacklogAttachmentsText(cmd.OutOrStdout(), store, args[0], attachments)
 		},
@@ -544,8 +548,35 @@ func writeBacklogListText(out io.Writer, project, filter string, result backlog.
 }
 
 type backlogAttachments struct {
-	ID          string               `json:"id"`
-	Attachments []backlog.Attachment `json:"attachments"`
+	ID          string                  `json:"id"`
+	Attachments []backlogAttachmentView `json:"attachments"`
+}
+
+// backlogAttachmentView is an attachment with the absolute path of Ply's
+// copy, so readers never derive the backlog directory themselves.
+type backlogAttachmentView struct {
+	backlog.Attachment
+	Path string `json:"path"`
+}
+
+func backlogAttachmentViews(store backlog.Store, id string, attachments []backlog.Attachment) ([]backlogAttachmentView, error) {
+	views := make([]backlogAttachmentView, 0, len(attachments))
+	for _, attachment := range attachments {
+		path, _, err := store.AttachmentState(id, attachment)
+		if err != nil {
+			return nil, err
+		}
+		views = append(views, backlogAttachmentView{attachment, path})
+	}
+	return views, nil
+}
+
+func writeBacklogAttachmentsJSON(out io.Writer, store backlog.Store, id string, attachments []backlog.Attachment) error {
+	views, err := backlogAttachmentViews(store, id, attachments)
+	if err != nil {
+		return err
+	}
+	return writeBacklogJSON(out, backlogAttachments{id, views})
 }
 
 func writeBacklogAttachmentsText(out io.Writer, store backlog.Store, id string, attachments []backlog.Attachment) error {
