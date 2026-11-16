@@ -17,15 +17,17 @@ import (
 func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "publication",
-		Short: "Publish, list and show runs that other applications deliver through Ply",
+		Short: "Publish, list, show and withdraw runs that other applications deliver through Ply",
 		Long: "A run is a finished result of an application, such as a code map or a workflow view, stored unchanged with publication.json written by Ply.\n" +
 			"Runs live in <project wrapper>/data/publications/,\n" +
 			"as <repo-id or _project>/<category>/[<agent>/]<run>/. A published run is never changed; Ply keeps every run with --plan and the newest five without plan per path.\n" +
+			"Withdraw hides the runs of a path from list until the next publish; it removes nothing.\n" +
 			"Without --project the single Project whose wrapper contains the current directory is used.",
 		Example: "  ply publication publish --project ply --repo ply-code-map --category code-map --dir out --entry index.html --title 'Kodekart'\n" +
 			"  ply publication publish --project ply --category workflow --agent ply-epic --plan PLAN-49 --dir out --entry index.html --title 'PLAN-49'\n" +
 			"  ply publication list --project ply --plan PLAN-49 --format json\n" +
-			"  ply publication show --project ply --repo ply-code-map --category code-map --format json",
+			"  ply publication show --project ply --repo ply-code-map --category code-map --format json\n" +
+			"  ply publication withdraw --project ply --repo ply-planning --category code-health",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
 				return publicationInvalidArguments("unknown publication command")
@@ -176,6 +178,40 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 	showCommand.Flags().StringVar(&showCategory, "category", "", "category (required)")
 	showCommand.Flags().StringVar(&showAgent, "agent", "", "agent")
 	showCommand.Flags().StringVar(&run, "run", "", "run ID (default: the newest)")
+
+	var withdrawRepo, withdrawCategory, withdrawAgent, withdrawActor string
+	withdrawCommand := addFlags(&cobra.Command{
+		Use:   "withdraw --category <category>",
+		Short: "Hide the runs of a path from list and show until the next publish",
+		Long: "Store withdrawn.json in the path with its newest run: list and show without --run leave out that run and every older one, and a later publish is shown again.\n" +
+			"No run is removed and show --run still reads a withdrawn run. Without --repo the path of the whole Project is withdrawn; without --agent only the path without agent.\n" +
+			"Withdrawing a path whose newest run is already withdrawn returns the stored withdrawal unchanged. The actor is --actor or PLY_ACTOR.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			s, err := open()
+			if err != nil {
+				return err
+			}
+			if withdrawRepo != "" && !slices.Contains(resolved.RepoIDs, workspace.RepoID(withdrawRepo)) {
+				return publicationInvalidArguments("--repo must be a repo ID of project " + string(resolved.ID))
+			}
+			if withdrawActor == "" {
+				withdrawActor = os.Getenv("PLY_ACTOR")
+			}
+			w, err := s.Withdraw(string(resolved.ID), withdrawRepo, withdrawCategory, withdrawAgent, withdrawActor)
+			if err != nil {
+				return err
+			}
+			if format == "json" {
+				return writeAssignmentJSON(cmd.OutOrStdout(), w)
+			}
+			_, err = io.WriteString(cmd.OutOrStdout(), withdrawalText(w))
+			return err
+		},
+	})
+	withdrawCommand.Flags().StringVar(&withdrawRepo, "repo", "", "repo ID of the Project (default: the whole Project)")
+	withdrawCommand.Flags().StringVar(&withdrawCategory, "category", "", "category (required)")
+	withdrawCommand.Flags().StringVar(&withdrawAgent, "agent", "", "agent")
+	withdrawCommand.Flags().StringVar(&withdrawActor, "actor", "", "who withdraws (default: PLY_ACTOR)")
 	return command
 }
 
@@ -230,6 +266,15 @@ func publicationText(v publication.View) string {
 	writeField(&out, "", "source", v.Source)
 	fmt.Fprintf(&out, "entry: %s (%d files)\npath: %s\n", v.Entry, len(v.Files), v.Path)
 	return out.String()
+}
+
+func withdrawalText(w publication.Withdrawal) string {
+	subject := publicationSubject(publication.View{Publication: publication.Publication{Repo: w.Repo, Category: w.Category, Agent: w.Agent}})
+	text := fmt.Sprintf("%s withdrawn through %s at %s", subject, w.Through, w.WithdrawnAt)
+	if w.Actor != "" {
+		text += " by " + w.Actor
+	}
+	return text + "\n"
 }
 
 func publicationListText(result publication.ListResult) string {

@@ -2,7 +2,9 @@
 // Ply: <root>/<repo-id|_project>/<category>/[<agent>/]<run>/ holding the
 // producer's files unchanged and publication.json written by Ply. A run is
 // copied to a dot-named temporary directory and renamed when complete, so
-// readers never see half a run; a published run is never changed. Writes take
+// readers never see half a run; a published run is never changed. A
+// withdrawal writes withdrawn.json in the path directory and hides the runs up
+// to and including the newest one at that time; nothing is removed. Writes take
 // an exclusive lock on <root>/.lock; reads take none and create nothing.
 // Errors are *Error with a fixed Class and a detail without absolute paths.
 package publication
@@ -35,9 +37,10 @@ const ProjectSegment = "_project"
 
 // Fixed JSON contract names.
 const (
-	Kind          = "PlyPublication@1"
-	ListKind      = "PlyPublicationList@1"
-	SchemaVersion = 1
+	Kind           = "PlyPublication@1"
+	ListKind       = "PlyPublicationList@1"
+	WithdrawalKind = "PlyPublicationWithdrawal@1"
+	SchemaVersion  = 1
 )
 
 // Error classes shared with the CLI contract.
@@ -76,6 +79,20 @@ type Publication struct {
 	Entry         string `json:"entry"`
 	Source        string `json:"source,omitempty"`
 	Files         []File `json:"files"`
+}
+
+// Withdrawal is the content of withdrawn.json: the runs of the path up to and
+// including Through are hidden from List and from Show without a run.
+type Withdrawal struct {
+	Kind          string `json:"kind"`
+	SchemaVersion int    `json:"schema_version"`
+	Project       string `json:"project"`
+	Repo          string `json:"repo,omitempty"`
+	Category      string `json:"category"`
+	Agent         string `json:"agent,omitempty"`
+	Through       string `json:"through"`
+	WithdrawnAt   string `json:"withdrawn_at"`
+	Actor         string `json:"actor,omitempty"`
 }
 
 // View is one stored run with the absolute path of its directory.
@@ -121,6 +138,7 @@ func Open(root string) Store { return Store{root: root, now: time.Now} }
 
 const (
 	metadataName = "publication.json"
+	withdrawName = "withdrawn.json"
 	lockName     = ".lock"
 	tempSuffix   = ".tmp"
 	runLayout    = "20060102T150405.000Z"
@@ -129,6 +147,9 @@ const (
 	keepWithout  = 5
 	maxTitle     = 200
 )
+
+// invalidWithdrawal is the detail of a withdrawn.json that cannot be parsed.
+const invalidWithdrawal = withdrawName + " is not a valid " + WithdrawalKind
 
 var (
 	namePattern   = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
@@ -373,17 +394,119 @@ func copyFile(source, target string) (int64, string, error) {
 }
 
 func writeMetadata(target string, p Publication) error {
+	return writeJSON(target, metadataName, p)
+}
+
+func writeJSON(target, name string, value any) error {
 	var buffer bytes.Buffer
 	encoder := json.NewEncoder(&buffer)
 	encoder.SetEscapeHTML(false)
 	encoder.SetIndent("", "  ")
-	if err := encoder.Encode(p); err != nil {
-		return ioError("encode "+metadataName, err)
+	if err := encoder.Encode(value); err != nil {
+		return ioError("encode "+name, err)
 	}
 	if err := os.WriteFile(target, buffer.Bytes(), 0o644); err != nil {
-		return ioError("write "+metadataName, err)
+		return ioError("write "+name, err)
 	}
 	return nil
+}
+
+// Withdraw hides the runs of the path up to its newest run. Withdrawing a path
+// whose newest run is already withdrawn returns the stored withdrawal unchanged.
+func (s Store) Withdraw(project, repo, category, agent, actor string) (Withdrawal, error) {
+	relative, err := location(repo, category, agent)
+	if err != nil {
+		return Withdrawal{}, err
+	}
+	if err := checkLine("--actor", actor, maxTitle, false); err != nil {
+		return Withdrawal{}, err
+	}
+	directory := filepath.Join(s.root, relative)
+	if _, err := os.Stat(directory); errors.Is(err, fs.ErrNotExist) {
+		return Withdrawal{}, &Error{Class: ClassNotFound, Detail: "no run in " + filepath.ToSlash(relative)}
+	}
+	lock, err := filelock.Acquire(filepath.Join(s.root, lockName), filelock.Options{})
+	if err != nil {
+		return Withdrawal{}, ioError("lock publications", err)
+	}
+	w, err := s.withdraw(project, repo, category, agent, actor, relative)
+	if releaseErr := lock.Release(); releaseErr != nil && err == nil {
+		err = &Error{Class: ClassIOError, Detail: "the withdrawal was stored; releasing the lock failed"}
+	}
+	return w, err
+}
+
+func (s Store) withdraw(project, repo, category, agent, actor, relative string) (Withdrawal, error) {
+	directory := filepath.Join(s.root, relative)
+	runs, err := runNames(directory)
+	if err != nil {
+		return Withdrawal{}, err
+	}
+	if len(runs) == 0 {
+		return Withdrawal{}, &Error{Class: ClassNotFound, Detail: "no run in " + filepath.ToSlash(relative)}
+	}
+	newest := runs[len(runs)-1]
+	// An unparsable withdrawal is replaced; another read failure stops here.
+	previous, found, err := readWithdrawal(directory)
+	var readError *Error
+	if err != nil && !(errors.As(err, &readError) && readError.Detail == invalidWithdrawal) {
+		return Withdrawal{}, err
+	}
+	if found && previous.Through == newest {
+		return previous, nil
+	}
+	w := Withdrawal{Kind: WithdrawalKind, SchemaVersion: SchemaVersion, Project: project, Repo: repo, Category: category, Agent: agent,
+		Through: newest, WithdrawnAt: s.now().UTC().Format(time.RFC3339), Actor: actor}
+	temp := filepath.Join(directory, "."+withdrawName+tempSuffix)
+	if err := writeJSON(temp, withdrawName, w); err != nil {
+		os.Remove(temp)
+		return Withdrawal{}, err
+	}
+	if err := os.Rename(temp, filepath.Join(directory, withdrawName)); err != nil {
+		os.Remove(temp)
+		return Withdrawal{}, ioError("write "+withdrawName, err)
+	}
+	return w, nil
+}
+
+// readWithdrawal returns the withdrawal of directory and whether one exists.
+func readWithdrawal(directory string) (Withdrawal, bool, error) {
+	contents, err := os.ReadFile(filepath.Join(directory, withdrawName))
+	if errors.Is(err, fs.ErrNotExist) {
+		return Withdrawal{}, false, nil
+	}
+	if err != nil {
+		return Withdrawal{}, false, ioError("read "+withdrawName, err)
+	}
+	var w Withdrawal
+	if err := json.Unmarshal(contents, &w); err != nil || w.Kind != WithdrawalKind || !runPattern.MatchString(w.Through) {
+		return Withdrawal{}, false, &Error{Class: ClassIOError, Detail: invalidWithdrawal}
+	}
+	return w, true, nil
+}
+
+// visibleRuns returns the runs of directory after its withdrawal, ascending.
+func visibleRuns(directory string) ([]string, error) {
+	runs, err := runNames(directory)
+	if err != nil {
+		return nil, err
+	}
+	w, found, err := readWithdrawal(directory)
+	if err != nil || !found {
+		return runs, err
+	}
+	return after(runs, w.Through), nil
+}
+
+// after returns the runs that sort after through; runs is ascending.
+func after(runs []string, through string) []string {
+	visible := runs[:0]
+	for _, run := range runs {
+		if run > through {
+			visible = append(visible, run)
+		}
+	}
+	return visible
 }
 
 // prune removes runs without plan beyond the newest keepWithout in directory.
@@ -445,7 +568,7 @@ func (s Store) Show(repo, category, agent, run string) (View, error) {
 	}
 	directory := filepath.Join(s.root, relative)
 	if run == "" {
-		runs, err := runNames(directory)
+		runs, err := visibleRuns(directory)
 		if err != nil {
 			return View{}, err
 		}
@@ -478,6 +601,13 @@ func (s Store) List(f Filter) (ListResult, error) {
 		runs, err := runNames(directory)
 		if err != nil {
 			return result, err
+		}
+		if w, found, err := readWithdrawal(directory); err != nil {
+			// An unreadable withdrawal hides nothing and is reported like an unreadable run.
+			relative, _ := filepath.Rel(s.root, filepath.Join(directory, withdrawName))
+			result.Invalid = append(result.Invalid, InvalidRun{Run: filepath.ToSlash(relative), Error: err.Error()})
+		} else if found {
+			runs = after(runs, w.Through)
 		}
 		for i := len(runs) - 1; i >= 0; i-- {
 			run := filepath.Join(directory, runs[i])

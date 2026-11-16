@@ -244,3 +244,109 @@ func TestPublicationHidesUnfinishedRunsAndOtherProjects(t *testing.T) {
 	_, err := runPublication(t, root, "show", "--project", "b", "--category", "code-map")
 	requirePublicationClass(t, err, publication.ClassNotFound)
 }
+
+func withdrawJSON(t *testing.T, root string, args ...string) publication.Withdrawal {
+	t.Helper()
+	out, err := runPublication(t, root, append([]string{"withdraw", "--project", "a", "--format", "json"}, args...)...)
+	if err != nil {
+		t.Fatalf("withdraw %v: %v", args, err)
+	}
+	var w publication.Withdrawal
+	if err := json.Unmarshal([]byte(out), &w); err != nil || w.Kind != "PlyPublicationWithdrawal@1" {
+		t.Fatalf("withdraw json %q: %v", out, err)
+	}
+	return w
+}
+
+func TestPublicationWithdrawHidesThePathUntilANewRun(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	dir := producerDir(t, root, "box", map[string]string{"index.html": "x"})
+	args := []string{"--repo", "a-app", "--category", "code-health", "--dir", dir, "--entry", "index.html", "--title", "t"}
+	first := publishJSON(t, root, args...)
+	second := publishJSON(t, root, args...)
+	other := publishJSON(t, root, "--category", "code-health", "--dir", dir, "--entry", "index.html", "--title", "prosjekt")
+	agent := publishJSON(t, root, "--repo", "a-app", "--category", "code-health", "--agent", "ply-epic", "--dir", dir, "--entry", "index.html", "--title", "agent")
+
+	w := withdrawJSON(t, root, "--repo", "a-app", "--category", "code-health", "--actor", "ply-code-map-plan")
+	if w.Through != second.Run || w.Repo != "a-app" || w.Category != "code-health" || w.Agent != "" || w.Actor != "ply-code-map-plan" || w.WithdrawnAt == "" {
+		t.Fatalf("withdrawal %+v", w)
+	}
+	for _, all := range [][]string{nil, {"--all"}} {
+		list := listJSON(t, root, append([]string{"--project", "a"}, all...)...)
+		if len(list.Items) != 2 || len(list.Invalid) != 0 {
+			t.Fatalf("list %v after withdraw %+v", all, list)
+		}
+		for _, v := range list.Items {
+			if v.Run == first.Run || v.Run == second.Run {
+				t.Fatalf("withdrawn run listed: %+v", list.Items)
+			}
+		}
+	}
+	if list := listJSON(t, root, "--project", "a", "--agent", "ply-epic"); len(list.Items) != 1 || list.Items[0].Run != agent.Run {
+		t.Fatalf("agent path withdrawn too: %+v", list.Items)
+	}
+	if list := listJSON(t, root, "--project", "a", "--repo", "_project"); len(list.Items) != 1 || list.Items[0].Run != other.Run {
+		t.Fatalf("project path withdrawn too: %+v", list.Items)
+	}
+	_, err := runPublication(t, root, "show", "--project", "a", "--repo", "a-app", "--category", "code-health")
+	requirePublicationClass(t, err, publication.ClassNotFound)
+	if out, err := runPublication(t, root, "show", "--project", "a", "--repo", "a-app", "--category", "code-health", "--run", first.Run); err != nil || !strings.Contains(out, first.Run) {
+		t.Fatalf("withdrawn run is no longer readable by ID: %q %v", out, err)
+	}
+	if _, err := os.Stat(second.Path); err != nil {
+		t.Fatalf("withdraw removed a run: %v", err)
+	}
+
+	again := withdrawJSON(t, root, "--repo", "a-app", "--category", "code-health")
+	if again != w {
+		t.Fatalf("second withdraw changed the record: %+v, want %+v", again, w)
+	}
+
+	third := publishJSON(t, root, args...)
+	if list := listJSON(t, root, "--project", "a", "--repo", "a-app", "--category", "code-health", "--all"); len(list.Items) != 2 {
+		t.Fatalf("new run after withdraw: %+v", list.Items)
+	} else if list.Items[0].Run != third.Run && list.Items[1].Run != third.Run {
+		t.Fatalf("new run hidden: %+v", list.Items)
+	}
+}
+
+func TestPublicationWithdrawRefusesWithoutRuns(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	_, err := runPublication(t, root, "withdraw", "--project", "a", "--repo", "a-app", "--category", "code-health")
+	requirePublicationClass(t, err, publication.ClassNotFound)
+	_, err = runPublication(t, root, "withdraw", "--project", "a", "--repo", "b-app", "--category", "code-health")
+	requirePublicationClass(t, err, publication.ClassInvalidArguments)
+	_, err = runPublication(t, root, "withdraw", "--project", "a", "--category", "Code_Health")
+	requirePublicationClass(t, err, publication.ClassInvalidArguments)
+}
+
+func TestPublicationListReportsAnUnreadableWithdrawal(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	dir := producerDir(t, root, "box", map[string]string{"index.html": "x"})
+	v := publishJSON(t, root, "--repo", "a-app", "--category", "code-health", "--dir", dir, "--entry", "index.html", "--title", "t")
+	if err := os.WriteFile(filepath.Join(filepath.Dir(v.Path), "withdrawn.json"), []byte("{"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	list := listJSON(t, root, "--project", "a")
+	if len(list.Items) != 1 || list.Items[0].Run != v.Run || len(list.Invalid) != 1 || list.Invalid[0].Run != "a-app/code-health/withdrawn.json" {
+		t.Fatalf("unreadable withdrawal %+v", list)
+	}
+	if w := withdrawJSON(t, root, "--repo", "a-app", "--category", "code-health"); w.Through != v.Run {
+		t.Fatalf("withdraw did not replace the unreadable withdrawal: %+v", w)
+	}
+	if list := listJSON(t, root, "--project", "a"); len(list.Items) != 0 || len(list.Invalid) != 0 {
+		t.Fatalf("after repair %+v", list)
+	}
+}
+
+func TestPublicationListSurvivesAWithdrawalThatCannotBeRead(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	dir := producerDir(t, root, "box", map[string]string{"index.html": "x"})
+	v := publishJSON(t, root, "--repo", "a-app", "--category", "code-health", "--dir", dir, "--entry", "index.html", "--title", "t")
+	if err := os.Mkdir(filepath.Join(filepath.Dir(v.Path), "withdrawn.json"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if list := listJSON(t, root, "--project", "a"); len(list.Items) != 1 || len(list.Invalid) != 1 {
+		t.Fatalf("list with a withdrawal directory %+v", list)
+	}
+}
