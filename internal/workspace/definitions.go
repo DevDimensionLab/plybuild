@@ -132,6 +132,11 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 		if err := validateProjectAddInput(input); err != nil {
 			return err
 		}
+		for _, c := range p.Companions {
+			if !validCompanionRole(CompanionRole(c.Role)) || c.Path == "" {
+				return ProjectInvalidArguments(fmt.Sprintf("companion %q of Project %s must have role planning, docs or other and a path", c.Path, p.ID))
+			}
+		}
 		if projects[p.ID] {
 			return ProjectInvalidArguments("duplicate Project in definitions")
 		}
@@ -151,7 +156,7 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 		if err != nil {
 			return registry, err
 		}
-		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper}
+		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper, Companions: definitionCompanions(root, p)}
 		repos := []RepoRecord{}
 		for _, r := range p.Repos {
 			path, err := canonicalDirectory(files, root, r.Path, "repository")
@@ -163,7 +168,7 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 				return registry, err
 			}
 			project.RepoIDs = append(project.RepoIDs, RepoID(r.ID))
-			repos = append(repos, RepoRecord{ID: RepoID(r.ID), Locator: observed.Locator, GitCommonDir: observed.GitCommonDir, Remote: r.Remote})
+			repos = append(repos, RepoRecord{ID: RepoID(r.ID), Locator: observed.Locator, GitCommonDir: observed.GitCommonDir, Remote: r.Remote, Wrapper: definitionWrapper(root, r)})
 		}
 		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
 		var errApply error
@@ -217,14 +222,40 @@ func definitionPath(root, path string) string {
 	return filepath.ToSlash(relative)
 }
 
+// ResolveDefinitionPath is the physical form of a stored definitions path of
+// the workspace at the physical root, without checking that it exists.
+func ResolveDefinitionPath(root, path string) string {
+	if filepath.IsAbs(path) {
+		return filepath.Clean(path)
+	}
+	return filepath.Join(root, filepath.FromSlash(path))
+}
+
+// definitionCompanions resolves the companions of p; nil when it has none.
+func definitionCompanions(root string, p workspacedef.Project) []ProjectCompanion {
+	var companions []ProjectCompanion
+	for _, c := range p.Companions {
+		companions = append(companions, ProjectCompanion{CompanionRole(c.Role), ResolveDefinitionPath(root, c.Path)})
+	}
+	return companions
+}
+
+// definitionWrapper resolves the wrapper of r; empty when it has none.
+func definitionWrapper(root string, r workspacedef.Repo) string {
+	if r.Wrapper == "" {
+		return ""
+	}
+	return ResolveDefinitionPath(root, r.Wrapper)
+}
+
 func missingDefinitions(root string) error {
 	return definitionError(&workspacedef.Error{Kind: workspacedef.KindMissing, Path: filepath.Join(root, workspacedef.File), Detail: "definitions do not exist"})
 }
 
-// metadataProjects is the Project lookup of project metadata only. When
+// metadataProjects is the Project lookup without Git. When
 // ply-workspace.json exists it alone is authoritative and is projected
 // statically, without Git observation or existence checks; repositories carry
-// no GitCommonDir, so the snapshot must not leave metadata. It takes no lock.
+// no GitCommonDir. It takes no lock.
 func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	defs, _, err := workspacedef.Read(root)
 	if err != nil {
@@ -236,19 +267,13 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	if err := validateDefinitions(*defs); err != nil {
 		return ProjectSnapshot{}, err
 	}
-	resolve := func(path string) string {
-		if filepath.IsAbs(path) {
-			return filepath.Clean(path)
-		}
-		return filepath.Join(root, filepath.FromSlash(path))
-	}
 	snapshot := ProjectSnapshot{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
 	for _, p := range defs.Projects {
-		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: resolve(p.Wrapper)}
+		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: ResolveDefinitionPath(root, p.Wrapper), Companions: definitionCompanions(root, p)}
 		for _, r := range p.Repos {
 			id := RepoID(r.ID)
 			project.RepoIDs = append(project.RepoIDs, id)
-			snapshot.Repos = append(snapshot.Repos, RepoRecord{ID: id, Locator: resolve(r.Path)})
+			snapshot.Repos = append(snapshot.Repos, RepoRecord{ID: id, Locator: ResolveDefinitionPath(root, r.Path), Wrapper: definitionWrapper(root, r)})
 		}
 		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
 		snapshot.Projects = append(snapshot.Projects, project)

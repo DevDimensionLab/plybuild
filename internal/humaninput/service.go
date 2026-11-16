@@ -92,7 +92,7 @@ func within(path, base string) bool {
 
 // checkOrigin requires the agent's physical cwd to belong to the project: its
 // wrapper, repositories, companions or registered Epic/Task worktrees.
-func (r registrations) checkOrigin(d Dependencies, root string, project *workspace.ProjectRecord, origin string) string {
+func (r registrations) checkOrigin(project *workspace.ProjectRecord, origin string) string {
 	if absoluteInput(origin) != nil {
 		return "origin_cwd must be a physical absolute normalized directory"
 	}
@@ -107,10 +107,8 @@ func (r registrations) checkOrigin(d Dependencies, root string, project *workspa
 			}
 		}
 	}
-	if meta, e := workspace.ReadProjectMetadata(d.Workspace, root); e == nil {
-		for _, c := range meta.Companions(project.ID) {
-			bases = append(bases, c.Locator)
-		}
+	for _, c := range project.Companions {
+		bases = append(bases, c.Locator)
 	}
 	for _, epic := range r.registry.Epics {
 		if epic.ProjectID == project.ID {
@@ -148,7 +146,7 @@ func AskDraft(d Dependencies, root string, draft QuestionDraft) (Question, error
 	scope := Scope{ProjectID: draft.ProjectID, RepoID: draft.RepoID, TaskID: draft.TaskID, ActivityID: draft.ActivityID, ActivityTitle: draft.ActivityTitle}
 	project, problem := regs.checkScope(scope)
 	if problem == "" {
-		problem = regs.checkOrigin(d, root, project, draft.OriginCWD)
+		problem = regs.checkOrigin(project, draft.OriginCWD)
 	}
 	if problem != "" {
 		return Question{}, fail(CodeScopeInvalid, problem)

@@ -277,6 +277,7 @@ func cloneProjects(input []ProjectRecord) []ProjectRecord {
 	for index, project := range input {
 		result[index] = project
 		result[index].RepoIDs = append([]RepoID(nil), project.RepoIDs...)
+		result[index].Companions = append([]ProjectCompanion(nil), project.Companions...)
 	}
 	return result
 }

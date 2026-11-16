@@ -72,7 +72,7 @@ func readChanges(d workspace.Dependencies, betweenPasses func()) (ChangesResult,
 		journals = append(journals, taskjournal.JournalDir(work))
 	}
 	owners := []changeOwner{
-		{"projects", []string{"ply-workspace.json", ".ply/project-metadata.json"}, nil, nil},
+		{"projects", []string{"ply-workspace.json"}, nil, nil},
 		{"work_items", nil, nil, workItems},
 		{"journal", nil, journals, nil},
 	}

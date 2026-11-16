@@ -27,7 +27,7 @@ func newFake() *fake {
 		target:  Target{ProjectRoot: "/ws/ply", Remote: "upstream", Path: "ply/map/main", WrapperPresent: true},
 		plan:    Plan{Digest: digest, Verdict: VerdictUnborn},
 		errs:    map[string]error{},
-		changed: map[string]bool{"metadata": true, "define": true, "wrapper": true},
+		changed: map[string]bool{"define": true, "wrapper": true},
 	}
 }
 
@@ -52,7 +52,6 @@ func (f *fake) deps() Dependencies {
 			f.got = append(f.got, r)
 			return f.plan, f.errs["inspect"]
 		},
-		ClearWrapper:  effect("metadata"),
 		Undefine:      effect("define"),
 		RemoveWrapper: effect("wrapper"),
 	}
@@ -64,7 +63,7 @@ func preview() Request {
 
 func apply() Request {
 	req := preview()
-	req.Apply, req.Expect, req.Actor = true, digest, "ply-epic"
+	req.Apply, req.Expect = true, digest
 	return req
 }
 
@@ -78,22 +77,22 @@ func requireStop(t *testing.T, err error, step Step, kind error) {
 
 func TestApplyRunsStepsInOrderWithResolvedTarget(t *testing.T) {
 	f := newFake()
-	f.changed["metadata"] = false
+	f.changed["define"] = false
 
 	result, err := Run(context.Background(), apply(), f.deps())
 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"locate", "inspect", "metadata", "define", "wrapper"}; !reflect.DeepEqual(f.calls, want) {
+	if want := []string{"locate", "inspect", "define", "wrapper"}; !reflect.DeepEqual(f.calls, want) {
 		t.Fatalf("calls %v", f.calls)
 	}
 	want := Resolved{Workspace: ws, Project: "ply", ProjectRoot: "/ws/ply", RepoName: "map", Wrapper: "/ws/ply/map", RepoDir: "/ws/ply/map/main",
-		Leaf: "main", Path: "ply/map/main", Remote: "upstream", Actor: "ply-epic"}
+		Leaf: "main", Path: "ply/map/main", Remote: "upstream"}
 	if result.Resolved != want || f.got[0] != want {
 		t.Fatalf("resolved %+v, inspected %+v", result.Resolved, f.got[0])
 	}
-	if steps := []StepResult{{StepMetadata, false}, {StepDefine, true}, {StepWrapper, true}}; !reflect.DeepEqual(result.Steps, steps) {
+	if steps := []StepResult{{StepDefine, false}, {StepWrapper, true}}; !reflect.DeepEqual(result.Steps, steps) {
 		t.Fatalf("steps %+v", result.Steps)
 	}
 }
@@ -127,7 +126,6 @@ func TestNoEffectBeforeAnyStepFails(t *testing.T) {
 		calls []string
 	}{
 		"apply without expect": {req: func() Request { r := apply(); r.Expect = ""; return r }, step: StepPrepare, kind: ErrInvalid},
-		"apply without actor":  {req: func() Request { r := apply(); r.Actor = ""; return r }, step: StepPrepare, kind: ErrInvalid},
 		"repository path":      {req: func() Request { r := apply(); r.RepoName = "../x"; return r }, step: StepPrepare, kind: ErrInvalid},
 		"relative workspace":   {req: func() Request { r := apply(); r.Workspace = "ws"; return r }, step: StepPrepare, kind: ErrInvalid},
 		"locate fails": {setup: func(f *fake) { f.errs["locate"] = errors.New("unreadable") }, step: StepPrepare, kind: ErrInvalid,
@@ -172,12 +170,12 @@ func TestEffectFailuresKeepClassAndStop(t *testing.T) {
 		calls   []string
 		steps   []StepResult
 	}{
-		"metadata conflict": {"metadata", ErrConflict, StepMetadata, ErrConflict,
-			[]string{"locate", "inspect", "metadata"}, nil},
+		"define conflict": {"define", ErrConflict, StepDefine, ErrConflict,
+			[]string{"locate", "inspect", "define"}, nil},
 		"define unclassified": {"define", errors.New("publish failed"), StepDefine, ErrUnknown,
-			[]string{"locate", "inspect", "metadata", "define"}, []StepResult{{StepMetadata, true}}},
+			[]string{"locate", "inspect", "define"}, nil},
 		"wrapper unknown": {"wrapper", ErrUnknown, StepWrapper, ErrUnknown,
-			[]string{"locate", "inspect", "metadata", "define", "wrapper"}, []StepResult{{StepMetadata, true}, {StepDefine, true}}},
+			[]string{"locate", "inspect", "define", "wrapper"}, []StepResult{{StepDefine, true}}},
 	} {
 		t.Run(name, func(t *testing.T) {
 			f := newFake()

@@ -180,8 +180,8 @@ class Journey:
 
         planning = self.workspace / "project-0" / "planning"
         planning.mkdir()
-        self.ply_json("workspace", "project", "companion", "add", "p0", "--role", "planning", "--path", str(planning), "--actor", "acceptance fixture")
-        self.ply_json("workspace", "project", "repo-wrapper", "set", "p0", "--repo", "r0", "--wrapper", str(planning.parent), "--actor", "acceptance fixture")
+        self.ply_json("workspace", "project", "companion", "add", "p0", "--role", "planning", "--path", str(planning))
+        self.ply_json("workspace", "project", "repo-wrapper", "set", "p0", "--repo", "r0", "--wrapper", str(planning.parent))
         project, _ = self.ply_json("workspace", "project", "show", "p0")
         assert project["project"]["companions"] == [dict(role="planning", locator=str(planning))]
         assert project["repositories"][0]["wrapper"] == str(planning.parent)
@@ -193,7 +193,7 @@ class Journey:
             ["workspace", "attention"], ["workspace", "overview"], ["workspace", "journal", "recent"],
             ["workspace", "journal", "recent", "--since", now], ["workspace", "run", "list"],
             ["workspace", "run", "list", "--active"], ["workspace", "worktree", "list"],
-            ["workspace", "status"], ["workspace", "project", "metadata", "show", "p0"],
+            ["workspace", "status"],
             ["workspace", "task", "lifecycle", "show", "t0-0"], ["workspace", "epic", "lifecycle", "show", "e0"],
         ]
         before = snapshot(self.workspace)

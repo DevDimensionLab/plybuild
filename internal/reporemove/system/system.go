@@ -40,12 +40,11 @@ const (
 )
 
 var (
-	invalidClasses    = map[string]bool{string(workspace.ErrorProjectInvalidArguments): true, string(workspace.ErrorProjectNotFound): true, string(workspace.ErrorWorkInvalidArguments): true}
-	checkConflicts    = map[string]bool{string(workspace.ErrorProjectConflict): true}
-	defineConflicts   = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorProjectStoreConflict): true, string(workspace.ErrorWorkIdentityConflict): true, string(workspace.ErrorWorkProjectConflict): true}
-	metadataConflicts = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorWorkProjectConflict): true}
-	objectID          = regexp.MustCompile(`^([0-9a-f]{40}|[0-9a-f]{64})$`)
-	stateFiles        = []string{"MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "BISECT_LOG", "rebase-merge", "rebase-apply", "sequencer"}
+	invalidClasses  = map[string]bool{string(workspace.ErrorProjectInvalidArguments): true, string(workspace.ErrorProjectNotFound): true, string(workspace.ErrorWorkInvalidArguments): true}
+	checkConflicts  = map[string]bool{string(workspace.ErrorProjectConflict): true}
+	defineConflicts = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorProjectStoreConflict): true, string(workspace.ErrorWorkIdentityConflict): true, string(workspace.ErrorWorkProjectConflict): true}
+	objectID        = regexp.MustCompile(`^([0-9a-f]{40}|[0-9a-f]{64})$`)
+	stateFiles      = []string{"MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "BISECT_LOG", "rebase-merge", "rebase-apply", "sequencer"}
 	// Object stores outside Git's object database that the history proof does not see.
 	foreignStores = []string{"lfs", "annex"}
 )
@@ -68,7 +67,7 @@ func New(runner process.Runner) reporemove.Dependencies {
 
 func newDependencies(runner process.Runner, h hooks) reporemove.Dependencies {
 	a := adapter{runner, h}
-	return reporemove.Dependencies{Locate: locate, Inspect: a.inspect, ClearWrapper: clearWrapper, Undefine: undefine, RemoveWrapper: a.removeWrapper}
+	return reporemove.Dependencies{Locate: locate, Inspect: a.inspect, Undefine: undefine, RemoveWrapper: a.removeWrapper}
 }
 
 // classified carries one reporemove sentinel and the original error.
@@ -223,7 +222,7 @@ func (a adapter) inspect(ctx context.Context, r reporemove.Resolved) (reporemove
 		plan.Checks = append(plan.Checks, reporemove.Check{Name: name, Detail: detail})
 	}
 
-	if plan.DefinitionsDigest, plan.MetadataRevision, plan.MetadataCleared, err = provenance(ctx, a, d, r); err != nil {
+	if plan.DefinitionsDigest, err = provenance(ctx, a, d, r); err != nil {
 		return plan, err
 	}
 	pass("provenance", "")
@@ -255,22 +254,21 @@ func (a adapter) inspect(ctx context.Context, r reporemove.Resolved) (reporemove
 		{Name: "workspace", Value: r.Workspace}, {Name: "project", Value: r.Project}, {Name: "repository", Value: r.RepoName},
 		{Name: "project_root", Value: r.ProjectRoot}, {Name: "wrapper", Value: r.Wrapper}, {Name: "leaf", Value: r.Leaf},
 		{Name: "remote", Value: r.Remote}, {Name: "remote_url", Value: plan.RemoteURL},
-		{Name: "definitions", Value: plan.DefinitionsDigest}, {Name: "metadata_revision", Value: int64(plan.MetadataRevision)},
+		{Name: "definitions", Value: plan.DefinitionsDigest},
 		{Name: "head", Value: observed.head}, {Name: "refs", Value: refs}, {Name: "verdict", Value: plan.Verdict},
 		{Name: "listing", Value: observed.listing}})
 	return plan, nil
 }
 
 // provenance requires the layout repo create produces and returns the
-// definitions digest, the metadata revision and whether the wrapper metadata
-// is already cleared by an earlier run.
-func provenance(ctx context.Context, a adapter, d workspace.Dependencies, r reporemove.Resolved) (string, int, bool, error) {
+// definitions digest.
+func provenance(ctx context.Context, a adapter, d workspace.Dependencies, r reporemove.Resolved) (string, error) {
 	if _, err := workspace.ParseRepoID(r.RepoName); err != nil {
-		return "", 0, false, classified{reporemove.ErrInvalid, err}
+		return "", classified{reporemove.ErrInvalid, err}
 	}
 	defs, digest, err := workspacedef.Read(r.Workspace)
 	if err != nil || defs == nil {
-		return "", 0, false, fail(reporemove.ErrInvalid, "read %s: %v", workspacedef.File, err)
+		return "", fail(reporemove.ErrInvalid, "read %s: %v", workspacedef.File, err)
 	}
 	members := 0
 	for _, p := range defs.Projects {
@@ -278,56 +276,28 @@ func provenance(ctx context.Context, a adapter, d workspace.Dependencies, r repo
 			if repo.ID == r.RepoName {
 				members++
 				if p.ID != r.Project || repo.Path != r.Path {
-					return "", 0, false, fail(reporemove.ErrConflict, "repository %s is also defined in Project %s at %s", r.RepoName, p.ID, repo.Path)
+					return "", fail(reporemove.ErrConflict, "repository %s is also defined in Project %s at %s", r.RepoName, p.ID, repo.Path)
+				}
+				if repo.Wrapper == "" || workspace.ResolveDefinitionPath(r.Workspace, repo.Wrapper) != r.Wrapper {
+					return "", fail(reporemove.ErrConflict, "%s does not define wrapper %s for repository %s as repo create sets it", workspacedef.File, r.Wrapper, r.RepoName)
 				}
 			}
 		}
 	}
 	if members != 1 {
-		return "", 0, false, fail(reporemove.ErrConflict, "repository %s is not defined exactly once", r.RepoName)
+		return "", fail(reporemove.ErrConflict, "repository %s is not defined exactly once", r.RepoName)
 	}
 	if err := workspace.CheckDefinitions(d, r.Workspace); err != nil {
-		return "", 0, false, classify(err, checkConflicts, reporemove.ErrInvalid)
-	}
-	snapshot, err := workspace.ReadProjectMetadata(d, r.Workspace)
-	if err != nil {
-		return "", 0, false, classified{reporemove.ErrInvalid, err}
-	}
-	cleared, err := wrapperEvents(snapshot, r)
-	if err != nil {
-		return "", 0, false, err
+		return "", classify(err, checkConflicts, reporemove.ErrInvalid)
 	}
 	if err := physicalLayout(r); err != nil {
-		return "", 0, false, err
+		return "", err
 	}
 	identity, err := gitrepo.Identify(ctx, a.runner, r.RepoDir)
 	if err != nil || !identity.Worktree || identity.Toplevel != r.RepoDir || identity.CommonDir != filepath.Join(r.RepoDir, ".git") {
-		return "", 0, false, fail(reporemove.ErrInvalid, "%s must be a Git worktree root with common dir %s/.git: %+v %v", r.RepoDir, r.RepoDir, identity, err)
+		return "", fail(reporemove.ErrInvalid, "%s must be a Git worktree root with common dir %s/.git: %+v %v", r.RepoDir, r.RepoDir, identity, err)
 	}
-	return digest, snapshot.Revision, cleared, nil
-}
-
-// wrapperEvents requires the latest wrapper event of the repository to be the
-// set of the wrapper, or a clear directly preceded by it.
-func wrapperEvents(snapshot workspace.ProjectMetadataSnapshot, r reporemove.Resolved) (bool, error) {
-	var events []workspace.ProjectMetadataEvent
-	for _, event := range snapshot.Events {
-		if event.RepoID != nil && string(*event.RepoID) == r.RepoName &&
-			(event.Operation == workspace.ProjectRepoWrapperSet || event.Operation == workspace.ProjectRepoWrapperClear) {
-			events = append(events, event)
-		}
-	}
-	set := func(event workspace.ProjectMetadataEvent) bool {
-		return event.Operation == workspace.ProjectRepoWrapperSet && event.Locator != nil && *event.Locator == r.Wrapper
-	}
-	n := len(events)
-	switch {
-	case n > 0 && set(events[n-1]):
-		return false, nil
-	case n > 1 && events[n-1].Operation == workspace.ProjectRepoWrapperClear && set(events[n-2]):
-		return true, nil
-	}
-	return false, fail(reporemove.ErrConflict, "project metadata does not record wrapper %s for repository %s as repo create sets it", r.Wrapper, r.RepoName)
+	return digest, nil
 }
 
 // physicalLayout requires a physical wrapper directory directly in the
@@ -657,18 +627,6 @@ func (a adapter) history(ctx context.Context, r reporemove.Resolved, l local) (s
 	return reporemove.VerdictProven, url, nil
 }
 
-func clearWrapper(ctx context.Context, r reporemove.Resolved, p reporemove.Plan) (bool, error) {
-	if err := ctx.Err(); err != nil {
-		return false, classified{reporemove.ErrInvalid, err}
-	}
-	d, err := atRoot(r.Workspace)
-	if err != nil {
-		return false, err
-	}
-	result, err := workspace.ClearRepositoryWrapperAt(d, r.Workspace, r.Project, r.RepoName, r.Actor, p.MetadataRevision)
-	return result.Changed, classify(err, metadataConflicts, reporemove.ErrUnknown)
-}
-
 func undefine(ctx context.Context, r reporemove.Resolved, p reporemove.Plan) (bool, error) {
 	if err := ctx.Err(); err != nil {
 		return false, classified{reporemove.ErrInvalid, err}
@@ -717,13 +675,6 @@ func (a adapter) removeWrapper(ctx context.Context, r reporemove.Resolved, p rep
 					return fail(reporemove.ErrConflict, "repository %s is defined again in Project %s", r.RepoName, project.ID)
 				}
 			}
-		}
-		snapshot, err := workspace.ReadProjectMetadata(d, r.Workspace)
-		if err != nil {
-			return classified{reporemove.ErrInvalid, err}
-		}
-		if cleared, err := wrapperEvents(snapshot, r); err != nil || !cleared {
-			return fail(reporemove.ErrConflict, "wrapper metadata of repository %s is no longer the clear of this removal", r.RepoName)
 		}
 		if err := workspace.CheckRepoRemoval(d, r.Workspace, r.Project, r.RepoName); err != nil {
 			return classify(err, checkConflicts, reporemove.ErrInvalid)

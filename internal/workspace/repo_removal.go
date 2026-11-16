@@ -130,14 +130,10 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 			}
 		}
 	}
-	metadata, err := readProjectMetadata(root)
-	if err != nil {
-		return err
-	}
-	for id, companions := range metadata.companions {
-		for _, companion := range companions {
+	for _, p := range defs.Projects {
+		for _, companion := range definitionCompanions(root, p) {
 			if found, err := inside(companion.Locator); err != nil || found {
-				return firstErr(err, referenced("companion %s of Project %s is inside wrapper %s", companion.Locator, id, wrapper))
+				return firstErr(err, referenced("companion %s of Project %s is inside wrapper %s", companion.Locator, p.ID, wrapper))
 			}
 		}
 	}
@@ -199,23 +195,4 @@ func physicalLocation(files FileSystem, path string) (string, error) {
 		return "", projectPathError("inspect reference", path, err)
 	}
 	return projectMetadataPath(files, "", path, true)
-}
-
-// ClearRepositoryWrapperAt clears the wrapper metadata of repo in the
-// workspace at root with the expected revision. Unlike UpdateProjectMetadata
-// it observes the root only and never bootstraps runtime Epics.
-func ClearRepositoryWrapperAt(d Dependencies, root, project, repo, actor string, expectedRevision int) (ProjectMetadataMutation, error) {
-	in := ProjectMetadataInput{Operation: ProjectRepoWrapperClear, ProjectID: ProjectID(project), RepoID: RepoID(repo), ActorClaim: actor, ExpectedRevision: &expectedRevision}
-	if err := in.Validate(); err != nil {
-		return ProjectMetadataMutation{}, err
-	}
-	if d.Projects == nil || d.WorkClock == nil {
-		return ProjectMetadataMutation{}, projectError(ErrorProjectIO, "project store and clock dependencies are required", nil)
-	}
-	observed, err := ObserveRoot(d, root)
-	if err != nil {
-		return ProjectMetadataMutation{}, err
-	}
-	// A clear has no locator, so the working directory is never consulted.
-	return applyProjectMetadata(d, observed.Root, observed.Root, in, workspaceMetadataPublisher{})
 }

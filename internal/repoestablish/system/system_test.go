@@ -130,7 +130,7 @@ func newFixture(t *testing.T) *fixture {
 }
 
 func (f *fixture) request() repoestablish.Request {
-	return repoestablish.Request{Workspace: f.root, Project: "ply", RepoName: "code-map", Actor: "ply-epic",
+	return repoestablish.Request{Workspace: f.root, Project: "ply", RepoName: "code-map",
 		Overrides: repoestablish.Overrides{GitHubOwner: "Org"}}
 }
 
@@ -148,10 +148,6 @@ func (f *fixture) read(path string) string {
 		f.t.Fatal(err)
 	}
 	return string(raw)
-}
-
-func (f *fixture) metadata() string {
-	return f.read(filepath.Join(f.root, workspace.MarkerDirectory, workspace.ProjectMetadataFile))
 }
 
 func (f *fixture) definitions() string { return f.read(filepath.Join(f.root, workspacedef.File)) }
@@ -240,10 +236,9 @@ func TestPrepareReadsProjectDefaults(t *testing.T) {
 	})
 }
 
-func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
+func TestRunEstablishesUnderExplicitWorkspaceOnly(t *testing.T) {
 	f := newFixture(t)
 	t.Chdir(t.TempDir())
-	t.Setenv("PLY_ACTOR", "someone-else")
 	result, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
 	if err != nil {
 		t.Fatal(err)
@@ -258,12 +253,11 @@ func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
 		}
 	}
 	defs, _, err := workspacedef.Read(f.root)
-	if err != nil || !reflect.DeepEqual(defs.Projects[0].Repos[1], workspacedef.Repo{ID: "code-map", Path: "projects/code-map/main", Remote: "git@github.com:Org/code-map.git"}) {
+	if err != nil || !reflect.DeepEqual(defs.Projects[0].Repos[1], workspacedef.Repo{ID: "code-map", Path: "projects/code-map/main", Remote: "git@github.com:Org/code-map.git", Wrapper: "projects/code-map"}) {
 		t.Fatalf("definitions %+v, error %v", defs, err)
 	}
-	snapshot, err := workspace.ReadProjectMetadata(workspace.SystemDependencies(), f.root)
-	if err != nil || len(snapshot.Events) != 1 || snapshot.Events[0].ActorClaim != "ply-epic" || *snapshot.RepositoryWrapper("code-map") != wrapper {
-		t.Fatalf("metadata %+v, error %v", snapshot, err)
+	if _, err := os.Lstat(filepath.Join(f.root, workspace.MarkerDirectory, "project-metadata.json")); !os.IsNotExist(err) {
+		t.Fatalf("project metadata store written: %v", err)
 	}
 	remote, err := exec.Command("git", "-C", result.Resolved.RepoDir, "remote", "get-url", "origin").Output()
 	if err != nil || string(remote) != result.SSHURL+"\n" {
@@ -286,9 +280,9 @@ func TestRunEstablishesUnderExplicitWorkspaceAndActorOnly(t *testing.T) {
 		t.Fatalf("planning remotes %q, error %v", remotes, err)
 	}
 
-	definitions, metadata, calls := f.definitions(), f.metadata(), len(f.gh.calls)
+	definitions, calls := f.definitions(), len(f.gh.calls)
 	result, err = repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
-	if err != nil || f.definitions() != definitions || f.metadata() != metadata {
+	if err != nil || f.definitions() != definitions {
 		t.Fatalf("rerun changed files: %+v, error %v", result, err)
 	}
 	for _, step := range result.Steps {
@@ -331,62 +325,36 @@ func established(t *testing.T, f *fixture) repoestablish.Resolved {
 	return result.Resolved
 }
 
-func TestSetWrapperComparesThenSetsWithExpectedRevision(t *testing.T) {
+func TestSetWrapperSetsOnlyAnAbsentWrapper(t *testing.T) {
 	f := newFixture(t)
 	r := established(t, f)
 	d := f.deps(hooks{})
 	if changed, err := d.SetWrapper(context.Background(), r); err != nil || !changed {
 		t.Fatalf("absent: %v %v", changed, err)
 	}
-	once := f.metadata()
-	if changed, err := d.SetWrapper(context.Background(), r); err != nil || changed || f.metadata() != once {
+	once := f.definitions()
+	if changed, err := d.SetWrapper(context.Background(), r); err != nil || changed || f.definitions() != once {
 		t.Fatalf("equal: %v %v", changed, err)
 	}
 	other := r
 	other.Wrapper = f.projects
 	_, err := d.SetWrapper(context.Background(), other)
-	if requireKind(t, err, repoestablish.ErrConflict); f.metadata() != once {
-		t.Fatal("conflict changed metadata")
-	}
-}
-
-func TestSetWrapperLosesRaceWithoutOverwriting(t *testing.T) {
-	f := newFixture(t)
-	r := established(t, f)
-	var raced string
-	h := hooks{afterMetadataRead: func() {
-		in := workspace.ProjectMetadataInput{Operation: workspace.ProjectRepoWrapperSet, ProjectID: "ply", RepoID: "code-map", Locator: f.projects, ActorClaim: "racer"}
-		if _, err := workspace.UpdateProjectMetadata(fixedDependencies(f.root), in); err != nil {
-			t.Fatal(err)
-		}
-		raced = f.metadata()
-	}}
-	_, err := f.deps(h).SetWrapper(context.Background(), r)
-	if requireKind(t, err, repoestablish.ErrConflict); raced == "" || f.metadata() != raced {
-		t.Fatalf("race overwrote metadata: %v", err)
+	if requireKind(t, err, repoestablish.ErrConflict); f.definitions() != once {
+		t.Fatal("conflict changed definitions")
 	}
 }
 
 func TestCheckStopsBeforeWrapperOnMetadataAndTools(t *testing.T) {
-	t.Run("corrupt metadata", func(t *testing.T) {
-		f := newFixture(t)
-		write(t, filepath.Join(f.root, workspace.MarkerDirectory, workspace.ProjectMetadataFile), "{")
-		_, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
-		requireStop(t, err, repoestablish.StepCheck, repoestablish.ErrConflict)
-		if _, err := os.Lstat(filepath.Join(f.projects, "code-map")); !os.IsNotExist(err) || len(f.gh.calls) != 0 {
-			t.Fatalf("wrapper %v, gh calls %q", err, f.gh.calls)
-		}
-	})
 	t.Run("different wrapper", func(t *testing.T) {
 		f := newFixture(t)
 		r := established(t, f)
-		in := workspace.ProjectMetadataInput{Operation: workspace.ProjectRepoWrapperSet, ProjectID: "ply", RepoID: "code-map", Locator: f.projects, ActorClaim: "other"}
+		in := workspace.ProjectMetadataInput{Operation: workspace.ProjectRepoWrapperSet, ProjectID: "ply", RepoID: "code-map", Locator: f.projects}
 		if _, err := workspace.UpdateProjectMetadata(fixedDependencies(f.root), in); err != nil {
 			t.Fatal(err)
 		}
-		before, calls := f.metadata(), len(f.gh.calls)
+		before, calls := f.definitions(), len(f.gh.calls)
 		err := f.deps(hooks{}).Check(context.Background(), r)
-		if requireKind(t, err, repoestablish.ErrConflict); f.metadata() != before || len(f.gh.calls) != calls {
+		if requireKind(t, err, repoestablish.ErrConflict); f.definitions() != before || len(f.gh.calls) != calls {
 			t.Fatal("check had an effect")
 		}
 	})
@@ -402,13 +370,6 @@ func TestCheckStopsBeforeWrapperOnMetadataAndTools(t *testing.T) {
 			`"repos": [{"id": "ply", "path": "projects/ply/main"}, {"id": "code-map", "path": "projects/ply/main"}]`, 1))
 		_, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
 		requireStop(t, err, repoestablish.StepCheck, repoestablish.ErrConflict)
-	})
-	t.Run("invalid actor", func(t *testing.T) {
-		f := newFixture(t)
-		req := f.request()
-		req.Actor = " padded "
-		_, err := repoestablish.Run(context.Background(), req, f.deps(hooks{}))
-		requireStop(t, err, repoestablish.StepCheck, repoestablish.ErrInvalid)
 	})
 	t.Run("invalid repository ID", func(t *testing.T) {
 		f := newFixture(t)
@@ -433,27 +394,26 @@ func TestClassificationOfWorkspaceErrors(t *testing.T) {
 	work := func(class workspace.WorkItemErrorClass) error { return &workspace.WorkItemError{Class: class} }
 	release := &filelock.ReleaseError{Path: "/w/.ply/projects.lock", Unlock: errors.New("unlock")}
 	for name, tc := range map[string]struct {
-		err            error
-		define, update error
+		err    error
+		define error
 	}{
-		"project invalid":   {project(workspace.ErrorProjectInvalidArguments), repoestablish.ErrInvalid, repoestablish.ErrInvalid},
-		"project not found": {project(workspace.ErrorProjectNotFound), repoestablish.ErrInvalid, repoestablish.ErrInvalid},
-		"work invalid":      {work(workspace.ErrorWorkInvalidArguments), repoestablish.ErrInvalid, repoestablish.ErrInvalid},
-		"project conflict":  {project(workspace.ErrorProjectConflict), repoestablish.ErrConflict, repoestablish.ErrConflict},
-		"work project":      {work(workspace.ErrorWorkProjectConflict), repoestablish.ErrConflict, repoestablish.ErrConflict},
-		"store conflict":    {project(workspace.ErrorProjectStoreConflict), repoestablish.ErrConflict, repoestablish.ErrUnknown},
-		"identity conflict": {work(workspace.ErrorWorkIdentityConflict), repoestablish.ErrConflict, repoestablish.ErrUnknown},
-		"work store":        {work(workspace.ErrorWorkStoreConflict), repoestablish.ErrUnknown, repoestablish.ErrUnknown},
-		"work IO":           {work(workspace.ErrorWorkIO), repoestablish.ErrUnknown, repoestablish.ErrUnknown},
-		"reconciliation":    {work(workspace.ErrorWorkReconciliation), repoestablish.ErrUnknown, repoestablish.ErrUnknown},
-		"project IO":        {project(workspace.ErrorProjectIO), repoestablish.ErrUnknown, repoestablish.ErrUnknown},
-		"release":           {fmt.Errorf("wrapped: %w", release), repoestablish.ErrUnknown, repoestablish.ErrUnknown},
-		"untyped":           {errors.New("boom"), repoestablish.ErrUnknown, repoestablish.ErrUnknown},
+		"project invalid":   {project(workspace.ErrorProjectInvalidArguments), repoestablish.ErrInvalid},
+		"project not found": {project(workspace.ErrorProjectNotFound), repoestablish.ErrInvalid},
+		"work invalid":      {work(workspace.ErrorWorkInvalidArguments), repoestablish.ErrInvalid},
+		"project conflict":  {project(workspace.ErrorProjectConflict), repoestablish.ErrConflict},
+		"work project":      {work(workspace.ErrorWorkProjectConflict), repoestablish.ErrConflict},
+		"store conflict":    {project(workspace.ErrorProjectStoreConflict), repoestablish.ErrConflict},
+		"identity conflict": {work(workspace.ErrorWorkIdentityConflict), repoestablish.ErrConflict},
+		"work store":        {work(workspace.ErrorWorkStoreConflict), repoestablish.ErrUnknown},
+		"work IO":           {work(workspace.ErrorWorkIO), repoestablish.ErrUnknown},
+		"reconciliation":    {work(workspace.ErrorWorkReconciliation), repoestablish.ErrUnknown},
+		"project IO":        {project(workspace.ErrorProjectIO), repoestablish.ErrUnknown},
+		"release":           {fmt.Errorf("wrapped: %w", release), repoestablish.ErrUnknown},
+		"untyped":           {errors.New("boom"), repoestablish.ErrUnknown},
 	} {
 		t.Run(name, func(t *testing.T) {
 			for _, got := range []struct{ err, want error }{
 				{classify(tc.err, defineConflicts, repoestablish.ErrUnknown), tc.define},
-				{classify(tc.err, metadataConflicts, repoestablish.ErrUnknown), tc.update},
 			} {
 				if !errors.Is(got.err, got.want) || !errors.Is(got.err, tc.err) {
 					t.Fatalf("classified %v, want %v wrapping the original", got.err, got.want)

@@ -37,10 +37,11 @@ type RepoInput struct {
 }
 
 type ProjectRecord struct {
-	ID      ProjectID `yaml:"id"`
-	Name    string    `yaml:"name"`
-	Wrapper string    `yaml:"wrapper"`
-	RepoIDs []RepoID  `yaml:"repo_ids"`
+	ID         ProjectID          `yaml:"id"`
+	Name       string             `yaml:"name"`
+	Wrapper    string             `yaml:"wrapper"`
+	RepoIDs    []RepoID           `yaml:"repo_ids"`
+	Companions []ProjectCompanion `yaml:"-"` // from ply-workspace.json; nil when none
 }
 
 // Data is the Project's data area under its wrapper.
@@ -53,6 +54,7 @@ type RepoRecord struct {
 	Locator      string `yaml:"locator"`
 	GitCommonDir string `yaml:"git_common_dir"`
 	Remote       string `yaml:"-"` // from ply-workspace.json
+	Wrapper      string `yaml:"-"` // from ply-workspace.json; empty when not set
 }
 
 type ProjectResult struct {
@@ -60,13 +62,11 @@ type ProjectResult struct {
 	Project   ProjectRecord
 	Repos     []RepoRecord
 	Created   bool
-	Metadata  ProjectMetadataSnapshot
 }
 
 type ProjectListResult struct {
 	Workspace string
 	Projects  []ProjectRecord
-	Metadata  ProjectMetadataSnapshot
 }
 
 const (
@@ -262,14 +262,19 @@ func AddProject(dependencies Dependencies, input ProjectAddInput) (ProjectResult
 }
 
 // defineProject appends defined to the definitions. The same Project with the
-// same name, wrapper and repositories is no change; any difference is a conflict.
+// same name, wrapper and repositories is no change; any difference is a
+// conflict. Companions and repository wrappers are not compared.
 func defineProject(defined workspacedef.Project) func(*workspacedef.Definitions) (bool, error) {
 	return func(defs *workspacedef.Definitions) (bool, error) {
 		for _, p := range defs.Projects {
 			if p.ID != defined.ID {
 				continue
 			}
-			if p.Name == defined.Name && p.Wrapper == defined.Wrapper && reflect.DeepEqual(p.Repos, defined.Repos) {
+			repos := append([]workspacedef.Repo{}, p.Repos...)
+			for i := range repos {
+				repos[i].Wrapper = ""
+			}
+			if p.Name == defined.Name && p.Wrapper == defined.Wrapper && reflect.DeepEqual(repos, defined.Repos) {
 				return false, nil
 			}
 			return false, projectError(ErrorProjectConflict, fmt.Sprintf("project %s is already defined in %s with other name, wrapper or repositories", defined.ID, workspacedef.File), nil)
@@ -289,11 +294,7 @@ func ShowProject(dependencies Dependencies, id ProjectID) (ProjectResult, error)
 	}
 	for _, project := range projects {
 		if project.ID == id {
-			metadata, err := readProjectMetadata(workspaceRoot)
-			if err != nil {
-				return ProjectResult{}, err
-			}
-			return ProjectResult{Workspace: workspaceRoot, Project: project, Repos: repositoriesForProject(project, repositories), Metadata: metadata}, nil
+			return ProjectResult{Workspace: workspaceRoot, Project: project, Repos: repositoriesForProject(project, repositories)}, nil
 		}
 	}
 	return ProjectResult{}, projectError(ErrorProjectNotFound, fmt.Sprintf("project %s is not registered in Ply workspace %s", id, workspaceRoot), nil)
@@ -304,11 +305,7 @@ func ListProjects(dependencies Dependencies) (ProjectListResult, error) {
 	if err != nil {
 		return ProjectListResult{}, err
 	}
-	metadata, err := readProjectMetadata(workspaceRoot)
-	if err != nil {
-		return ProjectListResult{}, err
-	}
-	return ProjectListResult{Workspace: workspaceRoot, Projects: projects, Metadata: metadata}, nil
+	return ProjectListResult{Workspace: workspaceRoot, Projects: projects}, nil
 }
 
 func projectSnapshot(dependencies Dependencies) (string, []ProjectRecord, []RepoRecord, error) {

@@ -133,7 +133,7 @@ func TestChangesCoverAllReadModelOwners(t *testing.T) {
 		previous = current
 	}
 	for _, relative := range []string{
-		"project-metadata.json", "work-items.yaml", "work-item-lifecycle.json",
+		"work-items.yaml", "work-item-lifecycle.json",
 		"task-process/v1/task-a/000000001.json",
 	} {
 		content := "one"
@@ -155,6 +155,8 @@ func TestChangesCoverAllReadModelOwners(t *testing.T) {
 	// Old Run stores are no longer a read-model owner.
 	writeChangeFile(t, root, "task-runs/v1/runs/trn_a/request.json", "not a read-model owner")
 	writeChangeFile(t, root, "workflow-runs/runs/wfr_a/state.json", "not a read-model owner")
+	// Project metadata lives in ply-workspace.json.
+	writeChangeFile(t, root, "project-metadata.json", "not a read-model owner")
 	current, err := ReadChanges(d)
 	if err != nil {
 		t.Fatal(err)
@@ -170,7 +172,12 @@ func TestChangesExposeUnknownWithoutFollowingSymlinks(t *testing.T) {
 	if err := os.WriteFile(external, []byte("private"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.Symlink(external, filepath.Join(root, ".ply", "project-metadata.json")); err != nil {
+	defineChangeProject(t, root)
+	lifecycle := writeChangeFile(t, root, "work-item-lifecycle.json", "")
+	if err := os.Remove(lifecycle); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(external, lifecycle); err != nil {
 		t.Fatal(err)
 	}
 	result, err := ReadChanges(d)
@@ -181,7 +188,7 @@ func TestChangesExposeUnknownWithoutFollowingSymlinks(t *testing.T) {
 		t.Fatalf("symlink treated as reliable: %+v", result)
 	}
 	for _, r := range result.Registers {
-		if r.ID == "projects" && (r.RegistrySHA256 != nil || r.Freshness != "unknown" || len(r.Reasons) == 0) {
+		if r.ID == "work_items" && (r.RegistrySHA256 != nil || r.Freshness != "unknown" || len(r.Reasons) == 0) {
 			t.Fatalf("missing source diagnosis: %+v", r)
 		}
 	}
@@ -189,8 +196,9 @@ func TestChangesExposeUnknownWithoutFollowingSymlinks(t *testing.T) {
 
 func TestChangesDetectMovementBetweenPasses(t *testing.T) {
 	d, root := changesFixture(t)
-	writeChangeFile(t, root, "project-metadata.json", "before")
-	result, err := readChanges(d, func() { writeChangeFile(t, root, "project-metadata.json", "after") })
+	defineChangeProject(t, root)
+	writeChangeFile(t, root, "work-item-lifecycle.json", "before")
+	result, err := readChanges(d, func() { writeChangeFile(t, root, "work-item-lifecycle.json", "after") })
 	if err != nil {
 		t.Fatal(err)
 	}

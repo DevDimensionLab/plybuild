@@ -463,6 +463,14 @@ func TestAddProjectWritesDefinitions(t *testing.T) {
 	if retry, err := AddProject(d, input); err != nil || retry.Created {
 		t.Fatalf("retry through alias = %#v, %v", retry, err)
 	}
+	// A repository wrapper is metadata, not part of the Project's identity.
+	if _, err := UpdateProjectMetadata(d, ProjectMetadataInput{Operation: ProjectRepoWrapperSet, ProjectID: "trip", RepoID: "web", Locator: filepath.Join(root, "web")}); err != nil {
+		t.Fatal(err)
+	}
+	before, _ = os.ReadFile(path)
+	if retry, err := AddProject(d, input); err != nil || retry.Created {
+		t.Fatalf("retry with a repository wrapper = %#v, %v", retry, err)
+	}
 	input.Name = "Other"
 	_, err = AddProject(d, input)
 	assertProjectErrorClass(t, err, ErrorProjectConflict)

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -16,16 +15,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// repoRemoveEnv is the caller context of ply repo remove: working directory,
-// environment and the operation.
+// repoRemoveEnv is the caller context of ply repo remove: working directory
+// and the operation.
 type repoRemoveEnv struct {
-	files  workspace.FileSystem
-	getenv func(string) string
-	run    func(context.Context, reporemove.Request) (reporemove.Result, error)
+	files workspace.FileSystem
+	run   func(context.Context, reporemove.Request) (reporemove.Result, error)
 }
 
 func systemRepoRemoveEnv(runner process.Runner) repoRemoveEnv {
-	return repoRemoveEnv{files: workspace.SystemDependencies().Files, getenv: os.Getenv,
+	return repoRemoveEnv{files: workspace.SystemDependencies().Files,
 		run: func(ctx context.Context, req reporemove.Request) (reporemove.Result, error) {
 			return reporemove.Run(ctx, req, removesystem.New(runner))
 		}}
@@ -35,15 +33,15 @@ func newRepoRemoveCommand(env repoRemoveEnv) *cobra.Command {
 	var req reporemove.Request
 	command := &cobra.Command{
 		Use:   "remove <repo-name>",
-		Short: "Remove a Project repository's local wrapper, definition and metadata without changing its remote",
-		Long: "Undo the local part of 'ply repo create <repo-name>': clear the wrapper metadata, remove the repository from\n" +
+		Short: "Remove a Project repository's local wrapper and definition without changing its remote",
+		Long: "Undo the local part of 'ply repo create <repo-name>': remove the repository with its wrapper from\n" +
 			"ply-workspace.json and delete the wrapper directory <Project root>/<repo-name>, only when the checks prove that no\n" +
 			"local data is lost. The remote repository is never changed; it is contacted by one read-only ls-remote only when\n" +
 			"the repository has local history. Without --apply the command previews: it writes nothing and prints the checks,\n" +
 			"the planned effects and a plan digest. --apply --expect <digest> repeats every check and removes only when the\n" +
-			"plan is unchanged. Project, workspace and actor resolve as for 'ply repo create'; --remote defaults to the\n" +
+			"plan is unchanged. Project and workspace resolve as for 'ply repo create'; --remote defaults to the\n" +
 			"Project defaults' remote, else origin.",
-		Example: "  ply repo remove ply-code-map\n  PLY_ACTOR=ply-epic ply repo remove ply-code-map --apply --expect sha256:<digest>",
+		Example: "  ply repo remove ply-code-map\n  ply repo remove ply-code-map --apply --expect sha256:<digest>",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
@@ -73,9 +71,6 @@ func newRepoRemoveCommand(env repoRemoveEnv) *cobra.Command {
 					return err
 				}
 			}
-			if req.Actor == "" {
-				req.Actor = env.getenv("PLY_ACTOR")
-			}
 			req.RepoName = args[0]
 			result, err := env.run(cmd.Context(), req)
 			var writeErr error
@@ -100,11 +95,7 @@ func newRepoRemoveCommand(env repoRemoveEnv) *cobra.Command {
 						report("check %s: ok (%s)\n", check.Name, check.Detail)
 					}
 				}
-				metadata := fmt.Sprintf("clear wrapper metadata (revision %d)", plan.MetadataRevision)
-				if plan.MetadataCleared {
-					metadata = fmt.Sprintf("wrapper metadata already cleared (revision %d)", plan.MetadataRevision)
-				}
-				report("plan: %s, remove definitions member %s, delete wrapper %s\n", metadata, r.RepoName, r.Wrapper)
+				report("plan: remove definitions member %s, delete wrapper %s\n", r.RepoName, r.Wrapper)
 				if len(plan.GitFiles) > 0 {
 					report("local Git files deleted with the repository: %s\n", strings.Join(plan.GitFiles, ", "))
 				}
@@ -131,7 +122,6 @@ func newRepoRemoveCommand(env repoRemoveEnv) *cobra.Command {
 	command.Flags().StringVar(&req.Project, "project", "", "Project ID (default: the Project whose root is the current directory)")
 	command.Flags().StringVar(&req.Workspace, "workspace", "", "absolute workspace root (default: the workspace containing the current directory)")
 	command.Flags().StringVar(&req.Remote, "remote", "", "remote name (default: Project defaults, else origin)")
-	command.Flags().StringVar(&req.Actor, "actor", "", "actor recorded in the wrapper metadata clear (default: PLY_ACTOR)")
 	command.Flags().BoolVar(&req.Apply, "apply", false, "remove after repeating every check; requires --expect")
 	command.Flags().StringVar(&req.Expect, "expect", "", "plan digest printed by the preview")
 	return command

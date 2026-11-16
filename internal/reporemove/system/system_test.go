@@ -119,7 +119,7 @@ func (f fixture) create(t *testing.T) repoestablish.Result {
 	deps.Commit = func(context.Context, repoestablish.Resolved) (bool, error) { return false, nil }
 	deps.Plan = func(context.Context, repoestablish.Resolved) (bool, error) { return false, nil }
 	deps.GitHub = func(context.Context, string, string) (string, bool, error) { return f.url, false, nil }
-	result, err := repoestablish.Run(context.Background(), repoestablish.Request{Workspace: f.root, Project: "ply", RepoName: "map", Actor: "tester",
+	result, err := repoestablish.Run(context.Background(), repoestablish.Request{Workspace: f.root, Project: "ply", RepoName: "map",
 		Overrides: repoestablish.Overrides{GitHubOwner: "tester"}}, deps)
 	if err != nil {
 		t.Fatal(err)
@@ -152,7 +152,7 @@ func (f fixture) preview(t *testing.T) reporemove.Plan {
 
 func (f fixture) apply(t *testing.T, h hooks, expect string) (reporemove.Result, error) {
 	t.Helper()
-	return f.run(t, h, reporemove.Request{Apply: true, Expect: expect, Actor: "tester"})
+	return f.run(t, h, reporemove.Request{Apply: true, Expect: expect})
 }
 
 // state records every entry under the workspace and the remote without
@@ -236,19 +236,6 @@ func (f fixture) definedRepos(t *testing.T) []workspacedef.Repo {
 	return defs.Projects[0].Repos
 }
 
-func (f fixture) metadata(t *testing.T) workspace.ProjectMetadataSnapshot {
-	t.Helper()
-	d, err := workspace.AtRoot(workspace.SystemDependencies(), f.root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	snapshot, err := workspace.ReadProjectMetadata(d, f.root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return snapshot
-}
-
 func (f fixture) gitCalls(t *testing.T) string {
 	t.Helper()
 	raw, err := os.ReadFile(f.gitLog)
@@ -259,10 +246,10 @@ func (f fixture) gitCalls(t *testing.T) string {
 }
 
 // requireRemoved checks the full effect: wrapper gone without quarantine, the
-// member removed, one clear appended and the remote unchanged.
-func (f fixture) requireRemoved(t *testing.T, result reporemove.Result, err error, remote map[string]string, revision int) {
+// member removed with its wrapper and the remote unchanged.
+func (f fixture) requireRemoved(t *testing.T, result reporemove.Result, err error, remote map[string]string) {
 	t.Helper()
-	want := []reporemove.StepResult{{Step: reporemove.StepMetadata, Changed: true}, {Step: reporemove.StepDefine, Changed: true}, {Step: reporemove.StepWrapper, Changed: true}}
+	want := []reporemove.StepResult{{Step: reporemove.StepDefine, Changed: true}, {Step: reporemove.StepWrapper, Changed: true}}
 	if err != nil || !reflect.DeepEqual(result.Steps, want) {
 		t.Fatalf("apply %+v %v", result.Steps, err)
 	}
@@ -272,11 +259,6 @@ func (f fixture) requireRemoved(t *testing.T, result reporemove.Result, err erro
 	}
 	if repos := f.definedRepos(t); len(repos) != 1 || repos[0].ID != "anchor" {
 		t.Fatalf("repos %+v", repos)
-	}
-	snapshot := f.metadata(t)
-	last := snapshot.Events[len(snapshot.Events)-1]
-	if snapshot.Revision != revision+1 || last.Operation != workspace.ProjectRepoWrapperClear || *last.RepoID != "map" || snapshot.RepositoryWrapper("map") != nil {
-		t.Fatalf("metadata %+v", snapshot.Events)
 	}
 	after := map[string]string{}
 	for path, value := range f.state(t) {
@@ -301,12 +283,11 @@ func (f fixture) remoteState(t *testing.T) map[string]string {
 func TestUnbornWithEmptyRemoteRemovesLocallyWithoutContactingRemoteAndRecreates(t *testing.T) {
 	f := newFixture(t, nil)
 	before := f.state(t)
-	revision := f.metadata(t).Revision
 
 	plan := f.preview(t)
 
 	requireSame(t, before, f.state(t))
-	if plan.Verdict != reporemove.VerdictUnborn || plan.RemoteURL != f.url || plan.MetadataRevision != revision || plan.MetadataCleared || !strings.HasPrefix(plan.Digest, "sha256:") {
+	if plan.Verdict != reporemove.VerdictUnborn || plan.RemoteURL != f.url || !strings.HasPrefix(plan.Digest, "sha256:") {
 		t.Fatalf("plan %+v", plan)
 	}
 	if names := []string{}; len(plan.Checks) != 5 {
@@ -319,7 +300,7 @@ func TestUnbornWithEmptyRemoteRemovesLocallyWithoutContactingRemoteAndRecreates(
 
 	result, err := f.apply(t, hooks{}, plan.Digest)
 
-	f.requireRemoved(t, result, err, remote, revision)
+	f.requireRemoved(t, result, err, remote)
 	if calls := f.gitCalls(t); strings.Contains(calls, "ls-remote") || strings.Contains(calls, "push") || strings.Contains(calls, "fetch") {
 		t.Fatalf("remote contacted:\n%s", calls)
 	}
@@ -347,7 +328,7 @@ func TestUnbornWithUnreachableRemoteIsRemovable(t *testing.T) {
 
 	result, err := f.apply(t, hooks{}, plan.Digest)
 
-	f.requireRemoved(t, result, err, remote, plan.MetadataRevision)
+	f.requireRemoved(t, result, err, remote)
 }
 
 func TestPushedHistoryIsProvenAndOutwardLinkTargetSurvives(t *testing.T) {
@@ -377,7 +358,7 @@ func TestPushedHistoryIsProvenAndOutwardLinkTargetSurvives(t *testing.T) {
 
 	result, err := f.apply(t, hooks{}, plan.Digest)
 
-	f.requireRemoved(t, result, err, remote, plan.MetadataRevision)
+	f.requireRemoved(t, result, err, remote)
 	if raw, err := os.ReadFile(filepath.Join(outside, "keep")); err != nil || string(raw) != "keep\n" {
 		t.Fatalf("link target changed: %q %v", raw, err)
 	}
@@ -649,13 +630,13 @@ func TestFsckOutputIsParsedStrictly(t *testing.T) {
 
 func TestChangesAfterPreviewConflictWithoutWriting(t *testing.T) {
 	for name, change := range map[string]func(*testing.T, fixture){
-		"metadata revision": func(t *testing.T, f fixture) {
+		"companion": func(t *testing.T, f fixture) {
 			d, err := workspace.AtRoot(workspace.SystemDependencies(), f.root)
 			if err != nil {
 				t.Fatal(err)
 			}
 			input := workspace.ProjectMetadataInput{Operation: workspace.ProjectCompanionAdd, ProjectID: "ply", Role: workspace.CompanionDocs,
-				Locator: filepath.Join(f.root, "anchor"), ActorClaim: "tester"}
+				Locator: filepath.Join(f.root, "anchor")}
 			if _, err := workspace.UpdateProjectMetadata(d, input); err != nil {
 				t.Fatal(err)
 			}
@@ -701,7 +682,7 @@ func TestReRegistrationBeforeRenameKeepsWrapper(t *testing.T) {
 	result, err := f.apply(t, hooks{beforeWrapper: readd}, plan.Digest)
 
 	requireStop(t, err, reporemove.StepWrapper, reporemove.ErrConflict, "")
-	if want := []reporemove.StepResult{{Step: reporemove.StepMetadata, Changed: true}, {Step: reporemove.StepDefine, Changed: true}}; !reflect.DeepEqual(result.Steps, want) {
+	if want := []reporemove.StepResult{{Step: reporemove.StepDefine, Changed: true}}; !reflect.DeepEqual(result.Steps, want) {
 		t.Fatalf("steps %+v", result.Steps)
 	}
 	if info, err := os.Lstat(filepath.Join(f.repo, ".git")); err != nil || !info.IsDir() {
@@ -723,31 +704,18 @@ func TestEarlierQuarantineHaltsWithoutWriting(t *testing.T) {
 	requireRejected(t, f, reporemove.ErrConflict, earlier)
 }
 
-func TestResumeAfterMetadataClearReportsUnchanged(t *testing.T) {
+func TestWrapperOtherThanRepoCreateSetsIsRejected(t *testing.T) {
 	f := newFixture(t, nil)
-	revision := f.metadata(t).Revision
 	d, err := workspace.AtRoot(workspace.SystemDependencies(), f.root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.ClearRepositoryWrapperAt(d, f.root, "ply", "map", "tester", revision); err != nil {
+	clear := workspace.ProjectMetadataInput{Operation: workspace.ProjectRepoWrapperClear, ProjectID: "ply", RepoID: "map"}
+	if _, err := workspace.UpdateProjectMetadata(d, clear); err != nil {
 		t.Fatal(err)
 	}
-	plan := f.preview(t)
-	if !plan.MetadataCleared || plan.MetadataRevision != revision+1 {
-		t.Fatalf("plan %+v", plan)
-	}
 
-	result, err := f.apply(t, hooks{}, plan.Digest)
-
-	want := []reporemove.StepResult{{Step: reporemove.StepMetadata}, {Step: reporemove.StepDefine, Changed: true}, {Step: reporemove.StepWrapper, Changed: true}}
-	if err != nil || !reflect.DeepEqual(result.Steps, want) {
-		t.Fatalf("apply %+v %v", result.Steps, err)
-	}
-	requireAbsent(t, f.wrapper)
-	if f.metadata(t).Revision != revision+1 {
-		t.Fatal("metadata written again")
-	}
+	requireRejected(t, f, reporemove.ErrConflict, "wrapper")
 }
 
 func TestFailedDeletionKeepsQuarantineAndHaltsNextRun(t *testing.T) {
@@ -758,7 +726,7 @@ func TestFailedDeletionKeepsQuarantineAndHaltsNextRun(t *testing.T) {
 
 	quarantine := filepath.Join(f.root, ".ply-repo-remove-map-"+strings.TrimPrefix(plan.Digest, "sha256:")[:12])
 	requireStop(t, err, reporemove.StepWrapper, reporemove.ErrUnknown, quarantine)
-	if len(result.Steps) != 2 {
+	if len(result.Steps) != 1 {
 		t.Fatalf("steps %+v", result.Steps)
 	}
 	requireAbsent(t, f.wrapper)

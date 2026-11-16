@@ -83,6 +83,17 @@ func TestHI01ExistingTaskScopeIsValidatedAgainstRegistry(t *testing.T) {
 	companion := f.choice("task/wrapper-companion")
 	companion.OriginCWD = planning
 	f.ask(companion)
+	docs := filepath.Join(f.root, "ply-docs")
+	if err := os.Mkdir(docs, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := workspace.UpdateProjectMetadata(workspace.SystemDependencies(), workspace.ProjectMetadataInput{
+		Operation: workspace.ProjectCompanionAdd, ProjectID: "ply", Role: workspace.CompanionDocs, Locator: docs}); err != nil {
+		t.Fatal(err)
+	}
+	registered := f.choice("task/registered-companion")
+	registered.OriginCWD = docs
+	f.ask(registered)
 }
 
 func TestHI01DraftValidationRejectsBeforeAnyStoreIsCreated(t *testing.T) {

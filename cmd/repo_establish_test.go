@@ -61,14 +61,13 @@ func createWorkspace(t *testing.T) string {
 	return root
 }
 
-func executeCreate(t *testing.T, cwd string, env map[string]string, fake *fakeEstablish, args ...string) (string, string, error) {
+func executeCreate(t *testing.T, cwd string, fake *fakeEstablish, args ...string) (string, string, error) {
 	t.Helper()
 	original, _, _ := RootCmd.Find([]string{"repo"})
 	replacement := &cobra.Command{Use: "repo"}
 	replacement.AddCommand(newRepoCreateCommand(repoCreateEnv{
-		files:  cwdFiles{workspace.SystemDependencies().Files, cwd},
-		getenv: func(name string) string { return env[name] },
-		run:    fake.run,
+		files: cwdFiles{workspace.SystemDependencies().Files, cwd},
+		run:   fake.run,
 	}))
 	RootCmd.RemoveCommand(original)
 	RootCmd.AddCommand(replacement)
@@ -88,32 +87,18 @@ func executeCreate(t *testing.T, cwd string, env map[string]string, fake *fakeEs
 	return stdout.String(), stderr.String(), err
 }
 
-func TestRepoCreateActorPrecedence(t *testing.T) {
+func TestRepoCreateHasNoActor(t *testing.T) {
 	root := createWorkspace(t)
-	cwd := filepath.Join(root, "ply")
-	for _, tc := range []struct {
-		env   map[string]string
-		args  []string
-		actor string
-	}{
-		{map[string]string{"PLY_ACTOR": "env"}, []string{"--actor", "flag", "code-map"}, "flag"},
-		{map[string]string{"PLY_ACTOR": "env"}, []string{"code-map"}, "env"},
-		{map[string]string{}, []string{"code-map"}, ""},
-	} {
-		fake := &fakeEstablish{}
-		if _, _, err := executeCreate(t, cwd, tc.env, fake, tc.args...); err != nil {
-			t.Fatal(err)
-		}
-		if len(fake.requests) != 1 || fake.requests[0].Actor != tc.actor {
-			t.Fatalf("requests %+v, want actor %q", fake.requests, tc.actor)
-		}
+	fake := &fakeEstablish{}
+	if _, _, err := executeCreate(t, filepath.Join(root, "ply"), fake, "--actor", "flag", "code-map"); err == nil || len(fake.requests) != 0 {
+		t.Fatalf("--actor accepted: %v %+v", err, fake.requests)
 	}
 }
 
 func TestRepoCreateWorkspaceFlagWinsOverCwd(t *testing.T) {
 	root, other := createWorkspace(t), createWorkspace(t)
 	fake := &fakeEstablish{}
-	if _, _, err := executeCreate(t, filepath.Join(other, "ply"), nil, fake, "--workspace", root, "--project", "app", "code-map"); err != nil {
+	if _, _, err := executeCreate(t, filepath.Join(other, "ply"), fake, "--workspace", root, "--project", "app", "code-map"); err != nil {
 		t.Fatal(err)
 	}
 	want := repoestablish.Request{Workspace: root, Project: "app", RepoName: "code-map"}
@@ -122,11 +107,11 @@ func TestRepoCreateWorkspaceFlagWinsOverCwd(t *testing.T) {
 	}
 
 	outside := filepath.Dir(root)
-	stdout, stderr, err := executeCreate(t, outside, nil, fake, "--project", "ply", "code-map")
+	stdout, stderr, err := executeCreate(t, outside, fake, "--project", "ply", "code-map")
 	if ExitCode(err) != 1 || len(fake.requests) != 1 || stdout != "" || !strings.Contains(stderr, string(workspace.ErrorWorkspaceNotFound)) {
 		t.Fatalf("outside: stdout %q, stderr %q, error %v", stdout, stderr, err)
 	}
-	_, stderr, err = executeCreate(t, root, nil, fake, "--workspace", "relative", "--project", "ply", "code-map")
+	_, stderr, err = executeCreate(t, root, fake, "--workspace", "relative", "--project", "ply", "code-map")
 	if ExitCode(err) != 1 || len(fake.requests) != 1 || stderr != "Error: invalid: --workspace must be an absolute path\n" {
 		t.Fatalf("relative: stderr %q, error %v", stderr, err)
 	}
@@ -135,7 +120,7 @@ func TestRepoCreateWorkspaceFlagWinsOverCwd(t *testing.T) {
 func TestRepoCreateDiscoversProjectOnlyAtExactRoot(t *testing.T) {
 	root := createWorkspace(t)
 	fake := &fakeEstablish{}
-	if _, _, err := executeCreate(t, filepath.Join(root, "app"), nil, fake, "code-map"); err != nil {
+	if _, _, err := executeCreate(t, filepath.Join(root, "app"), fake, "code-map"); err != nil {
 		t.Fatal(err)
 	}
 	if want := (repoestablish.Request{Workspace: root, Project: "app", RepoName: "code-map"}); len(fake.requests) != 1 || fake.requests[0] != want {
@@ -146,12 +131,12 @@ func TestRepoCreateDiscoversProjectOnlyAtExactRoot(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, cwd := range []string{root, sub} {
-		_, stderr, err := executeCreate(t, cwd, nil, fake, "code-map")
+		_, stderr, err := executeCreate(t, cwd, fake, "code-map")
 		if ExitCode(err) != 1 || len(fake.requests) != 1 || !strings.Contains(stderr, "--project") {
 			t.Fatalf("%s: stderr %q, error %v", cwd, stderr, err)
 		}
 	}
-	if _, _, err := executeCreate(t, sub, nil, fake, "--project", "ply", "code-map"); err != nil || fake.requests[1].Project != "ply" {
+	if _, _, err := executeCreate(t, sub, fake, "--project", "ply", "code-map"); err != nil || fake.requests[1].Project != "ply" {
 		t.Fatalf("override: %+v %v", fake.requests, err)
 	}
 }
@@ -190,7 +175,7 @@ func TestRepoCreateFromProjectRootLeavesEpicRuntimeUntouched(t *testing.T) {
 	}
 	before := workspaceBytes(t, root)
 	fake := &fakeEstablish{}
-	if _, stderr, err := executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map"); err != nil {
+	if _, stderr, err := executeCreate(t, filepath.Join(root, "ply"), fake, "code-map"); err != nil {
 		t.Fatalf("stderr %q, error %v", stderr, err)
 	}
 	if want := (repoestablish.Request{Workspace: root, Project: "ply", RepoName: "code-map"}); len(fake.requests) != 1 || fake.requests[0] != want {
@@ -204,11 +189,11 @@ func TestRepoCreateFromProjectRootLeavesEpicRuntimeUntouched(t *testing.T) {
 func TestRepoCreatePassesOverridesAndRejectsJSON(t *testing.T) {
 	root := createWorkspace(t)
 	fake := &fakeEstablish{}
-	_, _, err := executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map", "--github-owner", "Org", "--leaf", "l", "--branch", "b", "--remote", "r")
+	_, _, err := executeCreate(t, filepath.Join(root, "ply"), fake, "code-map", "--github-owner", "Org", "--leaf", "l", "--branch", "b", "--remote", "r")
 	if want := (repoestablish.Overrides{GitHubOwner: "Org", Leaf: "l", Branch: "b", Remote: "r"}); err != nil || fake.requests[0].Overrides != want {
 		t.Fatalf("requests %+v, error %v", fake.requests, err)
 	}
-	_, stderr, err := executeCreate(t, filepath.Join(root, "ply"), nil, fake, "--json", "code-map")
+	_, stderr, err := executeCreate(t, filepath.Join(root, "ply"), fake, "--json", "code-map")
 	if ExitCode(err) != 1 || len(fake.requests) != 1 || stderr != "Error: invalid: JSON output is not supported\n" {
 		t.Fatalf("json: stderr %q, error %v", stderr, err)
 	}
@@ -217,11 +202,11 @@ func TestRepoCreatePassesOverridesAndRejectsJSON(t *testing.T) {
 func TestRepoCreateReportsResolvedStepsWithoutRegistryNote(t *testing.T) {
 	root := createWorkspace(t)
 	resolved := repoestablish.Resolved{Workspace: root, Project: "ply", ProjectRoot: "/p", RepoName: "code-map", Wrapper: "/p/code-map", RepoDir: "/p/code-map/main",
-		Leaf: "main", Branch: "main", Remote: "origin", GitHubOwner: "Org", Actor: "ply-epic"}
-	header := "Resolved Project ply: root /p, wrapper /p/code-map, repository /p/code-map/main, owner Org, branch main, remote origin, actor ply-epic\n"
+		Leaf: "main", Branch: "main", Remote: "origin", GitHubOwner: "Org"}
+	header := "Resolved Project ply: root /p, wrapper /p/code-map, repository /p/code-map/main, owner Org, branch main, remote origin\n"
 	fake := &fakeEstablish{result: repoestablish.Result{Resolved: resolved, Steps: []repoestablish.StepResult{{Step: repoestablish.StepWrapper, Changed: true}, {Step: repoestablish.StepInit}}},
 		err: &repoestablish.Error{Step: repoestablish.StepGitHub, Err: fmt.Errorf("%w: GitHub repository Org/code-map is PUBLIC", repoestablish.ErrConflict)}}
-	stdout, stderr, err := executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map")
+	stdout, stderr, err := executeCreate(t, filepath.Join(root, "ply"), fake, "code-map")
 	if want := header + "wrapper: created\ninit: unchanged\n"; ExitCode(err) != 1 || stdout != want {
 		t.Fatalf("stdout %q, want %q, error %v", stdout, want, err)
 	}
@@ -230,7 +215,7 @@ func TestRepoCreateReportsResolvedStepsWithoutRegistryNote(t *testing.T) {
 	}
 	fake.err = &repoestablish.Error{Step: repoestablish.StepPrepare, Err: repoestablish.ErrInvalid}
 	fake.result = repoestablish.Result{}
-	if stdout, _, _ = executeCreate(t, filepath.Join(root, "ply"), nil, fake, "code-map"); stdout != "" {
+	if stdout, _, _ = executeCreate(t, filepath.Join(root, "ply"), fake, "code-map"); stdout != "" {
 		t.Fatalf("prepare failure stdout %q", stdout)
 	}
 }
@@ -255,7 +240,7 @@ func TestRepoCreateReturnsOutputErrorAndKeepsOperationError(t *testing.T) {
 	stopped := &repoestablish.Error{Step: repoestablish.StepGitHub, Err: repoestablish.ErrConflict}
 	for _, operationErr := range []error{nil, stopped} {
 		fake := &fakeEstablish{result: repoestablish.Result{Steps: []repoestablish.StepResult{{Step: repoestablish.StepWrapper, Changed: true}}}, err: operationErr}
-		command := newRepoCreateCommand(repoCreateEnv{files: cwdFiles{workspace.SystemDependencies().Files, filepath.Join(root, "ply")}, getenv: func(string) string { return "" }, run: fake.run})
+		command := newRepoCreateCommand(repoCreateEnv{files: cwdFiles{workspace.SystemDependencies().Files, filepath.Join(root, "ply")}, run: fake.run})
 		command.SetOut(failingWriter{writeErr})
 		command.SetErr(&bytes.Buffer{})
 		command.SetArgs([]string{"code-map"})

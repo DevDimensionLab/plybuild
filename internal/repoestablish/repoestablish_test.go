@@ -46,7 +46,7 @@ func newWorld(t *testing.T) *world {
 }
 
 func (w *world) request() Request {
-	return Request{Workspace: w.workspace, Project: "ply", RepoName: "code-map", Actor: "ply-epic"}
+	return Request{Workspace: w.workspace, Project: "ply", RepoName: "code-map"}
 }
 
 func (w *world) enter(name string) error {
@@ -173,7 +173,7 @@ func TestRunResolvesOnceAndRunsStepsInOrderWithURLFlow(t *testing.T) {
 	repoDir := filepath.Join(wrapper, "main")
 	url := "git@github.com:Org/code-map.git"
 	want := Resolved{Workspace: w.workspace, Project: "ply", ProjectRoot: w.setup.Root, RepoName: "code-map", Wrapper: wrapper, RepoDir: repoDir,
-		Leaf: "main", Branch: "main", Remote: "origin", GitHubOwner: "Org", Actor: "ply-epic"}
+		Leaf: "main", Branch: "main", Remote: "origin", GitHubOwner: "Org"}
 	if result.Resolved != want || result.SSHURL != url || !reflect.DeepEqual(result.Steps, allSteps(true)) {
 		t.Fatalf("result %+v", result)
 	}
@@ -233,7 +233,6 @@ func TestRunPrecedenceOverrideConfigConvention(t *testing.T) {
 func TestRunRejectsStaticRequestWithoutPrepare(t *testing.T) {
 	w := newWorld(t)
 	for name, edit := range map[string]func(*Request){
-		"empty actor":        func(r *Request) { r.Actor = "" },
 		"empty project":      func(r *Request) { r.Project = "" },
 		"relative workspace": func(r *Request) { r.Workspace = "ws" },
 		"unclean workspace":  func(r *Request) { r.Workspace += "/." },

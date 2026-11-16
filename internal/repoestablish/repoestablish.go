@@ -19,8 +19,8 @@ import (
 
 // Request is the caller's claim. Empty override fields mean "use defaults".
 type Request struct {
-	Workspace, Project, RepoName, Actor string
-	Overrides                           Overrides
+	Workspace, Project, RepoName string
+	Overrides                    Overrides
 }
 
 type Overrides struct{ GitHubOwner, Leaf, Branch, Remote string }
@@ -35,7 +35,7 @@ type ProjectSetup struct {
 type Resolved struct {
 	Workspace, Project, ProjectRoot, RepoName string // RepoName is repo ID and GitHub name
 	Wrapper, RepoDir                          string // ProjectRoot/RepoName, Wrapper/Leaf
-	Leaf, Branch, Remote, GitHubOwner, Actor  string
+	Leaf, Branch, Remote, GitHubOwner         string
 }
 
 const DefaultLeaf, DefaultBranch, DefaultRemote = "main", "main", "origin"
@@ -210,8 +210,6 @@ func validateRequest(req Request) error {
 		return invalid("workspace %q must be an absolute clean path", req.Workspace)
 	case req.Project == "":
 		return invalid("Project is required")
-	case req.Actor == "":
-		return invalid("actor is required; set --actor or PLY_ACTOR")
 	case !element(req.RepoName):
 		return invalid("repository name %q must be one path element", req.RepoName)
 	}
@@ -229,7 +227,7 @@ func first(values ...string) string {
 
 func resolve(req Request, setup ProjectSetup) (Resolved, error) {
 	o := req.Overrides
-	r := Resolved{Workspace: req.Workspace, Project: req.Project, ProjectRoot: setup.Root, RepoName: req.RepoName, Actor: req.Actor,
+	r := Resolved{Workspace: req.Workspace, Project: req.Project, ProjectRoot: setup.Root, RepoName: req.RepoName,
 		GitHubOwner: first(o.GitHubOwner, setup.GitHubOwner),
 		Leaf:        first(o.Leaf, setup.Leaf, DefaultLeaf),
 		Branch:      first(o.Branch, setup.Branch, DefaultBranch),

@@ -89,7 +89,6 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("epic.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
 		operation("journal.recent", "default", "WorkspaceActivityReadback@1", []string{}, []string{"project", "since", "limit"}, "independent_and"),
 		operation("overview", "default", "WorkspaceOverviewReadback@1", []string{}, []string{"project"}, "independent_and"),
-		operation("project.metadata.show", "default", "WorkspaceProjectMetadataReadback@1", []string{}, []string{}, "none"),
 		operation("status", "default", "WorkspaceStatusReadback@1", []string{}, []string{}, "none"),
 		operation("task.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
 		operation("task.list", "progress", "WorkspaceTaskProgressListReadback@1", []string{"--progress"}, []string{"project", "repo", "epic"}, "independent_and"),

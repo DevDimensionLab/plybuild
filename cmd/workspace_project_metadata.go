@@ -1,23 +1,19 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 	"github.com/spf13/cobra"
 )
 
 type workspaceProjectMetadataServices struct {
-	show   func(workspace.ProjectID) (workspace.ProjectMetadataReadback, error)
 	update func(workspace.ProjectMetadataInput) (workspace.ProjectMetadataMutation, error)
 }
 
 func addWorkspaceProjectMetadataCommands(command *cobra.Command, d workspace.Dependencies) {
 	services := workspaceProjectMetadataServices{
-		show: func(id workspace.ProjectID) (workspace.ProjectMetadataReadback, error) {
-			return workspace.ShowProjectMetadata(d, id)
-		},
 		update: func(in workspace.ProjectMetadataInput) (workspace.ProjectMetadataMutation, error) {
 			return workspace.UpdateProjectMetadata(d, in)
 		},
@@ -26,49 +22,11 @@ func addWorkspaceProjectMetadataCommands(command *cobra.Command, d workspace.Dep
 }
 
 func newWorkspaceProjectMetadataCommandsWithServices(services workspaceProjectMetadataServices) []*cobra.Command {
-	metadata := &cobra.Command{Use: "metadata", Short: "Inspect explicit project companions and repository wrappers", Long: "Inspect registered project navigation metadata. Reading does not scan or require the registered directories to exist.", Example: "  ply workspace project metadata show ply --format json"}
-	var format string
-	show := &cobra.Command{Use: "show <project-id>", Short: "Show project navigation metadata and its history", Long: "Read explicit companion directories and repository wrappers with their recorded change history. Missing metadata gives empty companions and null repository wrappers. Revision is shared across project metadata in this workspace.", Example: "  ply workspace project metadata show ply --format json", Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			return workspace.ProjectInvalidArguments("expected exactly one Project ID")
-		}
-		if _, err := workspace.ParseProjectID(args[0]); err != nil {
-			return err
-		}
-		return validateProjectFormat(format)
-	}, RunE: func(cmd *cobra.Command, args []string) error {
-		out, err := services.show(workspace.ProjectID(args[0]))
-		if err != nil {
-			return err
-		}
-		if format == "json" {
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(out)
-		}
-		if _, err := fmt.Fprintf(cmd.OutOrStdout(), "Project %s metadata (workspace revision %d).\n", out.ProjectID, out.Revision); err != nil {
-			return err
-		}
-		for _, companion := range out.Companions {
-			if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  Companion %s: %s\n", companion.Role, companion.Locator); err != nil {
-				return err
-			}
-		}
-		for _, repo := range out.Repositories {
-			if repo.Wrapper != nil {
-				if _, err := fmt.Fprintf(cmd.OutOrStdout(), "  Repository %s wrapper: %s\n", repo.RepoID, *repo.Wrapper); err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	}}
-	show.Flags().StringVar(&format, "format", "text", "output format (text or json)")
-	setProjectFlagErrors(show)
-	metadata.AddCommand(show)
-	companion := &cobra.Command{Use: "companion", Short: "Register planning, documentation, and other companion directories", Long: "Manage explicit companion directory metadata without creating directories or registering repositories. Registration validates a physical directory and survives later directory removal.", Example: "  ply workspace project companion add ply --role planning --path ./ply/planning --actor codex"}
+	companion := &cobra.Command{Use: "companion", Short: "Register planning, documentation, and other companion directories", Long: "Manage explicit companion directories of a Project in ply-workspace.json without creating directories or registering repositories. Registration validates a physical directory and survives later directory removal.", Example: "  ply workspace project companion add ply --role planning --path ./ply/planning"}
 	companion.AddCommand(newProjectMetadataMutationCommand(workspace.ProjectCompanionAdd, services), newProjectMetadataMutationCommand(workspace.ProjectCompanionRemove, services))
-	wrapper := &cobra.Command{Use: "repo-wrapper", Short: "Register a repository's enclosing directory", Long: "Manage explicit repository wrapper metadata. A registered wrapper must contain the repository locator. It does not change project or Git identity and remains registered if the directory later disappears.", Example: "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply --actor codex"}
+	wrapper := &cobra.Command{Use: "repo-wrapper", Short: "Register a repository's enclosing directory", Long: "Manage the wrapper of a repository in ply-workspace.json. A registered wrapper must contain the repository locator. It does not change project or Git identity and remains registered if the directory later disappears.", Example: "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply"}
 	wrapper.AddCommand(newProjectMetadataMutationCommand(workspace.ProjectRepoWrapperSet, services), newProjectMetadataMutationCommand(workspace.ProjectRepoWrapperClear, services))
-	return []*cobra.Command{metadata, companion, wrapper}
+	return []*cobra.Command{companion, wrapper}
 }
 
 func newProjectMetadataMutationCommand(operation string, services workspaceProjectMetadataServices) *cobra.Command {
@@ -76,50 +34,47 @@ func newProjectMetadataMutationCommand(operation string, services workspaceProje
 	companion := operation == workspace.ProjectCompanionAdd || operation == workspace.ProjectCompanionRemove
 	switch operation {
 	case workspace.ProjectCompanionAdd:
-		name, short, example = "add", "Register an explicit companion directory", "  ply workspace project companion add ply --role planning --path ./ply/planning --actor codex"
+		name, short, example = "add", "Register an explicit companion directory", "  ply workspace project companion add ply --role planning --path ./ply/planning"
 	case workspace.ProjectCompanionRemove:
-		name, short, example = "remove", "Remove a companion registration without deleting its directory", "  ply workspace project companion remove ply --role planning --path ./ply/planning --actor codex"
+		name, short, example = "remove", "Remove a companion registration without deleting its directory", "  ply workspace project companion remove ply --role planning --path ./ply/planning"
 	case workspace.ProjectRepoWrapperSet:
-		name, short, example = "set", "Register the physical directory enclosing a repository", "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply --actor codex"
+		name, short, example = "set", "Register the physical directory enclosing a repository", "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply"
 	case workspace.ProjectRepoWrapperClear:
-		name, short, example = "clear", "Clear a repository wrapper registration without deleting files", "  ply workspace project repo-wrapper clear ply --repo ply --actor codex"
+		name, short, example = "clear", "Clear a repository wrapper registration without deleting files", "  ply workspace project repo-wrapper clear ply --repo ply"
 	}
-	var actor, role, repo, path, format string
-	var expected int
-	input := func(cmd *cobra.Command, args []string) workspace.ProjectMetadataInput {
-		in := workspace.ProjectMetadataInput{Operation: operation, ProjectID: workspace.ProjectID(args[0]), RepoID: workspace.RepoID(repo), Role: workspace.CompanionRole(role), Locator: path, ActorClaim: actor}
-		if cmd.Flags().Changed("expected-revision") {
-			in.ExpectedRevision = &expected
-		}
-		return in
+	var role, repo, path, format string
+	input := func(args []string) workspace.ProjectMetadataInput {
+		return workspace.ProjectMetadataInput{Operation: operation, ProjectID: workspace.ProjectID(args[0]), RepoID: workspace.RepoID(repo), Role: workspace.CompanionRole(role), Locator: path}
 	}
-	command := &cobra.Command{Use: name + " <project-id>", Short: short, Long: short + ". The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.", Example: example, Args: func(cmd *cobra.Command, args []string) error {
+	command := &cobra.Command{Use: name + " <project-id>", Short: short, Long: short + " in ply-workspace.json. An unchanged registration writes nothing. JSON output is the Project as 'ply workspace project show' gives it, with changed. No directories or Git state are changed.", Example: example, Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) != 1 {
 			return workspace.ProjectInvalidArguments("expected exactly one Project ID")
 		}
 		if err := validateProjectFormat(format); err != nil {
 			return err
 		}
-		return input(cmd, args).Validate()
+		return input(args).Validate()
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		out, err := services.update(input(cmd, args))
+		out, err := services.update(input(args))
 		if err != nil {
 			return err
 		}
 		if format == "json" {
-			return json.NewEncoder(cmd.OutOrStdout()).Encode(out)
+			raw, err := workspace.MarshalProjectMetadataMutation(out)
+			if err != nil {
+				return err
+			}
+			_, err = cmd.OutOrStdout().Write(append(raw, '\n'))
+			return err
 		}
 		verb := "Updated"
 		if !out.Changed {
 			verb = "Kept"
 		}
-		_, err = fmt.Fprintf(cmd.OutOrStdout(), "%s Project %s metadata (workspace revision %d).\n", verb, out.ProjectID, out.Revision)
+		_, err = fmt.Fprintf(cmd.OutOrStdout(), "%s Project %s metadata in %s.\n", verb, out.Project.ID, workspacedef.File)
 		return err
 	}}
-	command.Flags().StringVar(&actor, "actor", "", "recorder identity or actor claim")
-	command.Flags().IntVar(&expected, "expected-revision", 0, "require this workspace project metadata revision before writing")
 	command.Flags().StringVar(&format, "format", "text", "output format (text or json)")
-	_ = command.MarkFlagRequired("actor")
 	if companion {
 		command.Flags().StringVar(&role, "role", "", "companion role (planning, docs, or other)")
 		command.Flags().StringVar(&path, "path", "", "companion directory path")

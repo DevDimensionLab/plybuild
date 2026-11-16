@@ -42,15 +42,13 @@ const (
 )
 
 var (
-	invalidClasses    = map[string]bool{string(workspace.ErrorProjectInvalidArguments): true, string(workspace.ErrorProjectNotFound): true, string(workspace.ErrorWorkInvalidArguments): true}
-	defineConflicts   = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorProjectStoreConflict): true, string(workspace.ErrorWorkIdentityConflict): true, string(workspace.ErrorWorkProjectConflict): true}
-	metadataConflicts = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorWorkProjectConflict): true}
+	invalidClasses  = map[string]bool{string(workspace.ErrorProjectInvalidArguments): true, string(workspace.ErrorProjectNotFound): true, string(workspace.ErrorWorkInvalidArguments): true}
+	defineConflicts = map[string]bool{string(workspace.ErrorProjectConflict): true, string(workspace.ErrorProjectStoreConflict): true, string(workspace.ErrorWorkIdentityConflict): true, string(workspace.ErrorWorkProjectConflict): true}
 )
 
 // hooks is a private, per-call test seam; production has none but the date.
 type hooks struct {
-	afterMetadataRead func()
-	today             func() string
+	today func() string
 }
 
 // New returns the production dependencies of repoestablish.Run; planTemplate
@@ -109,9 +107,7 @@ func newDependencies(runner process.Runner, planTemplate string, h hooks) repoes
 		Define: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
 			return define(ctx, runner, r)
 		},
-		SetWrapper: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
-			return setWrapper(ctx, r, h)
-		},
+		SetWrapper: setWrapper,
 	}
 }
 
@@ -351,7 +347,7 @@ func storedPath(r repoestablish.Resolved) (string, error) {
 	return filepath.ToSlash(relative), nil
 }
 
-// check reads tools, identifiers, definitions and metadata without effect.
+// check reads tools, identifiers and definitions, with the repository wrapper, without effect.
 func check(ctx context.Context, r repoestablish.Resolved) error {
 	for _, tool := range []string{"git", "gh"} {
 		if _, err := exec.LookPath(tool); err != nil {
@@ -375,7 +371,7 @@ func check(ctx context.Context, r repoestablish.Resolved) error {
 		return fail(repoestablish.ErrInvalid, "%q is not a valid remote name", r.Remote)
 	}
 	input := workspace.ProjectMetadataInput{Operation: workspace.ProjectRepoWrapperSet, ProjectID: workspace.ProjectID(r.Project),
-		RepoID: workspace.RepoID(r.RepoName), Locator: r.Wrapper, ActorClaim: r.Actor}
+		RepoID: workspace.RepoID(r.RepoName), Locator: r.Wrapper}
 	if err := input.Validate(); err != nil {
 		return classified{repoestablish.ErrInvalid, err}
 	}
@@ -396,12 +392,12 @@ func check(ctx context.Context, r repoestablish.Resolved) error {
 	if err := workspace.CheckDefinitions(d, r.Workspace); err != nil {
 		return classify(err, defineConflicts, repoestablish.ErrInvalid)
 	}
-	snapshot, err := workspace.ReadProjectMetadata(d, r.Workspace)
-	if err != nil {
-		return classified{repoestablish.ErrConflict, err}
-	}
-	if wrapper := snapshot.RepositoryWrapper(workspace.RepoID(r.RepoName)); wrapper != nil && *wrapper != r.Wrapper {
-		return fail(repoestablish.ErrConflict, "repository %s already has wrapper %s, not %s", r.RepoName, *wrapper, r.Wrapper)
+	for _, p := range defs.Projects {
+		for _, repo := range p.Repos {
+			if repo.ID == r.RepoName && repo.Wrapper != "" && workspace.ResolveDefinitionPath(r.Workspace, repo.Wrapper) != r.Wrapper {
+				return fail(repoestablish.ErrConflict, "repository %s already has wrapper %s, not %s", r.RepoName, workspace.ResolveDefinitionPath(r.Workspace, repo.Wrapper), r.Wrapper)
+			}
+		}
 	}
 	return nil
 }
@@ -434,29 +430,12 @@ func define(ctx context.Context, runner process.Runner, r repoestablish.Resolved
 	return result.Changed, classify(err, defineConflicts, repoestablish.ErrUnknown)
 }
 
-// setWrapper reads the wrapper of the repository and sets it only when it is
-// absent, with the read revision as expected revision.
-func setWrapper(ctx context.Context, r repoestablish.Resolved, h hooks) (bool, error) {
+// setWrapper sets the wrapper of the repository in the definitions only when
+// it has none; another wrapper is a conflict.
+func setWrapper(ctx context.Context, r repoestablish.Resolved) (bool, error) {
 	if err := notStarted(ctx); err != nil {
 		return false, err
 	}
-	d := fixedDependencies(r.Workspace)
-	snapshot, err := workspace.ReadProjectMetadata(d, r.Workspace)
-	if err != nil {
-		return false, classified{repoestablish.ErrConflict, err}
-	}
-	if wrapper := snapshot.RepositoryWrapper(workspace.RepoID(r.RepoName)); wrapper != nil {
-		if *wrapper != r.Wrapper {
-			return false, fail(repoestablish.ErrConflict, "repository %s already has wrapper %s, not %s", r.RepoName, *wrapper, r.Wrapper)
-		}
-		return false, nil
-	}
-	if h.afterMetadataRead != nil {
-		h.afterMetadataRead()
-	}
-	revision := snapshot.Revision
-	result, err := workspace.UpdateProjectMetadata(d, workspace.ProjectMetadataInput{Operation: workspace.ProjectRepoWrapperSet,
-		ProjectID: workspace.ProjectID(r.Project), RepoID: workspace.RepoID(r.RepoName), Locator: r.Wrapper, ActorClaim: r.Actor,
-		ExpectedRevision: &revision})
-	return result.Changed, classify(err, metadataConflicts, repoestablish.ErrUnknown)
+	changed, err := workspace.SetRepositoryWrapperAt(fixedDependencies(r.Workspace), r.Workspace, r.Project, r.RepoName, r.Wrapper)
+	return changed, classify(err, defineConflicts, repoestablish.ErrUnknown)
 }

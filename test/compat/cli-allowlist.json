@@ -4256,38 +4256,8 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project companion add ply --role planning --path ./ply/planning --actor codex",
+        "example": "  ply workspace project companion add ply --role planning --path ./ply/planning",
         "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_bash_completion_one_required_flag": [
-                "true"
-              ]
-            },
-            "default": "",
-            "deprecated": "",
-            "hidden": false,
-            "name": "actor",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "string",
-            "usage": "recorder identity or actor claim"
-          },
-          {
-            "annotations": {},
-            "default": "0",
-            "deprecated": "",
-            "hidden": false,
-            "name": "expected-revision",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "int",
-            "usage": "require this workspace project metadata revision before writing"
-          },
           {
             "annotations": {},
             "default": "text",
@@ -4359,7 +4329,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Register an explicit companion directory. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "long": "Register an explicit companion directory in ply-workspace.json. An unchanged registration writes nothing. JSON output is the Project as 'ply workspace project show' gives it, with changed. No directories or Git state are changed.",
         "path": "ply workspace project companion add",
         "runnable": true,
         "short": "Register an explicit companion directory",
@@ -4377,7 +4347,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project companion add ply --role planning --path ./ply/planning --actor codex",
+        "example": "  ply workspace project companion add ply --role planning --path ./ply/planning",
         "flags": [
           {
             "annotations": {
@@ -4403,7 +4373,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Manage explicit companion directory metadata without creating directories or registering repositories. Registration validates a physical directory and survives later directory removal.",
+        "long": "Manage explicit companion directories of a Project in ply-workspace.json without creating directories or registering repositories. Registration validates a physical directory and survives later directory removal.",
         "path": "ply workspace project companion",
         "runnable": false,
         "short": "Register planning, documentation, and other companion directories",
@@ -4421,38 +4391,8 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project companion remove ply --role planning --path ./ply/planning --actor codex",
+        "example": "  ply workspace project companion remove ply --role planning --path ./ply/planning",
         "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_bash_completion_one_required_flag": [
-                "true"
-              ]
-            },
-            "default": "",
-            "deprecated": "",
-            "hidden": false,
-            "name": "actor",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "string",
-            "usage": "recorder identity or actor claim"
-          },
-          {
-            "annotations": {},
-            "default": "0",
-            "deprecated": "",
-            "hidden": false,
-            "name": "expected-revision",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "int",
-            "usage": "require this workspace project metadata revision before writing"
-          },
           {
             "annotations": {},
             "default": "text",
@@ -4524,7 +4464,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Remove a companion registration without deleting its directory. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "long": "Remove a companion registration without deleting its directory in ply-workspace.json. An unchanged registration writes nothing. JSON output is the Project as 'ply workspace project show' gives it, with changed. No directories or Git state are changed.",
         "path": "ply workspace project companion remove",
         "runnable": true,
         "short": "Remove a companion registration without deleting its directory",
@@ -4599,139 +4539,8 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project metadata show ply --format json",
+        "example": "  ply workspace project repo-wrapper clear ply --repo ply",
         "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_flag_set_by_cobra": [
-                "true"
-              ]
-            },
-            "default": "false",
-            "deprecated": "",
-            "hidden": false,
-            "name": "help",
-            "no_opt_default": "true",
-            "scope": "local",
-            "shorthand": "h",
-            "shorthand_deprecated": "",
-            "type": "bool",
-            "usage": "help for metadata"
-          }
-        ],
-        "has_args_validator": false,
-        "has_persistent_post_run": false,
-        "has_persistent_pre_run": false,
-        "has_post_run": false,
-        "has_pre_run": false,
-        "hidden": false,
-        "long": "Inspect registered project navigation metadata. Reading does not scan or require the registered directories to exist.",
-        "path": "ply workspace project metadata",
-        "runnable": false,
-        "short": "Inspect explicit project companions and repository wrappers",
-        "suggest_for": null,
-        "traverse_children": false,
-        "use": "metadata"
-      },
-      "kind": "command_added",
-      "path": "ply workspace project metadata"
-    },
-    {
-      "after": {
-        "aliases": null,
-        "annotations": {},
-        "deprecated": "",
-        "disable_flag_parsing": false,
-        "disable_flags_in_use_line": false,
-        "example": "  ply workspace project metadata show ply --format json",
-        "flags": [
-          {
-            "annotations": {},
-            "default": "text",
-            "deprecated": "",
-            "hidden": false,
-            "name": "format",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "string",
-            "usage": "output format (text or json)"
-          },
-          {
-            "annotations": {
-              "cobra_annotation_flag_set_by_cobra": [
-                "true"
-              ]
-            },
-            "default": "false",
-            "deprecated": "",
-            "hidden": false,
-            "name": "help",
-            "no_opt_default": "true",
-            "scope": "local",
-            "shorthand": "h",
-            "shorthand_deprecated": "",
-            "type": "bool",
-            "usage": "help for show"
-          }
-        ],
-        "has_args_validator": true,
-        "has_persistent_post_run": false,
-        "has_persistent_pre_run": false,
-        "has_post_run": false,
-        "has_pre_run": false,
-        "hidden": false,
-        "long": "Read explicit companion directories and repository wrappers with their recorded change history. Missing metadata gives empty companions and null repository wrappers. Revision is shared across project metadata in this workspace.",
-        "path": "ply workspace project metadata show",
-        "runnable": true,
-        "short": "Show project navigation metadata and its history",
-        "suggest_for": null,
-        "traverse_children": false,
-        "use": "show <project-id>"
-      },
-      "kind": "command_added",
-      "path": "ply workspace project metadata show"
-    },
-    {
-      "after": {
-        "aliases": null,
-        "annotations": {},
-        "deprecated": "",
-        "disable_flag_parsing": false,
-        "disable_flags_in_use_line": false,
-        "example": "  ply workspace project repo-wrapper clear ply --repo ply --actor codex",
-        "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_bash_completion_one_required_flag": [
-                "true"
-              ]
-            },
-            "default": "",
-            "deprecated": "",
-            "hidden": false,
-            "name": "actor",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "string",
-            "usage": "recorder identity or actor claim"
-          },
-          {
-            "annotations": {},
-            "default": "0",
-            "deprecated": "",
-            "hidden": false,
-            "name": "expected-revision",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "int",
-            "usage": "require this workspace project metadata revision before writing"
-          },
           {
             "annotations": {},
             "default": "text",
@@ -4786,7 +4595,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Clear a repository wrapper registration without deleting files. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "long": "Clear a repository wrapper registration without deleting files in ply-workspace.json. An unchanged registration writes nothing. JSON output is the Project as 'ply workspace project show' gives it, with changed. No directories or Git state are changed.",
         "path": "ply workspace project repo-wrapper clear",
         "runnable": true,
         "short": "Clear a repository wrapper registration without deleting files",
@@ -4804,38 +4613,8 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply --actor codex",
+        "example": "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply",
         "flags": [
-          {
-            "annotations": {
-              "cobra_annotation_bash_completion_one_required_flag": [
-                "true"
-              ]
-            },
-            "default": "",
-            "deprecated": "",
-            "hidden": false,
-            "name": "actor",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "string",
-            "usage": "recorder identity or actor claim"
-          },
-          {
-            "annotations": {},
-            "default": "0",
-            "deprecated": "",
-            "hidden": false,
-            "name": "expected-revision",
-            "no_opt_default": "",
-            "scope": "local",
-            "shorthand": "",
-            "shorthand_deprecated": "",
-            "type": "int",
-            "usage": "require this workspace project metadata revision before writing"
-          },
           {
             "annotations": {},
             "default": "text",
@@ -4907,7 +4686,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Register the physical directory enclosing a repository. The actor is a recorded claim. An unchanged registration creates no history. --expected-revision checks the shared workspace project metadata revision before a change. No directories or Git state are changed.",
+        "long": "Register the physical directory enclosing a repository in ply-workspace.json. An unchanged registration writes nothing. JSON output is the Project as 'ply workspace project show' gives it, with changed. No directories or Git state are changed.",
         "path": "ply workspace project repo-wrapper set",
         "runnable": true,
         "short": "Register the physical directory enclosing a repository",
@@ -4925,7 +4704,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply --actor codex",
+        "example": "  ply workspace project repo-wrapper set ply --repo ply --wrapper ./ply",
         "flags": [
           {
             "annotations": {
@@ -4951,7 +4730,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Manage explicit repository wrapper metadata. A registered wrapper must contain the repository locator. It does not change project or Git identity and remains registered if the directory later disappears.",
+        "long": "Manage the wrapper of a repository in ply-workspace.json. A registered wrapper must contain the repository locator. It does not change project or Git identity and remains registered if the directory later disappears.",
         "path": "ply workspace project repo-wrapper",
         "runnable": false,
         "short": "Register a repository's enclosing directory",

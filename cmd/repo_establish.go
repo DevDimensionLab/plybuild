@@ -14,16 +14,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// repoCreateEnv is the caller context of ply repo create: working directory,
-// environment and the operation.
+// repoCreateEnv is the caller context of ply repo create: working directory
+// and the operation.
 type repoCreateEnv struct {
-	files  workspace.FileSystem
-	getenv func(string) string
-	run    func(context.Context, repoestablish.Request) (repoestablish.Result, error)
+	files workspace.FileSystem
+	run   func(context.Context, repoestablish.Request) (repoestablish.Result, error)
 }
 
 func systemRepoCreateEnv(runner process.Runner) repoCreateEnv {
-	return repoCreateEnv{files: workspace.SystemDependencies().Files, getenv: os.Getenv,
+	return repoCreateEnv{files: workspace.SystemDependencies().Files,
 		run: func(ctx context.Context, req repoestablish.Request) (repoestablish.Result, error) {
 			home, err := os.UserHomeDir()
 			if err != nil {
@@ -46,9 +45,9 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 			"The command creates a private GitHub repository through gh when it is not visible.\n" +
 			"The repository name is the repository ID, the wrapper name and the GitHub name. The Project is the one whose\n" +
 			"root is the current directory unless --project is given; github_owner, leaf, branch and remote come from\n" +
-			"ply-repo-defaults.json in the Project root unless overridden, else main, main and origin. The actor is --actor or PLY_ACTOR.\n" +
+			"ply-repo-defaults.json in the Project root unless overridden, else main, main and origin.\n" +
 			"Completed steps are left unchanged on a rerun; a conflict is never overwritten.",
-		Example: "  PLY_ACTOR=ply-epic ply repo create ply-code-map",
+		Example: "  ply repo create ply-code-map",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if jsonOutput, _ := cmd.Flags().GetBool("json"); jsonOutput {
@@ -75,9 +74,6 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 					return err
 				}
 			}
-			if req.Actor == "" {
-				req.Actor = env.getenv("PLY_ACTOR")
-			}
 			req.RepoName = args[0]
 			result, err := env.run(cmd.Context(), req)
 			var writeErr error
@@ -87,8 +83,8 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 				}
 			}
 			if r := result.Resolved; r.Wrapper != "" {
-				report("Resolved Project %s: root %s, wrapper %s, repository %s, owner %s, branch %s, remote %s, actor %s\n",
-					r.Project, r.ProjectRoot, r.Wrapper, r.RepoDir, r.GitHubOwner, r.Branch, r.Remote, r.Actor)
+				report("Resolved Project %s: root %s, wrapper %s, repository %s, owner %s, branch %s, remote %s\n",
+					r.Project, r.ProjectRoot, r.Wrapper, r.RepoDir, r.GitHubOwner, r.Branch, r.Remote)
 			}
 			for _, step := range result.Steps {
 				outcome := "unchanged"
@@ -105,7 +101,6 @@ func newRepoCreateCommand(env repoCreateEnv) *cobra.Command {
 	}
 	command.Flags().StringVar(&req.Project, "project", "", "Project ID (default: the Project whose root is the current directory)")
 	command.Flags().StringVar(&req.Workspace, "workspace", "", "absolute workspace root (default: the workspace containing the current directory)")
-	command.Flags().StringVar(&req.Actor, "actor", "", "actor recorded in the wrapper metadata (default: PLY_ACTOR)")
 	command.Flags().StringVar(&req.Overrides.GitHubOwner, "github-owner", "", "GitHub owner (default: github_owner in the Project defaults)")
 	command.Flags().StringVar(&req.Overrides.Leaf, "leaf", "", "repository directory inside the wrapper (default: Project defaults, else main)")
 	command.Flags().StringVar(&req.Overrides.Branch, "branch", "", "initial branch (default: Project defaults, else main)")

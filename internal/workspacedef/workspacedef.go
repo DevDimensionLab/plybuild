@@ -32,15 +32,24 @@ type Definitions struct {
 	Projects      []Project `json:"projects"`
 }
 type Project struct {
-	ID      string `json:"id"`
-	Name    string `json:"name"`
-	Wrapper string `json:"wrapper"`
-	Repos   []Repo `json:"repos"`
+	ID         string      `json:"id"`
+	Name       string      `json:"name"`
+	Wrapper    string      `json:"wrapper"`
+	Repos      []Repo      `json:"repos"`
+	Companions []Companion `json:"companions,omitempty"`
 }
 type Repo struct {
-	ID     string `json:"id"`
-	Path   string `json:"path"`
-	Remote string `json:"remote,omitempty"` // clone URL; absent when the repository has none
+	ID      string `json:"id"`
+	Path    string `json:"path"`
+	Remote  string `json:"remote,omitempty"`  // clone URL; absent when the repository has none
+	Wrapper string `json:"wrapper,omitempty"` // directory enclosing the repository; absent when not set
+}
+
+// Companion is a directory that belongs to a Project without being one of
+// its repositories. Role is planning, docs or other.
+type Companion struct {
+	Role string `json:"role"`
+	Path string `json:"path"`
 }
 
 // Effect is what an Update did to the definitions file.
@@ -363,6 +372,9 @@ func clone(d Definitions) Definitions {
 		// Keep nil and empty slices apart: they marshal as null and [].
 		if p.Repos != nil {
 			p.Repos = append([]Repo{}, p.Repos...)
+		}
+		if p.Companions != nil {
+			p.Companions = append([]Companion{}, p.Companions...)
 		}
 		out.Projects[i] = p
 	}

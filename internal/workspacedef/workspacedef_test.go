@@ -626,3 +626,55 @@ func TestErrorMessage(t *testing.T) {
 		t.Fatalf("message %q", got)
 	}
 }
+
+func TestReadCompanionsAndRepoWrapperAndOmitsThemWhenEmpty(t *testing.T) {
+	const withMetadata = `{
+  "format_version": 1,
+  "projects": [
+    {
+      "id": "ply",
+      "name": "Ply",
+      "wrapper": "ply",
+      "repos": [{"id": "ply", "path": "ply/main", "wrapper": "ply"}],
+      "companions": [{"role": "planning", "path": "ply/plan"}, {"role": "docs", "path": "/elsewhere/docs"}]
+    }
+  ]
+}
+`
+	defs, _, err := Read(writeRoot(t, withMetadata))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := Project{ID: "ply", Name: "Ply", Wrapper: "ply", Repos: []Repo{{ID: "ply", Path: "ply/main", Wrapper: "ply"}},
+		Companions: []Companion{{Role: "planning", Path: "ply/plan"}, {Role: "docs", Path: "/elsewhere/docs"}}}
+	if !reflect.DeepEqual(defs.Projects[0], want) {
+		t.Fatalf("decoded %+v", defs.Projects[0])
+	}
+	raw, err := json.Marshal(Project{ID: "ply", Name: "Ply", Wrapper: "ply", Repos: []Repo{{ID: "ply", Path: "ply/main"}}})
+	if err != nil || string(raw) != `{"id":"ply","name":"Ply","wrapper":"ply","repos":[{"id":"ply","path":"ply/main"}]}` {
+		t.Fatalf("empty metadata encoded as %s %v", raw, err)
+	}
+}
+
+func TestUpdateMutatesACopyOfCompanions(t *testing.T) {
+	root := writeRoot(t, `{"format_version": 1, "projects": [{"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "ply", "path": "ply/main"}], "companions": [{"role": "docs", "path": "docs"}]}]}`)
+	var current Definitions
+	calls := 0
+	check := func(d Definitions) error {
+		calls++
+		if calls == 1 {
+			current = d
+		}
+		return nil
+	}
+	mutate := func(d *Definitions) (bool, error) {
+		d.Projects[0].Companions[0].Path = "changed"
+		return false, errors.New("stop")
+	}
+	if _, err := Update(root, basisOf(t, root), mutate, check); err == nil {
+		t.Fatal("mutate error ignored")
+	}
+	if current.Projects[0].Companions[0].Path != "docs" {
+		t.Fatalf("current definitions were mutated: %+v", current.Projects[0])
+	}
+}

@@ -1,6 +1,6 @@
 // Package reporemove undoes the local part of repoestablish for one
-// repository: it clears the wrapper metadata, removes the definitions member
-// and deletes the wrapper directory, only when the checks prove that no local
+// repository: it removes the definitions member with its wrapper and deletes
+// the wrapper directory, only when the checks prove that no local
 // data is lost. The remote repository is never contacted for a change. Every
 // read and effect goes through Dependencies; the package has no output,
 // flags, working directory or environment.
@@ -15,11 +15,11 @@ import (
 )
 
 // Request is the caller's claim. Preview is the default; Apply requires the
-// previewed plan digest as Expect and an Actor.
+// previewed plan digest as Expect.
 type Request struct {
-	Workspace, Project, RepoName, Remote, Actor string
-	Apply                                       bool
-	Expect                                      string
+	Workspace, Project, RepoName, Remote string
+	Apply                                bool
+	Expect                               string
 }
 
 // Target is what Locate reads without effect.
@@ -35,7 +35,7 @@ type Target struct {
 type Resolved struct {
 	Workspace, Project, ProjectRoot, RepoName string
 	Wrapper, RepoDir, Leaf, Path              string // ProjectRoot/RepoName, Wrapper/Leaf, stored definitions path
-	Remote, Actor                             string
+	Remote                                    string
 }
 
 // Check is one passed pre-effect check, as shown in preview.
@@ -45,8 +45,6 @@ type Check struct{ Name, Detail string }
 type Plan struct {
 	Checks            []Check
 	RemoteURL         string // empty when the remote has no single URL
-	MetadataRevision  int
-	MetadataCleared   bool // the wrapper metadata is already cleared by an earlier run
 	DefinitionsDigest string
 	Verdict           string   // VerdictUnborn or VerdictProven
 	GitFiles          []string // local configuration files deleted with .git, relative to it
@@ -64,11 +62,10 @@ const (
 type Step string
 
 const (
-	StepPrepare  Step = "prepare"
-	StepCheck    Step = "check"
-	StepMetadata Step = "metadata"
-	StepDefine   Step = "define"
-	StepWrapper  Step = "wrapper"
+	StepPrepare Step = "prepare"
+	StepCheck   Step = "check"
+	StepDefine  Step = "define"
+	StepWrapper Step = "wrapper"
 )
 
 type StepResult struct {
@@ -102,13 +99,12 @@ func (e *Error) Unwrap() error { return e.Err }
 type Dependencies struct {
 	Locate        func(ctx context.Context, req Request) (Target, error)
 	Inspect       func(ctx context.Context, r Resolved) (Plan, error)
-	ClearWrapper  func(ctx context.Context, r Resolved, p Plan) (bool, error)
 	Undefine      func(ctx context.Context, r Resolved, p Plan) (bool, error)
 	RemoveWrapper func(ctx context.Context, r Resolved, p Plan) (bool, error)
 }
 
 func (d Dependencies) complete() bool {
-	return d.Locate != nil && d.Inspect != nil && d.ClearWrapper != nil && d.Undefine != nil && d.RemoveWrapper != nil
+	return d.Locate != nil && d.Inspect != nil && d.Undefine != nil && d.RemoveWrapper != nil
 }
 
 func invalid(format string, args ...interface{}) error {
@@ -120,9 +116,9 @@ func conflict(format string, args ...interface{}) error {
 }
 
 // Run previews or applies the removal of one repository. Apply recomputes the
-// plan and stops on any difference from the previewed digest; it then clears
-// the wrapper metadata, removes the definitions member and deletes the
-// wrapper, in that order, and rolls nothing back.
+// plan and stops on any difference from the previewed digest; it then removes
+// the definitions member with its wrapper and deletes the wrapper directory,
+// in that order, and rolls nothing back.
 func Run(ctx context.Context, req Request, d Dependencies) (Result, error) {
 	var result Result
 	if ctx == nil || !d.complete() {
@@ -170,7 +166,7 @@ func Run(ctx context.Context, req Request, d Dependencies) (Result, error) {
 	steps := []struct {
 		step Step
 		run  func(context.Context, Resolved, Plan) (bool, error)
-	}{{StepMetadata, d.ClearWrapper}, {StepDefine, d.Undefine}, {StepWrapper, d.RemoveWrapper}}
+	}{{StepDefine, d.Undefine}, {StepWrapper, d.RemoveWrapper}}
 	for _, s := range steps {
 		if err := ctx.Err(); err != nil {
 			return result, &Error{s.step, err}
@@ -221,8 +217,6 @@ func validateRequest(req Request) error {
 		return invalid("repository name %q must be one path element", req.RepoName)
 	case req.Apply && req.Expect == "":
 		return invalid("--apply requires --expect with the previewed plan digest")
-	case req.Apply && req.Actor == "":
-		return invalid("actor is required; set --actor or PLY_ACTOR")
 	case strings.HasPrefix(req.Remote, "-"):
 		return invalid("remote must not begin with -")
 	}
@@ -233,7 +227,7 @@ func validateRequest(req Request) error {
 // <Project root>/<repository>/<leaf> relative to the workspace.
 func resolve(req Request, target Target) (Resolved, error) {
 	r := Resolved{Workspace: req.Workspace, Project: req.Project, ProjectRoot: target.ProjectRoot, RepoName: req.RepoName,
-		Path: target.Path, Remote: req.Remote, Actor: req.Actor}
+		Path: target.Path, Remote: req.Remote}
 	if r.Remote == "" {
 		r.Remote = target.Remote
 	}

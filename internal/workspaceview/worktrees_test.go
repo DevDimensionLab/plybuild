@@ -133,3 +133,33 @@ func TestWorktreeInventoryKeepsOwnersUnknownsAndNoGitWrites(t *testing.T) {
 		t.Fatalf("invented unmanaged base: %+v", byPath[other])
 	}
 }
+
+// A repository without any Epic or Task has no recorded Git identity; its
+// inventory is still read from the checkout the definition names.
+func TestWorktreeInventoryReadsRepositoryWithoutWorkHistory(t *testing.T) {
+	d, root := changesFixture(t)
+	main := filepath.Join(root, "main")
+	if err := os.Mkdir(main, 0700); err != nil {
+		t.Fatal(err)
+	}
+	inventoryGit(t, main, "init", "-b", "main")
+	if err := os.WriteFile(filepath.Join(main, "README"), []byte("base\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	inventoryGit(t, main, "add", "README")
+	inventoryGit(t, main, "commit", "-m", "base")
+	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Inventory", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: main}}}); err != nil {
+		t.Fatal(err)
+	}
+	s, err := LoadSnapshot(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := ListWorktrees(d, s, WorktreeOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(out.Repositories) != 1 || out.Repositories[0].Freshness != "fresh" || len(out.Worktrees) != 1 {
+		t.Fatalf("repository without work history: %+v worktrees=%d", out.Repositories, len(out.Worktrees))
+	}
+}

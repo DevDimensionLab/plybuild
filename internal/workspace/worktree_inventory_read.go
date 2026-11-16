@@ -63,8 +63,16 @@ func (g *systemTaskIntegrationGit) ReadWorktreeInventory(repo RepoRecord, bases 
 		return out, err
 	}
 	actual, err := canonicalDirectory(g.files, "", common, "inventory Git directory")
-	if err != nil || actual != repo.GitCommonDir {
+	if err != nil {
 		return out, workError(ErrorWorkIdentityConflict, "registered repository Git identity differs", err)
+	}
+	// A repository without Epic or Task history has no recorded identity to
+	// conflict with; the checkout its definition names supplies it.
+	if repo.GitCommonDir == "" {
+		repo.GitCommonDir = actual
+	}
+	if actual != repo.GitCommonDir {
+		return out, workError(ErrorWorkIdentityConflict, "registered repository Git identity differs", nil)
 	}
 	before := g.inventoryRead(repo.Locator, "worktree", "list", "--porcelain", "-z")
 	if before.Err != nil {

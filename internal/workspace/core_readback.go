@@ -106,14 +106,14 @@ type repositoryReadRecord struct {
 	Remote       *string `json:"remote"`
 }
 
-func projectRead(p ProjectRecord, metadata ProjectMetadataSnapshot) projectReadRecord {
-	return projectReadRecord{p.ID, p.Name, p.Wrapper, len(p.RepoIDs), metadata.Companions(p.ID)}
+func projectRead(p ProjectRecord) projectReadRecord {
+	return projectReadRecord{p.ID, p.Name, p.Wrapper, len(p.RepoIDs), sortedCompanions(p.Companions)}
 }
 
 func MarshalProjectList(result ProjectListResult) ([]byte, error) {
 	projects := make([]projectReadRecord, 0, len(result.Projects))
 	for _, p := range result.Projects {
-		projects = append(projects, projectRead(p, result.Metadata))
+		projects = append(projects, projectRead(p))
 	}
 	sort.Slice(projects, func(i, j int) bool { return projects[i].ID < projects[j].ID })
 	return json.Marshal(struct {
@@ -126,23 +126,42 @@ func MarshalProjectList(result ProjectListResult) ([]byte, error) {
 }
 
 func MarshalProject(result ProjectResult) ([]byte, error) {
+	return json.Marshal(projectReadback(result))
+}
+
+// MarshalProjectMetadataMutation is project show with whether the change
+// changed ply-workspace.json.
+func MarshalProjectMetadataMutation(result ProjectMetadataMutation) ([]byte, error) {
+	return json.Marshal(struct {
+		projectReadbackRecord
+		Changed bool `json:"changed"`
+	}{projectReadback(result.ProjectResult), result.Changed})
+}
+
+type projectReadbackRecord struct {
+	Kind          string                 `json:"kind"`
+	SchemaVersion int                    `json:"schema_version"`
+	Workspace     coreReadWorkspace      `json:"workspace"`
+	Scope         projectReadScope       `json:"scope"`
+	Project       projectReadRecord      `json:"project"`
+	Repositories  []repositoryReadRecord `json:"repositories"`
+}
+
+func projectReadback(result ProjectResult) projectReadbackRecord {
 	repos := make([]repositoryReadRecord, 0, len(result.Repos))
 	for _, r := range result.Repos {
 		var remote *string
 		if r.Remote != "" {
 			remote = &r.Remote
 		}
-		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, result.Metadata.RepositoryWrapper(r.ID), remote})
+		var wrapper *string
+		if r.Wrapper != "" {
+			wrapper = &r.Wrapper
+		}
+		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, wrapper, remote})
 	}
 	sort.Slice(repos, func(i, j int) bool { return repos[i].ID < repos[j].ID })
-	return json.Marshal(struct {
-		Kind          string                 `json:"kind"`
-		SchemaVersion int                    `json:"schema_version"`
-		Workspace     coreReadWorkspace      `json:"workspace"`
-		Scope         projectReadScope       `json:"scope"`
-		Project       projectReadRecord      `json:"project"`
-		Repositories  []repositoryReadRecord `json:"repositories"`
-	}{ProjectReadbackKind, CoreReadSchemaVersion, coreReadWorkspace{result.Workspace}, projectReadScope{&result.Project.ID}, projectRead(result.Project, result.Metadata), repos})
+	return projectReadbackRecord{ProjectReadbackKind, CoreReadSchemaVersion, coreReadWorkspace{result.Workspace}, projectReadScope{&result.Project.ID}, projectRead(result.Project), repos}
 }
 
 func MarshalTaskList(result TaskListResult) ([]byte, error) {

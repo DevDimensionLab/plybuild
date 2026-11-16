@@ -21,11 +21,29 @@ func (s registrationsStore) SnapshotRegistrations(ProjectWork) (WorkItemRegistry
 	return s.registry, nil
 }
 
-// newRemovalFixture is the metadata fixture with repository ply-code-map
+// newEpicFixture is the definition fixture as an Epic workspace: the defined
+// Epic is committed and adopted natively instead of being read from the
+// partial K5 history registry.
+func newEpicFixture(t *testing.T) definitionFixture {
+	t.Helper()
+	f := newDefinitionFixture(t)
+	if err := os.Remove(testWork(t, f.root, "ply").Registry()); err != nil {
+		t.Fatal(err)
+	}
+	repo := filepath.Join(f.root, "ply", "main")
+	runLocalGit(t, repo, "symbolic-ref", "HEAD", "refs/heads/master")
+	runLocalGit(t, repo, "-c", "user.name=Ply tests", "-c", "user.email=tests@example.invalid", "commit", "-q", "--allow-empty", "-m", "fixture")
+	if _, err := ObserveContaining(f.metadataDependencies()); err != nil {
+		t.Fatal(err)
+	}
+	return f
+}
+
+// newRemovalFixture is the Epic fixture with repository ply-code-map
 // defined in Project ply at the layout repo create produces: ply/ply-code-map/main.
 func newRemovalFixture(t *testing.T) definitionFixture {
 	t.Helper()
-	f := newMetadataFixture(t)
+	f := newEpicFixture(t)
 	repo := filepath.Join(f.root, "ply", "ply-code-map", "main")
 	if err := os.MkdirAll(repo, 0o755); err != nil {
 		t.Fatal(err)
@@ -134,7 +152,7 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 			if err := os.Mkdir(docs, 0o755); err != nil {
 				t.Fatal(err)
 			}
-			input := ProjectMetadataInput{Operation: ProjectCompanionAdd, ProjectID: "app", Role: CompanionDocs, Locator: docs, ActorClaim: "codex"}
+			input := ProjectMetadataInput{Operation: ProjectCompanionAdd, ProjectID: "app", Role: CompanionDocs, Locator: docs}
 			if _, err := UpdateProjectMetadata(f.metadataDependencies(), input); err != nil {
 				t.Fatal(err)
 			}
