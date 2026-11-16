@@ -25,6 +25,8 @@ type goalAgentPlan struct {
 	OID       string          `json:"oid"`
 	Workspace string          `json:"herdr_workspace"`
 	Provider  string          `json:"provider,omitempty"`
+	Model     *string         `json:"model,omitempty"`
+	Effort    *string         `json:"effort,omitempty"`
 	Goal      json.RawMessage `json:"goal"`
 	Journal   string          `json:"journal_instruction,omitempty"`
 }
@@ -43,7 +45,15 @@ func journalInstruction(task string, link *taskjournal.PlyAction) string {
 		belongs, task, task, strings.Join(taskjournal.StepKinds, ", "), strings.Join(taskjournal.Outcomes, ", "), task)
 }
 
-func goalProvider(goal json.RawMessage) (string, error) {
+// goalExecutor is the registered Goal executor; model and effort are native
+// values the provider's CLI receives at start.
+type goalExecutor struct {
+	Provider string
+	Model    *string
+	Effort   *string
+}
+
+func goalExecutorOf(goal json.RawMessage) (goalExecutor, error) {
 	var g struct {
 		Executor struct {
 			Provider *string `json:"provider"`
@@ -52,19 +62,16 @@ func goalProvider(goal json.RawMessage) (string, error) {
 		} `json:"executor"`
 	}
 	if err := json.Unmarshal(goal, &g); err != nil {
-		return "", err
+		return goalExecutor{}, err
 	}
 	provider := agentstart.ProviderCodex
 	if g.Executor.Provider != nil {
 		provider = *g.Executor.Provider
 	}
 	if provider != agentstart.ProviderClaude && provider != agentstart.ProviderCodex {
-		return "", fmt.Errorf("goal-start supports Claude and Codex Goals only")
+		return goalExecutor{}, fmt.Errorf("goal-start supports Claude and Codex Goals only")
 	}
-	if g.Executor.Model != nil || g.Executor.Effort != nil {
-		return "", fmt.Errorf("explicit model/effort overrides require a supported launcher; not silently discarded")
-	}
-	return provider, nil
+	return goalExecutor{Provider: provider, Model: g.Executor.Model, Effort: g.Executor.Effort}, nil
 }
 
 func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBinary, precondition func() error) agentstart.StartInput {
@@ -72,6 +79,8 @@ func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBi
 		Key:          plan.Task,
 		ReceiptPath:  receipt,
 		Provider:     plan.Provider,
+		Model:        plan.Model,
+		Effort:       plan.Effort,
 		Cwd:          plan.Worktree,
 		Workspace:    plan.Workspace,
 		Label:        plan.Task,
@@ -122,7 +131,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 	var spec, herdrWorkspace, actor string
 	var revision int
 	var apply, resume bool
-	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent), with inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start; everything else is inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if resume && !apply {
 			return fmt.Errorf("--resume requires --apply")
 		}
@@ -155,10 +164,11 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if len(read.Goal) == 0 || string(read.Goal) == "null" || len(read.Reasons) > 0 {
 			return fmt.Errorf("registered revision must be an intact Goal")
 		}
-		provider, e := goalProvider(read.Goal)
+		executor, e := goalExecutorOf(read.Goal)
 		if e != nil {
 			return e
 		}
+		provider := executor.Provider
 		wt := task.Task.Worktree
 		if e = checkGoalGit(wt); e != nil {
 			return e
@@ -170,7 +180,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if e != nil {
 			return e
 		}
-		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Goal: read.Goal, Journal: journalInstruction(args[0], link)}
+		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Model: executor.Model, Effort: executor.Effort, Goal: read.Goal, Journal: journalInstruction(args[0], link)}
 		if !apply {
 			return json.NewEncoder(c.OutOrStdout()).Encode(plan)
 		}

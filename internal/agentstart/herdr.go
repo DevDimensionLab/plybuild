@@ -233,10 +233,16 @@ func startArgs(in StartInput, pane string) []string {
 		flags = append(flags, "--model", *in.Model)
 	}
 	if in.Provider == ProviderClaude {
+		if in.Effort != nil {
+			flags = append(flags, "--effort", *in.Effort)
+		}
 		if in.Permission != nil {
 			flags = append(flags, "--permission-mode", *in.Permission)
 		}
 	} else {
+		if in.Effort != nil {
+			flags = append(flags, "-c", "model_reasoning_effort="+quoted(*in.Effort))
+		}
 		if in.Permission != nil {
 			flags = append(flags, "-c", "default_permissions="+quoted(*in.Permission))
 		}

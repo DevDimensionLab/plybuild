@@ -63,6 +63,7 @@ type StartInput struct {
 	ReceiptPath  string
 	Provider     string
 	Model        *string
+	Effort       *string
 	Permission   *string
 	CodexProfile *string
 	Cwd          string
@@ -136,8 +137,9 @@ func ResumeAgent(ctx context.Context, in StartInput) (Receipt, error) {
 	return continueStart(ctx, in, ops{call: callHerdr, text: callHerdrText, awaitTimeout: awaitReadyTimeout, pause: awaitReadyPause})
 }
 
+// plain is a value that cannot be read as another CLI flag.
 func plain(s string) bool {
-	if s == "" || len(s) > 256 || !utf8.ValidString(s) {
+	if s == "" || len(s) > 256 || !utf8.ValidString(s) || strings.HasPrefix(s, "-") {
 		return false
 	}
 	for _, r := range s {
@@ -169,9 +171,9 @@ func validate(in StartInput) error {
 	case in.CodexProfile != nil && in.Provider != ProviderCodex:
 		return invalid("codex profile requires the codex provider")
 	}
-	for _, option := range []*string{in.Model, in.Permission, in.CodexProfile} {
+	for _, option := range []*string{in.Model, in.Effort, in.Permission, in.CodexProfile} {
 		if option != nil && !plain(*option) {
-			return invalid("model, permission and profile must be plain non-empty strings when set")
+			return invalid("model, effort, permission and profile must be plain non-empty strings not starting with - when set")
 		}
 	}
 	for _, env := range in.Env {
@@ -198,6 +200,7 @@ func inputDigest(in StartInput) (string, error) {
 	raw, err := canonicaljson.Marshal(canonicaljson.Object{
 		{Name: "provider", Value: in.Provider},
 		{Name: "model", Value: optional(in.Model)},
+		{Name: "effort", Value: optional(in.Effort)},
 		{Name: "permission", Value: optional(in.Permission)},
 		{Name: "codex_profile", Value: optional(in.CodexProfile)},
 		{Name: "cwd", Value: in.Cwd},

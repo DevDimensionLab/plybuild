@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -75,34 +76,45 @@ const goalPromptAttestingDeliveryProcess = "You own this explicit Ply Task. Read
 
 const wantGoalPrompt = "You own this explicit Ply Task. Read repository instructions and the preserved Goal below, including its required_inputs. Work only within its scope in this Task worktree. The Goal decides return, notification, delivery and delegation; this start grants no authority beyond it and does not attest runtime permissions. Goal:\n"
 
-func TestGoalStartSelectsProviderFromRegisteredExecutor(t *testing.T) {
+func TestGoalStartSelectsExecutorFromRegisteredGoal(t *testing.T) {
+	str := func(s string) *string { return &s }
 	for name, c := range map[string]struct {
-		goal, want string
-		fail       bool
+		goal string
+		want goalExecutor
+		fail bool
 	}{
-		"no executor":            {`{}`, "codex", false},
-		"null executor":          {`{"executor":null}`, "codex", false},
-		"null fields":            {`{"executor":{"provider":null,"model":null,"effort":null}}`, "codex", false},
-		"codex":                  {`{"executor":{"provider":"codex"}}`, "codex", false},
-		"claude":                 {`{"executor":{"provider":"claude","model":null,"effort":null}}`, "claude", false},
-		"unknown provider":       {`{"executor":{"provider":"gemini"}}`, "", true},
-		"explicit model":         {`{"executor":{"provider":"claude","model":"opus"}}`, "", true},
-		"explicit effort":        {`{"executor":{"provider":"codex","effort":"high"}}`, "", true},
-		"model without provider": {`{"executor":{"model":"x"}}`, "", true},
-		"not json":               {`{`, "", true},
+		"no executor":            {`{}`, goalExecutor{Provider: "codex"}, false},
+		"null executor":          {`{"executor":null}`, goalExecutor{Provider: "codex"}, false},
+		"null fields":            {`{"executor":{"provider":null,"model":null,"effort":null}}`, goalExecutor{Provider: "codex"}, false},
+		"codex":                  {`{"executor":{"provider":"codex"}}`, goalExecutor{Provider: "codex"}, false},
+		"claude":                 {`{"executor":{"provider":"claude","model":null,"effort":null}}`, goalExecutor{Provider: "claude"}, false},
+		"claude model effort":    {`{"executor":{"provider":"claude","model":"opus","effort":"max"}}`, goalExecutor{Provider: "claude", Model: str("opus"), Effort: str("max")}, false},
+		"codex model effort":     {`{"executor":{"provider":"codex","model":"gpt-6-astra","effort":"high"}}`, goalExecutor{Provider: "codex", Model: str("gpt-6-astra"), Effort: str("high")}, false},
+		"model without provider": {`{"executor":{"model":"x"}}`, goalExecutor{Provider: "codex", Model: str("x")}, false},
+		"unknown provider":       {`{"executor":{"provider":"gemini"}}`, goalExecutor{}, true},
+		"not json":               {`{`, goalExecutor{}, true},
 	} {
 		t.Run(name, func(t *testing.T) {
-			got, err := goalProvider(json.RawMessage(c.goal))
+			got, err := goalExecutorOf(json.RawMessage(c.goal))
 			if c.fail {
 				if err == nil {
 					t.Fatalf("admitted %s", c.goal)
 				}
 				return
 			}
-			if err != nil || got != c.want {
-				t.Fatalf("%q %v", got, err)
+			if err != nil || !reflect.DeepEqual(got, c.want) {
+				t.Fatalf("%+v %v", got, err)
 			}
 		})
+	}
+}
+
+func TestGoalStartPassesGoalModelAndEffortToTheAgent(t *testing.T) {
+	model, effort := "gpt-6-astra", "high"
+	plan := goalAgentPlan{Task: "task-1", Worktree: "/wt", Workspace: "wM", Provider: "codex", Model: &model, Effort: &effort, Goal: json.RawMessage(`{}`)}
+	in := goalStartInput(plan, "/r/task-1.json", agentstart.HerdrBinary{}, nil)
+	if in.Model == nil || *in.Model != model || in.Effort == nil || *in.Effort != effort {
+		t.Fatalf("%+v", in)
 	}
 }
 
@@ -114,7 +126,7 @@ func TestGoalStartMapsPlanToStartInputKeepingPromptBindingAndInheritedRuntime(t 
 	if in.Key != "task-1" || in.ReceiptPath != "/r/task-1.json" || in.Provider != "claude" || in.Cwd != "/wt" || in.Workspace != "wM" || in.Label != "task-1" || in.Herdr != herdr {
 		t.Fatalf("%+v", in)
 	}
-	if in.Model != nil || in.Permission != nil || in.CodexProfile != nil || len(in.Env) != 0 {
+	if in.Model != nil || in.Effort != nil || in.Permission != nil || in.CodexProfile != nil || len(in.Env) != 0 {
 		t.Fatal("Goal start must inherit provider runtime configuration")
 	}
 	if in.Prompt != wantGoalPrompt+`{"a":1}` {

@@ -302,6 +302,12 @@ func TestAgentStartArgvPerProviderKeepsDefaults(t *testing.T) {
 		{"codex model permission profile", func(in *StartInput) {
 			in.Model, in.Permission, in.CodexProfile = str("gpt-x"), str("workspace"), str("fast")
 		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "gpt-x", "-c", `default_permissions="workspace"`, "--profile", "fast"}},
+		{"claude model and effort", func(in *StartInput) {
+			in.Provider, in.Model, in.Effort = ProviderClaude, str("opus"), str("xhigh")
+		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "claude", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "opus", "--effort", "xhigh"}},
+		{"codex model and effort", func(in *StartInput) {
+			in.Model, in.Effort = str("gpt-x"), str("high")
+		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "gpt-x", "-c", `model_reasoning_effort="high"`}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -358,6 +364,8 @@ func TestAgentStartRejectsInvalidInputBeforeAnyEffect(t *testing.T) {
 		"relative herdr path":    func(in *StartInput) { in.Herdr.Path = "herdr" },
 		"profile on claude":      func(in *StartInput) { in.Provider, in.CodexProfile = ProviderClaude, str("p") },
 		"env without assignment": func(in *StartInput) { in.Env = []string{"NOPE"} },
+		"model like a flag":      func(in *StartInput) { in.Model = str("--dangerously-skip-permissions") },
+		"effort like a flag":     func(in *StartInput) { in.Effort = str("-x") },
 	}
 	for name, mutate := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -404,6 +412,7 @@ func TestAgentStartChangedInputMismatchesBeforeEffect(t *testing.T) {
 	fields := map[string]func(*StartInput){
 		"provider":      func(in *StartInput) { in.Provider = ProviderClaude },
 		"model":         func(in *StartInput) { in.Model = str("m") },
+		"effort":        func(in *StartInput) { in.Effort = str("e") },
 		"permission":    func(in *StartInput) { in.Permission = str("p") },
 		"codex profile": func(in *StartInput) { in.CodexProfile = str("p") },
 		"cwd":           func(in *StartInput) { in.Cwd = in.Cwd + "-other" },
