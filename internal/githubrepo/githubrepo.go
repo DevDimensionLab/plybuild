@@ -203,7 +203,7 @@ func failed(ctx context.Context, op string, code int) error {
 
 func gh(ctx context.Context, runner process.Runner, args ...string) ([]byte, int, error) {
 	var stdout bytes.Buffer
-	err := runner.Run(process.Command{Name: "gh", Args: args, Context: ctx, Env: ghEnv(os.Environ()),
+	err := runner.Run(process.Command{Name: "gh", Args: args, Context: ctx, Env: Env(os.Environ()),
 		Stdout: &stdout, Stderr: io.Discard})
 	code := 0
 	var exitErr *exec.ExitError
@@ -215,9 +215,9 @@ func gh(ctx context.Context, runner process.Runner, args ...string) ([]byte, int
 	return stdout.Bytes(), code, err
 }
 
-// ghEnv drops inherited variables that redirect gh or Git or change its
+// Env drops inherited variables that redirect gh or Git or change its
 // output, and pins gh to github.com without prompts, color or notifiers.
-func ghEnv(environ []string) []string {
+func Env(environ []string) []string {
 	pinned := []string{"GH_HOST=github.com", "GH_PROMPT_DISABLED=1", "NO_COLOR=1", "GH_NO_UPDATE_NOTIFIER=1", "GH_NO_EXTENSION_UPDATE_NOTIFIER=1"}
 	dropped := map[string]bool{"GH_REPO": true, "GH_DEBUG": true, "DEBUG": true, "GH_FORCE_TTY": true, "CLICOLOR_FORCE": true,
 		"GH_PAGER": true, "PAGER": true, "GIT_DIR": true, "GIT_WORK_TREE": true}
