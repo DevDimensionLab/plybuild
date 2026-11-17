@@ -262,7 +262,7 @@ func TestPlanIsRegisteredBesideExistingCommands(t *testing.T) {
 	}
 	for _, path := range [][]string{
 		{"plan", "add"}, {"plan", "update"}, {"plan", "show"}, {"plan", "list"}, {"plan", "history"},
-		{"assignment", "show"}, {"workflow", "epic", "plan"},
+		{"assignment", "show"}, {"repo", "plan"},
 	} {
 		if !find(path...) {
 			t.Fatalf("command %v not registered", path)

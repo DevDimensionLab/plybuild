@@ -124,6 +124,7 @@ func newRepoCommand(runner process.Runner) *cobra.Command {
 	repoCommand.AddCommand(newRepoCreateCommand(systemRepoCreateEnv(runner)))
 	repoCommand.AddCommand(newRepoRemoveCommand(systemRepoRemoveEnv(runner)))
 	repoCommand.AddCommand(newRepoCloneCommand(runner))
+	repoCommand.AddCommand(newRepoPlanCommand(runner))
 	return repoCommand
 }
 

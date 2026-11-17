@@ -59,7 +59,7 @@ func New(runner process.Runner, planTemplate string) repoestablish.Dependencies 
 
 func newDependencies(runner process.Runner, planTemplate string, h hooks) repoestablish.Dependencies {
 	plan := func(r repoestablish.Resolved) wrapperplan.Request {
-		return wrapperplan.Request{Template: planTemplate, Wrapper: r.Wrapper, Repo: r.RepoName, Date: h.today(), Branch: wrapperplan.DefaultBranch}
+		return planRequest(planTemplate, r.Wrapper, r.RepoName, h.today())
 	}
 	return repoestablish.Dependencies{
 		Prepare: prepare,
@@ -87,10 +87,7 @@ func newDependencies(runner process.Runner, planTemplate string, h hooks) repoes
 			return firstCommit(ctx, runner, r)
 		},
 		Plan: func(ctx context.Context, r repoestablish.Resolved) (bool, error) {
-			ctx, cancel := context.WithTimeout(ctx, gitTimeout)
-			defer cancel()
-			changed, err := wrapperplan.Ensure(ctx, runner, plan(r))
-			return changed, capability(err, wrapperplan.ErrInvalid, wrapperplan.ErrConflict)
+			return ensurePlan(ctx, runner, plan(r))
 		},
 		GitHub: func(ctx context.Context, owner, name string) (string, bool, error) {
 			ctx, cancel := context.WithTimeout(ctx, githubTimeout)
@@ -109,6 +106,23 @@ func newDependencies(runner process.Runner, planTemplate string, h hooks) repoes
 		},
 		SetWrapper: setWrapper,
 	}
+}
+
+// EnsurePlan creates or verifies the planning repository of repo in wrapper
+// from planTemplate, as the plan step of ply repo create does.
+func EnsurePlan(ctx context.Context, runner process.Runner, planTemplate, wrapper, repo string) (bool, error) {
+	return ensurePlan(ctx, runner, planRequest(planTemplate, wrapper, repo, time.Now().Format(time.DateOnly)))
+}
+
+func planRequest(planTemplate, wrapper, repo, date string) wrapperplan.Request {
+	return wrapperplan.Request{Template: planTemplate, Wrapper: wrapper, Repo: repo, Date: date, Branch: wrapperplan.DefaultBranch}
+}
+
+func ensurePlan(ctx context.Context, runner process.Runner, req wrapperplan.Request) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, gitTimeout)
+	defer cancel()
+	changed, err := wrapperplan.Ensure(ctx, runner, req)
+	return changed, capability(err, wrapperplan.ErrInvalid, wrapperplan.ErrConflict)
 }
 
 // firstCommit commits a README.md naming the repository when its branch has
