@@ -566,3 +566,39 @@ func TestAdoptEpicNeedsNoDefinition(t *testing.T) {
 		t.Fatalf("adoption changed the definitions: %s", after)
 	}
 }
+
+func TestLocateContainingWorkspaceStaysInsideTheCeiling(t *testing.T) {
+	outer := createProjectWorkspace(t)
+	ceiling := filepath.Join(outer, "ceiling")
+	leaf := filepath.Join(ceiling, "leaf")
+	if err := os.MkdirAll(leaf, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	files := SystemDependencies().Files
+	notFound := func(cwd string) {
+		t.Helper()
+		var project *ProjectError
+		if _, err := locateContainingWorkspace(files, cwd); !errors.As(err, &project) || project.Class != ErrorWorkspaceNotFound {
+			t.Fatalf("from %s: error %v, want %s", cwd, err, ErrorWorkspaceNotFound)
+		}
+	}
+	t.Setenv(WorkspaceCeilingVariable, ceiling)
+	notFound(leaf)
+	notFound(outer)
+
+	inner := filepath.Join(ceiling, "inner")
+	if err := os.MkdirAll(filepath.Join(inner, MarkerDirectory), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	mustWriteFile(t, filepath.Join(inner, MarkerDirectory, MarkerFile), fmt.Sprintf("format_version: 1\nroot: %s\n", inner))
+	mustWriteFile(t, filepath.Join(inner, DefinitionsFile), "{\"format_version\": 1, \"projects\": []}\n")
+	if got, err := locateContainingWorkspace(files, inner); err != nil || got != inner {
+		t.Fatalf("root = %q, error = %v", got, err)
+	}
+
+	t.Setenv(WorkspaceCeilingVariable, "relative")
+	var project *ProjectError
+	if _, err := locateContainingWorkspace(files, leaf); !errors.As(err, &project) || project.Class != ErrorProjectPath {
+		t.Fatalf("relative ceiling: error %v", err)
+	}
+}

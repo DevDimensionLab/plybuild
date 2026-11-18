@@ -15,8 +15,8 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-// hiFixture is a physical workspace under /private/tmp, outside any real
-// workspace, with project ply (repo ply, Epic and Task) and project other.
+// hiFixture is a physical workspace in the test's own temporary directory,
+// with project ply (repo ply, Epic and Task) and project other.
 type hiFixture struct {
 	t                  *testing.T
 	root, repo, origin string
@@ -27,7 +27,7 @@ type hiFixture struct {
 
 func newFixture(t *testing.T) *hiFixture {
 	t.Helper()
-	tmp, err := os.MkdirTemp("/private/tmp", "hi01-test.")
+	tmp, err := os.MkdirTemp("", "hi01-test.")
 	if err != nil {
 		t.Fatal(err)
 	}

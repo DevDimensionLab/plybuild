@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"os"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -365,8 +366,16 @@ func canonicalDirectory(files FileSystem, base, input, kind string) (string, err
 	return physical, nil
 }
 
+// WorkspaceCeilingVariable names a directory that bounds workspace discovery:
+// only that directory and the directories below it can contain the workspace.
+const WorkspaceCeilingVariable = "PLY_WORKSPACE_CEILING"
+
 func locateContainingWorkspace(files FileSystem, cwd string) (string, error) {
-	for ancestor := cwd; ; ancestor = filepath.Dir(ancestor) {
+	ceiling, err := workspaceCeiling(files)
+	if err != nil {
+		return "", err
+	}
+	for ancestor := cwd; ceiling == "" || ancestor == ceiling || strings.HasPrefix(ancestor, ceiling+string(filepath.Separator)); ancestor = filepath.Dir(ancestor) {
 		reserved := filepath.Join(ancestor, MarkerDirectory)
 		info, err := files.Lstat(reserved)
 		switch {
@@ -401,6 +410,22 @@ func locateContainingWorkspace(files FileSystem, cwd string) (string, error) {
 		}
 	}
 	return "", projectError(ErrorWorkspaceNotFound, fmt.Sprintf("no Ply workspace contains %s", cwd), nil)
+}
+
+// workspaceCeiling is the physical directory named by WorkspaceCeilingVariable, or "" when it is unset.
+func workspaceCeiling(files FileSystem) (string, error) {
+	ceiling := os.Getenv(WorkspaceCeilingVariable)
+	if ceiling == "" {
+		return "", nil
+	}
+	if !filepath.IsAbs(ceiling) {
+		return "", projectError(ErrorProjectPath, WorkspaceCeilingVariable+" must be an absolute directory", nil)
+	}
+	physical, err := files.EvalSymlinks(filepath.Clean(ceiling))
+	if err != nil {
+		return "", projectError(ErrorProjectPath, fmt.Sprintf("resolve %s %s: %v", WorkspaceCeilingVariable, ceiling, err), err)
+	}
+	return physical, nil
 }
 
 func validStoredPath(path string) bool {

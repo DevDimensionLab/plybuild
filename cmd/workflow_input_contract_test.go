@@ -28,7 +28,7 @@ var hiBundle = func() string {
 }()
 
 // hiWorkspace creates a physical workspace with project ply (repo ply) at root,
-// which must be a new directory under /private/tmp outside any workspace.
+// which must be a new directory in the test's own temporary directory.
 func hiWorkspace(t *testing.T, root string) (humaninput.Dependencies, string) {
 	t.Helper()
 	repo := filepath.Join(root, "ply", "main")
@@ -542,7 +542,7 @@ func TestHI07ValidRequestExamplesCarryNativeDigests(t *testing.T) {
 
 // Argument errors print nothing on stdout; semantic refusals print one result.
 func TestHI07ArgumentErrorsPrintNoResult(t *testing.T) {
-	root, err := os.MkdirTemp("/private/tmp", "hi01-args.")
+	root, err := os.MkdirTemp("", "hi01-args.")
 	if err != nil {
 		t.Fatal(err)
 	}

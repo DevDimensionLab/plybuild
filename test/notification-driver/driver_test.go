@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/cmd"
+	"github.com/devdimensionlab/plybuild/internal/testutil"
 	notification "github.com/devdimensionlab/plybuild/internal/workflownotification"
 )
 
@@ -159,7 +160,7 @@ func TestMain(m *testing.M) {
 		driverMain()
 		os.Exit(0)
 	}
-	os.Exit(m.Run())
+	os.Exit(testutil.Isolate(m))
 }
 
 func TestDriverRefusesCommandsOutsideNotification(t *testing.T) {
