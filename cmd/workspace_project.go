@@ -10,11 +10,12 @@ import (
 )
 
 type workspaceProjectServices struct {
-	addMember  func(workspace.ProjectID, workspace.RepoInput) (workspace.ProjectResult, error)
-	moveMember func(workspace.ProjectID, workspace.RepoID, workspace.RepoInput) (workspace.ProjectResult, error)
-	add        func(workspace.ProjectAddInput) (workspace.ProjectResult, error)
-	show       func(workspace.ProjectID) (workspace.ProjectResult, error)
-	list       func() (workspace.ProjectListResult, error)
+	addMember    func(workspace.ProjectID, workspace.RepoInput) (workspace.ProjectResult, error)
+	moveMember   func(workspace.ProjectID, workspace.RepoID, workspace.RepoInput) (workspace.ProjectResult, error)
+	removeMember func(workspace.ProjectID, workspace.RepoID) (workspace.DefinitionRepoResult, error)
+	add          func(workspace.ProjectAddInput) (workspace.ProjectResult, error)
+	show         func(workspace.ProjectID) (workspace.ProjectResult, error)
+	list         func() (workspace.ProjectListResult, error)
 }
 
 func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Command {
@@ -24,6 +25,9 @@ func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Comm
 		},
 		moveMember: func(id workspace.ProjectID, repo workspace.RepoID, to workspace.RepoInput) (workspace.ProjectResult, error) {
 			return workspace.MoveProjectMember(dependencies, id, repo, to)
+		},
+		removeMember: func(id workspace.ProjectID, repo workspace.RepoID) (workspace.DefinitionRepoResult, error) {
+			return workspace.RemoveProjectMember(dependencies, id, repo)
 		},
 		add: func(input workspace.ProjectAddInput) (workspace.ProjectResult, error) {
 			return workspace.AddProject(dependencies, input)
@@ -249,7 +253,44 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 	_ = moveCommand.MarkFlagRequired("repo")
 	_ = moveCommand.MarkFlagRequired("to")
 	setProjectFlagErrors(moveCommand)
-	projectCommand.AddCommand(addCommand, memberCommand, moveCommand, showCommand, listCommand)
+	var removeRepo string
+	parseRemove := func(args []string) (workspace.ProjectID, workspace.RepoID, error) {
+		if len(args) != 1 {
+			return "", "", workspace.ProjectInvalidArguments("expected exactly one project ID")
+		}
+		id, err := workspace.ParseProjectID(args[0])
+		if err != nil {
+			return "", "", err
+		}
+		repo, err := workspace.ParseRepoID(removeRepo)
+		return id, repo, err
+	}
+	removeCommand := &cobra.Command{
+		Use:     "remove-member <project-id>",
+		Short:   "Remove a repository member from a project",
+		Long:    "Remove one registered repository member from the project definition. Its directory may have moved or be gone. The removal is refused while a Task, Epic or operation binds the member. This deletes no files and changes no Git; data kept under the repository ID stays.",
+		Example: "  ply workspace project remove-member ply --repo ply-observer",
+		Args: func(cmd *cobra.Command, args []string) error {
+			_, _, err := parseRemove(args)
+			return err
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, repo, err := parseRemove(args)
+			if err != nil {
+				return err
+			}
+			result, err := services.removeMember(id, repo)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Fprintf(cmd.OutOrStdout(), "Removed repository member %s (%s) from project %s in Ply workspace %s.\n", result.RepoID, result.Path, result.ProjectID, result.Workspace)
+			return err
+		},
+	}
+	removeCommand.Flags().StringVarP(&removeRepo, "repo", "r", "", "repository member ID to remove")
+	_ = removeCommand.MarkFlagRequired("repo")
+	setProjectFlagErrors(removeCommand)
+	projectCommand.AddCommand(addCommand, memberCommand, moveCommand, removeCommand, showCommand, listCommand)
 	return projectCommand
 }
 

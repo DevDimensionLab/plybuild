@@ -157,6 +157,67 @@ func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to 
 	return ProjectResult{Workspace: root, Project: project, Repos: repos, Created: result.Changed}, nil
 }
 
+// RemoveProjectMember removes the member repo from Project id in the
+// definitions. Its directory, files and Git are untouched and need not exist.
+// The removal is refused while the Project's registry binds the member.
+func RemoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID) (DefinitionRepoResult, error) {
+	if err := validateIdentifier("project", string(id)); err != nil {
+		return DefinitionRepoResult{}, err
+	}
+	if err := validateIdentifier("repository", string(repo)); err != nil {
+		return DefinitionRepoResult{}, err
+	}
+	if dependencies.Files == nil || dependencies.WorkItems == nil {
+		return DefinitionRepoResult{}, projectError(ErrorProjectIO, "dependencies: filesystem and work-item store are required", nil)
+	}
+	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	if err != nil {
+		return DefinitionRepoResult{}, err
+	}
+	root, err := locateContainingWorkspace(dependencies.Files, cwd)
+	if err != nil {
+		return DefinitionRepoResult{}, err
+	}
+	work, err := projectWork(root, id)
+	if err != nil {
+		return DefinitionRepoResult{}, err
+	}
+	path := ""
+	result, err := workspacedef.Apply(root, func(defs *workspacedef.Definitions) (bool, error) {
+		path = ""
+		members := 0
+		for _, p := range defs.Projects {
+			for _, r := range p.Repos {
+				if p.ID == string(id) {
+					members++
+				}
+				if p.ID == string(id) && r.ID == string(repo) {
+					path = r.Path
+				}
+			}
+		}
+		if path == "" {
+			return false, ProjectInvalidArguments(fmt.Sprintf("repository %s is not a member of Project %s", repo, id))
+		}
+		if members == 1 {
+			return false, ProjectInvalidArguments(fmt.Sprintf("repository %s is the last member of Project %s; a Project needs at least one repository", repo, id))
+		}
+		// Registrations are read under projects.lock, where Tasks and Epics are registered.
+		registry, err := dependencies.WorkItems.SnapshotRegistrations(work)
+		if err != nil {
+			return false, err
+		}
+		if registration := repoRegistration(registry, string(repo), work.Registry()); registration != "" {
+			return false, projectError(ErrorProjectConflict, fmt.Sprintf("repository %s cannot be removed: %s", repo, registration), nil)
+		}
+		return workspacedef.RemoveRepo(defs, string(id), string(repo), path)
+	}, validateDefinitions)
+	if err != nil {
+		return DefinitionRepoResult{}, definitionUpdateError(err)
+	}
+	return DefinitionRepoResult{Workspace: root, ProjectID: id, RepoID: repo, Path: path, Changed: result.Changed}, nil
+}
+
 func validateProjectMemberInput(id ProjectID, repository RepoInput) error {
 	if err := validateIdentifier("project", string(id)); err != nil {
 		return err

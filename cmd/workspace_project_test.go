@@ -280,3 +280,26 @@ func TestWorkspaceProjectMoveMemberCommand(t *testing.T) {
 		t.Fatalf("calls = %d", calls)
 	}
 }
+
+func TestWorkspaceProjectRemoveMemberCommand(t *testing.T) {
+	calls := 0
+	services := workspaceProjectServices{removeMember: func(id workspace.ProjectID, repo workspace.RepoID) (workspace.DefinitionRepoResult, error) {
+		calls++
+		if id != "ply" || repo != "old" {
+			t.Fatalf("input = %s %s", id, repo)
+		}
+		return workspace.DefinitionRepoResult{Workspace: "/workspace", ProjectID: id, RepoID: repo, Path: "ply/old", Changed: true}, nil
+	}}
+	out, _, err := executeProjectCommand(t, services, "remove-member", "ply", "--repo", "old")
+	if err != nil || out != "Removed repository member old (ply/old) from project ply in Ply workspace /workspace.\n" {
+		t.Fatalf("out = %q err = %v", out, err)
+	}
+	for _, args := range [][]string{{"remove-member", "ply"}, {"remove-member", "--repo", "old"}, {"remove-member", "ply", "--repo", "BAD"}, {"remove-member", "BAD", "--repo", "old"}, {"remove-member", "ply", "--repo", "old", "unexpected"}} {
+		if _, _, err := executeProjectCommand(t, services, args...); err == nil {
+			t.Fatalf("accepted %v", args)
+		}
+	}
+	if calls != 1 {
+		t.Fatalf("calls = %d", calls)
+	}
+}

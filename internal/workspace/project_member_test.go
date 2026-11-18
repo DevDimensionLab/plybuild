@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 
@@ -221,4 +222,80 @@ func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
 	if after, _ := os.ReadFile(path); string(after) != string(before) {
 		t.Fatal("bound move changed the definitions")
 	}
+}
+
+func TestProjectMemberRemoveLeavesDirectories(t *testing.T) {
+	deps, root := discoverFixture(t)
+	first, kept, gone := filepath.Join(root, "first"), filepath.Join(root, "kept"), filepath.Join(root, "gone")
+	discoverRepo(t, first, "")
+	discoverRepo(t, kept, "")
+	discoverRepo(t, gone, "")
+	if _, err := Init(deps); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := AddProject(deps, ProjectAddInput{ProjectID: "shared", Name: "Shared", Wrapper: ".", Repos: []RepoInput{{RepoID: "first", Path: first}, {RepoID: "kept", Path: kept}, {RepoID: "gone", Path: gone}}}); err != nil {
+		t.Fatal(err)
+	}
+	members := func() []string {
+		t.Helper()
+		defs, _, err := workspacedef.Read(root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ids := []string{}
+		for _, r := range defs.Projects[0].Repos {
+			ids = append(ids, r.ID)
+		}
+		return ids
+	}
+	result, err := RemoveProjectMember(deps, "shared", "kept")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !result.Changed || result.RepoID != "kept" || result.Path != "kept" || !reflect.DeepEqual(members(), []string{"first", "gone"}) {
+		t.Fatalf("result = %#v, members = %v", result, members())
+	}
+	if _, err := os.Stat(filepath.Join(kept, ".git")); err != nil {
+		t.Fatalf("directory changed: %v", err)
+	}
+	// Missing directories, of the member or of the others, do not stop a removal.
+	if _, err := AddProjectMember(deps, "shared", RepoInput{RepoID: "kept", Path: kept}); err != nil {
+		t.Fatal(err)
+	}
+	for _, dir := range []string{gone, kept} {
+		if err := os.RemoveAll(dir); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if result, err := RemoveProjectMember(deps, "shared", "gone"); err != nil || !result.Changed || !reflect.DeepEqual(members(), []string{"first", "kept"}) {
+		t.Fatalf("gone = %#v, %v", result, err)
+	}
+	if _, err := RemoveProjectMember(deps, "shared", "kept"); err != nil {
+		t.Fatal(err)
+	}
+	discoverRepo(t, kept, "")
+	if _, err := AddProjectMember(deps, "shared", RepoInput{RepoID: "kept", Path: kept}); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, DefinitionsFile)
+	bound := deps
+	bound.WorkItems = registrationsStore{deps.WorkItems, WorkItemRegistry{Tasks: []TaskRecord{{ID: "k", RepoID: "first"}}}}
+	refused := func(deps Dependencies, repo RepoID, class ErrorClass, text string) {
+		t.Helper()
+		before, _ := os.ReadFile(path)
+		_, err := RemoveProjectMember(deps, "shared", repo)
+		assertProjectErrorClass(t, err, class)
+		if !strings.Contains(err.Error(), text) {
+			t.Fatalf("error = %v", err)
+		}
+		if after, _ := os.ReadFile(path); string(after) != string(before) {
+			t.Fatalf("refused removal of %s changed the definitions", repo)
+		}
+	}
+	refused(deps, "gone", ErrorProjectInvalidArguments, "not a member")
+	refused(bound, "first", ErrorProjectConflict, "Task k")
+	if _, err := RemoveProjectMember(deps, "shared", "kept"); err != nil {
+		t.Fatal(err)
+	}
+	refused(deps, "first", ErrorProjectInvalidArguments, "last member")
 }
