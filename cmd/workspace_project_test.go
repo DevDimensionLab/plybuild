@@ -255,3 +255,28 @@ func TestWorkspaceProjectMemberDispatchAndValidation(t *testing.T) {
 		t.Fatalf("calls = %d", calls)
 	}
 }
+
+func TestWorkspaceProjectMoveMemberCommand(t *testing.T) {
+	calls := 0
+	services := workspaceProjectServices{moveMember: func(id workspace.ProjectID, repo workspace.RepoID, to workspace.RepoInput) (workspace.ProjectResult, error) {
+		calls++
+		if id != "ply" || repo != "old" || to.RepoID != "new" || to.Path != "../ply/new" {
+			t.Fatalf("input = %s %s %#v", id, repo, to)
+		}
+		return workspace.ProjectResult{Workspace: "/workspace", Project: workspace.ProjectRecord{ID: id, Name: "Ply", Wrapper: "/wrapper"}, Repos: []workspace.RepoRecord{{ID: "new", Locator: "/ply/new", GitCommonDir: "/ply/new/.git"}}, Created: calls == 1}, nil
+	}}
+	for _, want := range []string{"Moved repository member old to new", "Repository member new is already at"} {
+		out, _, err := executeProjectCommand(t, services, "move-member", "ply", "--repo", "old", "--to", "new=../ply/new")
+		if err != nil || !strings.Contains(out, want) || !strings.Contains(out, "locator: /ply/new") {
+			t.Fatalf("out = %q err = %v", out, err)
+		}
+	}
+	for _, args := range [][]string{{"move-member", "ply", "--to", "new=path"}, {"move-member", "ply", "--repo", "old"}, {"move-member", "ply", "--repo", "BAD", "--to", "new=path"}, {"move-member", "ply", "--repo", "old", "--to", "new"}, {"move-member", "ply", "--repo", "old", "--to", "new=path", "unexpected"}} {
+		if _, _, err := executeProjectCommand(t, services, args...); err == nil {
+			t.Fatalf("accepted %v", args)
+		}
+	}
+	if calls != 2 {
+		t.Fatalf("calls = %d", calls)
+	}
+}

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"sort"
 
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -9,16 +10,20 @@ import (
 )
 
 type workspaceProjectServices struct {
-	addMember func(workspace.ProjectID, workspace.RepoInput) (workspace.ProjectResult, error)
-	add       func(workspace.ProjectAddInput) (workspace.ProjectResult, error)
-	show      func(workspace.ProjectID) (workspace.ProjectResult, error)
-	list      func() (workspace.ProjectListResult, error)
+	addMember  func(workspace.ProjectID, workspace.RepoInput) (workspace.ProjectResult, error)
+	moveMember func(workspace.ProjectID, workspace.RepoID, workspace.RepoInput) (workspace.ProjectResult, error)
+	add        func(workspace.ProjectAddInput) (workspace.ProjectResult, error)
+	show       func(workspace.ProjectID) (workspace.ProjectResult, error)
+	list       func() (workspace.ProjectListResult, error)
 }
 
 func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Command {
 	command := newWorkspaceProjectCommandWithServices(workspaceProjectServices{
 		addMember: func(id workspace.ProjectID, repo workspace.RepoInput) (workspace.ProjectResult, error) {
 			return workspace.AddProjectMember(dependencies, id, repo)
+		},
+		moveMember: func(id workspace.ProjectID, repo workspace.RepoID, to workspace.RepoInput) (workspace.ProjectResult, error) {
+			return workspace.MoveProjectMember(dependencies, id, repo, to)
 		},
 		add: func(input workspace.ProjectAddInput) (workspace.ProjectResult, error) {
 			return workspace.AddProject(dependencies, input)
@@ -199,7 +204,52 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 	memberCommand.Flags().StringVarP(&memberValue, "repo", "r", "", "repository member as <repo-id>=<path>")
 	_ = memberCommand.MarkFlagRequired("repo")
 	setProjectFlagErrors(memberCommand)
-	projectCommand.AddCommand(addCommand, memberCommand, showCommand, listCommand)
+	var moveFrom, moveTo string
+	parseMove := func(args []string) (workspace.ProjectID, workspace.RepoID, workspace.RepoInput, error) {
+		if len(args) != 1 {
+			return "", "", workspace.RepoInput{}, workspace.ProjectInvalidArguments("expected exactly one project ID")
+		}
+		repo, err := workspace.ParseRepoID(moveFrom)
+		if err != nil {
+			return "", "", workspace.RepoInput{}, err
+		}
+		id, to, err := workspace.ParseProjectMemberInput(args[0], moveTo)
+		return id, repo, to, err
+	}
+	moveCommand := &cobra.Command{
+		Use:     "move-member <project-id>",
+		Short:   "Give a repository member a new ID and path",
+		Long:    "Give one registered repository member a new ID, path or both after its directory has moved. The origin remote is read again at the new path and the wrapper is kept; it must contain the new path. The move is refused while a Task, Epic or operation binds the member. This moves no files and changes no Git.",
+		Example: "  ply workspace project move-member ply --repo pflyt-cli --to ply-planner=ply_projects/ply/ply-planner",
+		Args: func(cmd *cobra.Command, args []string) error {
+			_, _, _, err := parseMove(args)
+			return err
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, repo, to, err := parseMove(args)
+			if err != nil {
+				return err
+			}
+			result, err := services.moveMember(id, repo, to)
+			if err != nil {
+				return err
+			}
+			line := fmt.Sprintf("Moved repository member %s to %s in project %s.\n", repo, to.RepoID, id)
+			if !result.Created {
+				line = fmt.Sprintf("Repository member %s is already at %s in project %s.\n", to.RepoID, to.Path, id)
+			}
+			if _, err := io.WriteString(cmd.OutOrStdout(), line); err != nil {
+				return err
+			}
+			return renderProject(cmd, result, false)
+		},
+	}
+	moveCommand.Flags().StringVarP(&moveFrom, "repo", "r", "", "repository member ID to move")
+	moveCommand.Flags().StringVar(&moveTo, "to", "", "new member as <repo-id>=<path>")
+	_ = moveCommand.MarkFlagRequired("repo")
+	_ = moveCommand.MarkFlagRequired("to")
+	setProjectFlagErrors(moveCommand)
+	projectCommand.AddCommand(addCommand, memberCommand, moveCommand, showCommand, listCommand)
 	return projectCommand
 }
 

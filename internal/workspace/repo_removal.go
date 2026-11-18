@@ -157,22 +157,38 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 			}
 		}
 	}
+	if registration := repoRegistration(registry, repo, work.Registry()); registration != "" {
+		return referenced("%s", registration)
+	}
+	return nil
+}
+
+// repoRegistration names the registration in registry, read from path, that
+// binds repo by its ID; "" when none does.
+func repoRegistration(registry WorkItemRegistry, repo, path string) string {
+	for _, e := range registry.Epics {
+		for _, b := range e.RepoBindings {
+			if string(b.RepoID) == repo {
+				return fmt.Sprintf("Epic %s in %s binds it", e.ID, path)
+			}
+		}
+	}
 	for _, task := range registry.Tasks {
 		if string(task.RepoID) == repo {
-			return referenced("Task %s in %s binds it", task.ID, work.Registry())
+			return fmt.Sprintf("Task %s in %s binds it", task.ID, path)
 		}
 	}
 	for _, operation := range registry.WorktreeOperations {
 		if string(operation.RepoID) == repo {
-			return referenced("worktree operation %s in %s names it", operation.ID, work.Registry())
+			return fmt.Sprintf("worktree operation %s in %s names it", operation.ID, path)
 		}
 	}
 	for _, operation := range registry.EpicCreateOperations {
 		if string(operation.Request.RepoID) == repo {
-			return referenced("Epic create operation %s in %s names it", operation.ID, work.Registry())
+			return fmt.Sprintf("Epic create operation %s in %s names it", operation.ID, path)
 		}
 	}
-	return nil
+	return ""
 }
 
 func firstErr(err, otherwise error) error {

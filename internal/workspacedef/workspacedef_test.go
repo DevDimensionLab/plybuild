@@ -239,6 +239,29 @@ func TestRemoveRepo(t *testing.T) {
 	}
 }
 
+func TestMoveRepo(t *testing.T) {
+	defs := Definitions{FormatVersion: 1, Projects: []Project{{ID: "ply", Repos: []Repo{{ID: "ply", Path: "ply/main"}, {ID: "old", Path: "old", Remote: "git@github.com:o/old.git", Wrapper: "ply"}}}}}
+	for _, tc := range []struct {
+		project, id, newID string
+		kind               Kind
+	}{{"other", "old", "new", KindNotFound}, {"ply", "absent", "new", KindNotFound}, {"ply", "old", "ply", KindConflict}} {
+		if _, err := MoveRepo(&defs, tc.project, tc.id, tc.newID, "new", ""); err == nil {
+			t.Fatalf("%+v accepted", tc)
+		} else {
+			requireKind(t, err, tc.kind)
+		}
+	}
+	if changed, err := MoveRepo(&defs, "ply", "old", "old", "old", "git@github.com:o/old.git"); changed || err != nil {
+		t.Fatalf("unchanged: %v %v", changed, err)
+	}
+	if changed, err := MoveRepo(&defs, "ply", "old", "new", "ply/new", "git@github.com:o/new.git"); !changed || err != nil {
+		t.Fatalf("moved: %v %v", changed, err)
+	}
+	if want := []Repo{{ID: "ply", Path: "ply/main"}, {ID: "new", Path: "ply/new", Remote: "git@github.com:o/new.git", Wrapper: "ply"}}; !reflect.DeepEqual(defs.Projects[0].Repos, want) {
+		t.Fatalf("repos %+v", defs.Projects[0].Repos)
+	}
+}
+
 func TestUpdateAddsRepoAndPreservesSemantics(t *testing.T) {
 	root := writeRoot(t, sample)
 	before, basis, err := Read(root)

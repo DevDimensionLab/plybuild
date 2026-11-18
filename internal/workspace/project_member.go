@@ -2,6 +2,7 @@ package workspace
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
@@ -61,6 +62,99 @@ func AddProjectMember(dependencies Dependencies, id ProjectID, repository RepoIn
 		return ProjectResult{}, err
 	}
 	return ProjectResult{Workspace: root, Project: project, Repos: repos, Created: added}, nil
+}
+
+// MoveProjectMember gives the member repo of Project id the ID and path of
+// to, with the URL of the origin at that path; the member keeps its wrapper,
+// which must contain the new path. Files and Git are untouched. The move is
+// refused while the Project's registry binds the member. Created reports
+// whether the definitions changed.
+func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to RepoInput) (ProjectResult, error) {
+	if err := validateProjectMemberInput(id, to); err != nil {
+		return ProjectResult{}, err
+	}
+	if err := validateIdentifier("repository", string(repo)); err != nil {
+		return ProjectResult{}, err
+	}
+	remotes, ok := dependencies.Repos.(RemoteObserver)
+	if !ok || dependencies.Files == nil {
+		return ProjectResult{}, projectError(ErrorProjectIO, "dependencies: filesystem and a repository observer that reads remotes are required", nil)
+	}
+	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	root, err := locateContainingWorkspace(dependencies.Files, cwd)
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	locator, err := canonicalDirectory(dependencies.Files, cwd, to.Path, fmt.Sprintf("repository %s", to.RepoID))
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	remote, err := remotes.Remote(locator)
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	if dependencies.WorkItems == nil {
+		return ProjectResult{}, projectError(ErrorProjectIO, "work-item store dependency is required", nil)
+	}
+	work, err := projectWork(root, id)
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	stored := definitionPath(root, locator)
+	// The current definitions name the old path, which the move has usually
+	// emptied, so only definitions with the moved member are checked against Git.
+	check := func(defs workspacedef.Definitions) error {
+		if err := validateDefinitions(defs); err != nil {
+			return err
+		}
+		for _, p := range defs.Projects {
+			for _, r := range p.Repos {
+				if p.ID == string(id) && r.ID == string(to.RepoID) && r.Path == stored {
+					_, err := definitionProjects(root, defs)
+					return err
+				}
+			}
+		}
+		return nil
+	}
+	result, err := workspacedef.Apply(root, func(defs *workspacedef.Definitions) (bool, error) {
+		changed, err := workspacedef.MoveRepo(defs, string(id), string(repo), string(to.RepoID), stored, remote)
+		if err != nil || !changed {
+			return changed, err
+		}
+		// Registrations keep the member's ID and Git location; they are read
+		// under projects.lock, where Tasks and Epics are registered.
+		registry, err := dependencies.WorkItems.SnapshotRegistrations(work)
+		if err != nil {
+			return false, err
+		}
+		if registration := repoRegistration(registry, string(repo), work.Registry()); registration != "" {
+			return false, projectError(ErrorProjectConflict, fmt.Sprintf("repository %s cannot move: %s", repo, registration), nil)
+		}
+		for _, p := range defs.Projects {
+			for _, r := range p.Repos {
+				if p.ID != string(id) || r.ID != string(to.RepoID) || r.Wrapper == "" {
+					continue
+				}
+				rel, err := filepath.Rel(ResolveDefinitionPath(root, r.Wrapper), locator)
+				if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+					return false, ProjectInvalidArguments(fmt.Sprintf("repository wrapper %s must contain %s; set or clear the wrapper first", ResolveDefinitionPath(root, r.Wrapper), locator))
+				}
+			}
+		}
+		return true, nil
+	}, check)
+	if err != nil {
+		return ProjectResult{}, definitionUpdateError(err)
+	}
+	project, repos, err := definedProject(root, id)
+	if err != nil {
+		return ProjectResult{}, err
+	}
+	return ProjectResult{Workspace: root, Project: project, Repos: repos, Created: result.Changed}, nil
 }
 
 func validateProjectMemberInput(id ProjectID, repository RepoInput) error {

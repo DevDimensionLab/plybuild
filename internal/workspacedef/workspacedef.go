@@ -214,6 +214,37 @@ func RemoveRepo(d *Definitions, project, id, path string) (bool, error) {
 	return false, &Error{Kind: KindNotFound, Detail: fmt.Sprintf("Project %s is not defined", project)}
 }
 
+// MoveRepo gives the member id of project the ID newID, the path and the
+// remote, keeping its wrapper. newID may be id; another member's ID is a
+// conflict. An identical member is no change.
+func MoveRepo(d *Definitions, project, id, newID, path, remote string) (bool, error) {
+	for i := range d.Projects {
+		p := &d.Projects[i]
+		if p.ID != project {
+			continue
+		}
+		member := -1
+		for j, r := range p.Repos {
+			if r.ID == newID && newID != id {
+				return false, &Error{Kind: KindConflict, Detail: fmt.Sprintf("repository %s of Project %s is already defined", newID, project)}
+			}
+			if r.ID == id {
+				member = j
+			}
+		}
+		if member < 0 {
+			return false, &Error{Kind: KindNotFound, Detail: fmt.Sprintf("repository %s is not a member of Project %s", id, project)}
+		}
+		r := &p.Repos[member]
+		if r.ID == newID && r.Path == path && r.Remote == remote {
+			return false, nil
+		}
+		r.ID, r.Path, r.Remote = newID, path, remote
+		return true, nil
+	}
+	return false, &Error{Kind: KindNotFound, Detail: fmt.Sprintf("Project %s is not defined", project)}
+}
+
 // hooks is a private, per-call test seam; production has no mutable hooks.
 type hooks struct {
 	beforeFresh func()
