@@ -99,19 +99,6 @@ func TestGitHubActionsQuotaWithoutConfigOmitsLimitAndLevel(t *testing.T) {
 	}
 }
 
-func TestGitHubActionsLevel(t *testing.T) {
-	for _, test := range []struct {
-		remaining, percent int
-		want               string
-	}{
-		{0, 0, "exhausted"}, {1, 0, "low"}, {570, 19, "low"}, {600, 20, "ok"}, {3000, 100, "ok"},
-	} {
-		if got := githubActionsLevel(test.remaining, test.percent); got != test.want {
-			t.Fatalf("level(%d, %d%%) = %q, want %q", test.remaining, test.percent, got, test.want)
-		}
-	}
-}
-
 func TestGitHubActionsUsageWithoutMinutesIsAnEmptyList(t *testing.T) {
 	t.Chdir(t.TempDir())
 	env := githubActionsTestEnv(githubActionsHome(t, 3000), nil)

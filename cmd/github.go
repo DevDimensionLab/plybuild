@@ -24,8 +24,8 @@ import (
 // githubConfigFile holds the included Actions minutes below the user's home.
 const githubConfigFile = ".config/ply/github.json"
 
-// githubActionsLowPercent is the remaining share below which the level is low.
-const githubActionsLowPercent = 20
+// quotaLowPercent is the remaining share below which a quota's level is low.
+const quotaLowPercent = 20
 
 var errGitHubActionsFailed = errors.New("reading GitHub Actions usage failed")
 
@@ -141,7 +141,7 @@ func newGitHubCommand(env githubActionsEnv) *cobra.Command {
 				if limit > 0 {
 					remaining := max(0, limit-used)
 					percent := remaining * 100 / limit
-					quota.Limit, quota.Remaining, quota.RemainingPercent, quota.Level = &limit, &remaining, &percent, githubActionsLevel(remaining, percent)
+					quota.Limit, quota.Remaining, quota.RemainingPercent, quota.Level = &limit, &remaining, &percent, quotaLevel(remaining <= 0, percent)
 				}
 			}
 			if err := githubActionsWrite(cmd.OutOrStdout(), format, quota, githubActionsQuotaText(quota)); err != nil {
@@ -252,13 +252,13 @@ func githubActionsMultiplier(item githubbilling.Item) float64 {
 	return 0
 }
 
-// githubActionsLevel is exhausted only when no minute is left, even when the
-// floored percent is already 0.
-func githubActionsLevel(remaining, remainingPercent int) string {
+// quotaLevel is the level of every Ply quota: exhausted only when nothing is
+// left, even when the floored percent is already 0.
+func quotaLevel(nothingLeft bool, remainingPercent int) string {
 	switch {
-	case remaining <= 0:
+	case nothingLeft:
 		return "exhausted"
-	case remainingPercent < githubActionsLowPercent:
+	case remainingPercent < quotaLowPercent:
 		return "low"
 	}
 	return "ok"
