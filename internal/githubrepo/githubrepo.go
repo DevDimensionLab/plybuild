@@ -56,6 +56,18 @@ func Valid(owner, name string) bool {
 		name != "." && name != ".." && !strings.HasSuffix(strings.ToLower(name), ".git")
 }
 
+var remotePattern = regexp.MustCompile(`(?i)^(?:git@github\.com:|ssh://git@github\.com/|https://github\.com/)([^/]+)/([^/]+?)(?:\.git)?/?$`)
+
+// FromRemote returns the owner and name of a github.com remote in SSH,
+// ssh:// or HTTPS form when both are valid GitHub names.
+func FromRemote(remote string) (owner, name string, ok bool) {
+	m := remotePattern.FindStringSubmatch(remote)
+	if m == nil || !Valid(m[1], m[2]) {
+		return "", "", false
+	}
+	return m[1], m[2], true
+}
+
 // EnsurePrivate returns the private empty github.com repository owner/name,
 // creating it once when it is not visible. It never edits, deletes, retries or
 // renames, and its errors never contain gh output or a URL.

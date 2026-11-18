@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+
+	"github.com/devdimensionlab/plybuild/internal/githubrepo"
 )
 
 const (
@@ -104,6 +106,7 @@ type repositoryReadRecord struct {
 	GitCommonDir string  `json:"git_common_dir"`
 	Wrapper      *string `json:"wrapper"`
 	Remote       *string `json:"remote"`
+	GitHubURL    *string `json:"github_url"`
 }
 
 func projectRead(p ProjectRecord) projectReadRecord {
@@ -150,15 +153,19 @@ type projectReadbackRecord struct {
 func projectReadback(result ProjectResult) projectReadbackRecord {
 	repos := make([]repositoryReadRecord, 0, len(result.Repos))
 	for _, r := range result.Repos {
-		var remote *string
+		var remote, githubURL *string
 		if r.Remote != "" {
 			remote = &r.Remote
+		}
+		if owner, name, ok := githubrepo.FromRemote(r.Remote); ok {
+			url := "https://github.com/" + owner + "/" + name
+			githubURL = &url
 		}
 		var wrapper *string
 		if r.Wrapper != "" {
 			wrapper = &r.Wrapper
 		}
-		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, wrapper, remote})
+		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, wrapper, remote, githubURL})
 	}
 	sort.Slice(repos, func(i, j int) bool { return repos[i].ID < repos[j].ID })
 	return projectReadbackRecord{ProjectReadbackKind, CoreReadSchemaVersion, coreReadWorkspace{result.Workspace}, projectReadScope{&result.Project.ID}, projectRead(result.Project), repos}

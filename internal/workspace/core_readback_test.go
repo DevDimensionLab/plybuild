@@ -289,3 +289,29 @@ func TestRegisteredListRejectsUnverifiableProblemPublication(t *testing.T) {
 		}
 	}
 }
+
+func TestProjectReadbackGivesGitHubURLPerRepository(t *testing.T) {
+	b, err := MarshalProject(ProjectResult{Workspace: "/root", Project: ProjectRecord{ID: "p"}, Repos: []RepoRecord{
+		{ID: "a", Remote: "git@github.com:Org/svc.git"},
+		{ID: "b", Remote: "https://gitlab.com/Org/svc.git"},
+		{ID: "c"},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var value struct {
+		Repositories []map[string]any `json:"repositories"`
+	}
+	if err := json.Unmarshal(b, &value); err != nil {
+		t.Fatal(err)
+	}
+	want := []any{"https://github.com/Org/svc", nil, nil}
+	if len(value.Repositories) != len(want) {
+		t.Fatalf("repositories: %s", b)
+	}
+	for i, repo := range value.Repositories {
+		if url, present := repo["github_url"]; !present || url != want[i] {
+			t.Fatalf("repository %v github_url: %s", repo["repo_id"], b)
+		}
+	}
+}

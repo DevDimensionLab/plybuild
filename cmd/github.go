@@ -9,13 +9,13 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
 	"github.com/devdimensionlab/plybuild/internal/githubbilling"
+	"github.com/devdimensionlab/plybuild/internal/githubrepo"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 	"github.com/spf13/cobra"
@@ -289,8 +289,6 @@ func githubActionsLimit(env githubActionsEnv) (int, error) {
 	return config.Actions.IncludedMinutes, nil
 }
 
-var githubRemote = regexp.MustCompile(`(?i)^(?:git@github\.com:|ssh://git@github\.com/|https://github\.com/)([^/]+/[^/]+?)(?:\.git)?/?$`)
-
 // githubProjectsByRemote maps lower-case owner/repo to the IDs of the Projects
 // that have it as a repository remote; nil outside a workspace.
 func githubProjectsByRemote() (map[string][]string, error) {
@@ -309,8 +307,8 @@ func githubProjectsByRemote() (map[string][]string, error) {
 	projects := map[string][]string{}
 	for _, p := range defs.Projects {
 		for _, r := range p.Repos {
-			if m := githubRemote.FindStringSubmatch(r.Remote); m != nil {
-				key := strings.ToLower(m[1])
+			if owner, name, ok := githubrepo.FromRemote(r.Remote); ok {
+				key := strings.ToLower(owner + "/" + name)
 				if n := len(projects[key]); n == 0 || projects[key][n-1] != p.ID {
 					projects[key] = append(projects[key], p.ID)
 				}

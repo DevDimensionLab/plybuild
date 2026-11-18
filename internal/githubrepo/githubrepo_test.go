@@ -292,3 +292,27 @@ func TestValidMatchesEnsurePrivateInputRule(t *testing.T) {
 		}
 	}
 }
+
+func TestFromRemoteAcceptsGitHubRemotesWithValidNames(t *testing.T) {
+	for _, test := range []struct {
+		remote, owner, name string
+		ok                  bool
+	}{
+		{"git@github.com:DevDimensionLab/plybuild.git", "DevDimensionLab", "plybuild", true},
+		{"ssh://git@github.com/Org/svc", "Org", "svc", true},
+		{"https://github.com/Org/svc.git/", "Org", "svc", true},
+		{"https://GitHub.com/Org/x.y_z-1", "Org", "x.y_z-1", true},
+		{"https://gitlab.com/Org/svc.git", "", "", false},
+		{"https://github.com/Org", "", "", false},
+		{"https://github.com/Org/svc/tree", "", "", false},
+		{"https://github.com/-x/svc", "", "", false},
+		{"https://github.com/Org/..", "", "", false},
+		{"https://github.com/Org/.git", "", "", false},
+		{"", "", "", false},
+	} {
+		owner, name, ok := FromRemote(test.remote)
+		if owner != test.owner || name != test.name || ok != test.ok {
+			t.Fatalf("FromRemote(%q) = %q, %q, %v", test.remote, owner, name, ok)
+		}
+	}
+}
