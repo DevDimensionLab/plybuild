@@ -206,6 +206,7 @@ type planTraceDoc struct {
 	Tasks []struct {
 		TaskID   string  `json:"task_id"`
 		PlanStep *string `json:"plan_step"`
+		Role     string  `json:"role"`
 	} `json:"tasks"`
 	Events []struct {
 		TaskID       string  `json:"task_id"`
@@ -218,6 +219,7 @@ type planTraceDoc struct {
 		PlanStep     *string `json:"plan_step"`
 		PlyOperation *string `json:"ply_operation"`
 		RecordedAt   *string `json:"recorded_at"`
+		ActorBasis   string  `json:"actor_basis"`
 	} `json:"events"`
 }
 

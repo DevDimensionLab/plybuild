@@ -730,9 +730,15 @@ same actor's previous report is marked `reported_time_out_of_order`.
 A Task belongs to a plan step through its journal: `goal register` and `task create`
 take `--plan PLAN-<n> --plan-step <id>`, and `ply workspace task journal link` links an
 existing Task. Ply then records its own actions in the journal with `--actor` (or
-`PLY_ACTOR`) and its own time. `ply plan trace PLAN-<n> --format json`
-(`PlyPlanTrace@1`) reads the plan revisions, the linked Tasks and all their journal
-records. `goal-start` of a Task linked to a plan adds the journal commands after the
+`PLY_ACTOR`, else the owner of the Task's plan) and its own time. Step and note
+commands without `--actor` or `PLY_ACTOR` record the agent `goal-start` started for
+the Task (`<provider>:<task>`), else `unknown`; no call is refused for a missing
+actor. `goal register --role reviewer` (default `developer`) gives the Task's step
+and note records that role when they have no `--role`. `ply plan trace PLAN-<n>
+--format json` (`PlyPlanTrace@1`) reads the plan revisions, the linked Tasks with
+their role and all their journal records. A record stored with actor `unknown` gets
+its actor by the same rule when the trace is read, marked `"actor_basis":
+"derived"`; the journal is not changed. `goal-start` of a Task linked to a plan adds the journal commands after the
 Goal in the agent's prompt, so the agent records its steps without a Goal constraint.
 The plan owner records its own steps outside any Task with `ply plan journal step
 start|finish PLAN-<n>` and `ply plan journal note PLAN-<n>`; `plan trace` shows them

@@ -11,6 +11,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
+	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
@@ -100,7 +101,7 @@ func goalExecutorOf(goal json.RawMessage) (goalExecutor, error) {
 
 // goalAgentActor is the actor the started agent's Ply commands record.
 func goalAgentActor(plan goalAgentPlan) string {
-	return plan.Provider + ":" + plan.Task
+	return taskactor.Agent(plan.Provider, plan.Task)
 }
 
 func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBinary, precondition func() error) agentstart.StartInput {
@@ -234,7 +235,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 			return e
 		}
 		goalRefs := map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "provider": provider, "resume": fmt.Sprint(resume)}
-		if e = recordPly(d, args[0], plyActor(actor), "nothing was started", taskjournal.PlyAction{Operation: "goal_start_reserved", Refs: goalRefs}); e != nil {
+		if e = recordPly(d, args[0], namedActor(actor), "nothing was started", taskjournal.PlyAction{Operation: "goal_start_reserved", Refs: goalRefs}); e != nil {
 			return e
 		}
 		out, e := run(c.Context(), plan, workspace.GoalStartReceiptPath(work, id), herdr, func() error { return checkGoalGit(wt) })
@@ -247,7 +248,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 				reached.Refs[key] = value
 			}
 		}
-		recordErr := recordPly(d, args[0], plyActor(actor), "the start is in its receipt", reached)
+		recordErr := recordPly(d, args[0], namedActor(actor), "the start is in its receipt", reached)
 		if writeErr := json.NewEncoder(c.OutOrStdout()).Encode(out); writeErr != nil {
 			return writeErr
 		}
@@ -258,7 +259,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&herdrWorkspace, "herdr-workspace", "", "explicit Herdr workspace")
 	c.Flags().BoolVar(&apply, "apply", false, "start the explicit Goal once")
 	c.Flags().BoolVar(&resume, "resume", false, "with --apply, continue a start stopped before its prompt in the same agent")
-	c.Flags().StringVar(&actor, "actor", "", "who starts, recorded in the Task journal (default: PLY_ACTOR)")
+	c.Flags().StringVar(&actor, "actor", "", "who starts, recorded in the Task journal (default: PLY_ACTOR, else the owner of the Task's plan)")
 	return c
 }
 

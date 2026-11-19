@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
@@ -13,12 +14,15 @@ import (
 func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 	goal := &cobra.Command{Use: "goal", Short: "Register supplied first Goals without constructing native envelopes"}
 	var in workspace.FirstGoalInput
-	var project, repo, epic, task, document, format, confirmation, provider, model, effort, planID, planStep, actor string
+	var project, repo, epic, task, document, format, confirmation, provider, model, effort, planID, planStep, actor, role string
 	var additional []string
 	var apply bool
 	c := &cobra.Command{Use: "register TASK_ID", Short: "Preview or publish a supplied first Goal and append its exact queue reference", Long: "Supply an explicit title, objective, observable criteria, registered target; supplied UTF-8 documents are optional. Preview is read-only. Apply with its confirmation publishes the first Goal and appends its exact queue reference. A new Task gets an initial Problem; an existing unused Task retains its current Problem and identity. Unrelated queue entries are preserved. Identical retries recover native publications; changed real inputs conflict. Registration never starts an agent or creates a worktree. Choose subsequent operations explicitly.", Example: "  ply workspace task goal register explain-errors --spec explain-errors-v1 --title 'Explain errors' --objective 'Make failures actionable' --criterion 'Invalid input names the missing choice' --project ply --repo ply --epic workflow --format json\n  # Repeat the same flags with --apply --confirmation <preview confirmation>", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if e := validateWorkFormat(format); e != nil {
 			return e
+		}
+		if role != taskactor.RoleDeveloper && role != taskactor.RoleReviewer {
+			return workspace.WorkInvalidArguments("--role must be developer or reviewer")
 		}
 		task = args[0]
 		in.TaskID = workspace.TaskID(task)
@@ -61,11 +65,11 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 			}
 		}
 		if err == nil && apply && out.Applied {
-			records := []taskjournal.PlyAction{{Operation: "goal_register", Refs: map[string]string{"spec_id": out.Goal.SpecID, "spec_revision": fmt.Sprint(out.Goal.Spec.Revision)}}}
+			records := []taskjournal.PlyAction{{Operation: "goal_register", Refs: map[string]string{"spec_id": out.Goal.SpecID, "spec_revision": fmt.Sprint(out.Goal.Spec.Revision), "role": role}}}
 			if link != nil {
 				records = append(records, *link)
 			}
-			err = recordPly(d, task, plyActor(actor), "the Goal is registered", records...)
+			err = recordPly(d, task, namedActor(actor), "the Goal is registered", records...)
 		}
 		return err
 	}}
@@ -87,7 +91,8 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	c.Flags().StringVar(&planID, "plan", "", "PLAN-<n> of the Project the Task belongs to, recorded in the Task journal")
 	c.Flags().StringVar(&planStep, "plan-step", "", "step ID of --plan the Task carries")
-	c.Flags().StringVar(&actor, "actor", "", "who registers, recorded in the Task journal (default: PLY_ACTOR)")
+	c.Flags().StringVar(&actor, "actor", "", "who registers, recorded in the Task journal (default: PLY_ACTOR, else the owner of the Task's plan)")
+	c.Flags().StringVar(&role, "role", taskactor.RoleDeveloper, "the role the Task's agent works in, developer or reviewer; its journal steps get it")
 	setWorkFlagErrors(c)
 	goal.AddCommand(c)
 	return goal

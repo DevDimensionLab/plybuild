@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
+	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -33,15 +34,19 @@ type Plan struct {
 	Revisions []plan.HistoryEntry `json:"revisions"`
 }
 
-// Task is one Task whose latest plan link names the plan.
+// Task is one Task whose latest plan link names the plan, with the role its
+// goal register gave it.
 type Task struct {
 	TaskID   string  `json:"task_id"`
 	Title    string  `json:"title"`
 	PlanStep *string `json:"plan_step"`
+	Role     string  `json:"role"`
 }
 
 // Event is one journal record with what a drawing needs. A record of the
-// plan's own journal has an empty TaskID.
+// plan's own journal has an empty TaskID. ActorBasis is derived when the
+// record was stored with actor unknown and the trace found the actor with
+// the rule Ply records new actors by.
 type Event struct {
 	TaskID       string            `json:"task_id"`
 	EventID      string            `json:"event_id"`
@@ -58,6 +63,7 @@ type Event struct {
 	PlanStep     *string           `json:"plan_step"`
 	PlyOperation *string           `json:"ply_operation"`
 	Refs         map[string]string `json:"refs"`
+	ActorBasis   string            `json:"actor_basis,omitempty"`
 }
 
 // Reason is a journal that could not be read completely; an empty TaskID is
@@ -97,9 +103,10 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 		if readErr != nil {
 			out.Reasons = append(out.Reasons, Reason{task, "journal_damaged", "Only the validated prefix of the journal is read: " + readErr.Error()})
 		}
-		out.Tasks = append(out.Tasks, Task{task, link.Refs["task_title"], link.PlanStep})
+		out.Tasks = append(out.Tasks, Task{task, link.Refs["task_title"], link.PlanStep, taskactor.Role(records)})
+		agent := taskactor.StartedAgent(journal.Work, task)
 		for _, r := range records {
-			out.Events = append(out.Events, event(task, link, r))
+			out.Events = append(out.Events, derived(event(task, link, r), r, agent, view.Plan.Owner))
 		}
 	}
 	journal, err := plans.Journal(planID)
@@ -132,6 +139,18 @@ func event(task string, link *taskjournal.PlyAction, r taskjournal.Contribution)
 		}
 	} else if x := r.Observation; x != nil {
 		e.Type, e.Title = "observation_"+x.Type, x.Finding
+	}
+	return e
+}
+
+// derived gives an event stored with actor unknown the actor Ply records new
+// events with: owner for Ply's operations, agent for the agent's records.
+func derived(e Event, r taskjournal.Contribution, agent, owner string) Event {
+	if *e.ActorID != taskactor.Unknown || r.Event == nil {
+		return e
+	}
+	if actor := taskactor.Of(r.Event.Ply != nil, agent, owner); actor != taskactor.Unknown {
+		e.ActorID, e.ActorBasis = &actor, "derived"
 	}
 	return e
 }

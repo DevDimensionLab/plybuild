@@ -81,7 +81,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 			if link != nil {
 				records = append(records, *link)
 			}
-			err = services.record(string(input.TaskID), plyActor(actor), "the Task is created", records...)
+			err = services.record(string(input.TaskID), namedActor(actor), "the Task is created", records...)
 		}
 		if createFormat == "json" && result.Content != nil {
 			b, marshalErr := workspace.MarshalTaskContentMutation(*result.Content)
@@ -124,7 +124,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 	create.Flags().StringVar(&repoID, "repo", "", "registered repository ID")
 	create.Flags().StringVar(&planID, "plan", "", "PLAN-<n> of the Project the Task belongs to, recorded in the Task journal")
 	create.Flags().StringVar(&planStep, "plan-step", "", "step ID of --plan the Task carries")
-	create.Flags().StringVar(&actor, "actor", "", "who creates, recorded in the Task journal (default: PLY_ACTOR)")
+	create.Flags().StringVar(&actor, "actor", "", "who creates, recorded in the Task journal (default: PLY_ACTOR, else the owner of the Task's plan)")
 	for _, name := range []string{"title", "description", "epic", "project", "repo"} {
 		_ = create.MarkFlagRequired(name)
 	}
@@ -251,10 +251,10 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			if r.GitChanged != nil {
 				refs["git_changed"] = fmt.Sprint(*r.GitChanged)
 			}
-			err = services.record(string(input.TaskID), plyActor(actor), "the integration is applied", taskjournal.PlyAction{Operation: "integration", Refs: refs})
+			err = services.record(string(input.TaskID), namedActor(actor), "the integration is applied", taskjournal.PlyAction{Operation: "integration", Refs: refs})
 		}
 		if err == nil && input.Apply && out.Readback.RecoveryStatus == "complete" && !keepWorktree && services.retireWorktree != nil {
-			retireTaskAfterIntegration(cmd, services, input.TaskID, plyActor(actor))
+			retireTaskAfterIntegration(cmd, services, input.TaskID, namedActor(actor))
 		}
 		if err != nil && out.Readback.Value == nil {
 			return taskContentCommandError(cmd, format, err)
@@ -282,7 +282,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 	command.Flags().StringVar(&retry, "retry-after", "", "exact prior no-effect integration result ID")
 	command.Flags().BoolVar(&refresh, "refresh-parent", false, "integrer fra Epicens registrerte base oppgitt i --expected-parent-oid i stedet for Taskens opprinnelige basis")
 	command.Flags().StringVar(&format, "format", "text", "output format (text or json)")
-	command.Flags().StringVar(&actor, "actor", "", "who integrates, recorded in the Task journal (default: PLY_ACTOR)")
+	command.Flags().StringVar(&actor, "actor", "", "who integrates, recorded in the Task journal (default: PLY_ACTOR, else the owner of the Task's plan)")
 	command.Flags().BoolVar(&keepWorktree, "keep-worktree", false, "keep the Task worktree and branch after --apply instead of retiring them")
 	for _, n := range []string{"expected-result-oid", "expected-parent-oid"} {
 		_ = command.MarkFlagRequired(n)
@@ -337,9 +337,9 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		if wt := result.Task.Worktree; wt != nil {
 			refs["ref"], refs["oid"], refs["locator"] = wt.Ref, wt.OID, wt.Locator
 		}
-		return services.record(args[0], plyActor(actor), "the worktree is created", taskjournal.PlyAction{Operation: "worktree_create", Refs: refs})
+		return services.record(args[0], namedActor(actor), "the worktree is created", taskjournal.PlyAction{Operation: "worktree_create", Refs: refs})
 	}}
-	create.Flags().StringVar(&actor, "actor", "", "who creates, recorded in the Task journal (default: PLY_ACTOR)")
+	create.Flags().StringVar(&actor, "actor", "", "who creates, recorded in the Task journal (default: PLY_ACTOR, else the owner of the Task's plan)")
 	create.Flags().StringVar(&branch, "branch", "", "new short local branch name")
 	create.Flags().StringVar(&path, "path", "", "new Task worktree path")
 	create.Flags().StringVar(&expected, "expected-parent-oid", "", "expected current Epic parent commit object ID")

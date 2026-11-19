@@ -8,20 +8,75 @@ import (
 	"slices"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
+	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-// plyActor is the actor Ply records for its own actions: --actor, else
-// PLY_ACTOR, else unknown.
-func plyActor(flag string) string {
+// namedActor is the actor someone named: --actor, else PLY_ACTOR, else "".
+func namedActor(flag string) string {
 	if flag != "" {
 		return flag
 	}
-	if actor := os.Getenv("PLY_ACTOR"); actor != "" {
+	return os.Getenv("PLY_ACTOR")
+}
+
+// plyActor is the actor of an action outside a Task: the named actor, else
+// unknown.
+func plyActor(flag string) string {
+	if actor := namedActor(flag); actor != "" {
 		return actor
 	}
-	return "unknown"
+	return taskactor.Unknown
+}
+
+// taskPlyActor is the actor of Ply's own action on task when nobody named
+// one: the owner of the plan in a plan link among records, else of the plan
+// the Task's journal links it to, else unknown.
+func taskPlyActor(d workspace.Dependencies, task string, records []taskjournal.PlyAction) string {
+	link := (*taskjournal.PlyAction)(nil)
+	for i := range records {
+		if records[i].Operation == "plan_link" {
+			link = &records[i]
+		}
+	}
+	if link == nil {
+		if _, journal, ok := taskRecords(d, task); ok {
+			link = taskjournal.LatestPlanLink(journal)
+		}
+	}
+	return taskactor.Of(true, "", planOwner(d, link))
+}
+
+// taskRecords reads the journal of task for the actor rule; a Task whose
+// journal Ply cannot read gets no derived actor.
+func taskRecords(d workspace.Dependencies, task string) (workspace.ProjectWork, []taskjournal.Contribution, bool) {
+	b, err := workspace.ReadTaskJournalBasis(d, workspace.TaskID(task))
+	if err != nil {
+		return workspace.ProjectWork{}, nil, false
+	}
+	records, _ := taskjournal.ReadContributions(b.Workspace, b.Work, task)
+	return b.Work, records, true
+}
+
+// planOwner is the owner of the plan link names, or "" when it cannot be read.
+func planOwner(d workspace.Dependencies, link *taskjournal.PlyAction) string {
+	if link == nil || link.Plan == nil {
+		return ""
+	}
+	resolved, err := resolveAssignmentProject(d, link.Refs["project"])
+	if err != nil {
+		return ""
+	}
+	directory, err := resolved.Data().Plans()
+	if err != nil {
+		return ""
+	}
+	v, err := plan.Open(directory).Show(*link.Plan, 0)
+	if err != nil {
+		return ""
+	}
+	return v.Plan.Owner
 }
 
 // taskPlanLink validates --plan and --plan-step against the plans of project
@@ -62,7 +117,11 @@ func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID,
 
 // recordPly appends Ply's own records to the Task journal after an operation
 // succeeded; a failure names the operation as done and the record as missing.
+// An empty actor is the one taskPlyActor finds.
 func recordPly(d workspace.Dependencies, task, actor, done string, records ...taskjournal.PlyAction) error {
+	if actor == "" {
+		actor = taskPlyActor(d, task, records)
+	}
 	service := taskjournal.New(d)
 	for _, action := range records {
 		if _, err := service.AppendPly(task, actor, plyTitle(action), action); err != nil {

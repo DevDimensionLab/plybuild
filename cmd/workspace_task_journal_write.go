@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d workspace.De
 			if err != nil {
 				return err
 			}
-			if err = recordPly(d, args[0], plyActor(linkActor), "nothing changed", *l); err != nil {
+			if err = recordPly(d, args[0], namedActor(linkActor), "nothing changed", *l); err != nil {
 				return err
 			}
 			_, err = fmt.Fprintf(c.OutOrStdout(), "%s\n", plyTitle(*l))
@@ -50,7 +51,7 @@ func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d workspace.De
 	}
 	link.Flags().StringVar(&planID, "plan", "", "PLAN-<n> of the Task's Project (required)")
 	link.Flags().StringVar(&planStep, "plan-step", "", "step ID of --plan the Task carries")
-	link.Flags().StringVar(&linkActor, "actor", "", "who links (default: PLY_ACTOR)")
+	link.Flags().StringVar(&linkActor, "actor", "", "who links (default: PLY_ACTOR, else the owner of the Task's plan)")
 	journal.AddCommand(link)
 
 	step := &cobra.Command{Use: "step", Short: "Record the start or finish of a work step without a JSON file"}
@@ -89,8 +90,9 @@ func newJournalWriteCommand(d workspace.Dependencies, verb string) *cobra.Comman
 			if _, err := rand.Read(nonce); err != nil {
 				return err
 			}
+			who, as := reporter(d, args[0], actor, role)
 			in := taskjournal.EventInput{Common: taskjournal.Common{Kind: "ply.workspace.task-journal-event-input", SchemaVersion: 1, PublicationKey: fmt.Sprintf("cli:%x", nonce), TaskID: args[0],
-				Actor: taskjournal.Actor{ID: plyActor(actor), Role: role}, OccurredAt: &now, TimeBasis: taskjournal.TimeBasis{Kind: "observed", Clock: &[]string{"ply"}[0], Precision: "nanosecond"}, Sources: []taskjournal.SourceRef{}},
+				Actor: taskjournal.Actor{ID: who, Role: as}, OccurredAt: &now, TimeBasis: taskjournal.TimeBasis{Kind: "observed", Clock: &[]string{"ply"}[0], Precision: "nanosecond"}, Sources: []taskjournal.SourceRef{}},
 				Type: "note", Title: title, Relations: []taskjournal.Relation{}}
 			if verb != "note" {
 				if id == "" || kind == "" {
@@ -129,11 +131,28 @@ func newJournalWriteCommand(d workspace.Dependencies, verb string) *cobra.Comman
 		c.Flags().StringVar(&outcome, "outcome", "", "reported outcome")
 	}
 	c.Flags().StringVar(&title, "title", "", "one line (required)")
-	c.Flags().StringVar(&actor, "actor", "", "who reports (default: PLY_ACTOR)")
-	c.Flags().StringVar(&role, "role", "developer", "role: human, planner, developer, reviewer, observer or tool")
+	c.Flags().StringVar(&actor, "actor", "", "who reports (default: PLY_ACTOR, else the agent goal-start started for the Task)")
+	c.Flags().StringVar(&role, "role", "", "role: human, planner, developer, reviewer, observer or tool (default: the role the Task is registered with, else developer)")
 	c.Flags().StringArrayVar(&sources, "source", nil, "existing file as evidence; Ply keeps a copy (repeatable)")
 	_ = c.MarkFlagRequired("title")
 	return c
+}
+
+// reporter is the actor and role of a record the Task's agent writes: the
+// named ones, else the agent goal-start started and the Task's role.
+func reporter(d workspace.Dependencies, task, actor, role string) (string, string) {
+	who := namedActor(actor)
+	if who != "" && role != "" {
+		return who, role
+	}
+	work, records, _ := taskRecords(d, task)
+	if who == "" {
+		who = taskactor.Of(false, taskactor.StartedAgent(work, task), "")
+	}
+	if role == "" {
+		role = taskactor.Role(records)
+	}
+	return who, role
 }
 
 func journalSource(path string) (taskjournal.SourceRef, error) {
