@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -450,7 +451,7 @@ func TestFileProjectDefaultsLoaderReturnsExactFilePathReadAndUnmarshalResults(t 
 	writeProjectDefaultsFixture(t, malformed, `{"type":"partial defaults","settings":{"disableDependencySort":true,"maxSpringBootVersion":123}}`)
 	defaults, err = (fileProjectDefaultsLoader{}).Load(&recordingProjectDefaultsDirectory{path: malformed})
 	wantPartial := CloudProjectDefaults{Type: "partial defaults", Settings: ProjectSettings{DisableDependencySort: true}}
-	wantUnmarshalError := "Unable to unmarshal " + malformed + ", json: cannot unmarshal number into Go struct field ProjectSettings.settings.maxSpringBootVersion of type string"
+	wantUnmarshalError := "Unable to unmarshal " + malformed + ", " + jsonUnmarshalError(t, `{"type":"partial defaults","settings":{"disableDependencySort":true,"maxSpringBootVersion":123}}`, &CloudProjectDefaults{})
 	if !reflect.DeepEqual(defaults, wantPartial) || err == nil || err.Error() != wantUnmarshalError {
 		t.Fatalf("file ProjectDefaults unmarshal result was (%#v, %v), want exact partial (%#v, %q)", defaults, err, wantPartial, wantUnmarshalError)
 	}
@@ -592,7 +593,7 @@ func TestFileDeprecatedLoaderReturnsExactFilePathReadAndUnmarshalResults(t *test
 	deprecated, err = (fileDeprecatedLoader{}).Load(&recordingDeprecatedDirectory{path: malformed})
 	wantPartial := CloudDeprecated{Type: "partial deprecated"}
 	wantPartial.Data.Dependencies = []CloudDeprecatedDependency{{GroupId: "partial.group"}}
-	wantUnmarshalError := "Unable to unmarshal " + malformed + ", json: cannot unmarshal number into Go struct field CloudDeprecatedDependency.data.dependencies.artifactId of type string"
+	wantUnmarshalError := "Unable to unmarshal " + malformed + ", " + jsonUnmarshalError(t, `{"type":"partial deprecated","data":{"dependencies":[{"groupId":"partial.group","artifactId":123}]}}`, &CloudDeprecated{})
 	if !reflect.DeepEqual(deprecated, wantPartial) || err == nil || err.Error() != wantUnmarshalError {
 		t.Fatalf("file Deprecated unmarshal result was (%#v, %v), want exact partial (%#v, %q)", deprecated, err, wantPartial, wantUnmarshalError)
 	}
@@ -1012,4 +1013,16 @@ func TestGitCloudConfigValidTemplatesFromReturnsExactOrderedPartialResultWithErr
 		templates[0].Project.Config.Name != "test-template" {
 		t.Fatalf("ValidTemplatesFrom partial result was %#v, want exact first unique template", templates[0])
 	}
+}
+
+// jsonUnmarshalError is the standard library's own text for raw, which
+// differs between Go releases. It decodes through an interface pointer, as
+// file.ReadJson does.
+func jsonUnmarshalError(t *testing.T, raw string, v any) string {
+	t.Helper()
+	err := json.Unmarshal([]byte(raw), &v)
+	if err == nil {
+		t.Fatal("fixture JSON unexpectedly valid")
+	}
+	return err.Error()
 }

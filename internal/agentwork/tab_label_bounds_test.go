@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"reflect"
 	"sort"
@@ -72,78 +72,82 @@ func TestTabLabelsValidationAndConflict(t *testing.T) {
 	}
 }
 
-// The public-command fixture is a real subprocess, with no Herdr/provider
-// access. Separate log files make concurrency, byte and command boundaries
-// observable without production injection hooks.
-func TestTabLabelProcessChild(t *testing.T) {
-	root := os.Getenv("PLY_TAB_LABEL_TEST_ROOT")
-	if root == "" {
-		t.Skip("test-child entrypoint")
-	}
-	args := os.Args
-	for n, a := range args {
-		if a == "--" {
-			args = args[n+1:]
-			break
-		}
-	}
-	if len(args) >= 3 && args[0] == "agent" && (args[1] == "get" || args[1] == "prompt") {
-		_ = os.WriteFile(filepath.Join(root, args[1]+"-target"), []byte(args[2]), 0600)
-	}
-	var name string
-	switch {
-	case len(args) == 2 && args[0] == "agent" && args[1] == "list":
-		name = "agents"
-	case len(args) == 3 && args[0] == "agent" && args[1] == "get":
-		name = "agent"
-	case len(args) == 4 && args[0] == "agent" && args[1] == "prompt":
-		name = "prompt"
-	case len(args) == 4 && args[0] == "tab" && args[1] == "list" && args[2] == "--workspace":
-		name = args[3]
-	default:
-		os.Exit(5)
-	}
-	f, e := os.OpenFile(filepath.Join(root, "calls"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
-	if e != nil {
-		os.Exit(6)
-	}
-	_, _ = fmt.Fprintln(f, name)
-	_ = f.Close()
-	if name != "agents" && name != "agent" && name != "prompt" {
-		_ = os.WriteFile(filepath.Join(root, name+".start"), []byte(strconv.FormatInt(time.Now().UnixNano(), 10)), 0600)
-		delay, _ := os.ReadFile(filepath.Join(root, "delay"))
-		ms, _ := strconv.Atoi(string(delay))
-		time.Sleep(time.Duration(ms) * time.Millisecond)
-		if b, _ := os.ReadFile(filepath.Join(root, "stderr")); len(b) > 0 {
-			_, _ = os.Stderr.Write(b)
-		}
-		if _, e := os.Stat(filepath.Join(root, "hold-pipes")); e == nil {
-			// A descendant holds both pipes after the command exits. WaitDelay must
-			// bound the parent's drain even when the metadata deadline has not fired.
-			c := exec.Command("/bin/sleep", "2")
-			c.Stdout, c.Stderr = os.Stdout, os.Stderr
-			_ = c.Start()
-		}
-	}
-	b, e := os.ReadFile(filepath.Join(root, name))
-	if e != nil {
-		os.Exit(7)
-	}
-	_, _ = os.Stdout.Write(b)
-	_ = os.WriteFile(filepath.Join(root, name+".end"), []byte(strconv.FormatInt(time.Now().UnixNano(), 10)), 0600)
-	os.Exit(0)
-}
+// tabProcessFixture answers Herdr's public commands in memory from files in
+// root, without Herdr or provider access. The calls file and the max-active
+// file make command, concurrency and workspace boundaries observable. A
+// "block" file holds tab reads until the request budget ends; an "overlap"
+// file holds the first tab read until a second one has started.
 func tabProcessFixture(t *testing.T) (HerdrRuntime, string) {
 	t.Helper()
 	root := t.TempDir()
-	t.Setenv("PLY_TAB_LABEL_TEST_ROOT", root)
-	t.Setenv("GORACE", "atexit_sleep_ms=0")
-	binary, e := os.Executable()
-	if e != nil {
-		t.Fatal(e)
+	var mu sync.Mutex
+	active, maxActive := 0, 0
+	overlapped := make(chan struct{})
+	var once sync.Once
+	answer := func(ctx context.Context, stdout, stderr io.Writer, args ...string) error {
+		if len(args) >= 3 && args[0] == "agent" && (args[1] == "get" || args[1] == "prompt") {
+			_ = os.WriteFile(filepath.Join(root, args[1]+"-target"), []byte(args[2]), 0600)
+		}
+		var name string
+		switch {
+		case len(args) == 2 && args[0] == "agent" && args[1] == "list":
+			name = "agents"
+		case len(args) == 3 && args[0] == "agent" && args[1] == "get":
+			name = "agent"
+		case len(args) == 4 && args[0] == "agent" && args[1] == "prompt":
+			name = "prompt"
+		case len(args) == 4 && args[0] == "tab" && args[1] == "list" && args[2] == "--workspace":
+			name = args[3]
+		default:
+			return fmt.Errorf("unsupported command %v", args)
+		}
+		mu.Lock()
+		f, e := os.OpenFile(filepath.Join(root, "calls"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+		if e == nil {
+			_, _ = fmt.Fprintln(f, name)
+			e = f.Close()
+		}
+		mu.Unlock()
+		if e != nil {
+			return e
+		}
+		if args[0] == "tab" {
+			mu.Lock()
+			active++
+			if active > maxActive {
+				maxActive = active
+				_ = os.WriteFile(filepath.Join(root, "max-active"), []byte(strconv.Itoa(maxActive)), 0600)
+			}
+			if active > 1 {
+				once.Do(func() { close(overlapped) })
+			}
+			mu.Unlock()
+			defer func() { mu.Lock(); active--; mu.Unlock() }()
+			if _, e := os.Stat(filepath.Join(root, "overlap")); e == nil {
+				select {
+				case <-overlapped:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+			if _, e := os.Stat(filepath.Join(root, "block")); e == nil {
+				<-ctx.Done()
+				return ctx.Err()
+			}
+			if b, _ := os.ReadFile(filepath.Join(root, "stderr")); len(b) > 0 {
+				if _, e := stderr.Write(b); e != nil {
+					return e
+				}
+			}
+		}
+		b, e := os.ReadFile(filepath.Join(root, name))
+		if e != nil {
+			return e
+		}
+		_, e = stdout.Write(b)
+		return e
 	}
-	h := runtimeScript(t, "exec '"+strings.ReplaceAll(binary, "'", "'\\''")+"' -test.run='^TestTabLabelProcessChild$' -- \"$@\"\n")
-	return h, root
+	return HerdrRuntime{Executable: "herdr", Timeout: time.Second, run: answer}, root
 }
 func putFixture(t *testing.T, root, name, body string) {
 	t.Helper()
@@ -173,39 +177,18 @@ func TestTabLabelsWorkspaceSharingFreshnessAndConcurrency(t *testing.T) {
 		id := fmt.Sprintf("w%02d", w)
 		putFixture(t, root, id, labelEnvelope(labelRow(id, "t1", "First")))
 	}
-	putFixture(t, root, "delay", "20")
+	putFixture(t, root, "overlap", "")
 	got := h.tabLabels(agents)
 	calls := fixtureCalls(t, root)
 	sort.Strings(calls)
 	if len(calls) != 32 || len(got) != 32 || calls[0] != "w00" || calls[31] != "w31" {
 		t.Fatal("workspace bound/sharing", calls, len(got))
 	}
-	type event struct {
-		at     int64
-		change int
+	b, e := os.ReadFile(filepath.Join(root, "max-active"))
+	if e != nil {
+		t.Fatal(e)
 	}
-	var events []event
-	for _, id := range calls {
-		for _, v := range []struct {
-			suffix string
-			change int
-		}{{"start", 1}, {"end", -1}} {
-			b, e := os.ReadFile(filepath.Join(root, id+"."+v.suffix))
-			if e != nil {
-				t.Fatal(e)
-			}
-			at, _ := strconv.ParseInt(string(b), 10, 64)
-			events = append(events, event{at, v.change})
-		}
-	}
-	sort.Slice(events, func(i, j int) bool { return events[i].at < events[j].at })
-	active, max := 0, 0
-	for _, e := range events {
-		active += e.change
-		if active > max {
-			max = active
-		}
-	}
+	max, _ := strconv.Atoi(string(b))
 	if max < 2 || max > 4 {
 		t.Fatalf("parallel calls %d", max)
 	}
@@ -217,7 +200,7 @@ func TestTabLabelsWorkspaceSharingFreshnessAndConcurrency(t *testing.T) {
 }
 
 func TestTabLabelsDeadlineBytesAndInheritedPipes(t *testing.T) {
-	for _, tc := range []string{"deadline", "stdout", "stderr", "inherited-pipes", "invalid-utf8"} {
+	for _, tc := range []string{"deadline", "stdout", "stderr", "invalid-utf8"} {
 		t.Run(tc, func(t *testing.T) {
 			h, root := tabProcessFixture(t)
 			for w := 0; w < 32; w++ {
@@ -227,7 +210,7 @@ func TestTabLabelsDeadlineBytesAndInheritedPipes(t *testing.T) {
 			agents := []Agent{{Workspace: "w00", Tab: "t1"}}
 			switch tc {
 			case "deadline":
-				putFixture(t, root, "delay", "3000")
+				putFixture(t, root, "block", "")
 				for w := 1; w < 32; w++ {
 					agents = append(agents, Agent{Workspace: fmt.Sprintf("w%02d", w), Tab: "t1"})
 				}
@@ -235,19 +218,12 @@ func TestTabLabelsDeadlineBytesAndInheritedPipes(t *testing.T) {
 				putFixture(t, root, "w00", labelEnvelope(labelRow("w00", "t1", "Known"))+strings.Repeat(" ", 256<<10))
 			case "stderr":
 				putFixture(t, root, "stderr", strings.Repeat("e", (256<<10)+1))
-			case "inherited-pipes":
-				putFixture(t, root, "hold-pipes", "")
 			case "invalid-utf8":
 				putFixture(t, root, "w00", labelEnvelope(labelRow("w00", "t1", "Bad"))+string([]byte{0xff}))
 			}
-			start := time.Now()
-			got := h.tabLabels(agents)
-			elapsed := time.Since(start)
-			if len(got) != 0 {
+			// A blocked read returns only because the deadline ends it.
+			if got := h.tabLabels(agents); len(got) != 0 {
 				t.Fatal("bad source produced labels", got)
-			}
-			if elapsed > 1500*time.Millisecond {
-				t.Fatalf("unbounded metadata read %s", elapsed)
 			}
 			calls := fixtureCalls(t, root)
 			if tc == "deadline" && len(calls) > 4 {
@@ -266,6 +242,21 @@ func TestTabLabelsDeadlineBytesAndInheritedPipes(t *testing.T) {
 		putFixture(t, root, "stderr", strings.Repeat("e", 256<<10))
 		if got := h.tabLabels([]Agent{{Workspace: "w00", Tab: "t1"}}); got[tabKey{"w00", "t1"}] != "Known" {
 			t.Fatal(got)
+		}
+	})
+	// A real process: a descendant keeps both pipes open after the command
+	// exits, until the test releases it. The read must end without waiting for
+	// that release; otherwise it blocks and the test times out.
+	t.Run("inherited-pipes", func(t *testing.T) {
+		release := filepath.Join(t.TempDir(), "release")
+		h := runtimeScript(t, `(while [ ! -e '`+release+`' ]; do sleep 0.05; done) &
+printf '%s' '`+labelEnvelope(labelRow("w00", "t1", "Known"))+`'`)
+		defer func() { _ = os.WriteFile(release, nil, 0600) }()
+		if got := h.tabLabels([]Agent{{Workspace: "w00", Tab: "t1"}}); len(got) != 0 {
+			t.Fatal("read waited for the descendant", got)
+		}
+		if _, e := os.Stat(release); e == nil {
+			t.Fatal("descendant was released before the read ended")
 		}
 	})
 }

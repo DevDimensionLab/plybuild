@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os/exec"
 	"time"
 )
@@ -13,6 +14,8 @@ import (
 type HerdrRuntime struct {
 	Executable string
 	Timeout    time.Duration
+	// run replaces the Herdr process in tests; nil runs Executable.
+	run func(ctx context.Context, stdout, stderr io.Writer, args ...string) error
 }
 type limitedOutput struct {
 	data     []byte
@@ -44,19 +47,25 @@ func (h HerdrRuntime) callBytesContext(ctx context.Context, cleanup time.Duratio
 }
 
 func (h HerdrRuntime) runBytes(ctx context.Context, cleanup time.Duration, owned bool, args ...string) ([]byte, error) {
+	var out, errout limitedOutput
+	if e := h.start(ctx, cleanup, owned, &out, &errout, args...); e != nil || ctx.Err() != nil || out.overflow || errout.overflow {
+		return nil, fmt.Errorf("herdr_source_unavailable")
+	}
+	return out.data, nil
+}
+
+func (h HerdrRuntime) start(ctx context.Context, cleanup time.Duration, owned bool, stdout, stderr io.Writer, args ...string) error {
+	if h.run != nil {
+		return h.run(ctx, stdout, stderr, args...)
+	}
 	c := exec.CommandContext(ctx, h.Executable, args...)
 	c.WaitDelay = cleanup
 	if owned {
 		finish := configureMetadataProcess(c)
 		defer finish()
 	}
-	var out, errout limitedOutput
-	c.Stdout = &out
-	c.Stderr = &errout
-	if e := c.Run(); e != nil || ctx.Err() != nil || out.overflow || errout.overflow {
-		return nil, fmt.Errorf("herdr_source_unavailable")
-	}
-	return out.data, nil
+	c.Stdout, c.Stderr = stdout, stderr
+	return c.Run()
 }
 func (h HerdrRuntime) call(args ...string) (json.RawMessage, error) {
 	data, e := h.callBytes(args...)

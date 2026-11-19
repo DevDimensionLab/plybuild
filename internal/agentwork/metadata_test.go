@@ -1,10 +1,10 @@
 package agentwork
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
+	"io"
 	"strings"
 	"testing"
 	"time"
@@ -16,12 +16,19 @@ func metadataRow(pane string) map[string]any {
 func metadataRaw(v any) string { b, _ := json.Marshal(v); return string(b) }
 func metadataFixture(t *testing.T, raw string) MetadataReadback {
 	t.Helper()
-	p := filepath.Join(t.TempDir(), "response")
-	if e := os.WriteFile(p, []byte(raw), 0600); e != nil {
-		t.Fatal(e)
-	}
-	h := runtimeScript(t, "cat '"+p+"'")
-	return StatusMetadata(h)
+	return StatusMetadata(fakeHerdr(func(context.Context, []string) (string, error) { return raw, nil }))
+}
+
+// fakeHerdr answers Herdr calls in memory, so a test waits on state instead
+// of on process start under machine load. Process bounds have their own tests.
+func fakeHerdr(answer func(ctx context.Context, args []string) (string, error)) HerdrRuntime {
+	return HerdrRuntime{Executable: "herdr", Timeout: MetadataTimeout, run: func(ctx context.Context, stdout, _ io.Writer, args ...string) error {
+		out, err := answer(ctx, args)
+		if err == nil {
+			_, err = io.WriteString(stdout, out)
+		}
+		return err
+	}}
 }
 func TestStatusMetadataQualification(t *testing.T) {
 	row := metadataRow("p")
@@ -115,15 +122,17 @@ func TestStatusMetadataRowAndByteBounds(t *testing.T) {
 	}
 }
 func TestStatusMetadataDeadlineAndResponseClock(t *testing.T) {
-	for _, body := range []string{"exit 7", "sleep 20", "sleep 20 & wait"} {
-		h := runtimeScript(t, body)
+	for name, answer := range map[string]func(context.Context, []string) (string, error){
+		"failed":  func(context.Context, []string) (string, error) { return "", fmt.Errorf("exit 7") },
+		"blocked": func(ctx context.Context, _ []string) (string, error) { <-ctx.Done(); return "", ctx.Err() },
+	} {
+		h := fakeHerdr(answer)
 		h.Timeout = 50 * time.Millisecond
 		start := time.Now()
 		v := StatusMetadata(h)
-		elapsed := time.Since(start)
 		observed, e := time.Parse(time.RFC3339Nano, v.ObservedAtUTC)
-		if e != nil || observed.Before(start) || v.Sources[0].Status != "unavailable" || elapsed > 1500*time.Millisecond {
-			t.Fatal(v, elapsed, e)
+		if e != nil || observed.Before(start) || v.Sources[0].Status != "unavailable" {
+			t.Fatal(name, v, e)
 		}
 	}
 }
@@ -137,12 +146,14 @@ func TestStatusMetadataDoesNotUpgradeFullExecutionPartial(t *testing.T) {
 }
 
 func TestStatusMetadataClockIsResponseObservation(t *testing.T) {
-	h := runtimeScript(t, `sleep 0.05
-printf '%s' '{"result":{"type":"agent_list","agents":[]}}'`)
-	start := time.Now()
+	var answered time.Time
+	h := fakeHerdr(func(context.Context, []string) (string, error) {
+		answered = time.Now()
+		return `{"result":{"type":"agent_list","agents":[]}}`, nil
+	})
 	v := StatusMetadata(h)
 	observed, e := time.Parse(time.RFC3339Nano, v.ObservedAtUTC)
-	if e != nil || observed.Before(start.Add(40*time.Millisecond)) || v.Sources[0].SourceObservedAtUTC == nil || *v.Sources[0].SourceObservedAtUTC != v.ObservedAtUTC {
+	if e != nil || observed.Before(answered.Truncate(time.Microsecond)) || v.Sources[0].SourceObservedAtUTC == nil || *v.Sources[0].SourceObservedAtUTC != v.ObservedAtUTC {
 		t.Fatal(v, e)
 	}
 }

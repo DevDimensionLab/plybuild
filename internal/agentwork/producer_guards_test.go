@@ -2,6 +2,7 @@ package agentwork
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
@@ -97,9 +98,16 @@ func TestProducerBothLabelProjections(t *testing.T) {
 			s, _, _ := fixture(t)
 			p := filepath.Join(t.TempDir(), "label")
 			writeLabelResponse(t, p, label)
-			h := runtimeScript(t, `case "$1 $2" in
- "agent list") printf '%s' '{"result":{"type":"agent_list","agents":[{"agent":"codex","agent_status":"idle","workspace_id":"w-fixture","tab_id":"tab-fixture","pane_id":"pane-fixture","terminal_id":"terminal-fixture","agent_session":{"agent":"codex","kind":"id","value":"session-fixture"}}]}}';;
- "tab list") cat "`+p+`";; *) exit 9;; esac`)
+			h := fakeHerdr(func(_ context.Context, args []string) (string, error) {
+				switch args[0] + " " + args[1] {
+				case "agent list":
+					return `{"result":{"type":"agent_list","agents":[{"agent":"codex","agent_status":"idle","workspace_id":"w-fixture","tab_id":"tab-fixture","pane_id":"pane-fixture","terminal_id":"terminal-fixture","agent_session":{"agent":"codex","kind":"id","value":"session-fixture"}}]}}`, nil
+				case "tab list":
+					b, e := os.ReadFile(p)
+					return string(b), e
+				}
+				return "", fmt.Errorf("exit 9")
+			})
 			s.Runtime = h
 			rich, e := s.Overview()
 			if e != nil || len(rich.Agents) != 1 {

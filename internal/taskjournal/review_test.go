@@ -44,8 +44,34 @@ func TestOfflineRejectsInventedStepDuration(t *testing.T) {
 	}
 }
 
+// recordProblem publishes Task content with one document, so native
+// validation has content bytes to read.
+func (f testFixture) recordProblem(t *testing.T) {
+	t.Helper()
+	contents := []byte("# Fixture problem\n")
+	document := filepath.Join(f.root, "problem.md")
+	write(t, document, contents)
+	raw, e := json.Marshal(map[string]any{
+		"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785",
+		"publication_key": "fixture/problem", "task_id": "task", "registry_upgrade": nil,
+		"recorder":          map[string]any{"actor_claim": "fixture", "control_surface": "isolated test", "recorded_at_utc": "2026-10-03T09:00:00Z"},
+		"expected_previous": nil, "origin": map[string]any{"kind": "authored"}, "title": "Fixture problem", "summary": "Journal content fixture.", "problem_document_id": "problem",
+		"documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": document, "sha256": "sha256:" + hash(contents), "size_bytes": len(contents), "media_type": "text/markdown", "git_provenance": nil}}},
+		"sources":   []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Explicit fixture setup.",
+	})
+	if e != nil {
+		t.Fatal(e)
+	}
+	path := filepath.Join(f.root, "problem.json")
+	write(t, path, raw)
+	if _, e = workspace.RecordTaskProblem(f.s.Workspace, workspace.TaskContentInput{TaskID: "task", File: path}); e != nil {
+		t.Fatal(e)
+	}
+}
+
 func TestNativeSnapshotBindsContentDocuments(t *testing.T) {
 	f := fixture(t)
+	f.recordProblem(t)
 	s := f.show(t)
 	found := false
 	for _, src := range s.Sources {
@@ -58,6 +84,7 @@ func TestNativeSnapshotBindsContentDocuments(t *testing.T) {
 
 func TestMissingNativeRelationRemainsOfflineReadable(t *testing.T) {
 	f := fixture(t)
+	f.recordProblem(t)
 	s := f.show(t)
 	var target Event
 	for _, e := range s.Events {

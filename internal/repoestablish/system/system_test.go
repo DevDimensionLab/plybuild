@@ -360,7 +360,12 @@ func TestCheckStopsBeforeWrapperOnMetadataAndTools(t *testing.T) {
 	})
 	t.Run("missing gh", func(t *testing.T) {
 		f := newFixture(t)
-		t.Setenv("PATH", filepath.Dir(mustLookPath(t, "git")))
+		// git and gh often share a directory, so PATH holds only a link to git.
+		bin := t.TempDir()
+		if err := os.Symlink(mustLookPath(t, "git"), filepath.Join(bin, "git")); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("PATH", bin)
 		_, err := repoestablish.Run(context.Background(), f.request(), f.deps(hooks{}))
 		requireStop(t, err, repoestablish.StepCheck, repoestablish.ErrInvalid)
 	})

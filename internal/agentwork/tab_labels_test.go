@@ -1,7 +1,9 @@
 package agentwork
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -12,10 +14,16 @@ func TestOverviewTabLabelRenameAndMissing(t *testing.T) {
 	s, _, _ := fixture(t)
 	i := s.Runtime.(*fakeRuntime).agents[0].Identity
 	path := filepath.Join(t.TempDir(), "label")
-	h := runtimeScript(t, `case "$1 $2" in
- "agent list") printf '%s' '{"result":{"agents":[{"agent":"codex","agent_status":"idle","workspace_id":"w-fixture","tab_id":"tab-fixture","pane_id":"pane-fixture","terminal_id":"terminal-fixture","agent_session":{"agent":"codex","kind":"id","value":"session-fixture"}}]}}';;
- "tab list") cat "`+path+`";;
- *) exit 9;; esac`)
+	h := fakeHerdr(func(_ context.Context, args []string) (string, error) {
+		switch args[0] + " " + args[1] {
+		case "agent list":
+			return `{"result":{"agents":[{"agent":"codex","agent_status":"idle","workspace_id":"w-fixture","tab_id":"tab-fixture","pane_id":"pane-fixture","terminal_id":"terminal-fixture","agent_session":{"agent":"codex","kind":"id","value":"session-fixture"}}]}}`, nil
+		case "tab list":
+			b, e := os.ReadFile(path)
+			return string(b), e
+		}
+		return "", fmt.Errorf("exit 9")
+	})
 	// The response file is replaced between requests: metadata is never cached.
 	s.Runtime = h
 	var first Overview

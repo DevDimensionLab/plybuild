@@ -4,10 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
-	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -97,31 +95,42 @@ func TestMetadataLabelsAmbiguousAndMalformed(t *testing.T) {
 }
 
 func TestMetadataSharedBudgetCancellationAndRecovery(t *testing.T) {
-	h, root := tabProcessFixture(t)
-	putFixture(t, root, "agents", `{"result":{"type":"agent_list","agents":[{"agent":"codex","pane_id":"p","tab_id":"t","workspace_id":"w","agent_status":"idle"}]}}`)
-	putFixture(t, root, "w", labelEnvelope(labelRow("w", "t", "Known")))
-	// Consume most of the small request budget before label startup.
-	original := h.Executable
-	h = runtimeScript(t, "if [ \"$1\" = agent ]; then sleep 0.4; fi\nexec '"+original+"' \"$@\"")
-	h.Timeout = time.Second
-	putFixture(t, root, "delay", "2000")
-	start := time.Now()
-	got := StatusMetadata(h)
-	elapsed := time.Since(start)
-	if elapsed > 1200*time.Millisecond || len(got.Agents) != 1 || got.Agents[0].TabLabel != "" {
-		t.Fatal(elapsed, got)
+	agents := `{"result":{"type":"agent_list","agents":[{"agent":"codex","pane_id":"p","tab_id":"t","workspace_id":"w","agent_status":"idle"}]}}`
+	parent, exhaust := context.WithCancel(context.Background())
+	var mu sync.Mutex
+	var deadlines []time.Time
+	stalled := true
+	h := fakeHerdr(func(ctx context.Context, args []string) (string, error) {
+		deadline, ok := ctx.Deadline()
+		mu.Lock()
+		deadlines = append(deadlines, deadline)
+		mu.Unlock()
+		if !ok {
+			return "", fmt.Errorf("call without a budget: %v", args)
+		}
+		if args[0] == "agent" {
+			return agents, nil
+		}
+		if stalled {
+			// The label read uses up what is left of the shared budget.
+			exhaust()
+			<-ctx.Done()
+			return "", ctx.Err()
+		}
+		return labelEnvelope(labelRow("w", "t", "Known")), nil
+	})
+	got := StatusMetadataContext(parent, h)
+	if len(got.Agents) != 1 || got.Agents[0].TabLabel != "" || got.Sources[0].Status != "available" {
+		t.Fatal("exhausted label read", got)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	start = time.Now()
-	got = StatusMetadataContext(ctx, h)
-	if time.Since(start) > 100*time.Millisecond || got.Sources[0].Status != "unavailable" {
-		t.Fatal(got)
+	if len(deadlines) != 2 || !deadlines[0].Equal(deadlines[1]) {
+		t.Fatal("label read did not share the request budget", deadlines)
 	}
-	if err := os.Remove(filepath.Join(root, "delay")); err != nil {
-		t.Fatal(err)
+	got = StatusMetadataContext(parent, h)
+	if got.Sources[0].Status != "unavailable" || len(got.Agents) != 0 {
+		t.Fatal("cancelled request", got)
 	}
-	h.Timeout = time.Second
+	stalled = false
 	got = StatusMetadata(h)
 	if len(got.Agents) != 1 || got.Agents[0].TabLabel != "Known" {
 		t.Fatal("recovery", got)
@@ -129,16 +138,28 @@ func TestMetadataSharedBudgetCancellationAndRecovery(t *testing.T) {
 }
 
 func TestMetadataWorkspaceLimitPreservesMembership(t *testing.T) {
-	h, root := tabProcessFixture(t)
 	var rows []any
+	labels := map[string]string{}
 	for w := 33; w >= 0; w-- {
 		id := fmt.Sprintf("w%02d", w)
 		r := metadataRow(fmt.Sprintf("p%02d", w))
 		r["workspace_id"] = id
 		rows = append(rows, r)
-		putFixture(t, root, id, labelEnvelope(labelRow(id, "t", "Known")))
+		labels[id] = labelEnvelope(labelRow(id, "t", "Known"))
 	}
-	putFixture(t, root, "agents", metadataRaw(map[string]any{"result": map[string]any{"type": "agent_list", "agents": rows}}))
+	agents := metadataRaw(map[string]any{"result": map[string]any{"type": "agent_list", "agents": rows}})
+	var mu sync.Mutex
+	var calls []string
+	h := fakeHerdr(func(_ context.Context, args []string) (string, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if args[0] == "agent" {
+			calls = append(calls, "agents")
+			return agents, nil
+		}
+		calls = append(calls, args[3])
+		return labels[args[3]], nil
+	})
 	got := StatusMetadata(h)
 	if len(got.Agents) != 34 || got.Sources[0].Coverage != "complete" {
 		t.Fatal(got)
@@ -152,11 +173,7 @@ func TestMetadataWorkspaceLimitPreservesMembership(t *testing.T) {
 			t.Fatal(i, a)
 		}
 	}
-	calls := fixtureCalls(t, root)
-	if len(calls) != 33 {
-		t.Fatal(calls)
-	}
-	if !reflect.DeepEqual(calls[:1], []string{"agents"}) {
+	if len(calls) != 33 || calls[0] != "agents" {
 		t.Fatal(calls)
 	}
 }

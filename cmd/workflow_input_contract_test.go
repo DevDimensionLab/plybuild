@@ -396,8 +396,6 @@ func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	if err := json.Unmarshal(raw, &ex); err != nil {
 		t.Fatal(err)
 	}
-	hiValidate(t, ex.Valid, true)
-	hiValidate(t, ex.SchemaInvalid, false)
 	for _, v := range ex.CanonicalVectors {
 		var r humaninput.AnswerRequest
 		if err := json.Unmarshal([]byte(v.CanonicalUTF8), &r); err != nil {
@@ -413,7 +411,6 @@ func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 	}
 	d, repo := hiWorkspace(t, root)
 	all := hiJourney(t, d, root, repo)
-	hiValidate(t, all, true)
 	var fresh []hiExample
 	for _, e := range all {
 		if e.Command != nil {
@@ -434,6 +431,13 @@ func TestHI07ContractBundleIsLockedAndMatchesActualOutput(t *testing.T) {
 			t.Fatalf("example %s no longer matches the actual journey", observed[i].Name)
 		}
 	}
+	// Schema validation needs an external Python; the Go checks above always run.
+	if os.Getenv("PLY_SL01_SCHEMA_PYTHON") == "" && os.Getenv("PLY_MR05_SCHEMA_PYTHON") == "" {
+		t.Skip("schema validation needs PLY_SL01_SCHEMA_PYTHON (a Python with jsonschema)")
+	}
+	hiValidate(t, ex.Valid, true)
+	hiValidate(t, ex.SchemaInvalid, false)
+	hiValidate(t, all, true)
 }
 
 // hiDigestErrors checks the RFC8785 digests a strict consumer recomputes:

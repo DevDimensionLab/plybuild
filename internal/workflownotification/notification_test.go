@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -517,18 +518,13 @@ func TestStateRootReplacementAfterReservationNeverDispatches(t *testing.T) {
 func TestDocumentationFixturePassesRealValidator(t *testing.T) {
 	f := newFixture(t)
 	base := filepath.Join("..", "..", "test", "fixtures", "notification-docs")
-	docs, e := os.ReadFile(filepath.Join("..", "..", "docs", "workflow-notification.md"))
-	if e != nil {
-		t.Fatal(e)
-	}
+	fixtures := map[string][]byte{}
 	for _, name := range []string{"route.json", "request.json"} {
 		b, e := os.ReadFile(filepath.Join(base, name))
 		if e != nil {
 			t.Fatal(e)
 		}
-		if !bytes.Contains(docs, bytes.TrimSpace(b)) {
-			t.Fatal("docs JSON differs from tested fixture", name)
-		}
+		fixtures[name] = b
 		b = bytes.ReplaceAll(b, []byte("/private/tmp/ply-notification-example"), []byte(f.root))
 		if e = os.WriteFile(filepath.Join(f.root, name), b, 0600); e != nil {
 			t.Fatal(e)
@@ -537,7 +533,20 @@ func TestDocumentationFixturePassesRealValidator(t *testing.T) {
 	f.input.Route = filepath.Join(f.root, "route.json")
 	f.input.File = filepath.Join(f.root, "request.json")
 	p := f.preview(t)
-	if _, e = f.apply(t, p); e != nil {
+	if _, e := f.apply(t, p); e != nil {
 		t.Fatal(e)
+	}
+	// docs/ is local and outside Git, so a clean clone checks only the fixture.
+	docs, e := os.ReadFile(filepath.Join("..", "..", "docs", "workflow-notification.md"))
+	if errors.Is(e, fs.ErrNotExist) {
+		t.Skip("docs/workflow-notification.md is not present in this checkout")
+	}
+	if e != nil {
+		t.Fatal(e)
+	}
+	for name, b := range fixtures {
+		if !bytes.Contains(docs, bytes.TrimSpace(b)) {
+			t.Fatal("docs JSON differs from tested fixture", name)
+		}
 	}
 }

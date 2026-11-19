@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os/exec"
 	"sort"
 	"strings"
 	"sync"
@@ -99,13 +98,8 @@ func (b *tabLabelOutput) Write(p []byte) (int, error) {
 }
 
 func (h HerdrRuntime) workspaceTabLabels(ctx context.Context, workspace string) map[tabKey]string {
-	c := exec.CommandContext(ctx, h.Executable, "tab", "list", "--workspace", workspace)
-	c.WaitDelay = tabLabelCleanup
-	finish := configureMetadataProcess(c)
-	defer finish()
 	var out, errout tabLabelOutput
-	c.Stdout, c.Stderr = &out, &errout
-	if c.Run() != nil || ctx.Err() != nil || !utf8.Valid(out.data) {
+	if h.start(ctx, tabLabelCleanup, true, &out, &errout, "tab", "list", "--workspace", workspace) != nil || ctx.Err() != nil || !utf8.Valid(out.data) {
 		return nil
 	}
 	labels := decodeTabLabels(ctx, out.data, workspace)

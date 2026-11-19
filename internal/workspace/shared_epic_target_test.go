@@ -218,11 +218,17 @@ func TestSharedEpicTargetTwoEpicsShareMainAndRequireExplicitSelection(t *testing
 	if err != nil {
 		t.Fatal(err)
 	}
-	r.WorktreeOperations[0].SourceRef = "refs/heads/main"
-	if r.WorktreeOperations[0].IntentDigest, err = intentDigest(r.WorktreeOperations[0]); err != nil {
-		t.Fatal(err)
+	// A ready Task keeps its worktree as a native receipt, not an operation.
+	for i := range r.Tasks {
+		if task := r.Tasks[i]; task.ID == "alpha-task" {
+			w := task.Worktree
+			w.Ref = "refs/heads/main"
+			if w.IntentDigest, err = nativeIntentDigest(task.GitCommonDir, task.ParentEpicID, w.ParentOID, w.ParentRef, w.ParentTree, w.ParentWorktreeID, task.ProjectID, task.RepoID, w.Ref, w.Locator, task.ID); err != nil {
+				t.Fatal(err)
+			}
+		}
 	}
-	if err := validateWorkItemRegistry(r); err == nil || !strings.Contains(err.Error(), "Git resource shared") {
+	if err := validateWorkItemRegistry(r); err == nil || !strings.Contains(err.Error(), "shares Git resource with Epic") {
 		t.Fatalf("Task operation on the Epic ref must be rejected: %v", err)
 	}
 }
