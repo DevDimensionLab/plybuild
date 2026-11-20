@@ -5,18 +5,19 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-type noBatchGit struct{ workspace.WorkItemGit }
+type noBatchGit struct{ taskwork.WorkItemGit }
 
-func (noBatchGit) ObserveWorktree(string) (workspace.GitWorktreeObservation, error) {
+func (noBatchGit) ObserveWorktree(string) (taskwork.GitWorktreeObservation, error) {
 	panic("workspace activity must not observe Git")
 }
 
 func eventBatchInput(t *testing.T, f testFixture) EventBatchInput {
 	t.Helper()
-	b, err := workspace.ReadTaskJournalBasis(f.s.Workspace, "task")
+	b, err := taskwork.ReadTaskJournalBasis(f.s.Workspace, "task")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,11 +25,11 @@ func eventBatchInput(t *testing.T, f testFixture) EventBatchInput {
 	if err != nil {
 		t.Fatal(err)
 	}
-	l, err := workspace.ReadWorkItemLifecycle(f.s.Workspace, f.root)
+	l, err := taskwork.ReadWorkItemLifecycle(f.s.Workspace, f.root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return EventBatchInput{b.Workspace, workspace.ProjectSnapshot{Projects: p, Repos: r}, []workspace.ProjectRegistry{{Work: b.Work, Registry: b.Registry}}, l}
+	return EventBatchInput{b.Workspace, workspace.ProjectSnapshot{Projects: p, Repos: r}, []taskwork.ProjectRegistry{{Work: b.Work, Registry: b.Registry}}, l}
 }
 
 func TestEventBatchMatchesJournalEventsWithoutGitOrWrites(t *testing.T) {

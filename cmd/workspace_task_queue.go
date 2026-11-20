@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -13,11 +14,11 @@ func (f *queueTargetFlags) bind(c *cobra.Command) {
 	c.Flags().StringVar(&f.repo, "repo", "", "registered repository ID (requires --project and --epic)")
 	c.Flags().StringVar(&f.epic, "epic", "", "registered Epic ID (requires --project and --repo)")
 }
-func (f queueTargetFlags) input() (workspace.QueueTargetInput, error) {
+func (f queueTargetFlags) input() (taskwork.QueueTargetInput, error) {
 	if (f.project != "" || f.repo != "" || f.epic != "") && (f.project == "" || f.repo == "" || f.epic == "") {
-		return workspace.QueueTargetInput{}, workspace.WorkInvalidArguments("provide all of --project, --repo and --epic, or none")
+		return taskwork.QueueTargetInput{}, workspace.WorkInvalidArguments("provide all of --project, --repo and --epic, or none")
 	}
-	return workspace.QueueTargetInput{ProjectID: workspace.ProjectID(f.project), RepoID: workspace.RepoID(f.repo), EpicID: workspace.EpicID(f.epic)}, nil
+	return taskwork.QueueTargetInput{ProjectID: workspace.ProjectID(f.project), RepoID: workspace.RepoID(f.repo), EpicID: taskwork.EpicID(f.epic)}, nil
 }
 func queueParent(name, short, example string) *cobra.Command {
 	var format string
@@ -31,10 +32,10 @@ func queueParent(name, short, example string) *cobra.Command {
 	setWorkFlagErrors(c)
 	return c
 }
-func outputQueue(c *cobra.Command, format string, r workspace.WorkspaceTaskQueueReadback, err error) error {
+func outputQueue(c *cobra.Command, format string, r taskwork.WorkspaceTaskQueueReadback, err error) error {
 	if r.Kind != "" {
 		if format == "json" {
-			b, e := workspace.MarshalTaskQueue(r)
+			b, e := taskwork.MarshalTaskQueue(r)
 			if e != nil {
 				return e
 			}
@@ -42,14 +43,14 @@ func outputQueue(c *cobra.Command, format string, r workspace.WorkspaceTaskQueue
 				return e
 			}
 		} else {
-			if _, e := fmt.Fprint(c.OutOrStdout(), workspace.TaskQueueText(r)); e != nil {
+			if _, e := fmt.Fprint(c.OutOrStdout(), taskwork.TaskQueueText(r)); e != nil {
 				return e
 			}
 		}
 	}
 	return err
 }
-func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceTaskQueueCommands(task *cobra.Command, d taskwork.Dependencies) {
 	queue := queueParent("queue", "Inspect and explicitly prioritize pending Tasks", "  ply workspace task queue list --ready\n  ply workspace task queue set --file /absolute/queue.json")
 	task.AddCommand(queue)
 	var listFormat string
@@ -64,7 +65,7 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 		if e != nil {
 			return e
 		}
-		r, e := workspace.ListTaskQueueVersion(d, in, ready, schemaVersion)
+		r, e := taskwork.ListTaskQueueVersion(d, in, ready, schemaVersion)
 		return outputQueue(c, listFormat, r, e)
 	}}
 	list.Flags().IntVar(&schemaVersion, "schema-version", 1, "queue read schema (1 or 2)")
@@ -78,7 +79,7 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 		if e := validateWorkFormat(setFormat); e != nil {
 			return e
 		}
-		r, e := workspace.SetTaskQueue(d, file)
+		r, e := taskwork.SetTaskQueue(d, file)
 		return outputQueue(c, setFormat, r, e)
 	}}
 	set.Flags().StringVar(&file, "file", "", "absolute physical JSON draft path (maximum 256 KiB)")
@@ -111,7 +112,7 @@ func addWorkspaceTaskQueueCommands(task *cobra.Command, d workspace.Dependencies
 			if e != nil {
 				return e
 			}
-			r, e := workspace.ListTaskQueueVersion(d, in, true, queueSchema)
+			r, e := taskwork.ListTaskQueueVersion(d, in, true, queueSchema)
 			return outputQueue(c, format, r, e)
 		}
 		c.Long += " Use --ready for the prioritized queue; an explicit queue target requires all three of --project, --repo and --epic."

@@ -1,6 +1,8 @@
 package workspaceview
 
-import "github.com/devdimensionlab/plybuild/internal/workspace"
+import (
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
+)
 
 const OverviewKind = "WorkspaceOverviewReadback@1"
 
@@ -19,8 +21,8 @@ type Overview struct {
 
 // ReadOverview reads sources once and derives all three Home collections from
 // that captured basis. It does not claim an atomic transaction across stores.
-func ReadOverview(d workspace.Dependencies, filters EpicFilters) (Overview, error) {
-	taskFilters := workspace.TaskListFilters{ProjectID: filters.ProjectID}
+func ReadOverview(d taskwork.Dependencies, filters EpicFilters) (Overview, error) {
+	taskFilters := taskwork.TaskListFilters{ProjectID: filters.ProjectID}
 	if err := taskFilters.Validate(); err != nil {
 		return Overview{}, err
 	}

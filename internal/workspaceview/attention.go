@@ -4,6 +4,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -13,7 +14,7 @@ type AttentionItem struct {
 	Subject     string              `json:"subject"`
 	SubjectID   string              `json:"subject_id"`
 	ProjectID   workspace.ProjectID `json:"project_id"`
-	EpicID      workspace.EpicID    `json:"epic_id"`
+	EpicID      taskwork.EpicID     `json:"epic_id"`
 	Title       *string             `json:"title"`
 	Kind        string              `json:"kind"`
 	Actor       string              `json:"actor"`
@@ -26,17 +27,17 @@ type AttentionItem struct {
 }
 
 type AttentionList struct {
-	Kind          string                    `json:"kind"`
-	SchemaVersion int                       `json:"schema_version"`
-	Workspace     WorkspaceRef              `json:"workspace"`
-	Scope         workspace.TaskListFilters `json:"scope"`
-	Items         []AttentionItem           `json:"items"`
-	Freshness     string                    `json:"freshness"`
-	SourceBasis   string                    `json:"source_basis"`
-	Reasons       []string                  `json:"reasons"`
+	Kind          string                   `json:"kind"`
+	SchemaVersion int                      `json:"schema_version"`
+	Workspace     WorkspaceRef             `json:"workspace"`
+	Scope         taskwork.TaskListFilters `json:"scope"`
+	Items         []AttentionItem          `json:"items"`
+	Freshness     string                   `json:"freshness"`
+	SourceBasis   string                   `json:"source_basis"`
+	Reasons       []string                 `json:"reasons"`
 }
 
-func ReadAttention(d workspace.Dependencies, filters workspace.TaskListFilters) (AttentionList, error) {
+func ReadAttention(d taskwork.Dependencies, filters taskwork.TaskListFilters) (AttentionList, error) {
 	if err := filters.Validate(); err != nil {
 		return AttentionList{}, err
 	}
@@ -52,7 +53,7 @@ func ReadAttention(d workspace.Dependencies, filters workspace.TaskListFilters) 
 	return BuildAttention(s, filters, process)
 }
 
-func BuildAttention(s *Snapshot, filters workspace.TaskListFilters, process map[workspace.TaskID]ProcessFacts) (AttentionList, error) {
+func BuildAttention(s *Snapshot, filters taskwork.TaskListFilters, process map[taskwork.TaskID]ProcessFacts) (AttentionList, error) {
 	tasks, err := BuildTaskList(s, filters, process)
 	if err != nil {
 		return AttentionList{}, err
@@ -63,7 +64,7 @@ func BuildAttention(s *Snapshot, filters workspace.TaskListFilters, process map[
 func attentionFromTasks(tasks TaskList) AttentionList {
 	out := AttentionList{AttentionKind, 1, tasks.Workspace, tasks.Scope, []AttentionItem{}, tasks.Freshness, "registered", tasks.Reasons}
 	for _, task := range tasks.Tasks {
-		if (task.Lifecycle != workspace.LifecycleActive || task.EpicLifecycle != workspace.LifecycleActive) && task.Progress.State != "cleanup_pending" || !task.Progress.HasProgress {
+		if (task.Lifecycle != taskwork.LifecycleActive || task.EpicLifecycle != taskwork.LifecycleActive) && task.Progress.State != "cleanup_pending" || !task.Progress.HasProgress {
 			continue
 		}
 		for _, action := range task.Progress.NextActions {

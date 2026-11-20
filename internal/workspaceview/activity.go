@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -49,10 +50,10 @@ type ActivityResult struct {
 
 type processHistory struct {
 	journal taskjournal.EventBatch
-	facts   map[workspace.TaskID]ProcessFacts
+	facts   map[taskwork.TaskID]ProcessFacts
 }
 
-func readProcessHistory(d workspace.Dependencies, s *Snapshot) (*processHistory, error) {
+func readProcessHistory(d taskwork.Dependencies, s *Snapshot) (*processHistory, error) {
 	if s.process != nil {
 		return s.process, nil
 	}
@@ -60,7 +61,7 @@ func readProcessHistory(d workspace.Dependencies, s *Snapshot) (*processHistory,
 	if err != nil {
 		return nil, err
 	}
-	h := &processHistory{journal: j, facts: map[workspace.TaskID]ProcessFacts{}}
+	h := &processHistory{journal: j, facts: map[taskwork.TaskID]ProcessFacts{}}
 	for id, snap := range j.Tasks {
 		h.facts[id] = processFactsFromJournal(snap)
 	}
@@ -70,7 +71,7 @@ func readProcessHistory(d workspace.Dependencies, s *Snapshot) (*processHistory,
 
 // ReadProcessFacts is one memoized batch shared by Task progress, Epic counts
 // and Attention. It never derives native technical/human QA from agent claims.
-func ReadProcessFacts(d workspace.Dependencies, s *Snapshot) (map[workspace.TaskID]ProcessFacts, error) {
+func ReadProcessFacts(d taskwork.Dependencies, s *Snapshot) (map[taskwork.TaskID]ProcessFacts, error) {
 	h, err := readProcessHistory(d, s)
 	if err != nil {
 		return nil, err
@@ -152,10 +153,10 @@ func validateProjectFilter(s *Snapshot, id string) error {
 	if err != nil {
 		return err
 	}
-	return ValidateTaskFilters(s, workspace.TaskListFilters{ProjectID: &p})
+	return ValidateTaskFilters(s, taskwork.TaskListFilters{ProjectID: &p})
 }
 
-func ListActivity(d workspace.Dependencies, s *Snapshot, o ActivityOptions) (ActivityResult, error) {
+func ListActivity(d taskwork.Dependencies, s *Snapshot, o ActivityOptions) (ActivityResult, error) {
 	out := ActivityResult{Kind: ActivityKind, SchemaVersion: 1, Workspace: WorkspaceRef{s.Workspace.Root}, AsOf: s.ObservedAtUTC, Events: []ActivityEvent{}, Sources: []taskjournal.Source{}, Freshness: s.Freshness, Coverage: "complete", Reasons: []string{}}
 	if o.Limit < 0 {
 		return out, workspace.WorkInvalidArguments("--limit must not be negative")

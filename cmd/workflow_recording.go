@@ -10,6 +10,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/plan"
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -33,7 +34,7 @@ func plyActor(flag string) string {
 // taskPlyActor is the actor of Ply's own action on task when nobody named
 // one: the owner of the plan in a plan link among records, else of the plan
 // the Task's journal links it to, else unknown.
-func taskPlyActor(d workspace.Dependencies, task string, records []taskjournal.PlyAction) string {
+func taskPlyActor(d taskwork.Dependencies, task string, records []taskjournal.PlyAction) string {
 	link := (*taskjournal.PlyAction)(nil)
 	for i := range records {
 		if records[i].Operation == "plan_link" {
@@ -50,8 +51,8 @@ func taskPlyActor(d workspace.Dependencies, task string, records []taskjournal.P
 
 // taskRecords reads the journal of task for the actor rule; a Task whose
 // journal Ply cannot read gets no derived actor.
-func taskRecords(d workspace.Dependencies, task string) (workspace.ProjectWork, []taskjournal.Contribution, bool) {
-	b, err := workspace.ReadTaskJournalBasis(d, workspace.TaskID(task))
+func taskRecords(d taskwork.Dependencies, task string) (workspace.ProjectWork, []taskjournal.Contribution, bool) {
+	b, err := taskwork.ReadTaskJournalBasis(d, taskwork.TaskID(task))
 	if err != nil {
 		return workspace.ProjectWork{}, nil, false
 	}
@@ -60,11 +61,11 @@ func taskRecords(d workspace.Dependencies, task string) (workspace.ProjectWork, 
 }
 
 // planOwner is the owner of the plan link names, or "" when it cannot be read.
-func planOwner(d workspace.Dependencies, link *taskjournal.PlyAction) string {
+func planOwner(d taskwork.Dependencies, link *taskjournal.PlyAction) string {
 	if link == nil || link.Plan == nil {
 		return ""
 	}
-	resolved, err := resolveAssignmentProject(d, link.Refs["project"])
+	resolved, err := resolveAssignmentProject(d.Dependencies, link.Refs["project"])
 	if err != nil {
 		return ""
 	}
@@ -82,14 +83,14 @@ func planOwner(d workspace.Dependencies, link *taskjournal.PlyAction) string {
 // taskPlanLink validates --plan and --plan-step against the plans of project
 // and returns the link to record, with the project and Task title so that a
 // plan trace needs no registry read, or nil without --plan.
-func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID, step, title string) (*taskjournal.PlyAction, error) {
+func taskPlanLink(d taskwork.Dependencies, project workspace.ProjectID, planID, step, title string) (*taskjournal.PlyAction, error) {
 	if planID == "" {
 		if step != "" {
 			return nil, workspace.WorkInvalidArguments("--plan-step requires --plan")
 		}
 		return nil, nil
 	}
-	resolved, err := resolveAssignmentProject(d, string(project))
+	resolved, err := resolveAssignmentProject(d.Dependencies, string(project))
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +119,7 @@ func taskPlanLink(d workspace.Dependencies, project workspace.ProjectID, planID,
 // recordPly appends Ply's own records to the Task journal after an operation
 // succeeded; a failure names the operation as done and the record as missing.
 // An empty actor is the one taskPlyActor finds.
-func recordPly(d workspace.Dependencies, task, actor, done string, records ...taskjournal.PlyAction) error {
+func recordPly(d taskwork.Dependencies, task, actor, done string, records ...taskjournal.PlyAction) error {
 	if actor == "" {
 		actor = taskPlyActor(d, task, records)
 	}
@@ -144,9 +145,9 @@ func plyTitle(action taskjournal.PlyAction) string {
 // recordEpicIntegration records epic_integrate in the journal of each Task
 // whose integrated result reached the target with this fast-forward: it is
 // in the new target commit and was not in the old one.
-func recordEpicIntegration(d workspace.Dependencies, input workspace.EpicIntegrateInput, result workspace.EpicIntegrateResult, actor string) error {
+func recordEpicIntegration(d taskwork.Dependencies, input taskwork.EpicIntegrateInput, result taskwork.EpicIntegrateResult, actor string) error {
 	done := "the target is fast-forwarded"
-	epic, err := workspace.ShowEpic(d, input.EpicID)
+	epic, err := taskwork.ShowEpic(d, input.EpicID)
 	if err != nil {
 		return fmt.Errorf("%s; reading the Epic for its Task journals failed: %w", done, err)
 	}
@@ -156,7 +157,7 @@ func recordEpicIntegration(d workspace.Dependencies, input workspace.EpicIntegra
 			gitDir = b.GitCommonDir
 		}
 	}
-	w, err := workspace.ObserveContaining(d)
+	w, err := workspace.ObserveContaining(d.Dependencies)
 	if err != nil {
 		return fmt.Errorf("%s; %w", done, err)
 	}

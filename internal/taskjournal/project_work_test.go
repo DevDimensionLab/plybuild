@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -72,13 +73,13 @@ func addOtherProject(t *testing.T, f testFixture) {
 	git("add", "file")
 	git("commit", "-m", "other fixture")
 	d := f.s.Workspace
-	if _, e := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "other", Name: "Other", Wrapper: wrapper, Repos: []workspace.RepoInput{{RepoID: "other-repo", Path: repo}}}); e != nil {
+	if _, e := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "other", Name: "Other", Wrapper: wrapper, Repos: []workspace.RepoInput{{RepoID: "other-repo", Path: repo}}}); e != nil {
 		t.Fatal(e)
 	}
-	if _, e := workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "other-epic", Title: "Other Epic", ProjectID: "other", RepoID: "other-repo", Worktree: repo, Ref: "refs/heads/other-epic", ExpectedOID: git("rev-parse", "HEAD")}); e != nil {
+	if _, e := taskwork.AdoptEpic(d, taskwork.EpicAdoptInput{EpicID: "other-epic", Title: "Other Epic", ProjectID: "other", RepoID: "other-repo", Worktree: repo, Ref: "refs/heads/other-epic", ExpectedOID: git("rev-parse", "HEAD")}); e != nil {
 		t.Fatal(e)
 	}
-	if _, e := workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: "other-task", Title: "Other Task", Description: "Second Project", ParentEpicID: "other-epic", ProjectID: "other", RepoID: "other-repo"}); e != nil {
+	if _, e := taskwork.CreateTask(d, taskwork.TaskCreateInput{TaskID: "other-task", Title: "Other Task", Description: "Second Project", ParentEpicID: "other-epic", ProjectID: "other", RepoID: "other-repo"}); e != nil {
 		t.Fatal(e)
 	}
 }
@@ -118,7 +119,7 @@ func TestJournalsLiveInTheirProjectsWork(t *testing.T) {
 	if e != nil || len(journals) != 2 {
 		t.Fatalf("journals = %+v %v", journals, e)
 	}
-	w, e := workspace.ObserveContaining(f.s.Workspace)
+	w, e := workspace.ObserveContaining(f.s.Workspace.Dependencies)
 	if e != nil {
 		t.Fatal(e)
 	}

@@ -3,6 +3,7 @@ package workspaceview
 import (
 	"sort"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -22,12 +23,12 @@ type EpicBase struct {
 }
 
 type EpicWorktree struct {
-	RepoID      workspace.RepoID     `json:"repo_id"`
-	WorktreeID  workspace.WorktreeID `json:"worktree_id"`
-	Locator     string               `json:"locator"`
-	Ref         string               `json:"ref"`
-	Freshness   string               `json:"freshness"`
-	SourceBasis string               `json:"source_basis"`
+	RepoID      workspace.RepoID    `json:"repo_id"`
+	WorktreeID  taskwork.WorktreeID `json:"worktree_id"`
+	Locator     string              `json:"locator"`
+	Ref         string              `json:"ref"`
+	Freshness   string              `json:"freshness"`
+	SourceBasis string              `json:"source_basis"`
 }
 
 type ProgressCounts struct {
@@ -38,38 +39,38 @@ type ProgressCounts struct {
 }
 
 type EpicRow struct {
-	EpicID          workspace.EpicID         `json:"epic_id"`
-	ProjectID       workspace.ProjectID      `json:"project_id"`
-	Title           string                   `json:"title"`
-	Lifecycle       workspace.LifecycleState `json:"lifecycle"`
-	Base            []EpicBase               `json:"base"`
-	Worktrees       []EpicWorktree           `json:"worktrees"`
-	TaskCount       int                      `json:"task_count"`
-	ProgressCounts  ProgressCounts           `json:"progress_counts"`
-	LastActivityUTC *string                  `json:"last_activity_utc"`
+	EpicID          taskwork.EpicID         `json:"epic_id"`
+	ProjectID       workspace.ProjectID     `json:"project_id"`
+	Title           string                  `json:"title"`
+	Lifecycle       taskwork.LifecycleState `json:"lifecycle"`
+	Base            []EpicBase              `json:"base"`
+	Worktrees       []EpicWorktree          `json:"worktrees"`
+	TaskCount       int                     `json:"task_count"`
+	ProgressCounts  ProgressCounts          `json:"progress_counts"`
+	LastActivityUTC *string                 `json:"last_activity_utc"`
 }
 
 type EpicList struct {
-	Creations     []workspace.EpicCreateOperation `json:"creations"`
-	Kind          string                          `json:"kind"`
-	SchemaVersion int                             `json:"schema_version"`
-	Workspace     WorkspaceRef                    `json:"workspace"`
-	Scope         EpicFilters                     `json:"scope"`
-	Epics         []EpicRow                       `json:"epics"`
-	Freshness     string                          `json:"freshness"`
-	SourceBasis   string                          `json:"source_basis"`
-	Reasons       []string                        `json:"reasons"`
+	Creations     []taskwork.EpicCreateOperation `json:"creations"`
+	Kind          string                         `json:"kind"`
+	SchemaVersion int                            `json:"schema_version"`
+	Workspace     WorkspaceRef                   `json:"workspace"`
+	Scope         EpicFilters                    `json:"scope"`
+	Epics         []EpicRow                      `json:"epics"`
+	Freshness     string                         `json:"freshness"`
+	SourceBasis   string                         `json:"source_basis"`
+	Reasons       []string                       `json:"reasons"`
 }
 
-func ReadEpics(d workspace.Dependencies, filters EpicFilters) (EpicList, error) {
-	if err := (workspace.TaskListFilters{ProjectID: filters.ProjectID}).Validate(); err != nil {
+func ReadEpics(d taskwork.Dependencies, filters EpicFilters) (EpicList, error) {
+	if err := (taskwork.TaskListFilters{ProjectID: filters.ProjectID}).Validate(); err != nil {
 		return EpicList{}, err
 	}
 	s, err := LoadSnapshot(d)
 	if err != nil {
 		return EpicList{}, err
 	}
-	if err := ValidateTaskFilters(s, workspace.TaskListFilters{ProjectID: filters.ProjectID}); err != nil {
+	if err := ValidateTaskFilters(s, taskwork.TaskListFilters{ProjectID: filters.ProjectID}); err != nil {
 		return EpicList{}, err
 	}
 	process := readProgressProcess(d, s)
@@ -77,8 +78,8 @@ func ReadEpics(d workspace.Dependencies, filters EpicFilters) (EpicList, error) 
 	return BuildEpics(s, filters, process)
 }
 
-func BuildEpics(s *Snapshot, filters EpicFilters, process map[workspace.TaskID]ProcessFacts) (EpicList, error) {
-	tasks, err := BuildTaskList(s, workspace.TaskListFilters{ProjectID: filters.ProjectID}, process)
+func BuildEpics(s *Snapshot, filters EpicFilters, process map[taskwork.TaskID]ProcessFacts) (EpicList, error) {
+	tasks, err := BuildTaskList(s, taskwork.TaskListFilters{ProjectID: filters.ProjectID}, process)
 	if err != nil {
 		return EpicList{}, err
 	}
@@ -86,14 +87,14 @@ func BuildEpics(s *Snapshot, filters EpicFilters, process map[workspace.TaskID]P
 }
 
 func epicsFromTasks(s *Snapshot, filters EpicFilters, tasks TaskList) EpicList {
-	out := EpicList{[]workspace.EpicCreateOperation{}, EpicListKind, 2, tasks.Workspace, filters, []EpicRow{}, tasks.Freshness, "registered", tasks.Reasons}
+	out := EpicList{[]taskwork.EpicCreateOperation{}, EpicListKind, 2, tasks.Workspace, filters, []EpicRow{}, tasks.Freshness, "registered", tasks.Reasons}
 	for _, op := range s.Registry.EpicCreateOperations {
 		if filters.ProjectID == nil || op.Request.ProjectID == *filters.ProjectID {
 			out.Creations = append(out.Creations, op)
 		}
 	}
-	tasksByEpic := map[workspace.EpicID][]TaskRow{}
-	activityByEpic := workspace.RegisteredEpicActivityTimes(s.Registry)
+	tasksByEpic := map[taskwork.EpicID][]TaskRow{}
+	activityByEpic := taskwork.RegisteredEpicActivityTimes(s.Registry)
 	for _, task := range tasks.Tasks {
 		tasksByEpic[task.ParentEpicID] = append(tasksByEpic[task.ParentEpicID], task)
 	}
@@ -102,7 +103,7 @@ func epicsFromTasks(s *Snapshot, filters EpicFilters, tasks TaskList) EpicList {
 			continue
 		}
 		row := EpicRow{EpicID: epic.ID, ProjectID: epic.ProjectID, Title: epic.Title, Lifecycle: s.Lifecycle.Epic(epic.ID), Base: []EpicBase{}, Worktrees: []EpicWorktree{}, LastActivityUTC: activityByEpic[epic.ID]}
-		for _, base := range workspace.RegisteredEpicBases(s.Registry, epic) {
+		for _, base := range taskwork.RegisteredEpicBases(s.Registry, epic) {
 			row.Base = append(row.Base, EpicBase{base.RepoID, base.Revision, base.OID, base.Tree, s.Freshness, "registered"})
 			row.Worktrees = append(row.Worktrees, EpicWorktree{base.RepoID, base.WorktreeID, base.Locator, base.Ref, s.Freshness, "registered"})
 		}

@@ -24,7 +24,7 @@ for line in inventory.stdout.splitlines():
 
 groups = [
     ('cli-and-projection', ['./cmd', './internal/workspaceview'], '.'),
-    ('registered-queue-and-content', ['./internal/workspace'], '^Test(RegisteredQueue|TaskContent|TaskGoal|TaskQueue)'),
+    ('registered-queue-and-content', ['./internal/taskwork'], '^Test(RegisteredQueue|TaskContent|TaskGoal|TaskQueue)'),
     ('preserved-run-and-report', ['./internal/taskrun'], '^Test(ReadInventory|InventoryDelivery|InventoryCaptured|DeliveryOwnerActualAcceptance)'),
 ]
 observed = {}

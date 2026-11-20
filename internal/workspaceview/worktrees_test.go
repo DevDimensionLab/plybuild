@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -58,17 +59,17 @@ func TestWorktreeInventoryKeepsOwnersUnknownsAndNoGitWrites(t *testing.T) {
 	oid := inventoryGit(t, main, "rev-parse", "HEAD")
 	epic := filepath.Join(root, "epic")
 	inventoryGit(t, main, "worktree", "add", "-b", "epic", epic)
-	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Inventory", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: main}}}); err != nil {
+	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Inventory", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: main}}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: epic, Ref: "refs/heads/epic", ExpectedOID: oid}); err != nil {
+	if _, err := taskwork.AdoptEpic(d, taskwork.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: epic, Ref: "refs/heads/epic", ExpectedOID: oid}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: "task", Title: "Task", Description: "Fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
+	if _, err := taskwork.CreateTask(d, taskwork.TaskCreateInput{TaskID: "task", Title: "Task", Description: "Fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
 		t.Fatal(err)
 	}
 	task := filepath.Join(root, "task")
-	if _, err := workspace.CreateTaskWorktree(d, workspace.TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: task, ExpectedParentOID: oid}); err != nil {
+	if _, err := taskwork.CreateTaskWorktree(d, taskwork.TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: task, ExpectedParentOID: oid}); err != nil {
 		t.Fatal(err)
 	}
 	other := filepath.Join(root, "outside Ply")
@@ -148,7 +149,7 @@ func TestWorktreeInventoryReadsRepositoryWithoutWorkHistory(t *testing.T) {
 	}
 	inventoryGit(t, main, "add", "README")
 	inventoryGit(t, main, "commit", "-m", "base")
-	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Inventory", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: main}}}); err != nil {
+	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Inventory", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: main}}}); err != nil {
 		t.Fatal(err)
 	}
 	s, err := LoadSnapshot(d)

@@ -59,7 +59,7 @@ func (observer systemRepoObserver) Observe(path string) (RepoObservation, error)
 	if !identity.Worktree {
 		return RepoObservation{}, projectError(ErrorProjectRepoInvalid, fmt.Sprintf("%s is not a Git worktree root", path), nil)
 	}
-	topLevel, canonicalError := canonicalDirectory(observer.files, "", identity.Toplevel, "Git path")
+	topLevel, canonicalError := CanonicalDirectory(observer.files, "", identity.Toplevel, "Git path")
 	if canonicalError != nil {
 		return RepoObservation{}, projectError(ErrorProjectRepoObservation, fmt.Sprintf("observe toplevel for %s: %v", path, canonicalError), canonicalError)
 	}
@@ -69,13 +69,13 @@ func (observer systemRepoObserver) Observe(path string) (RepoObservation, error)
 	if err != nil {
 		return RepoObservation{}, projectError(ErrorProjectRepoObservation, fmt.Sprintf("observe Git identity for %s: %v", path, err), err)
 	}
-	commonDirectory, canonicalError := canonicalDirectory(observer.files, "", identity.CommonDir, "Git path")
+	commonDirectory, canonicalError := CanonicalDirectory(observer.files, "", identity.CommonDir, "Git path")
 	if canonicalError != nil {
 		return RepoObservation{}, projectError(ErrorProjectRepoObservation, fmt.Sprintf("observe common dir for %s: %v", path, canonicalError), canonicalError)
 	}
 	return RepoObservation{Locator: topLevel, GitCommonDir: commonDirectory}, nil
 }
 
-func singleGitLine(output []byte) (string, bool) {
+func SingleGitLine(output []byte) (string, bool) {
 	return gitrepo.SingleLine(output)
 }

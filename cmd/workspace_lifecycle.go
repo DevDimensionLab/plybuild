@@ -5,22 +5,23 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
 type workspaceLifecycleServices struct {
-	show func(string, string) (workspace.WorkItemLifecycleReadback, error)
-	set  func(workspace.WorkItemLifecycleInput) (workspace.WorkItemLifecycleMutation, error)
+	show func(string, string) (taskwork.WorkItemLifecycleReadback, error)
+	set  func(taskwork.WorkItemLifecycleInput) (taskwork.WorkItemLifecycleMutation, error)
 }
 
-func newWorkspaceLifecycleCommand(d workspace.Dependencies, subjectKind string) *cobra.Command {
+func newWorkspaceLifecycleCommand(d taskwork.Dependencies, subjectKind string) *cobra.Command {
 	return newWorkspaceLifecycleCommandWithServices(subjectKind, workspaceLifecycleServices{
-		show: func(kind, id string) (workspace.WorkItemLifecycleReadback, error) {
-			return workspace.ShowWorkItemLifecycle(d, kind, id)
+		show: func(kind, id string) (taskwork.WorkItemLifecycleReadback, error) {
+			return taskwork.ShowWorkItemLifecycle(d, kind, id)
 		},
-		set: func(input workspace.WorkItemLifecycleInput) (workspace.WorkItemLifecycleMutation, error) {
-			return workspace.SetWorkItemLifecycle(d, input)
+		set: func(input taskwork.WorkItemLifecycleInput) (taskwork.WorkItemLifecycleMutation, error) {
+			return taskwork.SetWorkItemLifecycle(d, input)
 		},
 	})
 }
@@ -59,8 +60,8 @@ func newWorkspaceLifecycleCommandWithServices(kind string, services workspaceLif
 	setWorkFlagErrors(show)
 	var actor, setFormat string
 	var expectedRevision int
-	input := func(cmd *cobra.Command, args []string) workspace.WorkItemLifecycleInput {
-		out := workspace.WorkItemLifecycleInput{SubjectKind: kind, SubjectID: args[0], State: workspace.LifecycleState(args[1]), ActorClaim: actor}
+	input := func(cmd *cobra.Command, args []string) taskwork.WorkItemLifecycleInput {
+		out := taskwork.WorkItemLifecycleInput{SubjectKind: kind, SubjectID: args[0], State: taskwork.LifecycleState(args[1]), ActorClaim: actor}
 		if cmd.Flags().Changed("expected-revision") {
 			out.ExpectedRevision = &expectedRevision
 		}
@@ -100,11 +101,11 @@ func newWorkspaceLifecycleCommandWithServices(kind string, services workspaceLif
 
 func validateLifecycleCommandID(kind, id string) error {
 	if kind == "task" {
-		_, err := workspace.ParseTaskID(id)
+		_, err := taskwork.ParseTaskID(id)
 		return err
 	}
 	if kind == "epic" {
-		_, err := workspace.ParseEpicID(id)
+		_, err := taskwork.ParseEpicID(id)
 		return err
 	}
 	return workspace.WorkInvalidArguments("lifecycle subject must be task or epic")

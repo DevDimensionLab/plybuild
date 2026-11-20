@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-const wr01FixturePath = "internal/workspace/content_physical_read.go"
+const wr01FixturePath = "internal/taskwork/content_physical_read.go"
 const wr01FixtureRead = `package workspace
 func contentPhysical(string) error { return nil }
 func contentReadBounded(string, int, bool) ([]byte, error) { return nil, nil }
@@ -123,7 +123,7 @@ func TestWR01ScannerAllProductionVariants(t *testing.T) {
 func TestWR01ScannerCannotPassOnHiddenPopulation(t *testing.T) {
 	t.Run("test file cannot supply production file", func(t *testing.T) {
 		root := legalFixture(t)
-		if err := os.Rename(filepath.Join(root, wr01FixturePath), filepath.Join(root, "internal/workspace/content_physical_read_test.go")); err != nil {
+		if err := os.Rename(filepath.Join(root, wr01FixturePath), filepath.Join(root, "internal/taskwork/content_physical_read_test.go")); err != nil {
 			t.Fatal(err)
 		}
 		got := scanRepository(root, scanIO{}).problems

@@ -7,6 +7,7 @@ import (
 )
 
 func TestProjectStoreRejectsLockSymlink(t *testing.T) {
+	t.Parallel()
 	root := createProjectWorkspace(t)
 	target := filepath.Join(root, "target")
 	mustWriteFile(t, target, "target")

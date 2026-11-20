@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -29,7 +30,7 @@ func (filesystem *commandFileSystem) Getwd() (string, error) {
 }
 
 func TestNewWorkspaceCommandShape(t *testing.T) {
-	command := newWorkspaceCommand(workspace.Dependencies{})
+	command := newWorkspaceCommand(taskwork.Dependencies{})
 	root := &cobra.Command{Use: "ply"}
 	root.AddCommand(command)
 
@@ -78,7 +79,7 @@ func TestWorkspaceCommandRendersCreatedAndAlreadyInitialized(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	filesystem := &commandFileSystem{FileSystem: workspace.SystemDependencies().Files, cwd: root}
+	filesystem := &commandFileSystem{FileSystem: taskwork.SystemDependencies().Files, cwd: root}
 
 	stdout, stderr, err := executeWorkspaceCommand(t, filesystem, "init")
 	if err != nil {
@@ -118,7 +119,7 @@ func TestWorkspaceCommandRejectsArgumentsAndLocalFlags(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			filesystem := &commandFileSystem{FileSystem: workspace.SystemDependencies().Files, cwd: root}
+			filesystem := &commandFileSystem{FileSystem: taskwork.SystemDependencies().Files, cwd: root}
 			stdout, _, err := executeWorkspaceCommand(t, filesystem, test.args...)
 			if err == nil || err.Error() != test.want {
 				t.Fatalf("error = %v, want %q", err, test.want)
@@ -135,7 +136,7 @@ func TestWorkspaceCommandRejectsArgumentsAndLocalFlags(t *testing.T) {
 
 func TestWorkspaceCommandDoesNotPrintSuccessOnUseCaseError(t *testing.T) {
 	filesystem := &commandFileSystem{
-		FileSystem: workspace.SystemDependencies().Files,
+		FileSystem: taskwork.SystemDependencies().Files,
 		getwdErr:   errors.New("cwd unavailable"),
 	}
 	stdout, _, err := executeWorkspaceCommand(t, filesystem, "init")
@@ -158,8 +159,8 @@ func TestWorkspaceHookShadowsLegacyInitialization(t *testing.T) {
 		{"workspace", "project", "list"},
 	} {
 		rootDirectory := t.TempDir()
-		filesystem := &commandFileSystem{FileSystem: workspace.SystemDependencies().Files, cwd: rootDirectory}
-		dependencies := workspace.SystemDependencies()
+		filesystem := &commandFileSystem{FileSystem: taskwork.SystemDependencies().Files, cwd: rootDirectory}
+		dependencies := taskwork.SystemDependencies()
 		dependencies.Files = filesystem
 		legacyCalls := 0
 		root := &cobra.Command{
@@ -190,7 +191,7 @@ func TestWorkspaceHookShadowsLegacyInitialization(t *testing.T) {
 
 func executeWorkspaceCommand(t *testing.T, filesystem workspace.FileSystem, args ...string) (string, string, error) {
 	t.Helper()
-	command := newWorkspaceCommand(workspace.Dependencies{Files: filesystem})
+	command := newWorkspaceCommand(taskwork.Dependencies{Dependencies: workspace.Dependencies{Files: filesystem}})
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	command.SetOut(stdout)
@@ -205,7 +206,7 @@ func executeWorkspaceCommand(t *testing.T, filesystem workspace.FileSystem, args
 func TestWorkspaceOffersNoRetiredExternalIssueCommands(t *testing.T) {
 	for _, kind := range []string{"task", "epic"} {
 		root := &cobra.Command{Use: "ply"}
-		root.AddCommand(newWorkspaceCommand(workspace.Dependencies{}))
+		root.AddCommand(newWorkspaceCommand(taskwork.Dependencies{}))
 		found, _, err := root.Find([]string{"workspace", kind, "external-issue", "show", "id"})
 		if err != nil || found.Name() != kind {
 			t.Fatalf("%s external-issue resolved to %q: %v", kind, found.Name(), err)

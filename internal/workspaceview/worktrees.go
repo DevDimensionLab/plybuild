@@ -3,6 +3,7 @@ package workspaceview
 import (
 	"sort"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -17,26 +18,26 @@ type WorktreeBase struct {
 	Revision int    `json:"revision"`
 }
 type WorktreeItem struct {
-	ProjectID      string                           `json:"project_id"`
-	RepoID         string                           `json:"repo_id"`
-	Locator        string                           `json:"locator"`
-	Ref            *string                          `json:"ref"`
-	OID            *string                          `json:"oid"`
-	Clean          *bool                            `json:"clean"`
-	Owner          string                           `json:"owner"`
-	OwnerID        *string                          `json:"owner_id"`
-	OwnerFreshness string                           `json:"owner_freshness"`
-	Base           *WorktreeBase                    `json:"base"`
-	Ahead          *int                             `json:"ahead"`
-	Behind         *int                             `json:"behind"`
-	MergedIntoBase *bool                            `json:"merged_into_base"`
-	LastCommitUTC  *string                          `json:"last_commit_utc"`
-	Locked         bool                             `json:"locked"`
-	Prunable       bool                             `json:"prunable"`
-	Bare           bool                             `json:"bare"`
-	Detached       bool                             `json:"detached"`
-	Freshness      workspace.InventoryFactFreshness `json:"freshness"`
-	Reasons        []string                         `json:"reasons"`
+	ProjectID      string                          `json:"project_id"`
+	RepoID         string                          `json:"repo_id"`
+	Locator        string                          `json:"locator"`
+	Ref            *string                         `json:"ref"`
+	OID            *string                         `json:"oid"`
+	Clean          *bool                           `json:"clean"`
+	Owner          string                          `json:"owner"`
+	OwnerID        *string                         `json:"owner_id"`
+	OwnerFreshness string                          `json:"owner_freshness"`
+	Base           *WorktreeBase                   `json:"base"`
+	Ahead          *int                            `json:"ahead"`
+	Behind         *int                            `json:"behind"`
+	MergedIntoBase *bool                           `json:"merged_into_base"`
+	LastCommitUTC  *string                         `json:"last_commit_utc"`
+	Locked         bool                            `json:"locked"`
+	Prunable       bool                            `json:"prunable"`
+	Bare           bool                            `json:"bare"`
+	Detached       bool                            `json:"detached"`
+	Freshness      taskwork.InventoryFactFreshness `json:"freshness"`
+	Reasons        []string                        `json:"reasons"`
 }
 type WorktreeRepository struct {
 	ProjectID string   `json:"project_id"`
@@ -60,14 +61,14 @@ type inventoryOwner struct {
 	freshness             string
 }
 
-func ListWorktrees(d workspace.Dependencies, s *Snapshot, o WorktreeOptions) (WorktreeListResult, error) {
+func ListWorktrees(d taskwork.Dependencies, s *Snapshot, o WorktreeOptions) (WorktreeListResult, error) {
 	out := WorktreeListResult{Kind: WorktreeListKind, SchemaVersion: 1, Workspace: WorkspaceRef{s.Workspace.Root}, AsOf: s.ObservedAtUTC, Worktrees: []WorktreeItem{}, Repositories: []WorktreeRepository{}, Freshness: s.Freshness, Reasons: []string{}}
 	if err := validateProjectFilter(s, o.ProjectID); err != nil {
 		return out, err
 	}
 	if o.RepoID != "" {
 		id := workspace.RepoID(o.RepoID)
-		if err := ValidateTaskFilters(s, workspace.TaskListFilters{RepoID: &id}); err != nil {
+		if err := ValidateTaskFilters(s, taskwork.TaskListFilters{RepoID: &id}); err != nil {
 			return out, err
 		}
 	}
@@ -96,7 +97,7 @@ func ListWorktrees(d workspace.Dependencies, s *Snapshot, o WorktreeOptions) (Wo
 					bases[path] = owner.base.OID
 				}
 			}
-			facts, err := workspace.ReadRegisteredWorktreeInventory(d, repo, bases)
+			facts, err := taskwork.ReadRegisteredWorktreeInventory(d, repo, bases)
 			if err != nil {
 				out.Repositories = append(out.Repositories, WorktreeRepository{string(project.ID), string(id), "unknown", []string{"worktree_inventory_unavailable: " + err.Error()}})
 				out.Freshness = "unknown"
@@ -154,12 +155,12 @@ func ListWorktrees(d workspace.Dependencies, s *Snapshot, o WorktreeOptions) (Wo
 
 func inventoryOwners(s *Snapshot, project workspace.ProjectID, repo workspace.RepoRecord) map[string]inventoryOwner {
 	owners := map[string]inventoryOwner{repo.Locator: {kind: "project_main", id: string(project), common: repo.GitCommonDir, freshness: s.Freshness}}
-	bases := map[workspace.EpicID]*WorktreeBase{}
+	bases := map[taskwork.EpicID]*WorktreeBase{}
 	for _, epic := range s.Registry.Epics {
 		if epic.ProjectID != project {
 			continue
 		}
-		for _, base := range workspace.RegisteredEpicBases(s.Registry, epic) {
+		for _, base := range taskwork.RegisteredEpicBases(s.Registry, epic) {
 			if base.RepoID == repo.ID {
 				b := &WorktreeBase{"registered_epic_base", base.Locator, base.Ref, base.OID, base.Revision}
 				bases[epic.ID] = b
@@ -171,7 +172,7 @@ func inventoryOwners(s *Snapshot, project workspace.ProjectID, repo workspace.Re
 		if task.ProjectID != project || task.RepoID != repo.ID {
 			continue
 		}
-		if task.WorktreeState == workspace.WorkItemRetired {
+		if task.WorktreeState == taskwork.WorkItemRetired {
 			// A retired receipt is historical ownership, not permission to claim
 			// a later checkout that happens to reuse the old physical locator.
 			continue

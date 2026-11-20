@@ -15,7 +15,7 @@ import (
 // Only the ProjectRecord leaves; repository records stay private.
 func ResolveDefinedProject(d Dependencies, id ProjectID) (ProjectRecord, error) {
 	if id != "" {
-		if err := validateIdentifier("project", string(id)); err != nil {
+		if err := ValidateIdentifier("project", string(id)); err != nil {
 			return ProjectRecord{}, err
 		}
 	}
@@ -49,7 +49,7 @@ func ResolveDefinedProject(d Dependencies, id ProjectID) (ProjectRecord, error) 
 // wrapper is or contains the physical working directory. A wrapper that does
 // not exist is skipped.
 func projectsContainingWorkingDirectory(files FileSystem, projects []ProjectRecord) ([]ProjectRecord, error) {
-	cwd, err := projectPhysicalWorkingDirectory(files)
+	cwd, err := ProjectPhysicalWorkingDirectory(files)
 	if err != nil {
 		return nil, err
 	}

@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func addWorkspaceTaskJournalCommands(task *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceTaskJournalCommands(task *cobra.Command, d taskwork.Dependencies) {
 	journal := &cobra.Command{Use: "journal", Short: "Read and contribute to a Task process journal", Long: "Read native facts, meaningful agent steps and observer contributions across Task runs. Contributions are self-reported data and grant no Task, QA, integration or start authority.", Example: "  ply workspace task journal show my-task\n  ply workspace task journal record my-task --file /absolute/event.json", Args: cobra.NoArgs, RunE: func(c *cobra.Command, a []string) error { return c.Help() }}
 	for _, verb := range []string{"show", "record", "observe"} {
 		verb := verb
@@ -27,7 +28,7 @@ func addWorkspaceTaskJournalCommands(task *cobra.Command, d workspace.Dependenci
 			if len(a) != 1 {
 				return workspace.WorkInvalidArguments("expected exactly one Task ID")
 			}
-			if _, e := workspace.ParseTaskID(a[0]); e != nil {
+			if _, e := taskwork.ParseTaskID(a[0]); e != nil {
 				return e
 			}
 			if format != "text" && format != "json" {

@@ -8,5 +8,5 @@ export PLY_REGISTRY_TEST_MANIFEST="$2"
 export PLY_CANDIDATE_BINARY="$1/ply"
 cd "$cb01a_root"
 python3 test/registry_cli_acceptance.py "$1" "$2"
-go test ./internal/workspace ./internal/clirelease ./cmd \
+go test ./internal/workspace ./internal/taskwork ./internal/clirelease ./cmd \
   -run 'TestRegistry|TestInstall|TestExecutableEntryBoundary' -count=1

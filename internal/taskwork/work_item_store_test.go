@@ -1,0 +1,581 @@
+package taskwork
+
+import (
+	"errors"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func TestWorkItemRegistryEncodingIsDeterministicAndStrict(t *testing.T) {
+	t.Parallel()
+	want := "epics: []\ntasks: []\nworktree_operations: []\ntask_results: []\nhuman_qa_records: []\nintegration_authorities: []\nintegration_intents: []\nintegration_attempts: []\nintegration_results: []\ntask_problem_revisions: []\ntask_spec_revisions: []\ntask_spec_assessments: []\ntask_solution_selections: []\ntask_result_spec_bindings: []\ntask_content_publications: []\nepic_base_versions: []\nepic_base_updates: []\ntask_queue_events: []\ntask_preparations: []\nepic_create_operations: []\n"
+	got, err := encodeWorkItemRegistry(emptyWorkItemRegistry())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != want {
+		t.Fatalf("registry bytes:\n%s\nwant:\n%s", got, want)
+	}
+	decoded, err := decodeWorkItemRegistry(got)
+	if err != nil || !reflect.DeepEqual(decoded, emptyWorkItemRegistry()) {
+		t.Fatalf("decode = %#v, %v", decoded, err)
+	}
+	for name, invalid := range map[string]string{
+		"unknown field":   strings.Replace(want, "epics: []", "epics: []\nunknown: true", 1),
+		"inner version":   "format_version: 11\n" + want,
+		"missing list":    strings.Replace(want, "epics: []\n", "", 1),
+		"missing queue":   strings.Replace(want, "task_preparations: []\n", "", 1),
+		"null list":       strings.Replace(want, "task_preparations: []", "task_preparations: null", 1),
+		"missing creates": strings.Replace(want, "epic_create_operations: []\n", "", 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := decodeWorkItemRegistry([]byte(invalid)); err == nil {
+				t.Fatalf("invalid registry accepted:\n%s", invalid)
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsInvalidObservationShapes(t *testing.T) {
+	t.Parallel()
+	fixture := newWorkItemJourneyFixture(t)
+	input, _ := ParseTaskWorktreeCreateInput("task", "task", filepath.Join(fixture.wrapper, "task"), fixture.oid)
+	git := fixture.dependencies.WorkGit
+	fixture.dependencies.WorkGit = noEffectGit{WorkItemGit: git}
+	if _, err := CreateTaskWorktree(fixture.dependencies, input); !hasWorkErrorClass(err, workspace.ErrorWorkGitEffect) {
+		t.Fatalf("preserve create intent: %v", err)
+	}
+	creating, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	operation := creating.WorktreeOperations[0]
+	fixture.dependencies.WorkGit = git
+	if _, err := CreateTaskWorktree(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, filepath.Dir(fixture.wrapper)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// This test covers legacy ready observations. Keep the actual pre-effect
+	// intent and observe completed Git rather than expecting a new native create
+	// to persist the legacy duplicate or synthesizing observation fields.
+	binding := registry.Epics[0].RepoBindings[0]
+	repo := workspace.RepoRecord{Locator: filepath.Join(fixture.wrapper, "main"), GitCommonDir: binding.GitCommonDir}
+	classification, observation := observeTaskCreate(fixture.dependencies, repo, binding, operation)
+	if classification != "exact_effect" {
+		t.Fatalf("legacy ready observation: %s", classification)
+	}
+	operation.State, operation.LastObservation = "ready", observation
+	registry.Tasks[0].Worktree.NativeReceiptVersion = 0
+	registry.WorktreeOperations = []WorktreeOperationRecord{operation}
+	baseline, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, mutate := range map[string]func(*WorkItemRegistry){
+		"unknown target kind": func(value *WorkItemRegistry) { value.WorktreeOperations[0].LastObservation.TargetKind = "directory" },
+		"malformed observed OID": func(value *WorkItemRegistry) {
+			value.WorktreeOperations[0].LastObservation.TargetOID = stringPointer("abc")
+		},
+		"readback-only reason": func(value *WorkItemRegistry) {
+			value.WorktreeOperations[0].LastObservation.Reasons = []string{"project_binding_unknown"}
+		},
+		"mismatched exact effect": func(value *WorkItemRegistry) {
+			value.WorktreeOperations[0].LastObservation.TargetRef = stringPointer("refs/heads/other")
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate, err := decodeWorkItemRegistry(baseline)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutate(&candidate)
+			if _, err := encodeWorkItemRegistry(candidate); err == nil {
+				t.Fatalf("invalid observation accepted: %#v", candidate.WorktreeOperations[0].LastObservation)
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsIntegrationPlanWithDifferentGitArgv(t *testing.T) {
+	t.Parallel()
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	registry.IntegrationAuthorities[0].Plan.Effect.Argv = []string{"git", "reset", "--hard"}
+	registry.IntegrationAuthorities[0].PlanSHA256 = integrationPlanDigest(registry.IntegrationAuthorities[0].Plan)
+	registry.IntegrationIntents[0].PlanSHA256 = registry.IntegrationAuthorities[0].PlanSHA256
+	registry.IntegrationIntents[0].IntentSHA256 = integrationIntentDigest(registry.IntegrationIntents[0])
+	if _, err := encodeWorkItemRegistry(registry); err == nil {
+		t.Fatal("integration plan with non-contract Git argv was accepted")
+	}
+}
+
+func TestWorkItemRegistryRejectsIntegrationPlanWithDifferentRetryBinding(t *testing.T) {
+	t.Parallel()
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	other := IntegrationResultID("ires_ffffffffffffffffffffffffffffffff")
+	registry.IntegrationAuthorities[0].Plan.RetryAfterResultID = &other
+	registry.IntegrationAuthorities[0].PlanSHA256 = integrationPlanDigest(registry.IntegrationAuthorities[0].Plan)
+	registry.IntegrationIntents[0].PlanSHA256 = registry.IntegrationAuthorities[0].PlanSHA256
+	registry.IntegrationIntents[0].IntentSHA256 = integrationIntentDigest(registry.IntegrationIntents[0])
+	if _, err := encodeWorkItemRegistry(registry); err == nil {
+		t.Fatal("integration plan with a different retry predecessor was accepted")
+	}
+}
+
+func TestWorkItemRegistryRejectsMalformedIntegrationCommandEvidence(t *testing.T) {
+	t.Parallel()
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline := registry.IntegrationResults[0]
+	for name, mutate := range map[string]func(*IntegrationResult){
+		"invalid base64":          func(result *IntegrationResult) { result.Command.Stdout.Base64 = "!" },
+		"captured size mismatch":  func(result *IntegrationResult) { result.Command.Stdout.CapturedBytes++ },
+		"invalid launch nullform": func(result *IntegrationResult) { result.Command.ExitCode = nil },
+		"invalid truncation":      func(result *IntegrationResult) { result.Command.Stdout.Truncated = !result.Command.Stdout.Truncated },
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := baseline
+			mutate(&candidate)
+			if err := validateIntegrationResultShape(candidate); err == nil {
+				t.Fatalf("malformed command evidence accepted: %#v", candidate.Command)
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsContradictoryIntegrationRecoveryActions(t *testing.T) {
+	t.Parallel()
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, mutate := range map[string]func(*IntegrationResult){
+		"wrong recovery status": func(result *IntegrationResult) { result.RecoveryStatus = "unknown" },
+		"unsafe next action": func(result *IntegrationResult) {
+			result.NextAction = IntegrationNextAction{Kind: "apply_confirmed_plan", Reason: "Apply again.", Argv: []string{"git", "merge"}}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate, err := decodeWorkItemRegistry(baseline)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutate(&candidate.IntegrationResults[0])
+			if _, err := encodeWorkItemRegistry(candidate); err == nil {
+				t.Fatalf("contradictory result accepted: %#v", candidate.IntegrationResults[0])
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsBrokenIntegrationObservationChain(t *testing.T) {
+	t.Parallel()
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	otherOID := strings.Repeat("f", len(fixture.oid))
+	for name, mutate := range map[string]func(*WorkItemRegistry){
+		"result before differs from Attempt": func(candidate *WorkItemRegistry) {
+			candidate.IntegrationResults[0].BeforeObservation.OID = otherOID
+		},
+		"Attempt prestate differs from plan": func(candidate *WorkItemRegistry) {
+			candidate.IntegrationAttempts[0].PreObservation.OID = otherOID
+			candidate.IntegrationResults[0].BeforeObservation.OID = otherOID
+		},
+		"exact effect inventory differs": func(candidate *WorkItemRegistry) {
+			candidate.IntegrationResults[0].AfterObservation.InventoryEntries[0].OID = fixture.oid
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate, err := decodeWorkItemRegistry(baseline)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutate(&candidate)
+			if _, err := encodeWorkItemRegistry(candidate); err == nil {
+				t.Fatalf("broken observation chain accepted: %#v", candidate.IntegrationResults[0])
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRequiresExactNestedFieldsExplicitArraysAndNulls(t *testing.T) {
+	t.Parallel()
+	fixture := newIntegrationJourneyFixture(t)
+	input := TaskIntegrationInput{TaskID: "task", ExpectedResultOID: fixture.resultOID, ExpectedParentOID: fixture.oid}
+	checked, err := CheckTaskIntegration(fixture.dependencies, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input.Apply, input.Confirmation = true, integrationDigest(t, checked.Readback)
+	if _, err := ApplyTaskIntegration(fixture.dependencies, input); err != nil {
+		t.Fatal(err)
+	}
+	registry, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, fixture.root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := encodeWorkItemRegistry(registry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline := string(encoded)
+	for name, candidate := range map[string]string{
+		"missing nullable": strings.Replace(baseline, "    retry_after_result_id: null\n", "", 1),
+		"null array":       strings.Replace(baseline, "reasons: []\n", "reasons: null\n", 1),
+		"wrong root order": strings.Replace(baseline, "task_results:", "human_qa_records:", 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if candidate == baseline {
+				t.Fatalf("test mutation %q did not change encoded bytes", name)
+			}
+			if _, err := decodeWorkItemRegistry([]byte(candidate)); err == nil {
+				t.Fatalf("invalid exact shape accepted:\n%s", candidate)
+			}
+		})
+	}
+}
+
+func TestWorkItemRegistryRejectsTaskOperationStateMismatches(t *testing.T) {
+	t.Parallel()
+	fixture := newWorkItemJourneyFixture(t)
+	fixture.dependencies.WorkGit = noEffectGit{WorkItemGit: fixture.dependencies.WorkGit}
+	input, _ := ParseTaskWorktreeCreateInput("task", "task", filepath.Join(fixture.wrapper, "task"), fixture.oid)
+	if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil || !hasWorkErrorClass(err, workspace.ErrorWorkGitEffect) {
+		t.Fatalf("creating error = %v", err)
+	}
+	root := filepath.Dir(fixture.wrapper)
+	creating, err := fixture.dependencies.WorkItems.Snapshot(testWork(t, root))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("reconciliation Task with creating operation", func(t *testing.T) {
+		contents, err := encodeWorkItemRegistry(creating)
+		if err != nil {
+			t.Fatal(err)
+		}
+		invalid := strings.Replace(string(contents), "    worktree_state: creating\n", "    worktree_state: reconciliation_required\n", 1)
+		if invalid == string(contents) {
+			t.Fatal("Task worktree_state was not found in encoded registry")
+		}
+		if _, err := decodeWorkItemRegistry([]byte(invalid)); err == nil {
+			t.Fatal("reconciliation_required Task with creating operation was accepted")
+		}
+	})
+
+	t.Run("creating Task with reconciliation operation", func(t *testing.T) {
+		reconciliation := creating
+		reconciliation.Tasks = append([]TaskRecord(nil), creating.Tasks...)
+		reconciliation.WorktreeOperations = append([]WorktreeOperationRecord(nil), creating.WorktreeOperations...)
+		reconciliation.Tasks[0].WorktreeState = WorkItemReconciliationRequired
+		reconciliation.WorktreeOperations[0].State = "reconciliation_required"
+		reconciliation.WorktreeOperations[0].LastObservation = emptyCreateObservation("partial_or_unknown")
+		reconciliation.WorktreeOperations[0].LastObservation.Reasons = []string{"task_worktree_reconciliation_required"}
+		contents, err := encodeWorkItemRegistry(reconciliation)
+		if err != nil {
+			t.Fatal(err)
+		}
+		invalid := strings.Replace(string(contents), "    worktree_state: reconciliation_required\n", "    worktree_state: creating\n", 1)
+		if invalid == string(contents) {
+			t.Fatal("Task worktree_state was not found in encoded registry")
+		}
+		if _, err := decodeWorkItemRegistry([]byte(invalid)); err == nil {
+			t.Fatal("creating Task with reconciliation_required operation was accepted")
+		}
+	})
+}
+
+func TestWorkItemStoreFaultsLeaveOldOrCompleteNewRegistry(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name, operation           string
+		shortWrite, expectPublish bool
+	}{
+		{name: "lock open", operation: "lock-open"},
+		{name: "lock", operation: "lock"},
+		{name: "temp open", operation: "temp-open"},
+		{name: "write", operation: "write"},
+		{name: "short write", shortWrite: true},
+		{name: "chmod", operation: "chmod"},
+		{name: "file sync", operation: "file-sync"},
+		{name: "close", operation: "close"},
+		{name: "replace", operation: "replace"},
+		{name: "directory sync", operation: "directory-sync", expectPublish: true},
+		{name: "unlock", operation: "unlock", expectPublish: true},
+		{name: "lock close", operation: "lock-close", expectPublish: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := createProjectWorkspace(t)
+			healthy := newSystemWorkItemStore()
+			if err := healthy.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(emptyWorkItemRegistry()) }); err != nil {
+				t.Fatal(err)
+			}
+			before, err := os.ReadFile(testWork(t, root).Registry())
+			if err != nil {
+				t.Fatal(err)
+			}
+			candidate := minimalEpicRegistry(root)
+			faulty := &systemWorkItemStore{faults: &workItemStoreFaults{shortWrite: test.shortWrite, fail: func(operation string) error {
+				if operation == test.operation {
+					return errInjected
+				}
+				return nil
+			}}}
+			err = faulty.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(candidate) })
+			if err == nil || !hasWorkErrorClass(err, workspace.ErrorWorkIO) {
+				t.Fatalf("error = %v", err)
+			}
+			after, readErr := os.ReadFile(testWork(t, root).Registry())
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			if test.expectPublish == reflect.DeepEqual(before, after) {
+				t.Fatalf("expect publish=%t bytes equal=%t", test.expectPublish, reflect.DeepEqual(before, after))
+			}
+			if err := healthy.WithLock(testWork(t, root), func(session WorkItemStoreSession) error { return session.Publish(candidate) }); err != nil {
+				t.Fatal(err)
+			}
+			final, err := healthy.Snapshot(testWork(t, root))
+			if err != nil || len(final.Epics) != 1 {
+				t.Fatalf("final=%#v error=%v", final, err)
+			}
+		})
+	}
+}
+
+func TestWorkItemStoreRejectsRegistryAndLockSymlinks(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{workspace.WorkItemsFile, workspace.ProjectWork{}.Lock()} {
+		t.Run(name, func(t *testing.T) {
+			root := createProjectWorkspace(t)
+			target := filepath.Join(root, "target")
+			if err := os.WriteFile(target, []byte("target"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.MkdirAll(testWork(t, root).Dir, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(target, filepath.Join(testWork(t, root).Dir, name)); err != nil {
+				t.Fatal(err)
+			}
+			store := newSystemWorkItemStore()
+			if name == workspace.WorkItemsFile {
+				_, err := store.Snapshot(testWork(t, root))
+				if err == nil || !hasWorkErrorClass(err, workspace.ErrorWorkStoreConflict) {
+					t.Fatalf("error=%v", err)
+				}
+			} else {
+				err := store.WithLock(testWork(t, root), func(WorkItemStoreSession) error { return errors.New("must not run") })
+				if err == nil || !hasWorkErrorClass(err, workspace.ErrorWorkStoreConflict) {
+					t.Fatalf("error=%v", err)
+				}
+			}
+			contents, err := os.ReadFile(target)
+			if err != nil || string(contents) != "target" {
+				t.Fatalf("target=%q error=%v", contents, err)
+			}
+		})
+	}
+}
+
+func TestTaskWorktreeStoreFailuresRespectTheGitEffectBoundary(t *testing.T) {
+	t.Parallel()
+	t.Run("intent failure starts no Git effect", func(t *testing.T) {
+		fixture := newWorkItemJourneyFixture(t)
+		fixture.dependencies.WorkItems = &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(operation string) error {
+			if operation == "temp-open" {
+				return errInjected
+			}
+			return nil
+		}}}
+		target := filepath.Join(fixture.wrapper, "task")
+		input, _ := ParseTaskWorktreeCreateInput("task", "task", target, fixture.oid)
+		if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil || !hasWorkErrorClass(err, workspace.ErrorWorkIO) {
+			t.Fatalf("error=%v", err)
+		}
+		if _, err := os.Lstat(target); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("target exists: %v", err)
+		}
+		if output, err := execGitOutput(filepath.Join(fixture.wrapper, "main"), "show-ref", "--verify", "refs/heads/task"); err == nil {
+			t.Fatalf("source ref exists: %s", output)
+		}
+	})
+
+	t.Run("ready directory sync failure recovers exact state", func(t *testing.T) {
+		fixture := newWorkItemJourneyFixture(t)
+		directorySyncs := 0
+		faulty := &systemWorkItemStore{faults: &workItemStoreFaults{fail: func(operation string) error {
+			if operation == "directory-sync" {
+				directorySyncs++
+				if directorySyncs == 2 {
+					return errInjected
+				}
+			}
+			return nil
+		}}}
+		fixture.dependencies.WorkItems = faulty
+		input, _ := ParseTaskWorktreeCreateInput("task", "task", filepath.Join(fixture.wrapper, "task"), fixture.oid)
+		if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil || !hasWorkErrorClass(err, workspace.ErrorWorkIO) {
+			t.Fatalf("error=%v", err)
+		}
+		fixture.dependencies.WorkItems = newSystemWorkItemStore()
+		result, err := CreateTaskWorktree(fixture.dependencies, input)
+		if err != nil || result.Outcome != "already_ready" || result.Task.WorktreeState != WorkItemReady {
+			t.Fatalf("retry=%#v error=%v", result, err)
+		}
+	})
+}
+
+func execGitOutput(directory string, arguments ...string) (string, error) {
+	command := exec.Command("git", append([]string{"-C", directory}, arguments...)...)
+	output, err := command.CombinedOutput()
+	return strings.TrimSpace(string(output)), err
+}
+
+func minimalEpicRegistry(root string) WorkItemRegistry {
+	oid := strings.Repeat("a", 40)
+	tree := strings.Repeat("b", 40)
+	registry := emptyWorkItemRegistry()
+	registry.Epics = []EpicRecord{{ID: "epic", Title: "Epic", ProjectID: "ply", RepoBindings: []EpicRepoBinding{{RepoID: "ply", GitCommonDir: filepath.Join(root, "repo.git"), Worktree: EpicWorktreeBinding{ID: "wt_11111111111111111111111111111111", OwnerKind: "epic", OwnerID: "epic", Origin: "adopted", Locator: filepath.Join(root, "epic"), Ref: "refs/heads/epic", OID: oid, Tree: tree, GitCommonDir: filepath.Join(root, "repo.git")}}}}}
+	registry.EpicBaseVersions = []EpicBaseVersion{adoptedEpicBase(registry.Epics[0], registry.Epics[0].RepoBindings[0])}
+	return registry
+}
+
+func TestWorkItemStoreTreatsMissingRegistryAsEmpty(t *testing.T) {
+	t.Parallel()
+	root := createProjectWorkspace(t)
+	registry, err := newSystemWorkItemStore().Snapshot(testWork(t, root))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(registry.Epics) != 0 || len(registry.Tasks) != 0 || len(registry.WorktreeOperations) != 0 || registry.TaskResults == nil || registry.IntegrationResults == nil {
+		t.Fatalf("registry = %#v", registry)
+	}
+	if filepath.Base(testWork(t, root).Registry()) != "work-items.yaml" {
+		t.Fatalf("path = %s", testWork(t, root).Registry())
+	}
+}
+
+// RepoUses lists every Epic binding, Task, worktree operation and Epic create
+// operation of the registrations in that order, as the register reads them.
+func TestWorkItemStoreRepoUsesListsEveryUseInRegistryOrder(t *testing.T) {
+	t.Parallel()
+	registry := emptyWorkItemRegistry()
+	registry.Epics = []EpicRecord{{ID: "e", RepoBindings: []EpicRepoBinding{{RepoID: "ply", GitCommonDir: "/w/ply/.git", Worktree: EpicWorktreeBinding{Locator: "/w/ply/e"}}, {RepoID: "app"}}}}
+	registry.Tasks = []TaskRecord{{ID: "k", RepoID: "ply", GitCommonDir: "/w/ply/.git"}}
+	registry.WorktreeOperations = []WorktreeOperationRecord{{ID: "o", RepoID: "app"}}
+	registry.EpicCreateOperations = []EpicCreateOperation{{ID: "c", Request: EpicCreateInput{RepoID: "ply"}}}
+	want := []workspace.RepoUse{
+		{Kind: workspace.RepoUseEpic, ID: "e", RepoID: "ply", GitCommonDir: "/w/ply/.git", Worktree: "/w/ply/e"},
+		{Kind: workspace.RepoUseEpic, ID: "e", RepoID: "app"},
+		{Kind: workspace.RepoUseTask, ID: "k", RepoID: "ply", GitCommonDir: "/w/ply/.git"},
+		{Kind: workspace.RepoUseWorktreeOperation, ID: "o", RepoID: "app"},
+		{Kind: workspace.RepoUseEpicCreate, ID: "c", RepoID: "ply"},
+	}
+	if got := repoUses(registry); !reflect.DeepEqual(got, want) {
+		t.Fatalf("uses %+v, want %+v", got, want)
+	}
+
+	root := createProjectWorkspace(t)
+	store := newSystemWorkItemStore()
+	if got, err := store.RepoUses(testWork(t, root)); err != nil || len(got) != 0 {
+		t.Fatalf("absent registry: %+v %v", got, err)
+	}
+	writeWorkItems(t, root, "format_version: [\n")
+	if _, err := store.RepoUses(testWork(t, root)); err == nil || !strings.Contains(err.Error(), "invalid work-item registry") {
+		t.Fatalf("invalid registry: %v", err)
+	}
+}
+
+// RecordedRepos reads only the identities that Epic bindings and Tasks record.
+func TestWorkItemStoreRecordedReposReadsOnlyRecordedIdentities(t *testing.T) {
+	t.Parallel()
+	root := t.TempDir()
+	writeWorkItems(t, root, envelope(RegistryFormat, historyRegistry+"unknown: ignored\n"))
+	got, err := newSystemWorkItemStore().RecordedRepos(testWork(t, root))
+	want := []workspace.RepoUse{
+		{Kind: workspace.RepoUseEpic, RepoID: "ply", GitCommonDir: "/w/ply/main/.git"},
+		{Kind: workspace.RepoUseEpic, RepoID: "app", GitCommonDir: "/w/app/main/.git"},
+		{Kind: workspace.RepoUseTask, RepoID: "ply", GitCommonDir: "/w/ply/main/.git"},
+		{Kind: workspace.RepoUseTask, RepoID: "app-server", GitCommonDir: "/w/app/server/.git"},
+	}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("uses %+v, error %v, want %+v", got, err, want)
+	}
+}

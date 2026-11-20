@@ -1,6 +1,7 @@
 package taskjournal
 
 import (
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"sort"
@@ -61,14 +62,14 @@ func axisEvent(e Event, axis, value string, c *Candidate) Event {
 	e.Data = raw(map[string]any{"axis": axis, "value": value})
 	return e
 }
-func candidate(t workspace.TaskRecord, oid, tree string) *Candidate {
+func candidate(t taskwork.TaskRecord, oid, tree string) *Candidate {
 	if t.Worktree == nil {
 		return nil
 	}
 	return &Candidate{string(t.RepoID), string(t.Worktree.ID), oid, tree}
 }
 
-func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
+func (s Service) native(b taskwork.TaskJournalBasis) (Snapshot, error) {
 	root := b.Workspace.Root
 	t := b.Task
 	out := Snapshot{Kind: "ply.workspace.task-journal-snapshot", SchemaVersion: 1, AsOf: s.Now().UTC().Format(time.RFC3339Nano), Workspace: Workspace{workspaceID(root, b.Workspace.MarkerSHA256), root, b.Workspace.MarkerSHA256}, Task: Task{string(t.ID), t.Title, string(t.ProjectID), string(t.RepoID), string(t.ParentEpicID), t.Worktree, digest(t)}, Sources: []Source{}, Events: []Event{}, Steps: []Step{}, Lanes: []Lane{}, Observations: []Observation{}, Coverage: Coverage{"complete", []Reason{}, []string{}, []string{}}, Selection: Selection{Order: "occurred", EventIDs: []string{}}, Current: Current{Axes: map[string]Axis{}, NextAction: NextAction{"Inspect the evidence and clarify the next action with the Task owner.", nil, []string{}}}}
@@ -82,7 +83,7 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
 	state.SourceIDs = append(state.SourceIDs, marker)
 	out.Events = append(out.Events, state)
 	if t.Worktree != nil && s.readBatch == nil {
-		g, e := workspace.ObserveTaskJournalWorktree(s.Workspace, t.Worktree.Locator)
+		g, e := taskwork.ObserveTaskJournalWorktree(s.Workspace, t.Worktree.Locator)
 		if e == nil && g.Clean && g.InventoryMatch && g.Locator == t.Worktree.Locator && g.Ref == t.Worktree.Ref && g.GitCommonDir == t.GitCommonDir {
 			out.Current.Candidate = candidate(t, g.OID, g.Tree)
 		} else {
@@ -99,7 +100,7 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
 		if p.TaskID != t.ID {
 			continue
 		}
-		versions, e := workspace.ReadTaskJournalContent(s.Workspace, b, p)
+		versions, e := taskwork.ReadTaskJournalContent(s.Workspace, b, p)
 		sources := []string{}
 		for _, v := range versions {
 			sources = append(sources, out.source(v.Kind, v.Locator, &v.SHA256, nil, nil))
@@ -115,11 +116,11 @@ func (s Service) native(b workspace.TaskJournalBasis) (Snapshot, error) {
 		out.Events = append(out.Events, ev)
 	}
 	integrationSources := []string{}
-	for _, source := range workspace.IntegrationEvidenceSources(b.Work, b.Registry) {
+	for _, source := range taskwork.IntegrationEvidenceSources(b.Work, b.Registry) {
 		integrationSources = append(integrationSources, out.source(source.Kind, source.Locator, &source.SHA256, nil, nil))
 	}
 	for _, ir := range b.Registry.IntegrationResults {
-		var a *workspace.IntegrationAuthority
+		var a *taskwork.IntegrationAuthority
 		for i := range b.Registry.IntegrationAuthorities {
 			p := &b.Registry.IntegrationAuthorities[i]
 			if p.ID == ir.AuthorityID && p.TaskID == t.ID {

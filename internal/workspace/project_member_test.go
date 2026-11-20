@@ -12,6 +12,7 @@ import (
 )
 
 func TestProjectMemberAddPreservesIdentityAndDirtyRepository(t *testing.T) {
+	t.Parallel()
 	deps, root := discoverFixture(t)
 	first, extra, owned := filepath.Join(root, "first"), filepath.Join(root, "extra"), filepath.Join(root, "owned")
 	discoverRepo(t, first, "")
@@ -79,6 +80,7 @@ func TestProjectMemberAddPreservesIdentityAndDirtyRepository(t *testing.T) {
 }
 
 func TestProjectMemberConcurrentAppendAndIdentityConflict(t *testing.T) {
+	t.Parallel()
 	deps, root := discoverFixture(t)
 	for _, name := range []string{"first", "a", "b", "c"} {
 		discoverRepo(t, filepath.Join(root, name), "")
@@ -135,7 +137,9 @@ func TestProjectMemberConcurrentAppendAndIdentityConflict(t *testing.T) {
 }
 
 func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
+	t.Parallel()
 	deps, root := discoverFixture(t)
+	deps.RepoUses = historyUses{}
 	first, old := filepath.Join(root, "first"), filepath.Join(root, "old")
 	discoverRepo(t, first, "")
 	discoverRepo(t, old, "git@github.com:o/old.git")
@@ -194,7 +198,7 @@ func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 	bound := deps
-	bound.WorkItems = registrationsStore{deps.WorkItems, WorkItemRegistry{Tasks: []TaskRecord{{ID: "k", RepoID: "moved"}}}}
+	bound.RepoUses = registrationsStore{recorded: deps.RepoUses, uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "moved"}}}
 	for name, test := range map[string]struct {
 		deps  Dependencies
 		repo  RepoID
@@ -225,7 +229,9 @@ func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
 }
 
 func TestProjectMemberRemoveLeavesDirectories(t *testing.T) {
+	t.Parallel()
 	deps, root := discoverFixture(t)
+	deps.RepoUses = historyUses{}
 	first, kept, gone := filepath.Join(root, "first"), filepath.Join(root, "kept"), filepath.Join(root, "gone")
 	discoverRepo(t, first, "")
 	discoverRepo(t, kept, "")
@@ -279,7 +285,7 @@ func TestProjectMemberRemoveLeavesDirectories(t *testing.T) {
 	}
 	path := filepath.Join(root, DefinitionsFile)
 	bound := deps
-	bound.WorkItems = registrationsStore{deps.WorkItems, WorkItemRegistry{Tasks: []TaskRecord{{ID: "k", RepoID: "first"}}}}
+	bound.RepoUses = registrationsStore{recorded: deps.RepoUses, uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "first"}}}
 	refused := func(deps Dependencies, repo RepoID, class ErrorClass, text string) {
 		t.Helper()
 		before, _ := os.ReadFile(path)

@@ -114,12 +114,12 @@ func projectReleaseError(err *filelock.ReleaseError) error {
 }
 
 func (store *systemProjectStore) read(workspaceRoot string) (projectRegistry, error) {
-	defs, _, err := readDefinitions(workspaceRoot)
+	defs, _, err := ReadDefinitions(workspaceRoot)
 	if err != nil {
 		return projectRegistry{}, err
 	}
 	if defs == nil {
-		return projectRegistry{}, missingDefinitions(workspaceRoot)
+		return projectRegistry{}, MissingDefinitions(workspaceRoot)
 	}
 	return definitionProjects(workspaceRoot, *defs)
 }
@@ -202,7 +202,7 @@ func validateRegistry(registry projectRegistry) error {
 	wrapperOwners := make(map[string]ProjectID, len(registry.Projects))
 	lastProject := ProjectID("")
 	for index, project := range registry.Projects {
-		if err := validateIdentifier("project", string(project.ID)); err != nil {
+		if err := ValidateIdentifier("project", string(project.ID)); err != nil {
 			return errors.New("project registry contains an invalid project ID")
 		}
 		if index > 0 && project.ID <= lastProject {
@@ -212,7 +212,7 @@ func validateRegistry(registry projectRegistry) error {
 		if err := validateName(project.Name); err != nil {
 			return errors.New("project registry contains an invalid project name")
 		}
-		if !validStoredPath(project.Wrapper) {
+		if !ValidStoredPath(project.Wrapper) {
 			return errors.New("project registry contains an invalid wrapper path")
 		}
 		if owner, duplicate := wrapperOwners[project.Wrapper]; duplicate {
@@ -224,7 +224,7 @@ func validateRegistry(registry projectRegistry) error {
 		}
 		lastRepo := RepoID("")
 		for repoIndex, id := range project.RepoIDs {
-			if err := validateIdentifier("repository", string(id)); err != nil {
+			if err := ValidateIdentifier("repository", string(id)); err != nil {
 				return errors.New("project contains an invalid repository ID")
 			}
 			if repoIndex > 0 && id <= lastRepo {
@@ -239,14 +239,14 @@ func validateRegistry(registry projectRegistry) error {
 	commonDirectories := make(map[string]RepoID, len(registry.Repos))
 	lastRepo := RepoID("")
 	for index, repository := range registry.Repos {
-		if err := validateIdentifier("repository", string(repository.ID)); err != nil {
+		if err := ValidateIdentifier("repository", string(repository.ID)); err != nil {
 			return errors.New("project registry contains an invalid repository ID")
 		}
 		if index > 0 && repository.ID <= lastRepo {
 			return errors.New("repository records must be uniquely sorted by ID")
 		}
 		lastRepo = repository.ID
-		if !validStoredPath(repository.Locator) || !validStoredPath(repository.GitCommonDir) {
+		if !ValidStoredPath(repository.Locator) || !ValidStoredPath(repository.GitCommonDir) {
 			return errors.New("project registry contains an invalid repository path")
 		}
 		if owner, duplicate := commonDirectories[repository.GitCommonDir]; duplicate {

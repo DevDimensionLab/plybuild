@@ -7,13 +7,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
 func TestWorkspaceProjectCommandShape(t *testing.T) {
-	command := newWorkspaceProjectCommand(workspace.Dependencies{})
+	command := newWorkspaceProjectCommand(taskwork.Dependencies{})
 	root := &cobra.Command{Use: "ply"}
 	workspaceParent := &cobra.Command{Use: "workspace"}
 	root.AddCommand(workspaceParent)

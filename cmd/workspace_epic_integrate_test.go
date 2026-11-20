@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestEpicIntegratePassesExactInputAndRendersJSON(t *testing.T) {
-	var got workspace.EpicIntegrateInput
-	c := newWorkspaceEpicIntegrateCommandWith(func(input workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
+	var got taskwork.EpicIntegrateInput
+	c := newWorkspaceEpicIntegrateCommandWith(func(input taskwork.EpicIntegrateInput) (taskwork.EpicIntegrateResult, error) {
 		got = input
-		return workspace.EpicIntegrateResult{EpicID: input.EpicID, Applied: true, Effect: "fast_forwarded"}, nil
+		return taskwork.EpicIntegrateResult{EpicID: input.EpicID, Applied: true, Effect: "fast_forwarded"}, nil
 	})
 	var out bytes.Buffer
 	c.SetOut(&out)
@@ -22,14 +22,14 @@ func TestEpicIntegratePassesExactInputAndRendersJSON(t *testing.T) {
 	if err := c.Execute(); err != nil {
 		t.Fatal(err)
 	}
-	want := workspace.EpicIntegrateInput{EpicID: "code-map-d1", RepoID: "ply-code-map", TargetRef: "refs/heads/main", ExpectedTargetOID: a, ExpectedEpicOID: b, Apply: true}
+	want := taskwork.EpicIntegrateInput{EpicID: "code-map-d1", RepoID: "ply-code-map", TargetRef: "refs/heads/main", ExpectedTargetOID: a, ExpectedEpicOID: b, Apply: true}
 	if got != want || !strings.Contains(out.String(), `"kind": "WorkspaceEpicIntegrate@1"`) {
 		t.Fatalf("input %+v output %s", got, out.String())
 	}
 	called := false
-	c = newWorkspaceEpicIntegrateCommandWith(func(workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
+	c = newWorkspaceEpicIntegrateCommandWith(func(taskwork.EpicIntegrateInput) (taskwork.EpicIntegrateResult, error) {
 		called = true
-		return workspace.EpicIntegrateResult{}, nil
+		return taskwork.EpicIntegrateResult{}, nil
 	})
 	c.SetOut(&bytes.Buffer{})
 	c.SetErr(&bytes.Buffer{})

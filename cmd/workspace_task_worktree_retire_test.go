@@ -5,14 +5,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestTaskWorktreeRetirePassesApplyAndRendersJSON(t *testing.T) {
-	var got []workspace.TaskWorktreeRetireInput
-	c := newWorkspaceTaskCommandWithServices(workspaceTaskServices{retireWorktree: func(input workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error) {
+	var got []taskwork.TaskWorktreeRetireInput
+	c := newWorkspaceTaskCommandWithServices(workspaceTaskServices{retireWorktree: func(input taskwork.TaskWorktreeRetireInput) (taskwork.TaskWorktreeRetireResult, error) {
 		got = append(got, input)
-		return workspace.TaskWorktreeRetireResult{TaskID: input.TaskID, Applied: input.Apply, Worktree: "removed", Branch: "deleted", State: workspace.WorkItemRetired}, nil
+		return taskwork.TaskWorktreeRetireResult{TaskID: input.TaskID, Applied: input.Apply, Worktree: "removed", Branch: "deleted", State: taskwork.WorkItemRetired}, nil
 	}})
 	for _, args := range [][]string{{"worktree", "retire", "task"}, {"worktree", "retire", "task", "--apply", "--format", "json"}} {
 		var out bytes.Buffer

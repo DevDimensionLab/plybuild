@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
@@ -28,8 +29,8 @@ func viewNoArgs(c *cobra.Command, args []string) error {
 	return validateWorkFormat(viewFormat(c))
 }
 
-func viewTaskFilters(c *cobra.Command) workspace.TaskListFilters {
-	var f workspace.TaskListFilters
+func viewTaskFilters(c *cobra.Command) taskwork.TaskListFilters {
+	var f taskwork.TaskListFilters
 	if c.Flags().Changed("project") {
 		value := workspace.ProjectID(viewString(c, "project"))
 		f.ProjectID = &value
@@ -39,7 +40,7 @@ func viewTaskFilters(c *cobra.Command) workspace.TaskListFilters {
 		f.RepoID = &value
 	}
 	if c.Flags().Lookup("epic") != nil && c.Flags().Changed("epic") {
-		value := workspace.EpicID(viewString(c, "epic"))
+		value := taskwork.EpicID(viewString(c, "epic"))
 		f.EpicID = &value
 	}
 	return f
@@ -71,10 +72,10 @@ func viewTitle(title *string) string {
 	return *title
 }
 
-func newWorkspaceStatusCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceStatusCommand(d taskwork.Dependencies) *cobra.Command {
 	c := &cobra.Command{Use: "status", Short: "Read change digests for registered workspace facts", Long: "Read content digests for Project, work-item, process-journal and run registers without locks or writes. Stable digests allow clients to skip unchanged registered data. They do not detect external Git changes or prove that a process is running. A changing or unreadable source has no cacheable digest.", Example: "  ply workspace status --format json", Args: viewNoArgs}
 	c.RunE = func(c *cobra.Command, args []string) error {
-		r, err := workspaceview.ReadChanges(d)
+		r, err := workspaceview.ReadChanges(d.Dependencies)
 		if err != nil {
 			return err
 		}
@@ -92,7 +93,7 @@ func newWorkspaceStatusCommand(d workspace.Dependencies) *cobra.Command {
 	return c
 }
 
-func newWorkspaceOverviewCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceOverviewCommand(d taskwork.Dependencies) *cobra.Command {
 	c := &cobra.Command{Use: "overview", Short: "Read Tasks, Epics and human attention together", Long: "Read registered Task progress, Epic summaries and human attention from one shared source capture. This is the inexpensive Home view: no live Git, Herdr or process checks, locks or writes. Progress keeps native facts separate from agent reports.", Example: "  ply workspace overview --format json\n  ply workspace overview --project ply", Args: func(c *cobra.Command, args []string) error {
 		if err := viewNoArgs(c, args); err != nil {
 			return err
@@ -115,7 +116,7 @@ func newWorkspaceOverviewCommand(d workspace.Dependencies) *cobra.Command {
 	return c
 }
 
-func newWorkspaceAttentionCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceAttentionCommand(d taskwork.Dependencies) *cobra.Command {
 	c := &cobra.Command{Use: "attention", Short: "List active Tasks that need a human action", Long: "Read explicit human actions for active Tasks in active Epics. Tasks without execution progress and parked, frozen or archived work are excluded. Registered results and process reports keep separate provenance; this command does not perform live Git or agent checks.", Example: "  ply workspace attention --format json\n  ply workspace attention --project ply", Args: func(c *cobra.Command, args []string) error {
 		if err := viewNoArgs(c, args); err != nil {
 			return err
@@ -140,7 +141,7 @@ func newWorkspaceAttentionCommand(d workspace.Dependencies) *cobra.Command {
 	return c
 }
 
-func newWorkspaceActivityCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceActivityCommand(d taskwork.Dependencies) *cobra.Command {
 	parent := &cobra.Command{Use: "journal", Short: "Read activity across the workspace", Long: "Read registered native facts and process contributions across Tasks without starting agents or changing state."}
 	c := &cobra.Command{Use: "recent", Short: "List workspace activity in reverse recorded order", Long: "Read recorded activity across Tasks and Epic lifecycle changes. Use --since with an inclusive UTC timestamp or a positive duration, such as 24h. Undated events are shown last without a time filter and counted separately when filtered. A limit is explicit; zero means all events. This is a registered history, not a live Git log.", Example: "  ply workspace journal recent --since 24h --format json\n  ply workspace journal recent --project ply --limit 50"}
 	c.Args = func(c *cobra.Command, args []string) error {
@@ -193,7 +194,7 @@ func validateViewSince(value string) error {
 	return err
 }
 
-func newWorkspaceWorktreesCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceWorktreesCommand(d taskwork.Dependencies) *cobra.Command {
 	parent := &cobra.Command{Use: "worktree", Short: "Inspect local worktrees and their registered owners", Long: "Inspect worktrees in registered repositories. This inventory never fetches, prunes, repairs or removes worktrees."}
 	c := &cobra.Command{Use: "list", Short: "Observe worktrees in registered local repositories", Long: "Read the local Git worktree inventory, registered ownership and available base comparisons. This explicit observation can cost more than registered Home data. Missing or inaccessible facts remain unknown; no fetch, locks or cleanup are performed.", Example: "  ply workspace worktree list --format json\n  ply workspace worktree list --project ply --repo ply", Args: func(c *cobra.Command, args []string) error {
 		if err := viewNoArgs(c, args); err != nil {
@@ -223,7 +224,7 @@ func newWorkspaceWorktreesCommand(d workspace.Dependencies) *cobra.Command {
 	return parent
 }
 
-func addWorkspaceTaskProgressCommands(task *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceTaskProgressCommands(task *cobra.Command, d taskwork.Dependencies) {
 	for _, c := range task.Commands() {
 		if c.Name() != "list" && c.Name() != "show" {
 			continue
@@ -253,7 +254,7 @@ func addWorkspaceTaskProgressCommands(task *cobra.Command, d workspace.Dependenc
 				return originalRun(c, args)
 			}
 			if c.Name() == "show" {
-				r, err := workspaceview.ReadTask(d, workspace.TaskID(args[0]))
+				r, err := workspaceview.ReadTask(d, taskwork.TaskID(args[0]))
 				if err != nil {
 					return err
 				}
@@ -272,7 +273,7 @@ func addWorkspaceTaskProgressCommands(task *cobra.Command, d workspace.Dependenc
 	}
 }
 
-func addWorkspaceEpicReadCommands(epic *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceEpicReadCommands(epic *cobra.Command, d taskwork.Dependencies) {
 	for _, c := range epic.Commands() {
 		if c.Name() != "list" {
 			continue

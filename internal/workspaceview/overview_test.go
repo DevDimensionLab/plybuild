@@ -6,12 +6,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 func TestOverviewUsesOneSnapshotAndMatchesItsComponentViews(t *testing.T) {
 	d, items, projects := viewDiskFixture(t)
-	items.registry.IntegrationAuthorities = []workspace.IntegrationAuthority{fixtureAuthority()}
+	items.registry.IntegrationAuthorities = []taskwork.IntegrationAuthority{fixtureAuthority()}
 	root, err := d.Files.Getwd()
 	if err != nil {
 		t.Fatal(err)
@@ -40,7 +41,7 @@ func TestOverviewUsesOneSnapshotAndMatchesItsComponentViews(t *testing.T) {
 		t.Fatal("process batch was not reused")
 	}
 	s.RefreshFreshness(d)
-	tasks, err := BuildTaskList(s, workspace.TaskListFilters{}, process)
+	tasks, err := BuildTaskList(s, taskwork.TaskListFilters{}, process)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +49,7 @@ func TestOverviewUsesOneSnapshotAndMatchesItsComponentViews(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	attention, err := BuildAttention(s, workspace.TaskListFilters{}, process)
+	attention, err := BuildAttention(s, taskwork.TaskListFilters{}, process)
 	if err != nil {
 		t.Fatal(err)
 	}

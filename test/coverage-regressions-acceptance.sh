@@ -32,7 +32,7 @@ PY
 "$PLY_REGRESSION_GO" version -m "$PLY_CANDIDATE_BINARY"
 "$PLY_MR05_SCHEMA_PYTHON" -I -B test/read_contract_schema_test.py
 "$PLY_REGRESSION_GO" test ./cmd -run '^(TestHI07ArgumentErrorsPrintNoResult|TestHI07ContractBundleIsLockedAndMatchesActualOutput|TestHI07InputCapabilitiesMatchActualCommands|TestHI07ValidRequestExamplesCarryNativeDigests|TestHI07WriteContractExamples|TestRegistryFailureProducesExactlyOneJSONDiagnostic)$' -count=1 -timeout=180s
-"$PLY_REGRESSION_GO" test ./internal/workspace -run '^(TestRegistryDiagnosticsUseDeclaredFormatAndValidation|TestRegistryFormatChangeRequiresNativePermit|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory)$' -count=1 -timeout=180s
+"$PLY_REGRESSION_GO" test ./internal/taskwork -run '^(TestRegistryDiagnosticsUseDeclaredFormatAndValidation|TestRegistryFormatChangeRequiresNativePermit|TestRegistryRoundtripPreservesAutomaticAuthorizationAndHistory)$' -count=1 -timeout=180s
 "$PLY_REGRESSION_GO" test ./internal/taskrun -run '^(TestAL09FollowRequestTimeoutContinuation|TestAL09FollowWindowClipsHealthyRequest|TestAL09ReportFollowObservation)$' -count=1 -timeout=180s
 "$PLY_REGRESSION_GO" vet ./cmd ./internal/taskrun
 git diff --check

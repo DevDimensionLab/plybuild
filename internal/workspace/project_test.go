@@ -15,13 +15,6 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
-type projectCwdFileSystem struct {
-	FileSystem
-	cwd string
-}
-
-func (filesystem projectCwdFileSystem) Getwd() (string, error) { return filesystem.cwd, nil }
-
 type fakeRepoObserver struct {
 	observations map[string]RepoObservation
 	errors       map[string]error
@@ -43,6 +36,7 @@ func (observer *fakeRepoObserver) Observe(path string) (RepoObservation, error) 
 }
 
 func TestParseProjectAddInputValidatesIdentifiersNamesAndRepositories(t *testing.T) {
+	t.Parallel()
 	input, err := ParseProjectAddInput("trip", "Trip", "../trip", []string{
 		"service=../trip-service",
 		"api=../trip-openapi=mirror",
@@ -101,6 +95,7 @@ func TestParseProjectAddInputValidatesIdentifiersNamesAndRepositories(t *testing
 }
 
 func TestLocateContainingWorkspaceFromRootChildAndSymlink(t *testing.T) {
+	t.Parallel()
 	root := createProjectWorkspace(t)
 	child := filepath.Join(root, "one", "two")
 	if err := os.MkdirAll(child, 0o755); err != nil {
@@ -112,11 +107,11 @@ func TestLocateContainingWorkspaceFromRootChildAndSymlink(t *testing.T) {
 	}
 	files := SystemDependencies().Files
 	for _, cwd := range []string{root, child, filepath.Join(alias, "one", "two")} {
-		physical, err := canonicalDirectory(files, "", cwd, "working directory")
+		physical, err := CanonicalDirectory(files, "", cwd, "working directory")
 		if err != nil {
 			t.Fatal(err)
 		}
-		got, err := locateContainingWorkspace(files, physical)
+		got, err := LocateContainingWorkspace(files, physical)
 		if err != nil || got != root {
 			t.Fatalf("locate(%s) = %q, %v; want %q", cwd, got, err, root)
 		}
@@ -124,6 +119,7 @@ func TestLocateContainingWorkspaceFromRootChildAndSymlink(t *testing.T) {
 }
 
 func TestLocateContainingWorkspaceStopsAtFirstInvalidCandidate(t *testing.T) {
+	t.Parallel()
 	outer := createProjectWorkspace(t)
 	child := filepath.Join(outer, "child")
 	if err := os.Mkdir(child, 0o755); err != nil {
@@ -139,7 +135,7 @@ func TestLocateContainingWorkspaceStopsAtFirstInvalidCandidate(t *testing.T) {
 		if err := os.Mkdir(cwd, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		got, err := locateContainingWorkspace(files, cwd)
+		got, err := LocateContainingWorkspace(files, cwd)
 		if err != nil || got != outer {
 			t.Fatalf("root = %q, error = %v", got, err)
 		}
@@ -173,13 +169,13 @@ func TestLocateContainingWorkspaceStopsAtFirstInvalidCandidate(t *testing.T) {
 				t.Fatal(err)
 			}
 			test.setup(cwd)
-			_, err := locateContainingWorkspace(files, cwd)
+			_, err := LocateContainingWorkspace(files, cwd)
 			assertProjectErrorClass(t, err, ErrorProjectWorkspace)
 		})
 	}
 
 	missing := t.TempDir()
-	_, err := locateContainingWorkspace(files, missing)
+	_, err := LocateContainingWorkspace(files, missing)
 	assertProjectErrorClass(t, err, ErrorWorkspaceNotFound)
 	if !strings.Contains(err.Error(), "no Ply workspace contains "+missing) {
 		t.Fatalf("missing error = %v", err)
@@ -187,6 +183,7 @@ func TestLocateContainingWorkspaceStopsAtFirstInvalidCandidate(t *testing.T) {
 }
 
 func TestAddProjectRejectsDuplicateObservedCommonDirectoryBeforeStore(t *testing.T) {
+	t.Parallel()
 	root := createProjectWorkspace(t)
 	repoA := filepath.Join(root, "repo-a")
 	repoB := filepath.Join(root, "repo-b")
@@ -210,6 +207,7 @@ func TestAddProjectRejectsDuplicateObservedCommonDirectoryBeforeStore(t *testing
 }
 
 func TestSystemRepoObserverUsesOnlyLocalIdentityCommands(t *testing.T) {
+	t.Parallel()
 	repository := filepath.Join(t.TempDir(), "repository")
 	if err := os.Mkdir(repository, 0o755); err != nil {
 		t.Fatal(err)
@@ -244,6 +242,7 @@ func TestSystemRepoObserverUsesOnlyLocalIdentityCommands(t *testing.T) {
 }
 
 func TestSystemRepoObserverCanonicalizesLinkedWorktreeCommonDirectory(t *testing.T) {
+	t.Parallel()
 	parent := physicalPath(t, t.TempDir())
 	mainRepository := filepath.Join(parent, "main")
 	linkedRepository := filepath.Join(parent, "linked")
@@ -369,38 +368,6 @@ func TestRepoObserverClassifiesIdentifyOutcomes(t *testing.T) {
 	}
 }
 
-func createProjectWorkspace(t *testing.T) string {
-	t.Helper()
-	root, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Mkdir(filepath.Join(root, MarkerDirectory), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	mustWriteFile(t, filepath.Join(root, MarkerDirectory, MarkerFile), fmt.Sprintf("format_version: 1\nroot: %s\n", root))
-	mustWriteFile(t, filepath.Join(root, DefinitionsFile), "{\"format_version\": 1, \"projects\": []}\n")
-	return root
-}
-
-func mustWriteFile(t *testing.T, path, contents string) {
-	t.Helper()
-	if err := os.WriteFile(path, []byte(contents), 0o644); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func runGitForTest(t *testing.T, directory string, arguments ...string) {
-	t.Helper()
-	command := exec.Command("git", arguments...)
-	if directory != "" {
-		command.Dir = directory
-	}
-	if output, err := command.CombinedOutput(); err != nil {
-		t.Fatalf("git %v: %v: %s", arguments, err, output)
-	}
-}
-
 func assertProjectErrorClass(t *testing.T, err error, class ErrorClass) {
 	t.Helper()
 	var typed *ProjectError
@@ -410,6 +377,7 @@ func assertProjectErrorClass(t *testing.T, err error, class ErrorClass) {
 }
 
 func TestParseRepoIDUsesTheIdentifierRule(t *testing.T) {
+	t.Parallel()
 	if id, err := ParseRepoID("ply-code-map"); err != nil || id != RepoID("ply-code-map") {
 		t.Fatalf("id %q, error %v", id, err)
 	}
@@ -424,6 +392,7 @@ func TestParseRepoIDUsesTheIdentifierRule(t *testing.T) {
 // the workspace and the origin remote. A repeat is no change; a difference is
 // a conflict that leaves the file untouched.
 func TestAddProjectWritesDefinitions(t *testing.T) {
+	t.Parallel()
 	d, root := discoverFixture(t)
 	discoverRepo(t, filepath.Join(root, "api", "main"), "git@example.invalid:api.git")
 	discoverRepo(t, filepath.Join(root, "web"), "")
@@ -481,6 +450,7 @@ func TestAddProjectWritesDefinitions(t *testing.T) {
 
 // project add-member appends to the defined Project in ply-workspace.json.
 func TestAddProjectMemberWritesDefinitions(t *testing.T) {
+	t.Parallel()
 	d, root := discoverFixture(t)
 	discoverRepo(t, filepath.Join(root, "api"), "")
 	discoverRepo(t, filepath.Join(root, "web"), "git@example.invalid:web.git")
@@ -516,6 +486,7 @@ func TestAddProjectMemberWritesDefinitions(t *testing.T) {
 
 // A workspace without ply-workspace.json has no Projects to read.
 func TestProjectsWithoutDefinitionsFail(t *testing.T) {
+	t.Parallel()
 	root := createProjectWorkspace(t)
 	if err := os.Remove(filepath.Join(root, DefinitionsFile)); err != nil {
 		t.Fatal(err)
@@ -528,45 +499,8 @@ func TestProjectsWithoutDefinitionsFail(t *testing.T) {
 	}
 }
 
-// defineTestProject writes project and its repository locators into
-// ply-workspace.json, creating the file when the fixture has none.
-func defineTestProject(t *testing.T, root string, project ProjectRecord, repos []RepoRecord) {
-	t.Helper()
-	if err := workspacedef.Create(root); err != nil {
-		t.Fatal(err)
-	}
-	defined := workspacedef.Project{ID: string(project.ID), Name: project.Name, Wrapper: definitionPath(root, project.Wrapper), Repos: []workspacedef.Repo{}}
-	for _, r := range repos {
-		defined.Repos = append(defined.Repos, workspacedef.Repo{ID: string(r.ID), Path: definitionPath(root, r.Locator)})
-	}
-	if _, err := updateDefinitions(root, defineProject(defined)); err != nil {
-		t.Fatal(err)
-	}
-}
-
 // ply-workspace.json holds only workspace structure: an Epic is adopted
 // without any definition of it, and the definitions stay unchanged.
-func TestAdoptEpicNeedsNoDefinition(t *testing.T) {
-	d, root := discoverFixture(t)
-	repo := filepath.Join(root, "api")
-	discoverRepo(t, repo, "")
-	if _, err := Init(d); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := AddProject(d, ProjectAddInput{ProjectID: "trip", Name: "Trip", Wrapper: ".", Repos: []RepoInput{{RepoID: "api", Path: "api"}}}); err != nil {
-		t.Fatal(err)
-	}
-	before, _ := os.ReadFile(filepath.Join(root, DefinitionsFile))
-	oid := strings.TrimSpace(runLocalGit(t, repo, "rev-parse", "HEAD"))
-	adopted, err := AdoptEpic(d, EpicAdoptInput{EpicID: "main", Title: "Main", ProjectID: "trip", RepoID: "api", Worktree: repo, Ref: "refs/heads/main", ExpectedOID: oid})
-	if err != nil || !adopted.Created {
-		t.Fatalf("adopt = %#v, %v", adopted, err)
-	}
-	if after, _ := os.ReadFile(filepath.Join(root, DefinitionsFile)); string(after) != string(before) {
-		t.Fatalf("adoption changed the definitions: %s", after)
-	}
-}
-
 func TestLocateContainingWorkspaceStaysInsideTheCeiling(t *testing.T) {
 	outer := createProjectWorkspace(t)
 	ceiling := filepath.Join(outer, "ceiling")
@@ -578,7 +512,7 @@ func TestLocateContainingWorkspaceStaysInsideTheCeiling(t *testing.T) {
 	notFound := func(cwd string) {
 		t.Helper()
 		var project *ProjectError
-		if _, err := locateContainingWorkspace(files, cwd); !errors.As(err, &project) || project.Class != ErrorWorkspaceNotFound {
+		if _, err := LocateContainingWorkspace(files, cwd); !errors.As(err, &project) || project.Class != ErrorWorkspaceNotFound {
 			t.Fatalf("from %s: error %v, want %s", cwd, err, ErrorWorkspaceNotFound)
 		}
 	}
@@ -592,13 +526,13 @@ func TestLocateContainingWorkspaceStaysInsideTheCeiling(t *testing.T) {
 	}
 	mustWriteFile(t, filepath.Join(inner, MarkerDirectory, MarkerFile), fmt.Sprintf("format_version: 1\nroot: %s\n", inner))
 	mustWriteFile(t, filepath.Join(inner, DefinitionsFile), "{\"format_version\": 1, \"projects\": []}\n")
-	if got, err := locateContainingWorkspace(files, inner); err != nil || got != inner {
+	if got, err := LocateContainingWorkspace(files, inner); err != nil || got != inner {
 		t.Fatalf("root = %q, error = %v", got, err)
 	}
 
 	t.Setenv(WorkspaceCeilingVariable, "relative")
 	var project *ProjectError
-	if _, err := locateContainingWorkspace(files, leaf); !errors.As(err, &project) || project.Class != ErrorProjectPath {
+	if _, err := LocateContainingWorkspace(files, leaf); !errors.As(err, &project) || project.Class != ErrorProjectPath {
 		t.Fatalf("relative ceiling: error %v", err)
 	}
 }

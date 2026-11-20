@@ -5,6 +5,7 @@ package taskjournal
 
 import (
 	"encoding/json"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"time"
 )
@@ -226,13 +227,13 @@ type Workspace struct {
 	MarkerSHA256 string `json:"marker_sha256"`
 }
 type Task struct {
-	TaskID       string                         `json:"task_id"`
-	Title        string                         `json:"title"`
-	ProjectID    string                         `json:"project_id"`
-	RepoID       string                         `json:"repo_id"`
-	EpicID       string                         `json:"epic_id"`
-	Worktree     *workspace.TaskWorktreeBinding `json:"worktree"`
-	RecordSHA256 string                         `json:"record_sha256"`
+	TaskID       string                        `json:"task_id"`
+	Title        string                        `json:"title"`
+	ProjectID    string                        `json:"project_id"`
+	RepoID       string                        `json:"repo_id"`
+	EpicID       string                        `json:"epic_id"`
+	Worktree     *taskwork.TaskWorktreeBinding `json:"worktree"`
+	RecordSHA256 string                        `json:"record_sha256"`
 }
 type Snapshot struct {
 	Kind                     string                `json:"kind"`
@@ -255,12 +256,12 @@ type Snapshot struct {
 }
 type Options struct{ View, Order, RunID, ActorID string }
 type Service struct {
-	Workspace workspace.Dependencies
+	Workspace taskwork.Dependencies
 	Now       func() time.Time
 	fault     func(string) error
 	readBatch *eventBatchReader
 }
 
-func New(d workspace.Dependencies) Service { return Service{Workspace: d, Now: time.Now} }
-func ptr[T any](v T) *T                    { return &v }
-func unknownTime() TimeBasis               { return TimeBasis{Kind: "unknown", Precision: "unknown"} }
+func New(d taskwork.Dependencies) Service { return Service{Workspace: d, Now: time.Now} }
+func ptr[T any](v T) *T                   { return &v }
+func unknownTime() TimeBasis              { return TimeBasis{Kind: "unknown", Precision: "unknown"} }

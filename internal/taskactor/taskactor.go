@@ -9,6 +9,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -29,7 +30,7 @@ func Agent(provider, task string) string {
 // StartedAgent is the agent goal-start started for task according to its
 // receipt, or "" without one.
 func StartedAgent(work workspace.ProjectWork, task string) string {
-	b, err := os.ReadFile(workspace.GoalStartReceiptPath(work, workspace.TaskID(task)))
+	b, err := os.ReadFile(taskwork.GoalStartReceiptPath(work, taskwork.TaskID(task)))
 	if err != nil {
 		return ""
 	}

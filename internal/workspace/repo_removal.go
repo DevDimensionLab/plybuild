@@ -19,7 +19,7 @@ func RemoveDefinitionRepo(d Dependencies, root, project, repo, path, expectedBas
 	if err != nil {
 		return DefinitionRepoResult{}, err
 	}
-	if err := validateIdentifier("repository", repo); err != nil {
+	if err := ValidateIdentifier("repository", repo); err != nil {
 		return DefinitionRepoResult{}, err
 	}
 	observed, err := ObserveRoot(d, root)
@@ -51,10 +51,10 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 	if _, err := ParseProjectID(project); err != nil {
 		return err
 	}
-	if err := validateIdentifier("repository", repo); err != nil {
+	if err := ValidateIdentifier("repository", repo); err != nil {
 		return err
 	}
-	if d.WorkItems == nil {
+	if d.RepoUses == nil {
 		return projectError(ErrorProjectIO, "work-item store dependency is required", nil)
 	}
 	observed, err := ObserveRoot(d, root)
@@ -139,56 +139,29 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 	}
 	// The repository belongs only to this Project, so only its registry can
 	// bind the repository.
-	work, err := projectWork(root, ProjectID(project))
+	work, err := DefinedProjectWork(root, ProjectID(project))
 	if err != nil {
 		return err
 	}
-	registry, err := d.WorkItems.SnapshotRegistrations(work)
+	uses, err := d.RepoUses.RepoUses(work)
 	if err != nil {
 		return err
 	}
-	for _, e := range registry.Epics {
-		for _, b := range e.RepoBindings {
-			if string(b.RepoID) == repo {
-				return referenced("Epic %s in %s binds it", e.ID, work.Registry())
-			}
-			if found, err := inside(b.Worktree.Locator); err != nil || found {
-				return firstErr(err, referenced("Epic %s is inside wrapper %s", e.ID, wrapper))
-			}
+	for _, use := range uses {
+		if use.Kind != RepoUseEpic {
+			continue
+		}
+		if string(use.RepoID) == repo {
+			return referenced("Epic %s in %s binds it", use.ID, work.Registry())
+		}
+		if found, err := inside(use.Worktree); err != nil || found {
+			return firstErr(err, referenced("Epic %s is inside wrapper %s", use.ID, wrapper))
 		}
 	}
-	if registration := repoRegistration(registry, repo, work.Registry()); registration != "" {
+	if registration := repoRegistration(uses, repo, work.Registry()); registration != "" {
 		return referenced("%s", registration)
 	}
 	return nil
-}
-
-// repoRegistration names the registration in registry, read from path, that
-// binds repo by its ID; "" when none does.
-func repoRegistration(registry WorkItemRegistry, repo, path string) string {
-	for _, e := range registry.Epics {
-		for _, b := range e.RepoBindings {
-			if string(b.RepoID) == repo {
-				return fmt.Sprintf("Epic %s in %s binds it", e.ID, path)
-			}
-		}
-	}
-	for _, task := range registry.Tasks {
-		if string(task.RepoID) == repo {
-			return fmt.Sprintf("Task %s in %s binds it", task.ID, path)
-		}
-	}
-	for _, operation := range registry.WorktreeOperations {
-		if string(operation.RepoID) == repo {
-			return fmt.Sprintf("worktree operation %s in %s names it", operation.ID, path)
-		}
-	}
-	for _, operation := range registry.EpicCreateOperations {
-		if string(operation.Request.RepoID) == repo {
-			return fmt.Sprintf("Epic create operation %s in %s names it", operation.ID, path)
-		}
-	}
-	return ""
 }
 
 func firstErr(err, otherwise error) error {

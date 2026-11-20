@@ -3,6 +3,7 @@ package workspaceview
 import (
 	"sort"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -34,26 +35,26 @@ type Progress struct {
 }
 
 type TaskRow struct {
-	TaskID        workspace.TaskID         `json:"task_id"`
-	ProjectID     workspace.ProjectID      `json:"project_id"`
-	RepoID        workspace.RepoID         `json:"repo_id"`
-	ParentEpicID  workspace.EpicID         `json:"parent_epic_id"`
-	WorktreeState workspace.WorkItemState  `json:"worktree_state"`
-	Lifecycle     workspace.LifecycleState `json:"lifecycle"`
-	EpicLifecycle workspace.LifecycleState `json:"epic_lifecycle"`
-	workspace.TaskListTitle
+	TaskID        taskwork.TaskID         `json:"task_id"`
+	ProjectID     workspace.ProjectID     `json:"project_id"`
+	RepoID        workspace.RepoID        `json:"repo_id"`
+	ParentEpicID  taskwork.EpicID         `json:"parent_epic_id"`
+	WorktreeState taskwork.WorkItemState  `json:"worktree_state"`
+	Lifecycle     taskwork.LifecycleState `json:"lifecycle"`
+	EpicLifecycle taskwork.LifecycleState `json:"epic_lifecycle"`
+	taskwork.TaskListTitle
 	Progress Progress `json:"progress"`
 }
 
 type TaskList struct {
-	Kind          string                    `json:"kind"`
-	SchemaVersion int                       `json:"schema_version"`
-	Workspace     WorkspaceRef              `json:"workspace"`
-	Scope         workspace.TaskListFilters `json:"scope"`
-	Tasks         []TaskRow                 `json:"tasks"`
-	Freshness     string                    `json:"freshness"`
-	SourceBasis   string                    `json:"source_basis"`
-	Reasons       []string                  `json:"reasons"`
+	Kind          string                   `json:"kind"`
+	SchemaVersion int                      `json:"schema_version"`
+	Workspace     WorkspaceRef             `json:"workspace"`
+	Scope         taskwork.TaskListFilters `json:"scope"`
+	Tasks         []TaskRow                `json:"tasks"`
+	Freshness     string                   `json:"freshness"`
+	SourceBasis   string                   `json:"source_basis"`
+	Reasons       []string                 `json:"reasons"`
 }
 
 type TaskReadback struct {
@@ -66,7 +67,7 @@ type TaskReadback struct {
 	Reasons       []string     `json:"reasons"`
 }
 
-func ReadTaskList(d workspace.Dependencies, filters workspace.TaskListFilters) (TaskList, error) {
+func ReadTaskList(d taskwork.Dependencies, filters taskwork.TaskListFilters) (TaskList, error) {
 	if err := filters.Validate(); err != nil {
 		return TaskList{}, err
 	}
@@ -82,8 +83,8 @@ func ReadTaskList(d workspace.Dependencies, filters workspace.TaskListFilters) (
 	return BuildTaskList(s, filters, process)
 }
 
-func ReadTask(d workspace.Dependencies, id workspace.TaskID) (TaskReadback, error) {
-	if _, err := workspace.ParseTaskID(string(id)); err != nil {
+func ReadTask(d taskwork.Dependencies, id taskwork.TaskID) (TaskReadback, error) {
+	if _, err := taskwork.ParseTaskID(string(id)); err != nil {
 		return TaskReadback{}, err
 	}
 	s, err := LoadSnapshot(d)
@@ -99,7 +100,7 @@ func ReadTask(d workspace.Dependencies, id workspace.TaskID) (TaskReadback, erro
 	}
 	process := readProgressProcess(d, s)
 	s.RefreshFreshness(d)
-	list, err := BuildTaskList(s, workspace.TaskListFilters{}, process)
+	list, err := BuildTaskList(s, taskwork.TaskListFilters{}, process)
 	if err != nil {
 		return TaskReadback{}, err
 	}
@@ -111,12 +112,12 @@ func ReadTask(d workspace.Dependencies, id workspace.TaskID) (TaskReadback, erro
 	return TaskReadback{}, notFound("Task", string(id))
 }
 
-func ReadTaskProgress(d workspace.Dependencies, id workspace.TaskID) (Progress, error) {
+func ReadTaskProgress(d taskwork.Dependencies, id taskwork.TaskID) (Progress, error) {
 	result, err := ReadTask(d, id)
 	return result.Task.Progress, err
 }
 
-func readProgressProcess(d workspace.Dependencies, s *Snapshot) map[workspace.TaskID]ProcessFacts {
+func readProgressProcess(d taskwork.Dependencies, s *Snapshot) map[taskwork.TaskID]ProcessFacts {
 	process, err := ReadProcessFacts(d, s)
 	if err == nil {
 		return process
@@ -125,19 +126,19 @@ func readProgressProcess(d workspace.Dependencies, s *Snapshot) map[workspace.Ta
 	// registrations/results. Unavailability remains explicit in the response.
 	s.Freshness = "unknown"
 	s.Reasons = sortedUnique(append(s.Reasons, "process_history_unavailable"))
-	process = map[workspace.TaskID]ProcessFacts{}
+	process = map[taskwork.TaskID]ProcessFacts{}
 	for _, task := range s.Registry.Tasks {
 		process[task.ID] = ProcessFacts{Freshness: "unknown", Reasons: []string{"process_history_unavailable"}}
 	}
 	return process
 }
 
-func BuildTaskList(s *Snapshot, filters workspace.TaskListFilters, process map[workspace.TaskID]ProcessFacts) (TaskList, error) {
+func BuildTaskList(s *Snapshot, filters taskwork.TaskListFilters, process map[taskwork.TaskID]ProcessFacts) (TaskList, error) {
 	if err := ValidateTaskFilters(s, filters); err != nil {
 		return TaskList{}, err
 	}
 	result := TaskList{TaskListKind, 1, WorkspaceRef{s.Workspace.Root}, filters, []TaskRow{}, s.Freshness, "registered", sortedUnique(s.Reasons)}
-	facts := workspace.RecordedTaskProgressFacts(s.Registry)
+	facts := taskwork.RecordedTaskProgressFacts(s.Registry)
 	for _, task := range s.Registry.Tasks {
 		if !MatchesTaskFilters(task, filters) {
 			continue
@@ -145,7 +146,7 @@ func BuildTaskList(s *Snapshot, filters workspace.TaskListFilters, process map[w
 		title, ok := s.Titles[task.ID]
 		if !ok {
 			registeredTitle := task.Title
-			title = workspace.TaskListTitle{Title: &registeredTitle, Source: "registration", Status: "available"}
+			title = taskwork.TaskListTitle{Title: &registeredTitle, Source: "registration", Status: "available"}
 		}
 		p := buildProgress(task, facts[task.ID], process[task.ID], s.Freshness, s.Reasons)
 		for _, event := range s.Lifecycle.Events() {
@@ -159,11 +160,11 @@ func BuildTaskList(s *Snapshot, filters workspace.TaskListFilters, process map[w
 	return result, nil
 }
 
-func BuildTaskProgress(s *Snapshot, id workspace.TaskID, process map[workspace.TaskID]ProcessFacts) (Progress, error) {
-	if _, err := workspace.ParseTaskID(string(id)); err != nil {
+func BuildTaskProgress(s *Snapshot, id taskwork.TaskID, process map[taskwork.TaskID]ProcessFacts) (Progress, error) {
+	if _, err := taskwork.ParseTaskID(string(id)); err != nil {
 		return Progress{}, err
 	}
-	list, err := BuildTaskList(s, workspace.TaskListFilters{}, process)
+	list, err := BuildTaskList(s, taskwork.TaskListFilters{}, process)
 	if err != nil {
 		return Progress{}, err
 	}
@@ -175,7 +176,7 @@ func BuildTaskProgress(s *Snapshot, id workspace.TaskID, process map[workspace.T
 	return Progress{}, notFound("Task", string(id))
 }
 
-func buildProgress(task workspace.TaskRecord, fact workspace.TaskRecordedProgressFacts, process ProcessFacts, freshness string, reasons []string) Progress {
+func buildProgress(task taskwork.TaskRecord, fact taskwork.TaskRecordedProgressFacts, process ProcessFacts, freshness string, reasons []string) Progress {
 	p := Progress{State: "nothing", IntegrationClassification: "unknown", HasProgress: fact.HasProgress || process.HasProgress, NextActions: []Action{}, LastActivityUTC: latestTime(fact.LastActivityUTC, process.LastActivityUTC), Freshness: freshness, SourceBasis: "registered", Reasons: sortedUnique(append(append([]string{}, reasons...), process.Reasons...))}
 	if process.Freshness != "" && process.Freshness != "fresh" {
 		p.Freshness = "unknown"
@@ -211,7 +212,7 @@ func buildProgress(task workspace.TaskRecord, fact workspace.TaskRecordedProgres
 		}
 	case fact.IntegrationPending:
 		add("integration", "inspect_integration", "agent", "Follow the existing integration before considering another attempt.", "next_step", fact.LastActivityUTC, "")
-	case task.WorktreeState == workspace.WorkItemReconciliationRequired:
+	case task.WorktreeState == taskwork.WorkItemReconciliationRequired:
 		p.State = "attention"
 		add("readiness", "inspect_worktree", "agent", "Inspect the recorded worktree reconciliation state.", "attention", nil, "")
 	}

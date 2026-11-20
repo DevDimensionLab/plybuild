@@ -17,10 +17,10 @@ import (
 )
 
 const modulePath = "github.com/devdimensionlab/plybuild"
-const physicalReadFile = "internal/workspace/content_physical_read.go"
+const physicalReadFile = "internal/taskwork/content_physical_read.go"
 
 var ownedTypes = []string{"ProjectID", "RepoID", "EpicID", "TaskID", "WorktreeID", "WorktreeOperationID", "WorkItemState", "EpicWorktreeBinding", "EpicRepoBinding", "EpicRecord", "TaskWorktreeBinding", "TaskRecord"}
-var affectedPackages = []string{"internal/workitem", "internal/workspace", "internal/workspaceview"}
+var affectedPackages = []string{"internal/workitem", "internal/workspace", "internal/taskwork", "internal/workspaceview"}
 
 // This scanner is test-local: parse all production source files individually,
 // including inactive build variants. Never use go/packages' host build filtering.
@@ -128,7 +128,7 @@ func scanRepository(root string, access scanIO) scanResult {
 			if within(directory, "internal/workitem") && imported != "fmt" {
 				report(file, position.Line, position.Column, "WI01-R1", pkg+" imports "+imported)
 			}
-			if within(directory, "internal/workspace") {
+			if within(directory, "internal/workspace") || within(directory, "internal/taskwork") {
 				for _, blocked := range []string{"internal/workspaceview"} {
 					if within(imported, modulePath+"/"+blocked) {
 						report(file, position.Line, position.Column, "WI01-R2", pkg+" imports "+imported)
@@ -178,7 +178,7 @@ func scanRepository(root string, access scanIO) scanResult {
 				} else {
 					canonical[name] = canonical[name] || topLevel[spec]
 				}
-			case "internal/workspace":
+			case "internal/workspace", "internal/taskwork":
 				selector, ok := spec.Type.(*ast.SelectorExpr)
 				valid := false
 				if ok {

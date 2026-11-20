@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"io"
 	"strings"
 	"testing"
@@ -11,7 +11,7 @@ import (
 
 func TestWorkspaceTaskContentEnglishNavigationAndRequiredArguments(t *testing.T) {
 	for _, args := range [][]string{{"problem"}, {"problem", "show"}, {"problem", "record"}, {"spec"}, {"spec", "list"}, {"spec", "show"}, {"spec", "record"}, {"spec", "assess"}, {"spec", "select"}, {"spec", "withdraw"}, {"publication"}, {"publication", "show"}} {
-		c := newWorkspaceTaskCommand(workspace.SystemDependencies())
+		c := newWorkspaceTaskCommand(taskwork.SystemDependencies())
 		var out, stderr bytes.Buffer
 		c.SetOut(&out)
 		c.SetErr(&stderr)
@@ -24,7 +24,7 @@ func TestWorkspaceTaskContentEnglishNavigationAndRequiredArguments(t *testing.T)
 		}
 	}
 	for _, args := range [][]string{{"spec", "record", "task"}, {"spec", "show", "task"}, {"publication", "show", "task"}} {
-		c := newWorkspaceTaskCommand(workspace.SystemDependencies())
+		c := newWorkspaceTaskCommand(taskwork.SystemDependencies())
 		c.SetOut(&bytes.Buffer{})
 		c.SetErr(&bytes.Buffer{})
 		c.SetArgs(args)
@@ -40,10 +40,10 @@ func (taskContentFailWriter) Write([]byte) (int, error) { return 0, io.ErrClosed
 
 func TestTaskCreateJSONLegacyRetryAndPublicationStreamFailure(t *testing.T) {
 	args := []string{"create", "task", "--title", "Task", "--description", "Description", "--epic", "epic", "--project", "ply", "--repo", "ply", "--format", "json"}
-	services := workspaceTaskServices{create: func(workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
-		return workspace.TaskMutationResult{Workspace: "/fixture", Task: workspace.TaskRecord{ID: "task", Title: "Task"}}, nil
-	}, show: func(workspace.TaskID) (workspace.TaskReadbackResult, error) {
-		return workspace.TaskReadbackResult{Workspace: "/fixture", Task: workspace.TaskRecord{ID: "task", Title: "Task"}, Reasons: []string{}}, nil
+	services := workspaceTaskServices{create: func(taskwork.TaskCreateInput) (taskwork.TaskMutationResult, error) {
+		return taskwork.TaskMutationResult{Workspace: "/fixture", Task: taskwork.TaskRecord{ID: "task", Title: "Task"}}, nil
+	}, show: func(taskwork.TaskID) (taskwork.TaskReadbackResult, error) {
+		return taskwork.TaskReadbackResult{Workspace: "/fixture", Task: taskwork.TaskRecord{ID: "task", Title: "Task"}, Reasons: []string{}}, nil
 	}}
 	out, err := executeTaskCommand(t, services, args...)
 	if err != nil {
@@ -52,8 +52,8 @@ func TestTaskCreateJSONLegacyRetryAndPublicationStreamFailure(t *testing.T) {
 	if _, err = canonicaljson.DecodeStrict([]byte(out)); err != nil {
 		t.Fatalf("legacy JSON retry emitted text: %q", out)
 	}
-	services.create = func(workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
-		return workspace.TaskMutationResult{Workspace: "/fixture", Task: workspace.TaskRecord{ID: "task"}, Created: true, Content: &workspace.TaskContentMutationResult{Workspace: "/fixture", TaskID: "task", PublicationKey: "task-create/task", Classification: "published"}}, nil
+	services.create = func(taskwork.TaskCreateInput) (taskwork.TaskMutationResult, error) {
+		return taskwork.TaskMutationResult{Workspace: "/fixture", Task: taskwork.TaskRecord{ID: "task"}, Created: true, Content: &taskwork.TaskContentMutationResult{Workspace: "/fixture", TaskID: "task", PublicationKey: "task-create/task", Classification: "published"}}, nil
 	}
 	c := newWorkspaceTaskCommandWithServices(services)
 	c.SetOut(taskContentFailWriter{})
@@ -66,7 +66,7 @@ func TestTaskCreateJSONLegacyRetryAndPublicationStreamFailure(t *testing.T) {
 }
 
 func TestWorkspaceTaskSpecShowDocumentWritesBytesNotFormat(t *testing.T) {
-	c := newWorkspaceTaskCommand(workspace.SystemDependencies())
+	c := newWorkspaceTaskCommand(taskwork.SystemDependencies())
 	var out bytes.Buffer
 	c.SetOut(&out)
 	c.SetErr(&bytes.Buffer{})
@@ -74,14 +74,14 @@ func TestWorkspaceTaskSpecShowDocumentWritesBytesNotFormat(t *testing.T) {
 	if err := c.Execute(); err != nil || !strings.Contains(out.String(), "--document") {
 		t.Fatalf("spec show lacks --document: %v %s", err, out.String())
 	}
-	c = newWorkspaceTaskCommand(workspace.SystemDependencies())
+	c = newWorkspaceTaskCommand(taskwork.SystemDependencies())
 	c.SetOut(&bytes.Buffer{})
 	c.SetErr(&bytes.Buffer{})
 	c.SetArgs([]string{"spec", "show", "task", "--spec", "s", "--revision", "1", "--document", "spec", "--format", "json"})
 	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "--format does not apply") {
 		t.Fatalf("document with format: %v", err)
 	}
-	c = newWorkspaceTaskCommand(workspace.SystemDependencies())
+	c = newWorkspaceTaskCommand(taskwork.SystemDependencies())
 	c.SetOut(&bytes.Buffer{})
 	c.SetErr(&bytes.Buffer{})
 	c.SetArgs([]string{"spec", "show", "task", "--spec", "s", "--revision", "1", "--document", ""})

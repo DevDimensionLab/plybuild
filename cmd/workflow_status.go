@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-func newWorkflowStatusCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkflowStatusCommand(d taskwork.Dependencies) *cobra.Command {
 	return newWorkflowStatusCommandWithReader(func(options workspaceview.WorkflowStatusOptions) (workspaceview.WorkflowStatus, error) {
 		return workspaceview.ReadWorkflowStatus(d, options)
 	})

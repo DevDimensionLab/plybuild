@@ -13,6 +13,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -279,7 +280,7 @@ func TestPlanTraceReadsTenTasksAndFiveHundredEventsWithinASecond(t *testing.T) {
 		registerGoal(t, f, fmt.Sprintf("load-%d", i), "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "planner-a")
 	}
 	t.Chdir(f.root)
-	journal := taskjournal.New(workspace.SystemDependencies())
+	journal := taskjournal.New(taskwork.SystemDependencies())
 	for i := 0; i < 10; i++ {
 		for j := 0; j < 48; j++ { // with the two records of goal register: 50 per Task
 			if _, e := journal.AppendPly(fmt.Sprintf("load-%d", i), "dev", "load", taskjournal.PlyAction{Operation: "lifecycle", Refs: map[string]string{"n": fmt.Sprint(j)}}); e != nil {

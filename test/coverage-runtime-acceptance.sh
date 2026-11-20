@@ -13,10 +13,10 @@ export PLY_DELIVERY_TEST_BINARY="$PLY_CANDIDATE_BINARY" PLY_TASK_RUN_TEST_BINARY
 export PLY_SL01_SCHEMA_PYTHON="$PLY_MR05_SCHEMA_PYTHON"
 "$PLY_MR05_SCHEMA_PYTHON" -I -B test/coverage-preflight.py --output "$scratch/before.json" -- \
     "$PLY_REGRESSION_GO" test -json -count=1 -timeout=300s "-coverprofile=$scratch/coverage.out" \
-    ./internal/taskrun ./internal/workspace -run '^(TestBackupGoal.*|TestRecordedProgress.*|TestAL05CandidateCLIJourneyWithOrdinaryModes|TestAL16UnknownIdentityQualifiedInstall|TestQualifiedCLIInstallationPublicConsumer|TestAdoptionSourceWriterObservations|TestAR03ComposedWriterEvidence|TestAR03HeadlessCleanupUsesActualSession|TestWorkflowDirtyContentDriftAndSymlinkAreNotTrusted)$'
+    ./internal/taskrun ./internal/taskwork -run '^(TestBackupGoal.*|TestRecordedProgress.*|TestAL05CandidateCLIJourneyWithOrdinaryModes|TestAL16UnknownIdentityQualifiedInstall|TestQualifiedCLIInstallationPublicConsumer|TestAdoptionSourceWriterObservations|TestAR03ComposedWriterEvidence|TestAR03HeadlessCleanupUsesActualSession|TestWorkflowDirtyContentDriftAndSymlinkAreNotTrusted)$'
 set +e
 "$PLY_REGRESSION_GO" test -json -count=1 -timeout=300s "-coverprofile=$scratch/coverage.out" \
-    ./internal/taskrun ./internal/workspace -run '^(TestBackupGoal.*|TestRecordedProgress.*|TestAL05CandidateCLIJourneyWithOrdinaryModes|TestAL16UnknownIdentityQualifiedInstall|TestQualifiedCLIInstallationPublicConsumer|TestAdoptionSourceWriterObservations|TestAR03ComposedWriterEvidence|TestAR03HeadlessCleanupUsesActualSession|TestWorkflowDirtyContentDriftAndSymlinkAreNotTrusted)$' \
+    ./internal/taskrun ./internal/taskwork -run '^(TestBackupGoal.*|TestRecordedProgress.*|TestAL05CandidateCLIJourneyWithOrdinaryModes|TestAL16UnknownIdentityQualifiedInstall|TestQualifiedCLIInstallationPublicConsumer|TestAdoptionSourceWriterObservations|TestAR03ComposedWriterEvidence|TestAR03HeadlessCleanupUsesActualSession|TestWorkflowDirtyContentDriftAndSymlinkAreNotTrusted)$' \
     > "$scratch/test.jsonl" 2> "$scratch/test.stderr"
 result=$?
 set -e

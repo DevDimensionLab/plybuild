@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -31,13 +32,13 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	}
 	git("init", "-b", "epic")
 	git("-c", "user.email=fixture@example.invalid", "-c", "user.name=Fixture", "commit", "--allow-empty", "-m", "fixture")
-	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Project", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
+	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Project", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); err != nil {
+	if _, err := taskwork.AdoptEpic(d, taskwork.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: "task", Title: "Task", Description: "Synthetic diagnostic fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
+	if _, err := taskwork.CreateTask(d, taskwork.TaskCreateInput{TaskID: "task", Title: "Task", Description: "Synthetic diagnostic fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -62,10 +63,10 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if err := os.WriteFile(problemPath, problemRaw, 0600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.RecordTaskProblem(d, workspace.TaskContentInput{TaskID: "task", File: problemPath}); err != nil {
+	if _, err := taskwork.RecordTaskProblem(d, taskwork.TaskContentInput{TaskID: "task", File: problemPath}); err != nil {
 		t.Fatal(err)
 	}
-	work, err := workspace.LocateTask(d, root, "task")
+	work, err := taskwork.LocateTask(d, root, "task")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,7 +74,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	draft := workspace.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/queue", ProjectID: "project", RepoID: "repo", EpicID: "epic", Entries: []workspace.TaskGoalQueueEntry{}, Recorder: workspace.TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-08T00:00:00Z"}}
+	draft := taskwork.WorkspaceTaskGoalQueueDraft{Kind: "WorkspaceTaskQueueDraft@2", SchemaVersion: 2, PublicationKey: "fixture/queue", ProjectID: "project", RepoID: "repo", EpicID: "epic", Entries: []taskwork.TaskGoalQueueEntry{}, Recorder: taskwork.TaskGoalQueueRecorder{ActorClaim: "fixture", ControlSurface: "synthetic test", RecordedAtUTC: "2026-10-08T00:00:00Z"}}
 	raw, err := json.Marshal(draft)
 	if err != nil {
 		t.Fatal(err)
@@ -82,7 +83,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if err = os.WriteFile(path, raw, 0600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = workspace.SetTaskQueue(d, path); err != nil {
+	if _, err = taskwork.SetTaskQueue(d, path); err != nil {
 		t.Fatal(err)
 	}
 	r, err = d.WorkItems.Snapshot(work)
@@ -114,7 +115,7 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	}
 	r.TaskProblemRevisions[0].ManifestSHA256 = p.OutcomeRef.ManifestSHA256
 	// Store the changed references in the registry's own physical format.
-	if err = d.WorkItems.WithLock(work, func(session workspace.WorkItemStoreSession) error { return session.Publish(r) }); err != nil {
+	if err = d.WorkItems.WithLock(work, func(session taskwork.WorkItemStoreSession) error { return session.Publish(r) }); err != nil {
 		t.Fatal(err)
 	}
 	before, err := os.ReadFile(work.Registry())

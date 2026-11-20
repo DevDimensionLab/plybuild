@@ -25,6 +25,7 @@ func requireProjectDetail(t *testing.T, err error, class ErrorClass, detail stri
 }
 
 func TestResolveDefinedProjectFromDefinitionsWithoutLegacyRegistry(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	project, err := ResolveDefinedProject(cwdDependencies(f.root), "app")
 	want := ProjectRecord{ID: "app", Name: "App", Wrapper: filepath.Join(f.root, "app"), RepoIDs: []RepoID{"app"}}
@@ -38,6 +39,7 @@ func TestResolveDefinedProjectFromDefinitionsWithoutLegacyRegistry(t *testing.T)
 }
 
 func TestResolveDefinedProjectAfterProjectAdd(t *testing.T) {
+	t.Parallel()
 	root := physicalPath(t, t.TempDir())
 	d := cwdDependencies(root)
 	if _, err := Init(d); err != nil {
@@ -63,6 +65,7 @@ func TestResolveDefinedProjectAfterProjectAdd(t *testing.T) {
 }
 
 func TestResolveDefinedProjectSelectsTheProjectContainingTheWorkingDirectory(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	for cwd, want := range map[string]ProjectID{"app": "app", "app/main": "app", "ply/main": "ply"} {
 		project, err := ResolveDefinedProject(cwdDependencies(filepath.Join(f.root, cwd)), "")
@@ -82,6 +85,7 @@ func TestResolveDefinedProjectSelectsTheProjectContainingTheWorkingDirectory(t *
 }
 
 func TestResolveDefinedProjectRefusesNestedWrappersAndSkipsMissingOnes(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	definitions := `{"format_version": 1, "projects": [
   {"id": "outer", "name": "Outer", "wrapper": ".", "repos": [{"id": "ply", "path": "ply/main"}]},

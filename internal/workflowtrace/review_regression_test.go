@@ -4,11 +4,11 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestReviewChangedWaitingEvidenceDoesNotKeepNumericInterval(t *testing.T) {
-	b := newBuilder("/fixture", workspace.TaskRecord{ID: "task", RepoID: "repo"}, "2026-10-07T12:00:00Z")
+	b := newBuilder("/fixture", taskwork.TaskRecord{ID: "task", RepoID: "repo"}, "2026-10-07T12:00:00Z")
 	b.source(Source{ID: "changed", Kind: "contribution", Locator: "/fixture/changed", Status: "changed"})
 	for i, id := range []string{"start", "finish"} {
 		kind, at := "step_started", "2026-10-07T10:00:00Z"
@@ -35,7 +35,7 @@ func TestReviewChangedWaitingEvidenceDoesNotKeepNumericInterval(t *testing.T) {
 }
 
 func TestReviewLegacyReportDedupKeepsPerformingActorAndQuestion(t *testing.T) {
-	b := newBuilder("/fixture", workspace.TaskRecord{ID: "task", RepoID: "repo"}, "2026-10-07T12:00:00Z")
+	b := newBuilder("/fixture", taskwork.TaskRecord{ID: "task", RepoID: "repo"}, "2026-10-07T12:00:00Z")
 	b.source(Source{ID: "valid", Kind: "run_event", Locator: "/fixture/event", Status: "valid"})
 	native := Event{ID: "same-native-report", Type: "run_report_received", Role: "ply", ActorClaim: ptr("ply"), Recorder: "task journal native projection", EvidenceClass: "registered", SourceIDs: []string{"valid"}, Data: raw(map[string]any{"run_event_type": "report_received"})}
 	b.event(native)

@@ -18,32 +18,32 @@ func ObserveContaining(dependencies Dependencies) (WorkspaceObservation, error) 
 	if err != nil {
 		return WorkspaceObservation{}, err
 	}
-	return observeWorkspaceRoot(dependencies.Files, root)
+	return ObserveWorkspaceRoot(dependencies.Files, root)
 }
 
 func containingWorkspaceRoot(dependencies Dependencies) (string, error) {
 	if dependencies.Files == nil {
 		return "", projectError(ErrorProjectIO, "dependencies: filesystem is required", nil)
 	}
-	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	cwd, err := ProjectPhysicalWorkingDirectory(dependencies.Files)
 	if err != nil {
 		return "", err
 	}
-	return locateContainingWorkspace(dependencies.Files, cwd)
+	return LocateContainingWorkspace(dependencies.Files, cwd)
 }
 
 func ObserveRoot(dependencies Dependencies, root string) (WorkspaceObservation, error) {
 	if dependencies.Files == nil {
 		return WorkspaceObservation{}, projectError(ErrorProjectIO, "dependencies: filesystem is required", nil)
 	}
-	physical, err := canonicalDirectory(dependencies.Files, "", root, "workspace root")
+	physical, err := CanonicalDirectory(dependencies.Files, "", root, "workspace root")
 	if err != nil {
 		return WorkspaceObservation{}, err
 	}
-	return observeWorkspaceRoot(dependencies.Files, physical)
+	return ObserveWorkspaceRoot(dependencies.Files, physical)
 }
 
-func observeWorkspaceRoot(files FileSystem, root string) (WorkspaceObservation, error) {
+func ObserveWorkspaceRoot(files FileSystem, root string) (WorkspaceObservation, error) {
 	markerPath := MarkerPath(root)
 	info, err := files.Lstat(markerPath)
 	if errors.Is(err, fs.ErrNotExist) {

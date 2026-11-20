@@ -13,7 +13,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +60,7 @@ func goalDocumentInstruction(task, spec string, revision int, goal json.RawMessa
 	}
 	var reads []string
 	for _, in := range g.RequiredInputs {
-		if id, ok := strings.CutPrefix(in.ID, workspace.GoalDocumentInputID); ok {
+		if id, ok := strings.CutPrefix(in.ID, taskwork.GoalDocumentInputID); ok {
 			reads = append(reads, fmt.Sprintf("\n  ply workspace task spec show %s --spec %s --revision %d --document %s", task, spec, revision, id))
 		}
 	}
@@ -129,7 +129,7 @@ func resumeGoal(ctx context.Context, plan goalAgentPlan, receipt string, herdr a
 	return agentstart.ResumeAgent(ctx, goalStartInput(plan, receipt, herdr, precondition))
 }
 
-func checkGoalGit(wt *workspace.TaskWorktreeBinding) error {
+func checkGoalGit(wt *taskwork.TaskWorktreeBinding) error {
 	git := func(a ...string) (string, error) {
 		b, e := exec.Command("git", append([]string{"--no-optional-locks", "-C", wt.Locator}, a...)...).Output()
 		return string(b), e
@@ -158,7 +158,7 @@ func checkGoalGit(wt *workspace.TaskWorktreeBinding) error {
 	return nil
 }
 
-func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 	var spec, herdrWorkspace, actor string
 	var revision int
 	var apply, resume bool
@@ -166,18 +166,18 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if resume && !apply {
 			return fmt.Errorf("--resume requires --apply")
 		}
-		id, e := workspace.ParseTaskID(args[0])
+		id, e := taskwork.ParseTaskID(args[0])
 		if e != nil {
 			return e
 		}
-		task, e := workspace.ShowTask(d, id)
+		task, e := taskwork.ShowTask(d, id)
 		if e != nil {
 			return e
 		}
 		if e = validateGoalTask(task); e != nil {
 			return e
 		}
-		content, e := workspace.ShowTaskSpec(d, workspace.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision})
+		content, e := taskwork.ShowTaskSpec(d, taskwork.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision})
 		if e != nil {
 			return e
 		}
@@ -230,7 +230,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if resume {
 			run = resumeGoal
 		}
-		work, e := workspace.LocateTask(d, task.Workspace, id)
+		work, e := taskwork.LocateTask(d, task.Workspace, id)
 		if e != nil {
 			return e
 		}
@@ -238,7 +238,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 		if e = recordPly(d, args[0], namedActor(actor), "nothing was started", taskjournal.PlyAction{Operation: "goal_start_reserved", Refs: goalRefs}); e != nil {
 			return e
 		}
-		out, e := run(c.Context(), plan, workspace.GoalStartReceiptPath(work, id), herdr, func() error { return checkGoalGit(wt) })
+		out, e := run(c.Context(), plan, taskwork.GoalStartReceiptPath(work, id), herdr, func() error { return checkGoalGit(wt) })
 		reached := taskjournal.PlyAction{Operation: "goal_start_started", Refs: map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "reached": out.Reached}}
 		if out.Reached == "prompt_submitted" {
 			reached.Operation = "goal_start_prompt_submitted"
@@ -263,7 +263,7 @@ func newWorkflowGoalStartCommand(d workspace.Dependencies) *cobra.Command {
 	return c
 }
 
-func validateGoalTask(task workspace.TaskReadbackResult) error {
+func validateGoalTask(task taskwork.TaskReadbackResult) error {
 	if task.Task.Worktree == nil || !task.WorktreeReady {
 		return fmt.Errorf("create this Task worktree explicitly before agent start")
 	}

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workitem"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
@@ -20,13 +21,13 @@ type WorkspaceRef struct {
 type Snapshot struct {
 	Workspace     workspace.WorkspaceObservation
 	Projects      workspace.ProjectSnapshot
-	Registry      workspace.WorkItemRegistry
-	Titles        map[workspace.TaskID]workspace.TaskListTitle
-	Lifecycle     workspace.WorkItemLifecycles
+	Registry      taskwork.WorkItemRegistry
+	Titles        map[taskwork.TaskID]taskwork.TaskListTitle
+	Lifecycle     taskwork.WorkItemLifecycles
 	Freshness     string
 	Reasons       []string
 	ObservedAtUTC string
-	basis         workspace.ReadViewBasisSnapshot
+	basis         taskwork.ReadViewBasisSnapshot
 	process       *processHistory
 }
 
@@ -45,12 +46,12 @@ type ProcessWaiting struct {
 	SinceUTC                     *string
 }
 
-func LoadSnapshot(d workspace.Dependencies) (*Snapshot, error) {
-	basis, err := workspace.ReadViewBasis(d)
+func LoadSnapshot(d taskwork.Dependencies) (*Snapshot, error) {
+	basis, err := taskwork.ReadViewBasis(d)
 	if err != nil {
 		return nil, err
 	}
-	lifecycle, err := workspace.ReadWorkItemLifecycle(d, basis.Workspace.Root)
+	lifecycle, err := taskwork.ReadWorkItemLifecycle(d, basis.Workspace.Root)
 	if err != nil {
 		return nil, err
 	}
@@ -79,8 +80,8 @@ func LoadSnapshot(d workspace.Dependencies) (*Snapshot, error) {
 
 // RefreshFreshness checks captured register bytes after optional batch reads.
 // It does not reload typed registries or assert a cross-register transaction.
-func (s *Snapshot) RefreshFreshness(d workspace.Dependencies) {
-	fresh, reasons := workspace.CheckReadViewBasis(d, s.basis)
+func (s *Snapshot) RefreshFreshness(d taskwork.Dependencies) {
+	fresh, reasons := taskwork.CheckReadViewBasis(d, s.basis)
 	if fresh != "fresh" {
 		s.Freshness = "unknown"
 		s.Reasons = append(s.Reasons, reasons...)
@@ -97,7 +98,7 @@ func (s *Snapshot) RefreshFreshness(d workspace.Dependencies) {
 
 // lifecycleFresh reports whether a Project's lifecycle file still has the
 // bytes, or the absence, that the snapshot read.
-func lifecycleFresh(d workspace.Dependencies, l workspace.WorkItemLifecycleSnapshot) bool {
+func lifecycleFresh(d taskwork.Dependencies, l taskwork.WorkItemLifecycleSnapshot) bool {
 	info, inspectErr := d.Files.Lstat(l.Locator)
 	if inspectErr != nil && !os.IsNotExist(inspectErr) || inspectErr == nil && !info.Mode().IsRegular() {
 		return false
@@ -110,7 +111,7 @@ func lifecycleFresh(d workspace.Dependencies, l workspace.WorkItemLifecycleSnaps
 	return err == nil && l.Exists && fmt.Sprintf("sha256:%x", sha256.Sum256(b)) == l.SHA256
 }
 
-func ValidateTaskFilters(s *Snapshot, filters workspace.TaskListFilters) error {
+func ValidateTaskFilters(s *Snapshot, filters taskwork.TaskListFilters) error {
 	if err := filters.Validate(); err != nil {
 		return err
 	}
@@ -140,7 +141,7 @@ func ValidateTaskFilters(s *Snapshot, filters workspace.TaskListFilters) error {
 	return nil
 }
 
-func MatchesTaskFilters(task workspace.TaskRecord, filters workspace.TaskListFilters) bool {
+func MatchesTaskFilters(task taskwork.TaskRecord, filters taskwork.TaskListFilters) bool {
 	return (filters.ProjectID == nil || task.ProjectID == *filters.ProjectID) && (filters.RepoID == nil || task.RepoID == *filters.RepoID) && (filters.EpicID == nil || task.ParentEpicID == *filters.EpicID)
 }
 

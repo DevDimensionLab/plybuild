@@ -11,13 +11,14 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
 // addWorkspaceTaskJournalWriteCommands adds the commands that write the
 // common records without a JSON file: link, step start|finish and note.
-func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d taskwork.Dependencies) {
 	var planID, planStep, linkActor string
 	link := &cobra.Command{
 		Use:   "link <task-id> --plan <PLAN-n> [--plan-step <id>]",
@@ -27,14 +28,14 @@ func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d workspace.De
 		Example: "  ply workspace task journal link workflow-viz-d10-impl --plan PLAN-39 --plan-step impl-d10 --actor ply-plan",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
-			id, err := workspace.ParseTaskID(args[0])
+			id, err := taskwork.ParseTaskID(args[0])
 			if err != nil {
 				return err
 			}
 			if planID == "" {
 				return workspace.WorkInvalidArguments("--plan is required")
 			}
-			task, err := workspace.ShowTask(d, id)
+			task, err := taskwork.ShowTask(d, id)
 			if err != nil {
 				return err
 			}
@@ -64,7 +65,7 @@ func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d workspace.De
 
 // newJournalWriteCommand builds step start, step finish or note. The record
 // gets Ply's current time; its outcome and text stay the reporter's claims.
-func newJournalWriteCommand(d workspace.Dependencies, verb string) *cobra.Command {
+func newJournalWriteCommand(d taskwork.Dependencies, verb string) *cobra.Command {
 	var id, kind, parent, title, outcome, actor, role string
 	var sources []string
 	use := map[string]string{
@@ -140,7 +141,7 @@ func newJournalWriteCommand(d workspace.Dependencies, verb string) *cobra.Comman
 
 // reporter is the actor and role of a record the Task's agent writes: the
 // named ones, else the agent goal-start started and the Task's role.
-func reporter(d workspace.Dependencies, task, actor, role string) (string, string) {
+func reporter(d taskwork.Dependencies, task, actor, role string) (string, string) {
 	who := namedActor(actor)
 	if who != "" && role != "" {
 		return who, role

@@ -78,21 +78,15 @@ func (err *Error) Error() string {
 
 func (err *Error) Unwrap() error { return err.Err }
 
+// Dependencies are the effects of the register. RepoUses comes from the
+// work-item store; SystemDependencies leaves it unset.
 type Dependencies struct {
-	ProjectDataRoot           func(string) (string, error)
-	SourceReconciliationFault func(string, string) error
-	TaskContent               *TaskContentStorage
-	TaskContentIDs            TaskContentIDSource
-	Files                     FileSystem
-	Repos                     RepoObserver
-	Projects                  ProjectStore
-	ProjectLocks              ProjectSnapshotLocker
-	WorkItems                 WorkItemStore
-	WorkGit                   WorkItemGit
-	WorkIDs                   WorkItemIDSource
-	TaskLifecycleIDs          TaskLifecycleIDSource
-	WorkClock                 WorkClock
-	IntegrationGit            TaskIntegrationGit
+	ProjectDataRoot func(string) (string, error)
+	Files           FileSystem
+	Repos           RepoObserver
+	Projects        ProjectStore
+	ProjectLocks    ProjectSnapshotLocker
+	RepoUses        RepoUses
 }
 
 func InvalidArguments(detail string) error {
@@ -103,19 +97,11 @@ func SystemDependencies() Dependencies {
 	files := systemFileSystem{}
 	projects := newSystemProjectStore()
 	return Dependencies{
-		ProjectDataRoot:  config.ProjectDataRoot,
-		TaskContent:      &TaskContentStorage{},
-		TaskContentIDs:   cryptoTaskContentIDs{},
-		Files:            files,
-		Repos:            newSystemRepoObserver(files),
-		Projects:         projects,
-		ProjectLocks:     projects,
-		WorkItems:        newSystemWorkItemStore(),
-		WorkGit:          newSystemWorkItemGit(files),
-		WorkIDs:          cryptoWorkItemIDSource{},
-		TaskLifecycleIDs: cryptoTaskLifecycleIDSource{},
-		WorkClock:        systemWorkClock{},
-		IntegrationGit:   newSystemTaskIntegrationGit(files),
+		ProjectDataRoot: config.ProjectDataRoot,
+		Files:           files,
+		Repos:           newSystemRepoObserver(files),
+		Projects:        projects,
+		ProjectLocks:    projects,
 	}
 }
 

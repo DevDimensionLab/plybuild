@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func newWorkspaceEpicRetireCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceEpicRetireCommand(d taskwork.Dependencies) *cobra.Command {
 	var repo, targetRef, actor, format string
 	var apply bool
 	c := &cobra.Command{
@@ -22,7 +23,7 @@ func newWorkspaceEpicRetireCommand(d workspace.Dependencies) *cobra.Command {
 			if err := validateWorkFormat(format); err != nil {
 				return err
 			}
-			result, err := workspace.RetireEpic(d, workspace.EpicRetireInput{EpicID: workspace.EpicID(args[0]), RepoID: workspace.RepoID(repo), TargetRef: targetRef, Actor: plyActor(actor), Apply: apply})
+			result, err := taskwork.RetireEpic(d, taskwork.EpicRetireInput{EpicID: taskwork.EpicID(args[0]), RepoID: workspace.RepoID(repo), TargetRef: targetRef, Actor: plyActor(actor), Apply: apply})
 			if err != nil {
 				return err
 			}
@@ -30,7 +31,7 @@ func newWorkspaceEpicRetireCommand(d workspace.Dependencies) *cobra.Command {
 				return writeAssignmentJSON(cmd.OutOrStdout(), struct {
 					Kind          string `json:"kind"`
 					SchemaVersion int    `json:"schema_version"`
-					workspace.EpicRetireResult
+					taskwork.EpicRetireResult
 				}{"WorkspaceEpicRetire@1", 1, result})
 			}
 			_, err = fmt.Fprintf(cmd.OutOrStdout(), "Epic %s worktree %s at %s, branch %s %s\nLifecycle: %s\n", result.EpicID, result.Worktree, result.Locator, result.Ref, result.Branch, result.Lifecycle)
@@ -52,8 +53,8 @@ func newWorkspaceEpicRetireCommand(d workspace.Dependencies) *cobra.Command {
 // retireEpicAfterIntegration retires the Epic binding after its target was
 // fast-forwarded. The integration stands either way; when cleanup cannot
 // run, out says why and how to finish it later.
-func retireEpicAfterIntegration(out io.Writer, d workspace.Dependencies, input workspace.EpicIntegrateInput, actor string) {
-	result, err := workspace.RetireEpic(d, workspace.EpicRetireInput{EpicID: input.EpicID, RepoID: input.RepoID, TargetRef: input.TargetRef, Actor: actor, Apply: true})
+func retireEpicAfterIntegration(out io.Writer, d taskwork.Dependencies, input taskwork.EpicIntegrateInput, actor string) {
+	result, err := taskwork.RetireEpic(d, taskwork.EpicRetireInput{EpicID: input.EpicID, RepoID: input.RepoID, TargetRef: input.TargetRef, Actor: actor, Apply: true})
 	if err != nil {
 		fmt.Fprintf(out, "Epic worktree kept: %v\nRetire it when it is safe: ply workspace epic retire %s --repo %s --target-ref %s --apply\n", err, input.EpicID, input.RepoID, input.TargetRef)
 		return

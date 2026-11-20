@@ -4,11 +4,11 @@ package workspace
 
 import "os"
 
-func platformReplace(source, destination string) error {
+func PlatformReplace(source, destination string) error {
 	return os.Rename(source, destination)
 }
 
-func platformSyncDirectory(path string) error {
+func PlatformSyncDirectory(path string) error {
 	directory, err := os.Open(path)
 	if err != nil {
 		return err

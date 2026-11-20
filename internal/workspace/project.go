@@ -18,9 +18,9 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
-const identifierRule = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$ (1..63 ASCII bytes)"
+const IdentifierRule = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$ (1..63 ASCII bytes)"
 
-var identifierPattern = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
+var IdentifierPattern = regexp.MustCompile(`^[a-z][a-z0-9]*(-[a-z0-9]+)*$`)
 
 type ProjectID = workitem.ProjectID
 type RepoID = workitem.RepoID
@@ -105,14 +105,14 @@ func ProjectInvalidArguments(detail string) error {
 }
 
 func ParseProjectID(value string) (ProjectID, error) {
-	if err := validateIdentifier("project", value); err != nil {
+	if err := ValidateIdentifier("project", value); err != nil {
 		return "", err
 	}
 	return ProjectID(value), nil
 }
 
 func ParseRepoID(value string) (RepoID, error) {
-	if err := validateIdentifier("repository", value); err != nil {
+	if err := ValidateIdentifier("repository", value); err != nil {
 		return "", err
 	}
 	return RepoID(value), nil
@@ -129,7 +129,7 @@ func ParseProjectAddInput(projectID, name, wrapper string, repositories []string
 		if !found || repoID == "" || path == "" {
 			return ProjectAddInput{}, ProjectInvalidArguments(fmt.Sprintf("repository member %q must be <repo-id>=<path>", repository))
 		}
-		if err := validateIdentifier("repository", repoID); err != nil {
+		if err := ValidateIdentifier("repository", repoID); err != nil {
 			return ProjectAddInput{}, err
 		}
 		input.Repos = append(input.Repos, RepoInput{RepoID: RepoID(repoID), Path: path})
@@ -141,7 +141,7 @@ func ParseProjectAddInput(projectID, name, wrapper string, repositories []string
 }
 
 func validateProjectAddInput(input ProjectAddInput) error {
-	if err := validateIdentifier("project", string(input.ProjectID)); err != nil {
+	if err := ValidateIdentifier("project", string(input.ProjectID)); err != nil {
 		return err
 	}
 	if err := validateName(input.Name); err != nil {
@@ -155,7 +155,7 @@ func validateProjectAddInput(input ProjectAddInput) error {
 	}
 	seen := make(map[RepoID]struct{}, len(input.Repos))
 	for _, repository := range input.Repos {
-		if err := validateIdentifier("repository", string(repository.RepoID)); err != nil {
+		if err := ValidateIdentifier("repository", string(repository.RepoID)); err != nil {
 			return err
 		}
 		if repository.Path == "" {
@@ -169,9 +169,9 @@ func validateProjectAddInput(input ProjectAddInput) error {
 	return nil
 }
 
-func validateIdentifier(kind, value string) error {
-	if len(value) < 1 || len(value) > 63 || !isASCII(value) || !identifierPattern.MatchString(value) {
-		return ProjectInvalidArguments(fmt.Sprintf("%s ID %q must match %s", kind, value, identifierRule))
+func ValidateIdentifier(kind, value string) error {
+	if len(value) < 1 || len(value) > 63 || !IsASCII(value) || !IdentifierPattern.MatchString(value) {
+		return ProjectInvalidArguments(fmt.Sprintf("%s ID %q must match %s", kind, value, IdentifierRule))
 	}
 	return nil
 }
@@ -188,7 +188,7 @@ func validateName(name string) error {
 	return nil
 }
 
-func isASCII(value string) bool {
+func IsASCII(value string) bool {
 	for index := 0; index < len(value); index++ {
 		if value[index] > unicode.MaxASCII {
 			return false
@@ -204,15 +204,15 @@ func AddProject(dependencies Dependencies, input ProjectAddInput) (ProjectResult
 	if dependencies.Files == nil || dependencies.Repos == nil || dependencies.Projects == nil {
 		return ProjectResult{}, projectError(ErrorProjectIO, "dependencies: filesystem, repository observer, and project store are required", nil)
 	}
-	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	cwd, err := ProjectPhysicalWorkingDirectory(dependencies.Files)
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	workspaceRoot, err := locateContainingWorkspace(dependencies.Files, cwd)
+	workspaceRoot, err := LocateContainingWorkspace(dependencies.Files, cwd)
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	wrapper, err := canonicalDirectory(dependencies.Files, cwd, input.Wrapper, "wrapper")
+	wrapper, err := CanonicalDirectory(dependencies.Files, cwd, input.Wrapper, "wrapper")
 	if err != nil {
 		return ProjectResult{}, err
 	}
@@ -224,7 +224,7 @@ func AddProject(dependencies Dependencies, input ProjectAddInput) (ProjectResult
 	defined := workspacedef.Project{ID: string(input.ProjectID), Name: input.Name, Wrapper: definitionPath(workspaceRoot, wrapper), Repos: []workspacedef.Repo{}}
 	commonDirectories := make(map[string]RepoID, len(input.Repos))
 	for _, repository := range input.Repos {
-		locator, err := canonicalDirectory(dependencies.Files, cwd, repository.Path, fmt.Sprintf("repository %s", repository.RepoID))
+		locator, err := CanonicalDirectory(dependencies.Files, cwd, repository.Path, fmt.Sprintf("repository %s", repository.RepoID))
 		if err != nil {
 			return ProjectResult{}, err
 		}
@@ -236,7 +236,7 @@ func AddProject(dependencies Dependencies, input ProjectAddInput) (ProjectResult
 			}
 			return ProjectResult{}, projectError(ErrorProjectRepoObservation, fmt.Sprintf("observe repository %s at %s: %v", repository.RepoID, locator, err), err)
 		}
-		if observation.Locator != locator || !validStoredPath(observation.Locator) || !validStoredPath(observation.GitCommonDir) {
+		if observation.Locator != locator || !ValidStoredPath(observation.Locator) || !ValidStoredPath(observation.GitCommonDir) {
 			return ProjectResult{}, projectError(ErrorProjectRepoObservation, fmt.Sprintf("observe repository %s at %s: observer returned malformed physical paths", repository.RepoID, locator), nil)
 		}
 		if existing, duplicate := commonDirectories[observation.GitCommonDir]; duplicate {
@@ -286,7 +286,7 @@ func defineProject(defined workspacedef.Project) func(*workspacedef.Definitions)
 }
 
 func ShowProject(dependencies Dependencies, id ProjectID) (ProjectResult, error) {
-	if err := validateIdentifier("project", string(id)); err != nil {
+	if err := ValidateIdentifier("project", string(id)); err != nil {
 		return ProjectResult{}, err
 	}
 	workspaceRoot, projects, repositories, err := projectSnapshot(dependencies)
@@ -322,22 +322,22 @@ func projectWorkspaceRoot(dependencies Dependencies) (string, error) {
 	if dependencies.Files == nil || dependencies.Projects == nil {
 		return "", projectError(ErrorProjectIO, "dependencies: filesystem and project store are required", nil)
 	}
-	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	cwd, err := ProjectPhysicalWorkingDirectory(dependencies.Files)
 	if err != nil {
 		return "", err
 	}
-	return locateContainingWorkspace(dependencies.Files, cwd)
+	return LocateContainingWorkspace(dependencies.Files, cwd)
 }
 
-func projectPhysicalWorkingDirectory(files FileSystem) (string, error) {
+func ProjectPhysicalWorkingDirectory(files FileSystem) (string, error) {
 	workingDirectory, err := files.Getwd()
 	if err != nil {
 		return "", projectPathError("getwd", "", err)
 	}
-	return canonicalDirectory(files, "", workingDirectory, "working directory")
+	return CanonicalDirectory(files, "", workingDirectory, "working directory")
 }
 
-func canonicalDirectory(files FileSystem, base, input, kind string) (string, error) {
+func CanonicalDirectory(files FileSystem, base, input, kind string) (string, error) {
 	path := input
 	if !filepath.IsAbs(path) && base != "" {
 		path = filepath.Join(base, path)
@@ -370,7 +370,7 @@ func canonicalDirectory(files FileSystem, base, input, kind string) (string, err
 // only that directory and the directories below it can contain the workspace.
 const WorkspaceCeilingVariable = "PLY_WORKSPACE_CEILING"
 
-func locateContainingWorkspace(files FileSystem, cwd string) (string, error) {
+func LocateContainingWorkspace(files FileSystem, cwd string) (string, error) {
 	ceiling, err := workspaceCeiling(files)
 	if err != nil {
 		return "", err
@@ -428,7 +428,7 @@ func workspaceCeiling(files FileSystem) (string, error) {
 	return physical, nil
 }
 
-func validStoredPath(path string) bool {
+func ValidStoredPath(path string) bool {
 	return path != "" && filepath.IsAbs(path) && filepath.Clean(path) == path
 }
 

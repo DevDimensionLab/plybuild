@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
@@ -19,23 +20,23 @@ type viewTestFiles struct {
 func (f viewTestFiles) Getwd() (string, error) { return f.root, nil }
 
 type viewTestItems struct {
-	registry                workspace.WorkItemRegistry
+	registry                taskwork.WorkItemRegistry
 	reads, fullReads, locks int
 }
 
-func (s *viewTestItems) Snapshot(work workspace.ProjectWork) (workspace.WorkItemRegistry, error) {
+func (s *viewTestItems) Snapshot(work workspace.ProjectWork) (taskwork.WorkItemRegistry, error) {
 	s.fullReads++
 	return s.of(work.Project), nil
 }
-func (s *viewTestItems) SnapshotRegistrations(work workspace.ProjectWork) (workspace.WorkItemRegistry, error) {
+func (s *viewTestItems) SnapshotRegistrations(work workspace.ProjectWork) (taskwork.WorkItemRegistry, error) {
 	s.reads++
 	return s.of(work.Project), nil
 }
 
 // of is the registry of one Project: its Epics, Tasks and Epic bases, and
 // for the fixture's Project "project" also every other record.
-func (s *viewTestItems) of(project workspace.ProjectID) workspace.WorkItemRegistry {
-	r := workspace.WorkItemRegistry{}
+func (s *viewTestItems) of(project workspace.ProjectID) taskwork.WorkItemRegistry {
+	r := taskwork.WorkItemRegistry{}
 	if project == "project" {
 		r = s.registry
 	}
@@ -57,7 +58,7 @@ func (s *viewTestItems) of(project workspace.ProjectID) workspace.WorkItemRegist
 	}
 	return r
 }
-func (s *viewTestItems) WithLock(_ workspace.ProjectWork, f func(workspace.WorkItemStoreSession) error) error {
+func (s *viewTestItems) WithLock(_ workspace.ProjectWork, f func(taskwork.WorkItemStoreSession) error) error {
 	s.locks++
 	return f(nil)
 }
@@ -70,7 +71,7 @@ func (viewTestLocks) WithSnapshotLock(_ string, f func(workspace.ProjectSnapshot
 	return f(workspace.ProjectSnapshot{})
 }
 
-func withViewLocks(d workspace.Dependencies) workspace.Dependencies {
+func withViewLocks(d taskwork.Dependencies) taskwork.Dependencies {
 	d.ProjectLocks = viewTestLocks{}
 	return d
 }
@@ -85,15 +86,15 @@ func (s *viewTestProjects) Snapshot(string) ([]workspace.ProjectRecord, []worksp
 	return s.projects.Projects, s.projects.Repos, nil
 }
 
-func viewDiskFixture(t *testing.T) (workspace.Dependencies, *viewTestItems, *viewTestProjects) {
+func viewDiskFixture(t *testing.T) (taskwork.Dependencies, *viewTestItems, *viewTestProjects) {
 	t.Helper()
 	root, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = viewTestFiles{d.Files, root}
-	if _, err = workspace.Init(d); err != nil {
+	if _, err = workspace.Init(d.Dependencies); err != nil {
 		t.Fatal(err)
 	}
 	f := progressFixture()
@@ -108,7 +109,7 @@ func viewDiskFixture(t *testing.T) (workspace.Dependencies, *viewTestItems, *vie
 // defineViewEpic adds a synthetic Epic with a worktree directory and a
 // matching binding to the registry and Project store fakes; its Project and
 // repository are defined in ply-workspace.json when missing.
-func defineViewEpic(t *testing.T, root string, items *viewTestItems, projects *viewTestProjects, project workspace.ProjectID, repo workspace.RepoID, epic workspace.EpicID, title string) {
+func defineViewEpic(t *testing.T, root string, items *viewTestItems, projects *viewTestProjects, project workspace.ProjectID, repo workspace.RepoID, epic taskwork.EpicID, title string) {
 	t.Helper()
 	repoPath := filepath.Join(string(project), string(repo))
 	epicPath := filepath.Join(string(project), string(epic))
@@ -132,7 +133,7 @@ func defineViewEpic(t *testing.T, root string, items *viewTestItems, projects *v
 	if _, err := workspacedef.Update(root, basis, mutate, func(workspacedef.Definitions) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
-	binding := []workspace.EpicRepoBinding{{RepoID: repo, GitCommonDir: common, Worktree: workspace.EpicWorktreeBinding{Locator: filepath.Join(root, epicPath), Ref: ref}}}
+	binding := []taskwork.EpicRepoBinding{{RepoID: repo, GitCommonDir: common, Worktree: taskwork.EpicWorktreeBinding{Locator: filepath.Join(root, epicPath), Ref: ref}}}
 	found := false
 	for i := range items.registry.Epics {
 		if items.registry.Epics[i].ID == epic {
@@ -140,7 +141,7 @@ func defineViewEpic(t *testing.T, root string, items *viewTestItems, projects *v
 		}
 	}
 	if !found {
-		items.registry.Epics = append(items.registry.Epics, workspace.EpicRecord{ID: epic, ProjectID: project, Title: title, RepoBindings: binding})
+		items.registry.Epics = append(items.registry.Epics, taskwork.EpicRecord{ID: epic, ProjectID: project, Title: title, RepoBindings: binding})
 	}
 	// Every registered Epic binding has its adopted base, as in a stored registry.
 	hasBase := false
@@ -148,7 +149,7 @@ func defineViewEpic(t *testing.T, root string, items *viewTestItems, projects *v
 		hasBase = hasBase || v.EpicID == epic && v.RepoID == repo
 	}
 	if !hasBase {
-		items.registry.EpicBaseVersions = append(items.registry.EpicBaseVersions, workspace.EpicBaseVersion{ProjectID: project, RepoID: repo, EpicID: epic, Revision: 1, Locator: binding[0].Worktree.Locator, Ref: ref, GitCommonDir: common})
+		items.registry.EpicBaseVersions = append(items.registry.EpicBaseVersions, taskwork.EpicBaseVersion{ProjectID: project, RepoID: repo, EpicID: epic, Revision: 1, Locator: binding[0].Worktree.Locator, Ref: ref, GitCommonDir: common})
 	}
 	snapshot := &projects.projects
 	if !containsProject(snapshot.Projects, project) {
@@ -193,27 +194,27 @@ func TestSnapshotUsesOneTypedReadAndDetectsLaterRegisterDrift(t *testing.T) {
 
 func TestAttentionHonorsTaskAndEpicLifecycleWithoutChangingChildren(t *testing.T) {
 	for _, subject := range []string{"task", "epic"} {
-		for _, state := range []workspace.LifecycleState{workspace.LifecycleParked, workspace.LifecycleFrozen, workspace.LifecycleArchived} {
+		for _, state := range []taskwork.LifecycleState{taskwork.LifecycleParked, taskwork.LifecycleFrozen, taskwork.LifecycleArchived} {
 			t.Run(subject+"/"+string(state), func(t *testing.T) {
 				d, items, _ := viewDiskFixture(t)
-				items.registry.IntegrationAuthorities = []workspace.IntegrationAuthority{fixtureAuthority()}
+				items.registry.IntegrationAuthorities = []taskwork.IntegrationAuthority{fixtureAuthority()}
 				beforeTask := items.registry.Tasks[0]
-				if _, err := workspace.SetWorkItemLifecycle(withViewLocks(d), workspace.WorkItemLifecycleInput{SubjectKind: subject, SubjectID: subject, State: state, ActorClaim: "fixture owner"}); err != nil {
+				if _, err := taskwork.SetWorkItemLifecycle(withViewLocks(d), taskwork.WorkItemLifecycleInput{SubjectKind: subject, SubjectID: subject, State: state, ActorClaim: "fixture owner"}); err != nil {
 					t.Fatal(err)
 				}
 				s, err := LoadSnapshot(d)
 				if err != nil {
 					t.Fatal(err)
 				}
-				rows, err := BuildTaskList(s, workspace.TaskListFilters{}, nil)
+				rows, err := BuildTaskList(s, taskwork.TaskListFilters{}, nil)
 				if err != nil || len(rows.Tasks) != 1 || rows.Tasks[0].Progress.State != "in_progress" {
 					t.Fatalf("task disappeared or progress changed: %+v %v", rows, err)
 				}
-				a, err := BuildAttention(s, workspace.TaskListFilters{}, nil)
+				a, err := BuildAttention(s, taskwork.TaskListFilters{}, nil)
 				if err != nil || len(a.Items) != 0 {
 					t.Fatalf("inactive work asks for attention: %+v %v", a, err)
 				}
-				if subject == "epic" && rows.Tasks[0].Lifecycle != workspace.LifecycleActive {
+				if subject == "epic" && rows.Tasks[0].Lifecycle != taskwork.LifecycleActive {
 					t.Fatalf("parent lifecycle leaked into stored Task state: %+v", rows.Tasks[0])
 				}
 				if !reflect.DeepEqual(beforeTask, items.registry.Tasks[0]) {
@@ -227,13 +228,13 @@ func TestAttentionHonorsTaskAndEpicLifecycleWithoutChangingChildren(t *testing.T
 func TestProgressFiltersValidateKnownIDsBeforeIntersection(t *testing.T) {
 	s := progressFixture()
 	s.Projects.Projects = append(s.Projects.Projects, workspace.ProjectRecord{ID: "other"})
-	p, r, e := workspace.ProjectID("other"), workspace.RepoID("repo"), workspace.EpicID("epic")
-	rows, err := BuildTaskList(s, workspace.TaskListFilters{ProjectID: &p, RepoID: &r, EpicID: &e}, nil)
+	p, r, e := workspace.ProjectID("other"), workspace.RepoID("repo"), taskwork.EpicID("epic")
+	rows, err := BuildTaskList(s, taskwork.TaskListFilters{ProjectID: &p, RepoID: &r, EpicID: &e}, nil)
 	if err != nil || len(rows.Tasks) != 0 {
 		t.Fatalf("known empty intersection: %+v %v", rows, err)
 	}
-	missing := workspace.EpicID("missing")
-	if _, err := BuildTaskList(s, workspace.TaskListFilters{ProjectID: &p, EpicID: &missing}, nil); err == nil {
+	missing := taskwork.EpicID("missing")
+	if _, err := BuildTaskList(s, taskwork.TaskListFilters{ProjectID: &p, EpicID: &missing}, nil); err == nil {
 		t.Fatal("unknown Epic hidden by empty intersection")
 	} else {
 		var workError *workspace.WorkItemError
@@ -242,7 +243,7 @@ func TestProgressFiltersValidateKnownIDsBeforeIntersection(t *testing.T) {
 		}
 	}
 	empty := workspace.ProjectID("")
-	if _, err := ReadTaskList(workspace.Dependencies{}, workspace.TaskListFilters{ProjectID: &empty}); err == nil {
+	if _, err := ReadTaskList(taskwork.Dependencies{}, taskwork.TaskListFilters{ProjectID: &empty}); err == nil {
 		t.Fatal("invalid filter was not rejected before reads")
 	}
 }

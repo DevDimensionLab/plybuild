@@ -7,13 +7,13 @@ import (
 	"strings"
 	"unicode/utf16"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workflowtrace"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
-func newWorkflowTraceCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkflowTraceCommand(d taskwork.Dependencies) *cobra.Command {
 	return newWorkflowTraceCommandWithReader(func(taskID string) (workflowtrace.Result, error) {
 		return workflowtrace.Read(d, taskID)
 	})
@@ -33,7 +33,7 @@ func newWorkflowTraceCommandWithReader(read func(string) (workflowtrace.Result, 
 			if len(args) != 1 || strings.TrimSpace(args[0]) == "" {
 				return invalid("expected one registered Task ID")
 			}
-			if _, err := workspace.ParseTaskID(args[0]); err != nil {
+			if _, err := taskwork.ParseTaskID(args[0]); err != nil {
 				return invalid(err.Error())
 			}
 			if format != "text" && format != "json" {

@@ -2,16 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func outputEpicBase(c *cobra.Command, format string, r workspace.EpicBaseResult, err error) error {
+func outputEpicBase(c *cobra.Command, format string, r taskwork.EpicBaseResult, err error) error {
 	if r.Kind == "" {
 		return err
 	}
 	if format == "json" {
-		b, e := workspace.MarshalTaskQueue(r)
+		b, e := taskwork.MarshalTaskQueue(r)
 		if e != nil {
 			return e
 		}
@@ -44,7 +45,7 @@ func outputEpicBase(c *cobra.Command, format string, r workspace.EpicBaseResult,
 	}
 	return err
 }
-func addWorkspaceEpicBaseCommands(epic *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceEpicBaseCommands(epic *cobra.Command, d taskwork.Dependencies) {
 	base := queueParent("base", "Inspect and explicitly update the versioned Epic base", "  ply workspace epic base show agentic-workflow --repo ply\n  ply workspace epic base update agentic-workflow --repo ply --check")
 	epic.AddCommand(base)
 	for _, name := range []string{"show", "update"} {
@@ -55,19 +56,19 @@ func addWorkspaceEpicBaseCommands(epic *cobra.Command, d workspace.Dependencies)
 			if e := validateWorkFormat(format); e != nil {
 				return e
 			}
-			id, e := workspace.ParseEpicID(args[0])
+			id, e := taskwork.ParseEpicID(args[0])
 			if e != nil {
 				return e
 			}
 			if check && apply || !apply && confirm != "" || apply && confirm == "" {
 				return workspace.WorkInvalidArguments("--check and --apply are exclusive; confirmation is required only for apply")
 			}
-			in := workspace.EpicBaseInput{EpicID: id, RepoID: workspace.RepoID(repo), Apply: apply, Confirmation: confirm}
-			var r workspace.EpicBaseResult
+			in := taskwork.EpicBaseInput{EpicID: id, RepoID: workspace.RepoID(repo), Apply: apply, Confirmation: confirm}
+			var r taskwork.EpicBaseResult
 			if name == "show" {
-				r, e = workspace.ShowEpicBase(d, in)
+				r, e = taskwork.ShowEpicBase(d, in)
 			} else {
-				r, e = workspace.UpdateEpicBase(d, in)
+				r, e = taskwork.UpdateEpicBase(d, in)
 			}
 			return outputEpicBase(c, format, r, e)
 		}}
@@ -89,7 +90,7 @@ func addWorkspaceEpicBaseCommands(epic *cobra.Command, d workspace.Dependencies)
 		if e := validateWorkFormat(format); e != nil {
 			return e
 		}
-		r, e := workspace.ShowEpicBaseOperation(d, args[0])
+		r, e := taskwork.ShowEpicBaseOperation(d, args[0])
 		return outputEpicBase(c, format, r, e)
 	}}
 	show.Flags().StringVar(&format, "format", "text", "output format (text or json)")

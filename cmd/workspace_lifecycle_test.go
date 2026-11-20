@@ -6,26 +6,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestWorkspaceOrganizingLifecycleCommandsValidateAndPreserveIdentity(t *testing.T) {
 	for _, kind := range []string{"task", "epic"} {
 		calls := 0
 		services := workspaceLifecycleServices{
-			show: func(gotKind, id string) (workspace.WorkItemLifecycleReadback, error) {
+			show: func(gotKind, id string) (taskwork.WorkItemLifecycleReadback, error) {
 				calls++
 				if gotKind != kind || id != "an-item" {
 					t.Fatalf("wrong show identity %q %q", gotKind, id)
 				}
-				return workspace.WorkItemLifecycleReadback{Kind: workspace.WorkItemLifecycleReadbackKind, SchemaVersion: 1, SubjectKind: kind, SubjectID: id, Lifecycle: workspace.LifecycleActive, Events: []workspace.WorkItemLifecycleEvent{}}, nil
+				return taskwork.WorkItemLifecycleReadback{Kind: taskwork.WorkItemLifecycleReadbackKind, SchemaVersion: 1, SubjectKind: kind, SubjectID: id, Lifecycle: taskwork.LifecycleActive, Events: []taskwork.WorkItemLifecycleEvent{}}, nil
 			},
-			set: func(input workspace.WorkItemLifecycleInput) (workspace.WorkItemLifecycleMutation, error) {
+			set: func(input taskwork.WorkItemLifecycleInput) (taskwork.WorkItemLifecycleMutation, error) {
 				calls++
-				if input.SubjectKind != kind || input.SubjectID != "an-item" || input.State != workspace.LifecycleArchived || input.ActorClaim != "codex" || input.ExpectedRevision == nil || *input.ExpectedRevision != 4 {
+				if input.SubjectKind != kind || input.SubjectID != "an-item" || input.State != taskwork.LifecycleArchived || input.ActorClaim != "codex" || input.ExpectedRevision == nil || *input.ExpectedRevision != 4 {
 					t.Fatalf("wrong set input %#v", input)
 				}
-				return workspace.WorkItemLifecycleMutation{WorkItemLifecycleReadback: workspace.WorkItemLifecycleReadback{Kind: workspace.WorkItemLifecycleMutationKind, SchemaVersion: 1, SubjectKind: kind, SubjectID: "an-item", Lifecycle: workspace.LifecycleArchived, Revision: 5, Events: []workspace.WorkItemLifecycleEvent{}}, Changed: true}, nil
+				return taskwork.WorkItemLifecycleMutation{WorkItemLifecycleReadback: taskwork.WorkItemLifecycleReadback{Kind: taskwork.WorkItemLifecycleMutationKind, SchemaVersion: 1, SubjectKind: kind, SubjectID: "an-item", Lifecycle: taskwork.LifecycleArchived, Revision: 5, Events: []taskwork.WorkItemLifecycleEvent{}}, Changed: true}, nil
 			},
 		}
 		for _, args := range [][]string{{"show", "an-item", "--format", "json"}, {"set", "an-item", "archived", "--actor", "codex", "--expected-revision", "4", "--format", "json"}} {

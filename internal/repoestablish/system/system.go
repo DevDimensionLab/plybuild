@@ -21,6 +21,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/githubrepo"
 	"github.com/devdimensionlab/plybuild/internal/gitrepo"
 	"github.com/devdimensionlab/plybuild/internal/repoestablish"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 	"github.com/devdimensionlab/plybuild/internal/wrapperplan"
@@ -213,7 +214,7 @@ type fixedCwdFiles struct {
 func (f fixedCwdFiles) Getwd() (string, error) { return f.cwd, nil }
 
 func fixedDependencies(root string) workspace.Dependencies {
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies().Dependencies
 	d.Files = fixedCwdFiles{d.Files, root}
 	return d
 }

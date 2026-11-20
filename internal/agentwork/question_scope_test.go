@@ -10,12 +10,13 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // questionWorkspace is a physical workspace with one registered project whose
 // questions are published through the public humaninput surface.
-func questionWorkspace(t *testing.T) (workspace.Dependencies, humaninput.Dependencies, string, string) {
+func questionWorkspace(t *testing.T) (taskwork.Dependencies, humaninput.Dependencies, string, string) {
 	t.Helper()
 	root, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
@@ -31,14 +32,14 @@ func questionWorkspace(t *testing.T) (workspace.Dependencies, humaninput.Depende
 		}
 	}
 	t.Chdir(root)
-	d := workspace.SystemDependencies()
-	if _, err := workspace.Init(d); err != nil {
+	d := taskwork.SystemDependencies()
+	if _, err := workspace.Init(d.Dependencies); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: filepath.Join(root, "ply"), Repos: []workspace.RepoInput{{RepoID: "ply", Path: repo}}}); err != nil {
+	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: filepath.Join(root, "ply"), Repos: []workspace.RepoInput{{RepoID: "ply", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
-	if d, err = workspace.AtRoot(d, root); err != nil {
+	if d.Dependencies, err = workspace.AtRoot(d.Dependencies, root); err != nil {
 		t.Fatal(err)
 	}
 	return d, humaninput.Dependencies{Workspace: d, Now: time.Now}, root, repo

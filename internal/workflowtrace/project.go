@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 type builder struct {
@@ -19,7 +19,7 @@ type builder struct {
 	recorded   bool
 }
 
-func newBuilder(root string, task workspace.TaskRecord, at string) *builder {
+func newBuilder(root string, task taskwork.TaskRecord, at string) *builder {
 	return &builder{out: Result{Kind: Kind, SchemaVersion: 1, Workspace: root,
 		Task: Task{string(task.ID), task.Title, string(task.ProjectID), string(task.RepoID), string(task.ParentEpicID)}, ObservedAtUTC: at,
 		Freshness: "fresh", LiveState: "unknown", HistoryState: "empty",
@@ -154,7 +154,7 @@ func (b *builder) event(e Event) {
 	b.out.Events = append(b.out.Events, e)
 }
 
-func (b *builder) journal(s taskjournal.Snapshot, r workspace.WorkItemRegistry) {
+func (b *builder) journal(s taskjournal.Snapshot, r taskwork.WorkItemRegistry) {
 	for _, src := range s.Sources {
 		b.source(Source{src.SourceID, src.Kind, src.Locator, src.SHA256, src.Status})
 	}
@@ -220,7 +220,7 @@ func journalRole(role string) string {
 	}
 }
 
-func (b *builder) enrichNative(e *Event, registry workspace.WorkItemRegistry) {
+func (b *builder) enrichNative(e *Event, registry taskwork.WorkItemRegistry) {
 	for _, ir := range registry.IntegrationResults {
 		if e.ID != nativeID("integration", string(ir.ID), ir) {
 			continue

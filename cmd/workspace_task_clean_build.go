@@ -7,13 +7,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
 // newWorkspaceTaskCleanBuildCommand empties .build/ in a Task's registered
 // worktree, so an agent cleans up its temporary files with a Ply command.
-func newWorkspaceTaskCleanBuildCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceTaskCleanBuildCommand(d taskwork.Dependencies) *cobra.Command {
 	return &cobra.Command{
 		Use:     "clean-build <task-id>",
 		Short:   "Empty .build/ in the Task's worktree",
@@ -21,15 +22,15 @@ func newWorkspaceTaskCleanBuildCommand(d workspace.Dependencies) *cobra.Command 
 		Example: "  ply workspace task clean-build code-map-card-name",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(c *cobra.Command, args []string) error {
-			id, err := workspace.ParseTaskID(args[0])
+			id, err := taskwork.ParseTaskID(args[0])
 			if err != nil {
 				return err
 			}
-			task, err := workspace.ShowTask(d, id)
+			task, err := taskwork.ShowTask(d, id)
 			if err != nil {
 				return err
 			}
-			if task.Task.Worktree == nil || task.Task.WorktreeState != workspace.WorkItemReady {
+			if task.Task.Worktree == nil || task.Task.WorktreeState != taskwork.WorkItemReady {
 				return workspace.WorkInvalidArguments(fmt.Sprintf("Task %s has no worktree", id))
 			}
 			n, err := cleanBuild(task.Task.Worktree.Locator)

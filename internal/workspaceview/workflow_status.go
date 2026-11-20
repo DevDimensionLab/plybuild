@@ -5,12 +5,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
 // ReadWorkflowStatus composes one registered basis and the existing process
 // batch. It performs no live preflight, creates no state, and starts no process.
-func ReadWorkflowStatus(d workspace.Dependencies, o WorkflowStatusOptions) (WorkflowStatus, error) {
+func ReadWorkflowStatus(d taskwork.Dependencies, o WorkflowStatusOptions) (WorkflowStatus, error) {
 	if err := o.Filters.Validate(); err != nil {
 		return WorkflowStatus{}, err
 	}
@@ -22,14 +23,14 @@ func ReadWorkflowStatus(d workspace.Dependencies, o WorkflowStatusOptions) (Work
 		return WorkflowStatus{}, err
 	}
 	process := readProgressProcess(d, s)
-	queues := workspace.ReadRegisteredTaskQueues(d, s.Projects, s.basis.Registries)
+	queues := taskwork.ReadRegisteredTaskQueues(d, s.Projects, s.basis.Registries)
 	s.RefreshFreshness(d)
 	return BuildWorkflowStatus(s, o, process, queues)
 }
 
 // BuildWorkflowStatus is a pure projection. The native Progress remains intact;
 // presentation actions supplement it without manufacturing result/QA facts.
-func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[workspace.TaskID]ProcessFacts, queues workspace.RegisteredTaskQueues) (WorkflowStatus, error) {
+func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[taskwork.TaskID]ProcessFacts, queues taskwork.RegisteredTaskQueues) (WorkflowStatus, error) {
 	version := o.SchemaVersion
 	if version == 0 {
 		version = 1
@@ -45,7 +46,7 @@ func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[works
 	for _, category := range workflowCategories {
 		out.Counts.Categories[category] = 0
 	}
-	known := map[string]workspace.TaskRecord{}
+	known := map[string]taskwork.TaskRecord{}
 	for _, task := range s.Registry.Tasks {
 		known[string(task.ID)] = task
 	}
@@ -53,7 +54,7 @@ func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[works
 		out.Kind = "WorkflowStatusReadback@2"
 		out.SchemaVersion = 2
 	}
-	rows := make(map[workspace.TaskID]*WorkflowStatusItem, len(tasks.Tasks))
+	rows := make(map[taskwork.TaskID]*WorkflowStatusItem, len(tasks.Tasks))
 	for _, task := range tasks.Tasks {
 		row := &WorkflowStatusItem{TaskID: task.TaskID, ProjectID: task.ProjectID, RepoID: task.RepoID, EpicID: task.ParentEpicID, TaskListTitle: task.TaskListTitle, WorktreeState: task.WorktreeState, TaskLifecycle: task.Lifecycle, EpicLifecycle: task.EpicLifecycle, Progress: task.Progress, LastActivityUTC: task.Progress.LastActivityUTC, Freshness: task.Progress.Freshness, NextActions: []WorkflowStatusAction{}, Queues: []WorkflowStatusQueue{}}
 		for _, action := range task.Progress.NextActions {
@@ -117,7 +118,7 @@ func BuildWorkflowStatus(s *Snapshot, o WorkflowStatusOptions, process map[works
 
 var workflowCategories = []string{"needs_you", "follow_up", "in_progress", "ready_next", "inactive", "completed", "backlog"}
 
-func (out *WorkflowStatus) addQueues(rows map[workspace.TaskID]*WorkflowStatusItem, queues workspace.RegisteredTaskQueues, filters workspace.TaskListFilters) {
+func (out *WorkflowStatus) addQueues(rows map[taskwork.TaskID]*WorkflowStatusItem, queues taskwork.RegisteredTaskQueues, filters taskwork.TaskListFilters) {
 	for _, q := range queues.Queues {
 		if !workflowTargetMatches(q.Target, filters) {
 			continue
@@ -127,12 +128,12 @@ func (out *WorkflowStatus) addQueues(rows map[workspace.TaskID]*WorkflowStatusIt
 			if row == nil {
 				continue
 			}
-			entry := WorkflowStatusQueue{QueueID: q.QueueID, Revision: q.Revision, Target: q.Target, State: "pending", Rank: &pending.Rank, SpecID: pending.SpecID, Spec: pending.Spec, Readiness: pending.State, Freshness: combineFreshness(q.Freshness, pending.Freshness), SinceUTC: pending.SinceUTC, Reasons: append([]workspace.QueueReason{}, pending.Reasons...), EvidenceIDs: sortedUnique(append(append([]string{}, q.EvidenceIDs...), pending.EvidenceIDs...))}
+			entry := WorkflowStatusQueue{QueueID: q.QueueID, Revision: q.Revision, Target: q.Target, State: "pending", Rank: &pending.Rank, SpecID: pending.SpecID, Spec: pending.Spec, Readiness: pending.State, Freshness: combineFreshness(q.Freshness, pending.Freshness), SinceUTC: pending.SinceUTC, Reasons: append([]taskwork.QueueReason{}, pending.Reasons...), EvidenceIDs: sortedUnique(append(append([]string{}, q.EvidenceIDs...), pending.EvidenceIDs...))}
 			entry.Goal, entry.Selection = pending.Goal, pending.Selection
 			entry.Freshness = combineFreshness(entry.Freshness, row.Freshness)
 			if entry.Freshness != "fresh" && entry.Readiness == "ready" {
 				entry.Readiness = "unknown"
-				entry.Reasons = append(entry.Reasons, workspace.QueueReason{Code: "queue_source_not_fresh", Message: "Registered queue readiness is unknown because its captured source basis is not fresh."})
+				entry.Reasons = append(entry.Reasons, taskwork.QueueReason{Code: "queue_source_not_fresh", Message: "Registered queue readiness is unknown because its captured source basis is not fresh."})
 			}
 			row.Queues = append(row.Queues, entry)
 			row.Freshness = combineFreshness(row.Freshness, entry.Freshness)
@@ -165,9 +166,9 @@ func workflowClassify(row *WorkflowStatusItem) {
 	case row.Progress.State == "cleanup_pending":
 		row.Category = "follow_up"
 		return
-	case row.TaskLifecycle == workspace.LifecycleCompleted && row.Progress.State == "completed":
+	case row.TaskLifecycle == taskwork.LifecycleCompleted && row.Progress.State == "completed":
 		row.Category = "completed"
-	case row.TaskLifecycle != workspace.LifecycleActive || row.EpicLifecycle != workspace.LifecycleActive:
+	case row.TaskLifecycle != taskwork.LifecycleActive || row.EpicLifecycle != taskwork.LifecycleActive:
 		row.Category = "inactive"
 	case row.Progress.State == "integrated":
 		row.Category = "completed"
@@ -201,7 +202,7 @@ func workflowClassify(row *WorkflowStatusItem) {
 	}
 }
 
-func (out *WorkflowStatus) fillContainers(s *Snapshot, tasks TaskList, filters workspace.TaskListFilters) {
+func (out *WorkflowStatus) fillContainers(s *Snapshot, tasks TaskList, filters taskwork.TaskListFilters) {
 	epics := epicsFromTasks(s, EpicFilters{ProjectID: filters.ProjectID}, tasks)
 	projectEpics := map[workspace.ProjectID]bool{}
 	for _, epic := range epics.Epics {
@@ -267,7 +268,7 @@ func (out *WorkflowStatus) addDiagnostic(code, source, reason, task, run, queue 
 	out.Diagnostics = append(out.Diagnostics, WorkflowDiagnostic{Code: code, Source: source, Actor: "unknown", Severity: "attention", Reason: reason, TaskID: stringValue(task), RunID: stringValue(run), QueueID: stringValue(queue), EvidenceIDs: sortedUnique(evidence)})
 }
 
-func workflowTargetMatches(t workspace.QueueTarget, f workspace.TaskListFilters) bool {
+func workflowTargetMatches(t taskwork.QueueTarget, f taskwork.TaskListFilters) bool {
 	return (f.ProjectID == nil || t.ProjectID == *f.ProjectID) && (f.RepoID == nil || t.RepoID == *f.RepoID) && (f.EpicID == nil || t.EpicID == *f.EpicID)
 }
 

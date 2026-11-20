@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceTaskContentCommands(task *cobra.Command, d taskwork.Dependencies) {
 	parents := map[string]*cobra.Command{}
 	for _, name := range []string{"problem", "spec", "publication"} {
 		p := &cobra.Command{Use: name, Short: map[string]string{"problem": "Preserve Task problem revisions", "spec": "Record Task goals and assess or select detailed solutions", "publication": "Inspect Task content publication outcomes"}[name], Long: "Record or inspect Task metadata and preserved documents. Goal Spec@2 keeps the objective, design, acceptance criteria and assigned implementor without an early Git base. A solution selection records a human claim. Goal recording preserves metadata without starting an agent. Choose subsequent operations explicitly.", Example: "  ply workspace task " + name + " --help", RunE: func(cmd *cobra.Command, args []string) error { return cmd.Help() }}
@@ -16,24 +17,24 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 	}
 	type mutation struct {
 		parent, name, short string
-		run                 func(workspace.Dependencies, workspace.TaskContentInput) (workspace.TaskContentMutationResult, error)
+		run                 func(taskwork.Dependencies, taskwork.TaskContentInput) (taskwork.TaskContentMutationResult, error)
 	}
-	for _, entry := range []mutation{{"problem", "record", "Record an immutable problem revision", workspace.RecordTaskProblem}, {"spec", "record", "Record an immutable goal or solution revision", workspace.RecordTaskSpec}, {"spec", "assess", "Record a readiness assessment without selecting a solution", workspace.AssessTaskSpec}, {"spec", "select", "Record the human's exact solution choice", workspace.SelectTaskSolution}, {"spec", "withdraw", "Withdraw the current choice without deleting its history", workspace.WithdrawTaskSolution}} {
+	for _, entry := range []mutation{{"problem", "record", "Record an immutable problem revision", taskwork.RecordTaskProblem}, {"spec", "record", "Record an immutable goal or solution revision", taskwork.RecordTaskSpec}, {"spec", "assess", "Record a readiness assessment without selecting a solution", taskwork.AssessTaskSpec}, {"spec", "select", "Record the human's exact solution choice", taskwork.SelectTaskSolution}, {"spec", "withdraw", "Withdraw the current choice without deleting its history", taskwork.WithdrawTaskSolution}} {
 		entry := entry
 		var file, format string
 		c := &cobra.Command{Use: entry.name + " <task-id>", Short: entry.short, Long: entry.short + ". Read a complete strict JSON draft from an absolute physical regular UTF-8 file. This records metadata; it does not start an agent or authorize worktree creation, product QA, or integration. Select and withdraw preserve an explicitly reported human claim.", Example: "  ply workspace task " + entry.parent + " " + entry.name + " explain-start-errors --file /absolute/" + entry.name + ".json --format json", Args: cobra.ExactArgs(1), PreRunE: func(cmd *cobra.Command, args []string) error {
-			if _, e := workspace.ParseTaskID(args[0]); e != nil {
+			if _, e := taskwork.ParseTaskID(args[0]); e != nil {
 				return e
 			}
 			return validateWorkFormat(format)
 		}, RunE: func(cmd *cobra.Command, args []string) error {
-			id, e := workspace.ParseTaskID(args[0])
+			id, e := taskwork.ParseTaskID(args[0])
 			if e != nil {
 				return e
 			}
-			r, mutationErr := entry.run(d, workspace.TaskContentInput{TaskID: id, File: file})
+			r, mutationErr := entry.run(d, taskwork.TaskContentInput{TaskID: id, File: file})
 			if format == "json" && r.Workspace != "" {
-				b, e := workspace.MarshalTaskContentMutation(r)
+				b, e := taskwork.MarshalTaskContentMutation(r)
 				if e != nil {
 					return e
 				}
@@ -58,14 +59,14 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 	}
 	type query struct {
 		parent, name, short string
-		run                 func(workspace.Dependencies, workspace.TaskContentQuery) (workspace.TaskContentReadbackResult, error)
+		run                 func(taskwork.Dependencies, taskwork.TaskContentQuery) (taskwork.TaskContentReadbackResult, error)
 	}
-	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", workspace.ShowTaskProblem}, {"spec", "list", "List goal and solution revisions and their assessments", workspace.ListTaskSpecs}, {"spec", "show", "Show an exact goal or solution revision and its preserved inputs", workspace.ShowTaskSpec}, {"publication", "show", "Inspect the outcome of a Task content publication", workspace.ShowTaskPublication}} {
+	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", taskwork.ShowTaskProblem}, {"spec", "list", "List goal and solution revisions and their assessments", taskwork.ListTaskSpecs}, {"spec", "show", "Show an exact goal or solution revision and its preserved inputs", taskwork.ShowTaskSpec}, {"publication", "show", "Inspect the outcome of a Task content publication", taskwork.ShowTaskPublication}} {
 		entry := entry
 		var format, spec, key, document string
 		var revision int
 		c := &cobra.Command{Use: entry.name + " <task-id>", Short: entry.short, Long: entry.short + ". This is read-only and does not migrate a registry, create locks, repair snapshots, or authorize another action. JSON includes preserved descriptors and exact input paths and hashes for handoff preparation.", Example: "  ply workspace task " + entry.parent + " " + entry.name + " explain-start-errors --format json", Args: cobra.ExactArgs(1), PreRunE: func(cmd *cobra.Command, args []string) error {
-			if _, e := workspace.ParseTaskID(args[0]); e != nil {
+			if _, e := taskwork.ParseTaskID(args[0]); e != nil {
 				return e
 			}
 			if cmd.Flags().Changed("revision") && revision < 1 {
@@ -79,31 +80,31 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d workspace.Dependenci
 			}
 			return validateWorkFormat(format)
 		}, RunE: func(cmd *cobra.Command, args []string) error {
-			id, e := workspace.ParseTaskID(args[0])
+			id, e := taskwork.ParseTaskID(args[0])
 			if e != nil {
 				return e
 			}
 			if document != "" {
-				b, e := workspace.ReadTaskSpecDocument(d, workspace.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision}, document)
+				b, e := taskwork.ReadTaskSpecDocument(d, taskwork.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision}, document)
 				if e != nil {
 					return taskContentCommandError(cmd, format, e)
 				}
 				_, e = cmd.OutOrStdout().Write(b)
 				return e
 			}
-			r, e := entry.run(d, workspace.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision, PublicationKey: key})
+			r, e := entry.run(d, taskwork.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision, PublicationKey: key})
 			if e != nil {
 				return taskContentCommandError(cmd, format, e)
 			}
 			if format == "json" {
-				b, e := workspace.MarshalTaskContentReadback(r)
+				b, e := taskwork.MarshalTaskContentReadback(r)
 				if e != nil {
 					return e
 				}
 				_, e = cmd.OutOrStdout().Write(append(b, '\n'))
 				return e
 			}
-			_, e = fmt.Fprint(cmd.OutOrStdout(), workspace.TaskContentText(r.Value))
+			_, e = fmt.Fprint(cmd.OutOrStdout(), taskwork.TaskContentText(r.Value))
 			return e
 		}}
 		c.Flags().StringVar(&format, "format", "text", "output format (text or json)")

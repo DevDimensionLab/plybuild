@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 	"github.com/spf13/cobra"
@@ -12,10 +13,10 @@ type workspaceProjectMetadataServices struct {
 	update func(workspace.ProjectMetadataInput) (workspace.ProjectMetadataMutation, error)
 }
 
-func addWorkspaceProjectMetadataCommands(command *cobra.Command, d workspace.Dependencies) {
+func addWorkspaceProjectMetadataCommands(command *cobra.Command, d taskwork.Dependencies) {
 	services := workspaceProjectMetadataServices{
 		update: func(in workspace.ProjectMetadataInput) (workspace.ProjectMetadataMutation, error) {
-			return workspace.UpdateProjectMetadata(d, in)
+			return workspace.UpdateProjectMetadata(d.Dependencies, in)
 		},
 	}
 	command.AddCommand(newWorkspaceProjectMetadataCommandsWithServices(services)...)

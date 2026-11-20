@@ -2,7 +2,7 @@ package taskjournal
 
 import (
 	"encoding/json"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,7 +64,7 @@ func (f testFixture) recordProblem(t *testing.T) {
 	}
 	path := filepath.Join(f.root, "problem.json")
 	write(t, path, raw)
-	if _, e = workspace.RecordTaskProblem(f.s.Workspace, workspace.TaskContentInput{TaskID: "task", File: path}); e != nil {
+	if _, e = taskwork.RecordTaskProblem(f.s.Workspace, taskwork.TaskContentInput{TaskID: "task", File: path}); e != nil {
 		t.Fatal(e)
 	}
 }
@@ -211,7 +211,7 @@ func TestCandidateObjectAndTaskBinding(t *testing.T) {
 		t.Fatal(e)
 	}
 	base := r.Epics[0].RepoBindings[0].Worktree
-	created, e := workspace.CreateTaskWorktree(f.s.Workspace, workspace.TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: filepath.Join(f.root, "task-work"), ExpectedParentOID: base.OID})
+	created, e := taskwork.CreateTaskWorktree(f.s.Workspace, taskwork.TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: filepath.Join(f.root, "task-work"), ExpectedParentOID: base.OID})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -234,7 +234,7 @@ func TestSourceDisappearanceAtFreshnessInvalidatesOutcome(t *testing.T) {
 		t.Fatal(e)
 	}
 	base := r.Epics[0].RepoBindings[0].Worktree
-	created, e := workspace.CreateTaskWorktree(f.s.Workspace, workspace.TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: filepath.Join(f.root, "task-work"), ExpectedParentOID: base.OID})
+	created, e := taskwork.CreateTaskWorktree(f.s.Workspace, taskwork.TaskWorktreeCreateInput{TaskID: "task", Branch: "task", Path: filepath.Join(f.root, "task-work"), ExpectedParentOID: base.OID})
 	if e != nil {
 		t.Fatal(e)
 	}

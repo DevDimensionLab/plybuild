@@ -9,7 +9,7 @@ import (
 	"errors"
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -27,7 +27,7 @@ func TestWorkflowOffersExplicitGoalStart(t *testing.T) {
 }
 
 func TestGoalStartHelpPointsToOptionalCoordinatorReturn(t *testing.T) {
-	c := newWorkflowGoalStartCommand(workspace.Dependencies{})
+	c := newWorkflowGoalStartCommand(taskwork.Dependencies{})
 	var out bytes.Buffer
 	c.SetOut(&out)
 	if err := c.Help(); err != nil {
@@ -41,8 +41,8 @@ func TestGoalStartHelpPointsToOptionalCoordinatorReturn(t *testing.T) {
 }
 
 func TestGoalStartRejectsStaleRepositoryBeforeEffects(t *testing.T) {
-	task := workspace.TaskReadbackResult{WorktreeReady: true, Reasons: []string{"target_worktree_stale", "worktree_inventory_stale"}}
-	task.Task.Worktree = &workspace.TaskWorktreeBinding{}
+	task := taskwork.TaskReadbackResult{WorktreeReady: true, Reasons: []string{"target_worktree_stale", "worktree_inventory_stale"}}
+	task.Task.Worktree = &taskwork.TaskWorktreeBinding{}
 	if err := validateGoalTask(task); err == nil {
 		t.Fatal("stale Git identity admitted")
 	}
@@ -50,10 +50,10 @@ func TestGoalStartRejectsStaleRepositoryBeforeEffects(t *testing.T) {
 func TestGoalStartAcceptsObservedBindingAndRejectsDifferentRepository(t *testing.T) {
 	p := func(s string) *string { return &s }
 	yes := true
-	task := workspace.TaskReadbackResult{WorktreeReady: true, ProjectFreshness: "fresh"}
+	task := taskwork.TaskReadbackResult{WorktreeReady: true, ProjectFreshness: "fresh"}
 	task.Task.GitCommonDir = "/repo/.git"
-	task.Task.Worktree = &workspace.TaskWorktreeBinding{Locator: "/task", Ref: "refs/heads/task", OID: "oid", Tree: "tree", GitCommonDir: "/repo/.git"}
-	task.Target = workspace.TaskObservedTarget{Locator: p("/task"), Ref: p("refs/heads/task"), OID: p("oid"), Tree: p("tree"), GitCommonDir: p("/repo/.git"), Clean: &yes, InventoryMatch: &yes}
+	task.Task.Worktree = &taskwork.TaskWorktreeBinding{Locator: "/task", Ref: "refs/heads/task", OID: "oid", Tree: "tree", GitCommonDir: "/repo/.git"}
+	task.Target = taskwork.TaskObservedTarget{Locator: p("/task"), Ref: p("refs/heads/task"), OID: p("oid"), Tree: p("tree"), GitCommonDir: p("/repo/.git"), Clean: &yes, InventoryMatch: &yes}
 	if err := validateGoalTask(task); err != nil {
 		t.Fatal(err)
 	}
@@ -160,7 +160,7 @@ func TestGoalStartPromptLeavesCoordinationAndAuthorityToTheGoal(t *testing.T) {
 	}
 }
 
-func goalGitRepo(t *testing.T) (workspace.TaskWorktreeBinding, string) {
+func goalGitRepo(t *testing.T) (taskwork.TaskWorktreeBinding, string) {
 	t.Helper()
 	dir := t.TempDir()
 	git := func(args ...string) string {
@@ -176,7 +176,7 @@ func goalGitRepo(t *testing.T) (workspace.TaskWorktreeBinding, string) {
 	}
 	git("add", "f")
 	git("commit", "-q", "-m", "init")
-	return workspace.TaskWorktreeBinding{Locator: dir, Ref: "refs/heads/task", OID: git("rev-parse", "HEAD")}, dir
+	return taskwork.TaskWorktreeBinding{Locator: dir, Ref: "refs/heads/task", OID: git("rev-parse", "HEAD")}, dir
 }
 
 func TestGoalStartGitGuardRequiresCleanBoundRefAndHead(t *testing.T) {
@@ -354,7 +354,7 @@ func TestGoalStartResumeContinuesStoppedStartWithOnePrompt(t *testing.T) {
 }
 
 func TestGoalStartResumeRequiresApplyBeforeReading(t *testing.T) {
-	c := newWorkflowGoalStartCommand(workspace.Dependencies{})
+	c := newWorkflowGoalStartCommand(taskwork.Dependencies{})
 	c.SetArgs([]string{"task-1", "--resume"})
 	c.SetOut(new(strings.Builder))
 	c.SetErr(new(strings.Builder))

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -87,10 +88,10 @@ func TestActivityMatchesTaskJournalIncludesLifecycleAndFiltersInclusively(t *tes
 	}
 	inventoryGit(t, repo, "add", "README")
 	inventoryGit(t, repo, "commit", "-m", "fixture")
-	if _, err := workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Activity", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
+	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Activity", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: inventoryGit(t, repo, "rev-parse", "HEAD")}); err != nil {
+	if _, err := taskwork.AdoptEpic(d, taskwork.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: inventoryGit(t, repo, "rev-parse", "HEAD")}); err != nil {
 		t.Fatal(err)
 	}
 	service := taskjournal.New(d)
@@ -102,7 +103,7 @@ func TestActivityMatchesTaskJournalIncludesLifecycleAndFiltersInclusively(t *tes
 	}
 	ids := map[string]bool{}
 	for _, id := range []string{"a", "b"} {
-		if _, err := workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: workspace.TaskID(id), Title: id, Description: "Activity fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
+		if _, err := taskwork.CreateTask(d, taskwork.TaskCreateInput{TaskID: taskwork.TaskID(id), Title: id, Description: "Activity fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
 			t.Fatal(err)
 		}
 		input := taskjournal.EventInput{Common: taskjournal.Common{Kind: "ply.workspace.task-journal-event-input", SchemaVersion: 1, PublicationKey: "activity:" + id, TaskID: id, Actor: taskjournal.Actor{ID: "fixture-agent", Role: "developer"}, TimeBasis: taskjournal.TimeBasis{Kind: "unknown", Precision: "unknown"}, Sources: []taskjournal.SourceRef{{Locator: source, SHA256: fmt.Sprintf("%x", sha256.Sum256([]byte("synthetic process fact")))}}}, Type: "note", Title: "A reported fact " + id, Relations: []taskjournal.Relation{}}
@@ -118,10 +119,10 @@ func TestActivityMatchesTaskJournalIncludesLifecycleAndFiltersInclusively(t *tes
 		ids[result.EventID] = true
 	}
 	d.WorkClock = activityClock{recorded.Add(time.Minute)}
-	if _, err := workspace.SetWorkItemLifecycle(d, workspace.WorkItemLifecycleInput{SubjectKind: "task", SubjectID: "a", State: workspace.LifecycleFrozen, ActorClaim: "Synthetic organizer"}); err != nil {
+	if _, err := taskwork.SetWorkItemLifecycle(d, taskwork.WorkItemLifecycleInput{SubjectKind: "task", SubjectID: "a", State: taskwork.LifecycleFrozen, ActorClaim: "Synthetic organizer"}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.SetWorkItemLifecycle(d, workspace.WorkItemLifecycleInput{SubjectKind: "epic", SubjectID: "epic", State: workspace.LifecycleParked, ActorClaim: "Synthetic organizer"}); err != nil {
+	if _, err := taskwork.SetWorkItemLifecycle(d, taskwork.WorkItemLifecycleInput{SubjectKind: "epic", SubjectID: "epic", State: taskwork.LifecycleParked, ActorClaim: "Synthetic organizer"}); err != nil {
 		t.Fatal(err)
 	}
 	s, err := LoadSnapshot(d)

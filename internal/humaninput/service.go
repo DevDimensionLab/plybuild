@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/privatestore"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -16,7 +17,7 @@ func observe(d Dependencies, root string) error {
 	if absoluteInput(root) != nil {
 		return fail(CodeInvalidArguments, "--workspace must name the physical absolute normalized workspace root")
 	}
-	if ws, e := workspace.ObserveRoot(d.Workspace, root); e != nil || ws.Root != root {
+	if ws, e := workspace.ObserveRoot(d.Workspace.Dependencies, root); e != nil || ws.Root != root {
 		return fail(CodeInvalidArguments, "--workspace is not a physical Ply workspace root")
 	}
 	return nil
@@ -25,7 +26,7 @@ func observe(d Dependencies, root string) error {
 type registrations struct {
 	projects []workspace.ProjectRecord
 	repos    []workspace.RepoRecord
-	registry workspace.WorkItemRegistry
+	registry taskwork.WorkItemRegistry
 }
 
 func readRegistrations(d Dependencies, root string) (registrations, error) {
@@ -37,11 +38,11 @@ func readRegistrations(d Dependencies, root string) (registrations, error) {
 	if r.projects, r.repos, e = d.Workspace.Projects.Snapshot(root); e != nil {
 		return r, invalidState("project registrations cannot be read")
 	}
-	registries, e := workspace.SnapshotWorkspace(d.Workspace, root)
+	registries, e := taskwork.SnapshotWorkspace(d.Workspace, root)
 	if e != nil {
 		return r, invalidState("work-item registrations cannot be read")
 	}
-	r.registry = workspace.MergeRegistries(registries)
+	r.registry = taskwork.MergeRegistries(registries)
 	return r, nil
 }
 

@@ -20,7 +20,7 @@ export GOTOOLCHAIN=local GOPROXY=off GOSUMDB=off GOENV=off GOWORK=off
 export PLY_DELIVERY_TEST_BINARY="$PLY_CANDIDATE_BINARY"
 # Preserve the actual disposable workspaces for readback; no real Task is used.
 export PLY_INFORMATIVE_JOURNEY_ROOT="$ld03_tmp"
-"$PLY_LD03_GO" test ./internal/workspace -run '^(TestCloseoutRetention|TestAutomaticCloseoutRetention|TestTaskCloseout)' -count=1 -v -timeout=180s
+"$PLY_LD03_GO" test ./internal/taskwork -run '^(TestCloseoutRetention|TestAutomaticCloseoutRetention|TestTaskCloseout)' -count=1 -v -timeout=180s
 "$PLY_LD03_GO" test ./internal/taskrun -run '^TestInformativeHistoricalReportCLI' -count=1 -v -timeout=240s
 for ld03_selector in '^TestAutomaticDeliveryCloseoutInterruptionResumesWithoutIntegration$' '^TestAutomaticDeliveryCLICloseoutRecoveryFromReleasedOwner$' '^TestAutomaticAcceptanceCLIAfterMergeRecovery$'; do
     "$PLY_LD03_GO" test ./internal/taskrun -run "$ld03_selector" -count=1 -v -timeout=180s

@@ -13,25 +13,25 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 // Read observes only registered stores. All optional histories degrade
 // independently; discovery, unknown Task and authoritative registry errors fail.
-func Read(d workspace.Dependencies, taskID string) (Result, error) {
+func Read(d taskwork.Dependencies, taskID string) (Result, error) {
 	return read(d, taskID, nil)
 }
 
-func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result, error) {
-	id, err := workspace.ParseTaskID(taskID)
+func read(d taskwork.Dependencies, taskID string, afterHistory func()) (Result, error) {
+	id, err := taskwork.ParseTaskID(taskID)
 	if err != nil {
 		return Result{}, err
 	}
-	basis, err := workspace.ReadViewBasis(d)
+	basis, err := taskwork.ReadViewBasis(d)
 	if err != nil {
 		return Result{}, err
 	}
-	var task *workspace.TaskRecord
+	var task *taskwork.TaskRecord
 	for i := range basis.Registry.Tasks {
 		if basis.Registry.Tasks[i].ID == id {
 			task = &basis.Registry.Tasks[i]
@@ -55,15 +55,15 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 	for path, digest := range basis.Sources {
 		b.source(Source{Kind: "registration", Locator: path, SHA256: nonempty(digest), Status: "valid"})
 	}
-	lifecycle, err := workspace.ReadWorkItemLifecycle(d, basis.Workspace.Root)
+	lifecycle, err := taskwork.ReadWorkItemLifecycle(d, basis.Workspace.Root)
 	if err != nil {
 		b.diagnostic("lifecycle_unavailable", err.Error(), nil, nil)
 	}
-	selected.Registry.Tasks = []workspace.TaskRecord{*task}
+	selected.Registry.Tasks = []taskwork.TaskRecord{*task}
 	// Journal history needs this Task's content closure, not the readiness of
 	// historical queues and Epic base updates for other work.
 	selected.Registry.TaskQueueEvents, selected.Registry.EpicBaseUpdates = nil, nil
-	batch, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registries: []workspace.ProjectRegistry{{Work: selected.Work, Registry: selected.Registry}}, Lifecycles: lifecycle})
+	batch, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: basis.Workspace, Projects: basis.Projects, Registries: []taskwork.ProjectRegistry{{Work: selected.Work, Registry: selected.Registry}}, Lifecycles: lifecycle})
 	if err != nil {
 		b.diagnostic("journal_unavailable", err.Error(), nil, nil)
 	} else {
@@ -73,7 +73,7 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 		}
 	}
 	b.goals(d, basis, *task)
-	b.goalStart(workspace.GoalStartReceiptPath(selected.Work, id))
+	b.goalStart(taskwork.GoalStartReceiptPath(selected.Work, id))
 	if afterHistory != nil {
 		afterHistory()
 	}
@@ -83,7 +83,7 @@ func read(d workspace.Dependencies, taskID string, afterHistory func()) (Result,
 		b.out.Freshness = "unknown"
 		b.diagnostic("journal_store_changed_or_unavailable", "Journal entries changed or could not be safely compared during reading: "+journalPath, nil, nil)
 	}
-	fresh, reasons := workspace.CheckReadViewBasis(d, basis)
+	fresh, reasons := taskwork.CheckReadViewBasis(d, basis)
 	if fresh != "fresh" {
 		b.out.Freshness = "unknown"
 		for _, reason := range reasons {
@@ -118,7 +118,7 @@ func directoryDigest(path string) (string, error) {
 	return hash(names), nil
 }
 
-func (b *builder) goals(d workspace.Dependencies, basis workspace.ReadViewBasisSnapshot, task workspace.TaskRecord) {
+func (b *builder) goals(d taskwork.Dependencies, basis taskwork.ReadViewBasisSnapshot, task taskwork.TaskRecord) {
 	latest := map[string]Goal{}
 	unclassified := map[string]int{}
 	j := basis.TaskJournal(task)
@@ -126,13 +126,13 @@ func (b *builder) goals(d workspace.Dependencies, basis workspace.ReadViewBasisS
 		if ref.TaskID != task.ID {
 			continue
 		}
-		var sources []workspace.TaskJournalSource
+		var sources []taskwork.TaskJournalSource
 		var err error
 		found := false
 		for _, pub := range basis.Registry.TaskContentPublications {
 			if pub.TaskID == task.ID && pub.OutcomeRef.ManifestSHA256 == ref.ManifestSHA256 {
 				found = true
-				sources, err = workspace.ReadTaskJournalContent(d, j, pub)
+				sources, err = taskwork.ReadTaskJournalContent(d, j, pub)
 				break
 			}
 		}

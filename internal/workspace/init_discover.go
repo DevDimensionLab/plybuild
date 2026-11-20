@@ -130,7 +130,7 @@ func discoverRepos(d Dependencies, root string) ([]workspacedef.Repo, []Discover
 			blockers = append(blockers, fmt.Sprintf("Git repository in %s: %v", worktree, err))
 			continue
 		}
-		if observation.Locator != worktree || !validStoredPath(observation.GitCommonDir) {
+		if observation.Locator != worktree || !ValidStoredPath(observation.GitCommonDir) {
 			blockers = append(blockers, fmt.Sprintf("invalid physical Git observation for %s", worktree))
 			continue
 		}
@@ -147,7 +147,7 @@ func discoverRepos(d Dependencies, root string) ([]workspacedef.Repo, []Discover
 			return group[i].Locator < group[j].Locator
 		})
 		chosen := group[0]
-		if err := validateIdentifier("repository", chosen.name); err != nil {
+		if err := ValidateIdentifier("repository", chosen.name); err != nil {
 			blockers = append(blockers, err.Error())
 		}
 		relative, _ := filepath.Rel(root, chosen.Locator)

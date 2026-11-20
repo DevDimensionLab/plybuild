@@ -35,15 +35,15 @@ func AddProjectMember(dependencies Dependencies, id ProjectID, repository RepoIn
 	if !ok || dependencies.Files == nil {
 		return ProjectResult{}, projectError(ErrorProjectIO, "dependencies: filesystem and a repository observer that reads remotes are required", nil)
 	}
-	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	cwd, err := ProjectPhysicalWorkingDirectory(dependencies.Files)
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	root, err := locateContainingWorkspace(dependencies.Files, cwd)
+	root, err := LocateContainingWorkspace(dependencies.Files, cwd)
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	locator, err := canonicalDirectory(dependencies.Files, cwd, repository.Path, fmt.Sprintf("repository %s", repository.RepoID))
+	locator, err := CanonicalDirectory(dependencies.Files, cwd, repository.Path, fmt.Sprintf("repository %s", repository.RepoID))
 	if err != nil {
 		return ProjectResult{}, err
 	}
@@ -73,22 +73,22 @@ func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to 
 	if err := validateProjectMemberInput(id, to); err != nil {
 		return ProjectResult{}, err
 	}
-	if err := validateIdentifier("repository", string(repo)); err != nil {
+	if err := ValidateIdentifier("repository", string(repo)); err != nil {
 		return ProjectResult{}, err
 	}
 	remotes, ok := dependencies.Repos.(RemoteObserver)
 	if !ok || dependencies.Files == nil {
 		return ProjectResult{}, projectError(ErrorProjectIO, "dependencies: filesystem and a repository observer that reads remotes are required", nil)
 	}
-	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	cwd, err := ProjectPhysicalWorkingDirectory(dependencies.Files)
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	root, err := locateContainingWorkspace(dependencies.Files, cwd)
+	root, err := LocateContainingWorkspace(dependencies.Files, cwd)
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	locator, err := canonicalDirectory(dependencies.Files, cwd, to.Path, fmt.Sprintf("repository %s", to.RepoID))
+	locator, err := CanonicalDirectory(dependencies.Files, cwd, to.Path, fmt.Sprintf("repository %s", to.RepoID))
 	if err != nil {
 		return ProjectResult{}, err
 	}
@@ -96,10 +96,10 @@ func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to 
 	if err != nil {
 		return ProjectResult{}, err
 	}
-	if dependencies.WorkItems == nil {
+	if dependencies.RepoUses == nil {
 		return ProjectResult{}, projectError(ErrorProjectIO, "work-item store dependency is required", nil)
 	}
-	work, err := projectWork(root, id)
+	work, err := DefinedProjectWork(root, id)
 	if err != nil {
 		return ProjectResult{}, err
 	}
@@ -127,11 +127,11 @@ func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to 
 		}
 		// Registrations keep the member's ID and Git location; they are read
 		// under projects.lock, where Tasks and Epics are registered.
-		registry, err := dependencies.WorkItems.SnapshotRegistrations(work)
+		uses, err := dependencies.RepoUses.RepoUses(work)
 		if err != nil {
 			return false, err
 		}
-		if registration := repoRegistration(registry, string(repo), work.Registry()); registration != "" {
+		if registration := repoRegistration(uses, string(repo), work.Registry()); registration != "" {
 			return false, projectError(ErrorProjectConflict, fmt.Sprintf("repository %s cannot move: %s", repo, registration), nil)
 		}
 		for _, p := range defs.Projects {
@@ -161,24 +161,24 @@ func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to 
 // definitions. Its directory, files and Git are untouched and need not exist.
 // The removal is refused while the Project's registry binds the member.
 func RemoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID) (DefinitionRepoResult, error) {
-	if err := validateIdentifier("project", string(id)); err != nil {
+	if err := ValidateIdentifier("project", string(id)); err != nil {
 		return DefinitionRepoResult{}, err
 	}
-	if err := validateIdentifier("repository", string(repo)); err != nil {
+	if err := ValidateIdentifier("repository", string(repo)); err != nil {
 		return DefinitionRepoResult{}, err
 	}
-	if dependencies.Files == nil || dependencies.WorkItems == nil {
+	if dependencies.Files == nil || dependencies.RepoUses == nil {
 		return DefinitionRepoResult{}, projectError(ErrorProjectIO, "dependencies: filesystem and work-item store are required", nil)
 	}
-	cwd, err := projectPhysicalWorkingDirectory(dependencies.Files)
+	cwd, err := ProjectPhysicalWorkingDirectory(dependencies.Files)
 	if err != nil {
 		return DefinitionRepoResult{}, err
 	}
-	root, err := locateContainingWorkspace(dependencies.Files, cwd)
+	root, err := LocateContainingWorkspace(dependencies.Files, cwd)
 	if err != nil {
 		return DefinitionRepoResult{}, err
 	}
-	work, err := projectWork(root, id)
+	work, err := DefinedProjectWork(root, id)
 	if err != nil {
 		return DefinitionRepoResult{}, err
 	}
@@ -203,11 +203,11 @@ func RemoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID) (
 			return false, ProjectInvalidArguments(fmt.Sprintf("repository %s is the last member of Project %s; a Project needs at least one repository", repo, id))
 		}
 		// Registrations are read under projects.lock, where Tasks and Epics are registered.
-		registry, err := dependencies.WorkItems.SnapshotRegistrations(work)
+		uses, err := dependencies.RepoUses.RepoUses(work)
 		if err != nil {
 			return false, err
 		}
-		if registration := repoRegistration(registry, string(repo), work.Registry()); registration != "" {
+		if registration := repoRegistration(uses, string(repo), work.Registry()); registration != "" {
 			return false, projectError(ErrorProjectConflict, fmt.Sprintf("repository %s cannot be removed: %s", repo, registration), nil)
 		}
 		return workspacedef.RemoveRepo(defs, string(id), string(repo), path)
@@ -219,10 +219,10 @@ func RemoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID) (
 }
 
 func validateProjectMemberInput(id ProjectID, repository RepoInput) error {
-	if err := validateIdentifier("project", string(id)); err != nil {
+	if err := ValidateIdentifier("project", string(id)); err != nil {
 		return err
 	}
-	if err := validateIdentifier("repository", string(repository.RepoID)); err != nil {
+	if err := ValidateIdentifier("repository", string(repository.RepoID)); err != nil {
 		return err
 	}
 	if repository.Path == "" {

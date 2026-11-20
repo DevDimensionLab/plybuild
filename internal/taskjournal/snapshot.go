@@ -2,13 +2,13 @@ package taskjournal
 
 import (
 	"encoding/json"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"sort"
 	"strings"
 	"time"
 )
 
-func (s Service) build(b workspace.TaskJournalBasis, records []stored) (Snapshot, error) {
+func (s Service) build(b taskwork.TaskJournalBasis, records []stored) (Snapshot, error) {
 	out, e := s.native(b)
 	if e != nil {
 		return out, e
@@ -353,7 +353,7 @@ func Select(s *Snapshot, o Options) error {
 	return nil
 }
 func (s Service) Show(task string, o Options) (Snapshot, error) {
-	b, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
+	b, e := taskwork.ReadTaskJournalBasis(s.Workspace, taskwork.TaskID(task))
 	if e != nil {
 		return Snapshot{}, e
 	}
@@ -384,7 +384,7 @@ func (s Service) Show(task string, o Options) (Snapshot, error) {
 		}
 	}
 	if b.Task.Worktree != nil && out.Current.Candidate != nil {
-		g, e := workspace.ObserveTaskJournalWorktree(s.Workspace, b.Task.Worktree.Locator)
+		g, e := taskwork.ObserveTaskJournalWorktree(s.Workspace, b.Task.Worktree.Locator)
 		if e != nil || !g.Clean || g.OID != out.Current.Candidate.OID || g.Tree != out.Current.Candidate.Tree {
 			out.Current.Candidate = nil
 			for k, a := range out.Current.Axes {
@@ -420,7 +420,7 @@ func ReadSnapshot(path, task string, o Options) (Snapshot, error) {
 	if s.Kind != "ply.workspace.task-journal-snapshot" || s.SchemaVersion != 1 || s.Task.TaskID != task || s.NextTransitionAuthorized || s.SnapshotID != snapshotDigest(s) {
 		return s, invalid("snapshot identity, version or digest differs")
 	}
-	if _, e = workspace.ParseTaskID(task); e != nil {
+	if _, e = taskwork.ParseTaskID(task); e != nil {
 		return s, e
 	}
 	if _, e = parseTime(s.AsOf); e != nil || !strings.HasSuffix(s.AsOf, "Z") {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"os/exec"
@@ -50,18 +51,18 @@ func fixture(t *testing.T) testFixture {
 	write(t, filepath.Join(repo, "file"), []byte("fixture\n"))
 	git("add", "file")
 	git("commit", "-m", "synthetic fixture")
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = cwdFiles{d.Files, root}
-	if _, e = workspace.Init(d); e != nil {
+	if _, e = workspace.Init(d.Dependencies); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Fixture", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); e != nil {
+	if _, e = workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Fixture", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); e != nil {
+	if _, e = taskwork.AdoptEpic(d, taskwork.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); e != nil {
 		t.Fatal(e)
 	}
-	if _, e = workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: "task", Title: "Fixture Task", Description: "Process journal fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); e != nil {
+	if _, e = taskwork.CreateTask(d, taskwork.TaskCreateInput{TaskID: "task", Title: "Fixture Task", Description: "Process journal fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); e != nil {
 		t.Fatal(e)
 	}
 	source := filepath.Join(root, "evidence.txt")

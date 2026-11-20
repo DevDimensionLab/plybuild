@@ -3,11 +3,12 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
+func newWorkspaceCommand(dependencies taskwork.Dependencies) *cobra.Command {
 	workspaceCommand := &cobra.Command{
 		Use:     "workspace",
 		Short:   "Manage Ply workspaces",
@@ -37,7 +38,7 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 			if discover {
 				return runInitDiscover(cmd, dependencies, project)
 			}
-			result, err := workspace.Init(dependencies)
+			result, err := workspace.Init(dependencies.Dependencies)
 			if err != nil {
 				return err
 			}
@@ -56,12 +57,12 @@ func newWorkspaceCommand(dependencies workspace.Dependencies) *cobra.Command {
 	})
 	workspaceCommand.AddCommand(initCommand, newWorkspaceProjectCommand(dependencies), newWorkspaceEpicCommand(dependencies), newWorkspaceTaskCommand(dependencies))
 	workspaceCommand.AddCommand(newWorkspaceStatusCommand(dependencies), newWorkspaceAttentionCommand(dependencies), newWorkspaceActivityCommand(dependencies), newWorkspaceWorktreesCommand(dependencies))
-	workspaceCommand.AddCommand(newWorkspaceOverviewCommand(dependencies), newWorkspaceDefinitionCommand(dependencies))
+	workspaceCommand.AddCommand(newWorkspaceOverviewCommand(dependencies), newWorkspaceDefinitionCommand(dependencies.Dependencies))
 	return workspaceCommand
 }
 
-func runInitDiscover(cmd *cobra.Command, dependencies workspace.Dependencies, project string) error {
-	result, err := workspace.InitDiscover(dependencies, project)
+func runInitDiscover(cmd *cobra.Command, dependencies taskwork.Dependencies, project string) error {
+	result, err := workspace.InitDiscover(dependencies.Dependencies, project)
 	if err != nil {
 		return err
 	}
@@ -85,6 +86,6 @@ func runInitDiscover(cmd *cobra.Command, dependencies workspace.Dependencies, pr
 }
 
 func init() {
-	dependencies := workspace.SystemDependencies()
+	dependencies := taskwork.SystemDependencies()
 	RootCmd.AddCommand(newWorkspaceCommand(dependencies))
 }

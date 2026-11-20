@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func testBuilder() *builder {
-	b := newBuilder("/fixture", workspace.TaskRecord{ID: "task", RepoID: "repo"}, "2026-10-07T12:00:00Z")
+	b := newBuilder("/fixture", taskwork.TaskRecord{ID: "task", RepoID: "repo"}, "2026-10-07T12:00:00Z")
 	b.source(Source{ID: "source", Kind: "fixture", Locator: "/fixture/evidence", SHA256: ptr("sha256:fixture"), Status: "valid"})
 	return b
 }
@@ -128,7 +128,7 @@ func candidateIndex(r Result, id string) int {
 func TestTraceNativeRecorderIsNotAnActor(t *testing.T) {
 	b := testBuilder()
 	j := taskjournal.Snapshot{Sources: []taskjournal.Source{{SourceID: "source", Kind: "registry", Locator: "/fixture", Status: "valid"}}, Events: []taskjournal.Event{{EventID: "lifecycle", Type: "lifecycle_changed", Origin: "native", Actor: &taskjournal.Actor{ID: "Recorder claim", Role: "tool"}, SourceIDs: []string{"source"}, Data: raw(map[string]string{})}}}
-	b.journal(j, workspace.WorkItemRegistry{})
+	b.journal(j, taskwork.WorkItemRegistry{})
 	r := b.finish()
 	e := eventByID(t, r, "lifecycle")
 	if e.Role != "unknown" || !strings.Contains(e.Recorder, "Recorder claim") {

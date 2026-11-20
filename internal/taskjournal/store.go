@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"fmt"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"io"
 	"os"
@@ -221,7 +222,7 @@ func keepSource(work workspace.ProjectWork, src SourceRef) error {
 // Append publishes one contribution read from file. Records with role ply
 // are Ply's own and come only from AppendPly.
 func (s Service) Append(task, file, kind string) (AppendResult, error) {
-	if _, e := workspace.ParseTaskID(task); e != nil {
+	if _, e := taskwork.ParseTaskID(task); e != nil {
 		return AppendResult{}, e
 	}
 	b, e := readFile(file, inputLimit)
@@ -260,7 +261,7 @@ var attemptOperations = map[string]bool{"goal_start_reserved": true, "goal_start
 // latest one, and a repeated identical operation, return the earlier record
 // instead of a new one.
 func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendResult, error) {
-	if _, e := workspace.ParseTaskID(task); e != nil {
+	if _, e := taskwork.ParseTaskID(task); e != nil {
 		return AppendResult{}, e
 	}
 	var refs map[string]string
@@ -276,7 +277,7 @@ func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendR
 	if actor == "" {
 		actor = "unknown"
 	}
-	b, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
+	b, e := taskwork.ReadTaskJournalBasis(s.Workspace, taskwork.TaskID(task))
 	if e != nil {
 		return AppendResult{}, e
 	}
@@ -326,7 +327,7 @@ func (s Service) AppendPly(task, actor, title string, action PlyAction) (AppendR
 // damaged journal is read up to its validated prefix, so the damage stops
 // no one who only asks for the link; journal show reports it.
 func (s Service) PlanLink(task string) (*PlyAction, error) {
-	b, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
+	b, e := taskwork.ReadTaskJournalBasis(s.Workspace, taskwork.TaskID(task))
 	if e != nil {
 		return nil, e
 	}
@@ -367,7 +368,7 @@ func Journals(root string) ([]Journal, error) {
 			return nil, e
 		}
 		for _, entry := range entries {
-			if _, err := workspace.ParseTaskID(entry.Name()); err == nil && entry.IsDir() {
+			if _, err := taskwork.ParseTaskID(entry.Name()); err == nil && entry.IsDir() {
 				out = append(out, Journal{work, entry.Name()})
 			}
 		}
@@ -403,7 +404,7 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if e != nil {
 		return result, e
 	}
-	basis, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
+	basis, e := taskwork.ReadTaskJournalBasis(s.Workspace, taskwork.TaskID(task))
 	if e != nil {
 		return result, e
 	}
@@ -460,7 +461,7 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	}()
 	// Recheck identity, key and relations after serialization; retry precedes
 	// mutable artifact checks and never rewrites previously published bytes.
-	nowBasis, e := workspace.ReadTaskJournalBasis(s.Workspace, workspace.TaskID(task))
+	nowBasis, e := taskwork.ReadTaskJournalBasis(s.Workspace, taskwork.TaskID(task))
 	if e != nil {
 		return result, e
 	}
@@ -533,7 +534,7 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 
 // validateAppend checks an input against the journal records and the current
 // sources. appendInput runs it before the lock and again under it.
-func (s Service) validateAppend(basis workspace.TaskJournalBasis, records []stored, c Common, ev *EventInput, ob *ObservationInput) error {
+func (s Service) validateAppend(basis taskwork.TaskJournalBasis, records []stored, c Common, ev *EventInput, ob *ObservationInput) error {
 	snap, e := s.build(basis, records)
 	if e != nil {
 		return e
@@ -542,7 +543,7 @@ func (s Service) validateAppend(basis workspace.TaskJournalBasis, records []stor
 		return e
 	}
 	if ev != nil && ev.Candidate != nil {
-		if e = workspace.ValidateTaskJournalCandidate(s.Workspace, basis, ev.Candidate.OID, ev.Candidate.Tree); e != nil {
+		if e = taskwork.ValidateTaskJournalCandidate(s.Workspace, basis, ev.Candidate.OID, ev.Candidate.Tree); e != nil {
 			return e
 		}
 	}

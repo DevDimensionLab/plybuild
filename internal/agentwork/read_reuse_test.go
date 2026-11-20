@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -71,9 +72,9 @@ func TestNativeSnapshotIgnoresOldRunFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = rootedFiles{d.Files, root}
-	if _, err := workspace.Init(d); err != nil {
+	if _, err := workspace.Init(d.Dependencies); err != nil {
 		t.Fatal(err)
 	}
 	requests := filepath.Join(root, ".ply", "workflow-runs", "requests")

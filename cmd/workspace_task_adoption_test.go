@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"strings"
 	"testing"
 )
@@ -10,9 +10,9 @@ func TestTaskAdoptionCommandsRemoved(t *testing.T) {
 	for _, name := range []string{"adopt", "release-adoption"} {
 		t.Run(name, func(t *testing.T) {
 			calls := 0
-			s := workspaceTaskServices{createWorktree: func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error) {
+			s := workspaceTaskServices{createWorktree: func(taskwork.TaskWorktreeCreateInput) (taskwork.TaskWorktreeMutationResult, error) {
 				calls++
-				return workspace.TaskWorktreeMutationResult{}, nil
+				return taskwork.TaskWorktreeMutationResult{}, nil
 			}}
 			c := newWorkspaceTaskCommandWithServices(s)
 			found, _, err := c.Find([]string{"worktree", name})

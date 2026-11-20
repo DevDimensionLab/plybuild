@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/devdimensionlab/plybuild/internal/agentwork"
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workflownotification"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -18,11 +18,11 @@ func newWorkflowCommand() *cobra.Command {
 		Example:           "  ply workflow status\n  ply workflow status --all --json\n  ply workflow trace task-id --format json",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	}
-	command.AddCommand(newWorkflowGoalStartCommand(workspace.SystemDependencies()))
+	command.AddCommand(newWorkflowGoalStartCommand(taskwork.SystemDependencies()))
 	command.AddCommand(newAgentWorkCommand(agentwork.System))
 	command.AddCommand(newFollowupCommand(agentwork.System))
-	command.AddCommand(newWorkflowStatusCommand(workspace.SystemDependencies()))
-	command.AddCommand(newWorkflowTraceCommand(workspace.SystemDependencies()))
+	command.AddCommand(newWorkflowStatusCommand(taskwork.SystemDependencies()))
+	command.AddCommand(newWorkflowTraceCommand(taskwork.SystemDependencies()))
 	command.AddCommand(NewWorkflowNotificationCommand(workflownotification.SystemDependencies()))
 	command.AddCommand(newWorkflowInputCommand(humaninput.SystemDependencies()))
 	return command

@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -13,14 +14,14 @@ import (
 type EventBatchInput struct {
 	Workspace  workspace.WorkspaceObservation
 	Projects   workspace.ProjectSnapshot
-	Registries []workspace.ProjectRegistry
-	Lifecycles workspace.WorkItemLifecycles
+	Registries []taskwork.ProjectRegistry
+	Lifecycles taskwork.WorkItemLifecycles
 }
 
 type EventBatch struct {
-	Tasks       map[workspace.TaskID]Snapshot
-	EpicEvents  map[workspace.EpicID][]Event
-	EpicSources map[workspace.EpicID][]Source
+	Tasks       map[taskwork.TaskID]Snapshot
+	EpicEvents  map[taskwork.EpicID][]Event
+	EpicSources map[taskwork.EpicID][]Source
 	Reasons     []Reason
 }
 
@@ -34,13 +35,13 @@ type bytesRead struct {
 	err   error
 }
 type eventBatchReader struct {
-	lifecycles workspace.WorkItemLifecycles
+	lifecycles taskwork.WorkItemLifecycles
 	sources    map[string]sourceRead
 }
 
 func journalSourceHash(root, kind, path string) (string, error) {
-	if kind == workspace.IntegrationEvidenceSourceKind {
-		digest, err := workspace.IntegrationEvidenceSourceDigest(root, path)
+	if kind == taskwork.IntegrationEvidenceSourceKind {
+		digest, err := taskwork.IntegrationEvidenceSourceDigest(root, path)
 		return strings.TrimPrefix(digest, "sha256:"), err
 	}
 	return sourceHash(path)
@@ -49,7 +50,7 @@ func journalSourceHash(root, kind, path string) (string, error) {
 // Generic observations cannot satisfy or weaken managed evidence checks.
 func cachedSourceHash(cache map[string]sourceRead, root, kind, path string) (string, error) {
 	if cache != nil {
-		if r, ok := cache[path]; ok && (r.kind == kind || r.kind == workspace.IntegrationEvidenceSourceKind) {
+		if r, ok := cache[path]; ok && (r.kind == kind || r.kind == taskwork.IntegrationEvidenceSourceKind) {
 			return r.hash, r.err
 		}
 	}
@@ -60,12 +61,12 @@ func cachedSourceHash(cache map[string]sourceRead, root, kind, path string) (str
 	return h, e
 }
 
-func ReadEventBatch(d workspace.Dependencies, in EventBatchInput) (EventBatch, error) {
+func ReadEventBatch(d taskwork.Dependencies, in EventBatchInput) (EventBatch, error) {
 	return New(d).readEventBatch(in)
 }
 
 func (s Service) readEventBatch(in EventBatchInput) (EventBatch, error) {
-	out := EventBatch{Tasks: map[workspace.TaskID]Snapshot{}, EpicEvents: map[workspace.EpicID][]Event{}, EpicSources: map[workspace.EpicID][]Source{}, Reasons: []Reason{}}
+	out := EventBatch{Tasks: map[taskwork.TaskID]Snapshot{}, EpicEvents: map[taskwork.EpicID][]Event{}, EpicSources: map[taskwork.EpicID][]Source{}, Reasons: []Reason{}}
 	reader := &eventBatchReader{lifecycles: in.Lifecycles, sources: map[string]sourceRead{}}
 	s.readBatch = reader
 	for _, owner := range in.Registries {
@@ -105,7 +106,7 @@ func (s Service) readEventBatch(in EventBatchInput) (EventBatch, error) {
 	return out, nil
 }
 
-func batchTaskIdentity(p workspace.ProjectSnapshot, t workspace.TaskRecord) bool {
+func batchTaskIdentity(p workspace.ProjectSnapshot, t taskwork.TaskRecord) bool {
 	member := false
 	for _, project := range p.Projects {
 		if project.ID != t.ProjectID {
@@ -129,14 +130,14 @@ func batchTaskIdentity(p workspace.ProjectSnapshot, t workspace.TaskRecord) bool
 }
 
 // lifecycle is the lifecycle of the Project of work.
-func (s Service) lifecycle(work workspace.ProjectWork) (workspace.WorkItemLifecycleSnapshot, error) {
+func (s Service) lifecycle(work workspace.ProjectWork) (taskwork.WorkItemLifecycleSnapshot, error) {
 	if s.readBatch != nil {
 		return s.readBatch.lifecycles.Of(work.Project), nil
 	}
-	return workspace.ReadProjectLifecycle(work)
+	return taskwork.ReadProjectLifecycle(work)
 }
 
-func appendLifecycleEvents(out *Snapshot, l workspace.WorkItemLifecycleSnapshot, kind, id string) {
+func appendLifecycleEvents(out *Snapshot, l taskwork.WorkItemLifecycleSnapshot, kind, id string) {
 	for _, change := range l.Events {
 		if change.SubjectKind != kind || change.SubjectID != id {
 			continue
@@ -169,9 +170,9 @@ func StableBatchReasons(s Snapshot) []string {
 	return out
 }
 
-func (s Service) readProjectEvents(in EventBatchInput, reader *eventBatchReader, owner workspace.ProjectRegistry, out *EventBatch) error {
+func (s Service) readProjectEvents(in EventBatchInput, reader *eventBatchReader, owner taskwork.ProjectRegistry, out *EventBatch) error {
 	for _, t := range owner.Registry.Tasks {
-		basis := workspace.TaskJournalBasis{Workspace: in.Workspace, Task: t, Registry: owner.Registry, Work: owner.Work}
+		basis := taskwork.TaskJournalBasis{Workspace: in.Workspace, Task: t, Registry: owner.Registry, Work: owner.Work}
 		records, readErr := readStore(owner.Work, string(t.ID), workspaceID(in.Workspace.Root, in.Workspace.MarkerSHA256))
 		snap, err := s.build(basis, records)
 		if err != nil {

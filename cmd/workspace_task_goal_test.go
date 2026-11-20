@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 // Uses only the supplied make-built CLI and ordinary public registration
@@ -48,15 +48,15 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 	extra := filepath.Join(f.root, "design.txt")
 	mustPlanWrite(t, extra, "Extra supplied design\n", 0600)
 	args := []string{"workspace", "task", "goal", "register", "supplied", "--spec", "supplied-v1", "--document", doc, "--extra-document", "extra=" + extra, "--title", "Supplied product Goal", "--objective", "Observe supplied behavior", "--criterion", "The requested behavior is observable", "--project", "example", "--repo", "code", "--epic", "work", "--format", "json"}
-	decode := func(raw string) workspace.FirstGoalResult {
+	decode := func(raw string) taskwork.FirstGoalResult {
 		t.Helper()
-		var out workspace.FirstGoalResult
+		var out taskwork.FirstGoalResult
 		if e := json.Unmarshal([]byte(raw), &out); e != nil {
 			t.Fatalf("invalid result: %v\n%s", e, raw)
 		}
 		return out
 	}
-	var preservedProblem *workspace.TaskRevisionRef
+	var preservedProblem *taskwork.TaskRevisionRef
 	var preservedTask string
 	if existing {
 		f.success(t, f.root, "workspace", "task", "create", "supplied", "--title", "Imported backlog label", "--description", "Historical imported product context", "--project", "example", "--repo", "code", "--epic", "work")
@@ -64,7 +64,7 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 		// The Task readback supplies its native current Problem reference.
 		var taskReadback struct {
 			Problem struct {
-				Head *workspace.TaskRevisionRef `json:"head"`
+				Head *taskwork.TaskRevisionRef `json:"head"`
 			} `json:"problem"`
 		}
 		if e := json.Unmarshal([]byte(preservedTask), &taskReadback); e != nil {
@@ -184,7 +184,7 @@ func TestDocumentFreeGoalRegistersAndStartsWithWholeAssignment(t *testing.T) {
 	if _, stderr, exit := f.run(t, f.root, nil, blank...); exit == 0 || !strings.Contains(stderr, "absolute physical file paths") {
 		t.Fatalf("explicit empty --document silently dropped: %d %s", exit, stderr)
 	}
-	var preview, applied workspace.FirstGoalResult
+	var preview, applied taskwork.FirstGoalResult
 	if e := json.Unmarshal([]byte(f.success(t, f.root, args...)), &preview); e != nil {
 		t.Fatal(e)
 	}
@@ -284,7 +284,7 @@ func TestFirstGoalAfterNativeWorktreeCandidateCLI(t *testing.T) {
 
 	args := []string{"workspace", "task", "goal", "register", "bound", "--spec", "bound-v1", "--title", "Bound title", "--objective", "Bound objective", "--criterion", "Bound criterion", "--project", "example", "--repo", "code", "--epic", "work", "--provider", "claude", "--format", "json"}
 	before := mr05Snapshot(t, f.root)
-	var preview, applied workspace.FirstGoalResult
+	var preview, applied taskwork.FirstGoalResult
 	if e := json.Unmarshal([]byte(f.success(t, f.root, args...)), &preview); e != nil {
 		t.Fatal(e)
 	}

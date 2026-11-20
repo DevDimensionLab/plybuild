@@ -5,38 +5,39 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
 type workspaceTaskServices struct {
-	create         func(workspace.TaskCreateInput) (workspace.TaskMutationResult, error)
-	show           func(workspace.TaskID) (workspace.TaskReadbackResult, error)
-	list           func(workspace.TaskListFilters) (workspace.TaskListResult, error)
-	createWorktree func(workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error)
-	integrate      func(workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error)
-	retireWorktree func(workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error)
+	create         func(taskwork.TaskCreateInput) (taskwork.TaskMutationResult, error)
+	show           func(taskwork.TaskID) (taskwork.TaskReadbackResult, error)
+	list           func(taskwork.TaskListFilters) (taskwork.TaskListResult, error)
+	createWorktree func(taskwork.TaskWorktreeCreateInput) (taskwork.TaskWorktreeMutationResult, error)
+	integrate      func(taskwork.TaskIntegrationInput) (taskwork.TaskIntegrationResult, error)
+	retireWorktree func(taskwork.TaskWorktreeRetireInput) (taskwork.TaskWorktreeRetireResult, error)
 	// planLink and record are absent in fakes; then nothing is linked or recorded.
 	planLink func(project workspace.ProjectID, plan, step, title string) (*taskjournal.PlyAction, error)
 	record   func(task, actor, done string, records ...taskjournal.PlyAction) error
 }
 
-func newWorkspaceTaskCommand(dependencies workspace.Dependencies) *cobra.Command {
-	command := newWorkspaceTaskCommandWithServices(workspaceTaskServices{create: func(input workspace.TaskCreateInput) (workspace.TaskMutationResult, error) {
-		return workspace.CreateTask(dependencies, input)
-	}, show: func(id workspace.TaskID) (workspace.TaskReadbackResult, error) {
-		return workspace.ShowTask(dependencies, id)
-	}, list: func(filters workspace.TaskListFilters) (workspace.TaskListResult, error) {
-		return workspace.ListTasksWithFilters(dependencies, filters)
-	}, createWorktree: func(input workspace.TaskWorktreeCreateInput) (workspace.TaskWorktreeMutationResult, error) {
-		return workspace.CreateTaskWorktree(dependencies, input)
-	}, integrate: func(input workspace.TaskIntegrationInput) (workspace.TaskIntegrationResult, error) {
+func newWorkspaceTaskCommand(dependencies taskwork.Dependencies) *cobra.Command {
+	command := newWorkspaceTaskCommandWithServices(workspaceTaskServices{create: func(input taskwork.TaskCreateInput) (taskwork.TaskMutationResult, error) {
+		return taskwork.CreateTask(dependencies, input)
+	}, show: func(id taskwork.TaskID) (taskwork.TaskReadbackResult, error) {
+		return taskwork.ShowTask(dependencies, id)
+	}, list: func(filters taskwork.TaskListFilters) (taskwork.TaskListResult, error) {
+		return taskwork.ListTasksWithFilters(dependencies, filters)
+	}, createWorktree: func(input taskwork.TaskWorktreeCreateInput) (taskwork.TaskWorktreeMutationResult, error) {
+		return taskwork.CreateTaskWorktree(dependencies, input)
+	}, integrate: func(input taskwork.TaskIntegrationInput) (taskwork.TaskIntegrationResult, error) {
 		if input.Apply {
-			return workspace.ApplyTaskIntegration(dependencies, input)
+			return taskwork.ApplyTaskIntegration(dependencies, input)
 		}
-		return workspace.CheckTaskIntegration(dependencies, input)
-	}, retireWorktree: func(input workspace.TaskWorktreeRetireInput) (workspace.TaskWorktreeRetireResult, error) {
-		return workspace.RetireTaskWorktree(dependencies, input)
+		return taskwork.CheckTaskIntegration(dependencies, input)
+	}, retireWorktree: func(input taskwork.TaskWorktreeRetireInput) (taskwork.TaskWorktreeRetireResult, error) {
+		return taskwork.RetireTaskWorktree(dependencies, input)
 	}, planLink: func(project workspace.ProjectID, plan, step, title string) (*taskjournal.PlyAction, error) {
 		return taskPlanLink(dependencies, project, plan, step, title)
 	}, record: func(task, actor, done string, records ...taskjournal.PlyAction) error {
@@ -59,10 +60,10 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
-		_, err := workspace.ParseTaskCreateInput(args[0], title, description, epicID, projectID, repoID)
+		_, err := taskwork.ParseTaskCreateInput(args[0], title, description, epicID, projectID, repoID)
 		return err
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := workspace.ParseTaskCreateInput(args[0], title, description, epicID, projectID, repoID)
+		input, err := taskwork.ParseTaskCreateInput(args[0], title, description, epicID, projectID, repoID)
 		if err != nil {
 			return err
 		}
@@ -84,7 +85,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 			err = services.record(string(input.TaskID), namedActor(actor), "the Task is created", records...)
 		}
 		if createFormat == "json" && result.Content != nil {
-			b, marshalErr := workspace.MarshalTaskContentMutation(*result.Content)
+			b, marshalErr := taskwork.MarshalTaskContentMutation(*result.Content)
 			if marshalErr != nil {
 				return marshalErr
 			}
@@ -101,7 +102,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 			if readErr != nil {
 				return readErr
 			}
-			b, marshalErr := workspace.MarshalTaskReadback(readback)
+			b, marshalErr := taskwork.MarshalTaskReadback(readback)
 			if marshalErr != nil {
 				return marshalErr
 			}
@@ -134,12 +135,12 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
-		if _, err := workspace.ParseTaskID(args[0]); err != nil {
+		if _, err := taskwork.ParseTaskID(args[0]); err != nil {
 			return err
 		}
 		return validateWorkFormat(format)
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		id, err := workspace.ParseTaskID(args[0])
+		id, err := taskwork.ParseTaskID(args[0])
 		if err != nil {
 			return err
 		}
@@ -148,7 +149,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 			return taskContentCommandError(cmd, format, err)
 		}
 		if format == "json" {
-			bytes, err := workspace.MarshalTaskReadback(result)
+			bytes, err := taskwork.MarshalTaskReadback(result)
 			if err != nil {
 				return err
 			}
@@ -160,8 +161,8 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 	show.Flags().StringVar(&format, "format", "text", "output format (text or json)")
 	setWorkFlagErrors(show)
 	var filterEpic, filterProject, filterRepo, listFormat string
-	filters := func(cmd *cobra.Command) workspace.TaskListFilters {
-		var f workspace.TaskListFilters
+	filters := func(cmd *cobra.Command) taskwork.TaskListFilters {
+		var f taskwork.TaskListFilters
 		if cmd.Flags().Changed("project") {
 			id := workspace.ProjectID(filterProject)
 			f.ProjectID = &id
@@ -171,7 +172,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 			f.RepoID = &id
 		}
 		if cmd.Flags().Changed("epic") {
-			id := workspace.EpicID(filterEpic)
+			id := taskwork.EpicID(filterEpic)
 			f.EpicID = &id
 		}
 		return f
@@ -183,7 +184,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 		// Ready retains its original argument validation and separate target semantics.
 		if ready, _ := cmd.Flags().GetBool("ready"); ready {
 			if filterEpic != "" {
-				_, err := workspace.ParseEpicID(filterEpic)
+				_, err := taskwork.ParseEpicID(filterEpic)
 				return err
 			}
 			return nil
@@ -198,7 +199,7 @@ func newWorkspaceTaskCommandWithServices(services workspaceTaskServices) *cobra.
 			return err
 		}
 		if listFormat == "json" {
-			b, err := workspace.MarshalTaskList(result)
+			b, err := taskwork.MarshalTaskList(result)
 			if err != nil {
 				return err
 			}
@@ -237,10 +238,10 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 		if err := validateWorkFormat(format); err != nil {
 			return err
 		}
-		_, err := workspace.ParseTaskIntegrationInput(args[0], resultOID, parentOID, retry, refresh, apply, confirm)
+		_, err := taskwork.ParseTaskIntegrationInput(args[0], resultOID, parentOID, retry, refresh, apply, confirm)
 		return err
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := workspace.ParseTaskIntegrationInput(args[0], resultOID, parentOID, retry, refresh, apply, confirm)
+		input, err := taskwork.ParseTaskIntegrationInput(args[0], resultOID, parentOID, retry, refresh, apply, confirm)
 		if err != nil {
 			return err
 		}
@@ -260,7 +261,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			return taskContentCommandError(cmd, format, err)
 		}
 		if format == "json" {
-			b, marshalErr := workspace.MarshalTaskIntegrationReadback(out.Readback)
+			b, marshalErr := taskwork.MarshalTaskIntegrationReadback(out.Readback)
 			if marshalErr != nil {
 				return marshalErr
 			}
@@ -269,7 +270,7 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 			}
 			return err
 		}
-		if _, writeErr := fmt.Fprint(cmd.OutOrStdout(), workspace.RenderTaskIntegrationText(out.Readback)); writeErr != nil {
+		if _, writeErr := fmt.Fprint(cmd.OutOrStdout(), taskwork.RenderTaskIntegrationText(out.Readback)); writeErr != nil {
 			return fmt.Errorf("%w; inspect with ply workspace task show %s --format json", writeErr, input.TaskID)
 		}
 		return err
@@ -294,8 +295,8 @@ func newWorkspaceTaskIntegrateCommand(services workspaceTaskServices) *cobra.Com
 // retireTaskAfterIntegration retires the worktree and branch of an integrated
 // Task with the checks of worktree retire. The integration stands either way;
 // when cleanup cannot run, stderr says why and how to finish it later.
-func retireTaskAfterIntegration(cmd *cobra.Command, services workspaceTaskServices, task workspace.TaskID, actor string) {
-	result, err := services.retireWorktree(workspace.TaskWorktreeRetireInput{TaskID: task, Apply: true})
+func retireTaskAfterIntegration(cmd *cobra.Command, services workspaceTaskServices, task taskwork.TaskID, actor string) {
+	result, err := services.retireWorktree(taskwork.TaskWorktreeRetireInput{TaskID: task, Apply: true})
 	if err != nil {
 		fmt.Fprintf(cmd.ErrOrStderr(), "Worktree kept: %v\nRetire it when it is safe: ply workspace task worktree retire %s --apply\n", err, task)
 		return
@@ -316,10 +317,10 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
-		_, err := workspace.ParseTaskWorktreeCreateInput(args[0], branch, path, expected)
+		_, err := taskwork.ParseTaskWorktreeCreateInput(args[0], branch, path, expected)
 		return err
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := workspace.ParseTaskWorktreeCreateInput(args[0], branch, path, expected)
+		input, err := taskwork.ParseTaskWorktreeCreateInput(args[0], branch, path, expected)
 		if err != nil {
 			return err
 		}
@@ -353,12 +354,12 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Task ID, got %d arguments", len(args)))
 		}
-		if _, err := workspace.ParseTaskID(args[0]); err != nil {
+		if _, err := taskwork.ParseTaskID(args[0]); err != nil {
 			return err
 		}
 		return validateWorkFormat(format)
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		result, err := services.retireWorktree(workspace.TaskWorktreeRetireInput{TaskID: workspace.TaskID(args[0]), Apply: apply})
+		result, err := services.retireWorktree(taskwork.TaskWorktreeRetireInput{TaskID: taskwork.TaskID(args[0]), Apply: apply})
 		if err != nil {
 			return err
 		}
@@ -366,7 +367,7 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 			return writeAssignmentJSON(cmd.OutOrStdout(), struct {
 				Kind          string `json:"kind"`
 				SchemaVersion int    `json:"schema_version"`
-				workspace.TaskWorktreeRetireResult
+				taskwork.TaskWorktreeRetireResult
 			}{"WorkspaceTaskWorktreeRetire@1", 1, result})
 		}
 		_, err = fmt.Fprintf(cmd.OutOrStdout(), "Task %s worktree %s: %s\nBranch %s: %s\nEpic %s at %s\nState: %s\n", result.TaskID, result.Locator, result.Worktree, result.Ref, result.Branch, result.EpicRef, result.EpicOID, result.State)
@@ -379,7 +380,7 @@ func newWorkspaceTaskWorktreeCommand(services workspaceTaskServices) *cobra.Comm
 	return command
 }
 
-func renderTaskMutation(command *cobra.Command, result workspace.TaskMutationResult) error {
+func renderTaskMutation(command *cobra.Command, result taskwork.TaskMutationResult) error {
 	if result.Created {
 		if _, err := fmt.Fprintf(command.OutOrStdout(), "Created Task %s: %s\n", result.Task.ID, result.Task.Title); err != nil {
 			return err
@@ -392,11 +393,11 @@ func renderTaskMutation(command *cobra.Command, result workspace.TaskMutationRes
 	_, err := fmt.Fprintf(command.OutOrStdout(), "Description: %s\nParent Epic: %s (%s)\nProject / repository: %s / %s\nGit common directory: %s\nWorktree: not created\nState: unbound\nAgent started by this command: no\n", result.Task.Description, result.Epic.ID, result.Epic.Title, result.Task.ProjectID, result.Task.RepoID, result.Task.GitCommonDir)
 	return err
 }
-func renderTaskShow(command *cobra.Command, result workspace.TaskReadbackResult) error {
+func renderTaskShow(command *cobra.Command, result taskwork.TaskReadbackResult) error {
 	if _, err := fmt.Fprintf(command.OutOrStdout(), "Task %s: %s\nDescription: %s\nParent Epic: %s (%s)\nProject / repository: %s / %s\nGit common directory: %s\n", result.Task.ID, result.Task.Title, result.Task.Description, result.Epic.ID, result.Epic.Title, result.Task.ProjectID, result.Task.RepoID, result.Task.GitCommonDir); err != nil {
 		return err
 	}
-	if result.Task.WorktreeState == workspace.WorkItemUnbound {
+	if result.Task.WorktreeState == taskwork.WorkItemUnbound {
 		if _, err := fmt.Fprint(command.OutOrStdout(), "Worktree: not created\nState: unbound\nFresh observation: not requested\nReady for handoff: no\nReason: Task worktree has not been created.\nAgent started by this command: no\n"); err != nil {
 			return err
 		}
@@ -404,12 +405,12 @@ func renderTaskShow(command *cobra.Command, result workspace.TaskReadbackResult)
 		return err
 	}
 	if result.Integration != nil {
-		_, err := fmt.Fprint(command.OutOrStdout(), workspace.RenderTaskIntegrationText(*result.Integration))
+		_, err := fmt.Fprint(command.OutOrStdout(), taskwork.RenderTaskIntegrationText(*result.Integration))
 		return err
 	}
 	return nil
 }
-func renderTaskWorktreeBlock(command *cobra.Command, task workspace.TaskRecord, operation *workspace.WorktreeOperationRecord, ready bool, reasons []string) error {
+func renderTaskWorktreeBlock(command *cobra.Command, task taskwork.TaskRecord, operation *taskwork.WorktreeOperationRecord, ready bool, reasons []string) error {
 	locator := ""
 	worktreeID := ""
 	branch := ""
@@ -458,7 +459,7 @@ func renderTaskWorktreeBlock(command *cobra.Command, task workspace.TaskRecord, 
 	_, err := fmt.Fprint(command.OutOrStdout(), "Agent started by this command: no\n")
 	return err
 }
-func renderTaskList(command *cobra.Command, result workspace.TaskListResult) error {
+func renderTaskList(command *cobra.Command, result taskwork.TaskListResult) error {
 	if result.Filters.ProjectID != nil || result.Filters.RepoID != nil {
 		labels := []string{}
 		if result.Filters.ProjectID != nil {
@@ -514,7 +515,7 @@ func renderTaskList(command *cobra.Command, result workspace.TaskListResult) err
 	}
 	return nil
 }
-func renderTaskWorktreeMutation(command *cobra.Command, result workspace.TaskWorktreeMutationResult) error {
+func renderTaskWorktreeMutation(command *cobra.Command, result taskwork.TaskWorktreeMutationResult) error {
 	line := "Created Task worktree for %s.\n"
 	if result.Outcome == "recovered" {
 		line = "Recovered Task worktree for %s.\n"
@@ -541,7 +542,7 @@ func workReasonText(reason string) string {
 	return reason
 }
 
-func currentTaskTitle(result workspace.TaskListResult, task workspace.TaskRecord) string {
+func currentTaskTitle(result taskwork.TaskListResult, task taskwork.TaskRecord) string {
 	if title, ok := result.CurrentTitles[task.ID]; ok {
 		return title
 	}

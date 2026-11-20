@@ -10,34 +10,11 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
-func discoverFixture(t *testing.T) (Dependencies, string) {
-	t.Helper()
-	parent, err := filepath.EvalSymlinks(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	root := filepath.Join(parent, "trip")
-	if err := os.Mkdir(root, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	d := SystemDependencies()
-	d.Files = projectCwdFileSystem{FileSystem: d.Files, cwd: root}
-	return d, root
-}
-
-func discoverRepo(t *testing.T, path, remote string) {
-	t.Helper()
-	runGitForTest(t, "", "init", "-q", "-b", "main", path)
-	runGitForTest(t, path, "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "--allow-empty", "-m", "fixture")
-	if remote != "" {
-		runGitForTest(t, path, "remote", "add", "origin", remote)
-	}
-}
-
 // A directory of repositories becomes a workspace whose ply-workspace.json
 // defines one Project named after the directory, with direct-child and
 // <name>/main repositories and their origin remotes.
 func TestInitDiscoverDefinesProjectFromRepositories(t *testing.T) {
+	t.Parallel()
 	d, root := discoverFixture(t)
 	discoverRepo(t, filepath.Join(root, "api"), "git@example.invalid:api.git")
 	discoverRepo(t, filepath.Join(root, "web", "main"), "git@example.invalid:web.git")
@@ -93,6 +70,7 @@ func TestInitDiscoverDefinesProjectFromRepositories(t *testing.T) {
 
 // Without any repository nothing is initialized.
 func TestInitDiscoverWithoutRepositoriesWritesNothing(t *testing.T) {
+	t.Parallel()
 	d, root := discoverFixture(t)
 	if _, err := InitDiscover(d, ""); err == nil || !strings.Contains(err.Error(), "no Git repositories") {
 		t.Fatalf("empty directory: %v", err)

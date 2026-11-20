@@ -5,22 +5,23 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
 type workspaceEpicServices struct {
-	adopt func(workspace.EpicAdoptInput) (workspace.EpicMutationResult, error)
-	show  func(workspace.EpicID) (workspace.EpicReadbackResult, error)
-	list  func() (workspace.EpicListResult, error)
+	adopt func(taskwork.EpicAdoptInput) (taskwork.EpicMutationResult, error)
+	show  func(taskwork.EpicID) (taskwork.EpicReadbackResult, error)
+	list  func() (taskwork.EpicListResult, error)
 }
 
-func newWorkspaceEpicCommand(dependencies workspace.Dependencies) *cobra.Command {
-	command := newWorkspaceEpicCommandWithServices(workspaceEpicServices{adopt: func(input workspace.EpicAdoptInput) (workspace.EpicMutationResult, error) {
-		return workspace.AdoptEpic(dependencies, input)
-	}, show: func(id workspace.EpicID) (workspace.EpicReadbackResult, error) {
-		return workspace.ShowEpic(dependencies, id)
-	}, list: func() (workspace.EpicListResult, error) { return workspace.ListEpics(dependencies) }})
+func newWorkspaceEpicCommand(dependencies taskwork.Dependencies) *cobra.Command {
+	command := newWorkspaceEpicCommandWithServices(workspaceEpicServices{adopt: func(input taskwork.EpicAdoptInput) (taskwork.EpicMutationResult, error) {
+		return taskwork.AdoptEpic(dependencies, input)
+	}, show: func(id taskwork.EpicID) (taskwork.EpicReadbackResult, error) {
+		return taskwork.ShowEpic(dependencies, id)
+	}, list: func() (taskwork.EpicListResult, error) { return taskwork.ListEpics(dependencies) }})
 	command.AddCommand(newWorkspaceEpicCreateCommand(dependencies))
 	command.AddCommand(newWorkspaceEpicIntegrateCommand(dependencies))
 	command.AddCommand(newWorkspaceEpicRetireCommand(dependencies))
@@ -37,10 +38,10 @@ func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Epic ID, got %d arguments", len(args)))
 		}
-		_, err := workspace.ParseEpicAdoptInput(args[0], title, projectID, repoID, worktree, ref, expectedOID)
+		_, err := taskwork.ParseEpicAdoptInput(args[0], title, projectID, repoID, worktree, ref, expectedOID)
 		return err
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		input, err := workspace.ParseEpicAdoptInput(args[0], title, projectID, repoID, worktree, ref, expectedOID)
+		input, err := taskwork.ParseEpicAdoptInput(args[0], title, projectID, repoID, worktree, ref, expectedOID)
 		if err != nil {
 			return err
 		}
@@ -65,12 +66,12 @@ func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.
 		if len(args) != 1 {
 			return workspace.WorkInvalidArguments(fmt.Sprintf("expected exactly one Epic ID, got %d arguments", len(args)))
 		}
-		if _, err := workspace.ParseEpicID(args[0]); err != nil {
+		if _, err := taskwork.ParseEpicID(args[0]); err != nil {
 			return err
 		}
 		return validateWorkFormat(format)
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		id, err := workspace.ParseEpicID(args[0])
+		id, err := taskwork.ParseEpicID(args[0])
 		if err != nil {
 			return err
 		}
@@ -79,7 +80,7 @@ func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.
 			return err
 		}
 		if format == "json" {
-			bytes, err := workspace.MarshalEpicReadback(result)
+			bytes, err := taskwork.MarshalEpicReadback(result)
 			if err != nil {
 				return err
 			}
@@ -135,7 +136,7 @@ func newWorkspaceEpicCommandWithServices(services workspaceEpicServices) *cobra.
 	return command
 }
 
-func renderEpicMutation(command *cobra.Command, result workspace.EpicMutationResult) error {
+func renderEpicMutation(command *cobra.Command, result taskwork.EpicMutationResult) error {
 	prefix := "Adopted Epic"
 	if !result.Created {
 		prefix = "Epic"
@@ -151,12 +152,12 @@ func renderEpicMutation(command *cobra.Command, result workspace.EpicMutationRes
 	}
 	return renderEpicBinding(command, result.Epic)
 }
-func renderEpicBinding(command *cobra.Command, epic workspace.EpicRecord) error {
+func renderEpicBinding(command *cobra.Command, epic taskwork.EpicRecord) error {
 	binding := epic.RepoBindings[0]
 	_, err := fmt.Fprintf(command.OutOrStdout(), "Project / repository: %s / %s\nGit common directory: %s\nWorktree: %s\nWorktree ID: %s\nBranch: %s\nRecorded commit: %s\nRecorded tree: %s\nOrigin: %s\nGit changed by this command: no\n", epic.ProjectID, binding.RepoID, binding.GitCommonDir, binding.Worktree.Locator, binding.Worktree.ID, binding.Worktree.Ref, binding.Worktree.OID, binding.Worktree.Tree, binding.Worktree.Origin)
 	return err
 }
-func renderEpicShow(command *cobra.Command, result workspace.EpicReadbackResult) error {
+func renderEpicShow(command *cobra.Command, result taskwork.EpicReadbackResult) error {
 	if _, err := fmt.Fprintf(command.OutOrStdout(), "Epic %s: %s\n", result.Epic.ID, result.Epic.Title); err != nil {
 		return err
 	}
@@ -183,7 +184,7 @@ func renderEpicShow(command *cobra.Command, result workspace.EpicReadbackResult)
 	}
 	return nil
 }
-func renderEpicBindingWithoutEffect(command *cobra.Command, epic workspace.EpicRecord) error {
+func renderEpicBindingWithoutEffect(command *cobra.Command, epic taskwork.EpicRecord) error {
 	binding := epic.RepoBindings[0]
 	_, err := fmt.Fprintf(command.OutOrStdout(), "Project / repository: %s / %s\nGit common directory: %s\nWorktree: %s\nWorktree ID: %s\nBranch: %s\nRecorded commit: %s\nRecorded tree: %s\nOrigin: %s\n", epic.ProjectID, binding.RepoID, binding.GitCommonDir, binding.Worktree.Locator, binding.Worktree.ID, binding.Worktree.Ref, binding.Worktree.OID, binding.Worktree.Tree, binding.Worktree.Origin)
 	return err

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -35,22 +36,22 @@ func (readOnlyFiles) Chmod(string, fs.FileMode) error { panic("trace must not ch
 func (readOnlyFiles) Rename(string, string) error     { panic("trace must not rename") }
 func (readOnlyFiles) RemoveAll(string) error          { panic("trace must not delete") }
 
-type noGit struct{ workspace.WorkItemGit }
+type noGit struct{ taskwork.WorkItemGit }
 
-func (noGit) ObserveWorktree(string) (workspace.GitWorktreeObservation, error) {
+func (noGit) ObserveWorktree(string) (taskwork.GitWorktreeObservation, error) {
 	panic("trace Git probe")
 }
-func (noGit) ObserveRepo(workspace.RepoRecord) (workspace.GitRepoObservation, error) {
+func (noGit) ObserveRepo(workspace.RepoRecord) (taskwork.GitRepoObservation, error) {
 	panic("trace Git probe")
 }
-func (noGit) ObserveRef(workspace.RepoRecord, string) (workspace.GitRefObservation, error) {
+func (noGit) ObserveRef(workspace.RepoRecord, string) (taskwork.GitRefObservation, error) {
 	panic("trace Git probe")
 }
-func (noGit) ListWorktrees(workspace.RepoRecord) (workspace.GitWorktreeInventory, error) {
+func (noGit) ListWorktrees(workspace.RepoRecord) (taskwork.GitWorktreeInventory, error) {
 	panic("trace Git probe")
 }
 
-func readFixture(t *testing.T) (workspace.Dependencies, string) {
+func readFixture(t *testing.T) (taskwork.Dependencies, string) {
 	t.Helper()
 	root, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
@@ -75,18 +76,18 @@ func readFixture(t *testing.T) (workspace.Dependencies, string) {
 	}
 	git("add", "README")
 	git("commit", "-m", "fixture")
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = cwdFiles{d.Files, root}
-	if _, err = workspace.Init(d); err != nil {
+	if _, err = workspace.Init(d.Dependencies); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = workspace.AddProject(d, workspace.ProjectAddInput{ProjectID: "project", Name: "Trace fixture", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
+	if _, err = workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Trace fixture", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = workspace.AdoptEpic(d, workspace.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); err != nil {
+	if _, err = taskwork.AdoptEpic(d, taskwork.EpicAdoptInput{EpicID: "epic", Title: "Epic", ProjectID: "project", RepoID: "repo", Worktree: repo, Ref: "refs/heads/epic", ExpectedOID: git("rev-parse", "HEAD")}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = workspace.CreateTask(d, workspace.TaskCreateInput{TaskID: "task", Title: "Untouched Task", Description: "Read fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
+	if _, err = taskwork.CreateTask(d, taskwork.TaskCreateInput{TaskID: "task", Title: "Untouched Task", Description: "Read fixture", ParentEpicID: "epic", ProjectID: "project", RepoID: "repo"}); err != nil {
 		t.Fatal(err)
 	}
 	return d, root
@@ -117,7 +118,7 @@ func fingerprint(t *testing.T, root string) map[string]string {
 	}
 	return out
 }
-func appendJournal(t *testing.T, d workspace.Dependencies, root, key string) taskjournal.AppendResult {
+func appendJournal(t *testing.T, d taskwork.Dependencies, root, key string) taskjournal.AppendResult {
 	t.Helper()
 	evidence := filepath.Join(root, "evidence")
 	if err := os.WriteFile(evidence, []byte("recorded evidence"), 0600); err != nil {
@@ -163,7 +164,7 @@ func TestTraceReadBoundaryEmptyUntouchedAndUnknownTask(t *testing.T) {
 		t.Fatal(err)
 	}
 	outside := d
-	outside.Files = readOnlyFiles{cwdFiles{workspace.SystemDependencies().Files, other}}
+	outside.Files = readOnlyFiles{cwdFiles{taskwork.SystemDependencies().Files, other}}
 	snapshot := fingerprint(t, other)
 	if _, err = Read(outside, "task"); err == nil {
 		t.Fatal("absent workspace succeeded")
@@ -272,28 +273,28 @@ func TestTraceCurrentGoalIsTheRegisteredHead(t *testing.T) {
 	if err := os.WriteFile(problemFile, raw(problemDraft), 0600); err != nil {
 		t.Fatal(err)
 	}
-	recorded, err := workspace.RecordTaskProblem(d, workspace.TaskContentInput{TaskID: "task", File: problemFile})
+	recorded, err := taskwork.RecordTaskProblem(d, taskwork.TaskContentInput{TaskID: "task", File: problemFile})
 	if err != nil {
 		t.Fatal(err)
 	}
-	problem := workspace.TaskRevisionRef{Revision: *recorded.OutcomeRef.Revision, ManifestSHA256: recorded.OutcomeRef.ManifestSHA256}
+	problem := taskwork.TaskRevisionRef{Revision: *recorded.OutcomeRef.Revision, ManifestSHA256: recorded.OutcomeRef.ManifestSHA256}
 	doc := filepath.Join(root, "design.md")
 	body := []byte("# Trace\nRecorded facts only.\n")
 	if err = os.WriteFile(doc, body, 0600); err != nil {
 		t.Fatal(err)
 	}
-	var previous *workspace.TaskRevisionRef
+	var previous *taskwork.TaskRevisionRef
 	for n := 1; n <= 2; n++ {
-		draft := map[string]any{"kind": "WorkspaceTaskSpecDraft@2", "schema_version": 2, "publication_key": fmt.Sprintf("goal/%d", n), "task_id": "task", "registry_upgrade": nil, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "recorder": map[string]any{"actor_claim": "Synthetic planner", "control_surface": "fixture", "recorded_at_utc": "2026-10-07T10:00:00Z"}, "spec_id": "trace-goal", "expected_previous": previous, "problem": workspace.TaskRevisionRef{Revision: problem.Revision, ManifestSHA256: problem.ManifestSHA256}, "title": fmt.Sprintf("Goal %d", n), "contract_kind": "goal", "objective": fmt.Sprintf("Observe revision %d", n), "requirements": []map[string]string{{"id": "read", "acceptance": "Read recorded sources without writing."}}, "design": []map[string]any{{"document_id": "design", "section": nil}}, "constraints": []string{"Read only."}, "executor": map[string]any{"provider": "codex", "model": nil, "effort": nil}, "change_reason": "Fixture goal revision.", "documents": []map[string]any{{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(body)), "size_bytes": len(body), "media_type": "text/markdown", "git_provenance": nil}}}}
+		draft := map[string]any{"kind": "WorkspaceTaskSpecDraft@2", "schema_version": 2, "publication_key": fmt.Sprintf("goal/%d", n), "task_id": "task", "registry_upgrade": nil, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "recorder": map[string]any{"actor_claim": "Synthetic planner", "control_surface": "fixture", "recorded_at_utc": "2026-10-07T10:00:00Z"}, "spec_id": "trace-goal", "expected_previous": previous, "problem": taskwork.TaskRevisionRef{Revision: problem.Revision, ManifestSHA256: problem.ManifestSHA256}, "title": fmt.Sprintf("Goal %d", n), "contract_kind": "goal", "objective": fmt.Sprintf("Observe revision %d", n), "requirements": []map[string]string{{"id": "read", "acceptance": "Read recorded sources without writing."}}, "design": []map[string]any{{"document_id": "design", "section": nil}}, "constraints": []string{"Read only."}, "executor": map[string]any{"provider": "codex", "model": nil, "effort": nil}, "change_reason": "Fixture goal revision.", "documents": []map[string]any{{"id": "design", "source": map[string]any{"kind": "file", "locator": doc, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(body)), "size_bytes": len(body), "media_type": "text/markdown", "git_provenance": nil}}}}
 		file := filepath.Join(root, fmt.Sprintf("goal-%d.json", n))
 		if err = os.WriteFile(file, raw(draft), 0600); err != nil {
 			t.Fatal(err)
 		}
-		record, err := workspace.RecordTaskSpec(d, workspace.TaskContentInput{TaskID: "task", File: file})
+		record, err := taskwork.RecordTaskSpec(d, taskwork.TaskContentInput{TaskID: "task", File: file})
 		if err != nil {
 			t.Fatal(err)
 		}
-		previous = &workspace.TaskRevisionRef{Revision: *record.OutcomeRef.Revision, ManifestSHA256: record.OutcomeRef.ManifestSHA256}
+		previous = &taskwork.TaskRevisionRef{Revision: *record.OutcomeRef.Revision, ManifestSHA256: record.OutcomeRef.ManifestSHA256}
 	}
 	d.WorkGit = noGit{}
 	d.Files = readOnlyFiles{d.Files}
@@ -345,7 +346,7 @@ func TestTraceShowsGoalStartReceipt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir := filepath.Dir(workspace.GoalStartReceiptPath(works[0], "task"))
+	dir := filepath.Dir(taskwork.GoalStartReceiptPath(works[0], "task"))
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		t.Fatal(err)
 	}

@@ -68,7 +68,7 @@ func (in ProjectMetadataInput) Validate() error {
 			return ProjectInvalidArguments("companion changes do not take a repository ID")
 		}
 	case ProjectRepoWrapperSet, ProjectRepoWrapperClear:
-		if err := validateIdentifier("repository", string(in.RepoID)); err != nil {
+		if err := ValidateIdentifier("repository", string(in.RepoID)); err != nil {
 			return err
 		}
 		if in.Role != "" {
@@ -106,7 +106,7 @@ func UpdateProjectMetadata(d Dependencies, in ProjectMetadataInput) (ProjectMeta
 		return ProjectMetadataMutation{}, err
 	}
 	if in.Locator != "" {
-		cwd, err := projectPhysicalWorkingDirectory(d.Files)
+		cwd, err := ProjectPhysicalWorkingDirectory(d.Files)
 		if err != nil {
 			return ProjectMetadataMutation{}, err
 		}
@@ -182,7 +182,7 @@ func applyProjectMetadata(root string, defs *workspacedef.Definitions, in Projec
 		}
 	}
 	if repo == nil {
-		return false, workError(ErrorWorkProjectConflict, fmt.Sprintf("repository %s is not a member of Project %s", in.RepoID, in.ProjectID), nil)
+		return false, WorkError(ErrorWorkProjectConflict, fmt.Sprintf("repository %s is not a member of Project %s", in.RepoID, in.ProjectID), nil)
 	}
 	if in.Operation == ProjectRepoWrapperClear {
 		changed := repo.Wrapper != ""
@@ -205,7 +205,7 @@ func applyProjectMetadata(root string, defs *workspacedef.Definitions, in Projec
 
 func projectMetadataPath(files FileSystem, cwd, input string, remove bool) (string, error) {
 	if !remove {
-		return canonicalDirectory(files, cwd, input, "metadata")
+		return CanonicalDirectory(files, cwd, input, "metadata")
 	}
 	path := input
 	if !filepath.IsAbs(path) {

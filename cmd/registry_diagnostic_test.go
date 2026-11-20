@@ -9,13 +9,14 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
 func TestRegistryFailureProducesExactlyOneJSONDiagnostic(t *testing.T) {
 	fields := []string{"epics", "tasks", "worktree_operations", "task_results", "human_qa_records", "integration_authorities", "integration_intents", "integration_attempts", "integration_results", "task_problem_revisions", "task_spec_revisions", "task_spec_assessments", "task_solution_selections", "task_result_spec_bindings", "task_content_publications", "epic_base_versions", "epic_base_updates", "task_queue_events", "task_preparations", "epic_create_operations"}
-	valid := fmt.Sprintf("format_version: %d\nregistry:\n", workspace.RegistryFormat)
+	valid := fmt.Sprintf("format_version: %d\nregistry:\n", taskwork.RegistryFormat)
 	for _, field := range fields {
 		valid += "  " + field + ": []\n"
 	}
@@ -65,7 +66,7 @@ func TestRegistryFailureProducesExactlyOneJSONDiagnostic(t *testing.T) {
 				if runErr == nil {
 					t.Fatal("invalid registry succeeded")
 				}
-				var diagnostic workspace.RegistryDiagnostic
+				var diagnostic taskwork.RegistryDiagnostic
 				if err := json.Unmarshal(stderr.Bytes(), &diagnostic); err != nil {
 					t.Fatalf("stderr is not one JSON diagnostic: %v\n%s\nCommand error: %v", err, stderr.String(), runErr)
 				}

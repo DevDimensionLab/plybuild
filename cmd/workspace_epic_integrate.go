@@ -3,16 +3,17 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func newWorkspaceEpicIntegrateCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceEpicIntegrateCommand(d taskwork.Dependencies) *cobra.Command {
 	var actor string
 	var keepWorktree bool
 	var c *cobra.Command
-	c = newWorkspaceEpicIntegrateCommandWith(func(input workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error) {
-		result, err := workspace.IntegrateEpic(d, input)
+	c = newWorkspaceEpicIntegrateCommandWith(func(input taskwork.EpicIntegrateInput) (taskwork.EpicIntegrateResult, error) {
+		result, err := taskwork.IntegrateEpic(d, input)
 		if err == nil && result.Applied && result.Effect == "fast_forwarded" {
 			err = recordEpicIntegration(d, input, result, namedActor(actor))
 			if err == nil && !keepWorktree {
@@ -27,7 +28,7 @@ func newWorkspaceEpicIntegrateCommand(d workspace.Dependencies) *cobra.Command {
 	return c
 }
 
-func newWorkspaceEpicIntegrateCommandWith(integrate func(workspace.EpicIntegrateInput) (workspace.EpicIntegrateResult, error)) *cobra.Command {
+func newWorkspaceEpicIntegrateCommandWith(integrate func(taskwork.EpicIntegrateInput) (taskwork.EpicIntegrateResult, error)) *cobra.Command {
 	var repo, targetRef, targetOID, epicOID, format string
 	var apply bool
 	c := &cobra.Command{Use: "integrate <epic-id>", Short: "Fast-forward a target branch such as main to the Epic", Long: "Check, or with --apply perform, one local fast-forward of --target-ref to the exact Epic commit. Both commits must match the expected object IDs. The target must not have commits outside the Epic; Ply never merges or rebases. A target checked out in a worktree must be clean and moves with git merge --ff-only; otherwise only the ref moves. The reflog action is ply-workspace-epic-integrate:<epic-id>. Nothing is pushed.", Example: "  ply workspace epic integrate code-map-d1 --repo ply-code-map --target-ref refs/heads/main --expected-target-oid <main-oid> --expected-epic-oid <epic-oid>\n  ply workspace epic integrate code-map-d1 --repo ply-code-map --target-ref refs/heads/main --expected-target-oid <main-oid> --expected-epic-oid <epic-oid> --apply", Args: func(cmd *cobra.Command, args []string) error {
@@ -36,7 +37,7 @@ func newWorkspaceEpicIntegrateCommandWith(integrate func(workspace.EpicIntegrate
 		}
 		return validateWorkFormat(format)
 	}, RunE: func(cmd *cobra.Command, args []string) error {
-		result, err := integrate(workspace.EpicIntegrateInput{EpicID: workspace.EpicID(args[0]), RepoID: workspace.RepoID(repo), TargetRef: targetRef, ExpectedTargetOID: targetOID, ExpectedEpicOID: epicOID, Apply: apply})
+		result, err := integrate(taskwork.EpicIntegrateInput{EpicID: taskwork.EpicID(args[0]), RepoID: workspace.RepoID(repo), TargetRef: targetRef, ExpectedTargetOID: targetOID, ExpectedEpicOID: epicOID, Apply: apply})
 		if err != nil {
 			return err
 		}
@@ -44,7 +45,7 @@ func newWorkspaceEpicIntegrateCommandWith(integrate func(workspace.EpicIntegrate
 			return writeAssignmentJSON(cmd.OutOrStdout(), struct {
 				Kind          string `json:"kind"`
 				SchemaVersion int    `json:"schema_version"`
-				workspace.EpicIntegrateResult
+				taskwork.EpicIntegrateResult
 			}{"WorkspaceEpicIntegrate@1", 1, result})
 		}
 		_, err = fmt.Fprintf(cmd.OutOrStdout(), "Epic %s %s at %s\nTarget %s at %s\nEffect: %s\n", result.EpicID, result.EpicRef, result.EpicOID, result.TargetRef, result.TargetOID, result.Effect)

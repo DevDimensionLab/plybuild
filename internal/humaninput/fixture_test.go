@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -61,21 +62,21 @@ func newFixture(t *testing.T) *hiFixture {
 	if err := os.Chdir(root); err != nil {
 		t.Fatal(err)
 	}
-	w := workspace.SystemDependencies()
-	if _, err := workspace.Init(w); err != nil {
+	w := taskwork.SystemDependencies()
+	if _, err := workspace.Init(w.Dependencies); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AddProject(w, workspace.ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: filepath.Join(root, "ply"), Repos: []workspace.RepoInput{{RepoID: "ply", Path: f.repo}}}); err != nil {
+	if _, err := workspace.AddProject(w.Dependencies, workspace.ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: filepath.Join(root, "ply"), Repos: []workspace.RepoInput{{RepoID: "ply", Path: f.repo}}}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AddProject(w, workspace.ProjectAddInput{ProjectID: "other", Name: "Other", Wrapper: filepath.Join(root, "other"), Repos: []workspace.RepoInput{{RepoID: "other", Path: f.otherOrigin}}}); err != nil {
+	if _, err := workspace.AddProject(w.Dependencies, workspace.ProjectAddInput{ProjectID: "other", Name: "Other", Wrapper: filepath.Join(root, "other"), Repos: []workspace.RepoInput{{RepoID: "other", Path: f.otherOrigin}}}); err != nil {
 		t.Fatal(err)
 	}
 	ref, oid := gitOut(t, f.repo, "symbolic-ref", "HEAD"), gitOut(t, f.repo, "rev-parse", "HEAD")
-	if _, err := workspace.AdoptEpic(w, workspace.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "ply", RepoID: "ply", Worktree: f.repo, Ref: ref, ExpectedOID: oid}); err != nil {
+	if _, err := taskwork.AdoptEpic(w, taskwork.EpicAdoptInput{EpicID: "epic", Title: "Fixture Epic", ProjectID: "ply", RepoID: "ply", Worktree: f.repo, Ref: ref, ExpectedOID: oid}); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.CreateTask(w, workspace.TaskCreateInput{TaskID: "task", Title: "Fixture Task", Description: "Fixture need", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
+	if _, err := taskwork.CreateTask(w, taskwork.TaskCreateInput{TaskID: "task", Title: "Fixture Task", Description: "Fixture need", ParentEpicID: "epic", ProjectID: "ply", RepoID: "ply"}); err != nil {
 		t.Fatal(err)
 	}
 	f.d = Dependencies{Workspace: w, Now: func() time.Time { f.now = f.now.Add(time.Second); return f.now }, Poll: 5 * time.Millisecond}

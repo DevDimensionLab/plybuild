@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestWorkspaceEpicCreateRendersEffectsOfEarlyRejection(t *testing.T) {
@@ -21,7 +21,7 @@ func TestWorkspaceEpicCreateRendersEffectsOfEarlyRejection(t *testing.T) {
 		t.Fatal(err)
 	}
 	for format, want := range map[string]string{"text": "Epic creation new-epic: rejected\nEffects: worktree not_attempted\n", "json": `"effects":{"worktree":"not_attempted"}`} {
-		command := newWorkspaceEpicCreateCommand(workspace.SystemDependencies())
+		command := newWorkspaceEpicCreateCommand(taskwork.SystemDependencies())
 		output := &bytes.Buffer{}
 		command.SetOut(output)
 		command.SetErr(&bytes.Buffer{})

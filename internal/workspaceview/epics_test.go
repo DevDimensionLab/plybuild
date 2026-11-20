@@ -3,15 +3,15 @@ package workspaceview
 import (
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestEpicsIncludeEmptyAndUseCurrentRecordedBaseAndSharedCounts(t *testing.T) {
 	s := progressFixture()
-	s.Registry.Epics[0].RepoBindings = []workspace.EpicRepoBinding{{RepoID: "repo", Worktree: workspace.EpicWorktreeBinding{OID: "adopted"}}}
-	s.Registry.Epics = append(s.Registry.Epics, workspace.EpicRecord{ID: "empty", ProjectID: "project", Title: "Empty Epic"})
-	s.Registry.EpicBaseVersions = []workspace.EpicBaseVersion{{EpicID: "epic", RepoID: "repo", Revision: 1, OID: "adopted"}, {EpicID: "epic", RepoID: "repo", Revision: 2, OID: "current", Tree: "current-tree", Locator: "/work/project/epic", Ref: "refs/heads/epic", WorktreeID: "worktree"}}
-	s.Registry.IntegrationAuthorities = []workspace.IntegrationAuthority{fixtureAuthority()}
+	s.Registry.Epics[0].RepoBindings = []taskwork.EpicRepoBinding{{RepoID: "repo", Worktree: taskwork.EpicWorktreeBinding{OID: "adopted"}}}
+	s.Registry.Epics = append(s.Registry.Epics, taskwork.EpicRecord{ID: "empty", ProjectID: "project", Title: "Empty Epic"})
+	s.Registry.EpicBaseVersions = []taskwork.EpicBaseVersion{{EpicID: "epic", RepoID: "repo", Revision: 1, OID: "adopted"}, {EpicID: "epic", RepoID: "repo", Revision: 2, OID: "current", Tree: "current-tree", Locator: "/work/project/epic", Ref: "refs/heads/epic", WorktreeID: "worktree"}}
+	s.Registry.IntegrationAuthorities = []taskwork.IntegrationAuthority{fixtureAuthority()}
 	list, err := BuildEpics(s, EpicFilters{}, nil)
 	if err != nil {
 		t.Fatal(err)

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -18,15 +19,15 @@ func workflowFixture() *Snapshot {
 	s.Projects.Projects[0].RepoIDs = []workspace.RepoID{"repo", "second-repo"}
 	s.Projects.Projects = append(s.Projects.Projects, workspace.ProjectRecord{ID: "other", Name: "Other", RepoIDs: []workspace.RepoID{"other-repo"}}, workspace.ProjectRecord{ID: "empty", Name: "Empty"})
 	s.Projects.Repos = append(s.Projects.Repos, workspace.RepoRecord{ID: "second-repo"}, workspace.RepoRecord{ID: "other-repo"})
-	s.Registry.Epics[0].RepoBindings = []workspace.EpicRepoBinding{{RepoID: "repo"}, {RepoID: "second-repo"}}
-	s.Registry.Epics = append(s.Registry.Epics, workspace.EpicRecord{ID: "empty-epic", ProjectID: "other", Title: "Empty Epic", RepoBindings: []workspace.EpicRepoBinding{{RepoID: "other-repo"}}})
-	s.Registry.EpicBaseVersions = []workspace.EpicBaseVersion{{ProjectID: "project", RepoID: "repo", EpicID: "epic", Revision: 1}, {ProjectID: "project", RepoID: "second-repo", EpicID: "epic", Revision: 1}, {ProjectID: "other", RepoID: "other-repo", EpicID: "empty-epic", Revision: 1}}
+	s.Registry.Epics[0].RepoBindings = []taskwork.EpicRepoBinding{{RepoID: "repo"}, {RepoID: "second-repo"}}
+	s.Registry.Epics = append(s.Registry.Epics, taskwork.EpicRecord{ID: "empty-epic", ProjectID: "other", Title: "Empty Epic", RepoBindings: []taskwork.EpicRepoBinding{{RepoID: "other-repo"}}})
+	s.Registry.EpicBaseVersions = []taskwork.EpicBaseVersion{{ProjectID: "project", RepoID: "repo", EpicID: "epic", Revision: 1}, {ProjectID: "project", RepoID: "second-repo", EpicID: "epic", Revision: 1}, {ProjectID: "other", RepoID: "other-repo", EpicID: "empty-epic", Revision: 1}}
 	return s
 }
 
 func workflowBuild(t *testing.T, s *Snapshot, all bool) WorkflowStatus {
 	t.Helper()
-	out, err := BuildWorkflowStatus(s, WorkflowStatusOptions{IncludeAll: all}, nil, workspace.RegisteredTaskQueues{Freshness: "fresh"})
+	out, err := BuildWorkflowStatus(s, WorkflowStatusOptions{IncludeAll: all}, nil, taskwork.RegisteredTaskQueues{Freshness: "fresh"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,17 +40,17 @@ func TestWorkflowStatusWorkspaceFiltersAndEmptyContainers(t *testing.T) {
 	if len(out.Projects) != 3 || len(out.Epics) != 2 || out.Counts.Total != 1 || out.Counts.Hidden.Backlog != 1 || len(out.Items) != 0 {
 		t.Fatalf("whole workspace or empty containers lost: %+v", out)
 	}
-	project, repo, epic := workspace.ProjectID("other"), workspace.RepoID("repo"), workspace.EpicID("empty-epic")
-	out, err := BuildWorkflowStatus(s, WorkflowStatusOptions{Filters: workspace.TaskListFilters{ProjectID: &project, RepoID: &repo, EpicID: &epic}}, nil, workspace.RegisteredTaskQueues{})
+	project, repo, epic := workspace.ProjectID("other"), workspace.RepoID("repo"), taskwork.EpicID("empty-epic")
+	out, err := BuildWorkflowStatus(s, WorkflowStatusOptions{Filters: taskwork.TaskListFilters{ProjectID: &project, RepoID: &repo, EpicID: &epic}}, nil, taskwork.RegisteredTaskQueues{})
 	if err != nil || len(out.Items) != 0 || len(out.Projects) != 0 || len(out.Epics) != 0 {
 		t.Fatalf("known disjoint AND filters: %+v %v", out, err)
 	}
 	epic = "missing"
-	if _, err = BuildWorkflowStatus(s, WorkflowStatusOptions{Filters: workspace.TaskListFilters{ProjectID: &project, RepoID: &repo, EpicID: &epic}}, nil, workspace.RegisteredTaskQueues{}); err == nil {
+	if _, err = BuildWorkflowStatus(s, WorkflowStatusOptions{Filters: taskwork.TaskListFilters{ProjectID: &project, RepoID: &repo, EpicID: &epic}}, nil, taskwork.RegisteredTaskQueues{}); err == nil {
 		t.Fatal("unknown filter hidden by empty intersection")
 	}
 	project, repo, epic = "project", "second-repo", "epic"
-	out, err = BuildWorkflowStatus(s, WorkflowStatusOptions{Filters: workspace.TaskListFilters{ProjectID: &project, RepoID: &repo, EpicID: &epic}}, nil, workspace.RegisteredTaskQueues{})
+	out, err = BuildWorkflowStatus(s, WorkflowStatusOptions{Filters: taskwork.TaskListFilters{ProjectID: &project, RepoID: &repo, EpicID: &epic}}, nil, taskwork.RegisteredTaskQueues{})
 	if err != nil || len(out.Items) != 0 || len(out.Projects) != 1 || len(out.Epics) != 1 || len(out.Epics[0].Base) != 1 {
 		t.Fatalf("empty registered target disappeared: %+v %v", out, err)
 	}
@@ -60,7 +61,7 @@ func TestWorkflowStatusQueueReadinessAndChangedSourceBasis(t *testing.T) {
 		for _, freshness := range []string{"fresh", "unknown"} {
 			s := workflowFixture()
 			s.Freshness = freshness
-			queues := workspace.RegisteredTaskQueues{Freshness: "fresh", Queues: []workspace.RegisteredTaskQueue{{QueueID: "queue", Revision: 1, Target: workspace.QueueTarget{ProjectID: "project", RepoID: "repo", EpicID: "epic"}, Freshness: "fresh", Pending: []workspace.RegisteredQueuePending{{QueuePending: workspace.QueuePending{Rank: 1, TaskID: "task", State: state, SpecID: stringValue("goal")}, Spec: &workspace.TaskRevisionRef{Revision: 1, ManifestSHA256: "digest"}, Freshness: "fresh"}}}}}
+			queues := taskwork.RegisteredTaskQueues{Freshness: "fresh", Queues: []taskwork.RegisteredTaskQueue{{QueueID: "queue", Revision: 1, Target: taskwork.QueueTarget{ProjectID: "project", RepoID: "repo", EpicID: "epic"}, Freshness: "fresh", Pending: []taskwork.RegisteredQueuePending{{QueuePending: taskwork.QueuePending{Rank: 1, TaskID: "task", State: state, SpecID: stringValue("goal")}, Spec: &taskwork.TaskRevisionRef{Revision: 1, ManifestSHA256: "digest"}, Freshness: "fresh"}}}}}
 			out, err := BuildWorkflowStatus(s, WorkflowStatusOptions{}, nil, queues)
 			if err != nil {
 				t.Fatal(err)
@@ -78,9 +79,9 @@ func TestWorkflowStatusQueueReadinessAndChangedSourceBasis(t *testing.T) {
 
 func TestWorkflowStatusHiddenCountsDoNotOverlapOrHideDiagnostics(t *testing.T) {
 	d, items, _ := viewDiskFixture(t)
-	items.registry.IntegrationAuthorities = []workspace.IntegrationAuthority{fixtureAuthority()}
-	items.registry.IntegrationResults = []workspace.IntegrationResult{{ID: "integration", AuthorityID: "authority", Outcome: "exact_effect"}}
-	if _, err := workspace.SetWorkItemLifecycle(withViewLocks(d), workspace.WorkItemLifecycleInput{SubjectKind: "epic", SubjectID: "epic", State: workspace.LifecycleParked, ActorClaim: "fixture owner"}); err != nil {
+	items.registry.IntegrationAuthorities = []taskwork.IntegrationAuthority{fixtureAuthority()}
+	items.registry.IntegrationResults = []taskwork.IntegrationResult{{ID: "integration", AuthorityID: "authority", Outcome: "exact_effect"}}
+	if _, err := taskwork.SetWorkItemLifecycle(withViewLocks(d), taskwork.WorkItemLifecycleInput{SubjectKind: "epic", SubjectID: "epic", State: taskwork.LifecycleParked, ActorClaim: "fixture owner"}); err != nil {
 		t.Fatal(err)
 	}
 	s, err := LoadSnapshot(d)
@@ -92,7 +93,7 @@ func TestWorkflowStatusHiddenCountsDoNotOverlapOrHideDiagnostics(t *testing.T) {
 		t.Fatalf("hidden precedence or independent diagnostics lost: %+v", out)
 	}
 	all := workflowBuild(t, s, true)
-	if all.Counts.Hidden != (WorkflowStatusHidden{}) || len(all.Items) != 1 || all.Items[0].Category != "inactive" || all.Items[0].TaskLifecycle != workspace.LifecycleActive || all.Items[0].Progress.State != "integrated" {
+	if all.Counts.Hidden != (WorkflowStatusHidden{}) || len(all.Items) != 1 || all.Items[0].Category != "inactive" || all.Items[0].TaskLifecycle != taskwork.LifecycleActive || all.Items[0].Progress.State != "integrated" {
 		t.Fatalf("--all changed lifecycle or native history: %+v", all)
 	}
 	for _, a := range all.Items[0].NextActions {
@@ -159,22 +160,22 @@ func BenchmarkWorkflowStatusMultiProject(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = viewTestFiles{d.Files, root}
-	if _, err = workspace.Init(d); err != nil {
+	if _, err = workspace.Init(d.Dependencies); err != nil {
 		b.Fatal(err)
 	}
-	registry := workspace.WorkItemRegistry{}
+	registry := taskwork.WorkItemRegistry{}
 	projects := workspace.ProjectSnapshot{}
 	for p := 0; p < 4; p++ {
 		project, repo := workspace.ProjectID(fmt.Sprintf("project-%d", p)), workspace.RepoID(fmt.Sprintf("repo-%d", p))
 		projects.Projects = append(projects.Projects, workspace.ProjectRecord{ID: project, RepoIDs: []workspace.RepoID{repo}})
 		projects.Repos = append(projects.Repos, workspace.RepoRecord{ID: repo})
 		for e := 0; e < 3; e++ {
-			epic := workspace.EpicID(fmt.Sprintf("epic-%d-%d", p, e))
-			registry.Epics = append(registry.Epics, workspace.EpicRecord{ID: epic, ProjectID: project})
+			epic := taskwork.EpicID(fmt.Sprintf("epic-%d-%d", p, e))
+			registry.Epics = append(registry.Epics, taskwork.EpicRecord{ID: epic, ProjectID: project})
 			for n := 0; n < 25; n++ {
-				registry.Tasks = append(registry.Tasks, workspace.TaskRecord{ID: workspace.TaskID(fmt.Sprintf("task-%d-%d-%d", p, e, n)), ProjectID: project, RepoID: repo, ParentEpicID: epic, Title: "Planned task", WorktreeState: workspace.WorkItemUnbound})
+				registry.Tasks = append(registry.Tasks, taskwork.TaskRecord{ID: taskwork.TaskID(fmt.Sprintf("task-%d-%d-%d", p, e, n)), ProjectID: project, RepoID: repo, ParentEpicID: epic, Title: "Planned task", WorktreeState: taskwork.WorkItemUnbound})
 			}
 		}
 	}

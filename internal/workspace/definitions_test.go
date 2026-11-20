@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/filelock"
-	"github.com/devdimensionlab/plybuild/internal/repohistory"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
 func TestProjectShowReturnsDefinedRemoteAndNullWhenAbsent(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	path := filepath.Join(f.root, workspacedef.File)
 	definitions := strings.Replace(fixtureDefinitions, `"path": "ply/main"`, `"path": "ply/main", "remote": "git@github.com:example/ply.git"`, 1)
@@ -51,165 +51,20 @@ func TestProjectShowReturnsDefinedRemoteAndNullWhenAbsent(t *testing.T) {
 	}
 }
 
-func assertWorkErrorClass(t *testing.T, err error, class WorkItemErrorClass) {
-	t.Helper()
-	var typed *WorkItemError
-	if !errors.As(err, &typed) || typed.Class != class {
-		t.Fatalf("error = %v, want class %s", err, class)
-	}
-}
-
-// historyRegistry has the logical shape of the real registry: bindings carry
-// worktrees and other fields that the projection ignores.
-const historyRegistry = `epics:
-  - id: ply-master
-    title: Ply master
-    project_id: ply
-    repo_bindings:
-      - repo_id: ply
-        git_common_dir: /w/ply/main/.git
-        worktree:
-          id: wt_1
-          locator: /w/ply/main
-          ref: refs/heads/master
-      - repo_id: app
-        git_common_dir: /w/app/main/.git
-tasks:
-  - id: k5
-    epic_id: ply-master
-    repo_id: ply
-    git_common_dir: /w/ply/main/.git
-    worktree:
-      locator: /w/ply/k5
-  - id: old
-    repo_id: app-server
-    git_common_dir: /w/app/server/.git
-worktree_operations: []
-`
-
-func envelope(version int, body string) string {
-	return fmt.Sprintf("format_version: %d\nregistry:\n  %s", version, strings.ReplaceAll(strings.TrimSuffix(body, "\n"), "\n", "\n  ")+"\n")
-}
-
-func writeWorkItems(t *testing.T, root, contents string, project ...ProjectID) {
-	t.Helper()
-	path := testWork(t, root, project...).Registry()
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	mustWriteFile(t, path, contents)
-}
-
-func TestDefinitionHistoryProjectsRegistry(t *testing.T) {
-	want := []repohistory.Binding{{RepoID: "ply", GitCommonDir: "/w/ply/main/.git"}, {RepoID: "app", GitCommonDir: "/w/app/main/.git"}, {RepoID: "ply", GitCommonDir: "/w/ply/main/.git"}, {RepoID: "app-server", GitCommonDir: "/w/app/server/.git"}}
-	root := t.TempDir()
-	writeWorkItems(t, root, envelope(RegistryFormat, historyRegistry))
-	got, err := historicalBindings(testWork(t, root))
-	if err != nil || !reflect.DeepEqual(got, want) {
-		t.Fatalf("bindings %+v, error %v", got, err)
-	}
-}
-
-func TestDefinitionHistoryAbsentAndEmptyCollections(t *testing.T) {
-	got, err := historicalBindings(testWork(t, t.TempDir()))
-	if got != nil || err != nil {
-		t.Fatalf("absent: %+v %v", got, err)
-	}
-	root := t.TempDir()
-	writeWorkItems(t, root, "format_version: 11\nregistry: {}\n")
-	got, err = historicalBindings(testWork(t, root))
-	if len(got) != 0 || err != nil {
-		t.Fatalf("no collections: %+v %v", got, err)
-	}
-}
-
-func TestDefinitionHistoryEmptyCommonDirRecordsNoIdentity(t *testing.T) {
-	root := t.TempDir()
-	writeWorkItems(t, root, envelope(RegistryFormat, `epics:
-  - repo_bindings:
-      - repo_id: Not-Valid
-        git_common_dir: ""
-      - repo_id: 7
-tasks:
-  - repo_id: "bad id"
-    git_common_dir: ""
-  - {}
-`))
-	got, err := historicalBindings(testWork(t, root))
-	if err != nil || len(got) != 4 {
-		t.Fatalf("bindings %+v, error %v", got, err)
-	}
-	identities, err := repohistory.CommonDirs(got)
-	if err != nil || len(identities) != 0 {
-		t.Fatalf("identities %v, error %v", identities, err)
-	}
-}
-
-func TestDefinitionHistoryRejectsUnsupportedRegistries(t *testing.T) {
-	single := func(body string) string { return envelope(RegistryFormat, body) }
-	for name, contents := range map[string]string{
-		"empty":                   "",
-		"two documents":           single(historyRegistry) + "---\nformat_version: 11\n",
-		"sequence root":           "- format_version: 11\n",
-		"inline format 4":         "format_version: 4\n" + historyRegistry,
-		"inline format 8":         "format_version: 8\n" + historyRegistry,
-		"previous envelope 10":    envelope(10, "format_version: 4\n"+historyRegistry),
-		"future format":           envelope(12, historyRegistry),
-		"format 0":                envelope(0, historyRegistry),
-		"string format":           "format_version: \"11\"\nregistry: {}\n",
-		"missing format":          "registry: {}\n",
-		"extra envelope key":      single(historyRegistry) + "integration_results: []\n",
-		"envelope without inner":  "format_version: 11\n",
-		"envelope registry list":  "format_version: 11\nregistry: []\n",
-		"alias":                   single("epics: &e []\ntasks: *e\n"),
-		"merge key":               single("base: &b {repo_id: ply}\ntasks:\n  - <<: *b\n    git_common_dir: /w/.git\n"),
-		"duplicate repo_id":       single("tasks:\n  - repo_id: ply\n    repo_id: app\n    git_common_dir: /w/.git\n"),
-		"epics not a sequence":    single("epics: {}\n"),
-		"task not a mapping":      single("tasks:\n  - ply\n"),
-		"bindings not a sequence": single("epics:\n  - repo_bindings: {}\n"),
-		"relative common dir":     single("tasks:\n  - repo_id: ply\n    git_common_dir: ply/.git\n"),
-		"unclean common dir":      single("tasks:\n  - repo_id: ply\n    git_common_dir: /w/ply/../ply/.git\n"),
-		"null common dir":         single("tasks:\n  - repo_id: ply\n    git_common_dir: null\n"),
-		"invalid repo id":         single("epics:\n  - repo_bindings:\n      - repo_id: Ply\n        git_common_dir: /w/.git\n"),
-		"missing repo id":         single("tasks:\n  - git_common_dir: /w/.git\n"),
-		"integer repo id":         single("tasks:\n  - repo_id: 7\n    git_common_dir: /w/.git\n"),
-	} {
-		t.Run(name, func(t *testing.T) {
-			root := t.TempDir()
-			writeWorkItems(t, root, contents)
-			_, err := historicalBindings(testWork(t, root))
-			assertWorkErrorClass(t, err, ErrorWorkStoreConflict)
-		})
-	}
-}
-
-func TestDefinitionHistoryRejectsNonRegularRegistry(t *testing.T) {
-	directory := t.TempDir()
-	if err := os.MkdirAll(testWork(t, directory).Registry(), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	_, err := historicalBindings(testWork(t, directory))
-	assertWorkErrorClass(t, err, ErrorWorkStoreConflict)
-
-	target := t.TempDir()
-	writeWorkItems(t, target, envelope(RegistryFormat, historyRegistry))
-	link := t.TempDir()
-	if err := os.MkdirAll(testWork(t, link).Dir, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Symlink(testWork(t, target).Registry(), testWork(t, link).Registry()); err != nil {
-		t.Fatal(err)
-	}
-	_, err = historicalBindings(testWork(t, link))
-	assertWorkErrorClass(t, err, ErrorWorkStoreConflict)
-	if !strings.Contains(err.Error(), "not a regular file") {
-		t.Fatalf("error %v", err)
-	}
-}
-
 type definitionFixture struct {
-	root string
-	ply  string // .ply directory
+	root    string
+	ply     string // .ply directory
+	history historyUses
+}
+
+// historyUses serves, per Project, the repository identities that a
+// work-item registry records. It records no registrations.
+type historyUses map[ProjectID][]RepoUse
+
+func (h historyUses) RepoUses(ProjectWork) ([]RepoUse, error) { return nil, nil }
+
+func (h historyUses) RecordedRepos(work ProjectWork) ([]RepoUse, error) {
+	return h[work.Project], nil
 }
 
 const fixtureDefinitions = `{
@@ -242,29 +97,17 @@ func newDefinitionFixture(t *testing.T) definitionFixture {
 		runGitForTest(t, path, "init", "-q")
 	}
 	mustWriteFile(t, filepath.Join(root, workspacedef.File), fixtureDefinitions)
-	history := fmt.Sprintf(`format_version: 11
-registry:
-  epics:
-    - id: ply-master
-      repo_bindings:
-        - repo_id: ply
-          git_common_dir: %[1]s/ply/main/.git
-  tasks:
-    - id: k5
-      repo_id: ply-code-map
-      git_common_dir: %[1]s/ply-code-map/.git
-    - id: old
-      repo_id: retired
-      git_common_dir: /elsewhere/retired/.git
-  worktree_operations: []
-`, root)
-	writeWorkItems(t, root, history, "ply")
 	mustWriteFile(t, filepath.Join(root, MarkerDirectory, projectsLock), "")
-	return definitionFixture{root: root, ply: filepath.Join(root, MarkerDirectory)}
+	history := historyUses{"ply": {
+		{Kind: RepoUseEpic, ID: "ply-master", RepoID: "ply", GitCommonDir: root + "/ply/main/.git"},
+		{Kind: RepoUseTask, ID: "k5", RepoID: "ply-code-map", GitCommonDir: root + "/ply-code-map/.git"},
+		{Kind: RepoUseTask, ID: "old", RepoID: "retired", GitCommonDir: "/elsewhere/retired/.git"},
+	}}
+	return definitionFixture{root: root, ply: filepath.Join(root, MarkerDirectory), history: history}
 }
 
 func (f definitionFixture) dependencies(cwd string) Dependencies {
-	return Dependencies{Files: projectCwdFileSystem{systemFileSystem{}, cwd}}
+	return Dependencies{Files: projectCwdFileSystem{systemFileSystem{}, cwd}, RepoUses: f.history}
 }
 
 func (f definitionFixture) add(t *testing.T, cwd, project, repo, path string) (DefinitionRepoResult, error) {
@@ -325,6 +168,7 @@ func (f definitionFixture) definitions(t *testing.T) workspacedef.Definitions {
 }
 
 func TestAddDefinitionRepoAddsRerunsAndConflicts(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	ply := snapshotTree(t, f.ply)
 	before := f.definitions(t)
@@ -359,6 +203,7 @@ func TestAddDefinitionRepoAddsRerunsAndConflicts(t *testing.T) {
 }
 
 func TestAddDefinitionRepoRejectsDifferentHistoricalCommonDir(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	state := f.state(t)
 	_, err := f.add(t, f.root, "ply", "retired", "retired")
@@ -370,8 +215,9 @@ func TestAddDefinitionRepoRejectsDifferentHistoricalCommonDir(t *testing.T) {
 }
 
 func TestAddDefinitionRepoRejectsConflictingHistory(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
-	writeWorkItems(t, f.root, envelope(RegistryFormat, "tasks:\n  - repo_id: retired\n    git_common_dir: /a/.git\n  - repo_id: retired\n    git_common_dir: /b/.git\n"), "app")
+	f.history["app"] = []RepoUse{{Kind: RepoUseTask, RepoID: "retired", GitCommonDir: "/a/.git"}, {Kind: RepoUseTask, RepoID: "retired", GitCommonDir: "/b/.git"}}
 	state := f.state(t)
 	_, err := f.add(t, f.root, "app", "retired", "retired")
 	assertWorkErrorClass(t, err, ErrorWorkIdentityConflict)
@@ -379,6 +225,7 @@ func TestAddDefinitionRepoRejectsConflictingHistory(t *testing.T) {
 }
 
 func TestAddDefinitionRepoValidatesGitRoot(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	if err := os.MkdirAll(filepath.Join(f.root, "ply", "main", "sub"), 0o755); err != nil {
 		t.Fatal(err)
@@ -401,6 +248,7 @@ func TestAddDefinitionRepoValidatesGitRoot(t *testing.T) {
 }
 
 func TestAddDefinitionRepoStoresCanonicalPathAndAcceptsNestedUnbornRepo(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	nested := filepath.Join(f.root, "ply", "main", "nested")
 	if err := os.Mkdir(nested, 0o755); err != nil {
@@ -425,6 +273,7 @@ func TestAddDefinitionRepoStoresCanonicalPathAndAcceptsNestedUnbornRepo(t *testi
 }
 
 func TestAddDefinitionRepoRejectsInvalidRequests(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	outside := physicalPath(t, t.TempDir())
 	runGitForTest(t, outside, "init", "-q")
@@ -448,6 +297,7 @@ func TestAddDefinitionRepoRejectsInvalidRequests(t *testing.T) {
 }
 
 func TestAddDefinitionRepoRejectsInvalidCurrentDefinitions(t *testing.T) {
+	t.Parallel()
 	for name, tc := range map[string]struct {
 		edit  func(string) string
 		class ErrorClass
@@ -486,6 +336,7 @@ func TestAddDefinitionRepoRejectsInvalidCurrentDefinitions(t *testing.T) {
 }
 
 func TestAddDefinitionRepoWaitsForProjectsLock(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	lock, err := filelock.Acquire(filepath.Join(f.ply, projectsLock), filelock.Options{})
 	if err != nil {
@@ -510,6 +361,7 @@ func TestAddDefinitionRepoWaitsForProjectsLock(t *testing.T) {
 }
 
 func TestDefinitionUpdateErrorMapping(t *testing.T) {
+	t.Parallel()
 	path := "/w/" + workspacedef.File
 	replaceErr := errors.New("replace failed")
 	for name, tc := range map[string]struct {
@@ -548,6 +400,7 @@ func TestDefinitionUpdateErrorMapping(t *testing.T) {
 }
 
 func TestCheckDefinitionsValidatesCurrentFileWithoutLockOrWrite(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	lock, err := filelock.Acquire(filepath.Join(f.ply, projectsLock), filelock.Options{})
 	if err != nil {
@@ -574,6 +427,7 @@ func TestCheckDefinitionsValidatesCurrentFileWithoutLockOrWrite(t *testing.T) {
 // A repository belongs to exactly one Project: the same repository ID under
 // two Projects is rejected wherever definitions are resolved.
 func TestDefinitionsRejectRepositoryInTwoProjects(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	shared := strings.Replace(fixtureDefinitions, `"repos": [{"id": "app", "path": "app/main"}]`, `"repos": [{"id": "app", "path": "app/main"}, {"id": "ply", "path": "ply/main"}]`, 1)
 	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), shared)

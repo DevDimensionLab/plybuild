@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -17,15 +18,15 @@ type changesWorkingDirectory struct {
 
 func (f changesWorkingDirectory) Getwd() (string, error) { return f.root, nil }
 
-func changesFixture(t *testing.T) (workspace.Dependencies, string) {
+func changesFixture(t *testing.T) (taskwork.Dependencies, string) {
 	t.Helper()
 	root, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = changesWorkingDirectory{d.Files, root}
-	if _, err := workspace.Init(d); err != nil {
+	if _, err := workspace.Init(d.Dependencies); err != nil {
 		t.Fatal(err)
 	}
 	return d, root
@@ -69,7 +70,7 @@ func writeChangeFile(t *testing.T, root, relative, content string) string {
 func TestChangesAreContentBoundAndReadOnly(t *testing.T) {
 	d, root := changesFixture(t)
 	defineChangeProject(t, root)
-	first, err := ReadChanges(d)
+	first, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +83,7 @@ func TestChangesAreContentBoundAndReadOnly(t *testing.T) {
 		t.Fatalf("read created files: %v", entries)
 	}
 	p := writeChangeFile(t, root, "work-items.yaml", emptyRegistry+"# content-one\n")
-	second, err := ReadChanges(d)
+	second, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,7 +95,7 @@ func TestChangesAreContentBoundAndReadOnly(t *testing.T) {
 	}
 	writeChangeFile(t, root, "work-items.lock", "lock bytes are not facts")
 	writeChangeFile(t, root, "unrelated.json", "not a register")
-	third, err := ReadChanges(d)
+	third, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -102,7 +103,7 @@ func TestChangesAreContentBoundAndReadOnly(t *testing.T) {
 		t.Fatal("mtime or unrelated file invalidated content digest")
 	}
 	writeChangeFile(t, root, "work-items.yaml", emptyRegistry+"# content-two\n")
-	fourth, err := ReadChanges(d)
+	fourth, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +115,7 @@ func TestChangesAreContentBoundAndReadOnly(t *testing.T) {
 func TestChangesCoverAllReadModelOwners(t *testing.T) {
 	d, root := changesFixture(t)
 	defineChangeProject(t, root)
-	previous, err := ReadChanges(d)
+	previous, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +128,7 @@ func TestChangesCoverAllReadModelOwners(t *testing.T) {
 	if err := os.WriteFile(definitions, append(raw, '\n'), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if current, err := ReadChanges(d); err != nil || current.RegistrySHA256 == nil || *previous.RegistrySHA256 == *current.RegistrySHA256 {
+	if current, err := ReadChanges(d.Dependencies); err != nil || current.RegistrySHA256 == nil || *previous.RegistrySHA256 == *current.RegistrySHA256 {
 		t.Fatalf("not covered: ply-workspace.json %v", err)
 	} else {
 		previous = current
@@ -142,7 +143,7 @@ func TestChangesCoverAllReadModelOwners(t *testing.T) {
 			content = emptyRegistry + "# one\n"
 		}
 		writeChangeFile(t, root, relative, content)
-		current, err := ReadChanges(d)
+		current, err := ReadChanges(d.Dependencies)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -157,7 +158,7 @@ func TestChangesCoverAllReadModelOwners(t *testing.T) {
 	writeChangeFile(t, root, "workflow-runs/runs/wfr_a/state.json", "not a read-model owner")
 	// Project metadata lives in ply-workspace.json.
 	writeChangeFile(t, root, "project-metadata.json", "not a read-model owner")
-	current, err := ReadChanges(d)
+	current, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -180,7 +181,7 @@ func TestChangesExposeUnknownWithoutFollowingSymlinks(t *testing.T) {
 	if err := os.Symlink(external, lifecycle); err != nil {
 		t.Fatal(err)
 	}
-	result, err := ReadChanges(d)
+	result, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +199,7 @@ func TestChangesDetectMovementBetweenPasses(t *testing.T) {
 	d, root := changesFixture(t)
 	defineChangeProject(t, root)
 	writeChangeFile(t, root, "work-item-lifecycle.json", "before")
-	result, err := readChanges(d, func() { writeChangeFile(t, root, "work-item-lifecycle.json", "after") })
+	result, err := readChanges(d.Dependencies, func() { writeChangeFile(t, root, "work-item-lifecycle.json", "after") })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -210,7 +211,7 @@ func TestChangesDetectMovementBetweenPasses(t *testing.T) {
 func TestChangesTrackUnexpectedJournalEntriesAndModes(t *testing.T) {
 	d, root := changesFixture(t)
 	defineChangeProject(t, root)
-	current, err := ReadChanges(d)
+	current, err := ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +219,7 @@ func TestChangesTrackUnexpectedJournalEntriesAndModes(t *testing.T) {
 	for _, relative := range []string{"task-process/v1/task-a/unexpected.txt", "task-process/v1/task-a/.unexpected"} {
 		before = current
 		writeChangeFile(t, root, relative, "changes read validity")
-		current, err = ReadChanges(d)
+		current, err = ReadChanges(d.Dependencies)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -227,14 +228,14 @@ func TestChangesTrackUnexpectedJournalEntriesAndModes(t *testing.T) {
 		}
 	}
 	p := writeChangeFile(t, root, "task-process/v1/task-a/000000001.json", "{}")
-	before, err = ReadChanges(d)
+	before, err = ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err := os.Chmod(p, 0644); err != nil {
 		t.Fatal(err)
 	}
-	current, err = ReadChanges(d)
+	current, err = ReadChanges(d.Dependencies)
 	if err != nil {
 		t.Fatal(err)
 	}

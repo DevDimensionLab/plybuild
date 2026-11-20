@@ -15,6 +15,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -45,11 +46,11 @@ func hiWorkspace(t *testing.T, root string) (humaninput.Dependencies, string) {
 	if err := os.Chdir(root); err != nil {
 		t.Fatal(err)
 	}
-	w := workspace.SystemDependencies()
-	if _, err := workspace.Init(w); err != nil {
+	w := taskwork.SystemDependencies()
+	if _, err := workspace.Init(w.Dependencies); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := workspace.AddProject(w, workspace.ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: filepath.Join(root, "ply"), Repos: []workspace.RepoInput{{RepoID: "ply", Path: repo}}}); err != nil {
+	if _, err := workspace.AddProject(w.Dependencies, workspace.ProjectAddInput{ProjectID: "ply", Name: "Ply", Wrapper: filepath.Join(root, "ply"), Repos: []workspace.RepoInput{{RepoID: "ply", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
 	clock := time.Date(2026, 10, 18, 18, 0, 0, 0, time.UTC)

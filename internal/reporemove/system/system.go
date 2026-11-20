@@ -29,6 +29,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/gitworktree"
 	establish "github.com/devdimensionlab/plybuild/internal/repoestablish/system"
 	"github.com/devdimensionlab/plybuild/internal/reporemove"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
@@ -109,7 +110,7 @@ func classify(err error, conflicts map[string]bool, otherwise error) error {
 }
 
 func atRoot(root string) (workspace.Dependencies, error) {
-	d, err := workspace.AtRoot(workspace.SystemDependencies(), root)
+	d, err := workspace.AtRoot(taskwork.SystemDependencies().Dependencies, root)
 	if err != nil {
 		return d, classified{reporemove.ErrInvalid, err}
 	}

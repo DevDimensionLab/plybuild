@@ -14,8 +14,6 @@ import (
 	"time"
 )
 
-var errInjected = errors.New("injected failure")
-
 type recordingFileSystem struct {
 	cwd             string
 	operations      []string
@@ -179,6 +177,7 @@ func (file *recordingFile) Close() error {
 }
 
 func TestInitPublishesCanonicalMarkerAtomically(t *testing.T) {
+	t.Parallel()
 	root := physicalPath(t, t.TempDir())
 	filesystem := newRecordingFileSystem(root)
 
@@ -248,6 +247,7 @@ func TestInitPublishesCanonicalMarkerAtomically(t *testing.T) {
 }
 
 func TestInitUsesPhysicalSymlinkRoot(t *testing.T) {
+	t.Parallel()
 	parent := t.TempDir()
 	physical := filepath.Join(parent, "physical")
 	alias := filepath.Join(parent, "alias")
@@ -272,6 +272,7 @@ func TestInitUsesPhysicalSymlinkRoot(t *testing.T) {
 }
 
 func TestInitCompatibleMarkerIsIdempotentWithoutMutation(t *testing.T) {
+	t.Parallel()
 	root := physicalPath(t, t.TempDir())
 	markerPath := filepath.Join(root, MarkerDirectory, MarkerFile)
 	if err := os.Mkdir(filepath.Dir(markerPath), 0o755); err != nil {
@@ -315,6 +316,7 @@ func TestInitCompatibleMarkerIsIdempotentWithoutMutation(t *testing.T) {
 }
 
 func TestInitRejectsInvalidMarkers(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		marker func(string) string
@@ -341,6 +343,7 @@ func TestInitRejectsInvalidMarkers(t *testing.T) {
 }
 
 func TestInitRejectsReservedPathAndMarkerTypes(t *testing.T) {
+	t.Parallel()
 	t.Run("reserved path file", func(t *testing.T) {
 		root := physicalPath(t, t.TempDir())
 		if err := os.WriteFile(filepath.Join(root, MarkerDirectory), []byte("owned"), 0o600); err != nil {
@@ -398,6 +401,7 @@ func TestInitRejectsReservedPathAndMarkerTypes(t *testing.T) {
 // A workspace inside another one is allowed; the nearest .ply wins, as with
 // Git repositories. Ancestors are not inspected at all.
 func TestInitInsideAnotherWorkspaceCreatesTheNearest(t *testing.T) {
+	t.Parallel()
 	parent := physicalPath(t, t.TempDir())
 	child := filepath.Join(parent, "child")
 	if err := os.Mkdir(child, 0o755); err != nil {
@@ -416,12 +420,13 @@ func TestInitInsideAnotherWorkspaceCreatesTheNearest(t *testing.T) {
 	if err := os.Mkdir(nested, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if root, err := locateContainingWorkspace(SystemDependencies().Files, nested); err != nil || root != child {
+	if root, err := LocateContainingWorkspace(SystemDependencies().Files, nested); err != nil || root != child {
 		t.Fatalf("nearest workspace = %q, %v", root, err)
 	}
 }
 
 func TestInitClassifiesPathFailures(t *testing.T) {
+	t.Parallel()
 	for _, operation := range []string{"getwd", "eval", "stat"} {
 		t.Run(operation, func(t *testing.T) {
 			root := physicalPath(t, t.TempDir())
@@ -434,6 +439,7 @@ func TestInitClassifiesPathFailures(t *testing.T) {
 }
 
 func TestInitCleansOwnStagingOnPublicationFailures(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		operation  string
@@ -470,6 +476,7 @@ func TestInitCleansOwnStagingOnPublicationFailures(t *testing.T) {
 }
 
 func TestInitPreservesPrimaryFailureWhenCleanupFails(t *testing.T) {
+	t.Parallel()
 	root := physicalPath(t, t.TempDir())
 	filesystem := newRecordingFileSystem(root)
 	filesystem.fail["write"] = errInjected
@@ -485,6 +492,7 @@ func TestInitPreservesPrimaryFailureWhenCleanupFails(t *testing.T) {
 }
 
 func TestInitHandlesConcurrentPublish(t *testing.T) {
+	t.Parallel()
 	t.Run("identical marker", func(t *testing.T) {
 		root := physicalPath(t, t.TempDir())
 		filesystem := newRecordingFileSystem(root)
@@ -526,11 +534,13 @@ func TestInitHandlesConcurrentPublish(t *testing.T) {
 }
 
 func TestInitZeroDependenciesHasNoOSEffect(t *testing.T) {
+	t.Parallel()
 	_, err := Init(Dependencies{})
 	assertWorkspaceError(t, err, ErrorIO, "filesystem dependency is required")
 }
 
 func TestInvalidArgumentsIsTyped(t *testing.T) {
+	t.Parallel()
 	err := InvalidArguments("bad input")
 	assertWorkspaceError(t, err, ErrorInvalidArguments, "bad input")
 }
@@ -548,15 +558,6 @@ func writeMarkerForTest(t *testing.T, root string, contents []byte) {
 	if err := os.WriteFile(filepath.Join(reserved, MarkerFile), contents, 0o644); err != nil {
 		t.Fatal(err)
 	}
-}
-
-func physicalPath(t *testing.T, path string) string {
-	t.Helper()
-	physical, err := filepath.EvalSymlinks(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return filepath.Clean(physical)
 }
 
 func assertMode(t *testing.T, path string, want fs.FileMode) {
@@ -611,6 +612,7 @@ func firstOperationWithPrefix(operations []string, prefix string) string {
 // Every workspace has ply-workspace.json; init creates it without Projects
 // and a rerun leaves existing definitions untouched.
 func TestInitCreatesEmptyDefinitions(t *testing.T) {
+	t.Parallel()
 	root := physicalPath(t, t.TempDir())
 	if _, err := Init(Dependencies{Files: newRecordingFileSystem(root)}); err != nil {
 		t.Fatal(err)

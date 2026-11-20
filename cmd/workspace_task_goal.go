@@ -7,13 +7,14 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
+func newWorkspaceTaskGoalCommand(d taskwork.Dependencies) *cobra.Command {
 	goal := &cobra.Command{Use: "goal", Short: "Register supplied first Goals without constructing native envelopes"}
-	var in workspace.FirstGoalInput
+	var in taskwork.FirstGoalInput
 	var project, repo, epic, task, document, format, confirmation, provider, model, effort, planID, planStep, actor, role string
 	var additional []string
 	var apply bool
@@ -25,17 +26,17 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 			return workspace.WorkInvalidArguments("--role must be developer or reviewer")
 		}
 		task = args[0]
-		in.TaskID = workspace.TaskID(task)
-		in.Target = workspace.QueueTargetInput{ProjectID: workspace.ProjectID(project), RepoID: workspace.RepoID(repo), EpicID: workspace.EpicID(epic)}
+		in.TaskID = taskwork.TaskID(task)
+		in.Target = taskwork.QueueTargetInput{ProjectID: workspace.ProjectID(project), RepoID: workspace.RepoID(repo), EpicID: taskwork.EpicID(epic)}
 		if c.Flags().Changed("document") {
-			in.Documents = []workspace.GoalDocumentInput{{ID: "spec", Locator: document}}
+			in.Documents = []taskwork.GoalDocumentInput{{ID: "spec", Locator: document}}
 		}
 		for _, doc := range additional {
 			id, path, ok := strings.Cut(doc, "=")
 			if !ok {
 				return workspace.WorkInvalidArguments("--extra-document requires id=/absolute/path")
 			}
-			in.Documents = append(in.Documents, workspace.GoalDocumentInput{ID: id, Locator: path})
+			in.Documents = append(in.Documents, taskwork.GoalDocumentInput{ID: id, Locator: path})
 		}
 		if provider != "" {
 			in.Executor.Provider = &provider
@@ -50,7 +51,7 @@ func newWorkspaceTaskGoalCommand(d workspace.Dependencies) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		out, err := workspace.RegisterFirstGoal(d, in, apply, confirmation)
+		out, err := taskwork.RegisterFirstGoal(d, in, apply, confirmation)
 		if format == "json" {
 			if e := json.NewEncoder(c.OutOrStdout()).Encode(out); e != nil {
 				return e

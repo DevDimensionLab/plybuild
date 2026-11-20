@@ -4,25 +4,26 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
-func newWorkspaceEpicCreateCommand(d workspace.Dependencies) *cobra.Command {
-	var in workspace.EpicCreateInput
+func newWorkspaceEpicCreateCommand(d taskwork.Dependencies) *cobra.Command {
+	var in taskwork.EpicCreateInput
 	var project, repo, format string
 	c := &cobra.Command{Use: "create <epic-id>", Short: "Create one Epic branch and worktree from an explicit ordinary parent", Long: "Create one repo-specific Epic from an explicitly selected clean ordinary parent checkout. Persist intent before additive Git effects. Exact retries recover no-effect, branch-only or exact effects; unknown effects require inspection. With an active ply-workspace.json the Epic definition is added there before the runtime Epic. Output reports the observed worktree and config effects (not_attempted, no_effect, partial, completed or unknown). This creates no Task, commit, agent or product QA. Use adopt for an existing worktree. The parent must be an existing commit; a repository without commits needs a first commit before an Epic can be created or adopted.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if e := validateWorkFormat(format); e != nil {
 			return e
 		}
-		id, e := workspace.ParseEpicID(args[0])
+		id, e := taskwork.ParseEpicID(args[0])
 		if e != nil {
 			return e
 		}
 		in.EpicID = id
 		in.ProjectID = workspace.ProjectID(project)
 		in.RepoID = workspace.RepoID(repo)
-		result, e := workspace.CreateEpic(d, in)
+		result, e := taskwork.CreateEpic(d, in)
 		if result.Outcome == "" && e != nil {
 			result.Outcome = "rejected"
 		}

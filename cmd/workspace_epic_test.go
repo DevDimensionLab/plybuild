@@ -5,22 +5,22 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 func TestWorkspaceEpicCommandsRenderMutationAndCanonicalJSON(t *testing.T) {
 	oid := strings.Repeat("a", 40)
 	tree := strings.Repeat("b", 40)
-	epic := workspace.EpicRecord{ID: "epic", Title: "Epic", ProjectID: "ply", RepoBindings: []workspace.EpicRepoBinding{{RepoID: "ply", GitCommonDir: "/repo/.git", Worktree: workspace.EpicWorktreeBinding{ID: "wt_11111111111111111111111111111111", OwnerKind: "epic", OwnerID: "epic", Origin: "adopted", Locator: "/repo/epic", Ref: "refs/heads/epic", OID: oid, Tree: tree, GitCommonDir: "/repo/.git"}}}}
+	epic := taskwork.EpicRecord{ID: "epic", Title: "Epic", ProjectID: "ply", RepoBindings: []taskwork.EpicRepoBinding{{RepoID: "ply", GitCommonDir: "/repo/.git", Worktree: taskwork.EpicWorktreeBinding{ID: "wt_11111111111111111111111111111111", OwnerKind: "epic", OwnerID: "epic", Origin: "adopted", Locator: "/repo/epic", Ref: "refs/heads/epic", OID: oid, Tree: tree, GitCommonDir: "/repo/.git"}}}}
 	services := workspaceEpicServices{
-		adopt: func(input workspace.EpicAdoptInput) (workspace.EpicMutationResult, error) {
-			return workspace.EpicMutationResult{Workspace: "/workspace", Epic: epic, Created: true}, nil
+		adopt: func(input taskwork.EpicAdoptInput) (taskwork.EpicMutationResult, error) {
+			return taskwork.EpicMutationResult{Workspace: "/workspace", Epic: epic, Created: true}, nil
 		},
-		show: func(id workspace.EpicID) (workspace.EpicReadbackResult, error) {
-			return workspace.EpicReadbackResult{Workspace: "/workspace", Epic: epic, Observed: []workspace.EpicObservedRepo{{RepoID: "ply"}}, Freshness: []workspace.EpicFreshnessRepo{{RepoID: "ply", Locator: "unknown", Ref: "unknown", OID: "unknown", Tree: "unknown", GitCommonDir: "unknown", Clean: "unknown", InventoryMatch: "unknown"}}, Reasons: []string{"epic_observation_unknown"}}, nil
+		show: func(id taskwork.EpicID) (taskwork.EpicReadbackResult, error) {
+			return taskwork.EpicReadbackResult{Workspace: "/workspace", Epic: epic, Observed: []taskwork.EpicObservedRepo{{RepoID: "ply"}}, Freshness: []taskwork.EpicFreshnessRepo{{RepoID: "ply", Locator: "unknown", Ref: "unknown", OID: "unknown", Tree: "unknown", GitCommonDir: "unknown", Clean: "unknown", InventoryMatch: "unknown"}}, Reasons: []string{"epic_observation_unknown"}}, nil
 		},
-		list: func() (workspace.EpicListResult, error) {
-			return workspace.EpicListResult{Workspace: "/workspace", Epics: []workspace.EpicRecord{epic}}, nil
+		list: func() (taskwork.EpicListResult, error) {
+			return taskwork.EpicListResult{Workspace: "/workspace", Epics: []taskwork.EpicRecord{epic}}, nil
 		},
 	}
 	stdout, err := executeEpicCommand(t, services, "adopt", "epic", "--title", "Epic", "--project", "ply", "--repo", "ply", "--worktree", "/repo/epic", "--ref", "refs/heads/epic", "--expected-oid", oid)

@@ -20,6 +20,7 @@ import (
 func (f definitionFixture) metadataDependencies() Dependencies {
 	d := SystemDependencies()
 	d.Files = projectCwdFileSystem{d.Files, f.root}
+	d.RepoUses = f.history
 	return d
 }
 
@@ -40,6 +41,7 @@ func requireAbsent(t *testing.T, path string) {
 }
 
 func TestProjectMetadataIsStoredInDefinitions(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	if err := os.Mkdir(filepath.Join(f.root, "ply", "planning"), 0o755); err != nil {
 		t.Fatal(err)
@@ -78,6 +80,7 @@ func TestProjectMetadataIsStoredInDefinitions(t *testing.T) {
 }
 
 func TestProjectMetadataReadbackResolvesPhysicalPaths(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	planning := filepath.Join(f.root, "ply", "planning")
 	if err := os.Mkdir(planning, 0o755); err != nil {
@@ -94,6 +97,7 @@ func TestProjectMetadataReadbackResolvesPhysicalPaths(t *testing.T) {
 }
 
 func TestProjectMetadataSurvivesMissingDirectoriesAndClears(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	planning := filepath.Join(f.root, "ply", "planning")
 	if err := os.Mkdir(planning, 0o755); err != nil {
@@ -136,6 +140,7 @@ func TestProjectMetadataSurvivesMissingDirectoriesAndClears(t *testing.T) {
 }
 
 func TestProjectMetadataRemoveMissingCompanionThroughSymlink(t *testing.T) {
+	t.Parallel()
 	for _, relative := range []string{"planning", filepath.Join("nested", "planning")} {
 		t.Run(relative, func(t *testing.T) {
 			f := newDefinitionFixture(t)
@@ -164,6 +169,7 @@ func TestProjectMetadataRemoveMissingCompanionThroughSymlink(t *testing.T) {
 }
 
 func TestProjectMetadataNormalizesAliases(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	planning := filepath.Join(f.root, "ply", "planning")
 	if err := os.Mkdir(planning, 0o755); err != nil {
@@ -183,6 +189,7 @@ func TestProjectMetadataNormalizesAliases(t *testing.T) {
 }
 
 func TestProjectMetadataRejectsBeforeWriting(t *testing.T) {
+	t.Parallel()
 	for name, tc := range map[string]struct {
 		edit  func(string) string
 		in    ProjectMetadataInput
@@ -228,6 +235,7 @@ func TestProjectMetadataRejectsBeforeWriting(t *testing.T) {
 }
 
 func TestProjectMetadataRejectsNonUTF8PathBeforeFilesystemAccess(t *testing.T) {
+	t.Parallel()
 	in := ProjectMetadataInput{Operation: ProjectCompanionAdd, ProjectID: "ply", Role: CompanionDocs, Locator: string([]byte{0xff})}
 	if err := in.Validate(); err == nil {
 		t.Fatal("non-UTF-8 path could be replaced during JSON serialization")
@@ -235,6 +243,7 @@ func TestProjectMetadataRejectsNonUTF8PathBeforeFilesystemAccess(t *testing.T) {
 }
 
 func TestProjectMetadataParallelRegistrationsAreAllKept(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	var group sync.WaitGroup
 	errorsOut := make(chan error, 3)
@@ -259,6 +268,7 @@ func TestProjectMetadataParallelRegistrationsAreAllKept(t *testing.T) {
 }
 
 func TestProjectMetadataWaitsForProjectsLock(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	lock, err := filelock.Acquire(filepath.Join(f.ply, projectsLock), filelock.Options{})
 	if err != nil {
@@ -294,6 +304,7 @@ func TestProjectMetadataWaitsForProjectsLock(t *testing.T) {
 // plyapp-server reads project.companions[] {role, locator} and
 // repositories[].wrapper (string or null) from project show.
 func TestProjectMetadataInProjectShowAndListJSON(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	if _, err := f.add(t, f.root, "ply", "ply-code-map", "ply-code-map"); err != nil {
 		t.Fatal(err)
@@ -354,6 +365,7 @@ func TestProjectMetadataInProjectShowAndListJSON(t *testing.T) {
 
 // A metadata change answers with project show and whether it changed.
 func TestProjectMetadataMutationJSONIsProjectShowWithChanged(t *testing.T) {
+	t.Parallel()
 	f := newDefinitionFixture(t)
 	out := f.update(t, ProjectMetadataInput{Operation: ProjectCompanionAdd, ProjectID: "ply", Role: CompanionDocs, Locator: "ply"})
 	raw, err := MarshalProjectMetadataMutation(out)
@@ -385,6 +397,7 @@ func TestProjectMetadataMutationJSONIsProjectShowWithChanged(t *testing.T) {
 }
 
 func TestProjectsLockErrorMatchesSnapshotLock(t *testing.T) {
+	t.Parallel()
 	path := "/w/.ply/projects.lock"
 	cause := errors.New("cause")
 	lockErr := &filelock.Error{Op: "not-regular", Path: path}

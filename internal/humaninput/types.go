@@ -6,7 +6,7 @@ package humaninput
 import (
 	"time"
 
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 )
 
 // Schema 1 of cooperative_agent_v1. Nullable fields are always present as
@@ -269,7 +269,7 @@ type ErrorResult struct {
 }
 
 type Dependencies struct {
-	Workspace workspace.Dependencies
+	Workspace taskwork.Dependencies
 	Now       func() time.Time
 	// Fault is an in-process test seam around answer publication.
 	Fault func(string) error
@@ -278,7 +278,7 @@ type Dependencies struct {
 }
 
 func SystemDependencies() Dependencies {
-	return Dependencies{Workspace: workspace.SystemDependencies(), Now: time.Now}
+	return Dependencies{Workspace: taskwork.SystemDependencies(), Now: time.Now}
 }
 
 func (d Dependencies) now() string {

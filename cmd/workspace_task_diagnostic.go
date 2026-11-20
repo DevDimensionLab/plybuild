@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,7 @@ func taskContentCommandError(cmd *cobra.Command, format string, err error) error
 	if format != "json" || err == nil {
 		return err
 	}
-	value := workspace.TaskContentDiagnosticValue(err, cmd.CommandPath())
+	value := taskwork.TaskContentDiagnosticValue(err, cmd.CommandPath())
 	if value == nil {
 		return err
 	}

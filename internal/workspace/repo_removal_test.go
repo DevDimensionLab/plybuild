@@ -11,25 +11,28 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
 
-// registrationsStore answers SnapshotRegistrations with a fixed typed registry.
+// registrationsStore answers RepoUses with fixed uses or a fixed error.
 type registrationsStore struct {
-	WorkItemStore
-	registry WorkItemRegistry
+	recorded RepoUses
+	uses     []RepoUse
+	err      error
 }
 
-func (s registrationsStore) SnapshotRegistrations(ProjectWork) (WorkItemRegistry, error) {
-	return s.registry, nil
+func (s registrationsStore) RepoUses(ProjectWork) ([]RepoUse, error) {
+	return s.uses, s.err
+}
+
+func (s registrationsStore) RecordedRepos(work ProjectWork) ([]RepoUse, error) {
+	return s.recorded.RecordedRepos(work)
 }
 
 // newEpicFixture is the definition fixture as an Epic workspace: the defined
 // Epic is committed and adopted natively instead of being read from the
-// partial K5 history registry.
+// partial K5 history.
 func newEpicFixture(t *testing.T) definitionFixture {
 	t.Helper()
 	f := newDefinitionFixture(t)
-	if err := os.Remove(testWork(t, f.root, "ply").Registry()); err != nil {
-		t.Fatal(err)
-	}
+	delete(f.history, "ply")
 	repo := filepath.Join(f.root, "ply", "main")
 	runLocalGit(t, repo, "symbolic-ref", "HEAD", "refs/heads/master")
 	runLocalGit(t, repo, "-c", "user.name=Ply tests", "-c", "user.email=tests@example.invalid", "commit", "-q", "--allow-empty", "-m", "fixture")
@@ -86,6 +89,7 @@ func projectClass(err error) ErrorClass {
 }
 
 func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
+	t.Parallel()
 	const repo RepoID = "ply-code-map"
 	for name, tc := range map[string]struct {
 		setup    func(*testing.T, definitionFixture, *Dependencies)
@@ -99,19 +103,19 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 		"last repository": {project: "app", repo: "app", class: ErrorProjectInvalidArguments, reason: "at least one",
 			setup: func(*testing.T, definitionFixture, *Dependencies) {}},
 		"Epic binding": {class: ErrorProjectConflict, reason: "Epic e in", setup: func(_ *testing.T, _ definitionFixture, d *Dependencies) {
-			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{Epics: []EpicRecord{{ID: "e", RepoBindings: []EpicRepoBinding{{RepoID: repo}}}}}}
+			d.RepoUses = registrationsStore{recorded: d.RepoUses, uses: []RepoUse{{Kind: RepoUseEpic, ID: "e", RepoID: repo}}}
 		}},
 		"Task binding with empty common dir": {class: ErrorProjectConflict, reason: "Task k in", setup: func(_ *testing.T, _ definitionFixture, d *Dependencies) {
-			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{Tasks: []TaskRecord{{ID: "k", RepoID: repo, GitCommonDir: "", WorktreeState: WorkItemRetired}}}}
+			d.RepoUses = registrationsStore{recorded: d.RepoUses, uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: repo, GitCommonDir: ""}}}
 		}},
 		"worktree operation": {class: ErrorProjectConflict, reason: "worktree operation o", setup: func(_ *testing.T, _ definitionFixture, d *Dependencies) {
-			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{WorktreeOperations: []WorktreeOperationRecord{{ID: "o", RepoID: repo}}}}
+			d.RepoUses = registrationsStore{recorded: d.RepoUses, uses: []RepoUse{{Kind: RepoUseWorktreeOperation, ID: "o", RepoID: repo}}}
 		}},
 		"Epic create operation": {class: ErrorProjectConflict, reason: "Epic create operation o", setup: func(_ *testing.T, _ definitionFixture, d *Dependencies) {
-			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{EpicCreateOperations: []EpicCreateOperation{{ID: "o", Request: EpicCreateInput{RepoID: repo}}}}}
+			d.RepoUses = registrationsStore{recorded: d.RepoUses, uses: []RepoUse{{Kind: RepoUseEpicCreate, ID: "o", RepoID: repo}}}
 		}},
-		"invalid work-item registry": {workItem: ErrorWorkStoreConflict, reason: "invalid work-item registry", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
-			writeWorkItems(t, f.root, "format_version: [\n", "ply")
+		"invalid work-item registry": {workItem: ErrorWorkStoreConflict, reason: "invalid work-item registry", setup: func(_ *testing.T, _ definitionFixture, d *Dependencies) {
+			d.RepoUses = registrationsStore{recorded: d.RepoUses, err: WorkError(ErrorWorkStoreConflict, "invalid work-item registry", nil)}
 		}},
 		"repository path inside wrapper": {class: ErrorProjectConflict, reason: "repository nested of Project app is inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
 			f.editDefinitions(t, func(d *workspacedef.Definitions) {
@@ -120,7 +124,7 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 		}},
 		"Epic path inside wrapper": {class: ErrorProjectConflict, reason: "Epic e is inside", setup: func(_ *testing.T, f definitionFixture, d *Dependencies) {
 			locator := filepath.Join(f.root, "ply", "ply-code-map", "epic")
-			d.WorkItems = registrationsStore{d.WorkItems, WorkItemRegistry{Epics: []EpicRecord{{ID: "e", RepoBindings: []EpicRepoBinding{{RepoID: "app", Worktree: EpicWorktreeBinding{Locator: locator}}}}}}}
+			d.RepoUses = registrationsStore{recorded: d.RepoUses, uses: []RepoUse{{Kind: RepoUseEpic, ID: "e", RepoID: "app", Worktree: locator}}}
 		}},
 		"Project root inside wrapper": {class: ErrorProjectConflict, reason: "Project inner has its root inside", setup: func(t *testing.T, f definitionFixture, _ *Dependencies) {
 			f.editDefinitions(t, func(d *workspacedef.Definitions) {
@@ -194,6 +198,7 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 }
 
 func TestRemoveDefinitionRepoUsesExpectedBasis(t *testing.T) {
+	t.Parallel()
 	f := newRemovalFixture(t)
 	d := f.metadataDependencies()
 	_, basis, err := workspacedef.Read(f.root)

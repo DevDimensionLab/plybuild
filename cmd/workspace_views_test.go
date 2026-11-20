@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -19,21 +20,21 @@ type viewCWD struct {
 
 func (f viewCWD) Getwd() (string, error) { return f.root, nil }
 
-func viewFixture(t *testing.T) (workspace.Dependencies, string) {
+func viewFixture(t *testing.T) (taskwork.Dependencies, string) {
 	t.Helper()
 	root, err := filepath.EvalSymlinks(t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = viewCWD{d.Files, root}
-	if _, err := workspace.Init(d); err != nil {
+	if _, err := workspace.Init(d.Dependencies); err != nil {
 		t.Fatal(err)
 	}
 	return d, root
 }
 
-func runWorkspaceView(t *testing.T, d workspace.Dependencies, args ...string) (string, error) {
+func runWorkspaceView(t *testing.T, d taskwork.Dependencies, args ...string) (string, error) {
 	t.Helper()
 	c := newWorkspaceCommand(d)
 	var out bytes.Buffer
@@ -56,7 +57,7 @@ func TestWorkspaceViewsRejectInvalidArgumentsBeforeDependencies(t *testing.T) {
 		{"task", "show", "--progress", "Bad"},
 	} {
 		t.Run(strings.Join(args, " "), func(t *testing.T) {
-			out, err := runWorkspaceView(t, workspace.Dependencies{}, args...)
+			out, err := runWorkspaceView(t, taskwork.Dependencies{}, args...)
 			if err == nil || out != "" {
 				t.Fatalf("err=%v stdout=%q", err, out)
 			}
@@ -142,7 +143,7 @@ func TestCapabilitiesRetainCoreAndAdvertiseReadExtensions(t *testing.T) {
 	}
 	want := map[string]bool{"task.list:progress": false, "task.show:progress": false, "attention:default": false, "epic.list:default": false, "journal.recent:default": false, "worktree.list:default": false, "status:default": false, "workflow.status:default": false}
 	tree := &cobra.Command{Use: "ply"}
-	tree.AddCommand(newWorkspaceCommand(workspace.Dependencies{}), newWorkflowCommand())
+	tree.AddCommand(newWorkspaceCommand(taskwork.Dependencies{}), newWorkflowCommand())
 	for _, op := range v.Extensions {
 		command, remaining, err := tree.Find(op.Command)
 		if err != nil || len(remaining) != 0 || command.Flags().Lookup("format") == nil {

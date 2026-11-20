@@ -5,6 +5,7 @@ import (
 	"io"
 	"sort"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -18,25 +19,25 @@ type workspaceProjectServices struct {
 	list         func() (workspace.ProjectListResult, error)
 }
 
-func newWorkspaceProjectCommand(dependencies workspace.Dependencies) *cobra.Command {
+func newWorkspaceProjectCommand(dependencies taskwork.Dependencies) *cobra.Command {
 	command := newWorkspaceProjectCommandWithServices(workspaceProjectServices{
 		addMember: func(id workspace.ProjectID, repo workspace.RepoInput) (workspace.ProjectResult, error) {
-			return workspace.AddProjectMember(dependencies, id, repo)
+			return workspace.AddProjectMember(dependencies.Dependencies, id, repo)
 		},
 		moveMember: func(id workspace.ProjectID, repo workspace.RepoID, to workspace.RepoInput) (workspace.ProjectResult, error) {
-			return workspace.MoveProjectMember(dependencies, id, repo, to)
+			return workspace.MoveProjectMember(dependencies.Dependencies, id, repo, to)
 		},
 		removeMember: func(id workspace.ProjectID, repo workspace.RepoID) (workspace.DefinitionRepoResult, error) {
-			return workspace.RemoveProjectMember(dependencies, id, repo)
+			return workspace.RemoveProjectMember(dependencies.Dependencies, id, repo)
 		},
 		add: func(input workspace.ProjectAddInput) (workspace.ProjectResult, error) {
-			return workspace.AddProject(dependencies, input)
+			return workspace.AddProject(dependencies.Dependencies, input)
 		},
 		show: func(id workspace.ProjectID) (workspace.ProjectResult, error) {
-			return workspace.ShowProject(dependencies, id)
+			return workspace.ShowProject(dependencies.Dependencies, id)
 		},
 		list: func() (workspace.ProjectListResult, error) {
-			return workspace.ListProjects(dependencies)
+			return workspace.ListProjects(dependencies.Dependencies)
 		},
 	})
 	addWorkspaceProjectMetadataCommands(command, dependencies)

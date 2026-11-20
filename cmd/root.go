@@ -20,7 +20,7 @@ import (
 	"flag"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/buildinfo"
-	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/pkg/config"
 	"github.com/devdimensionlab/plybuild/pkg/context"
 	"github.com/devdimensionlab/plybuild/pkg/file"
@@ -79,7 +79,7 @@ func ExecuteE() error {
 		return nil
 	}
 	if err != nil {
-		if diagnostic := workspace.RegistryError(err); diagnostic != nil && executed != nil {
+		if diagnostic := taskwork.RegistryError(err); diagnostic != nil && executed != nil {
 			format, _ := executed.Flags().GetString("format")
 			if format == "json" {
 				if writeErr := json.NewEncoder(executed.ErrOrStderr()).Encode(diagnostic); writeErr != nil {

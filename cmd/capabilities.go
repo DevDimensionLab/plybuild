@@ -10,6 +10,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/inbox"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
@@ -79,7 +80,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("project.list", "default", workspace.ProjectListReadbackKind, []string{}, []string{}, "none"),
 		operation("project.show", "default", workspace.ProjectReadbackKind, []string{}, []string{}, "none"),
 		operation("task.list", "ready", "WorkspaceTaskQueueReadback@1", []string{"--ready"}, []string{"project", "repo", "epic"}, "all_or_none"),
-		operation("task.list", "registered", workspace.TaskListReadbackKind, []string{}, []string{"project", "repo", "epic"}, "independent_and"),
+		operation("task.list", "registered", taskwork.TaskListReadbackKind, []string{}, []string{"project", "repo", "epic"}, "independent_and"),
 		operation("task.show", "default", "WorkspaceTaskReadback@1", []string{}, []string{}, "none"),
 	}
 	ops[4].ResultSchemas = []capabilitySchema{{"WorkspaceTaskReadback@1", nil}, {"WorkspaceTaskIntegrationReadback@1", &one}, {"WorkspaceTaskReadback@3", &three}}

@@ -1,6 +1,7 @@
 package workspaceview
 
 import (
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
@@ -8,24 +9,24 @@ const WorkflowStatusKind = "WorkflowStatusReadback@1"
 
 type WorkflowStatusOptions struct {
 	SchemaVersion int
-	Filters       workspace.TaskListFilters
+	Filters       taskwork.TaskListFilters
 	IncludeAll    bool
 }
 
 type WorkflowStatus struct {
-	Kind          string                    `json:"kind"`
-	SchemaVersion int                       `json:"schema_version"`
-	Workspace     WorkspaceRef              `json:"workspace"`
-	Filters       workspace.TaskListFilters `json:"filters"`
-	IncludeAll    bool                      `json:"include_all"`
-	ObservedAtUTC string                    `json:"observed_at_utc"`
-	SourceBasis   string                    `json:"source_basis"`
-	Freshness     string                    `json:"freshness"`
-	Projects      []WorkflowStatusProject   `json:"projects"`
-	Epics         []EpicRow                 `json:"epics"`
-	Items         []WorkflowStatusItem      `json:"items"`
-	Counts        WorkflowStatusCounts      `json:"counts"`
-	Diagnostics   []WorkflowDiagnostic      `json:"diagnostics"`
+	Kind          string                   `json:"kind"`
+	SchemaVersion int                      `json:"schema_version"`
+	Workspace     WorkspaceRef             `json:"workspace"`
+	Filters       taskwork.TaskListFilters `json:"filters"`
+	IncludeAll    bool                     `json:"include_all"`
+	ObservedAtUTC string                   `json:"observed_at_utc"`
+	SourceBasis   string                   `json:"source_basis"`
+	Freshness     string                   `json:"freshness"`
+	Projects      []WorkflowStatusProject  `json:"projects"`
+	Epics         []EpicRow                `json:"epics"`
+	Items         []WorkflowStatusItem     `json:"items"`
+	Counts        WorkflowStatusCounts     `json:"counts"`
+	Diagnostics   []WorkflowDiagnostic     `json:"diagnostics"`
 }
 
 type WorkflowStatusProject struct {
@@ -48,20 +49,20 @@ type WorkflowStatusHidden struct {
 }
 
 type WorkflowStatusItem struct {
-	TaskID    workspace.TaskID    `json:"task_id"`
+	TaskID    taskwork.TaskID     `json:"task_id"`
 	ProjectID workspace.ProjectID `json:"project_id"`
 	RepoID    workspace.RepoID    `json:"repo_id"`
-	EpicID    workspace.EpicID    `json:"epic_id"`
-	workspace.TaskListTitle
-	WorktreeState   workspace.WorkItemState  `json:"worktree_state"`
-	TaskLifecycle   workspace.LifecycleState `json:"task_lifecycle"`
-	EpicLifecycle   workspace.LifecycleState `json:"epic_lifecycle"`
-	Category        string                   `json:"category"`
-	Progress        Progress                 `json:"progress"`
-	LastActivityUTC *string                  `json:"last_activity_utc"`
-	Freshness       string                   `json:"freshness"`
-	NextActions     []WorkflowStatusAction   `json:"next_actions"`
-	Queues          []WorkflowStatusQueue    `json:"queues"`
+	EpicID    taskwork.EpicID     `json:"epic_id"`
+	taskwork.TaskListTitle
+	WorktreeState   taskwork.WorkItemState  `json:"worktree_state"`
+	TaskLifecycle   taskwork.LifecycleState `json:"task_lifecycle"`
+	EpicLifecycle   taskwork.LifecycleState `json:"epic_lifecycle"`
+	Category        string                  `json:"category"`
+	Progress        Progress                `json:"progress"`
+	LastActivityUTC *string                 `json:"last_activity_utc"`
+	Freshness       string                  `json:"freshness"`
+	NextActions     []WorkflowStatusAction  `json:"next_actions"`
+	Queues          []WorkflowStatusQueue   `json:"queues"`
 }
 
 // Current distinguishes actionable needs from facts retained by --all. The
@@ -74,20 +75,20 @@ type WorkflowStatusAction struct {
 }
 
 type WorkflowStatusQueue struct {
-	QueueID     string                     `json:"queue_id"`
-	Revision    int                        `json:"revision"`
-	Target      workspace.QueueTarget      `json:"target"`
-	State       string                     `json:"state"`
-	Rank        *int                       `json:"rank"`
-	SpecID      *string                    `json:"spec_id"`
-	Spec        *workspace.TaskRevisionRef `json:"spec"`
-	Goal        *workspace.TaskGoalRef     `json:"goal"`
-	Selection   *workspace.TaskDecisionRef `json:"selection"`
-	Readiness   string                     `json:"readiness"`
-	Freshness   string                     `json:"freshness"`
-	SinceUTC    *string                    `json:"since_utc"`
-	Reasons     []workspace.QueueReason    `json:"reasons"`
-	EvidenceIDs []string                   `json:"evidence_ids"`
+	QueueID     string                    `json:"queue_id"`
+	Revision    int                       `json:"revision"`
+	Target      taskwork.QueueTarget      `json:"target"`
+	State       string                    `json:"state"`
+	Rank        *int                      `json:"rank"`
+	SpecID      *string                   `json:"spec_id"`
+	Spec        *taskwork.TaskRevisionRef `json:"spec"`
+	Goal        *taskwork.TaskGoalRef     `json:"goal"`
+	Selection   *taskwork.TaskDecisionRef `json:"selection"`
+	Readiness   string                    `json:"readiness"`
+	Freshness   string                    `json:"freshness"`
+	SinceUTC    *string                   `json:"since_utc"`
+	Reasons     []taskwork.QueueReason    `json:"reasons"`
+	EvidenceIDs []string                  `json:"evidence_ids"`
 }
 
 type WorkflowDiagnostic struct {

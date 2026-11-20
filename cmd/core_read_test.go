@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -43,7 +44,7 @@ func TestCapabilitiesSkipsRootInitializationAndUsesEmbeddedMetadata(t *testing.T
 				}
 				// Each advertised operation must actually resolve, expose its formats and selectors,
 				// and list only flags supported by the dispatched command.
-				tree := newWorkspaceCommand(workspace.Dependencies{})
+				tree := newWorkspaceCommand(taskwork.Dependencies{})
 				for _, op := range value.Operations {
 					command, remaining, err := tree.Find(op.Command[1:])
 					if err != nil || len(remaining) != 0 {
@@ -99,9 +100,9 @@ func (coreFailWriter) Write([]byte) (int, error) { return 0, errors.New("stdout 
 func TestRegisteredTaskListValidatesBeforeServiceAndAcceptsIndependentFilters(t *testing.T) {
 	for _, args := range [][]string{{"list", "extra"}, {"list", "--format", "yaml"}, {"list", "--epic", ""}, {"list", "--project", ""}, {"list", "--repo", ""}, {"list", "--repo", "Bad"}, {"list", "--project", "ok", "--epic", "BAD"}} {
 		calls := 0
-		out, err := executeTaskCommand(t, workspaceTaskServices{list: func(workspace.TaskListFilters) (workspace.TaskListResult, error) {
+		out, err := executeTaskCommand(t, workspaceTaskServices{list: func(taskwork.TaskListFilters) (taskwork.TaskListResult, error) {
 			calls++
-			return workspace.TaskListResult{}, nil
+			return taskwork.TaskListResult{}, nil
 		}}, args...)
 		if err == nil || !strings.HasPrefix(err.Error(), "workspace_work_invalid_arguments:") || out != "" || calls != 0 {
 			t.Fatalf("args=%v err=%v out=%q calls=%d", args, err, out, calls)
@@ -110,9 +111,9 @@ func TestRegisteredTaskListValidatesBeforeServiceAndAcceptsIndependentFilters(t 
 	for _, flags := range [][]string{{}, {"--project", "p"}, {"--repo", "r"}, {"--epic", "e"}, {"--project", "p", "--repo", "r", "--epic", "e"}} {
 		for _, format := range []string{"text", "json"} {
 			calls := 0
-			services := workspaceTaskServices{list: func(f workspace.TaskListFilters) (workspace.TaskListResult, error) {
+			services := workspaceTaskServices{list: func(f taskwork.TaskListFilters) (taskwork.TaskListResult, error) {
 				calls++
-				return workspace.TaskListResult{Workspace: "/fixture", Filters: f}, nil
+				return taskwork.TaskListResult{Workspace: "/fixture", Filters: f}, nil
 			}}
 			args := append([]string{"list", "--format", format}, flags...)
 			out, err := executeTaskCommand(t, services, args...)

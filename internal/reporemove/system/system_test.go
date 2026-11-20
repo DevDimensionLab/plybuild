@@ -20,6 +20,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/repoestablish"
 	establish "github.com/devdimensionlab/plybuild/internal/repoestablish/system"
 	"github.com/devdimensionlab/plybuild/internal/reporemove"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 )
@@ -670,7 +671,7 @@ func TestReRegistrationBeforeRenameKeepsWrapper(t *testing.T) {
 	f := newFixture(t, nil)
 	plan := f.preview(t)
 	readd := func() {
-		d, err := workspace.AtRoot(workspace.SystemDependencies(), f.root)
+		d, err := workspace.AtRoot(taskwork.SystemDependencies().Dependencies, f.root)
 		if err != nil {
 			t.Fatal(err)
 		}

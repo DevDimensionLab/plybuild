@@ -2,6 +2,7 @@ package taskjournal
 
 import (
 	"encoding/json"
+	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"io/fs"
 	"os"
@@ -16,7 +17,7 @@ func integrationJournalFixture(t *testing.T) (Service, string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := exec.Command("go", "test", "./internal/workspace", "-run", "^TestIntegrationEvidenceExportJournalFixture$", "-count=1")
+	c := exec.Command("go", "test", "./internal/taskwork", "-run", "^TestIntegrationEvidenceExportJournalFixture$", "-count=1")
 	c.Dir = filepath.Clean("../..")
 	c.Env = append(os.Environ(), "PLY_INTEGRATION_JOURNAL_FIXTURE="+dest)
 	if b, err := c.CombinedOutput(); err != nil {
@@ -66,19 +67,19 @@ func integrationJournalFixture(t *testing.T) (Service, string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d := workspace.SystemDependencies()
+	d := taskwork.SystemDependencies()
 	d.Files = cwdFiles{d.Files, m.Root}
 	d.ProjectDataRoot = func(string) (string, error) { return filepath.Join(dest, "data"), nil }
 	return New(d), m.Root
 }
 func corruptJournalEvidenceMode(t *testing.T, root string, directory bool) string {
 	t.Helper()
-	work := taskWork(t, workspace.SystemDependencies(), root)
-	r, err := workspace.SystemDependencies().WorkItems.Snapshot(work)
+	work := taskWork(t, taskwork.SystemDependencies(), root)
+	r, err := taskwork.SystemDependencies().WorkItems.Snapshot(work)
 	if err != nil {
 		t.Fatal(err)
 	}
-	sources := workspace.IntegrationEvidenceSources(work, r)
+	sources := taskwork.IntegrationEvidenceSources(work, r)
 	if len(sources) == 0 {
 		t.Fatal("missing referenced integration fixture")
 	}
@@ -152,7 +153,7 @@ func TestIntegrationEvidenceJournalBatchCapturedSnapshot(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			s, root := integrationJournalFixture(t)
-			basis, err := workspace.ReadViewBasis(s.Workspace)
+			basis, err := taskwork.ReadViewBasis(s.Workspace)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -175,7 +176,7 @@ func TestIntegrationEvidenceJournalBatchFinalFreshness(t *testing.T) {
 		}
 		t.Run(name, func(t *testing.T) {
 			s, root := integrationJournalFixture(t)
-			basis, err := workspace.ReadViewBasis(s.Workspace)
+			basis, err := taskwork.ReadViewBasis(s.Workspace)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -205,7 +206,7 @@ func TestIntegrationEvidenceCacheKeepsManagedValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	path := workspace.IntegrationEvidenceSources(work, r)[0].Locator
+	path := taskwork.IntegrationEvidenceSources(work, r)[0].Locator
 	cache := map[string]sourceRead{}
 	if _, err := cachedSourceHash(cache, root, "artifact", path); err != nil {
 		t.Fatal(err)
@@ -213,20 +214,20 @@ func TestIntegrationEvidenceCacheKeepsManagedValidation(t *testing.T) {
 	if err := os.Chmod(path, 0600); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := cachedSourceHash(cache, root, workspace.IntegrationEvidenceSourceKind, path); err == nil {
+	if _, err := cachedSourceHash(cache, root, taskwork.IntegrationEvidenceSourceKind, path); err == nil {
 		t.Fatal("generic cached hash bypassed managed validation")
 	}
 	if err := os.Chmod(path, 0400); err != nil {
 		t.Fatal(err)
 	}
 	cache = map[string]sourceRead{}
-	if _, err := cachedSourceHash(cache, root, workspace.IntegrationEvidenceSourceKind, path); err != nil {
+	if _, err := cachedSourceHash(cache, root, taskwork.IntegrationEvidenceSourceKind, path); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := cachedSourceHash(cache, root, "artifact", path); err != nil {
 		t.Fatal(err)
 	}
-	if cache[path].kind != workspace.IntegrationEvidenceSourceKind {
+	if cache[path].kind != taskwork.IntegrationEvidenceSourceKind {
 		t.Fatal("generic source weakened final managed recheck")
 	}
 	if err := os.Chmod(path, 0600); err != nil {
@@ -238,9 +239,9 @@ func TestIntegrationEvidenceCacheKeepsManagedValidation(t *testing.T) {
 }
 
 // taskWork is the work of the Project that owns the fixtures' Task "task".
-func taskWork(t *testing.T, d workspace.Dependencies, root string) workspace.ProjectWork {
+func taskWork(t *testing.T, d taskwork.Dependencies, root string) workspace.ProjectWork {
 	t.Helper()
-	work, err := workspace.LocateTask(d, root, "task")
+	work, err := taskwork.LocateTask(d, root, "task")
 	if err != nil {
 		t.Fatal(err)
 	}
