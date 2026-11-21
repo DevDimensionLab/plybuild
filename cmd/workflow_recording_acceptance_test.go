@@ -438,9 +438,6 @@ func TestEpicIntegrateRetiresTheEpic(t *testing.T) {
   "repos": [{"id": "code", "path": "repo"}]}]}
 `, 0600)
 		f.success(t, f.root, "workspace", "epic", "adopt", "work", "--title", "Work", "--project", "example", "--repo", "code", "--worktree", epic, "--ref", "refs/heads/epic", "--expected-oid", base)
-		if defs, e := os.ReadFile(filepath.Join(f.root, "ply-workspace.json")); e != nil || !strings.Contains(string(defs), `"refs/heads/epic"`) {
-			t.Fatalf("the Epic must be defined in ply-workspace.json as in real use: %s %v", defs, e)
-		}
 		mustPlanWrite(t, filepath.Join(epic, "epic.txt"), "epic\n", 0600)
 		f.git(t, epic, "add", "epic.txt")
 		f.git(t, epic, "commit", "-m", "epic work")

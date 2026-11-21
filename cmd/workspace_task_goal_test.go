@@ -61,7 +61,8 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 	if existing {
 		f.success(t, f.root, "workspace", "task", "create", "supplied", "--title", "Imported backlog label", "--description", "Historical imported product context", "--project", "example", "--repo", "code", "--epic", "work")
 		preservedTask = f.success(t, f.root, "workspace", "task", "show", "supplied", "--format", "json")
-		// The Task readback supplies its native current Problem reference.
+		// Task create records no native Problem; the readback shows the imported
+		// title and description as a legacy summary until P1 is recorded.
 		var taskReadback struct {
 			Problem struct {
 				Head *taskwork.TaskRevisionRef `json:"head"`
@@ -70,9 +71,8 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 		if e := json.Unmarshal([]byte(preservedTask), &taskReadback); e != nil {
 			t.Fatal(e)
 		}
-		head := taskReadback.Problem.Head
-		if head == nil || head.Revision != 1 {
-			t.Fatalf("missing initial Problem head: %s", preservedTask)
+		if taskReadback.Problem.Head != nil {
+			t.Fatalf("task create recorded a native Problem: %s", preservedTask)
 		}
 		problemDoc := filepath.Join(f.root, "imported-problem.md")
 		mustPlanWrite(t, problemDoc, "# Imported backlog problem\nPreserve the imported context.\n", 0600)
@@ -81,7 +81,7 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 		if e != nil {
 			t.Fatal(e)
 		}
-		draft := map[string]any{"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "fixture/imported-problem-2", "task_id": "supplied", "registry_upgrade": nil, "expected_previous": head, "origin": map[string]any{"kind": "authored"}, "title": "Imported backlog problem", "summary": "Preserve historical imported context", "problem_document_id": "problem", "documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": problemDoc, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(b)), "size_bytes": len(b), "media_type": "text/markdown", "git_provenance": nil}}}, "sources": []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Import the preserved product context", "recorder": map[string]any{"actor_claim": "isolated fixture", "control_surface": "CLI test", "recorded_at_utc": "2026-10-22T00:00:00Z"}}
+		draft := map[string]any{"kind": "WorkspaceTaskProblemDraft@1", "schema_version": 1, "format": "json", "format_version": 1, "canonicalization": "RFC8785", "publication_key": "fixture/imported-problem-1", "task_id": "supplied", "registry_upgrade": nil, "expected_previous": nil, "origin": map[string]any{"kind": "authored"}, "title": "Imported backlog problem", "summary": "Preserve historical imported context", "problem_document_id": "problem", "documents": []any{map[string]any{"id": "problem", "source": map[string]any{"kind": "file", "locator": problemDoc, "sha256": fmt.Sprintf("sha256:%x", sha256.Sum256(b)), "size_bytes": len(b), "media_type": "text/markdown", "git_provenance": nil}}}, "sources": []any{}, "claims": []any{}, "deadline": nil, "change_reason": "Import the preserved product context", "recorder": map[string]any{"actor_claim": "isolated fixture", "control_surface": "CLI test", "recorded_at_utc": "2026-10-22T00:00:00Z"}}
 		draftBytes, e := json.Marshal(draft)
 		if e != nil {
 			t.Fatal(e)
@@ -94,7 +94,7 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 	preview := decode(f.success(t, f.root, args...))
 	if existing {
 		preservedProblem = preview.Problem
-		if preservedProblem == nil || preservedProblem.Revision != 2 || len(preview.Effects) != 2 {
+		if preservedProblem == nil || preservedProblem.Revision != 1 || len(preview.Effects) != 2 {
 			t.Fatalf("existing Task preview lost basis/effects: %#v", preview)
 		}
 	}
@@ -141,21 +141,16 @@ func firstGoalCLIJourney(t *testing.T, existing bool) {
 		t.Fatal("CLI retry duplicated native state")
 	}
 	f.success(t, f.root, "workspace", "task", "spec", "show", "supplied", "--spec", out.Goal.SpecID, "--revision", "1", "--format", "json")
-	// Dirty return blocks the existing metadata-only execute preview before any
-	// runtime inspection. Registration retains its successful result and Run=null.
+	// Registration names no next command: worktree create and workflow goal-start
+	// are separate steps, and goal-start checks that the Task worktree is clean.
+	if len(out.NextArgv) != 0 {
+		t.Fatalf("registration named a next command: %q", out.NextArgv)
+	}
+	// A dirty return to the Epic worktree does not erase registration success.
 	mustPlanWrite(t, filepath.Join(repo, "dirty.txt"), "dirty return\n", 0600)
-	beforeCheck := mr05Snapshot(t, f.root)
-	check := append([]string{}, out.NextArgv[1:]...)
-	_, stderr, exit := f.run(t, repo, nil, check...)
-	if exit == 0 || !strings.Contains(strings.ToLower(stderr), "clean") {
-		t.Fatalf("expected honest dirty-return readiness blocker, got %d %s", exit, stderr)
-	}
-	if !reflect.DeepEqual(beforeCheck, mr05Snapshot(t, f.root)) {
-		t.Fatal("read-only execute check wrote files")
-	}
 	historical := decode(f.success(t, f.root, apply...))
 	if !historical.Applied || historical.Goal != out.Goal || historical.Run != nil {
-		t.Fatal("readiness blocker erased registration success")
+		t.Fatal("dirty return erased registration success")
 	}
 }
 
