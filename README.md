@@ -980,6 +980,16 @@ at most 32 KiB and a code-health review 4 MiB. `observations` lists posts by
 `--after` and `--links-to`; its JSON holds each whole post and the `sha256` of its
 bytes. Posts live in `<project wrapper>/data/intelligence/`.
 
+`ply intelligence knowledge [WORD...]` finds posts in the Project's curated knowledge
+archive, which another repository owns. The Project names it in `ply-workspace.json`
+as `"knowledge": {"repo": "<repo-id>", "path": "<directory in that repository>"}`;
+without a usable pointer the answer is empty with a diagnostic and exit status 0.
+Posts rank on how many distinct words hit, then on whether their scope fits `--repo`
+(which filters nothing), then on where the words hit; filter with
+`--theme`, `--tag`, `--status` (default `candidate,confirmed`, or `all`) and `--limit`
+(default 10). Without words it lists every post by theme. Ply only reads the archive.
+See `docs/intelligence-knowledge.md`.
+
 ## Agent quota
 
 `ply agent` shows the remaining subscription quota that Codex and Claude report

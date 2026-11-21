@@ -37,6 +37,7 @@ type Project struct {
 	Wrapper    string      `json:"wrapper"`
 	Repos      []Repo      `json:"repos"`
 	Companions []Companion `json:"companions,omitempty"`
+	Knowledge  *Knowledge  `json:"knowledge,omitempty"` // curated knowledge source; absent when not set
 }
 type Repo struct {
 	ID      string `json:"id"`
@@ -49,6 +50,14 @@ type Repo struct {
 // its repositories. Role is planning, docs or other.
 type Companion struct {
 	Role string `json:"role"`
+	Path string `json:"path"`
+}
+
+// Knowledge points to a Project's curated knowledge: the directory Path,
+// relative to the worktree of the Project repository Repo. Only the knowledge
+// command checks it, so a bad pointer never stops reading the workspace.
+type Knowledge struct {
+	Repo string `json:"repo"`
 	Path string `json:"path"`
 }
 
@@ -406,6 +415,10 @@ func clone(d Definitions) Definitions {
 		}
 		if p.Companions != nil {
 			p.Companions = append([]Companion{}, p.Companions...)
+		}
+		if p.Knowledge != nil {
+			knowledge := *p.Knowledge
+			p.Knowledge = &knowledge
 		}
 		out.Projects[i] = p
 	}

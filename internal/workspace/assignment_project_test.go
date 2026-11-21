@@ -104,3 +104,33 @@ func TestResolveDefinedProjectRefusesNestedWrappersAndSkipsMissingOnes(t *testin
 		t.Fatalf("outer only: %+v %v", project, err)
 	}
 }
+
+func TestResolveDefinedProjectCarriesTheKnowledgePointerWithoutCheckingIt(t *testing.T) {
+	t.Parallel()
+	f := newDefinitionFixture(t)
+	definitions := `{"format_version": 1, "projects": [
+  {"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "ply", "path": "ply/main"}], "knowledge": {"repo": "ply", "path": "knowledge"}},
+  {"id": "app", "name": "App", "wrapper": "app", "repos": [{"id": "app", "path": "app/main"}], "knowledge": {"repo": "elsewhere", "path": "../x"}}
+]}
+`
+	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), definitions)
+	project, err := ResolveDefinedProject(cwdDependencies(f.root), "ply")
+	want := &KnowledgeSource{Repo: "ply", Path: "knowledge", Locator: filepath.Join(f.root, "ply", "main")}
+	if err != nil || !reflect.DeepEqual(project.Knowledge, want) {
+		t.Fatalf("ply knowledge %+v %v", project.Knowledge, err)
+	}
+	// A pointer to a repository outside the Project is the knowledge command's
+	// concern; reading the workspace goes on.
+	project, err = ResolveDefinedProject(cwdDependencies(f.root), "app")
+	want = &KnowledgeSource{Repo: "elsewhere", Path: "../x"}
+	if err != nil || !reflect.DeepEqual(project.Knowledge, want) {
+		t.Fatalf("app knowledge %+v %v", project.Knowledge, err)
+	}
+	if _, _, err := newSystemProjectStore().Snapshot(f.root); err != nil {
+		t.Fatalf("snapshot: %v", err)
+	}
+	mustWriteFile(t, filepath.Join(f.root, workspacedef.File), fixtureDefinitions)
+	if project, err := ResolveDefinedProject(cwdDependencies(f.root), "ply"); err != nil || project.Knowledge != nil {
+		t.Fatalf("without pointer %+v %v", project.Knowledge, err)
+	}
+}

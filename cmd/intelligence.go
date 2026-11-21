@@ -229,6 +229,7 @@ func newIntelligenceCommand(d workspace.Dependencies) *cobra.Command {
 			return err
 		},
 	})
+	command.AddCommand(newIntelligenceKnowledgeCommand(d))
 	return command
 }
 

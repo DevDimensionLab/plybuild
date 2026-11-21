@@ -701,3 +701,37 @@ func TestUpdateMutatesACopyOfCompanions(t *testing.T) {
 		t.Fatalf("current definitions were mutated: %+v", current.Projects[0])
 	}
 }
+
+func TestReadKnowledgeSourceAndOmitItWhenAbsent(t *testing.T) {
+	root := writeRoot(t, `{"format_version": 1, "projects": [{"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "plane", "path": "plane/main"}], "knowledge": {"repo": "plane", "path": "knowledge"}}]}`)
+	defs, _, err := Read(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := defs.Projects[0].Knowledge; got == nil || *got != (Knowledge{Repo: "plane", Path: "knowledge"}) {
+		t.Fatalf("knowledge decoded as %+v", got)
+	}
+	copied := clone(*defs)
+	copied.Projects[0].Knowledge.Path = "changed"
+	if defs.Projects[0].Knowledge.Path != "knowledge" {
+		t.Fatal("clone shares the knowledge source")
+	}
+	raw, err := json.Marshal(Project{ID: "ply", Name: "Ply", Wrapper: "ply", Repos: []Repo{}})
+	if err != nil || string(raw) != `{"id":"ply","name":"Ply","wrapper":"ply","repos":[]}` {
+		t.Fatalf("absent knowledge encoded as %s %v", raw, err)
+	}
+}
+
+func TestUpdateKeepsKnowledgeSource(t *testing.T) {
+	root := writeRoot(t, `{"format_version": 1, "projects": [{"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "ply", "path": "ply/main"}], "knowledge": {"repo": "ply", "path": "knowledge"}}]}`)
+	if _, err := Apply(root, addRepo("ply", "plane", "plane/main"), accept); err != nil {
+		t.Fatal(err)
+	}
+	defs, _, err := Read(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := defs.Projects[0].Knowledge; got == nil || *got != (Knowledge{Repo: "ply", Path: "knowledge"}) {
+		t.Fatalf("knowledge after update: %+v", got)
+	}
+}

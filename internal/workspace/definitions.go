@@ -276,6 +276,21 @@ func definitionCompanions(root string, p workspacedef.Project) []ProjectCompanio
 	return companions
 }
 
+// definitionKnowledge is p's knowledge pointer as written, with the locator of
+// its repository among repos; nil when p has none.
+func definitionKnowledge(p workspacedef.Project, repos []RepoRecord) *KnowledgeSource {
+	if p.Knowledge == nil {
+		return nil
+	}
+	source := &KnowledgeSource{Repo: RepoID(p.Knowledge.Repo), Path: p.Knowledge.Path}
+	for _, r := range repos {
+		if r.ID == source.Repo {
+			source.Locator = r.Locator
+		}
+	}
+	return source
+}
+
 // definitionWrapper resolves the wrapper of r; empty when it has none.
 func definitionWrapper(root string, r workspacedef.Repo) string {
 	if r.Wrapper == "" {
@@ -306,12 +321,15 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	snapshot := ProjectSnapshot{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
 	for _, p := range defs.Projects {
 		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: ResolveDefinitionPath(root, p.Wrapper), Companions: definitionCompanions(root, p)}
+		var repos []RepoRecord
 		for _, r := range p.Repos {
 			id := RepoID(r.ID)
 			project.RepoIDs = append(project.RepoIDs, id)
-			snapshot.Repos = append(snapshot.Repos, RepoRecord{ID: id, Locator: ResolveDefinitionPath(root, r.Path), Wrapper: definitionWrapper(root, r)})
+			repos = append(repos, RepoRecord{ID: id, Locator: ResolveDefinitionPath(root, r.Path), Wrapper: definitionWrapper(root, r)})
 		}
+		snapshot.Repos = append(snapshot.Repos, repos...)
 		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
+		project.Knowledge = definitionKnowledge(p, repos)
 		snapshot.Projects = append(snapshot.Projects, project)
 	}
 	return snapshot, nil

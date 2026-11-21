@@ -43,6 +43,16 @@ type ProjectRecord struct {
 	Wrapper    string             `yaml:"wrapper"`
 	RepoIDs    []RepoID           `yaml:"repo_ids"`
 	Companions []ProjectCompanion `yaml:"-"` // from ply-workspace.json; nil when none
+	Knowledge  *KnowledgeSource   `yaml:"-"` // from ply-workspace.json, unchecked; nil when not set
+}
+
+// KnowledgeSource is a Project's knowledge pointer as ply-workspace.json
+// holds it. Locator is the worktree of Repo when Repo is a repository of the
+// Project, otherwise empty. Only the knowledge command checks the pointer.
+type KnowledgeSource struct {
+	Repo    RepoID
+	Path    string
+	Locator string
 }
 
 // Data is the Project's data area under its wrapper.
