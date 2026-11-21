@@ -43,7 +43,7 @@ func TestGoalStartHelpPointsToOptionalCoordinatorReturn(t *testing.T) {
 func TestGoalStartRejectsStaleRepositoryBeforeEffects(t *testing.T) {
 	task := taskwork.TaskReadbackResult{WorktreeReady: true, Reasons: []string{"target_worktree_stale", "worktree_inventory_stale"}}
 	task.Task.Worktree = &taskwork.TaskWorktreeBinding{}
-	if err := validateGoalTask(task); err == nil {
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
 		t.Fatal("stale Git identity admitted")
 	}
 }
@@ -54,16 +54,21 @@ func TestGoalStartAcceptsObservedBindingAndRejectsDifferentRepository(t *testing
 	task.Task.GitCommonDir = "/repo/.git"
 	task.Task.Worktree = &taskwork.TaskWorktreeBinding{Locator: "/task", Ref: "refs/heads/task", OID: "oid", Tree: "tree", GitCommonDir: "/repo/.git"}
 	task.Target = taskwork.TaskObservedTarget{Locator: p("/task"), Ref: p("refs/heads/task"), OID: p("oid"), Tree: p("tree"), GitCommonDir: p("/repo/.git"), Clean: &yes, InventoryMatch: &yes}
-	if err := validateGoalTask(task); err != nil {
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err != nil {
 		t.Fatal(err)
 	}
 	task.Target.GitCommonDir = p("/clone/.git")
-	if err := validateGoalTask(task); err == nil {
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
 		t.Fatal("separate clone with identical commit/ref admitted")
 	}
 	task.Target.GitCommonDir = p("/repo/.git")
+	task.Target.Tree = p("other")
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
+		t.Fatal("bound commit with a different tree admitted")
+	}
+	task.Target.Tree = p("tree")
 	task.Target.InventoryMatch = nil
-	if err := validateGoalTask(task); err == nil {
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
 		t.Fatal("unknown inventory admitted")
 	}
 }
@@ -410,5 +415,366 @@ func TestGoalStartPromptNamesTheReaderOfEachGoalDocument(t *testing.T) {
 	plan := goalAgentPlan{Task: "task-1", Provider: "codex", Goal: goal, Documents: "\n\nDOCS", Journal: "\n\nJOURNAL"}
 	if prompt := goalStartInput(plan, "/r", agentstart.HerdrBinary{}, nil).Prompt; prompt != wantGoalPrompt+string(goal)+"\n\nDOCS\n\nJOURNAL" {
 		t.Fatalf("%q", prompt)
+	}
+}
+
+// goalStartFixture gives Task "moved" the registered Goal moved-v1 and a ready
+// worktree bound at the Epic's second commit, in a workspace of its own. It
+// returns the worktree, the Epic's first commit and the bound commit.
+func goalStartFixture(t *testing.T) (d taskwork.Dependencies, git func(dir string, args ...string) string, worktree, first, bound string) {
+	t.Helper()
+	d, root := viewFixture(t)
+	git = func(dir string, args ...string) string {
+		t.Helper()
+		out, err := exec.Command("git", append([]string{"-C", dir, "-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=" + os.DevNull}, args...)...).CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %s", args, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	run := func(args ...string) string {
+		t.Helper()
+		out, err := runWorkspaceView(t, d, args...)
+		if err != nil {
+			t.Fatalf("workspace %v: %v", args, err)
+		}
+		return out
+	}
+	repo := filepath.Join(root, "repo")
+	if err := os.Mkdir(repo, 0700); err != nil {
+		t.Fatal(err)
+	}
+	git(repo, "init", "-q", "-b", "epic")
+	git(repo, "commit", "-q", "--allow-empty", "-m", "first")
+	first = git(repo, "rev-parse", "HEAD")
+	git(repo, "commit", "-q", "--allow-empty", "-m", "second")
+	bound = git(repo, "rev-parse", "HEAD")
+	run("project", "add", "example", "--name", "Example", "--wrapper", root, "--repo", "code="+repo)
+	run("epic", "adopt", "work", "--title", "Work", "--project", "example", "--repo", "code", "--worktree", repo, "--ref", "refs/heads/epic", "--expected-oid", bound)
+	register := []string{"task", "goal", "register", "moved", "--spec", "moved-v1", "--title", "T", "--objective", "O", "--criterion", "C", "--project", "example", "--repo", "code", "--epic", "work", "--format", "json"}
+	var preview struct{ Confirmation string }
+	if err := json.Unmarshal([]byte(run(register...)), &preview); err != nil {
+		t.Fatal(err)
+	}
+	run(append(register, "--apply", "--confirmation", preview.Confirmation)...)
+	worktree = filepath.Join(root, "moved")
+	run("task", "worktree", "create", "moved", "--branch", "moved", "--path", worktree, "--expected-parent-oid", bound)
+	return d, git, worktree, first, bound
+}
+
+func previewGoalStart(t *testing.T, d taskwork.Dependencies) (goalAgentPlan, error) {
+	t.Helper()
+	c := newWorkflowGoalStartCommand(d)
+	var out bytes.Buffer
+	c.SetOut(&out)
+	c.SetErr(&bytes.Buffer{})
+	c.SilenceErrors, c.SilenceUsage = true, true
+	c.SetArgs([]string{"moved", "--spec", "moved-v1", "--revision", "1", "--herdr-workspace", "w1"})
+	if err := c.Execute(); err != nil {
+		return goalAgentPlan{}, err
+	}
+	var plan goalAgentPlan
+	if err := json.Unmarshal(out.Bytes(), &plan); err != nil {
+		t.Fatal(err)
+	}
+	return plan, nil
+}
+
+// Backlog 20261117-28d0dcb6: a Task whose agent has committed gets its next
+// Goal in the same worktree, starting at the commit the worktree is at.
+func TestGoalStartAcceptsCleanWorktreeAdvancedFromItsBinding(t *testing.T) {
+	d, git, worktree, _, bound := goalStartFixture(t)
+	plan, err := previewGoalStart(t, d)
+	if err != nil || plan.OID != bound {
+		t.Fatalf("bound Task worktree refused: %+v %v", plan, err)
+	}
+	git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+	head := git(worktree, "rev-parse", "HEAD")
+	plan, err = previewGoalStart(t, d)
+	if err != nil || plan.OID != head || plan.Ref != "refs/heads/moved" || plan.Worktree != worktree {
+		t.Fatalf("advanced Task worktree refused: %+v %v", plan, err)
+	}
+}
+
+func TestGoalStartRejectsWorktreeThatIsNotACleanDescendantOnItsRef(t *testing.T) {
+	for name, c := range map[string]struct {
+		drift func(t *testing.T, git func(string, ...string) string, worktree, first string)
+		want  string
+	}{
+		"dirty": {func(t *testing.T, git func(string, ...string) string, worktree, first string) {
+			if err := os.WriteFile(filepath.Join(worktree, "untracked"), []byte("u"), 0600); err != nil {
+				t.Fatal(err)
+			}
+		}, "Task Git identity or inventory is stale or unknown"},
+		"head without the bound commit as ancestor": {func(t *testing.T, git func(string, ...string) string, worktree, first string) {
+			git(worktree, "reset", "-q", "--hard", git(worktree, "commit-tree", "-m", "unrelated", "HEAD^{tree}"))
+		}, "Task Git binding differs from the observed worktree"},
+		"head behind the bound commit": {func(t *testing.T, git func(string, ...string) string, worktree, first string) {
+			git(worktree, "reset", "-q", "--hard", first)
+		}, "Task Git binding differs from the observed worktree"},
+		"other ref": {func(t *testing.T, git func(string, ...string) string, worktree, first string) {
+			git(worktree, "switch", "-q", "-c", "other")
+		}, "Task Git binding differs from the observed worktree"},
+		"branch checked out elsewhere": {func(t *testing.T, git func(string, ...string) string, worktree, first string) {
+			git(worktree, "switch", "-q", "--detach")
+			git(worktree, "worktree", "add", "-q", filepath.Join(filepath.Dir(worktree), "elsewhere"), "moved")
+		}, "Task Git"},
+		"unobservable worktree": {func(t *testing.T, git func(string, ...string) string, worktree, first string) {
+			if err := os.RemoveAll(worktree); err != nil {
+				t.Fatal(err)
+			}
+		}, "Task Git identity or inventory is stale or unknown"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d, git, worktree, first, _ := goalStartFixture(t)
+			git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+			c.drift(t, git, worktree, first)
+			if plan, err := previewGoalStart(t, d); err == nil || !strings.Contains(err.Error(), c.want) {
+				t.Fatalf("drifted Task worktree: %+v %v", plan, err)
+			}
+		})
+	}
+}
+
+// applyGoalStart runs goal-start --apply for one revision of moved-v1 with
+// the fake Herdr of the test.
+func applyGoalStart(t *testing.T, d taskwork.Dependencies, revision string) (agentstart.Receipt, error) {
+	t.Helper()
+	return applyGoalStartIn(t, d, revision, "w1")
+}
+
+func applyGoalStartIn(t *testing.T, d taskwork.Dependencies, revision, herdrWorkspace string) (agentstart.Receipt, error) {
+	t.Helper()
+	c := newWorkflowGoalStartCommand(d)
+	var out bytes.Buffer
+	c.SetOut(&out)
+	c.SetErr(&bytes.Buffer{})
+	c.SilenceErrors, c.SilenceUsage = true, true
+	c.SetArgs([]string{"moved", "--spec", "moved-v1", "--revision", revision, "--herdr-workspace", herdrWorkspace, "--apply", "--actor", "planner"})
+	err := c.Execute()
+	var r agentstart.Receipt
+	if out.Len() > 0 {
+		if e := json.Unmarshal(out.Bytes(), &r); e != nil {
+			t.Fatal(e)
+		}
+	}
+	return r, err
+}
+
+// fakeHerdrOnPath lets goal-start --apply of this test reach a fake Herdr and
+// returns its call log.
+func fakeHerdrOnPath(t *testing.T) string {
+	t.Helper()
+	herdr, log := fakeHerdrBinary(t)
+	t.Setenv("HERDR_ENV", "1")
+	t.Setenv("PATH", filepath.Dir(herdr.Path)+string(os.PathListSeparator)+os.Getenv("PATH"))
+	return log
+}
+
+// registerSecondGoalRevision records revision 2 of moved-v1 with a changed
+// objective and the given executor provider.
+func registerSecondGoalRevision(t *testing.T, d taskwork.Dependencies, worktree string, provider any) {
+	t.Helper()
+	out, err := runWorkspaceView(t, d, "task", "spec", "show", "moved", "--spec", "moved-v1", "--revision", "1", "--format", "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var shown struct {
+		Goal struct {
+			Goal struct {
+				Spec json.RawMessage `json:"spec"`
+			} `json:"goal"`
+		} `json:"goal"`
+		Revision map[string]any `json:"revision"`
+	}
+	if err = json.Unmarshal([]byte(out), &shown); err != nil {
+		t.Fatal(err)
+	}
+	draft := shown.Revision
+	for _, published := range []string{"previous", "recorded_at_utc", "revision", "source_draft_sha256"} {
+		delete(draft, published)
+	}
+	draft["kind"], draft["registry_upgrade"], draft["expected_previous"] = "WorkspaceTaskSpecDraft@2", nil, shown.Goal.Goal.Spec
+	draft["publication_key"], draft["objective"], draft["change_reason"] = "fixture/moved-goal-2", "O after the answers", "Answer the questions"
+	draft["executor"] = map[string]any{"provider": provider, "model": nil, "effort": nil}
+	raw, err := json.Marshal(draft)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(filepath.Dir(worktree), "goal-2.json")
+	if err = os.WriteFile(path, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err = runWorkspaceView(t, d, "task", "spec", "record", "moved", "--file", path, "--format", "json"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The guard before each Herdr effect holds the start to the commit observed
+// in the worktree, so an agent starts in an advanced worktree. The same Goal
+// is still sent once, also after further commits.
+func TestGoalStartApplyStartsOnceInAdvancedWorktree(t *testing.T) {
+	d, git, worktree, _, _ := goalStartFixture(t)
+	git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+	log := fakeHerdrOnPath(t)
+	r, err := applyGoalStart(t, d, "1")
+	if err != nil || r.Reached != agentstart.ReachedPromptSubmitted {
+		t.Fatalf("advanced Task worktree not started: %+v %v", r, err)
+	}
+	calls, _ := os.ReadFile(log)
+	if strings.Count(string(calls), "agent prompt") != 1 || !strings.Contains(string(calls), "--cwd "+worktree) {
+		t.Fatalf("calls: %s", calls)
+	}
+	git(worktree, "commit", "-q", "--allow-empty", "-m", "more work")
+	if again, err := applyGoalStart(t, d, "1"); err != nil || again != r {
+		t.Fatalf("repeated start: %+v %v", again, err)
+	}
+	if after, _ := os.ReadFile(log); string(after) != string(calls) {
+		t.Fatal("repeated start had an effect")
+	}
+}
+
+// Backlog 20261117-28d0dcb6: after the agent of revision 1 has committed and
+// revision 2 is registered, the same Task starts one agent for revision 2.
+// Each revision is still sent once.
+func TestGoalStartStartsTheNextGoalRevisionInTheSameTask(t *testing.T) {
+	d, git, worktree, _, _ := goalStartFixture(t)
+	log := fakeHerdrOnPath(t)
+	first, err := applyGoalStart(t, d, "1")
+	if err != nil || first.Reached != agentstart.ReachedPromptSubmitted {
+		t.Fatalf("revision 1 not started: %+v %v", first, err)
+	}
+	git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+	registerSecondGoalRevision(t, d, worktree, nil)
+	second, err := applyGoalStart(t, d, "2")
+	if err != nil || second.Reached != agentstart.ReachedPromptSubmitted || second.Key == first.Key || second.InputSHA256 == first.InputSHA256 {
+		t.Fatalf("revision 2 not started beside revision 1: %+v %v", second, err)
+	}
+	calls, _ := os.ReadFile(log)
+	var agents []string
+	for _, line := range strings.Split(string(calls), "\n") {
+		if name, found := strings.CutPrefix(line, "agent start "); found {
+			agents = append(agents, strings.Fields(name)[0])
+		}
+	}
+	if strings.Count(string(calls), "agent prompt") != 2 || !strings.Contains(string(calls), "O after the answers") || len(agents) != 2 || agents[0] == agents[1] {
+		t.Fatalf("expected one prompt per revision to agents of their own: %s", calls)
+	}
+	for revision, want := range map[string]agentstart.Receipt{"1": first, "2": second} {
+		if again, err := applyGoalStart(t, d, revision); err != nil || again != want {
+			t.Fatalf("repeated start of revision %s: %+v %v", revision, again, err)
+		}
+	}
+	if after, _ := os.ReadFile(log); string(after) != string(calls) {
+		t.Fatal("a repeated start had an effect")
+	}
+}
+
+// A Task started before receipts were kept per Goal revision has one receipt
+// that names no revision: it still answers a repeated start and refuses any
+// other, saying that the next revision needs a new Task, so nothing is
+// started twice.
+func TestGoalStartKeepsTheSingleReceiptOfAnOlderStart(t *testing.T) {
+	d, git, worktree, _, _ := goalStartFixture(t)
+	log := fakeHerdrOnPath(t)
+	started, err := applyGoalStart(t, d, "1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	receipts, err := filepath.Glob(filepath.Join(filepath.Dir(worktree), "data", "work", "task-process", "goal-start", "moved", "*.json"))
+	if err != nil || len(receipts) != 1 {
+		t.Fatalf("receipt of revision 1: %v %v", receipts, err)
+	}
+	started.Key = "moved"
+	older, err := json.Marshal(started)
+	if err != nil {
+		t.Fatal(err)
+	}
+	single := filepath.Dir(receipts[0]) + ".json"
+	if err = os.WriteFile(single, older, 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.RemoveAll(filepath.Dir(receipts[0])); err != nil {
+		t.Fatal(err)
+	}
+	calls, _ := os.ReadFile(log)
+	if again, err := applyGoalStart(t, d, "1"); err != nil || again != started {
+		t.Fatalf("repeated older start: %+v %v", again, err)
+	}
+	git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+	registerSecondGoalRevision(t, d, worktree, nil)
+	_, err = applyGoalStart(t, d, "2")
+	var mismatch *agentstart.Error
+	if !errors.As(err, &mismatch) || mismatch.Code != agentstart.CodeInputMismatch {
+		t.Fatalf("revision 2 beside a receipt that names no revision: %v", err)
+	}
+	for _, says := range []string{"started by an older Ply", "receipt names no Goal revision", "revision 2", "needs a new Task"} {
+		if !strings.Contains(err.Error(), says) {
+			t.Fatalf("the refusal of revision 2 does not say %q: %v", says, err)
+		}
+	}
+	if after, _ := os.ReadFile(log); string(after) != string(calls) {
+		t.Fatal("a start beside the older receipt had an effect")
+	}
+	if _, err = os.Stat(filepath.Dir(receipts[0])); !os.IsNotExist(err) {
+		t.Fatalf("a receipt per revision was reserved beside the older receipt: %v", err)
+	}
+}
+
+// A receipt per Goal revision refuses other input for its revision as
+// before, without the explanation meant for a receipt of an older Ply.
+func TestGoalStartRefusesOtherInputForARevisionWithItsOwnReceipt(t *testing.T) {
+	d, _, _, _, _ := goalStartFixture(t)
+	fakeHerdrOnPath(t)
+	if _, err := applyGoalStart(t, d, "1"); err != nil {
+		t.Fatal(err)
+	}
+	_, err := applyGoalStartIn(t, d, "1", "w2")
+	var mismatch *agentstart.Error
+	if !errors.As(err, &mismatch) || mismatch.Code != agentstart.CodeInputMismatch || strings.Contains(err.Error(), "older Ply") {
+		t.Fatalf("revision 1 in another Herdr workspace: %v", err)
+	}
+}
+
+// A journal record without a named actor gets the agent of the highest
+// started Goal revision.
+func TestTaskAgentIsTheAgentOfTheHighestStartedGoalRevision(t *testing.T) {
+	d, git, worktree, _, _ := goalStartFixture(t)
+	fakeHerdrOnPath(t)
+	t.Setenv("PLY_ACTOR", "")
+	step := func(id string) string {
+		t.Helper()
+		if _, err := runWorkspaceView(t, d, "task", "journal", "step", "start", "moved", "--id", id, "--kind", "implementation", "--title", "Step "+id); err != nil {
+			t.Fatal(err)
+		}
+		out, err := runWorkspaceView(t, d, "task", "journal", "show", "moved", "--format", "json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		var snap taskjournal.Snapshot
+		if err = json.Unmarshal([]byte(out), &snap); err != nil {
+			t.Fatal(err)
+		}
+		for _, event := range snap.Events {
+			if event.Title == "Step "+id && event.Actor != nil {
+				return event.Actor.ID
+			}
+		}
+		t.Fatalf("step %s not in the journal: %s", id, out)
+		return ""
+	}
+	if _, err := applyGoalStart(t, d, "1"); err != nil {
+		t.Fatal(err)
+	}
+	if actor := step("s1"); actor != "codex:moved" {
+		t.Fatalf("actor after revision 1: %s", actor)
+	}
+	git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+	registerSecondGoalRevision(t, d, worktree, "claude")
+	if _, err := applyGoalStart(t, d, "2"); err != nil {
+		t.Fatal(err)
+	}
+	if actor := step("s2"); actor != "claude:moved" {
+		t.Fatalf("actor after revision 2: %s", actor)
 	}
 }

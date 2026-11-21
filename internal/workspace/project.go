@@ -56,7 +56,21 @@ type RepoRecord struct {
 	GitCommonDir string `yaml:"git_common_dir"`
 	Remote       string `yaml:"-"` // from ply-workspace.json
 	Wrapper      string `yaml:"-"` // from ply-workspace.json; empty when not set
+	// Unavailable says why a read could not resolve the member, explained by
+	// Diagnostic; empty when it is resolved. Locator is then the defined path
+	// and GitCommonDir is empty. Only reads report unavailable members.
+	Unavailable RepoAvailability `yaml:"-"`
+	Diagnostic  string           `yaml:"-"`
 }
+
+// RepoAvailability is why a read could not resolve a member: its directory
+// does not exist, or the directory or its Git identity cannot be read.
+type RepoAvailability string
+
+const (
+	RepoMissing    RepoAvailability = "missing"
+	RepoUnreadable RepoAvailability = "unreadable"
+)
 
 type ProjectResult struct {
 	Workspace string
@@ -314,7 +328,7 @@ func projectSnapshot(dependencies Dependencies) (string, []ProjectRecord, []Repo
 	if err != nil {
 		return "", nil, nil, err
 	}
-	projects, repositories, err := dependencies.Projects.Snapshot(workspaceRoot)
+	projects, repositories, err := readableProjects(workspaceRoot)
 	return workspaceRoot, projects, repositories, err
 }
 

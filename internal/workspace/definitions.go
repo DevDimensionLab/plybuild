@@ -3,6 +3,7 @@ package workspace
 import (
 	"errors"
 	"fmt"
+	"io/fs"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -142,6 +143,29 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 // Resolve definitions using the same physical paths, Git observer and identity
 // conflict checks as Project registration. No second copy is published in .ply.
 func definitionProjects(root string, defs workspacedef.Definitions) (projectRegistry, error) {
+	return resolveDefinitionProjects(root, defs, false)
+}
+
+// readableProjects resolves ply-workspace.json for reading: a repository whose
+// directory or Git identity cannot be read is kept as Unavailable, so its
+// Project stays readable. Every other failure, such as two members with one
+// Git identity, still stops the read.
+func readableProjects(root string) ([]ProjectRecord, []RepoRecord, error) {
+	defs, _, err := ReadDefinitions(root)
+	if err != nil {
+		return nil, nil, err
+	}
+	if defs == nil {
+		return nil, nil, MissingDefinitions(root)
+	}
+	registry, err := resolveDefinitionProjects(root, *defs, true)
+	if err != nil {
+		return nil, nil, err
+	}
+	return registry.Projects, registry.Repos, nil
+}
+
+func resolveDefinitionProjects(root string, defs workspacedef.Definitions, keepUnavailable bool) (projectRegistry, error) {
 	files := systemFileSystem{}
 	observer := newSystemRepoObserver(files)
 	registry := projectRegistry{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
@@ -153,16 +177,12 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper, Companions: definitionCompanions(root, p)}
 		repos := []RepoRecord{}
 		for _, r := range p.Repos {
-			path, err := CanonicalDirectory(files, root, r.Path, "repository")
-			if err != nil {
-				return registry, err
-			}
-			observed, err := observer.Observe(path)
-			if err != nil {
+			repo, err := definitionRepo(files, observer, root, r)
+			if err != nil && !keepUnavailable {
 				return registry, err
 			}
 			project.RepoIDs = append(project.RepoIDs, RepoID(r.ID))
-			repos = append(repos, RepoRecord{ID: RepoID(r.ID), Locator: observed.Locator, GitCommonDir: observed.GitCommonDir, Remote: r.Remote, Wrapper: definitionWrapper(root, r)})
+			repos = append(repos, repo)
 		}
 		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
 		var errApply error
@@ -172,6 +192,28 @@ func definitionProjects(root string, defs workspacedef.Definitions) (projectRegi
 		}
 	}
 	return registry, validateRegistry(registry)
+}
+
+// definitionRepo resolves member r from its directory and Git identity. When
+// that fails, the record is r as Unavailable with the failure as Diagnostic.
+func definitionRepo(files FileSystem, observer RepoObserver, root string, r workspacedef.Repo) (RepoRecord, error) {
+	repo := RepoRecord{ID: RepoID(r.ID), Locator: ResolveDefinitionPath(root, r.Path), Remote: r.Remote, Wrapper: definitionWrapper(root, r)}
+	path, err := CanonicalDirectory(files, root, r.Path, "repository")
+	if errors.Is(err, fs.ErrNotExist) {
+		repo.Unavailable, repo.Diagnostic = RepoMissing, "the directory does not exist"
+		return repo, err
+	}
+	if err != nil {
+		repo.Unavailable, repo.Diagnostic = RepoUnreadable, err.Error()
+		return repo, err
+	}
+	observed, err := observer.Observe(path)
+	if err != nil {
+		repo.Unavailable, repo.Diagnostic = RepoUnreadable, err.Error()
+		return repo, err
+	}
+	repo.Locator, repo.GitCommonDir = observed.Locator, observed.GitCommonDir
+	return repo, nil
 }
 
 // updateDefinitions applies mutate to ply-workspace.json as it is under

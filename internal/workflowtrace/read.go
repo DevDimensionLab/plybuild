@@ -73,7 +73,7 @@ func read(d taskwork.Dependencies, taskID string, afterHistory func()) (Result, 
 		}
 	}
 	b.goals(d, basis, *task)
-	b.goalStart(taskwork.GoalStartReceiptPath(selected.Work, id))
+	b.goalStarts(taskwork.GoalStartReceiptPaths(selected.Work, id))
 	if afterHistory != nil {
 		afterHistory()
 	}
@@ -177,7 +177,18 @@ func (b *builder) goals(d taskwork.Dependencies, basis taskwork.ReadViewBasisSna
 	sort.Slice(b.out.CurrentGoals, func(i, j int) bool { return b.out.CurrentGoals[i].SpecID < b.out.CurrentGoals[j].SpecID })
 }
 
-// goalStart projects the goal-start receipt: who was started where, and how
+// goalStarts projects the listed goal-start receipts of the Task, one per
+// started Goal revision.
+func (b *builder) goalStarts(receipts []string, err error) {
+	if err != nil {
+		b.diagnostic("goal_start_receipt_unavailable", "Goal-start receipts could not be listed: "+err.Error(), nil, nil)
+	}
+	for _, receipt := range receipts {
+		b.goalStart(receipt)
+	}
+}
+
+// goalStart projects one goal-start receipt: who was started where, and how
 // far the start got. A missing receipt means no goal-start was recorded.
 func (b *builder) goalStart(path string) {
 	if _, err := os.Lstat(path); os.IsNotExist(err) {

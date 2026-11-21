@@ -317,6 +317,12 @@ func renderProject(command *cobra.Command, result workspace.ProjectResult, add b
 	repositories := append([]workspace.RepoRecord(nil), result.Repos...)
 	sort.Slice(repositories, func(i, j int) bool { return repositories[i].ID < repositories[j].ID })
 	for _, repository := range repositories {
+		if repository.Unavailable != "" {
+			if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s:\n    locator: %s\n    %s: %s\n", repository.ID, repository.Locator, repository.Unavailable, repository.Diagnostic); err != nil {
+				return err
+			}
+			continue
+		}
 		if _, err := fmt.Fprintf(command.OutOrStdout(), "  %s:\n    locator: %s\n    git common directory: %s\n", repository.ID, repository.Locator, repository.GitCommonDir); err != nil {
 			return err
 		}

@@ -157,6 +157,12 @@ func applyProject(registry projectRegistry, project ProjectRecord, repositories 
 			}
 			continue
 		}
+		if repository.Unavailable != "" {
+			// Without a directory there is no Git identity to compare.
+			updated.Repos = append(updated.Repos, repository)
+			repoByID[repository.ID] = repository
+			continue
+		}
 		if existing, found := repoByCommon[repository.GitCommonDir]; found {
 			return registry, ProjectRecord{}, nil, false, projectError(ErrorProjectConflict, fmt.Sprintf("Git common directory %s is already registered as repository %s", repository.GitCommonDir, existing.ID), nil)
 		}
@@ -246,8 +252,12 @@ func validateRegistry(registry projectRegistry) error {
 			return errors.New("repository records must be uniquely sorted by ID")
 		}
 		lastRepo = repository.ID
-		if !ValidStoredPath(repository.Locator) || !ValidStoredPath(repository.GitCommonDir) {
+		if !ValidStoredPath(repository.Locator) || repository.Unavailable == "" && !ValidStoredPath(repository.GitCommonDir) {
 			return errors.New("project registry contains an invalid repository path")
+		}
+		if repository.Unavailable != "" {
+			repositories[repository.ID] = repository
+			continue
 		}
 		if owner, duplicate := commonDirectories[repository.GitCommonDir]; duplicate {
 			return fmt.Errorf("Git common directory is duplicated by repository %s", owner)

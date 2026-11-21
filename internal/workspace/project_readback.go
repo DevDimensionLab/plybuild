@@ -28,12 +28,19 @@ type projectReadRecord struct {
 }
 type repositoryReadRecord struct {
 	ID           RepoID  `json:"repo_id"`
+	Status       string  `json:"status"`
+	Diagnostic   *string `json:"diagnostic"`
 	Locator      string  `json:"locator"`
-	GitCommonDir string  `json:"git_common_dir"`
+	GitCommonDir *string `json:"git_common_dir"`
 	Wrapper      *string `json:"wrapper"`
 	Remote       *string `json:"remote"`
 	GitHubURL    *string `json:"github_url"`
 }
+
+// repositoryPresent is the status of a resolved member in a Project readback;
+// an unavailable member has its RepoAvailability, a diagnostic and no Git
+// common directory.
+const repositoryPresent = "present"
 
 func projectRead(p ProjectRecord) projectReadRecord {
 	return projectReadRecord{p.ID, p.Name, p.Wrapper, len(p.RepoIDs), sortedCompanions(p.Companions)}
@@ -91,7 +98,11 @@ func projectReadback(result ProjectResult) projectReadbackRecord {
 		if r.Wrapper != "" {
 			wrapper = &r.Wrapper
 		}
-		repos = append(repos, repositoryReadRecord{r.ID, r.Locator, r.GitCommonDir, wrapper, remote, githubURL})
+		status, diagnostic, commonDir := repositoryPresent, (*string)(nil), &r.GitCommonDir
+		if r.Unavailable != "" {
+			status, diagnostic, commonDir = string(r.Unavailable), &r.Diagnostic, nil
+		}
+		repos = append(repos, repositoryReadRecord{r.ID, status, diagnostic, r.Locator, commonDir, wrapper, remote, githubURL})
 	}
 	sort.Slice(repos, func(i, j int) bool { return repos[i].ID < repos[j].ID })
 	return projectReadbackRecord{ProjectReadbackKind, CoreReadSchemaVersion, CoreReadWorkspace{result.Workspace}, projectReadScope{&result.Project.ID}, projectRead(result.Project), repos}

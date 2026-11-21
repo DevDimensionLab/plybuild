@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
 
@@ -31,6 +33,9 @@ type goalAgentPlan struct {
 	Goal      json.RawMessage `json:"goal"`
 	Documents string          `json:"document_instruction,omitempty"`
 	Journal   string          `json:"journal_instruction,omitempty"`
+	// Key names the start in its receipt. It is empty for the receipt kept
+	// per Task, whose key is the Task.
+	Key string `json:"-"`
 }
 
 // journalInstruction asks the agent of a Task linked to a plan to record its
@@ -105,8 +110,12 @@ func goalAgentActor(plan goalAgentPlan) string {
 }
 
 func goalStartInput(plan goalAgentPlan, receipt string, herdr agentstart.HerdrBinary, precondition func() error) agentstart.StartInput {
+	key := plan.Key
+	if key == "" {
+		key = plan.Task
+	}
 	return agentstart.StartInput{
-		Key:          plan.Task,
+		Key:          key,
 		ReceiptPath:  receipt,
 		Provider:     plan.Provider,
 		Model:        plan.Model,
@@ -162,7 +171,7 @@ func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 	var spec, herdrWorkspace, actor string
 	var revision int
 	var apply, resume bool
-	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start. The agent tab gets PLY_ACTOR=<provider>:<task>, so the Ply commands the agent runs record it as actor. The prompt names the ply workspace task spec show --document command that reads each Goal document; everything else is inherited runtime policy. A durable reservation prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
+	c := &cobra.Command{Use: "goal-start TASK_ID", Short: "Start an explicitly assigned Goal in its bound Task worktree", Long: "Preview a registered Goal and existing Task worktree. The worktree must be clean on its bound ref, at the bound commit or a descendant of it. --apply starts one visible Claude or Codex agent, chosen by the Goal executor provider (Codex when absent). The executor model and effort, when set, are passed to the agent CLI (Claude --model and --effort, Codex --model and -c model_reasoning_effort) as native values the agent CLI checks at start. The agent tab gets PLY_ACTOR=<provider>:<task>, so the Ply commands the agent runs record it as actor. The prompt names the ply workspace task spec show --document command that reads each Goal document; everything else is inherited runtime policy. A durable reservation per Goal revision prevents duplicate launches after failure or unknown effects; inspect its receipt and pane. A later revision of the same Task starts its own agent; a Task whose receipt names no revision, written by an earlier Ply, keeps that one receipt and starts no further revision: the next revision needs a new Task. --apply answers two startup dialogs when the pane shows exactly that dialog: Yes in Claude's folder trust for the Task worktree (receipt folder_trust_accepted) and Skip in Codex's update prompt (receipt codex_update_skipped). When the start stopped before its prompt on any other screen, settle the pane yourself and rerun with --apply --resume: it sends the same Goal prompt at most once to the same agent and never resends an unknown prompt.\n\nKoordinatorretur velges i Goal.constraints; se docs/goal-coordinator-return.md. Goal-start oppretter ingen koordinator og krever ingen retur.", Args: cobra.ExactArgs(1), RunE: func(c *cobra.Command, args []string) error {
 		if resume && !apply {
 			return fmt.Errorf("--resume requires --apply")
 		}
@@ -174,7 +183,7 @@ func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 		if e != nil {
 			return e
 		}
-		if e = validateGoalTask(task); e != nil {
+		if e = validateGoalTask(d, task); e != nil {
 			return e
 		}
 		content, e := taskwork.ShowTaskSpec(d, taskwork.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision})
@@ -200,7 +209,11 @@ func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 			return e
 		}
 		provider := executor.Provider
-		wt := task.Task.Worktree
+		// The start is held to the commit observed in the worktree: the bound
+		// commit, or a descendant of it.
+		start := *task.Task.Worktree
+		start.OID = *task.Target.OID
+		wt := &start
 		if e = checkGoalGit(wt); e != nil {
 			return e
 		}
@@ -238,7 +251,14 @@ func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 		if e = recordPly(d, args[0], namedActor(actor), "nothing was started", taskjournal.PlyAction{Operation: "goal_start_reserved", Refs: goalRefs}); e != nil {
 			return e
 		}
-		out, e := run(c.Context(), plan, taskwork.GoalStartReceiptPath(work, id), herdr, func() error { return checkGoalGit(wt) })
+		receipt, older, e := goalStartReceipt(work, id, spec, revision, &plan)
+		if e != nil {
+			return e
+		}
+		out, e := run(c.Context(), plan, receipt, herdr, func() error { return checkGoalGit(wt) })
+		if older {
+			e = olderStartRefusal(e, id, spec, revision)
+		}
 		reached := taskjournal.PlyAction{Operation: "goal_start_started", Refs: map[string]string{"spec_id": spec, "spec_revision": fmt.Sprint(revision), "reached": out.Reached}}
 		if out.Reached == "prompt_submitted" {
 			reached.Operation = "goal_start_prompt_submitted"
@@ -263,7 +283,32 @@ func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 	return c
 }
 
-func validateGoalTask(task taskwork.TaskReadbackResult) error {
+// goalStartReceipt is the receipt of this Goal revision's start, and sets the
+// plan's key to match. A Task that still has the one receipt kept per Task
+// keeps it for every start, and older reports that.
+func goalStartReceipt(work workspace.ProjectWork, task taskwork.TaskID, spec string, revision int, plan *goalAgentPlan) (receipt string, older bool, err error) {
+	single := taskwork.TaskGoalStartReceiptPath(work, task)
+	if _, e := os.Lstat(single); e == nil {
+		return single, true, nil
+	} else if !errors.Is(e, fs.ErrNotExist) {
+		return "", false, e
+	}
+	plan.Key = taskwork.GoalStartKey(task, spec, revision)
+	return taskwork.GoalStartReceiptPath(work, task, spec, revision), false, nil
+}
+
+// olderStartRefusal explains an input mismatch against the one receipt of a
+// Task started by an older Ply: that receipt names no Goal revision, so only
+// its own start can be repeated and another revision needs a new Task.
+func olderStartRefusal(err error, task taskwork.TaskID, spec string, revision int) error {
+	var mismatch *agentstart.Error
+	if !errors.As(err, &mismatch) || mismatch.Code != agentstart.CodeInputMismatch {
+		return err
+	}
+	return &agentstart.Error{Code: mismatch.Code, Stage: mismatch.Stage, Err: fmt.Errorf("Task %s was started by an older Ply and its receipt names no Goal revision, so it repeats only that start; %s revision %d needs a new Task (%w)", task, spec, revision, mismatch.Err)}
+}
+
+func validateGoalTask(d taskwork.Dependencies, task taskwork.TaskReadbackResult) error {
 	if task.Task.Worktree == nil || !task.WorktreeReady {
 		return fmt.Errorf("create this Task worktree explicitly before agent start")
 	}
@@ -272,8 +317,24 @@ func validateGoalTask(task taskwork.TaskReadbackResult) error {
 		return fmt.Errorf("Task Git identity or inventory is stale or unknown")
 	}
 	match := func(got *string, want string) bool { return got != nil && *got == want }
-	if !match(target.Locator, wt.Locator) || !match(target.Ref, wt.Ref) || !match(target.OID, wt.OID) || !match(target.Tree, wt.Tree) || !match(target.GitCommonDir, wt.GitCommonDir) || wt.GitCommonDir != task.Task.GitCommonDir {
-		return fmt.Errorf("Task Git binding differs from the observed worktree")
+	differs := fmt.Errorf("Task Git binding differs from the observed worktree")
+	if !match(target.Locator, wt.Locator) || !match(target.Ref, wt.Ref) || !match(target.GitCommonDir, wt.GitCommonDir) || wt.GitCommonDir != task.Task.GitCommonDir {
+		return differs
+	}
+	if match(target.OID, wt.OID) {
+		if !match(target.Tree, wt.Tree) {
+			return differs
+		}
+		return nil
+	}
+	// The Task's agent has committed: the worktree may be ahead of its
+	// binding, never beside or behind it.
+	advanced, e := taskwork.TaskWorktreeAdvanced(d, task)
+	if e != nil {
+		return e
+	}
+	if !advanced {
+		return differs
 	}
 	return nil
 }

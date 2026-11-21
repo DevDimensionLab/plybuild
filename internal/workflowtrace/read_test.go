@@ -346,12 +346,12 @@ func TestTraceShowsGoalStartReceipt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	dir := filepath.Dir(taskwork.GoalStartReceiptPath(works[0], "task"))
-	if err := os.MkdirAll(dir, 0o700); err != nil {
+	single := taskwork.TaskGoalStartReceiptPath(works[0], "task")
+	if err := os.MkdirAll(filepath.Dir(single), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	receipt := `{"key":"task","provider":"claude","input_sha256":"` + strings.Repeat("a", 64) + `","reached":"prompt_submitted","tab":"w0:t3","pane":"w0:p3","terminal":"term_1","session":"aba59e60-6d2a-444d-8f26-40ab3c197902","folder_trust_accepted":true,"codex_update_skipped":true}`
-	if err := os.WriteFile(filepath.Join(dir, "task.json"), []byte(receipt), 0o600); err != nil {
+	if err := os.WriteFile(single, []byte(receipt), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	d.WorkGit = noGit{}
@@ -370,6 +370,80 @@ func TestTraceShowsGoalStartReceipt(t *testing.T) {
 		!strings.Contains(string(start.Data), `"pane":"w0:p3"`) || !strings.Contains(string(start.Data), `"session":"aba59e60-6d2a-444d-8f26-40ab3c197902"`) ||
 		!strings.Contains(string(start.Data), `"folder_trust_accepted":true`) || !strings.Contains(string(start.Data), `"codex_update_skipped":true`) {
 		t.Fatalf("goal start event %+v", start)
+	}
+	if err = ValidateReferences(r); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestTraceShowsTheGoalStartReceiptOfEachGoalRevision(t *testing.T) {
+	d, root := readFixture(t)
+	works, err := workspace.DefinedWork(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for revision, pane := range map[int]string{1: "w0:p3", 2: "w0:p4"} {
+		path := taskwork.GoalStartReceiptPath(works[0], "task", "spec", revision)
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		receipt := `{"key":"` + taskwork.GoalStartKey("task", "spec", revision) + `","provider":"claude","input_sha256":"` + strings.Repeat("a", 64) + `","reached":"prompt_submitted","tab":"w0:t3","pane":"` + pane + `","terminal":"term_1"}`
+		if err := os.WriteFile(path, []byte(receipt), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	d.WorkGit = noGit{}
+	d.Files = readOnlyFiles{d.Files}
+	r, err := Read(d, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	panes := ""
+	for _, event := range r.Events {
+		if event.Type == "goal_start" {
+			panes += string(event.Data)
+		}
+	}
+	if strings.Count(panes, `"pane":`) != 2 || !strings.Contains(panes, `"pane":"w0:p3"`) || !strings.Contains(panes, `"pane":"w0:p4"`) {
+		t.Fatalf("goal start events: %s", panes)
+	}
+	if err = ValidateReferences(r); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A receipt kept per Task and receipts per Goal revision are each shown.
+func TestTraceShowsTheTaskReceiptBesideReceiptsPerGoalRevision(t *testing.T) {
+	d, root := readFixture(t)
+	works, err := workspace.DefinedWork(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for path, receipt := range map[string]string{
+		taskwork.TaskGoalStartReceiptPath(works[0], "task"):        `{"key":"task","provider":"codex","input_sha256":"` + strings.Repeat("a", 64) + `","reached":"prompt_submitted","tab":"w0:t3","pane":"w0:p3","terminal":"term_1"}`,
+		taskwork.GoalStartReceiptPath(works[0], "task", "spec", 2): `{"key":"` + taskwork.GoalStartKey("task", "spec", 2) + `","provider":"claude","input_sha256":"` + strings.Repeat("b", 64) + `","reached":"reserved"}`,
+	} {
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(receipt), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	d.WorkGit = noGit{}
+	d.Files = readOnlyFiles{d.Files}
+	r, err := Read(d, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	starts := map[string]string{}
+	for _, event := range r.Events {
+		if event.Type == "goal_start" {
+			starts[event.Title] = string(event.Data)
+		}
+	}
+	if len(starts) != 2 || !strings.Contains(starts["Goal start: prompt_submitted"], `"provider":"codex"`) || !strings.Contains(starts["Goal start: reserved"], `"provider":"claude"`) {
+		t.Fatalf("goal start events: %v", starts)
 	}
 	if err = ValidateReferences(r); err != nil {
 		t.Fatal(err)

@@ -6,6 +6,7 @@ package taskactor
 import (
 	"encoding/json"
 	"os"
+	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
@@ -27,18 +28,44 @@ func Agent(provider, task string) string {
 	return provider + ":" + task
 }
 
-// StartedAgent is the agent goal-start started for task according to its
-// receipt, or "" without one.
+// StartedAgent is the agent goal-start started for task: that of the highest
+// Goal revision whose receipt reached an agent, else that of the receipt kept
+// per Task, or "" without one. A receipt that only reserved a start or
+// stopped before its agent names none.
 func StartedAgent(work workspace.ProjectWork, task string) string {
-	b, err := os.ReadFile(taskwork.GoalStartReceiptPath(work, taskwork.TaskID(task)))
+	paths, err := taskwork.GoalStartReceiptPaths(work, taskwork.TaskID(task))
+	if err != nil {
+		return ""
+	}
+	for i := len(paths) - 1; i >= 0; i-- {
+		if provider := startedProvider(paths[i], task); provider != "" {
+			return Agent(provider, task)
+		}
+	}
+	return ""
+}
+
+// startedProvider is the provider of the agent the receipt at path started
+// for task, or "" when the receipt does not show a started agent.
+func startedProvider(path, task string) string {
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return ""
 	}
 	var r agentstart.Receipt
-	if json.Unmarshal(b, &r) != nil || r.Provider == "" || r.Key != task {
+	if json.Unmarshal(b, &r) != nil {
 		return ""
 	}
-	return Agent(r.Provider, task)
+	// The receipt kept per Task has the Task as key; one per Goal revision
+	// has the Task first.
+	if r.Key != task && !strings.HasPrefix(r.Key, task+"@") {
+		return ""
+	}
+	switch r.Reached {
+	case agentstart.ReachedAgentStarted, agentstart.ReachedSessionBound, agentstart.ReachedPromptSubmitted:
+		return r.Provider
+	}
+	return ""
 }
 
 // Of is the actor of a record nobody named an actor for: Ply's own

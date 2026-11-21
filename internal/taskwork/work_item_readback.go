@@ -347,6 +347,26 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	return result, nil
 }
 
+// TaskWorktreeAdvanced reports whether the commit observed in the Task
+// worktree descends from the commit the Task is bound to.
+func TaskWorktreeAdvanced(dependencies Dependencies, shown TaskReadbackResult) (bool, error) {
+	if shown.Task.Worktree == nil || shown.Target.OID == nil {
+		return false, nil
+	}
+	if dependencies.Projects == nil || dependencies.WorkGit == nil {
+		return false, workspace.WorkError(workspace.ErrorWorkIO, "project store and Git dependencies are required", nil)
+	}
+	projects, repositories, err := dependencies.Projects.Snapshot(shown.Workspace)
+	if err != nil {
+		return false, err
+	}
+	_, repository, err := projectAndRepo(workspace.ProjectSnapshot{Projects: projects, Repos: repositories}, shown.Task.ProjectID, shown.Task.RepoID)
+	if err != nil {
+		return false, err
+	}
+	return dependencies.WorkGit.IsAncestor(repository, shown.Task.Worktree.OID, *shown.Target.OID)
+}
+
 func MarshalEpicReadback(result EpicReadbackResult) ([]byte, error) {
 	observed := []canonicaljson.Value{}
 	for _, item := range result.Observed {
