@@ -60,6 +60,16 @@ func TestScannerLegalAndExcludedFiles(t *testing.T) {
 	put(t, root, "vendor/nested/go.mod", "module ignored")
 	expectProblems(t, root)
 }
+
+// The ignored .build/ in the repository root holds agents' temporary tools;
+// a .build directory elsewhere is still production source.
+func TestScannerSkipsTheRootBuildArea(t *testing.T) {
+	root := legalFixture(t)
+	put(t, root, ".build/tool/go.mod", "module tool\n")
+	put(t, root, ".build/tool/main.go", "invalid Go")
+	put(t, root, "internal/workitem/.build/go.mod", "module nested\n")
+	expectProblems(t, root, "internal/workitem/.build/go.mod:1:1: WI01-SCAN nested module in production scan")
+}
 func TestScannerR1AllImportForms(t *testing.T) {
 	for _, path := range []string{fixtureModule + "/internal/workspace", "os", "os/exec", "net/http", "example.org/thirdparty", "unsafe", fixtureModule + "/internal/workitem/subpackage"} {
 		for _, alias := range []string{"", "renamed ", ". ", "_ "} {

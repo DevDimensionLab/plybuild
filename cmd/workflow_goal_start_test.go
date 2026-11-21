@@ -54,9 +54,19 @@ func TestGoalStartAcceptsObservedBindingAndRejectsDifferentRepository(t *testing
 	task.Task.GitCommonDir = "/repo/.git"
 	task.Task.Worktree = &taskwork.TaskWorktreeBinding{Locator: "/task", Ref: "refs/heads/task", OID: "oid", Tree: "tree", GitCommonDir: "/repo/.git"}
 	task.Target = taskwork.TaskObservedTarget{Locator: p("/task"), Ref: p("refs/heads/task"), OID: p("oid"), Tree: p("tree"), GitCommonDir: p("/repo/.git"), Clean: &yes, InventoryMatch: &yes}
+	task.Source = taskwork.TaskObservedSource{Ref: p("refs/heads/task"), OID: p("oid"), Tree: p("tree"), CheckedOutAt: p("/task")}
 	if err := validateGoalTask(taskwork.Dependencies{}, task); err != nil {
 		t.Fatal(err)
 	}
+	task.Source.CheckedOutAt = p("/elsewhere")
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
+		t.Fatal("Task branch checked out in another worktree admitted")
+	}
+	task.Source = taskwork.TaskObservedSource{}
+	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
+		t.Fatal("unobserved Task branch admitted")
+	}
+	task.Source = taskwork.TaskObservedSource{Ref: p("refs/heads/task"), OID: p("oid"), Tree: p("tree"), CheckedOutAt: p("/task")}
 	task.Target.GitCommonDir = p("/clone/.git")
 	if err := validateGoalTask(taskwork.Dependencies{}, task); err == nil {
 		t.Fatal("separate clone with identical commit/ref admitted")
@@ -531,6 +541,72 @@ func TestGoalStartRejectsWorktreeThatIsNotACleanDescendantOnItsRef(t *testing.T)
 			c.drift(t, git, worktree, first)
 			if plan, err := previewGoalStart(t, d); err == nil || !strings.Contains(err.Error(), c.want) {
 				t.Fatalf("drifted Task worktree: %+v %v", plan, err)
+			}
+		})
+	}
+}
+
+// Backlog 20261121-4e694844: Git can be forced to check the Task branch out
+// in a second worktree while the Task worktree keeps it. The branch can then
+// not be observed, and the start is refused before any effect.
+func TestGoalStartRejectsTaskBranchForcedOutInASecondWorktree(t *testing.T) {
+	for name, c := range map[string]struct {
+		advanced bool
+		force    func(git func(string, ...string) string, worktree, second string)
+	}{
+		"worktree add --force at the bound commit": {false, func(git func(string, ...string) string, worktree, second string) {
+			git(worktree, "worktree", "add", "-q", "--force", second, "moved")
+		}},
+		"checkout --ignore-other-worktrees after a commit": {true, func(git func(string, ...string) string, worktree, second string) {
+			git(worktree, "worktree", "add", "-q", "--detach", second)
+			git(second, "checkout", "-q", "--ignore-other-worktrees", "moved")
+		}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d, git, worktree, _, _ := goalStartFixture(t)
+			if c.advanced {
+				git(worktree, "commit", "-q", "--allow-empty", "-m", "work")
+			}
+			second := filepath.Join(filepath.Dir(worktree), "second")
+			c.force(git, worktree, second)
+			for _, dir := range []string{worktree, second} {
+				if ref := git(dir, "symbolic-ref", "HEAD"); ref != "refs/heads/moved" {
+					t.Fatalf("fixture: %s is on %s", dir, ref)
+				}
+			}
+			const want = "Task branch could not be observed as checked out in the Task worktree only"
+			if _, err := previewGoalStart(t, d); err == nil || !strings.Contains(err.Error(), want) {
+				t.Fatalf("preview with the Task branch in two worktrees: %v", err)
+			}
+			journal := func() string {
+				t.Helper()
+				out, err := runWorkspaceView(t, d, "task", "journal", "show", "moved", "--format", "json")
+				if err != nil {
+					t.Fatal(err)
+				}
+				var snap taskjournal.Snapshot
+				if err = json.Unmarshal([]byte(out), &snap); err != nil {
+					t.Fatal(err)
+				}
+				var events []string
+				for _, event := range snap.Events {
+					events = append(events, event.EventID+" "+event.Title)
+				}
+				return strings.Join(events, "\n")
+			}
+			before := journal()
+			log := fakeHerdrOnPath(t)
+			if r, err := applyGoalStart(t, d, "1"); err == nil || !strings.Contains(err.Error(), want) {
+				t.Fatalf("start with the Task branch in two worktrees: %+v %v", r, err)
+			}
+			if calls, err := os.ReadFile(log); !os.IsNotExist(err) {
+				t.Fatalf("the refused start reached Herdr: %s %v", calls, err)
+			}
+			if after := journal(); after != before {
+				t.Fatalf("the refused start wrote to the Task journal: %s", after)
+			}
+			if receipts, err := filepath.Glob(filepath.Join(filepath.Dir(worktree), "data", "work", "task-process", "goal-start", "*")); err != nil || len(receipts) != 0 {
+				t.Fatalf("the refused start reserved a receipt: %v %v", receipts, err)
 			}
 		})
 	}

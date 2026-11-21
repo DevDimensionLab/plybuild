@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 )
 
 // startTask registers task on PLAN-1 step review, creates its worktree and
@@ -36,6 +38,7 @@ func traceOf(t *testing.T, f planCLIFixture) planTraceDoc {
 // operations get the plan owner and the agent's steps get the agent that
 // goal-start started; a reviewer Task's steps get its role.
 func TestActorAndRoleComeFromTheTaskWithoutActorOrEnvironment(t *testing.T) {
+	t.Setenv("PLY_ACTOR", "")
 	f, oid := recordingFixture(t)
 	before := mr05Snapshot(t, f.root)
 	f.failure(t, f.root, nil, "--role must be developer or reviewer", "workspace", "task", "goal", "register", "bad", "--spec", "bad-v1", "--title", "T", "--objective", "O", "--criterion", "C",
@@ -76,8 +79,13 @@ func TestActorAndRoleComeFromTheTaskWithoutActorOrEnvironment(t *testing.T) {
 // Records stored with actor unknown before the rule get their actor by the
 // same rule when the trace is read, marked derived; the journal is unchanged.
 func TestPlanTraceDerivesTheActorOfOlderUnknownRecords(t *testing.T) {
+	t.Setenv("PLY_ACTOR", "")
 	f, oid := recordingFixture(t)
 	startTask(t, f, oid, "old")
+	started := map[string]bool{}
+	for _, ev := range plyActions(t, f, "old") {
+		started[ev.EventID] = true
+	}
 	f.success(t, f.root, "workspace", "task", "journal", "step", "start", "old", "--id", "i1", "--kind", "implementation", "--title", "Implement", "--actor", "unknown")
 	f.success(t, f.root, "workspace", "task", "journal", "link", "old", "--plan", "PLAN-1", "--plan-step", "impl", "--actor", "unknown")
 	var step, link bool
@@ -88,7 +96,15 @@ func TestPlanTraceDerivesTheActorOfOlderUnknownRecords(t *testing.T) {
 	if !step || !link {
 		t.Fatalf("events %+v", traceOf(t, f).Events)
 	}
-	if got := operationsOf(t, plyActions(t, f, "old")[5:], "unknown"); strings.Join(got, ",") != "plan_link" {
+	// The journal lists events by ID, not by time: the stored records are the
+	// ones added after startTask.
+	var stored []taskjournal.Event
+	for _, ev := range plyActions(t, f, "old") {
+		if !started[ev.EventID] {
+			stored = append(stored, ev)
+		}
+	}
+	if got := operationsOf(t, stored, "unknown"); strings.Join(got, ",") != "plan_link" {
 		t.Fatalf("stored records changed: %v", got)
 	}
 }

@@ -321,6 +321,11 @@ func validateGoalTask(d taskwork.Dependencies, task taskwork.TaskReadbackResult)
 	if !match(target.Locator, wt.Locator) || !match(target.Ref, wt.Ref) || !match(target.GitCommonDir, wt.GitCommonDir) || wt.GitCommonDir != task.Task.GitCommonDir {
 		return differs
 	}
+	// A failed observation of the Task branch leaves the source empty, as
+	// when Git is forced to check the branch out in a second worktree.
+	if !match(task.Source.CheckedOutAt, wt.Locator) {
+		return fmt.Errorf("Task branch could not be observed as checked out in the Task worktree only")
+	}
 	if match(target.OID, wt.OID) {
 		if !match(target.Tree, wt.Tree) {
 			return differs

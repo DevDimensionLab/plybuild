@@ -50,6 +50,26 @@ func TestExecutableEntryBoundary(t *testing.T) {
 	}
 }
 
+// The ignored .build/ in the repository root holds agents' temporary tools;
+// a .build directory elsewhere is still scanned.
+func TestProcessTerminationScanSkipsTheRootBuildArea(t *testing.T) {
+	root := t.TempDir()
+	for _, name := range []string{"main.go", ".build/tool/main.go", "internal/tool/.build/main.go"} {
+		path := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte("package main\n\nimport \"os\"\n\nfunc main() { os.Exit(1) }\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	violations, exitCounts := processTerminationViolations(t, root, []string{"main.go"})
+	want := []string{filepath.FromSlash("internal/tool/.build/main.go") + ":5 os.Exit"}
+	if strings.Join(violations, "\n") != strings.Join(want, "\n") || exitCounts["main.go"] != 1 {
+		t.Fatalf("violations %q exits %v, want %q and one exit in main.go", violations, exitCounts, want)
+	}
+}
+
 func testRepositoryRoot(t *testing.T) string {
 	t.Helper()
 	_, filename, _, ok := runtime.Caller(0)
@@ -215,7 +235,7 @@ func processTerminationViolations(t *testing.T, repositoryRoot string, entrypoin
 			return walkErr
 		}
 		if info.IsDir() {
-			if info.Name() == ".git" || info.Name() == "target" || info.Name() == "vendor" {
+			if info.Name() == ".git" || info.Name() == "target" || info.Name() == "vendor" || path == filepath.Join(repositoryRoot, ".build") {
 				return filepath.SkipDir
 			}
 			return nil
