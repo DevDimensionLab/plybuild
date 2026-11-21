@@ -40,7 +40,10 @@ type TaskObservedWorktree struct {
 	Locator, Ref, OID, Tree, GitCommonDir *string
 	Clean, InventoryMatch                 *bool
 }
-type TaskObservedSource struct{ Ref, OID, Tree, CheckedOutAt *string }
+
+// TaskObservedSource is the Task branch as Git showed it. Diagnostic holds
+// Git's answer when the branch could not be observed.
+type TaskObservedSource struct{ Ref, OID, Tree, CheckedOutAt, Diagnostic *string }
 type TaskObservedTarget struct {
 	Kind                                  string
 	Locator, Ref, OID, Tree, GitCommonDir *string
@@ -291,7 +294,8 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 	} else if found && dependencies.WorkGit != nil {
 		source, sourceErr := dependencies.WorkGit.ObserveRef(repository, sourceRef)
 		if sourceErr != nil {
-			result.Reasons = append(result.Reasons, "source_ref_stale")
+			result.Source.Diagnostic = stringPointer(sourceErr.Error())
+			result.Reasons = append(result.Reasons, "source_observation_unknown")
 		} else if source.Exists {
 			result.Source = TaskObservedSource{Ref: stringPointer(source.Ref), OID: stringPointer(source.OID), Tree: stringPointer(source.Tree)}
 			if source.CheckedOutAt != "" {
@@ -329,7 +333,13 @@ func ShowTask(dependencies Dependencies, id TaskID) (TaskReadbackResult, error) 
 			_, current := observeTaskCreate(dependencies, repository, *binding, operation)
 			result.Target = TaskObservedTarget{Kind: current.TargetKind, Locator: current.TargetLocator, Ref: current.TargetRef, OID: current.TargetOID, Tree: current.TargetTree, GitCommonDir: current.TargetGitCommonDir, Clean: current.TargetClean, InventoryMatch: current.InventoryMatch}
 			result.TargetFreshness = freshnessForObservedTarget(current, operation)
-			result.Reasons = append(result.Reasons, current.Reasons...)
+			// The creation observation reads the same Task branch again; when
+			// that read failed above, its source_ref_stale is the same failure.
+			for _, reason := range current.Reasons {
+				if reason != "source_ref_stale" || result.Source.Diagnostic == nil {
+					result.Reasons = append(result.Reasons, reason)
+				}
+			}
 			if task.WorktreeState == WorkItemCreating {
 				result.Reasons = append(result.Reasons, "task_worktree_creation_in_progress")
 			} else {
@@ -541,7 +551,7 @@ func observedWorktreeCanonical(value TaskObservedWorktree) canonicaljson.Value {
 	return canonicaljson.Object{{Name: "locator", Value: pointerValue(value.Locator)}, {Name: "ref", Value: pointerValue(value.Ref)}, {Name: "oid", Value: pointerValue(value.OID)}, {Name: "tree", Value: pointerValue(value.Tree)}, {Name: "git_common_dir", Value: pointerValue(value.GitCommonDir)}, {Name: "clean", Value: pointerValue(value.Clean)}, {Name: "inventory_match", Value: pointerValue(value.InventoryMatch)}}
 }
 func observedSourceCanonical(value TaskObservedSource) canonicaljson.Value {
-	return canonicaljson.Object{{Name: "ref", Value: pointerValue(value.Ref)}, {Name: "oid", Value: pointerValue(value.OID)}, {Name: "tree", Value: pointerValue(value.Tree)}, {Name: "checked_out_at", Value: pointerValue(value.CheckedOutAt)}}
+	return canonicaljson.Object{{Name: "ref", Value: pointerValue(value.Ref)}, {Name: "oid", Value: pointerValue(value.OID)}, {Name: "tree", Value: pointerValue(value.Tree)}, {Name: "checked_out_at", Value: pointerValue(value.CheckedOutAt)}, {Name: "diagnostic", Value: pointerValue(value.Diagnostic)}}
 }
 func observedTargetCanonical(value TaskObservedTarget) canonicaljson.Value {
 	return canonicaljson.Object{{Name: "kind", Value: value.Kind}, {Name: "locator", Value: pointerValue(value.Locator)}, {Name: "ref", Value: pointerValue(value.Ref)}, {Name: "oid", Value: pointerValue(value.OID)}, {Name: "tree", Value: pointerValue(value.Tree)}, {Name: "git_common_dir", Value: pointerValue(value.GitCommonDir)}, {Name: "clean", Value: pointerValue(value.Clean)}, {Name: "inventory_match", Value: pointerValue(value.InventoryMatch)}}

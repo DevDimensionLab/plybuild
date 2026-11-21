@@ -10,10 +10,12 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -551,15 +553,19 @@ func TestGoalStartRejectsWorktreeThatIsNotACleanDescendantOnItsRef(t *testing.T)
 // not be observed, and the start is refused before any effect.
 func TestGoalStartRejectsTaskBranchForcedOutInASecondWorktree(t *testing.T) {
 	for name, c := range map[string]struct {
-		advanced bool
-		force    func(git func(string, ...string) string, worktree, second string)
+		advanced, dirty bool
+		force           func(git func(string, ...string) string, worktree, second string)
 	}{
-		"worktree add --force at the bound commit": {false, func(git func(string, ...string) string, worktree, second string) {
+		"worktree add --force at the bound commit": {false, false, func(git func(string, ...string) string, worktree, second string) {
 			git(worktree, "worktree", "add", "-q", "--force", second, "moved")
 		}},
-		"checkout --ignore-other-worktrees after a commit": {true, func(git func(string, ...string) string, worktree, second string) {
+		"checkout --ignore-other-worktrees after a commit": {true, false, func(git func(string, ...string) string, worktree, second string) {
 			git(worktree, "worktree", "add", "-q", "--detach", second)
 			git(second, "checkout", "-q", "--ignore-other-worktrees", "moved")
+		}},
+		// ASSIGNMENT-300: an unregistered file must not hide Git's cause.
+		"worktree add --force with an unregistered file": {false, true, func(git func(string, ...string) string, worktree, second string) {
+			git(worktree, "worktree", "add", "-q", "--force", second, "moved")
 		}},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -569,12 +575,17 @@ func TestGoalStartRejectsTaskBranchForcedOutInASecondWorktree(t *testing.T) {
 			}
 			second := filepath.Join(filepath.Dir(worktree), "second")
 			c.force(git, worktree, second)
+			if c.dirty {
+				if err := os.WriteFile(filepath.Join(worktree, "untracked"), nil, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
 			for _, dir := range []string{worktree, second} {
 				if ref := git(dir, "symbolic-ref", "HEAD"); ref != "refs/heads/moved" {
 					t.Fatalf("fixture: %s is on %s", dir, ref)
 				}
 			}
-			const want = "Task branch could not be observed as checked out in the Task worktree only"
+			want := "Task branch could not be observed as checked out in the Task worktree only: " + string(workspace.ErrorWorkGitObservation) + ": ref refs/heads/moved is checked out more than once"
 			if _, err := previewGoalStart(t, d); err == nil || !strings.Contains(err.Error(), want) {
 				t.Fatalf("preview with the Task branch in two worktrees: %v", err)
 			}
@@ -609,6 +620,47 @@ func TestGoalStartRejectsTaskBranchForcedOutInASecondWorktree(t *testing.T) {
 				t.Fatalf("the refused start reserved a receipt: %v %v", receipts, err)
 			}
 		})
+	}
+}
+
+// Backlog 20261121-68d70343: when Git cannot observe the Task branch because
+// it is forced out in a second worktree, task show reports the failed
+// observation with its Git cause instead of a stale start base.
+func TestTaskShowReportsAFailedSourceObservationWithItsGitCause(t *testing.T) {
+	d, git, worktree, _, _ := goalStartFixture(t)
+	git(worktree, "worktree", "add", "-q", "--force", filepath.Join(filepath.Dir(worktree), "second"), "moved")
+	// A dirty Task worktree adds a reason that must not carry the Git cause.
+	if err := os.WriteFile(filepath.Join(worktree, "untracked"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cause := string(workspace.ErrorWorkGitObservation) + ": ref refs/heads/moved is checked out more than once"
+	out, err := runWorkspaceView(t, d, "task", "show", "moved", "--format", "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var shown struct {
+		Resource struct {
+			Reasons  []string `json:"reasons"`
+			Observed struct {
+				Source map[string]any `json:"source"`
+			} `json:"observed"`
+		} `json:"resource"`
+	}
+	if err = json.Unmarshal([]byte(out), &shown); err != nil {
+		t.Fatal(err)
+	}
+	if reasons := shown.Resource.Reasons; !slices.Contains(reasons, "source_observation_unknown") || slices.Contains(reasons, "source_ref_stale") {
+		t.Errorf("reasons = %q, want source_observation_unknown and no source_ref_stale", reasons)
+	}
+	if got := shown.Resource.Observed.Source["diagnostic"]; got != cause {
+		t.Errorf("observed.source.diagnostic = %#v, want %q", got, cause)
+	}
+	text, err := runWorkspaceView(t, d, "task", "show", "moved")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "Reason: The current Task branch state could not be observed: " + cause + "\n"; !strings.Contains(text, want) || strings.Count(text, cause) != 1 || !strings.Contains(text, "Reason: The Task worktree is not clean.\n") || strings.Contains(text, "no longer matches the recorded start base") || !strings.Contains(text, "Fresh observation: unknown;") {
+		t.Errorf("task show text lacks %q or still reports a stale start base:\n%s", want, text)
 	}
 }
 

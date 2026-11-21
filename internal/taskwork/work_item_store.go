@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"reflect"
 	"regexp"
@@ -1082,7 +1083,7 @@ func exactObservationMatchesOperation(operation WorktreeOperationRecord, parentL
 }
 
 func (validation *workItemRegistryValidation) validateOperationsHaveTasks() error {
-	for taskID := range validation.operations {
+	for _, taskID := range slices.Sorted(maps.Keys(validation.operations)) {
 		if task, _ := findTask(validation.registry, taskID); task == nil {
 			return fmt.Errorf("operation refers to missing Task %s", taskID)
 		}
@@ -1463,6 +1464,17 @@ func sortedIntegrationResults(v []IntegrationResult) bool {
 	return true
 }
 
+// firstInvalidField rejects the first present field, by name, whose value the
+// rule does not accept, so that several invalid fields always give one answer.
+func firstInvalidField(fields map[string]*string, valid func(string) bool) error {
+	for _, name := range slices.Sorted(maps.Keys(fields)) {
+		if value := fields[name]; value != nil && !valid(*value) {
+			return fmt.Errorf("invalid %s", name)
+		}
+	}
+	return nil
+}
+
 func validateObservation(observation WorktreeObservationRecord, state string) error {
 	if observation.Reasons == nil || !sort.StringsAreSorted(observation.Reasons) {
 		return errors.New("observation reasons must be an explicit sorted array")
@@ -1481,20 +1493,14 @@ func validateObservation(observation WorktreeObservationRecord, state string) er
 	if observation.TargetKind != "absent" && observation.TargetKind != "worktree" && observation.TargetKind != "other" && observation.TargetKind != "unknown" {
 		return fmt.Errorf("invalid target kind %s", observation.TargetKind)
 	}
-	for name, value := range map[string]*string{"parent_ref_oid": observation.ParentRefOID, "parent_ref_tree": observation.ParentRefTree, "parent_worktree_oid": observation.ParentWorktreeOID, "parent_worktree_tree": observation.ParentWorktreeTree, "source_ref_oid": observation.SourceRefOID, "source_ref_tree": observation.SourceRefTree, "target_oid": observation.TargetOID, "target_tree": observation.TargetTree} {
-		if value != nil && !validOIDText(*value) {
-			return fmt.Errorf("invalid %s", name)
-		}
+	if err := firstInvalidField(map[string]*string{"parent_ref_oid": observation.ParentRefOID, "parent_ref_tree": observation.ParentRefTree, "parent_worktree_oid": observation.ParentWorktreeOID, "parent_worktree_tree": observation.ParentWorktreeTree, "source_ref_oid": observation.SourceRefOID, "source_ref_tree": observation.SourceRefTree, "target_oid": observation.TargetOID, "target_tree": observation.TargetTree}, validOIDText); err != nil {
+		return err
 	}
-	for name, value := range map[string]*string{"parent_worktree_locator": observation.ParentWorktreeLocator, "parent_worktree_git_common_dir": observation.ParentWorktreeGitCommonDir, "source_ref_checked_out_at": observation.SourceRefCheckedOutAt, "target_locator": observation.TargetLocator, "target_git_common_dir": observation.TargetGitCommonDir} {
-		if value != nil && !workspace.ValidStoredPath(*value) {
-			return fmt.Errorf("invalid %s", name)
-		}
+	if err := firstInvalidField(map[string]*string{"parent_worktree_locator": observation.ParentWorktreeLocator, "parent_worktree_git_common_dir": observation.ParentWorktreeGitCommonDir, "source_ref_checked_out_at": observation.SourceRefCheckedOutAt, "target_locator": observation.TargetLocator, "target_git_common_dir": observation.TargetGitCommonDir}, workspace.ValidStoredPath); err != nil {
+		return err
 	}
-	for name, value := range map[string]*string{"parent_worktree_ref": observation.ParentWorktreeRef, "target_ref": observation.TargetRef} {
-		if value != nil && !validFullBranchRef(*value) {
-			return fmt.Errorf("invalid %s", name)
-		}
+	if err := firstInvalidField(map[string]*string{"parent_worktree_ref": observation.ParentWorktreeRef, "target_ref": observation.TargetRef}, validFullBranchRef); err != nil {
+		return err
 	}
 	switch state {
 	case "creating":

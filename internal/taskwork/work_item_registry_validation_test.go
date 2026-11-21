@@ -741,6 +741,44 @@ func TestValidateWorkItemRegistryOperationNeedsRegisteredTask(t *testing.T) {
 	})
 }
 
+// Of several breaches of one rule, the one with the smallest name answers,
+// every time. Map order once chose among them, so each case runs repeatedly.
+func TestValidateWorkItemRegistryNamesTheSmallestOfSeveral(t *testing.T) {
+	t.Parallel()
+	observation := func(change func(o *WorktreeObservationRecord)) func(r *WorkItemRegistry) {
+		return func(r *WorkItemRegistry) { change(&r.WorktreeOperations[readyOperation].LastObservation) }
+	}
+	const ready = "operation wop_44444444444444444444444444444444: "
+	for _, tc := range []registryViolation{
+		{"operations without Task", func(r *WorkItemRegistry) {
+			for digit, task := range map[string]TaskID{"7": "ghost-c", "8": "ghost-a", "9": "ghost-b"} {
+				r.WorktreeOperations = append(r.WorktreeOperations, validationOperation(validationTask(task, r.Epics[0]), r.Epics[0], digit, "creating"))
+			}
+			slices.SortFunc(r.WorktreeOperations, func(a, b WorktreeOperationRecord) int { return strings.Compare(string(a.ID), string(b.ID)) })
+		}, "operation refers to missing Task ghost-a"},
+		{"object IDs", observation(func(o *WorktreeObservationRecord) {
+			o.TargetTree, o.SourceRefOID, o.ParentWorktreeTree = stringPointer("bad"), stringPointer("bad"), stringPointer("bad")
+		}), ready + "invalid parent_worktree_tree"},
+		{"paths", observation(func(o *WorktreeObservationRecord) {
+			o.TargetLocator, o.SourceRefCheckedOutAt, o.ParentWorktreeGitCommonDir = stringPointer("relative"), stringPointer("relative"), stringPointer("relative")
+		}), ready + "invalid parent_worktree_git_common_dir"},
+		{"refs", observation(func(o *WorktreeObservationRecord) {
+			o.TargetRef, o.ParentWorktreeRef = stringPointer("main"), stringPointer("main")
+		}), ready + "invalid parent_worktree_ref"},
+		{"object ID before path and ref", observation(func(o *WorktreeObservationRecord) {
+			o.TargetTree, o.ParentWorktreeLocator, o.ParentWorktreeRef = stringPointer("bad"), stringPointer("relative"), stringPointer("main")
+		}), ready + "invalid target_tree"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for range 64 {
+				r := validationRegistry()
+				tc.mutate(&r)
+				assertRegistryError(t, validateWorkItemRegistry(r), tc.want)
+			}
+		})
+	}
+}
+
 // The three tests below pin rules that an earlier phase or an earlier record
 // currently keeps from answering through validateWorkItemRegistry. They call
 // the helpers, so that the rules are still there when the earlier phase changes.

@@ -588,14 +588,16 @@ func TestPublicationChainRequestFieldsEqualTheManifest(t *testing.T) {
 	})
 }
 
-// Request fields are compared in map order, so which of several differing
-// fields the answer names changes from run to run.
-func TestPublicationChainNamesOneOfSeveralDifferingFields(t *testing.T) {
+// Of several differing request fields, the one with the smallest name answers,
+// every time. Map order once chose among them, so the case runs repeatedly.
+func TestPublicationChainNamesTheSmallestOfSeveralDifferingFields(t *testing.T) {
 	t.Parallel()
 	c := newPublicationChainCase(t, problemKey)
 	c.manifest["title"], c.manifest["summary"] = "Other", "Other"
-	if got := c.answer(); got != "unclassified: request field title differs" && got != "unclassified: request field summary differs" {
-		t.Fatalf("got %q", got)
+	for range 64 {
+		if got := c.answer(); got != "unclassified: request field summary differs" {
+			t.Fatalf("got %q", got)
+		}
 	}
 	c = newPublicationChainCase(t, problemKey)
 	c.manifest = nil

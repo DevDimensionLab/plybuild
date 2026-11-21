@@ -401,7 +401,7 @@ func renderTaskShow(command *cobra.Command, result taskwork.TaskReadbackResult) 
 		if _, err := fmt.Fprint(command.OutOrStdout(), "Worktree: not created\nState: unbound\nFresh observation: not requested\nReady for handoff: no\nReason: Task worktree has not been created.\nAgent started by this command: no\n"); err != nil {
 			return err
 		}
-	} else if err := renderTaskWorktreeBlock(command, result.Task, result.Operation, result.ReadyForHandoff, result.Reasons); err != nil {
+	} else if err := renderTaskWorktreeBlock(command, result.Task, result.Operation, result.ReadyForHandoff, result.Reasons, result.Source.Diagnostic); err != nil {
 		return err
 	}
 	if result.Integration != nil {
@@ -410,7 +410,10 @@ func renderTaskShow(command *cobra.Command, result taskwork.TaskReadbackResult) 
 	}
 	return nil
 }
-func renderTaskWorktreeBlock(command *cobra.Command, task taskwork.TaskRecord, operation *taskwork.WorktreeOperationRecord, ready bool, reasons []string) error {
+
+// renderTaskWorktreeBlock writes the Task worktree and its reasons; a failed
+// observation of the Task branch is followed by Git's answer when there is one.
+func renderTaskWorktreeBlock(command *cobra.Command, task taskwork.TaskRecord, operation *taskwork.WorktreeOperationRecord, ready bool, reasons []string, sourceDiagnostic *string) error {
 	locator := ""
 	worktreeID := ""
 	branch := ""
@@ -442,7 +445,7 @@ func renderTaskWorktreeBlock(command *cobra.Command, task taskwork.TaskRecord, o
 	if !ready {
 		summary = "stale; one or more current fields differ from the recorded binding"
 		for _, reason := range reasons {
-			if reason == "parent_observation_unknown" || reason == "target_observation_unknown" || reason == "worktree_inventory_unknown" || reason == "project_binding_unknown" {
+			if reason == "parent_observation_unknown" || reason == "source_observation_unknown" || reason == "target_observation_unknown" || reason == "worktree_inventory_unknown" || reason == "project_binding_unknown" {
 				summary = "unknown; one or more current fields could not be observed"
 				break
 			}
@@ -452,7 +455,11 @@ func renderTaskWorktreeBlock(command *cobra.Command, task taskwork.TaskRecord, o
 		return err
 	}
 	for _, reason := range reasons {
-		if _, err := fmt.Fprintf(command.OutOrStdout(), "Reason: %s\n", workReasonText(reason)); err != nil {
+		text := workReasonText(reason)
+		if reason == "source_observation_unknown" && sourceDiagnostic != nil {
+			text = strings.TrimSuffix(text, ".") + ": " + *sourceDiagnostic
+		}
+		if _, err := fmt.Fprintf(command.OutOrStdout(), "Reason: %s\n", text); err != nil {
 			return err
 		}
 	}
@@ -529,13 +536,13 @@ func renderTaskWorktreeMutation(command *cobra.Command, result taskwork.TaskWork
 		if _, err := fmt.Fprintf(command.OutOrStdout(), "Historical creation receipt; inspect current Git state with `ply workspace task show %s`.\n", result.Task.ID); err != nil {
 			return err
 		}
-		return renderTaskWorktreeBlock(command, result.Task, nil, false, []string{"target_observation_unknown"})
+		return renderTaskWorktreeBlock(command, result.Task, nil, false, []string{"target_observation_unknown"}, nil)
 	}
-	return renderTaskWorktreeBlock(command, result.Task, result.Operation, true, nil)
+	return renderTaskWorktreeBlock(command, result.Task, result.Operation, true, nil, nil)
 }
 
 func workReasonText(reason string) string {
-	values := map[string]string{"task_worktree_unbound": "Task worktree has not been created.", "task_worktree_creation_in_progress": "Task worktree creation has not reached a verified terminal state.", "task_worktree_reconciliation_required": "Task worktree state requires an explicit reconciliation activity.", "project_binding_stale": "The current Project repository binding differs from the recorded binding.", "project_binding_unknown": "The current Project repository binding could not be observed.", "epic_ref_stale": "The Epic branch no longer matches the recorded commit and tree.", "epic_worktree_stale": "The Epic worktree no longer matches the recorded binding.", "epic_worktree_dirty": "The Epic worktree is not clean.", "epic_observation_unknown": "The current Epic worktree state could not be observed completely.", "parent_ref_stale": "The parent branch no longer matches the recorded start base.", "parent_worktree_stale": "The parent worktree no longer matches the recorded binding.", "parent_worktree_dirty": "The parent worktree is not clean.", "parent_observation_unknown": "The current parent worktree state could not be observed completely.", "source_ref_stale": "The Task branch no longer matches the recorded start base.", "source_ref_checked_out_elsewhere": "The Task branch is checked out in a different worktree.", "target_worktree_stale": "The Task worktree no longer matches the recorded binding.", "target_worktree_dirty": "The Task worktree is not clean.", "target_observation_unknown": "The current Task worktree state could not be observed completely.", "worktree_inventory_stale": "Git worktree inventory differs from the recorded binding.", "worktree_inventory_unknown": "Git worktree inventory could not be observed completely."}
+	values := map[string]string{"task_worktree_unbound": "Task worktree has not been created.", "task_worktree_creation_in_progress": "Task worktree creation has not reached a verified terminal state.", "task_worktree_reconciliation_required": "Task worktree state requires an explicit reconciliation activity.", "project_binding_stale": "The current Project repository binding differs from the recorded binding.", "project_binding_unknown": "The current Project repository binding could not be observed.", "epic_ref_stale": "The Epic branch no longer matches the recorded commit and tree.", "epic_worktree_stale": "The Epic worktree no longer matches the recorded binding.", "epic_worktree_dirty": "The Epic worktree is not clean.", "epic_observation_unknown": "The current Epic worktree state could not be observed completely.", "parent_ref_stale": "The parent branch no longer matches the recorded start base.", "parent_worktree_stale": "The parent worktree no longer matches the recorded binding.", "parent_worktree_dirty": "The parent worktree is not clean.", "parent_observation_unknown": "The current parent worktree state could not be observed completely.", "source_ref_stale": "The Task branch no longer matches the recorded start base.", "source_observation_unknown": "The current Task branch state could not be observed.", "source_ref_checked_out_elsewhere": "The Task branch is checked out in a different worktree.", "target_worktree_stale": "The Task worktree no longer matches the recorded binding.", "target_worktree_dirty": "The Task worktree is not clean.", "target_observation_unknown": "The current Task worktree state could not be observed completely.", "worktree_inventory_stale": "Git worktree inventory differs from the recorded binding.", "worktree_inventory_unknown": "Git worktree inventory could not be observed completely."}
 	if value, ok := values[reason]; ok {
 		return value
 	}

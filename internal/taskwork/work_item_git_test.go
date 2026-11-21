@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -325,4 +326,39 @@ func initWorkItemGitRepository(t *testing.T) string {
 	runLocalGit(t, root, "add", "README.md")
 	runLocalGit(t, root, "commit", "-m", "fixture")
 	return root
+}
+
+// ASSIGNMENT-300: a Task whose worktree creation has not finished observes
+// its branch twice; one failed Git observation is reported once, as
+// source_observation_unknown with Git's cause, not also as a stale start base.
+func TestShowTaskInCreationReportsAFailedSourceObservationOnlyAsUnknown(t *testing.T) {
+	t.Parallel()
+	fixture := newWorkItemJourneyFixture(t)
+	base := fixture.dependencies.WorkGit
+	fixture.dependencies.WorkGit = noEffectGit{WorkItemGit: base}
+	input, _ := ParseTaskWorktreeCreateInput("task", "task", filepath.Join(fixture.wrapper, "task"), fixture.oid)
+	if _, err := CreateTaskWorktree(fixture.dependencies, input); err == nil {
+		t.Fatal("fixture: worktree creation unexpectedly succeeded")
+	}
+	fixture.dependencies.WorkGit = base
+	repository := filepath.Join(fixture.wrapper, "main")
+	runLocalGit(t, repository, "worktree", "add", "-q", "-b", "task", filepath.Join(fixture.wrapper, "first"), fixture.oid)
+	runLocalGit(t, repository, "worktree", "add", "-q", "--force", filepath.Join(fixture.wrapper, "second"), "task")
+	// A file at the target path adds a creation reason that must be kept.
+	if err := os.WriteFile(filepath.Join(fixture.wrapper, "task"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := ShowTask(fixture.dependencies, "task")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if shown.Task.WorktreeState != WorkItemCreating {
+		t.Fatalf("fixture: worktree state = %s, want creating", shown.Task.WorktreeState)
+	}
+	if !slices.Contains(shown.Reasons, "source_observation_unknown") || slices.Contains(shown.Reasons, "source_ref_stale") || !slices.Contains(shown.Reasons, "target_worktree_stale") {
+		t.Errorf("reasons = %q, want source_observation_unknown and target_worktree_stale and no source_ref_stale", shown.Reasons)
+	}
+	if shown.Source.Diagnostic == nil || !strings.Contains(*shown.Source.Diagnostic, "checked out more than once") {
+		t.Errorf("source diagnostic = %v, want Git's cause", shown.Source.Diagnostic)
+	}
 }

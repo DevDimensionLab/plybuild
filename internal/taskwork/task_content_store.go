@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -496,12 +497,11 @@ func validatePublicationIntent(r WorkItemRegistry, pub TaskContentPublication) e
 	return nil
 }
 
-// The manifest repeats the fields of its request. Fields are compared in map
-// order, so which of several differing fields the error names varies between
-// runs.
+// The manifest repeats the fields of its request. Fields are compared by name,
+// so of several differing fields the error names the first.
 func validateRequestFields(draft, manifest map[string]canonicaljson.Value) error {
-	for field, value := range draft {
-		if member, repeated := manifestMember(field); repeated && !contentEqual(value, manifest[member]) {
+	for _, field := range slices.Sorted(maps.Keys(draft)) {
+		if member, repeated := manifestMember(field); repeated && !contentEqual(draft[field], manifest[member]) {
 			return fmt.Errorf("request field %s differs", member)
 		}
 	}

@@ -314,6 +314,9 @@ func validateGoalTask(d taskwork.Dependencies, task taskwork.TaskReadbackResult)
 	}
 	wt, target := task.Task.Worktree, task.Target
 	if task.ProjectFreshness != "fresh" || target.InventoryMatch == nil || !*target.InventoryMatch || target.Clean == nil || !*target.Clean {
+		if task.Source.Diagnostic != nil {
+			return fmt.Errorf("Task Git identity or inventory is stale or unknown; Task branch could not be observed as checked out in the Task worktree only: %s", *task.Source.Diagnostic)
+		}
 		return fmt.Errorf("Task Git identity or inventory is stale or unknown")
 	}
 	match := func(got *string, want string) bool { return got != nil && *got == want }
@@ -322,8 +325,12 @@ func validateGoalTask(d taskwork.Dependencies, task taskwork.TaskReadbackResult)
 		return differs
 	}
 	// A failed observation of the Task branch leaves the source empty, as
-	// when Git is forced to check the branch out in a second worktree.
+	// when Git is forced to check the branch out in a second worktree; Git's
+	// answer is then the diagnostic.
 	if !match(task.Source.CheckedOutAt, wt.Locator) {
+		if task.Source.Diagnostic != nil {
+			return fmt.Errorf("Task branch could not be observed as checked out in the Task worktree only: %s", *task.Source.Diagnostic)
+		}
 		return fmt.Errorf("Task branch could not be observed as checked out in the Task worktree only")
 	}
 	if match(target.OID, wt.OID) {

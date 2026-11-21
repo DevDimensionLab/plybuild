@@ -805,27 +805,30 @@ func TestSelectionHasASolutionAndWithdrawalHasNone(t *testing.T) {
 	}
 }
 
-// Documents and the verification IDs of a requirement are visited in map
-// order, so which of several the answer names changes from run to run.
-func TestTaskContentSemanticsNamesOneOfSeveral(t *testing.T) {
+// Of several unused documents or uncovered verification IDs, the one with the
+// smallest ID answers, every time. Map order once chose among them, so each
+// case runs repeatedly.
+func TestTaskContentSemanticsNamesTheSmallestOfSeveral(t *testing.T) {
 	t.Parallel()
-	oneOf := func(c *semanticsCase, answers ...string) {
+	answers := func(c *semanticsCase, want string) {
 		t.Helper()
-		if got := c.validator(); !slices.Contains(answers, got) {
-			t.Errorf("the validator answers %q, want one of %q", got, answers)
-		}
-		if got := strings.TrimPrefix(c.decoded(), "task_content_invalid_input: "); !slices.Contains(answers, got) {
-			t.Errorf("decoded as %q, want one of %q", got, answers)
+		for range 64 {
+			if got := c.validator(); got != want {
+				t.Fatalf("the validator answers %q, want %q", got, want)
+			}
+			if got := strings.TrimPrefix(c.decoded(), "task_content_invalid_input: "); got != want {
+				t.Fatalf("decoded as %q, want %q", got, want)
+			}
 		}
 	}
 	c := problemCase(t, false)
 	c.declareAlso("spare")
 	c.declareAlso("surplus")
-	oneOf(c, "unused document spare", "unused document surplus")
+	answers(c, "unused document spare")
 	c = specCase(t, false)
 	changeEntry(c.fields, "requirements", 0, set("verification_ids", list("manual", "unit")))
 	changeEntry(c.fields, "phases", 0, set("verification_ids", list("e2e")))
-	oneOf(c, "phase does not cover requirement verifier manual", "phase does not cover requirement verifier unit")
+	answers(c, "phase does not cover requirement verifier manual")
 }
 
 // The schema answers before the validator sees the content.

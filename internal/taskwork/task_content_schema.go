@@ -2,9 +2,11 @@ package taskwork
 
 import (
 	"fmt"
+	"maps"
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -475,10 +477,9 @@ func (docs contentDocuments) useAll(ids []canonicaljson.Value) error {
 }
 
 // unused rejects a declared document that nothing refers to. Documents are
-// visited in map order, so which of several unused documents the error names
-// varies between runs.
+// visited by ID, so of several unused documents the error names the first.
 func (docs contentDocuments) unused() error {
-	for id := range docs.declared {
+	for _, id := range slices.Sorted(maps.Keys(docs.declared)) {
 		if !docs.used[id] {
 			return fmt.Errorf("unused document %s", id)
 		}
@@ -737,14 +738,14 @@ func validatePhaseCoverage(m map[string]canonicaljson.Value, verifiers map[strin
 }
 
 // The requirement id is known and each of its verification IDs is covered.
-// They are visited in map order, so which of several uncovered ones the error
-// names varies between runs.
+// They are visited by ID, so of several uncovered ones the error names the
+// first.
 func validateCoveredRequirement(id string, verifiers map[string]map[string]bool, covered map[string]bool) error {
 	required, known := verifiers[id]
 	if !known {
 		return fmt.Errorf("phase refers to an unknown requirement")
 	}
-	for verifier := range required {
+	for _, verifier := range slices.Sorted(maps.Keys(required)) {
 		if !covered[verifier] {
 			return fmt.Errorf("phase does not cover requirement verifier %s", verifier)
 		}
