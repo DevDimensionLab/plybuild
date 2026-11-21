@@ -20,7 +20,7 @@ through the short form (see [usage](references/usage.md)).
 Run from the job's actual working directory:
 
 ```sh
-python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/notify.py \
+python3 ~/.agents/skills/ply-agent-notify/scripts/notify.py \
   --activity stable-job-id --run stable-run-id --event-id finished --status done --provider claude \
   --title "ℹ️ Completed task" --summary "Concrete result" \
   --next-action "No action required." --ply-bin "$PLY_BIN"
@@ -28,7 +28,7 @@ python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/notify
 
 `--provider` is `codex` or `claude` from the actual runtime, not a model name or executable lookup.
 Pass the already-resolved absolute Ply executable used by the job as `PLY_BIN`
-(here `/Users/perottochristensen/go/bin/ply`); no global PATH change. If it is unavailable, report
+(normally `PLY_BIN=$(command -v ply)`); no global PATH change. If it is unavailable, report
 `not_attempted` with the missing executable. Credential setup requires a separate installation request.
 
 Optional: `--next-actor coordinator` (default `user`),
@@ -70,8 +70,8 @@ question and answer. Reuse this job's authorized route and activity with one Q-d
 event ID `human-input/QUESTION_ID`. Immediately
 before invocation, the owner reads the same Q; answered/withdrawn needs no alert.
 For this branch only, the `needs_answer` summary is an alert containing
-`?`, such as `A necessary question is waiting. Can you answer it in /plyapp?`;
-the next action is `Open /plyapp. Select a question if needed, choose or write your answer, then confirm the exact answer with passkey.`
+`?`, such as `A necessary question is waiting. Can you answer it in the plyapp PWA?`;
+the next action is `Open the plyapp PWA and select <Herdr name> under Mine.`
 Keep the full question/reason/consequences in Ply/app rather than truncating or
 copying them into Slack. Do not export private details or answer text. Missing route
 authority is `not_attempted`, without setup or a new permission round. Other feedback
@@ -83,8 +83,8 @@ The notice remains three lines and at most
 and transcripts out of public fields. Preserve a necessary question in full except for the
 Ply Q alert branch above. The next actor is `coordinator`
 for coordinator continuation or `user` for a user return. When no follow-up is required, use
-`No action required.` Necessary answers belong in the active conversation, or in `/plyapp`
-with passkey for a published Q. Slack thread replies are not connected to either.
+`No action required.` Necessary answers belong in the active conversation, or on the
+question card in the plyapp PWA for a published Q. Slack thread replies are not connected to either.
 
 The helper uses the existing environment credential or named private file, checks the send,
 applies at most once, and reads back the result. It does not automatically retry.

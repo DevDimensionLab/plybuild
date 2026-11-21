@@ -7,9 +7,10 @@ import stat
 from contextlib import contextmanager
 from pathlib import Path
 
-CONFIG = Path('/Users/perottochristensen/.config/ply/notifications/ply-log')
-STATE = Path('/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log')
-DEST = Path('/Users/perottochristensen/.agents/skills/ply-agent-notify')
+HOME = Path(os.path.realpath(Path.home()))
+CONFIG = HOME/'.config/ply/notifications/ply-log'
+STATE = HOME/'.local/state/ply/agent-notifications/ply-log'
+DEST = HOME/'.agents/skills/ply-agent-notify'
 ENV = 'PLY_SLACK_WEBHOOK_URL'
 WEBHOOK = re.compile(r'https://hooks\.slack\.com/services/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+/[A-Za-z0-9_-]+\Z')
 

@@ -442,11 +442,12 @@ upgrade:
 all: build
 
 # Agent notification skill: installation is an explicit, separate effect.
-AGENT_NOTIFY_DEST ?= /Users/perottochristensen/.agents/skills/ply-agent-notify
+# Without AGENT_NOTIFY_DEST, install.py's own default (common.DEST) decides the path.
+AGENT_NOTIFY_DEST ?=
 AGENT_NOTIFY_TEST_ROOT ?=
 .PHONY: install-agent-notify test-agent-notify
 install-agent-notify:
-	$(PYTHON) skills/ply-agent-notify/scripts/install.py --destination "$(AGENT_NOTIFY_DEST)"
+	$(PYTHON) skills/ply-agent-notify/scripts/install.py $(if $(AGENT_NOTIFY_DEST),--destination "$(AGENT_NOTIFY_DEST)",)
 
 test-agent-notify:
 	$(PYTHON) test/agent_notify_acceptance.py $(if $(AGENT_NOTIFY_TEST_ROOT),--root "$(AGENT_NOTIFY_TEST_ROOT)",)

@@ -9,7 +9,7 @@ Only during the separately authorized installation activity, from the owning sou
 
 ```sh
 make install-agent-notify
-python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/bootstrap.py
+python3 ~/.agents/skills/ply-agent-notify/scripts/bootstrap.py
 ```
 
 Bootstrap prefers `PLY_SLACK_WEBHOOK_URL`, otherwise reuses its named private value or requests
@@ -17,9 +17,9 @@ hidden terminal input. An invalid environment value is an error, with no file fa
 only the named route, private credential file, and state directory; it sends nothing. Conflicting
 files, symlinks, unsafe ownership, and unsafe modes fail without repair.
 
-- Route: `/Users/perottochristensen/.config/ply/notifications/ply-log/route.json`.
+- Route: `~/.config/ply/notifications/ply-log/route.json`.
 - Credential: `webhook` alongside it, mode `0600` in a `0700` directory.
-- State: `/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log`, mode `0700`.
+- State: `~/.local/state/ply/agent-notifications/ply-log`, mode `0700`.
 
 The helper passes the credential only to send/check children, never to show. Normal calls reuse
 this installation; they do not search secret stores, set up another app/route, or request another
@@ -48,7 +48,7 @@ writes the link file beside the route. Nothing in the helper source changes:
 
 ```sh
 umask 077
-printf '{"app_link":"https://plyapp-pwa.web.app"}\n' > /Users/perottochristensen/.config/ply/notifications/ply-log/app-link.json
+printf '{"app_link":"https://plyapp-pwa.web.app"}\n' > ~/.config/ply/notifications/ply-log/app-link.json
 ```
 
 New short-form events then send v6 with an `Åpne plyapp` link. To change the link, rewrite the

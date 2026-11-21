@@ -2,13 +2,13 @@
 # HI08: a hermetic journey through the actual CLI, following the installed
 # ply-human-input skill as an ordinary agent, with an app-role answer in
 # between. Usage: test-human-input-journey /absolute/ply-binary
-# Everything lives under a new physical /private/tmp root. This is a modeled
+# Everything lives under a new physical root in TMPDIR. This is a modeled
 # agent and app; it is not a live provider run and not physical phone evidence.
 set -eu
 ply=${1:?usage: test-human-input-journey /absolute/ply-binary}
 case "$ply" in /*) ;; *) echo "binary must be absolute" >&2; exit 2 ;; esac
 here=$(cd "$(dirname "$0")" && pwd -P)
-root=$(mktemp -d /private/tmp/hi01-journey.XXXXXX)
+root=$(cd "$(mktemp -d "${TMPDIR:-/tmp}/hi01-journey.XXXXXX")" && pwd -P)
 trap 'rm -rf "$root"' EXIT
 fail() { printf 'human-input journey failed: %s\n' "$1" >&2; exit 1; }
 field() { python3 -I -c 'import json,sys
@@ -23,7 +23,7 @@ mkdir -p "$HOME" "$TMPDIR"
 "$here/install-human-input-skill" >/dev/null || fail "skill install"
 skill="$HOME/.agents/skills/ply-human-input/SKILL.md"
 [ -f "$skill" ] || fail "installed skill missing"
-for cmd in ask wait acknowledge continue withdraw show; do
+for cmd in ask acknowledge continue withdraw show; do
   grep -q "ply workflow input $cmd" "$skill" || fail "skill does not name $cmd"
   "$ply" workflow input $cmd --help >/dev/null 2>&1 || fail "skill names a missing command: $cmd"
 done
@@ -59,8 +59,9 @@ qid=$(printf '%s' "$q" | field question_id)
 [ "$(printf '%s' "$q" | field next_action.actor)" = human ] || fail "next actor before answer"
 again=$("$ply" workflow input ask --workspace "$WS" --file "$draft_dir/q.json" --format json) || fail "repeated ask"
 [ "$(printf '%s' "$again" | field question_id)" = "$qid" ] || fail "repeated ask made a new question"
-w=$("$ply" workflow input wait "$qid" --workspace "$WS" --timeout-seconds 1 --format json) || fail "wait timeout"
-[ "$(printf '%s' "$w" | field outcome)" = still_waiting ] || fail "timeout is not still_waiting"
+# The agent ends its turn; the question still waits.
+w=$("$ply" workflow input show "$qid" --workspace "$WS" --format json) || fail "show before answer"
+[ "$(printf '%s' "$w" | field state)" = waiting_for_answer ] || fail "question is not waiting"
 
 # App role: discover through public list and race two physical confirmations.
 app=$(mktemp -d "$root/tmp/app.XXXXXX")
@@ -83,12 +84,12 @@ winner=$(for f in "$app/a1" "$app/a2"; do if [ "$(field state < "$f")" = recorde
 "$ply" workflow input answer status "$winner" --question-id "$qid" --workspace "$WS" | field state | grep -qx recorded || fail "status of the winner"
 if "$ply" workflow input answer apply --workspace "$root" --file "$app/full.json" >/dev/null 2>&1; then fail "apply in another workspace"; fi
 
-# Agent, skill steps 5-7: same answer, acknowledge, act, report.
-w=$("$ply" workflow input wait "$qid" --workspace "$WS" --timeout-seconds 5 --format json) || fail "wait"
-[ "$(printf '%s' "$w" | field outcome)" = answered ] || fail "wait did not return the answer"
-rid=$(printf '%s' "$w" | field question.answer.request_id)
-sha=$(printf '%s' "$w" | field question.answer.request_sha256)
-choice=$(printf '%s' "$w" | field question.answer.option_id)
+# Agent, skill steps 7-8: woken with the QID, show, acknowledge, act, report.
+w=$("$ply" workflow input show "$qid" --workspace "$WS" --format json) || fail "show"
+[ "$(printf '%s' "$w" | field state)" = answered ] || fail "show did not return the answer"
+rid=$(printf '%s' "$w" | field answer.request_id)
+sha=$(printf '%s' "$w" | field answer.request_sha256)
+choice=$(printf '%s' "$w" | field answer.option_id)
 [ "$rid" = "$winner" ] || fail "agent sees another answer than the winner"
 "$ply" workflow input acknowledge "$qid" --workspace "$WS" --request-id "$rid" --request-sha256 "$sha" | field state | grep -qx agent_received || fail "acknowledge"
 case "$choice" in
@@ -115,5 +116,11 @@ t=json.load(sys.stdin)["question"]["answer"]["text"]
 raise SystemExit(0 if t.encode()==open(sys.argv[1],"rb").read() else "text changed")' "$app/answer.txt" || fail "text answer not exact"
 
 [ "$(registers)" = "$registers_before" ] || fail "registers changed; a question must not create a Task"
-find "$WS/.ply/human-input/v1" -type f ! -perm 600 | grep -q . && fail "non-private human-input file"
+wrapper=$("$ply" workspace project list --format json | field projects.0.wrapper) || fail "project wrapper"
+store="$wrapper/data/work/human-input/v1"
+[ -d "$store" ] || fail "human-input store missing: $store"
+files=$(find "$store" -type f) || fail "cannot list $store"
+[ -n "$files" ] || fail "no human-input files in $store"
+loose=$(find "$store" -type f ! -perm 600) || fail "cannot check modes in $store"
+[ -z "$loose" ] || fail "non-private human-input file: $loose"
 printf 'human-input journey passed: %s choice=%s\n' "$qid" "$choice"

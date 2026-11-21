@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """HI03: model the installed skills with real CLI data and offline notification I/O.
 
-This is a cooperative agent/app-role fixture, not a live phone or passkey test.
+This is a cooperative agent/app-role fixture, not a live phone test.
 All writes are under a retained physical /private/tmp directory. No live transport,
 user credential lookup, app code, global installation or existing Q is used.
 """
@@ -72,8 +72,8 @@ class Journey:
                       '--destination', self.skill])
         self.command([REPO/'scripts/install-human-input-skill', '--destination', self.human], structured=False)
         # The skill's short invocation; each fixture records its own event values.
-        self.feedback = {'status':'needs_answer','title':'⚠️ Human input needed','summary':'A necessary question is waiting. Can you answer it in /plyapp?',
-                         'next-action':'Open /plyapp. Select a question if needed, choose or write your answer, then confirm the exact answer with passkey.'}
+        self.feedback = {'status':'needs_answer','title':'⚠️ Human input needed','summary':'A necessary question is waiting. Can you answer it in the plyapp PWA?',
+                         'next-action':'Open the plyapp PWA and select hi03 under Mine.'}
         self.done = {'status':'done','title':'ℹ️ Completed task','summary':'Concrete result','next-action':'No action required.'}
         for folder, source in [(self.skill, REPO/'skills/ply-agent-notify'), (self.human, REPO/'skills/ply-human-input')]:
             for p in folder.rglob('*'):
@@ -128,7 +128,7 @@ class Journey:
         return p.read_bytes().splitlines() if p.exists() else []
 
     def answer(self, q):
-        # Simulate app-role immutable answer APIs; passkey/mobile UI is owned by plyapp.
+        # Simulate app-role immutable answer APIs; the question card is owned by plyapp.
         preview = self.input('answer', 'preview', q['question_id'], '--request-id', 'app-'+q['question_id'], '--option-id', 'full')
         path = put(self.root/(q['question_id']+'-answer.json'), preview['request'])
         assert self.input('answer', 'apply', '--file', path)['state'] == 'recorded'
@@ -141,17 +141,17 @@ class Journey:
         request = Path(first['request']); before = request.read_bytes(); event = (f/'event.json').read_bytes()
         posts = self.posts(f); assert len(posts) == 1
         text = json.loads(posts[0])['payload']['text']
-        assert '⚠️' in text and '/plyapp' in text and 'passkey' in text
+        assert '⚠️' in text and 'plyapp PWA' in text and 'under Mine' in text and 'passkey' not in text
         assert len(text.splitlines()) == 3 and len(text) <= 480
         assert all(s not in text for s in ['PRIVATE_', q['text'], q['reason'], 'Short usage note', 'Full reference'])
         assert json.loads(before)['source']['activity'] == 'notification/job' != q['scope']['activity_id']
-        assert self.input('wait', q['question_id'], '--timeout-seconds', '1')['outcome'] == 'still_waiting'
+        assert self.input('show', q['question_id'])['state'] == 'waiting_for_answer'  # The agent ends its turn.
         assert self.pending_notify(q, f, trigger='waiting_for_feedback')['state'] == 'suppressed'
         assert self.pending_notify(q, f)['state'] == 'transport_acknowledged'  # Fresh helper process after lost reply.
         assert self.posts(f) == posts and request.read_bytes() == before and (f/'event.json').read_bytes() == event
         self.answer(q)
         assert self.pending_notify(q, f)['state'] == 'not_needed'
-        answer = self.input('wait', q['question_id'], '--timeout-seconds', '1')['question']['answer']
+        answer = self.input('show', q['question_id'])['answer']  # Woken with the QID.
         flags = ['--request-id', answer['request_id'], '--request-sha256', answer['request_sha256']]
         assert self.input('acknowledge', q['question_id'], *flags)['state'] == 'agent_received'
         put(self.repo/'decision.txt', b'Full note.\n')  # Observable work selected by the stored answer.

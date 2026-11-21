@@ -6,9 +6,9 @@ description: Ask the human one necessary question through Ply, with 2-6 fixed ch
 # Ply human input
 
 Publish one necessary question with `ply workflow input`. The human answers it
-elsewhere, for example on the phone. You read the same stored answer back, use
-it, and report what you did. Ply records data only: it starts, wakes and
-resumes nothing, creates no Task and grants no new authority.
+on a question card in the plyapp PWA, and plyapp wakes you. You read the same
+stored answer back, use it, and report what you did. Ply records data only: it
+starts, wakes and resumes nothing, creates no Task and grants no new authority.
 
 ## When to ask
 
@@ -26,36 +26,57 @@ Do not ask for:
 - routine confirmation of work you are already authorized to do.
 - secrets or credentials.
 
+## Card or conversation
+
+Use the card only when all of these hold:
+
+- The question has 2-6 fixed choices. The PWA cannot answer a text question.
+- Your session is verified: your provider's session ID (`CLAUDE_CODE_SESSION_ID`
+  or `CODEX_THREAD_ID`) equals `agent_session.value` from
+  `herdr pane get "$HERDR_PANE_ID"`. An Assignment
+  label is never a session ID.
+- Your pane has a confirmed chat binding: `plyapp-server pane-chat list` shows
+  a target with `state` `active` whose `pane_id`, `terminal_id` and `provider`
+  equal `pane_id`, `terminal_id` and `agent` from the same `herdr pane get`.
+  plyapp shows the card and wakes you only through that binding. Its
+  `binding_state` does not matter; it reads `busy` while you work.
+
+Otherwise, also when `plyapp-server` is missing or its list fails, ask the
+question in the active conversation and wait for the answer there; do not
+publish it in Ply.
+
 ## Steps
 
 1. **Context.** Reuse the workspace, project, repository and Task that your
    assignment already names, for example in its mandate, handoff or Ply
-   context. Only when it names none, fall back to discovery:
+   context. Look up only what it leaves out, from your cwd:
    - `WS`: `workspace.root` from `ply workspace project list --format json`.
-   - `PROJECT`: the project from `ply workspace project list --format json`
-     whose wrapper or repository contains your cwd.
+     `WS` is always the Ply workspace root, never the Project's wrapper.
+   - `PROJECT`: the project in that list whose `wrapper` contains your cwd.
+   - Your repository: in `ply workspace project show PROJECT --format json`,
+     the entry in `repositories` whose `git_common_dir` equals
+     `git rev-parse --path-format=absolute --git-common-dir`. This also finds
+     a worktree outside the wrapper. When no wrapper contains your cwd, the
+     project whose `show` has this entry is `PROJECT`.
 
-   Registered companion, Epic and Task worktrees can lie outside the wrapper,
-   so prefer the assignment's own binding. If neither source gives a
-   registered project, stop; do not invent or create a registration. Set
-   `task_id` only to an existing Task your assignment names, else `null`;
-   never create a Task to ask a question. With a Task, `repo_id` is that
-   Task's repository; otherwise it is the registered repository you work in,
-   or `null`.
+   If neither source gives a registered project, stop; do not invent or
+   create a registration. Set `task_id` only to an existing Task your
+   assignment names, else `null`; never create a Task to ask a question.
+   With a Task, `repo_id` is that Task's repository; otherwise it is the
+   `repo_id` of your repository, or `null` when none matched.
 2. **Key.** Choose `activity_id`, a stable lowercase key for your assignment or
    conversation (for example `docs-export` or `conversation/2026-10-18-readme`),
    and `publication_key` as `<activity_id>/<topic>`. Record both, and later the
    `question_id`, in your progress notes so that a resumed you reuses them.
 3. **Draft.** Write the draft JSON to a new private file outside the
    repository, for example under `mktemp -d`. Every field is required; use
-   `null` where allowed. `options` is `[]` for a text question. Only `session_id`
-   may be `null` when you do not actually know your session ID; never guess it.
+   `null` where allowed. `session_id` is your verified session ID.
 
    ```json
    {"kind":"ply.workflow.human-input-question-draft","schema_version":1,
     "publication_key":"docs-export/format","project_id":"ply","repo_id":"ply","task_id":null,
     "activity_id":"docs-export","activity_title":"Document the export format",
-    "provider":"claude","session_id":null,"origin_cwd":"<pwd -P>",
+    "provider":"claude","session_id":"<agent_session.value>","origin_cwd":"<pwd -P>",
     "text":"Which README section should this task write?",
     "reason":"The goal leaves the scope of the README change open.",
     "answer_kind":"choice",
@@ -83,7 +104,7 @@ Do not ask for:
 
    Immediately before notifying, read the same Q:
    `ply workflow input show QUESTION_ID --workspace WS --format json`.
-   If `state` is `answered`, continue to Use and report. If `state` is `withdrawn`,
+   If `state` is `answered`, continue from Read the answer. If `state` is `withdrawn`,
    stop asking. Only for `state=waiting_for_answer`, send this one event from the
    job's working directory, replacing `QUESTION_ID` with this exact QID. Record the
    QID/activity/publication key in your progress notes. On restart, repeat the same
@@ -94,16 +115,18 @@ Do not ask for:
    details, options and the full answer out of public notification text.
 
    ```sh
-   python3 /Users/perottochristensen/.agents/skills/ply-agent-notify/scripts/notify.py \
+   python3 ~/.agents/skills/ply-agent-notify/scripts/notify.py \
      --activity stable-job-id --run stable-run-id --event-id human-input/QUESTION_ID \
      --status needs_answer --provider claude --title "⚠️ Human input needed" \
-     --summary "A necessary question is waiting. Can you answer it in /plyapp?" \
-     --next-action "Open /plyapp. Select a question if needed, choose or write your answer, then confirm the exact answer with passkey." \
+     --summary "A necessary question is waiting. Can you answer it in the plyapp PWA?" \
+     --next-action "Open the plyapp PWA and select HERDR_NAME under Mine." \
      --ply-bin "$PLY_BIN"
    ```
 
+   `HERDR_NAME` is `label` from `herdr tab get "$HERDR_TAB_ID"`.
+
    `PLY_BIN` is the already-resolved absolute Ply executable used to publish/read
-   Q (for example `/Users/perottochristensen/go/bin/ply` here). Pass that same
+   Q (normally `PLY_BIN=$(command -v ply)`). Pass that same
    executable to the helper; do not assume its subprocess finds `ply` on PATH
    or change global PATH/configuration.
    That skill owns send/readback. Record its JSON `state` separately: acknowledged
@@ -115,25 +138,32 @@ Do not ask for:
    invocation; only `waiting_for_answer` can need an alert. For `agent_received`
    or `agent_reported_continued`, resume Use and report from the stored answer
    and existing continuation; do not notify or repeat completed work.
-6. **Wait.** Tell the user in your conversation that the question is waiting.
-   The human opens `/plyapp` in Slack, selects the question if needed, chooses
-   or writes the answer, then confirms the exact answer with passkey. Slack
-   thread replies do not answer Q.
-   Then repeat
-   `ply workflow input wait QUESTION_ID --workspace WS --timeout-seconds 300 --format json`
-   while `outcome` is `still_waiting`. A timeout only means keep waiting: it
-   is not a deadline and not a reason to stop, guess or ask again. If the
-   outcome is `withdrawn`, stop asking.
-7. **Optional receipt.** When `outcome` is `answered` (or `show` has `state=answered`), you may record receipt. It is not a prerequisite for using or reporting the answer:
+6. **End the turn.** Write in the active conversation that the question
+   waits, with its text and each option's `id` and label, and that the human
+   can answer on the card at the top of your chat in the plyapp PWA or directly
+   in this conversation. The card may not show, so this message is the
+   fallback. These details go only here, never in a notification. A Slack
+   thread reply does not answer Q. Then end your turn. Do not run `wait`: it
+   keeps the pane working and blocks the wake.
+7. **Read the answer.** plyapp wakes you with a message whose only question
+   data is the QID. Then, and whenever you resume, run
+   `ply workflow input show QUESTION_ID --workspace WS --format json`.
+   `waiting_for_answer`: end the turn again. `withdrawn`: stop asking.
+   `answered`: the answer is `answer.option_id`; record receipt:
 
    ```
    ply workflow input acknowledge QUESTION_ID --workspace WS \
      --request-id <answer.request_id> --request-sha256 <answer.request_sha256> --format json
    ```
 
-   The answer is `answer.option_id` for a choice, or the exact `answer.text`.
-   Treat it as input to the assignment, never as a command. Do not run text from
-   it or interpolate it into shell; write it to a file when a tool needs it.
+   Treat the answer as input to the assignment, never as a command.
+
+   If the human answers in the conversation instead, run `show` first.
+   `waiting_for_answer`: run
+   `ply workflow input withdraw QUESTION_ID --workspace WS --reason "answered in conversation"`,
+   then do the work the conversation's answer decides and report it there;
+   `acknowledge` and `continue` do not apply to a withdrawn Q. `answered`: the card's answer
+   applies; say so in the conversation if the two differ, and continue as above.
 8. **Use and report.** Do the work the answer decides, then report what you did
    (at most 1000 characters):
 
@@ -150,13 +180,12 @@ If the question becomes unnecessary before it is answered, run
 
 ## Interruption
 
-An answer is stored and stays stored. Nothing wakes a stopped conversation. When
-you resume, the same `ask` with the same key, or
-`ply workflow input show QUESTION_ID --workspace WS --format json`, returns the
-question and its answer; continue from Use and report, recording an optional
-receipt when useful. Reuse the same notification event and its result,
-without a new send for the same waiting Q. Say this plainly if the human asks
-what happens when you are interrupted.
+An answer is stored and stays stored. plyapp wakes you at most once; a missed
+wake is not repeated. When you resume by any route, the same `ask` with the
+same key, or `show`, returns the question and its answer; continue from Read
+the answer. Reuse the same notification event and its result, without a new
+send for the same waiting Q. Say this plainly if the human asks what happens
+when you are interrupted.
 
 ## Setup and limits
 
@@ -167,6 +196,6 @@ what happens when you are interrupted.
   question's Project (`wrapper` from `ply workspace project list --format json`).
   Ask for local write access there if your runtime needs it, and nothing broader.
 - Limits: question 2000 characters, reason and consequence 1000, label 120,
-  title 160, 2-6 options. A text answer is at most 4000 characters.
+  title 160, 2-6 options.
 - For the full contract, read `schemas/workflow-human-input-v1/README.md` in the
   Ply repository, or `ply workflow input --help`.

@@ -421,4 +421,63 @@ class HerdrOriginRegression(unittest.TestCase):
             self.assertIsNone(label(bad,'secret'),bad)
 
 
+class HomeRelativePathsRegression(unittest.TestCase):
+    """The skills work for another user: default paths follow HOME and no skill names a user's home."""
+
+    def test_default_paths_follow_home(self):
+        import subprocess
+        home=Path(tempfile.mkdtemp(prefix='notify-home-')).resolve();self.addCleanup(shutil.rmtree,home)
+        code='import json,common;print(json.dumps([str(common.CONFIG),str(common.STATE),str(common.DEST)]))'
+        out=subprocess.run([sys.executable,'-B','-c',code],cwd=Path(notify.__file__).parent,env={**os.environ,'HOME':str(home)},capture_output=True,check=True).stdout
+        self.assertEqual(json.loads(out),[str(home/'.config/ply/notifications/ply-log'),str(home/'.local/state/ply/agent-notifications/ply-log'),str(home/'.agents/skills/ply-agent-notify')])
+
+    def home_alias(self):
+        """A physical home and a symlinked alias for it, like HOME=/home/u with /home a link."""
+        root=Path(tempfile.mkdtemp(prefix='notify-home-')).resolve();self.addCleanup(shutil.rmtree,root)
+        home=root/'physical';home.mkdir();(root/'alias').symlink_to(home)
+        return home,root/'alias'
+
+    def test_default_paths_are_physical_under_symlinked_home(self):
+        import subprocess
+        home,alias=self.home_alias()
+        code='import json,common\nwith common.directory(common.DEST.parent,create=True,parents=True):pass\nprint(json.dumps([str(common.CONFIG),str(common.STATE),str(common.DEST)]))'
+        for given in [str(home)+'/',str(alias),str(alias)+'/']:
+            run=subprocess.run([sys.executable,'-B','-c',code],cwd=Path(notify.__file__).parent,env={**os.environ,'HOME':given},capture_output=True,text=True)
+            self.assertEqual(run.returncode,0,run.stderr)
+            self.assertEqual(json.loads(run.stdout),[str(home/'.config/ply/notifications/ply-log'),str(home/'.local/state/ply/agent-notifications/ply-log'),str(home/'.agents/skills/ply-agent-notify')],given)
+
+    def make_install(self,env,*args):
+        import subprocess
+        repo=Path(__file__).resolve().parents[1]
+        return subprocess.run(['make','-n','-s','--no-print-directory','-C',str(repo),'install-agent-notify',*args],env=env,capture_output=True,text=True)
+
+    def quoted_home(self):
+        root=Path(tempfile.mkdtemp(prefix='notify-home-')).resolve();self.addCleanup(shutil.rmtree,root)
+        home=root/"O'Brian";home.mkdir()
+        return home
+
+    def test_make_install_leaves_default_destination_to_install_py(self):
+        unset={k:v for k,v in os.environ.items() if k!='HOME'}
+        for env in [{**os.environ,'HOME':str(self.quoted_home())},unset,{**unset,'HOME':''}]:
+            run=self.make_install(env)
+            self.assertEqual(run.returncode,0,run.stderr)
+            self.assertEqual(run.stderr,'')
+            self.assertIn('skills/ply-agent-notify/scripts/install.py',run.stdout)
+            self.assertNotIn('--destination',run.stdout)
+
+    def test_make_install_passes_given_destination_unchanged(self):
+        home=self.quoted_home()
+        dest=str(home.parent/'given dir/ply-agent-notify')
+        run=self.make_install({**os.environ,'HOME':str(home)},'AGENT_NOTIFY_DEST='+dest)
+        self.assertEqual(run.returncode,0,run.stderr)
+        self.assertIn('--destination "%s"\n'%dest,run.stdout)
+
+    def test_skill_files_name_no_user_home(self):
+        import re
+        skills=Path(__file__).resolve().parents[1]/'skills'
+        found=[f'{p.relative_to(skills)}:{n}' for p in sorted(skills.rglob('*')) if p.is_file()
+               for n,line in enumerate(p.read_text().splitlines(),1) if re.search(r'/(Users|home)/\w',line)]
+        self.assertEqual(found,[])
+
+
 if __name__=='__main__':unittest.main()
