@@ -602,7 +602,9 @@ No migration. Run start-error tests and inspect help. On failure, retain state.
 ```
 
 All new leaves accept `--format text|json`. `problem show` optionally accepts `--revision`;
-`spec show` requires `--spec` and `--revision`. `spec list` shows revisions and choices.
+`spec show` requires `--spec` and `--revision`. With an exact `--revision`, `problem show` and
+`spec show` accept `--document <id>` instead of `--format` and write that preserved document's
+bytes after checking them against their hash. `spec list` shows revisions and choices.
 `spec withdraw --file /absolute/withdraw.json` uses the same selection draft: a new publication
 key, `expected_previous_selection` from the latest event, `action="withdraw"`, `solution=null`,
 and an explicit human withdrawal claim. It preserves all previous choices and starts or stops

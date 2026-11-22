@@ -15,7 +15,10 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 )
 
-func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T) {
+// problemTaskFixture registers Task "task" with problem revision 1, whose
+// only document "problem" holds "# Explicit fixture problem\n".
+func problemTaskFixture(t *testing.T) (taskwork.Dependencies, string) {
+	t.Helper()
 	d, root := viewFixture(t)
 	repo := filepath.Join(root, "repository")
 	if err := os.Mkdir(repo, 0700); err != nil {
@@ -66,6 +69,11 @@ func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T)
 	if _, err := taskwork.RecordTaskProblem(d, taskwork.TaskContentInput{TaskID: "task", File: problemPath}); err != nil {
 		t.Fatal(err)
 	}
+	return d, root
+}
+
+func TestTaskCommandSeparatesIncompatibleDocumentsFromTaskIdentity(t *testing.T) {
+	d, root := problemTaskFixture(t)
 	work, err := taskwork.LocateTask(d, root, "task")
 	if err != nil {
 		t.Fatal(err)

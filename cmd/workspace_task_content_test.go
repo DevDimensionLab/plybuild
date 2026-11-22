@@ -2,9 +2,13 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
+	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"io"
+	"os"
 	"strings"
 	"testing"
 )
@@ -87,5 +91,63 @@ func TestWorkspaceTaskSpecShowDocumentWritesBytesNotFormat(t *testing.T) {
 	c.SetArgs([]string{"spec", "show", "task", "--spec", "s", "--revision", "1", "--document", ""})
 	if err := c.Execute(); err == nil || !strings.Contains(err.Error(), "--document") {
 		t.Fatalf("empty document: %v", err)
+	}
+}
+
+// problem show --document writes a problem document's preserved bytes the way
+// spec show --document writes a Spec document's.
+func TestWorkspaceTaskProblemShowDocumentWritesPreservedBytes(t *testing.T) {
+	d, _ := problemTaskFixture(t)
+	help, err := runWorkspaceView(t, d, "task", "problem", "show", "--help")
+	if err != nil || !strings.Contains(help, "--document") {
+		t.Fatalf("problem show lacks --document: %v %s", err, help)
+	}
+	out, err := runWorkspaceView(t, d, "task", "problem", "show", "task", "--revision", "1", "--document", "problem")
+	if err != nil || out != "# Explicit fixture problem\n" {
+		t.Fatalf("problem document bytes: %q %v", out, err)
+	}
+	notFound := func(args ...string) {
+		t.Helper()
+		out, err := runWorkspaceView(t, d, append([]string{"task", "problem", "show", "task"}, args...)...)
+		var classified *workspace.WorkItemError
+		if out != "" || !errors.As(err, &classified) || classified.Class != workspace.ErrorWorkNotFound {
+			t.Fatalf("%v: %q %v", args, out, err)
+		}
+	}
+	notFound("--revision", "1", "--document", "absent")
+	notFound("--revision", "2", "--document", "problem")
+	for _, args := range [][]string{{"--document", "problem"}, {"--revision", "1", "--document", ""}, {"--revision", "1", "--document", "problem", "--format", "json"}} {
+		if out, err := runWorkspaceView(t, d, append([]string{"task", "problem", "show", "task"}, args...)...); err == nil || out != "" {
+			t.Fatalf("accepted %v: %q", args, out)
+		}
+	}
+	readback, err := runWorkspaceView(t, d, "task", "problem", "show", "task", "--revision", "1", "--format", "json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var shown struct {
+		Revision struct {
+			Documents []struct {
+				Locator string `json:"locator"`
+			} `json:"documents"`
+		} `json:"revision"`
+	}
+	if err = json.Unmarshal([]byte(readback), &shown); err != nil || len(shown.Revision.Documents) != 1 {
+		t.Fatalf("%v %s", err, readback)
+	}
+	stored := shown.Revision.Documents[0].Locator
+	if err = os.Chmod(stored, 0600); err != nil {
+		t.Fatal(err)
+	}
+	// Same size and immutable mode, so only the hash tells the bytes apart.
+	if err = os.WriteFile(stored, []byte("# EXPLICIT FIXTURE PROBLEM\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.Chmod(stored, 0400); err != nil {
+		t.Fatal(err)
+	}
+	out, err = runWorkspaceView(t, d, "task", "problem", "show", "task", "--revision", "1", "--document", "problem")
+	if out != "" || err == nil || !strings.Contains(err.Error(), "managed bytes do not match their digest") {
+		t.Fatalf("wrote bytes that differ from their hash: %q %v", out, err)
 	}
 }

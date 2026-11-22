@@ -240,33 +240,58 @@ func ReadTaskSpecDocument(d Dependencies, q TaskContentQuery, id string) ([]byte
 		return nil, e
 	}
 	for _, p := range r.TaskSpecRevisions {
-		if p.TaskID != q.TaskID || p.SpecID != q.SpecID || p.Revision != q.Revision {
+		if p.TaskID == q.TaskID && p.SpecID == q.SpecID && p.Revision == q.Revision {
+			return readManifestDocument(d.TaskContent, work, r, p.ManifestSHA256, id, "Spec")
+		}
+	}
+	return nil, workspace.WorkError(workspace.ErrorWorkNotFound, "Spec revision is not registered", nil)
+}
+
+// ReadTaskProblemDocument returns the preserved bytes of one document of an
+// exact problem revision, verified against its descriptor.
+func ReadTaskProblemDocument(d Dependencies, q TaskContentQuery, id string) ([]byte, error) {
+	d = WithTaskContentScope(d, q.TaskID)
+	if q.Revision < 1 || q.Revision > 2147483647 {
+		return nil, contentError("task_content_invalid_input", "--revision (1..2147483647) is required", nil)
+	}
+	work, r, _, e := readContentStart(d, q, false)
+	if e != nil {
+		return nil, e
+	}
+	for _, p := range r.TaskProblemRevisions {
+		if p.TaskID == q.TaskID && p.Revision == q.Revision {
+			return readManifestDocument(d.TaskContent, work, r, p.ManifestSHA256, id, "problem")
+		}
+	}
+	return nil, workspace.WorkError(workspace.ErrorWorkNotFound, "problem revision is not registered", nil)
+}
+
+// readManifestDocument returns the bytes of document id of the registered
+// manifest digest after checking every document of the manifest against its
+// descriptor; kind names the revision in the not-found error.
+func readManifestDocument(s *TaskContentStorage, work workspace.ProjectWork, r WorkItemRegistry, digest, id, kind string) ([]byte, error) {
+	o, e := readRegisteredTaskManifest(s, work, r, digest)
+	if e == nil {
+		e = verifyManifestDocuments(s, work, o)
+	}
+	if e != nil {
+		return nil, e
+	}
+	for _, v := range contentArray(contentFields(o), "documents") {
+		m := contentFields(v)
+		if contentString(m, "id") != id {
 			continue
 		}
-		o, e := readRegisteredTaskManifest(d.TaskContent, work, r, p.ManifestSHA256)
-		if e == nil {
-			e = verifyManifestDocuments(d.TaskContent, work, o)
-		}
+		b, e := s.Read(work, "objects", contentString(m, "sha256"))
 		if e != nil {
 			return nil, e
 		}
-		for _, v := range contentArray(contentFields(o), "documents") {
-			m := contentFields(v)
-			if contentString(m, "id") != id {
-				continue
-			}
-			b, e := d.TaskContent.Read(work, "objects", contentString(m, "sha256"))
-			if e != nil {
-				return nil, e
-			}
-			if len(b) != contentInt(m, "size_bytes") {
-				return nil, contentError("task_content_integrity_conflict", "snapshot descriptor differs", nil)
-			}
-			return b, nil
+		if len(b) != contentInt(m, "size_bytes") {
+			return nil, contentError("task_content_integrity_conflict", "snapshot descriptor differs", nil)
 		}
-		return nil, workspace.WorkError(workspace.ErrorWorkNotFound, "document is not part of this Spec revision", nil)
+		return b, nil
 	}
-	return nil, workspace.WorkError(workspace.ErrorWorkNotFound, "Spec revision is not registered", nil)
+	return nil, workspace.WorkError(workspace.ErrorWorkNotFound, "document is not part of this "+kind+" revision", nil)
 }
 func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult, error) {
 	d = WithTaskContentScope(d, q.TaskID)

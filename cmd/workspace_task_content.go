@@ -60,8 +60,9 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d taskwork.Dependencie
 	type query struct {
 		parent, name, short string
 		run                 func(taskwork.Dependencies, taskwork.TaskContentQuery) (taskwork.TaskContentReadbackResult, error)
+		readDocument        func(taskwork.Dependencies, taskwork.TaskContentQuery, string) ([]byte, error)
 	}
-	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", taskwork.ShowTaskProblem}, {"spec", "list", "List goal and solution revisions and their assessments", taskwork.ListTaskSpecs}, {"spec", "show", "Show an exact goal or solution revision and its preserved inputs", taskwork.ShowTaskSpec}, {"publication", "show", "Inspect the outcome of a Task content publication", taskwork.ShowTaskPublication}} {
+	for _, entry := range []query{{"problem", "show", "Show the recorded problem and preserved sources", taskwork.ShowTaskProblem, taskwork.ReadTaskProblemDocument}, {"spec", "list", "List goal and solution revisions and their assessments", taskwork.ListTaskSpecs, nil}, {"spec", "show", "Show an exact goal or solution revision and its preserved inputs", taskwork.ShowTaskSpec, taskwork.ReadTaskSpecDocument}, {"publication", "show", "Inspect the outcome of a Task content publication", taskwork.ShowTaskPublication, nil}} {
 		entry := entry
 		var format, spec, key, document string
 		var revision int
@@ -85,7 +86,7 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d taskwork.Dependencie
 				return e
 			}
 			if document != "" {
-				b, e := taskwork.ReadTaskSpecDocument(d, taskwork.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision}, document)
+				b, e := entry.readDocument(d, taskwork.TaskContentQuery{TaskID: id, SpecID: spec, Revision: revision}, document)
 				if e != nil {
 					return taskContentCommandError(cmd, format, e)
 				}
@@ -111,9 +112,14 @@ func addWorkspaceTaskContentCommands(task *cobra.Command, d taskwork.Dependencie
 		if entry.name == "show" && entry.parent != "publication" {
 			c.Flags().IntVar(&revision, "revision", 0, "exact positive revision number")
 		}
+		if entry.readDocument != nil {
+			c.Flags().StringVar(&document, "document", "", "write the exact bytes of this preserved document ID instead of the revision")
+		}
+		if entry.parent == "problem" {
+			c.Example = "  ply workspace task problem show explain-start-errors --format json\n  ply workspace task problem show explain-start-errors --revision 1 --document problem"
+		}
 		if entry.parent == "spec" && entry.name == "show" {
 			c.Flags().StringVar(&spec, "spec", "", "Task-owned Spec ID")
-			c.Flags().StringVar(&document, "document", "", "write the exact bytes of this preserved document ID instead of the revision")
 			_ = c.MarkFlagRequired("spec")
 			_ = c.MarkFlagRequired("revision")
 			c.Example = "  ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --format json\n  ply workspace task spec show explain-start-errors --spec explain-errors --revision 1 --document spec"
