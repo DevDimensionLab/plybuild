@@ -267,7 +267,8 @@ no replacement process engine or configuration layer is included here.
 
 ### Preserve a problem and choose a solution
 
-A new Task atomically records its initial problem (P1) and a `spec_required` policy.
+A new Task has no problem. `task problem record` records its first problem (P1) and each later
+revision as an immutable record.
 A problem is the need; a Spec is a proposed solution with abstract, functional and technical
 parts. A readiness assessment and a human selection are separate immutable records.
 Selection records the reported human claim. Worktree creation, agent start, product QA and

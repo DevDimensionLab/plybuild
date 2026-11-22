@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"github.com/devdimensionlab/plybuild/internal/agentwork"
 	"github.com/spf13/cobra"
@@ -45,7 +46,7 @@ func TestFollowupRetargetRemoved(t *testing.T) {
 
 func TestAgentWorkCLIReadAndErrors(t *testing.T) {
 	root := &cobra.Command{Use: "ply"}
-	root.AddCommand(newAgentWorkCommand(func(string) (*agentwork.Service, error) { return nil, errAgentFixture{} }))
+	root.AddCommand(newAgentWorkCommand(func(string) (*agentwork.Service, error) { return nil, errAgentFixture{} }, herdrAgentMetadata))
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&bytes.Buffer{})
@@ -137,24 +138,20 @@ func TestAgentWorkSummaryOnlyTextReadback(t *testing.T) {
 }
 
 // SM01: metadata selects its transport before constructing the full native service.
+// The reader is injected: the Herdr process and its deadline are tested in internal/agentwork.
 func TestAgentStatusMetadataCLIBypassesNative(t *testing.T) {
-	dir := t.TempDir()
-	calls := filepath.Join(dir, "calls")
-	script := `#!/bin/sh
-printf '%s\n' "$*" >> '` + calls + `'
-case "$*" in
-'agent list') printf '%s' '{"result":{"type":"agent_list","agents":[{"agent":"codex","pane_id":"w1:p1","tab_id":"w1:t1","workspace_id":"w1","agent_status":"done","terminal_id":{},"agent_session":false}]}}';;
-'tab list --workspace w1') printf '%s' '{"result":{"tabs":[{"workspace_id":"w1","tab_id":"w1:t1","label":"Actual 🌱"}]}}';;
-*) exit 8;;
-esac
-`
-
-	if e := os.WriteFile(filepath.Join(dir, "herdr"), []byte(script), 0700); e != nil {
+	label, observed := "Actual 🌱", "2026-11-22T00:00:00Z"
+	want := agentwork.MetadataReadback{Kind: agentwork.MetadataKind, SchemaVersion: 1, ObservedAtUTC: observed,
+		Sources: []agentwork.MetadataSource{{Source: "herdr.agent.list", Status: "available", Freshness: "fresh", SourceObservedAtUTC: &observed, Coverage: "complete", Scope: "fixture"}},
+		Agents:  []agentwork.StatusAgent{{Pane: "w1:p1", Provider: "codex", Status: "done", Tab: "w1:t1", Workspace: "w1", TabLabel: label}}}
+	wantJSON, e := json.Marshal(want)
+	if e != nil {
 		t.Fatal(e)
 	}
-	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	reads := 0
 	for n := 0; n < 2; n++ {
-		c := newAgentWorkCommand(func(string) (*agentwork.Service, error) { t.Fatal("full/native factory called"); return nil, nil })
+		c := newAgentWorkCommand(func(string) (*agentwork.Service, error) { t.Fatal("full/native factory called"); return nil, nil },
+			func(context.Context) agentwork.MetadataReadback { reads++; return want })
 		var out bytes.Buffer
 		c.SetOut(&out)
 		c.SetErr(&bytes.Buffer{})
@@ -162,24 +159,12 @@ esac
 		if e := c.Execute(); e != nil {
 			t.Fatal(e)
 		}
-		var v struct {
-			Kind    string           `json:"kind"`
-			Agents  []map[string]any `json:"agents"`
-			Sources []struct {
-				Status   string `json:"status"`
-				Coverage string `json:"coverage"`
-			} `json:"sources"`
-		}
-		if e := json.Unmarshal(out.Bytes(), &v); e != nil {
-			t.Fatal(e)
-		}
-		if v.Kind != "AgentStatusMetadataReadback@1" || len(v.Agents) != 1 || len(v.Agents[0]) != 6 || v.Agents[0]["tab_label"] != "Actual 🌱" || v.Sources[0].Coverage != "complete" {
+		if strings.TrimSpace(out.String()) != string(wantJSON) {
 			t.Fatal(out.String())
 		}
 	}
-	b, e := os.ReadFile(calls)
-	if e != nil || string(b) != "agent list\ntab list --workspace w1\nagent list\ntab list --workspace w1\n" {
-		t.Fatal(string(b), e)
+	if reads != 2 {
+		t.Fatal("metadata reads", reads)
 	}
 }
 

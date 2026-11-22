@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/agentwork"
@@ -13,6 +14,13 @@ import (
 )
 
 type agentWorkFactory func(string) (*agentwork.Service, error)
+
+// agentMetadataReader reads the public agent metadata for --metadata-only.
+type agentMetadataReader func(context.Context) agentwork.MetadataReadback
+
+func herdrAgentMetadata(ctx context.Context) agentwork.MetadataReadback {
+	return agentwork.StatusMetadataContext(ctx, agentwork.HerdrRuntime{Executable: "herdr"})
+}
 
 func agentWorkOutput(cmd *cobra.Command, format string, v any) error {
 	if format == "json" || workflowStatusJSON(cmd) {
@@ -64,7 +72,7 @@ func agentWorkFormat(cmd *cobra.Command, format string) error {
 	}
 	return nil
 }
-func newAgentWorkCommand(factory agentWorkFactory) *cobra.Command {
+func newAgentWorkCommand(factory agentWorkFactory, metadata agentMetadataReader) *cobra.Command {
 	var root, format string
 	var metadataOnly bool
 	c := &cobra.Command{Use: "agents", SilenceUsage: true, Short: "Read public fresh agent observations and separate native work/follow-ups", Args: cobra.NoArgs, PersistentPreRunE: func(*cobra.Command, []string) error { return nil }, RunE: func(cmd *cobra.Command, _ []string) error {
@@ -74,7 +82,7 @@ func newAgentWorkCommand(factory agentWorkFactory) *cobra.Command {
 		if metadataOnly {
 			ctx, stop := signal.NotifyContext(cmd.Context(), os.Interrupt, syscall.SIGTERM)
 			defer stop()
-			return agentWorkOutput(cmd, format, agentwork.StatusMetadataContext(ctx, agentwork.HerdrRuntime{Executable: "herdr"}))
+			return agentWorkOutput(cmd, format, metadata(ctx))
 		}
 		s, e := factory(root)
 		if e != nil {

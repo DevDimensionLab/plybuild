@@ -5,10 +5,10 @@ package quota
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
-	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -162,29 +162,30 @@ func TestReadCodexParentCancellationIsNotOwnTimeout(t *testing.T) {
 	}
 }
 
+// The child holds the only write end of a FIFO and the server waits for the child,
+// so neither exits by itself. Returning proves ReadCodex did not wait for the server;
+// EOF on the FIFO proves the child was killed. No step depends on elapsed time.
 func TestReadCodexReapsLingeringServerAndChildren(t *testing.T) {
-	dir := t.TempDir()
-	pidFile := filepath.Join(dir, "child.pid")
-	exe, _ := fakeCodex(t, "sleep 30 & echo $! > '"+pidFile+"'; "+catFixture("codex-weekly-only.json"), "wait")
-	start := time.Now()
+	fifo := filepath.Join(t.TempDir(), "child")
+	if err := syscall.Mkfifo(fifo, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	childGone := make(chan error, 1)
+	go func() {
+		f, err := os.Open(fifo)
+		if err == nil {
+			_, err = io.Copy(io.Discard, f)
+			_ = f.Close()
+		}
+		childGone <- err
+	}()
+	exe, _ := fakeCodex(t, "sleep 3600 > '"+fifo+"' & "+catFixture("codex-weekly-only.json"), "wait")
 	got, err := ReadCodex(context.Background(), CodexOptions{Executable: exe})
 	if err != nil || got.Windows[0].Remaining() != 95 {
 		t.Fatalf("got %+v, %v", got, err)
 	}
-	if elapsed := time.Since(start); elapsed > 2*time.Second {
-		t.Fatalf("lingering server delayed return by %v", elapsed)
-	}
-	raw, err := os.ReadFile(pidFile)
-	if err != nil {
+	if err := <-childGone; err != nil {
 		t.Fatal(err)
-	}
-	pid, _ := strconv.Atoi(strings.TrimSpace(string(raw)))
-	deadline := time.Now().Add(time.Second)
-	for syscall.Kill(pid, 0) == nil {
-		if time.Now().After(deadline) {
-			t.Fatalf("child %d still running", pid)
-		}
-		time.Sleep(20 * time.Millisecond)
 	}
 }
 

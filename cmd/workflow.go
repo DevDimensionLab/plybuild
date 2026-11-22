@@ -19,7 +19,7 @@ func newWorkflowCommand() *cobra.Command {
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	}
 	command.AddCommand(newWorkflowGoalStartCommand(taskwork.SystemDependencies()))
-	command.AddCommand(newAgentWorkCommand(agentwork.System))
+	command.AddCommand(newAgentWorkCommand(agentwork.System, herdrAgentMetadata))
 	command.AddCommand(newFollowupCommand(agentwork.System))
 	command.AddCommand(newWorkflowStatusCommand(taskwork.SystemDependencies()))
 	command.AddCommand(newWorkflowTraceCommand(taskwork.SystemDependencies()))

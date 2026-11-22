@@ -469,8 +469,11 @@ func TestPlanJournalRecordsPlanStepsInTheTrace(t *testing.T) {
 	f.success(t, f.root, append(journal, "step", "finish", "PLAN-1", "--project", "example", "--id", "map", "--kind", "planning", "--title", "Map", "--outcome", "complete", "--actor", "ply-plan")...)
 	f.success(t, f.root, append(journal, "note", "PLAN-1", "--project", "example", "--title", "User chose option 1", "--actor", "ply-plan")...)
 	f.success(t, f.root, append(journal, "note", "PLAN-1", "--project", "example", "--title", "Reviewed", "--actor", "rev-1", "--role", "reviewer")...)
+	// The raw trace keeps each event's at, actor and role for the failure message
+	// (backlog 20261121-058d5a58: the last event was seen once out of order).
+	raw := f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")
 	var trace planTraceDoc
-	if e := json.Unmarshal([]byte(f.success(t, f.root, "plan", "trace", "PLAN-1", "--project", "example", "--format", "json")), &trace); e != nil {
+	if e := json.Unmarshal([]byte(raw), &trace); e != nil {
 		t.Fatal(e)
 	}
 	var types []string
@@ -480,11 +483,11 @@ func TestPlanJournalRecordsPlanStepsInTheTrace(t *testing.T) {
 		}
 	}
 	if !reflect.DeepEqual(types, []string{"step_started", "step_finished", "note"}) {
-		t.Fatalf("plan events %+v", trace.Events)
+		t.Fatalf("plan events %v; trace %s", types, raw)
 	}
 	last := trace.Events[len(trace.Events)-1]
 	if last.TaskID != "" || *last.ActorID != "rev-1" || *last.Role != "reviewer" {
-		t.Fatalf("last plan event %+v", last)
+		t.Fatalf("last plan event is not rev-1; trace %s", raw)
 	}
 }
 
