@@ -9,7 +9,10 @@ import (
 
 const WorktreeListKind = "WorkspaceWorktreeListReadback@1"
 
-type WorktreeOptions struct{ ProjectID, RepoID string }
+type WorktreeOptions struct {
+	ProjectID, RepoID string
+	Inspect           bool
+}
 type WorktreeBase struct {
 	Kind     string `json:"kind"`
 	Locator  string `json:"locator"`
@@ -104,7 +107,7 @@ func ListWorktrees(d taskwork.Dependencies, s *Snapshot, o WorktreeOptions) (Wor
 					bases[path] = owner.base.OID
 				}
 			}
-			facts, err := taskwork.ReadRegisteredWorktreeInventory(d, repo, bases)
+			facts, err := taskwork.ReadRegisteredWorktreeInventory(d, repo, bases, o.Inspect)
 			if err != nil {
 				out.Repositories = append(out.Repositories, WorktreeRepository{string(project.ID), string(id), "unknown", []string{"worktree_inventory_unavailable: " + err.Error()}})
 				out.Freshness = "unknown"

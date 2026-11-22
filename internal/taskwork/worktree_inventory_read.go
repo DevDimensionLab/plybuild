@@ -38,18 +38,20 @@ type InventoryRepositoryFacts struct {
 	Reasons   []string
 }
 type WorktreeInventoryGit interface {
-	ReadWorktreeInventory(workspace.RepoRecord, map[string]string) (InventoryRepositoryFacts, error)
+	ReadWorktreeInventory(workspace.RepoRecord, map[string]string, bool) (InventoryRepositoryFacts, error)
 }
 
 // ReadRegisteredWorktreeInventory is intentionally separate from readiness and
 // integration observers. It tolerates incomplete checkouts, never fetches, and
-// compares only the explicitly supplied local base OIDs.
-func ReadRegisteredWorktreeInventory(d Dependencies, repo workspace.RepoRecord, bases map[string]string) (InventoryRepositoryFacts, error) {
+// compares only the explicitly supplied local base OIDs. Only inspect reads
+// each work tree (git status) and compares it with its base; that is what
+// costs with many checkouts of a large repository.
+func ReadRegisteredWorktreeInventory(d Dependencies, repo workspace.RepoRecord, bases map[string]string, inspect bool) (InventoryRepositoryFacts, error) {
 	reader, ok := d.IntegrationGit.(WorktreeInventoryGit)
 	if !ok {
 		return InventoryRepositoryFacts{}, workspace.WorkError(workspace.ErrorWorkGitObservation, "read-only inventory observer is unavailable", nil)
 	}
-	return reader.ReadWorktreeInventory(repo, bases)
+	return reader.ReadWorktreeInventory(repo, bases, inspect)
 }
 
 func (g *systemTaskIntegrationGit) inventoryRead(path string, args ...string) GitCommandOutcome {
@@ -57,7 +59,7 @@ func (g *systemTaskIntegrationGit) inventoryRead(path string, args ...string) Gi
 	prefix = append(prefix, integrationGitPrefix(path)...)
 	return g.run(append(prefix, args...), []string{"GIT_OPTIONAL_LOCKS=0"})
 }
-func (g *systemTaskIntegrationGit) ReadWorktreeInventory(repo workspace.RepoRecord, bases map[string]string) (InventoryRepositoryFacts, error) {
+func (g *systemTaskIntegrationGit) ReadWorktreeInventory(repo workspace.RepoRecord, bases map[string]string, inspect bool) (InventoryRepositoryFacts, error) {
 	out := InventoryRepositoryFacts{Worktrees: []InventoryWorktreeFacts{}, Freshness: "fresh", Reasons: []string{}}
 	common, err := integrationLine(g.inventoryRead(repo.Locator, "rev-parse", "--path-format=absolute", "--git-common-dir"), "observe inventory repository")
 	if err != nil {
@@ -83,8 +85,13 @@ func (g *systemTaskIntegrationGit) ReadWorktreeInventory(repo workspace.RepoReco
 	if err != nil {
 		return out, err
 	}
+	oids := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		out.Worktrees = append(out.Worktrees, g.inventoryWorktree(repo, entry, bases[entry.Locator]))
+		oids = append(oids, entry.OID)
+	}
+	times := g.inventoryCommitTimes(repo, oids)
+	for _, entry := range entries {
+		out.Worktrees = append(out.Worktrees, g.inventoryWorktree(repo, entry, bases[entry.Locator], inspect, times))
 	}
 	after := g.inventoryRead(repo.Locator, "worktree", "list", "--porcelain", "-z")
 	if after.Err != nil || !bytes.Equal(before.Stdout, after.Stdout) {
@@ -101,7 +108,7 @@ func (g *systemTaskIntegrationGit) ReadWorktreeInventory(repo workspace.RepoReco
 	return out, nil
 }
 
-func (g *systemTaskIntegrationGit) inventoryWorktree(repo workspace.RepoRecord, entry GitWorktreeInventoryEntry, base string) InventoryWorktreeFacts {
+func (g *systemTaskIntegrationGit) inventoryWorktree(repo workspace.RepoRecord, entry GitWorktreeInventoryEntry, base string, inspect bool, times map[string]string) InventoryWorktreeFacts {
 	out := InventoryWorktreeFacts{Entry: entry, Freshness: InventoryFactFreshness{"fresh", "unknown", "unknown", "unknown", "unknown"}, Reasons: []string{}}
 	physical, err := workspace.CanonicalDirectory(g.files, "", entry.Locator, "inventory worktree")
 	if err != nil || physical != entry.Locator || entry.Bare {
@@ -113,6 +120,8 @@ func (g *systemTaskIntegrationGit) inventoryWorktree(repo workspace.RepoRecord, 
 			out.Reasons = append(out.Reasons, "worktree_identity_differs")
 		} else {
 			out.Freshness.Identity = "fresh"
+		}
+		if out.Freshness.Identity == "fresh" && inspect {
 			status := g.inventoryRead(entry.Locator, "status", "--porcelain=v1", "-z", "--untracked-files=normal")
 			if status.Err != nil {
 				out.Reasons = append(out.Reasons, "worktree_status_unavailable")
@@ -124,19 +133,14 @@ func (g *systemTaskIntegrationGit) inventoryWorktree(repo workspace.RepoRecord, 
 		}
 	}
 	if validOIDText(entry.OID) {
-		commit := g.inventoryRead(repo.Locator, "show", "-s", "--format=%cI", entry.OID, "--")
-		if commit.Err == nil {
-			if t, e := time.Parse(time.RFC3339, strings.TrimSpace(string(commit.Stdout))); e == nil {
-				value := t.UTC().Format(time.RFC3339)
-				out.LastCommitUTC = &value
-				out.Freshness.LastCommitUTC = "fresh"
-			}
-		}
-		if out.LastCommitUTC == nil {
+		if value, ok := times[entry.OID]; ok {
+			out.LastCommitUTC = &value
+			out.Freshness.LastCommitUTC = "fresh"
+		} else {
 			out.Reasons = append(out.Reasons, "commit_time_unavailable")
 		}
 	}
-	if base != "" && validOIDText(base) && validOIDText(entry.OID) {
+	if inspect && base != "" && validOIDText(base) && validOIDText(entry.OID) {
 		relation := g.inventoryRead(repo.Locator, "rev-list", "--left-right", "--count", "--end-of-options", base+"..."+entry.OID, "--")
 		parts := strings.Fields(string(relation.Stdout))
 		if relation.Err == nil && len(parts) == 2 {
@@ -171,4 +175,32 @@ func parseReadInventory(b []byte) ([]GitWorktreeInventoryEntry, error) {
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].Locator < entries[j].Locator })
 	return entries, nil
+}
+
+// inventoryCommitTimes reads the commit time of every OID in one git log; a
+// missing commit is skipped and leaves only its own row without a time.
+func (g *systemTaskIntegrationGit) inventoryCommitTimes(repo workspace.RepoRecord, oids []string) map[string]string {
+	times := map[string]string{}
+	args := []string{"log", "--no-walk", "--ignore-missing", "--format=%H %cI"}
+	seen := map[string]bool{}
+	for _, oid := range oids {
+		if validOIDText(oid) && !seen[oid] {
+			seen[oid] = true
+			args = append(args, oid)
+		}
+	}
+	if len(seen) == 0 {
+		return times
+	}
+	out := g.inventoryRead(repo.Locator, append(args, "--")...)
+	if out.Err != nil {
+		return times
+	}
+	for _, line := range strings.Split(string(out.Stdout), "\n") {
+		oid, at, ok := strings.Cut(line, " ")
+		if t, e := time.Parse(time.RFC3339, at); ok && seen[oid] && e == nil {
+			times[oid] = t.UTC().Format(time.RFC3339)
+		}
+	}
+	return times
 }

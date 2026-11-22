@@ -120,6 +120,16 @@ func TestWorktreeInventoryKeepsOwnersUnknownsAndNoGitWrites(t *testing.T) {
 	if byPath[main].Owner != "project_main" || byPath[epic].Owner != "epic" || byPath[task].Owner != "task" || byPath[other].Owner != "none" {
 		t.Fatalf("ownership: %+v", byPath)
 	}
+	if w := byPath[task]; w.Clean != nil || w.Ahead != nil || w.OwnerFreshness != "fresh" || w.LastCommitUTC == nil {
+		t.Fatalf("default read inspected the work tree: %+v", w)
+	}
+	inspected, err := ListWorktrees(d, s, WorktreeOptions{Inspect: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, w := range inspected.Worktrees {
+		byPath[w.Locator] = w
+	}
 	w := byPath[task]
 	if w.Ahead == nil || *w.Ahead != 1 || w.Behind == nil || *w.Behind != 0 || w.Clean == nil || *w.Clean || w.MergedIntoBase == nil || *w.MergedIntoBase {
 		t.Fatalf("task facts: %+v", w)

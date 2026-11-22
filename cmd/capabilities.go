@@ -95,6 +95,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("task.list", "progress", "WorkspaceTaskProgressListReadback@1", []string{"--progress"}, []string{"project", "repo", "epic"}, "independent_and"),
 		operation("task.show", "progress", "WorkspaceTaskProgressReadback@1", []string{"--progress"}, []string{}, "none"),
 		operation("worktree.list", "default", "WorkspaceWorktreeListReadback@1", []string{}, []string{"project", "repo"}, "independent_and"),
+		operation("worktree.list", "inspect", "WorkspaceWorktreeListReadback@1", []string{"--inspect"}, []string{"project", "repo"}, "independent_and"),
 	}
 	two := 2
 	extensions[1].ResultSchemas = []capabilitySchema{{workspaceview.EpicListKind, &two}}

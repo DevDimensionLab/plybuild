@@ -95,7 +95,7 @@ func TestInventoryConsumersPreservePrunableFacts(t *testing.T) {
 	}
 	repo := workspace.RepoRecord{ID: "repo", Locator: root, GitCommonDir: common}
 	reader := newSystemTaskIntegrationGit(workspace.SystemDependencies().Files).(*systemTaskIntegrationGit)
-	facts, err := reader.ReadWorktreeInventory(repo, nil)
+	facts, err := reader.ReadWorktreeInventory(repo, nil, true)
 	if err != nil || facts.Freshness != "fresh" || len(facts.Worktrees) != 2 {
 		t.Fatalf("facts=%#v, %v", facts, err)
 	}
@@ -117,5 +117,49 @@ func TestInventoryConsumersPreservePrunableFacts(t *testing.T) {
 	}
 	if _, err := reader.ObserveIntegrationRepository(repo); err != nil {
 		t.Fatalf("Epic integration rejected unrelated prunable checkout: %v", err)
+	}
+}
+
+// The default inventory reads identity and commit time but not the work tree:
+// git status and the base comparison only run with inspect (PLAN-181).
+func TestInventoryDefaultSkipsWorkTreeInspection(t *testing.T) {
+	t.Parallel()
+	root := initWorkItemGitRepository(t)
+	common := physicalPath(t, filepath.Join(root, ".git"))
+	if err := os.WriteFile(filepath.Join(root, "dirty.txt"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	head := strings.TrimSpace(runLocalGit(t, root, "rev-parse", "HEAD"))
+	repo := workspace.RepoRecord{ID: "repo", Locator: root, GitCommonDir: common}
+	reader := newSystemTaskIntegrationGit(workspace.SystemDependencies().Files).(*systemTaskIntegrationGit)
+	for _, inspect := range []bool{false, true} {
+		facts, err := reader.ReadWorktreeInventory(repo, map[string]string{root: head}, inspect)
+		if err != nil || len(facts.Worktrees) != 1 {
+			t.Fatalf("inspect=%v facts=%#v, %v", inspect, facts, err)
+		}
+		f := facts.Worktrees[0]
+		if f.Freshness.Identity != "fresh" || f.LastCommitUTC == nil || len(f.Reasons) != 0 {
+			t.Fatalf("inspect=%v identity/commit %#v", inspect, f)
+		}
+		if inspect {
+			if f.Clean == nil || *f.Clean || f.Ahead == nil || f.Freshness.Clean != "fresh" || f.Freshness.BaseRelation != "fresh" {
+				t.Fatalf("inspected %#v", f)
+			}
+		} else if f.Clean != nil || f.Ahead != nil || f.Behind != nil || f.MergedIntoBase != nil || f.Freshness.Clean != "unknown" || f.Freshness.BaseRelation != "unknown" {
+			t.Fatalf("default inspected the work tree %#v", f)
+		}
+	}
+}
+
+// One missing commit leaves only its own row without a commit time.
+func TestInventoryCommitTimesToleratesAMissingCommit(t *testing.T) {
+	t.Parallel()
+	root := initWorkItemGitRepository(t)
+	head := strings.TrimSpace(runLocalGit(t, root, "rev-parse", "HEAD"))
+	missing := strings.Repeat("1", 40)
+	reader := newSystemTaskIntegrationGit(workspace.SystemDependencies().Files).(*systemTaskIntegrationGit)
+	times := reader.inventoryCommitTimes(workspace.RepoRecord{Locator: root}, []string{head, missing, head})
+	if _, ok := times[head]; !ok || len(times) != 1 {
+		t.Fatalf("times %v", times)
 	}
 }

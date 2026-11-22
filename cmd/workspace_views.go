@@ -196,7 +196,8 @@ func validateViewSince(value string) error {
 
 func newWorkspaceWorktreesCommand(d taskwork.Dependencies) *cobra.Command {
 	parent := &cobra.Command{Use: "worktree", Short: "Inspect local worktrees and their registered owners", Long: "Inspect worktrees in registered repositories. This inventory never fetches, prunes, repairs or removes worktrees."}
-	c := &cobra.Command{Use: "list", Short: "Observe worktrees in registered local repositories", Long: "Read the local Git worktree inventory, registered ownership and available base comparisons. This explicit observation can cost more than registered Home data. Missing or inaccessible facts remain unknown; no fetch, locks or cleanup are performed.", Example: "  ply workspace worktree list --format json\n  ply workspace worktree list --project ply --repo ply", Args: func(c *cobra.Command, args []string) error {
+	var inspect bool
+	c := &cobra.Command{Use: "list", Short: "Observe worktrees in registered local repositories", Long: "Read the local Git worktree inventory, registered ownership and commit times. clean, ahead, behind and merged_into_base stay null with freshness unknown unless --inspect reads each work tree (git status) and compares it with its base; that costs about a second per checkout of a large repository, so limit it with --repo. Missing or inaccessible facts remain unknown; no fetch, locks or cleanup are performed.", Example: "  ply workspace worktree list --format json\n  ply workspace worktree list --project ply --repo ply --inspect", Args: func(c *cobra.Command, args []string) error {
 		if err := viewNoArgs(c, args); err != nil {
 			return err
 		}
@@ -207,7 +208,7 @@ func newWorkspaceWorktreesCommand(d taskwork.Dependencies) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		r, err := workspaceview.ListWorktrees(d, s, workspaceview.WorktreeOptions{ProjectID: viewString(c, "project"), RepoID: viewString(c, "repo")})
+		r, err := workspaceview.ListWorktrees(d, s, workspaceview.WorktreeOptions{ProjectID: viewString(c, "project"), RepoID: viewString(c, "repo"), Inspect: inspect})
 		if err != nil {
 			return err
 		}
@@ -220,6 +221,7 @@ func newWorkspaceWorktreesCommand(d taskwork.Dependencies) *cobra.Command {
 	addViewFormat(c)
 	c.Flags().String("project", "", "filter by Project ID")
 	c.Flags().String("repo", "", "filter by repository ID")
+	c.Flags().BoolVar(&inspect, "inspect", false, "also read clean, ahead, behind and merged_into_base for each work tree")
 	parent.AddCommand(c)
 	return parent
 }

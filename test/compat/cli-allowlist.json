@@ -6918,7 +6918,7 @@
         "deprecated": "",
         "disable_flag_parsing": false,
         "disable_flags_in_use_line": false,
-        "example": "  ply workspace worktree list --format json\n  ply workspace worktree list --project ply --repo ply",
+        "example": "  ply workspace worktree list --format json\n  ply workspace worktree list --project ply --repo ply --inspect",
         "flags": [
           {
             "annotations": {},
@@ -6949,6 +6949,19 @@
             "shorthand_deprecated": "",
             "type": "bool",
             "usage": "help for list"
+          },
+          {
+            "annotations": {},
+            "default": "false",
+            "deprecated": "",
+            "hidden": false,
+            "name": "inspect",
+            "no_opt_default": "true",
+            "scope": "local",
+            "shorthand": "",
+            "shorthand_deprecated": "",
+            "type": "bool",
+            "usage": "also read clean, ahead, behind and merged_into_base for each work tree"
           },
           {
             "annotations": {},
@@ -6983,7 +6996,7 @@
         "has_post_run": false,
         "has_pre_run": false,
         "hidden": false,
-        "long": "Read the local Git worktree inventory, registered ownership and available base comparisons. This explicit observation can cost more than registered Home data. Missing or inaccessible facts remain unknown; no fetch, locks or cleanup are performed.",
+        "long": "Read the local Git worktree inventory, registered ownership and commit times. clean, ahead, behind and merged_into_base stay null with freshness unknown unless --inspect reads each work tree (git status) and compares it with its base; that costs about a second per checkout of a large repository, so limit it with --repo. Missing or inaccessible facts remain unknown; no fetch, locks or cleanup are performed.",
         "path": "ply workspace worktree list",
         "runnable": true,
         "short": "Observe worktrees in registered local repositories",
