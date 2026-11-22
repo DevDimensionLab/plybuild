@@ -164,7 +164,7 @@ for leaf in create integrate list problem publication show spec worktree; do
 	grep -F "  $leaf" "$temp_root/workspace-task-help.stdout" >/dev/null || fail "Task help does not expose $leaf" "$temp_root/workspace-task-help.stdout"
 done
 grep -F 'ply workspace task create <task-id> [flags]' "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail 'Task create usage changed' "$temp_root/workspace-task-create-help.stdout"
-for flag in '--title string' '--description string' '--epic string' '--project string' '--repo string' '--format string' '--upgrade-store string'; do
+for flag in '--title string' '--description string' '--epic string' '--project string' '--repo string' '--format string'; do
 	grep -F -- "$flag" "$temp_root/workspace-task-create-help.stdout" >/dev/null || fail "Task create $flag is unavailable" "$temp_root/workspace-task-create-help.stdout"
 done
 grep -F 'ply workspace task show <task-id> [flags]' "$temp_root/workspace-task-show-help.stdout" >/dev/null || fail 'Task show usage changed' "$temp_root/workspace-task-show-help.stdout"
@@ -179,7 +179,7 @@ for flag in '--expected-result-oid string' '--expected-parent-oid string' '--che
 	grep -F -- "$flag" "$temp_root/workspace-task-integrate-help.stdout" >/dev/null || fail "Task integrate $flag is unavailable" "$temp_root/workspace-task-integrate-help.stdout"
 done
 
-grep -F "Read registered workspace workflow status, trace one Task's recorded history, create local planning repositories, start an explicitly assigned agent, and manage notifications." "$temp_root/workflow-help.stdout" >/dev/null ||
+grep -F "Read registered workspace workflow status, trace one Task's recorded history, start an explicitly assigned agent, and manage notifications." "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help lost its long description' "$temp_root/workflow-help.stdout"
 grep -F 'ply workflow [command]' "$temp_root/workflow-help.stdout" >/dev/null ||
 	fail 'workflow help usage changed' "$temp_root/workflow-help.stdout"
@@ -200,7 +200,22 @@ printf '%s\n' \
 	'The command creates `.ply/workspace.yaml` with format version 1 and the canonical physical' \
 	'directory path. The directory does not need to be a Git repository. Re-running the command is' \
 	'safe and leaves an existing compatible marker unchanged. It does not create a Git repository or' \
-	'create workflows.' \
+	'create workflows. A workspace may lie inside another one; as with Git' \
+	'repositories, every command uses the nearest `.ply` above the current directory.' \
+	'' \
+	'To use a directory of repositories as a workspace with one Project, run from that directory:' \
+	'' \
+	'```shell script' \
+	'cd ~/github/trip' \
+	'ply workspace init --discover' \
+	'```' \
+	'' \
+	'This also writes `ply-workspace.json` with one Project whose ID is the directory name (or' \
+	'`--project <id>`) and whose wrapper is `.`. Each child directory holding a Git worktree root,' \
+	'as `<name>` or `<name>/main`, becomes repository `<name>` with the URL of its `origin` as' \
+	'`remote`. The output lists what was found and what was left out. Re-running with the same' \
+	'repositories changes nothing; other repositories are a conflict. A workspace whose Projects' \
+	'exist only in `.ply` is refused, because the new file would hide them.' \
 	'' \
 	'From an initialized workspace, or any directory below it, register a project with an explicit' \
 	'wrapper and one or more Git worktree roots:' \
@@ -227,11 +242,14 @@ printf '%s\n' \
 	'only the nominated worktree roots. Dirty repositories are accepted, and registration performs no' \
 	'discovery or Git mutation. Read registrations with `ply workspace project show <id>` and' \
 	'`ply workspace project list`. These commands also accept `--format json`.' \
+	'All data of a Project (backlog, backlog-archive, inbox, plans, assignments, publications,' \
+	'agent-status) lives in `<project wrapper>/data/<category>/`; there is no configuration of these paths.' \
+	'In `project show` JSON, each repository'\''s `remote` is the URL from' \
+	'`ply-workspace.json`, or `null` when no remote is defined. Ply does not infer it from Git.' \
 	'See the [workspace read contract](docs/read-contract.md) for independent Task filters,' \
 	'versioned JSON schemas, and `ply capabilities`.' \
 	'' \
-	'Retrying the same registration is idempotent. Changing membership, relocating repositories, and' \
-	'`project init` are not part of this command.' \
+	'Retrying the same registration is idempotent. To append one member to an existing project:' \
 	'' >"$temp_root/readme-workspace.expected"
 sed -n '/^## Workspace$/,/^## Agent quota$/p' "$repo_root/README.md" | sed '$d' \
 	>"$temp_root/readme-workspace.actual"
@@ -249,8 +267,8 @@ for text in \
 	'Ply persists a durable create intent before the additive branch/worktree operation.' \
 	'are never reset, removed,' \
 	'`ply workspace task show <id>`' \
-	'confirmation digest' \
-	'exactly one local `ff-only`' \
+	'`--apply --confirm <digest>`' \
+	'one local `ff-only` move' \
 	'Git 2.45.0 or newer' \
 	'Both show commands accept `--format json`' \
 	'it does not start an agent, select a workflow, or grant execution authority.' \
@@ -320,7 +338,7 @@ cmp -s "$temp_root/marker.before" "$work/.ply/workspace.yaml" ||
 [[ $(file_mtime "$work/.ply/workspace.yaml") == "$first_mtime" ]] ||
 	fail 'idempotent init changed marker mtime' "$work/.ply/workspace.yaml"
 [[ ! -e "$temp_root/home/.ply" ]] || fail 'workspace init created a global Ply profile' "$temp_root/home/.ply"
-[[ $(cd "$work" && find . -mindepth 1 -print | LC_ALL=C sort) == $'./.ply\n./.ply/workspace.yaml' ]] ||
+[[ $(cd "$work" && find . -mindepth 1 -print | LC_ALL=C sort) == $'./.ply\n./.ply/projects.lock\n./.ply/workspace.yaml\n./ply-workspace.json' ]] ||
 	fail 'workspace init created unexpected persistent files'
 
 physical="$temp_root/physical"
@@ -552,7 +570,10 @@ run_project_error unknown-show workspace_project_not_found "$work" workspace pro
 run_project_error changed-members workspace_project_conflict "$work" \
 	workspace project add single --name Single --wrapper "$single_wrapper_root" --repo "single=$external_repo_root"
 run_project_error duplicate-wrapper workspace_project_conflict "$work" \
-	workspace project add other --name Other --wrapper "$single_wrapper_root" --repo "api=$external_repo_root"
+	workspace project add other --name Other --wrapper "$single_wrapper_root" --repo "other=$external_repo_root"
+# The repository is registered too, which gives the same class; only the wrapper rule names the wrapper.
+grep -F "overlaps the wrapper of project single" "$temp_root/duplicate-wrapper.stderr" >/dev/null ||
+	fail 'duplicate-wrapper stderr lost the wrapper overlap' "$temp_root/duplicate-wrapper.stderr"
 
 find "$single_wrapper" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/single.after"
 find "$multi_wrapper" -mindepth 1 -print | LC_ALL=C sort >"$temp_root/multi.after"

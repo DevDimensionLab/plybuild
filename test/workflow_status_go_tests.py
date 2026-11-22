@@ -22,16 +22,18 @@ for line in inventory.stdout.splitlines():
     if name.startswith('Test') and ' ' not in name:
         registered.add((event['Package'], name))
 
+# Each package and each name prefix must select a test: a stale selector is no test.
 groups = [
-    ('cli-and-projection', ['./cmd', './internal/workspaceview'], '.'),
-    ('registered-queue-and-content', ['./internal/taskwork'], '^Test(RegisteredQueue|TaskContent|TaskGoal|TaskQueue)'),
-    ('preserved-run-and-report', ['./internal/taskrun'], '^Test(ReadInventory|InventoryDelivery|InventoryCaptured|DeliveryOwnerActualAcceptance)'),
+    ('cli-and-projection', ['./cmd', './internal/workspaceview'], []),
+    ('registered-queue-and-content', ['./internal/taskwork'], ['RegisteredQueue', 'TaskContent', 'TaskQueue']),
 ]
 observed = {}
 started_tests = set()
 results = []
 failed = False
-for name, packages, pattern in groups:
+for name, packages, prefixes in groups:
+    pattern = '^Test(' + '|'.join(prefixes) + ')' if prefixes else '.'
+    group_started = set()
     argv = [go, 'test', '-json', '-count=1', '-timeout=5m', *packages, '-run', pattern]
     print(f'Running {name}: {" ".join(argv)}', flush=True)
     started = time.monotonic()
@@ -47,11 +49,17 @@ for name, packages, pattern in groups:
             key = (event['Package'], test)
             if event.get('Action') == 'run':
                 started_tests.add(key)
+                group_started.add(key)
             elif event.get('Action') in ('pass', 'fail', 'skip'):
                 observed[key] = event['Action']
     results.append(dict(id=name, argv=argv, cwd=str(repo), exit=result.returncode, elapsed_seconds=time.monotonic()-started))
     print(f'{name}: exit {result.returncode}, {results[-1]["elapsed_seconds"]:.1f}s; log {evidence / (name + ".jsonl")}', flush=True)
     failed |= result.returncode != 0
+    empty = [p for p in packages if not any(package.endswith(p[1:]) for package, _ in group_started)]
+    empty += [p for p in prefixes if not any(test.startswith('Test' + p) for _, test in group_started)]
+    if empty:
+        print(f'{name}: selects no test for {", ".join(empty)}', file=sys.stderr, flush=True)
+        failed = True
 
 report = dict(kind='WorkflowStatusGoTestCoverage@1', groups=results, tests=[dict(package=p, test=t, outcome=observed.get((p,t), 'incomplete' if (p,t) in started_tests else 'not_run')) for p,t in sorted(registered)])
 (evidence / 'go-test-coverage.json').write_text(json.dumps(report, indent=2)+'\n')

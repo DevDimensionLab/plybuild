@@ -15,5 +15,4 @@ PY
 go version
 go version -m "$PLY_CANDIDATE_BINARY"
 go test ./internal/agentwork -count=1 -timeout 120s
-go test ./cmd -run '^(TestAgentWork|TestWorkflowStatus|TestCapabilities)' -count=1 -timeout 120s
-go test ./internal/taskrun -run '^(TestStatusFollowupCandidateJourney|TestInventoryStatusFollowupVeto|TestReadInventoryStopHistoryIdentityContracts|TestReadInventoryDeliveryReportsKeepExactQuestionAndSeparateNativeOutcomes|TestReadInventoryDeliveryCorruptionAndOrphansPreserveValidSiblings)$' -count=1 -timeout 180s
+test/go_test_each.sh ./cmd TestAgentWork TestWorkflowStatus TestCapabilities -- -count=1 -timeout 120s

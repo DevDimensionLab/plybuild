@@ -16,7 +16,6 @@ test "$(git rev-parse 'HEAD^{tree}')" = "$PLY_CANDIDATE_TREE"
 test -z "$(git status --porcelain)"
 go version -m "$PLY_CANDIDATE_BINARY"
 go test -race ./internal/agentwork -count=1 -timeout 120s
-go test ./cmd -run '^TestAgentWork' -count=1 -timeout 120s
-go test ./internal/taskrun -run '^(TestStatusFollowupCandidateJourney|TestInventoryStatusFollowupVeto|TestReadInventoryStopHistoryIdentityContracts|TestReadInventoryDeliveryReportsKeepExactQuestionAndSeparateNativeOutcomes|TestReadInventoryDeliveryCorruptionAndOrphansPreserveValidSiblings)$' -count=1 -timeout 180s
+test/go_test_each.sh ./cmd TestAgentWork -- -count=1 -timeout 120s
 go vet ./internal/agentwork ./cmd
 printf '%s\n' 'T965226AF producer acceptance passed; installed timings and consumer QA remain parent-owned.'

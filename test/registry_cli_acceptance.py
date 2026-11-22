@@ -84,7 +84,7 @@ def main():
     pin = sys.argv[2]
     assert digest(package / "manifest.json") == pin
     manifest = json.loads((package / "manifest.json").read_text())
-    with tempfile.TemporaryDirectory(prefix="ply-cb01a-acceptance-", dir="/tmp") as temporary:
+    with tempfile.TemporaryDirectory(prefix="ply-cb01a-acceptance-", dir=os.environ["TMPDIR"]) as temporary:
         root = Path(temporary).resolve()
         consumer = root / "consumer"
         consumer.mkdir()

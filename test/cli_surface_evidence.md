@@ -21,12 +21,3 @@ that root; the README build section describes it. A failed build replays its
 stderr and returns the build's exit status; CLI assertion failures return 1.
 Before its run directory is removed, a failed assertion prints the first 80
 lines of each file it checked. Nothing is retained.
-
-`test/al24-acceptance.sh` is the historical acceptance for an earlier native
-candidate and still expects the former retention behaviour. It runs the regression and the real successful surface
-script against a clean native candidate, checking that successful cleanup leaves
-an unrelated sibling alone. It also records the supplied candidate binary's
-version, Go build metadata and hash. Raw acceptance evidence is retained in a
-private `/private/tmp/ply-al24-acceptance.*` directory, outside the native
-runner's automatically removed temporary parent. This checks the exercised local shell/CLI
-paths; it makes no claim about other platforms, providers or all signal cases.
