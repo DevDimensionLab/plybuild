@@ -9,9 +9,6 @@ type RepoUses interface {
 	// worktree operation and Epic create operation, in that order. A registry
 	// the store rejects is an error.
 	RepoUses(ProjectWork) ([]RepoUse, error)
-	// RecordedRepos reads only the repository identities that the Epic
-	// bindings and Tasks of work record, ignoring all other registry content.
-	RecordedRepos(ProjectWork) ([]RepoUse, error)
 }
 
 // RepoUseKind is the kind of work item that uses a repository, as messages

@@ -107,62 +107,61 @@ func publishDamaged(damage func(string) string) func(*testing.T, string) {
 
 // AddDefinitionRepo with the work-item store as RepoUses admits a new
 // repository ID and refuses a historical ID with another Git common
-// directory without touching the definitions, also when the registry holds
-// null records or content the strict registration read rejects.
+// directory without touching the definitions.
 func TestAddDefinitionRepoReadsHistoryThroughTheWorkItemStore(t *testing.T) {
+	t.Parallel()
+	root := newHistoryWorkspace(t)
+	registry := minimalEpicRegistry(root)
+	registry.Epics[0].RepoBindings[0].RepoID = "retired"
+	registry.EpicBaseVersions = []EpicBaseVersion{adoptedEpicBase(registry.Epics[0], registry.Epics[0].RepoBindings[0])}
+	if err := newSystemWorkItemStore().WithLock(testWork(t, root, "ply"), func(s WorkItemStoreSession) error { return s.Publish(registry) }); err != nil {
+		t.Fatal(err)
+	}
+	d := workspace.Dependencies{Files: projectCwdFileSystem{workspace.SystemDependencies().Files, root}, RepoUses: newSystemWorkItemStore()}
+
+	result, err := workspace.AddDefinitionRepo(d, "ply", "ply-code-map", "ply-code-map", "")
+	if err != nil || !result.Changed {
+		t.Fatalf("new repository: %+v, %v", result, err)
+	}
+	definitions := filepath.Join(root, workspacedef.File)
+	before, err := os.ReadFile(definitions)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = workspace.AddDefinitionRepo(d, "ply", "retired", "retired", "")
+
+	assertWorkErrorClass(t, err, workspace.ErrorWorkIdentityConflict)
+	if !strings.Contains(err.Error(), "retired") {
+		t.Fatalf("error %v", err)
+	}
+	if after, readErr := os.ReadFile(definitions); readErr != nil || string(after) != string(before) {
+		t.Fatalf("definitions changed on refusal (%v):\n%s", readErr, after)
+	}
+}
+
+// AddDefinitionRepo reads the Project's registry as strictly as removal and
+// move: a registry the work-item store rejects stops the add with the store's
+// conflict and leaves the definitions untouched.
+func TestAddDefinitionRepoRejectsRegistryTheStoreRejects(t *testing.T) {
 	t.Parallel()
 	for name, write := range historyRegistries {
 		t.Run(name, func(t *testing.T) {
 			root := newHistoryWorkspace(t)
 			write(t, root)
 			d := workspace.Dependencies{Files: projectCwdFileSystem{workspace.SystemDependencies().Files, root}, RepoUses: newSystemWorkItemStore()}
-
-			result, err := workspace.AddDefinitionRepo(d, "ply", "ply-code-map", "ply-code-map", "")
-			if err != nil || !result.Changed {
-				t.Fatalf("new repository: %+v, %v", result, err)
-			}
 			definitions := filepath.Join(root, workspacedef.File)
 			before, err := os.ReadFile(definitions)
 			if err != nil {
 				t.Fatal(err)
 			}
 
-			_, err = workspace.AddDefinitionRepo(d, "ply", "retired", "retired", "")
+			_, err = workspace.AddDefinitionRepo(d, "ply", "ply-code-map", "ply-code-map", "")
 
-			assertWorkErrorClass(t, err, workspace.ErrorWorkIdentityConflict)
-			if !strings.Contains(err.Error(), "retired") {
-				t.Fatalf("error %v", err)
-			}
+			assertWorkErrorClass(t, err, workspace.ErrorWorkStoreConflict)
 			if after, readErr := os.ReadFile(definitions); readErr != nil || string(after) != string(before) {
 				t.Fatalf("definitions changed on refusal (%v):\n%s", readErr, after)
 			}
-		})
-	}
-}
-
-// The store's RepoUses is the strict registration read: it rejects every
-// registry whose repository identities RecordedRepos still reads.
-func TestWorkItemStoreRepoUsesRejectsWhatRecordedReposReads(t *testing.T) {
-	t.Parallel()
-	for name, write := range historyRegistries {
-		t.Run(name, func(t *testing.T) {
-			root := newHistoryWorkspace(t)
-			write(t, root)
-			work := testWork(t, root, "ply")
-			uses := SystemDependencies().RepoUses
-
-			recorded, err := uses.RecordedRepos(work)
-			found := false
-			for _, use := range recorded {
-				found = found || use.RepoID == "retired" && use.GitCommonDir != ""
-			}
-			if err != nil || !found {
-				t.Fatalf("recorded %+v, %v", recorded, err)
-			}
-
-			_, err = uses.RepoUses(work)
-
-			assertWorkErrorClass(t, err, workspace.ErrorWorkStoreConflict)
 		})
 	}
 }

@@ -216,6 +216,15 @@ func definitionRepo(files FileSystem, observer RepoObserver, root string, r work
 	return repo, nil
 }
 
+// ObserveMember reads member repo the way project show does. It returns why
+// the member is unavailable and the diagnostic, or "" when its directory is a
+// Git worktree root.
+func ObserveMember(repo RepoRecord) (RepoAvailability, string) {
+	files := systemFileSystem{}
+	observed, _ := definitionRepo(files, newSystemRepoObserver(files), "", workspacedef.Repo{ID: string(repo.ID), Path: repo.Locator})
+	return observed.Unavailable, observed.Diagnostic
+}
+
 // updateDefinitions applies mutate to ply-workspace.json as it is under
 // projects.lock and validates the result against live Git before it is
 // written. It reports whether the file changed.
@@ -339,7 +348,7 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 // work-item registry recorded with another Git common directory than the one
 // observed now.
 func checkHistoricalIdentity(uses RepoUses, work ProjectWork, registry projectRegistry, repo RepoID) error {
-	recorded, err := uses.RecordedRepos(work)
+	recorded, err := uses.RepoUses(work)
 	if err != nil {
 		return err
 	}

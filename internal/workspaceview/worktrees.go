@@ -90,6 +90,13 @@ func ListWorktrees(d taskwork.Dependencies, s *Snapshot, o WorktreeOptions) (Wor
 				out.Freshness = "unknown"
 				continue
 			}
+			// Git would find a repository above a member without its own Git
+			// identity; that repository's worktrees are not the member's.
+			if availability, diagnostic := workspace.ObserveMember(repo); availability != "" {
+				out.Repositories = append(out.Repositories, WorktreeRepository{string(project.ID), string(id), "unknown", []string{"repository_" + string(availability) + ": " + diagnostic}})
+				out.Freshness = "unknown"
+				continue
+			}
 			owners := inventoryOwners(s, project.ID, repo)
 			bases := map[string]string{}
 			for path, owner := range owners {

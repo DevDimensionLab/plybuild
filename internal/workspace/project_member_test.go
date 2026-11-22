@@ -198,7 +198,7 @@ func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 	bound := deps
-	bound.RepoUses = registrationsStore{recorded: deps.RepoUses, uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "moved"}}}
+	bound.RepoUses = registrationsStore{uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "moved"}}}
 	for name, test := range map[string]struct {
 		deps  Dependencies
 		repo  RepoID
@@ -285,7 +285,7 @@ func TestProjectMemberRemoveLeavesDirectories(t *testing.T) {
 	}
 	path := filepath.Join(root, DefinitionsFile)
 	bound := deps
-	bound.RepoUses = registrationsStore{recorded: deps.RepoUses, uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "first"}}}
+	bound.RepoUses = registrationsStore{uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "first"}}}
 	refused := func(deps Dependencies, repo RepoID, class ErrorClass, text string) {
 		t.Helper()
 		before, _ := os.ReadFile(path)

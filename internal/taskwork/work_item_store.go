@@ -191,11 +191,9 @@ func (store *systemWorkItemStore) read(work workspace.ProjectWork) (WorkItemRegi
 	return store.readRegistry(work)
 }
 
-// SnapshotRegistrations validates the registry itself without requiring the
-// content of unrelated workflow/queue objects. Registered lists verify current
-// problem heads individually so an unavailable title does not hide its Task.
-// Operations validate the document inputs they actually consume; Git operations
-// do not depend on the availability of optional document history.
+// SnapshotRegistrations reads and validates the registry as Snapshot does,
+// including the integration evidence objects it references; a registry
+// Snapshot rejects is rejected here too.
 func (store *systemWorkItemStore) SnapshotRegistrations(work workspace.ProjectWork) (WorkItemRegistry, error) {
 	return store.readRegistry(work)
 }
@@ -204,28 +202,9 @@ func (store *systemWorkItemStore) readRegistry(work workspace.ProjectWork) (Work
 	return store.readRegistryAs(work, func(contents []byte) (WorkItemRegistry, error) { return store.decodeStoredRegistry(work, contents) })
 }
 
-// snapshotRepoIdentities reads only the repository identities that the Epic
-// bindings and Tasks of the registry record. All other registry content and
-// every referenced object is ignored and absent from the result, so a
-// registry that Snapshot rejects for them still tells which Git common
-// directory a repository ID was bound to.
-func (store *systemWorkItemStore) snapshotRepoIdentities(work workspace.ProjectWork) (WorkItemRegistry, error) {
-	return store.readRegistryAs(work, decodeRepoIdentities)
-}
-
 // RepoUses implements the register's RepoUses with the registrations of work.
 func (store *systemWorkItemStore) RepoUses(work workspace.ProjectWork) ([]workspace.RepoUse, error) {
 	registry, err := store.SnapshotRegistrations(work)
-	if err != nil {
-		return nil, err
-	}
-	return repoUses(registry), nil
-}
-
-// RecordedRepos implements the register's RepoUses with the repository
-// identities of work.
-func (store *systemWorkItemStore) RecordedRepos(work workspace.ProjectWork) ([]workspace.RepoUse, error) {
-	registry, err := store.snapshotRepoIdentities(work)
 	if err != nil {
 		return nil, err
 	}
@@ -281,73 +260,6 @@ func (store *systemWorkItemStore) readRegistryAs(work workspace.ProjectWork, dec
 	}
 	registry.RawSHA256 = digestTaskBytes(contents)
 	return registry, nil
-}
-
-// recordedRepo is the repository identity of an Epic binding or a Task as
-// stored. The nodes keep the stored YAML types, which repoIdentity checks.
-type recordedRepo struct {
-	RepoID       yaml.Node `yaml:"repo_id"`
-	GitCommonDir yaml.Node `yaml:"git_common_dir"`
-}
-
-func decodeRepoIdentities(contents []byte) (WorkItemRegistry, error) {
-	logical, err := storedRegistryNode(contents)
-	if err != nil {
-		return WorkItemRegistry{}, err
-	}
-	var stored struct {
-		Epics []struct {
-			RepoBindings []recordedRepo `yaml:"repo_bindings"`
-		} `yaml:"epics"`
-		Tasks []recordedRepo `yaml:"tasks"`
-	}
-	if err := logical.Decode(&stored); err != nil {
-		return WorkItemRegistry{}, err
-	}
-	registry := emptyWorkItemRegistry()
-	for _, epic := range stored.Epics {
-		record := EpicRecord{}
-		for _, binding := range epic.RepoBindings {
-			id, common, err := repoIdentity(binding)
-			if err != nil {
-				return WorkItemRegistry{}, err
-			}
-			if common != "" {
-				record.RepoBindings = append(record.RepoBindings, EpicRepoBinding{RepoID: id, GitCommonDir: common})
-			}
-		}
-		registry.Epics = append(registry.Epics, record)
-	}
-	for _, task := range stored.Tasks {
-		id, common, err := repoIdentity(task)
-		if err != nil {
-			return WorkItemRegistry{}, err
-		}
-		if common != "" {
-			registry.Tasks = append(registry.Tasks, TaskRecord{RepoID: id, GitCommonDir: common})
-		}
-	}
-	return registry, nil
-}
-
-// repoIdentity validates repo_id and git_common_dir. A missing or empty common
-// directory records no identity, so its repo_id is not validated.
-func repoIdentity(r recordedRepo) (workspace.RepoID, string, error) {
-	isString := func(n yaml.Node) bool { return n.Kind == yaml.ScalarNode && n.Tag == "!!str" }
-	common, id := r.GitCommonDir, r.RepoID
-	if common.Kind == 0 || isString(common) && common.Value == "" {
-		return "", "", nil
-	}
-	if !isString(common) || !validAbsoluteCleanPath(common.Value) {
-		return "", "", errors.New("git_common_dir must be an absolute clean path")
-	}
-	if !isString(id) {
-		return "", "", errors.New("repo_id must be a string")
-	}
-	if err := workspace.ValidateIdentifier("repository", id.Value); err != nil {
-		return "", "", err
-	}
-	return workspace.RepoID(id.Value), common.Value, nil
 }
 
 func (session *systemWorkItemStoreSession) publish(registry WorkItemRegistry) error {

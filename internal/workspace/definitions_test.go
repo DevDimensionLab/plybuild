@@ -57,13 +57,11 @@ type definitionFixture struct {
 	history historyUses
 }
 
-// historyUses serves, per Project, the repository identities that a
-// work-item registry records. It records no registrations.
+// historyUses serves, per Project, the registrations of a work-item
+// registry: Epic bindings and Tasks with their repository identities.
 type historyUses map[ProjectID][]RepoUse
 
-func (h historyUses) RepoUses(ProjectWork) ([]RepoUse, error) { return nil, nil }
-
-func (h historyUses) RecordedRepos(work ProjectWork) ([]RepoUse, error) {
+func (h historyUses) RepoUses(work ProjectWork) ([]RepoUse, error) {
 	return h[work.Project], nil
 }
 
@@ -81,8 +79,8 @@ const fixtureDefinitions = `{
 }
 `
 
-// newDefinitionFixture builds a workspace shaped like the real one: an
-// envelope 10, inner 4 registry whose history names live and retired repos.
+// newDefinitionFixture builds a workspace shaped like the real one, whose
+// Project ply has registrations of live and retired repos.
 func newDefinitionFixture(t *testing.T) definitionFixture {
 	t.Helper()
 	root := physicalPath(t, t.TempDir())

@@ -164,3 +164,45 @@ func TestWorktreeInventoryReadsRepositoryWithoutWorkHistory(t *testing.T) {
 		t.Fatalf("repository without work history: %+v worktrees=%d", out.Repositories, len(out.Worktrees))
 	}
 }
+
+// A member whose directory is not a Git worktree root has no Git identity in
+// project show. Git would find the wrapper's repository above it; the
+// inventory must not lend that repository's worktrees to the member.
+func TestWorktreeInventoryGivesMemberWithoutGitIdentityNoForeignWorktrees(t *testing.T) {
+	d, root := changesFixture(t)
+	wrapper := filepath.Join(root, "w")
+	if err := os.MkdirAll(filepath.Join(wrapper, "gamma"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	inventoryGit(t, wrapper, "init", "-b", "main")
+	if err := os.WriteFile(filepath.Join(wrapper, "README"), []byte("wrapper\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	inventoryGit(t, wrapper, "add", "README")
+	inventoryGit(t, wrapper, "commit", "-m", "wrapper")
+	definitions := `{"format_version": 1, "projects": [{"id": "project", "name": "Project", "wrapper": "w", "repos": [{"id": "gamma", "path": "w/gamma"}]}]}`
+	if err := os.WriteFile(filepath.Join(root, workspace.DefinitionsFile), []byte(definitions), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	shown, err := workspace.ShowProject(d.Dependencies, "project")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(shown.Repos) != 1 || shown.Repos[0].Unavailable != workspace.RepoUnreadable {
+		t.Fatalf("project show must read gamma as unreadable: %+v", shown.Repos)
+	}
+	s, err := LoadSnapshot(d)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out, err := ListWorktrees(d, s, WorktreeOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(out.Worktrees) != 0 {
+		t.Fatalf("member without Git identity got foreign worktrees: %+v", out.Worktrees)
+	}
+	if len(out.Repositories) != 1 || out.Repositories[0].RepoID != "gamma" || out.Repositories[0].Freshness == "fresh" || out.Freshness == "fresh" {
+		t.Fatalf("inventory for member without Git identity must not be fresh: %+v freshness=%s", out.Repositories, out.Freshness)
+	}
+}

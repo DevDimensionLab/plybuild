@@ -562,20 +562,3 @@ func TestWorkItemStoreRepoUsesListsEveryUseInRegistryOrder(t *testing.T) {
 		t.Fatalf("invalid registry: %v", err)
 	}
 }
-
-// RecordedRepos reads only the identities that Epic bindings and Tasks record.
-func TestWorkItemStoreRecordedReposReadsOnlyRecordedIdentities(t *testing.T) {
-	t.Parallel()
-	root := t.TempDir()
-	writeWorkItems(t, root, envelope(RegistryFormat, historyRegistry+"unknown: ignored\n"))
-	got, err := newSystemWorkItemStore().RecordedRepos(testWork(t, root))
-	want := []workspace.RepoUse{
-		{Kind: workspace.RepoUseEpic, RepoID: "ply", GitCommonDir: "/w/ply/main/.git"},
-		{Kind: workspace.RepoUseEpic, RepoID: "app", GitCommonDir: "/w/app/main/.git"},
-		{Kind: workspace.RepoUseTask, RepoID: "ply", GitCommonDir: "/w/ply/main/.git"},
-		{Kind: workspace.RepoUseTask, RepoID: "app-server", GitCommonDir: "/w/app/server/.git"},
-	}
-	if err != nil || !reflect.DeepEqual(got, want) {
-		t.Fatalf("uses %+v, error %v, want %+v", got, err, want)
-	}
-}
