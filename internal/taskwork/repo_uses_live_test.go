@@ -22,19 +22,21 @@ func liveFixture() (WorkItemRegistry, WorkItemLifecycles) {
 		}
 		registry.Tasks = append(registry.Tasks, TaskRecord{ID: id, RepoID: "app", GitCommonDir: dir, WorktreeState: state})
 	}
+	registry.Tasks = append(registry.Tasks, TaskRecord{ID: "T-archived", RepoID: "app", GitCommonDir: "/old/app/.git", WorktreeState: WorkItemReady})
 	registry.WorktreeOperations = []WorktreeOperationRecord{{ID: "O-live", TaskID: "T-ready", RepoID: "app"}, {ID: "O-finished", TaskID: "T-retired", RepoID: "app", State: "ready"}}
 	registry.EpicCreateOperations = []EpicCreateOperation{{ID: "C-live", Request: EpicCreateInput{RepoID: "app"}, State: "pending"}, {ID: "C-completed", Request: EpicCreateInput{RepoID: "app"}, State: "completed"}}
-	lifecycles := WorkItemLifecycles{{states: map[string]LifecycleState{"epic/E-archived": LifecycleArchived}}}
+	lifecycles := WorkItemLifecycles{{states: map[string]LifecycleState{"epic/E-archived": LifecycleArchived, "task/T-archived": LifecycleArchived}}}
 	return registry, lifecycles
 }
 
 // Only work that still holds a worktree or an open operation is live: an
-// archived Epic, a Task without a worktree, an operation of such a Task and a
+// archived Epic, an archived Task even if it still records a worktree, a Task
+// without a worktree, an operation of such a Task and a
 // completed Epic create are history.
 func TestRepoUsesMarkOnlyLiveWorkLive(t *testing.T) {
 	t.Parallel()
 	registry, lifecycles := liveFixture()
-	want := map[string]bool{"E-live": true, "E-archived": false, "T-unbound": false, "T-creating": true, "T-ready": true, "T-retired": false, "T-reconcile": true, "O-live": true, "O-finished": false, "C-live": true, "C-completed": false}
+	want := map[string]bool{"E-live": true, "E-archived": false, "T-unbound": false, "T-creating": true, "T-ready": true, "T-retired": false, "T-reconcile": true, "T-archived": false, "O-live": true, "O-finished": false, "C-live": true, "C-completed": false}
 	uses := repoUses(registry, lifecycles)
 	if len(uses) != len(want) {
 		t.Fatalf("uses = %+v", uses)

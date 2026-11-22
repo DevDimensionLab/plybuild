@@ -230,7 +230,7 @@ func repoUses(registry WorkItemRegistry, lifecycles WorkItemLifecycles) []worksp
 	}
 	liveTasks := map[TaskID]bool{}
 	for _, task := range registry.Tasks {
-		live := task.WorktreeState == WorkItemCreating || task.WorktreeState == WorkItemReady || task.WorktreeState == WorkItemReconciliationRequired
+		live := lifecycles.Task(task.ID) != LifecycleArchived && (task.WorktreeState == WorkItemCreating || task.WorktreeState == WorkItemReady || task.WorktreeState == WorkItemReconciliationRequired)
 		liveTasks[task.ID] = live
 		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseTask, ID: string(task.ID), RepoID: task.RepoID, GitCommonDir: task.GitCommonDir, Live: live})
 	}
