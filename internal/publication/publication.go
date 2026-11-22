@@ -47,7 +47,6 @@ const (
 const (
 	ClassInvalidArguments = "publication_invalid_arguments"
 	ClassNotFound         = "publication_not_found"
-	ClassTooLarge         = "publication_too_large"
 	ClassIOError          = "publication_io_error"
 )
 
@@ -142,7 +141,6 @@ const (
 	lockName     = ".lock"
 	tempSuffix   = ".tmp"
 	runLayout    = "20060102T150405.000Z"
-	maxBytes     = 20 << 20
 	maxFiles     = 1000
 	keepWithout  = 5
 	maxTitle     = 200
@@ -228,7 +226,6 @@ func collect(dir string) ([]sourceFile, error) {
 		return nil, invalid("--dir must be an existing directory")
 	}
 	var files []sourceFile
-	var total int64
 	err = filepath.WalkDir(dir, func(p string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return ioError("read --dir", err)
@@ -243,14 +240,6 @@ func collect(dir string) ([]sourceFile, error) {
 		}
 		if name == metadataName {
 			return invalid(metadataName + " in --dir is reserved for Ply")
-		}
-		info, err := entry.Info()
-		if err != nil {
-			return ioError("read --dir", err)
-		}
-		total += info.Size()
-		if total > maxBytes {
-			return &Error{Class: ClassTooLarge, Detail: fmt.Sprintf("--dir holds more than %d MiB", maxBytes>>20)}
 		}
 		if files = append(files, sourceFile{name: name, path: p}); len(files) > maxFiles {
 			return invalid(fmt.Sprintf("--dir holds more than %d files", maxFiles))
@@ -354,7 +343,6 @@ func copyRun(temp string, files []sourceFile) ([]File, error) {
 		return nil, ioError("create run", err)
 	}
 	result := make([]File, 0, len(files))
-	var total int64
 	for _, f := range files {
 		target := filepath.Join(temp, filepath.FromSlash(f.name))
 		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
@@ -363,9 +351,6 @@ func copyRun(temp string, files []sourceFile) ([]File, error) {
 		size, sum, err := copyFile(f.path, target)
 		if err != nil {
 			return nil, err
-		}
-		if total += size; total > maxBytes {
-			return nil, &Error{Class: ClassTooLarge, Detail: fmt.Sprintf("--dir grew past %d MiB during publish", maxBytes>>20)}
 		}
 		result = append(result, File{Name: f.name, Size: size, SHA256: sum})
 	}
@@ -383,7 +368,7 @@ func copyFile(source, target string) (int64, string, error) {
 		return 0, "", ioError("write run", err)
 	}
 	hash := sha256.New()
-	size, err := io.Copy(io.MultiWriter(out, hash), io.LimitReader(in, maxBytes+1))
+	size, err := io.Copy(io.MultiWriter(out, hash), in)
 	if closeErr := out.Close(); err == nil {
 		err = closeErr
 	}

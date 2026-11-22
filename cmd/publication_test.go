@@ -188,15 +188,26 @@ func TestPublicationRetentionKeepsPlanRuns(t *testing.T) {
 	}
 }
 
+// A publication has no size limit; the earlier 20 MiB refusal is removed.
+func TestPublicationStoresMoreThan20MiB(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	large := producerDir(t, root, "large", map[string]string{"index.html": "x"})
+	const size = 20<<20 + 1
+	if err := os.Truncate(filepath.Join(large, "index.html"), size); err != nil {
+		t.Fatal(err)
+	}
+	v := publishJSON(t, root, "--category", "code-map", "--dir", large, "--entry", "index.html", "--title", "t")
+	info, err := os.Stat(filepath.Join(v.Path, "index.html"))
+	if err != nil || info.Size() != size {
+		t.Fatalf("stored entry %v %v", info, err)
+	}
+}
+
 func TestPublicationRefusesWithoutStoring(t *testing.T) {
 	root := newAssignmentWorkspace(t)
 	dir := producerDir(t, root, "map", map[string]string{"index.html": "x"})
 	linked := producerDir(t, root, "linked", map[string]string{"index.html": "x"})
 	if err := os.Symlink(filepath.Join(dir, "index.html"), filepath.Join(linked, "other.html")); err != nil {
-		t.Fatal(err)
-	}
-	large := producerDir(t, root, "large", map[string]string{"index.html": "x"})
-	if err := os.Truncate(filepath.Join(large, "index.html"), 20<<20+1); err != nil {
 		t.Fatal(err)
 	}
 	reserved := producerDir(t, root, "reserved", map[string]string{"index.html": "x", "publication.json": "{}"})
@@ -213,7 +224,6 @@ func TestPublicationRefusesWithoutStoring(t *testing.T) {
 		"invalid agent":    {append(base(dir), "--agent", "Ply Epic"), publication.ClassInvalidArguments},
 		"missing entry":    {[]string{"publish", "--project", "a", "--category", "code-map", "--dir", dir, "--entry", "map.html", "--title", "t"}, publication.ClassInvalidArguments},
 		"symlink":          {base(linked), publication.ClassInvalidArguments},
-		"too large":        {base(large), publication.ClassTooLarge},
 		"reserved name":    {base(reserved), publication.ClassInvalidArguments},
 		"two line title":   {[]string{"publish", "--project", "a", "--category", "code-map", "--dir", dir, "--entry", "index.html", "--title", "a\nb"}, publication.ClassInvalidArguments},
 	} {

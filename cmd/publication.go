@@ -87,7 +87,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		Short: "Store the files of a directory as a new run",
 		Long: "Copy every regular file under --dir as a new run of the repo (--repo) or the whole Project (no --repo), the category and optionally the agent.\n" +
 			"--entry names the file to open; --plan links the run to a plan of the Project, which must exist; --source is a short producer ID such as a commit.\n" +
-			"Symlinks, publication.json at the top, more than 1000 files and more than 20 MiB are refused before anything is stored. The actor is --actor or PLY_ACTOR.",
+			"Symlinks, publication.json at the top, and more than 1000 files are refused before anything is stored. The actor is --actor or PLY_ACTOR.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			s, err := open()
 			if err != nil {
