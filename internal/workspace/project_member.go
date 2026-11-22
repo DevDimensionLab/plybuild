@@ -125,8 +125,8 @@ func MoveProjectMember(dependencies Dependencies, id ProjectID, repo RepoID, to 
 		if err != nil || !changed {
 			return changed, err
 		}
-		// Registrations keep the member's ID and Git location; they are read
-		// under projects.lock, where Tasks and Epics are registered.
+		// Live registrations keep the member's ID and Git location; they are
+		// read under projects.lock, where Tasks and Epics are registered.
 		uses, err := dependencies.RepoUses.RepoUses(work)
 		if err != nil {
 			return false, err

@@ -97,9 +97,9 @@ func newDefinitionFixture(t *testing.T) definitionFixture {
 	mustWriteFile(t, filepath.Join(root, workspacedef.File), fixtureDefinitions)
 	mustWriteFile(t, filepath.Join(root, MarkerDirectory, projectsLock), "")
 	history := historyUses{"ply": {
-		{Kind: RepoUseEpic, ID: "ply-master", RepoID: "ply", GitCommonDir: root + "/ply/main/.git"},
-		{Kind: RepoUseTask, ID: "k5", RepoID: "ply-code-map", GitCommonDir: root + "/ply-code-map/.git"},
-		{Kind: RepoUseTask, ID: "old", RepoID: "retired", GitCommonDir: "/elsewhere/retired/.git"},
+		{Live: true, Kind: RepoUseEpic, ID: "ply-master", RepoID: "ply", GitCommonDir: root + "/ply/main/.git"},
+		{Live: true, Kind: RepoUseTask, ID: "k5", RepoID: "ply-code-map", GitCommonDir: root + "/ply-code-map/.git"},
+		{Live: true, Kind: RepoUseTask, ID: "old", RepoID: "retired", GitCommonDir: "/elsewhere/retired/.git"},
 	}}
 	return definitionFixture{root: root, ply: filepath.Join(root, MarkerDirectory), history: history}
 }
@@ -212,10 +212,21 @@ func TestAddDefinitionRepoRejectsDifferentHistoricalCommonDir(t *testing.T) {
 	f.requireUnchanged(t, state)
 }
 
+// Finished work keeps its old Git location as history: it neither conflicts
+// nor binds the repository ID to that location.
+func TestAddDefinitionRepoIgnoresFinishedHistory(t *testing.T) {
+	t.Parallel()
+	f := newDefinitionFixture(t)
+	f.history["ply"] = []RepoUse{{Kind: RepoUseTask, ID: "old", RepoID: "retired", GitCommonDir: "/elsewhere/retired/.git"}, {Kind: RepoUseTask, ID: "older", RepoID: "retired", GitCommonDir: "/other/retired/.git"}}
+	if _, err := f.add(t, f.root, "ply", "retired", "retired"); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestAddDefinitionRepoRejectsConflictingHistory(t *testing.T) {
 	t.Parallel()
 	f := newDefinitionFixture(t)
-	f.history["app"] = []RepoUse{{Kind: RepoUseTask, RepoID: "retired", GitCommonDir: "/a/.git"}, {Kind: RepoUseTask, RepoID: "retired", GitCommonDir: "/b/.git"}}
+	f.history["app"] = []RepoUse{{Live: true, Kind: RepoUseTask, RepoID: "retired", GitCommonDir: "/a/.git"}, {Live: true, Kind: RepoUseTask, RepoID: "retired", GitCommonDir: "/b/.git"}}
 	state := f.state(t)
 	_, err := f.add(t, f.root, "app", "retired", "retired")
 	assertWorkErrorClass(t, err, ErrorWorkIdentityConflict)

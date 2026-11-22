@@ -224,7 +224,7 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 	moveCommand := &cobra.Command{
 		Use:     "move-member <project-id>",
 		Short:   "Give a repository member a new ID and path",
-		Long:    "Give one registered repository member a new ID, path or both after its directory has moved. The origin remote is read again at the new path and the wrapper is kept; it must contain the new path. The move is refused while a Task, Epic or operation binds the member. This moves no files and changes no Git.",
+		Long:    "Give one registered repository member a new ID, path or both after its directory has moved. The origin remote is read again at the new path and the wrapper is kept; it must contain the new path. The move is refused while a Task, Epic or operation with a live worktree or open operation binds the member; finished work keeps its old location as history and stops nothing. This moves no files and changes no Git.",
 		Example: "  ply workspace project move-member ply --repo pflyt-cli --to ply-planner=ply_projects/ply/ply-planner",
 		Args: func(cmd *cobra.Command, args []string) error {
 			_, _, _, err := parseMove(args)
@@ -269,7 +269,7 @@ func newWorkspaceProjectCommandWithServices(services workspaceProjectServices) *
 	removeCommand := &cobra.Command{
 		Use:     "remove-member <project-id>",
 		Short:   "Remove a repository member from a project",
-		Long:    "Remove one registered repository member from the project definition. Its directory may have moved or be gone. The removal is refused while a Task, Epic or operation binds the member. This deletes no files and changes no Git; data kept under the repository ID stays.",
+		Long:    "Remove one registered repository member from the project definition. Its directory may have moved or be gone. The removal is refused while a Task, Epic or operation with a live worktree or open operation binds the member; finished work keeps its old location as history and stops nothing. This deletes no files and changes no Git; data kept under the repository ID stays.",
 		Example: "  ply workspace project remove-member ply --repo ply-observer",
 		Args: func(cmd *cobra.Command, args []string) error {
 			_, _, err := parseRemove(args)

@@ -148,7 +148,7 @@ func CheckRepoRemoval(d Dependencies, root, project, repo string) error {
 		return err
 	}
 	for _, use := range uses {
-		if use.Kind != RepoUseEpic {
+		if use.Kind != RepoUseEpic || !use.Live {
 			continue
 		}
 		if string(use.RepoID) == repo {

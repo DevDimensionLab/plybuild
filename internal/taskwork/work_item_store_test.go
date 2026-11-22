@@ -542,13 +542,13 @@ func TestWorkItemStoreRepoUsesListsEveryUseInRegistryOrder(t *testing.T) {
 	registry.WorktreeOperations = []WorktreeOperationRecord{{ID: "o", RepoID: "app"}}
 	registry.EpicCreateOperations = []EpicCreateOperation{{ID: "c", Request: EpicCreateInput{RepoID: "ply"}}}
 	want := []workspace.RepoUse{
-		{Kind: workspace.RepoUseEpic, ID: "e", RepoID: "ply", GitCommonDir: "/w/ply/.git", Worktree: "/w/ply/e"},
-		{Kind: workspace.RepoUseEpic, ID: "e", RepoID: "app"},
+		{Kind: workspace.RepoUseEpic, ID: "e", RepoID: "ply", GitCommonDir: "/w/ply/.git", Worktree: "/w/ply/e", Live: true},
+		{Kind: workspace.RepoUseEpic, ID: "e", RepoID: "app", Live: true},
 		{Kind: workspace.RepoUseTask, ID: "k", RepoID: "ply", GitCommonDir: "/w/ply/.git"},
 		{Kind: workspace.RepoUseWorktreeOperation, ID: "o", RepoID: "app"},
-		{Kind: workspace.RepoUseEpicCreate, ID: "c", RepoID: "ply"},
+		{Kind: workspace.RepoUseEpicCreate, ID: "c", RepoID: "ply", Live: true},
 	}
-	if got := repoUses(registry); !reflect.DeepEqual(got, want) {
+	if got := repoUses(registry, nil); !reflect.DeepEqual(got, want) {
 		t.Fatalf("uses %+v, want %+v", got, want)
 	}
 

@@ -344,9 +344,9 @@ func metadataProjects(d Dependencies, root string) (ProjectSnapshot, error) {
 	return snapshot, nil
 }
 
-// checkHistoricalIdentity rejects a repository ID that the Project's
-// work-item registry recorded with another Git common directory than the one
-// observed now.
+// checkHistoricalIdentity rejects a repository ID that live work in the
+// Project's work-item registry recorded with another Git common directory than
+// the one observed now.
 func checkHistoricalIdentity(uses RepoUses, work ProjectWork, registry projectRegistry, repo RepoID) error {
 	recorded, err := uses.RepoUses(work)
 	if err != nil {
@@ -354,7 +354,9 @@ func checkHistoricalIdentity(uses RepoUses, work ProjectWork, registry projectRe
 	}
 	var bindings []repohistory.Binding
 	for _, use := range recorded {
-		bindings = append(bindings, repohistory.Binding{RepoID: string(use.RepoID), GitCommonDir: use.GitCommonDir})
+		if use.Live {
+			bindings = append(bindings, repohistory.Binding{RepoID: string(use.RepoID), GitCommonDir: use.GitCommonDir})
+		}
 	}
 	identities, err := repohistory.CommonDirs(bindings)
 	var conflict *repohistory.ConflictError

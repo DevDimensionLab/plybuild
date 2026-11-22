@@ -29,16 +29,19 @@ type RepoUse struct {
 	RepoID       RepoID
 	GitCommonDir string // recorded by an Epic binding or a Task; "" when none
 	Worktree     string // the worktree locator of an Epic binding
+	// Live is true while the work item holds a worktree or an open operation.
+	// Finished work keeps its recorded Git location as history and binds nothing.
+	Live bool
 }
 
 // binds reports whether the use binds the repository; otherwise it only names it.
 func (u RepoUse) binds() bool { return u.Kind == RepoUseEpic || u.Kind == RepoUseTask }
 
-// repoRegistration names the first use of repo in uses, read from path; ""
-// when none uses it.
+// repoRegistration names the first live use of repo in uses, read from path;
+// "" when no live work uses it.
 func repoRegistration(uses []RepoUse, repo, path string) string {
 	for _, use := range uses {
-		if string(use.RepoID) != repo {
+		if string(use.RepoID) != repo || !use.Live {
 			continue
 		}
 		if use.binds() {

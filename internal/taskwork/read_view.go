@@ -51,7 +51,11 @@ func ReadViewBasis(d Dependencies) (ReadViewBasisSnapshot, error) {
 		return out, err
 	}
 	out.Registry = MergeRegistries(out.Registries)
-	projects, repos, err := registryProjects(ws.Root, out.Registry)
+	lifecycles, err := ReadWorkItemLifecycle(d, ws.Root)
+	if err != nil {
+		return out, err
+	}
+	projects, repos, err := registryProjects(ws.Root, out.Registry, lifecycles)
 	if err != nil {
 		return out, err
 	}
@@ -181,12 +185,16 @@ func registrationProjects(d Dependencies, root string) ([]workspace.ProjectRecor
 	if err != nil {
 		return nil, nil, err
 	}
-	return registryProjects(root, MergeRegistries(registries))
+	lifecycles, err := ReadWorkItemLifecycle(d, root)
+	if err != nil {
+		return nil, nil, err
+	}
+	return registryProjects(root, MergeRegistries(registries), lifecycles)
 }
 
 // registryProjects resolves the defined Projects statically, with the Git
 // common directories the registry recorded for their repositories.
-func registryProjects(root string, registry WorkItemRegistry) ([]workspace.ProjectRecord, []workspace.RepoRecord, error) {
+func registryProjects(root string, registry WorkItemRegistry, lifecycles WorkItemLifecycles) ([]workspace.ProjectRecord, []workspace.RepoRecord, error) {
 	defs, _, err := workspace.ReadDefinitions(root)
 	if err != nil {
 		return nil, nil, err
@@ -194,7 +202,7 @@ func registryProjects(root string, registry WorkItemRegistry) ([]workspace.Proje
 	if defs == nil {
 		return nil, nil, workspace.MissingDefinitions(root)
 	}
-	identities, err := repohistory.CommonDirs(registryBindings(registry))
+	identities, err := repohistory.CommonDirs(registryBindings(registry, lifecycles))
 	if err != nil {
 		return nil, nil, workspace.WorkInvalidArguments("conflicting historical repository identity")
 	}
@@ -221,17 +229,14 @@ func registryProjects(root string, registry WorkItemRegistry) ([]workspace.Proje
 	return projects, repos, nil
 }
 
-// registryBindings projects the repository identities that the Epic and Task
-// records of registry carry.
-func registryBindings(registry WorkItemRegistry) []repohistory.Binding {
+// registryBindings projects the repository identities that the live Epic and
+// Task records of registry carry; finished work is history and names none.
+func registryBindings(registry WorkItemRegistry, lifecycles WorkItemLifecycles) []repohistory.Binding {
 	var bindings []repohistory.Binding
-	for _, epic := range registry.Epics {
-		for _, binding := range epic.RepoBindings {
-			bindings = append(bindings, repohistory.Binding{RepoID: string(binding.RepoID), GitCommonDir: binding.GitCommonDir})
+	for _, use := range repoUses(registry, lifecycles) {
+		if use.Live && (use.Kind == workspace.RepoUseEpic || use.Kind == workspace.RepoUseTask) {
+			bindings = append(bindings, repohistory.Binding{RepoID: string(use.RepoID), GitCommonDir: use.GitCommonDir})
 		}
-	}
-	for _, task := range registry.Tasks {
-		bindings = append(bindings, repohistory.Binding{RepoID: string(task.RepoID), GitCommonDir: task.GitCommonDir})
 	}
 	return bindings
 }

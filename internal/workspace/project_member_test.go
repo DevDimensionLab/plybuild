@@ -198,7 +198,7 @@ func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
 		t.Fatal(err)
 	}
 	bound := deps
-	bound.RepoUses = registrationsStore{uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "moved"}}}
+	bound.RepoUses = registrationsStore{uses: []RepoUse{{Live: true, Kind: RepoUseTask, ID: "k", RepoID: "moved"}}}
 	for name, test := range map[string]struct {
 		deps  Dependencies
 		repo  RepoID
@@ -225,6 +225,12 @@ func TestProjectMemberMoveChangesIDPathAndRemote(t *testing.T) {
 	assertProjectErrorClass(t, err, ErrorProjectConflict)
 	if after, _ := os.ReadFile(path); string(after) != string(before) {
 		t.Fatal("bound move changed the definitions")
+	}
+	// Finished work keeps its old Git location as history and stops nothing.
+	finished := deps
+	finished.RepoUses = registrationsStore{uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "moved", GitCommonDir: "/old/.git"}}}
+	if result, err := MoveProjectMember(finished, "shared", "moved", RepoInput{RepoID: "moved", Path: moved}); err != nil || !result.Created {
+		t.Fatalf("move with finished work = %#v, %v", result, err)
 	}
 }
 
@@ -285,7 +291,7 @@ func TestProjectMemberRemoveLeavesDirectories(t *testing.T) {
 	}
 	path := filepath.Join(root, DefinitionsFile)
 	bound := deps
-	bound.RepoUses = registrationsStore{uses: []RepoUse{{Kind: RepoUseTask, ID: "k", RepoID: "first"}}}
+	bound.RepoUses = registrationsStore{uses: []RepoUse{{Live: true, Kind: RepoUseTask, ID: "k", RepoID: "first"}}}
 	refused := func(deps Dependencies, repo RepoID, class ErrorClass, text string) {
 		t.Helper()
 		before, _ := os.ReadFile(path)

@@ -208,26 +208,37 @@ func (store *systemWorkItemStore) RepoUses(work workspace.ProjectWork) ([]worksp
 	if err != nil {
 		return nil, err
 	}
-	return repoUses(registry), nil
+	lifecycle, err := readWorkItemLifecycle(work)
+	if err != nil {
+		return nil, err
+	}
+	return repoUses(registry, WorkItemLifecycles{lifecycle}), nil
 }
 
 // repoUses lists the uses of repositories in registry in the order RepoUses
-// promises.
-func repoUses(registry WorkItemRegistry) []workspace.RepoUse {
+// promises. A use is live while its work item holds a worktree or an open
+// operation: an Epic that is not archived, a Task whose worktree is being
+// created, ready or awaiting reconciliation, a worktree operation of such a
+// Task and an Epic create that is not completed.
+func repoUses(registry WorkItemRegistry, lifecycles WorkItemLifecycles) []workspace.RepoUse {
 	var uses []workspace.RepoUse
 	for _, e := range registry.Epics {
+		live := lifecycles.Epic(e.ID) != LifecycleArchived
 		for _, b := range e.RepoBindings {
-			uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseEpic, ID: string(e.ID), RepoID: b.RepoID, GitCommonDir: b.GitCommonDir, Worktree: b.Worktree.Locator})
+			uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseEpic, ID: string(e.ID), RepoID: b.RepoID, GitCommonDir: b.GitCommonDir, Worktree: b.Worktree.Locator, Live: live})
 		}
 	}
+	liveTasks := map[TaskID]bool{}
 	for _, task := range registry.Tasks {
-		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseTask, ID: string(task.ID), RepoID: task.RepoID, GitCommonDir: task.GitCommonDir})
+		live := task.WorktreeState == WorkItemCreating || task.WorktreeState == WorkItemReady || task.WorktreeState == WorkItemReconciliationRequired
+		liveTasks[task.ID] = live
+		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseTask, ID: string(task.ID), RepoID: task.RepoID, GitCommonDir: task.GitCommonDir, Live: live})
 	}
 	for _, operation := range registry.WorktreeOperations {
-		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseWorktreeOperation, ID: string(operation.ID), RepoID: operation.RepoID})
+		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseWorktreeOperation, ID: string(operation.ID), RepoID: operation.RepoID, Live: liveTasks[operation.TaskID]})
 	}
 	for _, operation := range registry.EpicCreateOperations {
-		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseEpicCreate, ID: string(operation.ID), RepoID: operation.Request.RepoID})
+		uses = append(uses, workspace.RepoUse{Kind: workspace.RepoUseEpicCreate, ID: string(operation.ID), RepoID: operation.Request.RepoID, Live: operation.State != "completed"})
 	}
 	return uses
 }
