@@ -21,12 +21,11 @@ with tempfile.TemporaryDirectory(prefix="fixture-", dir=sys.argv[2]) as td:
     root = Path(td).resolve()
     repo = root / "repo"
     (repo / "scripts").mkdir(parents=True)
-    (repo / "docs").mkdir()
     shutil.copyfile(source / "scripts/package-cli", repo / "scripts/package-cli")
     shutil.copy2(source / "scripts/with-go", repo / "scripts/with-go")
     shutil.copyfile(source / "go.mod", repo / "go.mod")
     selected = next(line.split()[1] for line in (source / "go.mod").read_text().splitlines() if line.startswith("toolchain "))
-    (repo / "docs/cli-installation.md").write_text("Fixture installation guide.\n")
+    (repo / "INSTALL.md").write_text("Fixture installation guide.\n")
     def git(*args):
         return subprocess.check_output(["git", *args], cwd=repo, text=True).strip()
     git("init", "-b", "main")
@@ -50,7 +49,7 @@ out = Path(sys.argv[sys.argv.index('-o')+1])
 out.write_bytes(('fixture executable '+out.name).encode())
 out.chmod(0o755)
 if os.environ.get('PACKAGE_TEST_DRIFT') == '1':
-    Path('docs/cli-installation.md').write_text('Source changed during build.\\n')
+    Path('INSTALL.md').write_text('Source changed during build.\\n')
 ''')
     compiler.chmod(0o755)
     # The publisher must use the explicit selection, never the stale go first on PATH.
@@ -80,6 +79,7 @@ if os.environ.get('PACKAGE_TEST_DRIFT') == '1':
     assert manifest["sha256"] == digest(package / "ply")
     assert manifest["installer_sha256"] == digest(package / "ply-install")
     assert receipt["manifest_sha256"] == digest(package / "manifest.json")
+    assert (package / "INSTALL.md").read_text() == "Fixture installation guide.\n"
     before = (package / "manifest.json").read_bytes()
     build(root / "release", False)
     assert (package / "manifest.json").read_bytes() == before

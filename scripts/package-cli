@@ -39,7 +39,7 @@ def main():
         (package / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
         pin = digest(package / "manifest.json")
         (stage / "manifest.sha256").write_text(pin + "\n")
-        shutil.copyfile(repo / "docs/cli-installation.md", package / "INSTALL.md")
+        shutil.copyfile(repo / "INSTALL.md", package / "INSTALL.md")
         archive = stage / (package.name + ".tar.gz")
         with tarfile.open(archive, "w:gz") as tar:
             tar.add(package, arcname=package.name)

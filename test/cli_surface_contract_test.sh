@@ -246,8 +246,8 @@ printf '%s\n' \
 	'agent-status) lives in `<project wrapper>/data/<category>/`; there is no configuration of these paths.' \
 	'In `project show` JSON, each repository'\''s `remote` is the URL from' \
 	'`ply-workspace.json`, or `null` when no remote is defined. Ply does not infer it from Git.' \
-	'See the [workspace read contract](docs/read-contract.md) for independent Task filters,' \
-	'versioned JSON schemas, and `ply capabilities`.' \
+	'See `schemas/read-contract/` and `ply capabilities` for independent Task filters' \
+	'and versioned JSON schemas.' \
 	'' \
 	'Retrying the same registration is idempotent. To append one member to an existing project:' \
 	'' >"$temp_root/readme-workspace.expected"

@@ -24,7 +24,7 @@ var affectedPackages = []string{"internal/workitem", "internal/workspace", "inte
 
 // This scanner is test-local: parse all production source files individually,
 // including inactive build variants. Never use go/packages' host build filtering.
-// target is the reserved build output documented in docs/workitem-core.md;
+// target is the reserved build output;
 // .build in the repository root is the ignored area for agents' temporary files.
 // Test helpers and deliberately invalid fixtures belong in _test.go/testdata.
 type scanIO struct {

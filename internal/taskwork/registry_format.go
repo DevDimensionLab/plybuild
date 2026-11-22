@@ -33,7 +33,7 @@ func (e *RegistryDiagnostic) Error() string { return e.Code + ": " + e.Detail + 
 func registryDiagnostic(code, detail string, version int) *RegistryDiagnostic {
 	next := "Run ply version --format json and retain this diagnostic with the unchanged registry and backups for producer repair before retrying. Do not strip fields or edit authorization history."
 	if code == "registry_unsupported_format" {
-		next = fmt.Sprintf("This release reads only work-item registry format %d and does not upgrade or migrate registries. Use a release that reads this format (docs/cli-installation.md); do not edit the registry.", RegistryFormat)
+		next = fmt.Sprintf("This release reads only work-item registry format %d and does not upgrade or migrate registries. Use a release that reads this format (INSTALL.md); do not edit the registry.", RegistryFormat)
 	}
 	return &RegistryDiagnostic{Kind: "WorkspaceRegistryDiagnostic@1", SchemaVersion: 1, Code: code, Detail: detail, FormatVersion: version, SupportedFormats: []int{RegistryFormat}, NextAction: next}
 }

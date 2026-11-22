@@ -35,7 +35,7 @@ func TestGoalStartHelpPointsToOptionalCoordinatorReturn(t *testing.T) {
 	if err := c.Help(); err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Koordinatorretur velges i Goal.constraints", "docs/goal-coordinator-return.md"} {
+	for _, want := range []string{"Koordinatorretur velges i Goal.constraints"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("goal-start help lacks %q: %s", want, out.String())
 		}

@@ -16,9 +16,7 @@ Heads up!
 - start with `ply format pom`, verify that the rewrite of the pom.xml is ok, commit, and from now on you will easily see the diff that ply introduces with ```ply upgrade <2party|3party|spring-boot|plugins|all>```
 - or just use  `ply status` (no rewrite) and manually upgrade your pom.xml based on what is reported as outdated, current option if you need to keep your pom.xml formatting
   
-For a prebuilt macOS arm64 CLI, use the [consumer installation and recovery guide](docs/cli-installation.md).
-It needs neither Go nor a source checkout and can replace an old CLI that cannot read the workspace.
-See also the [work-item registry format](docs/registry-compatibility.md).
+To build and install from source, or to install a prebuilt macOS arm64 package, see [INSTALL.md](INSTALL.md).
 
 Building from source requires [Go 1.26.10](https://go.dev/doc/install).
 
@@ -132,8 +130,8 @@ All data of a Project (backlog, backlog-archive, inbox, plans, assignments, publ
 agent-status) lives in `<project wrapper>/data/<category>/`; there is no configuration of these paths.
 In `project show` JSON, each repository's `remote` is the URL from
 `ply-workspace.json`, or `null` when no remote is defined. Ply does not infer it from Git.
-See the [workspace read contract](docs/read-contract.md) for independent Task filters,
-versioned JSON schemas, and `ply capabilities`.
+See `schemas/read-contract/` and `ply capabilities` for independent Task filters
+and versioned JSON schemas.
 
 Retrying the same registration is idempotent. To append one member to an existing project:
 
@@ -195,8 +193,7 @@ ply workspace task worktree create workspace-work-item-bootstrap \
 ```
 
 To continue an existing committed descendant, create an ordinary Task/worktree and use
-human-owned `git merge --ff-only S` with the exact selected source commit. See the
-[Task and Git recipe](docs/task-worktree-adoption.md) for the checks and limits.
+human-owned `git merge --ff-only S` with the exact selected source commit.
 Task worktree adoption and `release-adoption` are removed; Epic adoption remains.
 
 Ply persists a durable create intent before the additive branch/worktree operation. Identical
@@ -213,10 +210,9 @@ Every Task reaches its registered Epic through the same operation, with or witho
 Goal. Commit the Task, run `ply workspace task integrate TASK --expected-result-oid
 RESULT_OID --expected-parent-oid PARENT_OID --check`, then use the returned digest with
 `--apply --confirm <digest>`. The human decides when to integrate; Ply records what happened
-in Git. Deliver Tasks serially per Epic and update the Epic base after each delivery; see
-[Explicit Goal agent start](docs/goal-agent-start.md). A Task adapted by hand to an
-updated Epic base can be integrated from that base with `--refresh-parent`; see
-[Integrer en tilpasset Task fra oppdatert Epic-basis](docs/task-integration-refresh-parent.md).
+in Git. Deliver Tasks serially per Epic and update the Epic base after each delivery.
+A Task adapted by hand to an updated Epic base can be integrated from that base with
+`--refresh-parent`.
 
 Apply permits one local `ff-only` move
 of the exact registered parent, including an explicitly selected `main` or `master`.
@@ -990,7 +986,6 @@ Posts rank on how many distinct words hit, then on whether their scope fits `--r
 (which filters nothing), then on where the words hit; filter with
 `--theme`, `--tag`, `--status` (default `candidate,confirmed`, or `all`) and `--limit`
 (default 10). Without words it lists every post by theme. Ply only reads the archive.
-See `docs/intelligence-knowledge.md`.
 
 ## Agent quota
 
@@ -1148,7 +1143,6 @@ named environment variable such as `PLY_SLACK_WEBHOOK` using your usual secret p
 and create a route JSON containing the variable name and a private state root, without the
 URL. No global Ply configuration or native workspace is needed.
 
-See [the complete validated route/request example and check → apply → show procedure](docs/workflow-notification.md).
 The event is a sender claim. Transport acknowledgement does not attest product
 correctness, human acceptance, or that anyone read the message. Unknown outcomes cannot be
 resent. Requests v1–v3 of the removed delivery process are refused; their stored records are
@@ -1198,4 +1192,4 @@ discover it, or that a readable mandate pointer such as the existing
 `~/.agents/AGENTS.md` names it. That check is part of installation and needs no
 broad provider configuration change.
 
-Workspace Project/repository/Epic definitions can live outside disposable runtime data; see [durable workspace config](docs/durable-workspace-config.md).
+Workspace Project/repository/Epic definitions can live outside disposable runtime data.
