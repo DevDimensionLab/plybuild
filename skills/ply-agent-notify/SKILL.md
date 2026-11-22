@@ -23,13 +23,14 @@ Run from the job's actual working directory:
 python3 ~/.agents/skills/ply-agent-notify/scripts/notify.py \
   --activity stable-job-id --run stable-run-id --event-id finished --status done --provider claude \
   --title "ℹ️ Completed task" --summary "Concrete result" \
-  --next-action "No action required." --ply-bin "$PLY_BIN"
+  --next-action "No action required." --ply-bin "$(command -v ply)"
 ```
 
 `--provider` is `codex` or `claude` from the actual runtime, not a model name or executable lookup.
-Pass the already-resolved absolute Ply executable used by the job as `PLY_BIN`
-(normally `PLY_BIN=$(command -v ply)`); no global PATH change. If it is unavailable, report
-`not_attempted` with the missing executable. Credential setup requires a separate installation request.
+`--ply-bin` is the absolute Ply executable the job uses, resolved in the call as above; no global
+PATH change. Do not write `PLY_BIN=$(command -v ply) python3 … --ply-bin "$PLY_BIN"` on one line:
+the shell expands `$PLY_BIN` before the assignment applies, and the helper refuses the empty value
+with `ply_bin_required`. If Ply is unavailable, report `not_attempted` with the missing executable. Credential setup requires a separate installation request.
 
 Optional: `--next-actor coordinator` (default `user`),
 `--phase before_start` (only for a stop), `--context-root`, `--timezone` (default Europe/Oslo) and

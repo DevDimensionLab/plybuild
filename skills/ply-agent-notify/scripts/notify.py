@@ -258,6 +258,8 @@ def deliver(args):
         return outcome('suppressed', args.trigger)
     if not all([args.activity, args.run, args.event_id]):
         raise Failure('short_form_fields_required')
+    if not args.ply_bin:
+        raise Failure('ply_bin_required')
     known = {'activity': args.activity, 'run': args.run, 'route': args.route, 'event_root': str(events_root(args.route))}
     def bind_and_deliver():
         task, event = short_binding(args)

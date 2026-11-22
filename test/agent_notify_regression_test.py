@@ -108,6 +108,13 @@ class ShortHelperRegression(unittest.TestCase):
             with self.subTest(change=change),self.assertRaises(notify.Failure):self.deliver(**change)
         self.assertFalse((self.root/'notification-events').exists());self.assertEqual(self.sends,[])
 
+    def test_empty_ply_bin_fails_before_any_state(self):
+        # PLY_BIN=$(command -v ply) on the same line as the call expands to an empty --ply-bin.
+        args=self.args();args.ply_bin=''
+        with self.assertRaises(notify.Failure) as raised:self.deliver(args)
+        self.assertEqual(raised.exception.reason,'ply_bin_required')
+        self.assertFalse((self.root/'notification-events').exists());self.assertEqual(self.sends,[])
+
     def test_removed_bound_task_documents_are_not_arguments(self):
         # The bound Task entrance and its source documents belonged to the removed delivery process.
         for flag in ['--task','--event','--report','--start-receipt']:
