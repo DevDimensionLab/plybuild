@@ -182,17 +182,7 @@ func writeKnowledgeText(out io.Writer, source knowledgeSource, result knowledge.
 		b.WriteString("no matches\n")
 	}
 	for _, item := range result.Items {
-		repos := strings.Join(item.Scope.Repos, ",")
-		if repos == "" {
-			repos = "-"
-		}
-		var summary []string
-		for _, part := range []string{item.Title, item.Situation} {
-			if part != "" {
-				summary = append(summary, part)
-			}
-		}
-		fmt.Fprintf(&b, "%s  %s/%s  %s\n  %s\n", item.ID, item.Theme, item.Status, repos, strings.Join(summary, " — "))
+		writeKnowledgeItem(&b, "", item)
 	}
 	for _, invalid := range result.Invalid {
 		fmt.Fprintf(&b, "invalid %s: %s\n", invalid.File, invalid.Error)
@@ -209,4 +199,49 @@ func writeKnowledgeText(out io.Writer, source knowledgeSource, result knowledge.
 	}
 	_, err := io.WriteString(out, b.String())
 	return err
+}
+
+// writeKnowledgeItem writes the two lines of one post, the second indented
+// two more spaces than indent.
+func writeKnowledgeItem(b *strings.Builder, indent string, item knowledge.Item) {
+	repos := strings.Join(item.Scope.Repos, ",")
+	if repos == "" {
+		repos = "-"
+	}
+	var summary []string
+	for _, part := range []string{item.Title, item.Situation} {
+		if part != "" {
+			summary = append(summary, part)
+		}
+	}
+	fmt.Fprintf(b, "%s%s  %s/%s  %s\n%s  %s\n", indent, item.ID, item.Theme, item.Status, repos, indent, strings.Join(summary, " — "))
+}
+
+// sharedExperience is at most three posts of project's knowledge archive
+// that text points at, ranked for repos (see knowledge.Relevant). A source
+// that cannot be used gives none, so a command that shows them never fails
+// or changes on account of the archive.
+func sharedExperience(project workspace.ProjectRecord, text string, repos ...string) []knowledge.Item {
+	dir, source := resolveKnowledgeDirectory(project)
+	if source.Status != knowledgeSourceOK {
+		return nil
+	}
+	items, err := knowledge.Relevant(dir, text, repos, string(project.ID))
+	if err != nil {
+		return nil
+	}
+	return items
+}
+
+// writeSharedExperience writes items under "Shared experience" with the
+// path to open, and nothing without items.
+func writeSharedExperience(b *strings.Builder, items []knowledge.Item) {
+	if len(items) == 0 {
+		return
+	}
+	b.WriteString("Shared experience (open the file at path):\n")
+	for _, item := range items {
+		writeKnowledgeItem(b, "  ", item)
+		fmt.Fprintf(b, "    path: %s\n", item.Path)
+	}
 }

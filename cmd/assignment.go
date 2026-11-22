@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/devdimensionlab/plybuild/internal/assignment"
+	"github.com/devdimensionlab/plybuild/internal/knowledge"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/spf13/cobra"
 )
@@ -162,14 +163,16 @@ func newAssignmentCommand(d workspace.Dependencies) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			shared := sharedExperience(resolved, strings.Join(append([]string{a.Title, a.Text}, a.Topics...), "\n"), a.Repos...)
 			if format == "json" {
 				return writeAssignmentJSON(cmd.OutOrStdout(), struct {
 					Project    workspace.ProjectID   `json:"project"`
 					Assignment assignment.Assignment `json:"assignment"`
 					Lifecycle  assignment.Lifecycle  `json:"lifecycle"`
-				}{resolved.ID, a, lifecycle})
+					Knowledge  []knowledge.Item      `json:"knowledge,omitempty"`
+				}{resolved.ID, a, lifecycle, shared})
 			}
-			return writeAssignmentText(cmd.OutOrStdout(), a, lifecycle)
+			return writeAssignmentText(cmd.OutOrStdout(), a, lifecycle, shared)
 		},
 	})
 
@@ -358,8 +361,19 @@ func resolveAssignmentProject(d workspace.Dependencies, value string) (workspace
 	return workspace.ProjectRecord{}, &assignment.Error{Class: assignment.ClassIOError, Detail: "could not resolve " + subject}
 }
 
-func writeAssignmentText(out io.Writer, a assignment.Assignment, l assignment.Lifecycle) error {
-	_, err := fmt.Fprintf(out, "%s %s\nrepos: %s\ntopics: %s\ncreated: %s\nstate: %s\n\n%s", a.ID, a.Title, strings.Join(a.Repos, ", "), strings.Join(a.Topics, ", "), a.CreatedAt, lifecycleText(l), a.Text)
+// writeAssignmentText writes a with its text and, after a blank line, any
+// shared experience.
+func writeAssignmentText(out io.Writer, a assignment.Assignment, l assignment.Lifecycle, shared []knowledge.Item) error {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s %s\nrepos: %s\ntopics: %s\ncreated: %s\nstate: %s\n\n%s", a.ID, a.Title, strings.Join(a.Repos, ", "), strings.Join(a.Topics, ", "), a.CreatedAt, lifecycleText(l), a.Text)
+	if len(shared) > 0 {
+		if !strings.HasSuffix(a.Text, "\n") {
+			b.WriteString("\n")
+		}
+		b.WriteString("\n")
+		writeSharedExperience(&b, shared)
+	}
+	_, err := io.WriteString(out, b.String())
 	return err
 }
 

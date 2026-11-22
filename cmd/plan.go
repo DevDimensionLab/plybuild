@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/knowledge"
 	"github.com/devdimensionlab/plybuild/internal/plan"
 	"github.com/devdimensionlab/plybuild/internal/plantrace"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -92,16 +93,21 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		}
 		return plan.Open(directory), nil
 	}
-	readback := func(cmd *cobra.Command, v plan.View) error {
+	// readback writes v; shared is the shared experience that only show gives.
+	readback := func(cmd *cobra.Command, v plan.View, shared []knowledge.Item) error {
 		if format == "json" {
 			return writeAssignmentJSON(cmd.OutOrStdout(), struct {
 				Kind          string              `json:"kind"`
 				SchemaVersion int                 `json:"schema_version"`
 				Project       workspace.ProjectID `json:"project"`
 				plan.View
-			}{planReadbackKind, planSchemaVersion, resolved.ID, v})
+				Knowledge []knowledge.Item `json:"knowledge,omitempty"`
+			}{planReadbackKind, planSchemaVersion, resolved.ID, v, shared})
 		}
-		_, err := io.WriteString(cmd.OutOrStdout(), planText(v, details))
+		text := planText(v, details)
+		var b strings.Builder
+		writeSharedExperience(&b, shared)
+		_, err := io.WriteString(cmd.OutOrStdout(), text+b.String())
 		return err
 	}
 	write := func(cmd *cobra.Command, store func(plan.Store, []byte) (plan.View, error)) error {
@@ -117,7 +123,7 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		if err != nil {
 			return err
 		}
-		if readback(cmd, v) != nil {
+		if readback(cmd, v, nil) != nil {
 			// The writer's error may carry paths; the stored result is what matters.
 			return &plan.Error{Class: plan.ClassIOError, Detail: fmt.Sprintf("%s revision %d was stored; writing its readback failed; run show before writing again", v.ID, v.Revision)}
 		}
@@ -170,7 +176,7 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return readback(cmd, v)
+			return readback(cmd, v, sharedExperience(resolved, planWords(v.Plan)))
 		},
 	})
 	showCommand.Flags().IntVar(&revision, "revision", 0, "revision to show (default: the latest)")
@@ -285,6 +291,17 @@ func resolvePlanProject(d workspace.Dependencies, value string) (workspace.Proje
 		return workspace.ProjectRecord{}, &plan.Error{Class: plan.ClassIOError, Detail: "could not resolve the project"}
 	}
 	return project, err
+}
+
+// planWords is the text of p that shared experience is looked up from: the
+// title, goal, scope and step titles. Status text that changes with every
+// revision is left out. A plan has no repository.
+func planWords(p plan.Plan) string {
+	parts := []string{p.Title, p.Goal, p.Scope}
+	for _, step := range p.Steps {
+		parts = append(parts, step.Title)
+	}
+	return strings.Join(parts, "\n")
 }
 
 func planText(v plan.View, details bool) string {

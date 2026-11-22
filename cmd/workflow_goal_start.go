@@ -12,6 +12,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/agentstart"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
+	"github.com/devdimensionlab/plybuild/internal/knowledge"
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
 	"github.com/devdimensionlab/plybuild/internal/taskjournal"
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
@@ -36,6 +37,24 @@ type goalAgentPlan struct {
 	// Key names the start in its receipt. It is empty for the receipt kept
 	// per Task, whose key is the Task.
 	Key string `json:"-"`
+}
+
+// goalStartShared is the shared experience of a Task's Goal; a Project that
+// cannot be resolved gives none.
+func goalStartShared(d taskwork.Dependencies, task taskwork.TaskRecord, goal json.RawMessage) []knowledge.Item {
+	project, err := resolveIntelligenceProject(d.Dependencies, string(task.ProjectID))
+	if err != nil {
+		return nil
+	}
+	return sharedExperience(project, goalWords(task, goal), string(task.RepoID))
+}
+
+// goalWords is the text of a Task and its Goal that shared experience is
+// looked up from. A Goal without title or objective gives fewer words.
+func goalWords(task taskwork.TaskRecord, goal json.RawMessage) string {
+	var g struct{ Title, Objective string }
+	_ = json.Unmarshal(goal, &g)
+	return strings.Join([]string{task.Title, task.Description, g.Title, g.Objective}, "\n")
 }
 
 // journalInstruction asks the agent of a Task linked to a plan to record its
@@ -230,7 +249,12 @@ func newWorkflowGoalStartCommand(d taskwork.Dependencies) *cobra.Command {
 		}
 		plan := goalAgentPlan{Task: args[0], Worktree: wt.Locator, Ref: wt.Ref, OID: wt.OID, Workspace: herdrWorkspace, Provider: provider, Model: executor.Model, Effort: executor.Effort, Goal: read.Goal, Documents: documents, Journal: journalInstruction(args[0], link)}
 		if !apply {
-			return json.NewEncoder(c.OutOrStdout()).Encode(plan)
+			// Shared experience goes to the preview only: the prompt and the
+			// receipt never depend on the knowledge archive.
+			return json.NewEncoder(c.OutOrStdout()).Encode(struct {
+				goalAgentPlan
+				Knowledge []knowledge.Item `json:"knowledge,omitempty"`
+			}{plan, goalStartShared(d, task.Task, read.Goal)})
 		}
 		if os.Getenv("HERDR_ENV") != "1" {
 			return fmt.Errorf("goal-start --apply requires the actual Herdr terminal")
