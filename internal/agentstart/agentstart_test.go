@@ -43,6 +43,8 @@ type fakeHerdr struct {
 	trustCwd   string
 	screen     string
 	stuckTrust bool
+	// oneLine shows the trust question on one line, as in a wide pane.
+	oneLine bool
 	// shellBusy is the number of process-info reads that show a job beside
 	// the new pane's shell; shellNever keeps it busy. busyStarts is the
 	// number of agent starts Herdr refuses as agent_pane_busy.
@@ -150,7 +152,10 @@ func trustScreen(cwd, selected string) string {
 		yes = " ❯ Yes, I trust this folder"
 	}
 	return strings.Join([]string{"user@host t1 % claude", "", strings.Repeat("─", 40), " Accessing workspace:", "", " " + cwd, "",
-		" Quick safety check: Is this a project you created or one you trust? (Like your own code, a well-known open source project, or work from your team). If not, take a moment to review what's in this folder first.",
+		// Claude Code 2.1.323 wraps the question at the pane width (here 145
+		// columns); recent-unwrapped does not join it.
+		" Quick safety check: Is this a project you created or one you trust? (Like your own code, a well-known open source project, or work from your",
+		" team). If not, take a moment to review what's in this folder first.",
 		"", " Claude Code'll be able to read, edit, and execute files here.", "", " Security guide", "", no, yes, "", " Enter to confirm · Esc to cancel", "", ""}, "\n")
 }
 
@@ -190,6 +195,9 @@ func (f *fakeHerdr) text(_ context.Context, _ HerdrBinary, args []string) (strin
 		cwd := f.trustCwd
 		if cwd == "" {
 			cwd = f.cwd()
+		}
+		if f.oneLine {
+			return strings.Replace(trustScreen(cwd, f.trust), "from your\n team)", "from your team)", 1), nil
 		}
 		return trustScreen(cwd, f.trust), nil
 	case args[0] == "pane" && args[1] == "send-keys":
@@ -1604,6 +1612,15 @@ func TestAgentStartAnswersClaudeFolderTrustAndPromptsOnce(t *testing.T) {
 	}
 }
 
+func TestAgentStartAnswersClaudeFolderTrustOnOneLine(t *testing.T) {
+	in, f := claudeAtTrust(t)
+	f.oneLine = true
+	r, err := run(in, f, nil)
+	if err != nil || r.Reached != ReachedPromptSubmitted || !r.FolderTrustAccepted {
+		t.Fatalf("start did not pass a question on one line: %+v %v", r, err)
+	}
+}
+
 func TestAgentResumeAnswersClaudeFolderTrustLeftByEarlierStart(t *testing.T) {
 	in, f := claudeAtTrust(t)
 	f.trust = ""
@@ -1625,6 +1642,9 @@ func TestAgentStartLeavesUnrecognizedDialogToTheHuman(t *testing.T) {
 			f.screen = strings.Replace(trustScreen(in.Cwd, "no"), "Security guide", "Security guide\n Extra", 1)
 		},
 		"not last": func(in StartInput, f *fakeHerdr) { f.screen = trustScreen(in.Cwd, "no") + "more output\n" },
+		"no question": func(in StartInput, f *fakeHerdr) {
+			f.screen = strings.Replace(trustScreen(in.Cwd, "no"), " Quick safety check:", " Quick check:", 1)
+		},
 		"two selected": func(in StartInput, f *fakeHerdr) {
 			f.screen = strings.Replace(trustScreen(in.Cwd, "no"), "   Yes", " ❯ Yes", 1)
 		},
