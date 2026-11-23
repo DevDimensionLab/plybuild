@@ -11,8 +11,7 @@ func goalOperationContent(d Dependencies, task TaskID) Dependencies {
 }
 
 func goalOperationContentScope(d Dependencies, scope *taskContentScope) Dependencies {
-	var narrow func(WorkItemStore) WorkItemStore
-	narrow = func(store WorkItemStore) WorkItemStore {
+	narrow := func(store WorkItemStore) WorkItemStore {
 		switch s := store.(type) {
 		case *systemWorkItemStore:
 			copy := *s

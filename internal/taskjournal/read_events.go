@@ -30,10 +30,6 @@ type sourceRead struct {
 	hash string
 	err  error
 }
-type bytesRead struct {
-	bytes []byte
-	err   error
-}
 type eventBatchReader struct {
 	lifecycles taskwork.WorkItemLifecycles
 	sources    map[string]sourceRead

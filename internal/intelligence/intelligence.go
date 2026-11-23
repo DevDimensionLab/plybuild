@@ -125,7 +125,6 @@ const timeLayout = "2006-01-02T15:04:05Z"
 var (
 	idPattern        = regexp.MustCompile(`^obs-[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$`)
 	knowledgePattern = regexp.MustCompile(`^k-[0-9]{8}-[a-z0-9]+(-[a-z0-9]+)*$`)
-	repoPattern      = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 	shaPattern       = regexp.MustCompile(`^[0-9a-f]{40}$`)
 )
 
@@ -219,7 +218,7 @@ func (s Store) publish(id string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(staged.Name())
+	defer func() { _ = os.Remove(staged.Name()) }()
 	if _, err = staged.Write(data); err == nil {
 		err = staged.Sync()
 	}

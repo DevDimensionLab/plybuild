@@ -49,7 +49,7 @@ run_checker() {
 	CLI_COMPAT_BASE_GENERATED="$temp_root/generated-base.json" \
 	CLI_COMPAT_CURRENT_GENERATED="$temp_root/current.json" \
 	CLI_COMPAT_REPORT_OUT="$temp_root/report.json" \
-		"$checker"
+		"$checker" "$@"
 }
 
 expect_failure() {
@@ -76,6 +76,24 @@ grep -F 'cli compatibility: PASS' "$temp_root/pass.stdout" >/dev/null ||
 
 write_tree "$temp_root/current.json" "[$command_a]"
 expect_failure 'CLI deltas do not match allowlist' run_checker
+
+# Rebaseline a stale list, then verify it with the default, read-only check.
+write_allowlist '[{"obsolete":true},{"obsolete":true}]'
+write_tree "$temp_root/current.json" '[]'
+run_checker --write-allowlist
+run_checker
+python3 - "$fake_repo/test/compat/cli-allowlist.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+deltas = json.loads(Path(sys.argv[1]).read_text())["allowed_deltas"]
+assert [(delta["kind"], delta["path"]) for delta in deltas] == [
+    ("command_removed", "ply"),
+    ("command_removed", "ply status"),
+]
+PY
+write_allowlist '[]'
 
 changed_flag='{"path":"ply","use":"ply","flags":[{"scope":"persistent","name":"debug","default":"true","usage":"changed"}]}'
 write_tree "$temp_root/current.json" "[$changed_flag,$command_b]"

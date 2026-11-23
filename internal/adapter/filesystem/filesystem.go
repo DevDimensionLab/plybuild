@@ -6,9 +6,10 @@ import (
 	"errors"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 )
 
 // ErrNoFilesystem reports a zero-value dependency without performing an
@@ -248,7 +249,19 @@ func (systemFilesystem) ReadFile(path string) ([]byte, error) {
 }
 
 func (systemFilesystem) ReadDir(path string) ([]fs.FileInfo, error) {
-	return ioutil.ReadDir(path)
+	dir, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = dir.Close() }()
+	entries, err := dir.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
+	slices.SortFunc(entries, func(a, b fs.FileInfo) int {
+		return strings.Compare(a.Name(), b.Name())
+	})
+	return entries, nil
 }
 
 func (systemFilesystem) ReadDirEntries(path string) ([]fs.DirEntry, error) {

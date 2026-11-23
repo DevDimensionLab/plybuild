@@ -4,8 +4,12 @@
     "./cmd.ExecuteE: added",
     "./cmd.ExitCode: added",
     "./cmd.NewWorkflowNotificationCommand: added",
+    "./pkg/config.LocalConfiguration.Projects: added",
+    "./pkg/config.ProjectDataRoot: added",
+    "./pkg/config.ProjectStorageConfig: added",
     "./pkg/file.RenderBytes: added",
     "package github.com/devdimensionlab/plybuild/cmd/claude-statusline-relay: added",
+    "package github.com/devdimensionlab/plybuild/cmd/ply-install: added",
     "package github.com/devdimensionlab/plybuild/cmd/ply: added",
     "package github.com/devdimensionlab/plybuild/test/notification-driver: added"
   ],

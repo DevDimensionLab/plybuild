@@ -244,7 +244,7 @@ func (s Store) read(id string) (Assignment, error) {
 	if err != nil {
 		return Assignment{}, ioError("read "+id, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	if opened, err := file.Stat(); err != nil || !os.SameFile(info, opened) {
 		return Assignment{}, invalid("not a regular file")
 	}

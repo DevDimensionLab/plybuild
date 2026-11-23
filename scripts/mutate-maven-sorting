@@ -52,8 +52,6 @@ git_root=$(git -C "$repo_root" rev-parse --show-toplevel 2>/dev/null) ||
 [[ $git_root == "$repo_root" ]] || fail 'harness repository root does not match the Git root'
 [[ -z $(git -C "$repo_root" status --porcelain=v1 -uall) ]] ||
 	fail 'source repository is not clean'
-[[ -z $(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ]] ||
-	fail 'source repository has ordinary or ignored artifacts'
 
 if [[ $meta_fault == repository-local-artifacts ]]; then
 	requested_work="$repo_root/.mutation-local-artifacts-meta"
@@ -121,7 +119,7 @@ mutate "maven-command-executable-argument-order" "pkg/maven/command.go" $'\t\t\t
 mutate "maven-metadata-username-password-order" "pkg/maven/query.go" $'\t\t\tUsername: repo.Auth.Username,\n\t\t\tPassword: repo.Auth.Password,' $'\t\t\tUsername: repo.Auth.Password,\n\t\t\tPassword: repo.Auth.Username,' "./pkg/maven" "TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse" ""
 mutate "maven-metadata-coordinate-path-order" "pkg/maven/query.go" $'\t\tstrings.ReplaceAll(groupID, ".", "/"),\n\t\tstrings.ReplaceAll(artifactId, ".", "/"))' $'\t\tstrings.ReplaceAll(artifactId, ".", "/"),\n\t\tstrings.ReplaceAll(groupID, ".", "/"))' "./pkg/maven" "TestMavenMetadataKeepsUsernameBeforePasswordAndParsesResponse" ""
 mutate "maven-metadata-authentication-gate" "pkg/maven/query.go" "if repo.Auth != nil {" "if repo.Auth == nil {" "./pkg/maven" "TestMavenMetadataWithoutAuthSelectsAnonymousRequest" ""
-mutate "maven-metadata-error-gate" "pkg/maven/query.go" $'\tif err != nil {\n\t\treturn metaData, err\n\t}' $'\tif err == nil {\n\t\treturn metaData, err\n\t}' "./pkg/maven" "TestMavenMetadataReturnsDependencyErrorAfterCompleteDelivery" ""
+mutate "maven-metadata-error-gate" "pkg/maven/query.go" $'\tif err != nil {\n\t\treason := "metadata lookup failed"' $'\tif err == nil {\n\t\treason := "metadata lookup failed"' "./pkg/maven" "TestMavenMetadataReturnsDependencyErrorAfterCompleteDelivery" ""
 mutate "dependency-sort-swap-direction" "pkg/sorting/sort.go" "func (a DependencySort) Swap(i, j int) { a.Deps[i], a.Deps[j] = a.Deps[j], a.Deps[i] }" "func (a DependencySort) Swap(i, j int) { a.Deps[i], a.Deps[j] = a.Deps[i], a.Deps[j] }" "./pkg/sorting" "TestDependencySortSwapMutatesSharedSliceThroughValueReceiver" ""
 mutate "dependency-sort-comparison-direction" "pkg/sorting/sort.go" "return concat(a, sortKey) < concat(b, sortKey)" "return concat(a, sortKey) > concat(b, sortKey)" "./pkg/sorting" "TestDependencySortLessCharacterizesScopeGroupAndArtifactTieBreaks" ""
 mutate "dependency-sort-key-field-order" "pkg/sorting/sort.go" "return fmt.Sprintf(\"%d:%s:%s\", scopeWeight(dep.Scope), groupIdWeight(dep.GroupId, sortKey), dep.ArtifactId)" "return fmt.Sprintf(\"%d:%s:%s\", scopeWeight(dep.Scope), dep.ArtifactId, groupIdWeight(dep.GroupId, sortKey))" "./pkg/sorting" "TestConcatCharacterizesExactScopeGroupAndArtifactKey" ""

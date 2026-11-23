@@ -46,7 +46,7 @@ run_wrapper() {
 	local output=$1
 	shift
 	: >"$calls_file"
-	env PATH="$stale_root/bin:/usr/bin:/bin" FAKE_GO_CALLS="$calls_file" \
+	env -u PLY_GO PATH="$stale_root/bin:/usr/bin:/bin" FAKE_GO_CALLS="$calls_file" \
 		GOTOOLCHAIN=auto GOROOT="$stale_root" LC_ALL=en_US.UTF-8 "$@" "$wrapper" bash -c "$probe" >"$output" 2>"$output.err"
 }
 

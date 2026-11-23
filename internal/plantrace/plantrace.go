@@ -7,6 +7,7 @@ package plantrace
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/plan"
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
@@ -74,6 +75,9 @@ type Reason struct {
 	Detail string `json:"detail"`
 }
 
+// ReasonTimeUnreadable: an event's time is not RFC 3339; the event is ordered first.
+const ReasonTimeUnreadable = "time_unreadable"
+
 // Read returns the trace of planID in project, whose plans live in plans.
 func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Store, planID string) (Trace, error) {
 	view, err := plans.Show(planID, 0)
@@ -113,17 +117,54 @@ func Read(d workspace.Dependencies, project workspace.ProjectID, plans plan.Stor
 	if err != nil {
 		out.Reasons = append(out.Reasons, Reason{"", "journal_damaged", "Only the readable prefix of the plan journal is read: " + err.Error()})
 	}
+	planEvents := make([]Event, 0, len(journal))
 	for i, e := range journal {
-		out.Events = append(out.Events, planEvent(planID, i, e))
+		planEvents = append(planEvents, planEvent(planID, i, e))
 	}
-	sort.SliceStable(out.Events, func(i, j int) bool {
-		a, b := at(out.Events[i]), at(out.Events[j])
-		if a != b {
-			return a < b
-		}
-		return out.Events[i].EventID < out.Events[j].EventID
-	})
+	out.Reasons = append(out.Reasons, timeReasons(append(append([]Event{}, out.Events...), planEvents...))...)
+	out.Events = mergeEvents(out.Events, planEvents)
 	return out, nil
+}
+
+// timeReasons names each event whose ordering time cannot be read.
+func timeReasons(events []Event) []Reason {
+	var reasons []Reason
+	for _, e := range events {
+		if stamp := orderStamp(e); stamp != nil {
+			if _, err := time.Parse(time.RFC3339Nano, *stamp); err != nil {
+				reasons = append(reasons, Reason{e.TaskID, ReasonTimeUnreadable, fmt.Sprintf("Event %s has an unreadable time %q; it is ordered first.", e.EventID, *stamp)})
+			}
+		}
+	}
+	return reasons
+}
+
+func mergeEvents(taskEvents, planEvents []Event) []Event {
+	sort.SliceStable(taskEvents, func(i, j int) bool {
+		return eventBefore(taskEvents[i], taskEvents[j])
+	})
+
+	// The plan journal already has numeric EventID order. Only compare its
+	// next entry with the next task event so clock changes cannot reorder it.
+	events := make([]Event, 0, len(taskEvents)+len(planEvents))
+	for len(taskEvents) > 0 && len(planEvents) > 0 {
+		if eventBefore(taskEvents[0], planEvents[0]) {
+			events = append(events, taskEvents[0])
+			taskEvents = taskEvents[1:]
+		} else {
+			events = append(events, planEvents[0])
+			planEvents = planEvents[1:]
+		}
+	}
+	events = append(events, taskEvents...)
+	return append(events, planEvents...)
+}
+
+func eventBefore(a, b Event) bool {
+	if order := at(a).Compare(at(b)); order != 0 {
+		return order < 0
+	}
+	return a.EventID < b.EventID
 }
 
 func event(task string, link *taskjournal.PlyAction, r taskjournal.Contribution) Event {
@@ -162,10 +203,24 @@ func planEvent(planID string, i int, e plan.JournalEntry) Event {
 		StepID: e.StepID, StepKind: e.StepKind, ParentStepID: e.ParentStepID, Outcome: e.Outcome, OccurredAt: &e.At, RecordedAt: &e.At}
 }
 
-// at is the time an event is ordered by: occurred, else recorded.
-func at(e Event) string {
+// orderStamp is the time an event is ordered by: occurred, else recorded.
+func orderStamp(e Event) *string {
 	if e.OccurredAt != nil {
-		return *e.OccurredAt
+		return e.OccurredAt
 	}
-	return *e.RecordedAt
+	return e.RecordedAt
+}
+
+// at is orderStamp as a time; an unreadable one is the zero time, which
+// timeReasons reports.
+func at(e Event) time.Time {
+	stamp := orderStamp(e)
+	if stamp == nil {
+		return time.Time{}
+	}
+	parsed, err := time.Parse(time.RFC3339Nano, *stamp)
+	if err != nil {
+		return time.Time{}
+	}
+	return parsed
 }

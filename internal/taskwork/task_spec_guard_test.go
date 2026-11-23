@@ -1,18 +1,6 @@
 package taskwork
 
-import (
-	"errors"
-	"testing"
-)
-
-type unavailableTaskBasisGit struct {
-	WorkItemGit
-	TaskContentGit
-}
-
-func (g unavailableTaskBasisGit) ObserveWorktree(string) (GitWorktreeObservation, error) {
-	return GitWorktreeObservation{}, errors.New("fixture Git observation unavailable")
-}
+import "testing"
 
 func TestTaskIntegrationResumeIgnoresUnrelatedProblemChange(t *testing.T) {
 	t.Parallel()

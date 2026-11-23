@@ -130,7 +130,7 @@ func loadDatabase(route Route) (*database, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer dir.Close()
+	defer func() { _ = dir.Close() }()
 	db, e := readDatabase(dir)
 	if e != nil {
 		return nil, e

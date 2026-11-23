@@ -96,20 +96,3 @@ func (w *BackupCommittedWork) Bind(work workspace.ProjectWork) error {
 func (w *BackupCommittedWork) DocumentID() string {
 	return backupCommittedDocumentPrefix + strings.TrimPrefix(w.SHA256, "sha256:")
 }
-
-func (w *BackupCommittedWork) document() canonicaljson.Value {
-	return contentRefValue(map[string]any{"id": w.DocumentID(), "source": map[string]any{"kind": "file", "locator": w.Locator, "sha256": w.SHA256, "size_bytes": w.SizeBytes, "media_type": "text/plain", "git_provenance": nil}})
-}
-
-func validateBackupCommitted(w *BackupCommittedWork, work workspace.ProjectWork) error {
-	if w == nil {
-		return nil
-	}
-	if err := taskDocumentBytesValid(w.Bytes); err != nil {
-		return err
-	}
-	if digestTaskBytes(w.Bytes) != w.SHA256 || len(w.Bytes) != w.SizeBytes || w.Locator != taskContentPath(work, "objects", w.SHA256) || !strings.HasPrefix(string(w.Bytes), "# Preserved committed source;") {
-		return workspace.WorkInvalidArguments("committed dry-run bytes or descriptor differ")
-	}
-	return nil
-}

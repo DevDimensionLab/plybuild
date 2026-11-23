@@ -29,12 +29,12 @@ func openDir(path string, create bool) (*os.File, error) {
 		next, err := unix.Openat(fd, part, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
 		if err == unix.ENOENT && create {
 			if err = unix.Mkdirat(fd, part, 0700); err != nil && err != unix.EEXIST {
-				unix.Close(fd)
+				_ = unix.Close(fd)
 				return nil, err
 			}
 			next, err = unix.Openat(fd, part, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
 		}
-		unix.Close(fd)
+		_ = unix.Close(fd)
 		if err != nil {
 			return nil, &os.PathError{Op: "open physical directory", Path: path, Err: err}
 		}
@@ -66,15 +66,15 @@ func createStore(work workspace.ProjectWork, task string) (*os.File, error) {
 			}
 		}
 		if err != nil {
-			d.Close()
+			_ = d.Close()
 			return nil, &os.PathError{Op: "open journal directory", Path: part, Err: err}
 		}
 		next := os.NewFile(uintptr(fd), filepath.Join(d.Name(), part))
-		d.Close()
+		_ = d.Close()
 		d = next
 		st, err := d.Stat()
 		if err != nil || st.Mode().Perm() != 0700 {
-			d.Close()
+			_ = d.Close()
 			return nil, conflict("journal directories must be private")
 		}
 	}
@@ -91,7 +91,7 @@ func openAt(dir *os.File, name string, flags int, mode uint32) (*os.File, error)
 	f := os.NewFile(uintptr(fd), name)
 	st, e := f.Stat()
 	if e != nil || !st.Mode().IsRegular() {
-		f.Close()
+		_ = f.Close()
 		return nil, invalid("file is not regular")
 	}
 	return f, nil
@@ -122,12 +122,12 @@ func readFile(path string, limit int) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer d.Close()
+	defer func() { _ = d.Close() }()
 	f, e := openAt(d, filepath.Base(path), unix.O_RDONLY, 0)
 	if e != nil {
 		return nil, e
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return readOpened(f, limit)
 }
 func sourceHash(path string) (string, error) {
@@ -135,12 +135,12 @@ func sourceHash(path string) (string, error) {
 	if e != nil {
 		return "", e
 	}
-	defer d.Close()
+	defer func() { _ = d.Close() }()
 	f, e := openAt(d, filepath.Base(path), unix.O_RDONLY, 0)
 	if e != nil {
 		return "", e
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return hashStream(f)
 }
 func lock(dir *os.File) (*os.File, error) {
@@ -155,11 +155,11 @@ func lock(dir *os.File) (*os.File, error) {
 	}
 	st, e := f.Stat()
 	if e != nil || st.Mode().Perm() != 0600 {
-		f.Close()
+		_ = f.Close()
 		return nil, conflict("append lock must be private")
 	}
 	if e = unix.Flock(int(f.Fd()), unix.LOCK_EX); e != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, e
 	}
 	return f, nil
@@ -199,7 +199,7 @@ func regularMode(path string) error {
 	if e != nil {
 		return e
 	}
-	defer d.Close()
+	defer func() { _ = d.Close() }()
 	st, e := d.Stat()
 	if e != nil {
 		return e

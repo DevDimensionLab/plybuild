@@ -10,6 +10,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/humaninput"
 	"github.com/devdimensionlab/plybuild/internal/inbox"
+	"github.com/devdimensionlab/plybuild/internal/machine"
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspaceview"
@@ -89,6 +90,7 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		operation("epic.list", "default", workspaceview.EpicListKind, []string{}, []string{"project"}, "independent_and"),
 		operation("epic.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
 		operation("journal.recent", "default", "WorkspaceActivityReadback@1", []string{}, []string{"project", "since", "limit"}, "independent_and"),
+		operation("module.list", "default", workspaceview.ModuleListKind, []string{}, []string{"project", "repo", "commit"}, "independent_and"),
 		operation("overview", "default", "WorkspaceOverviewReadback@1", []string{}, []string{"project"}, "independent_and"),
 		operation("status", "default", "WorkspaceStatusReadback@1", []string{}, []string{}, "none"),
 		operation("task.lifecycle.show", "default", "WorkspaceWorkItemLifecycleReadback@1", []string{}, []string{}, "none"),
@@ -112,6 +114,18 @@ func coreCapabilities(build capabilityBuild) capabilityCatalog {
 		Selectors: []string{"--details"}, Formats: []string{"text", "json"},
 		Filters: []string{}, FilterPolicy: "none",
 		ResultSchemas: []capabilitySchema{{"WorkflowTraceReadback@1", &one}}, Effect: "read",
+	})
+	extensions = append(extensions, capabilityOperation{
+		ID: "machine.status", Command: []string{"machine", "status"}, Mode: "default",
+		Selectors: []string{}, Formats: []string{"text", "json"},
+		Filters: []string{}, FilterPolicy: "none",
+		ResultSchemas: []capabilitySchema{{machine.StatusKind, &one}}, Effect: "read",
+	})
+	extensions = append(extensions, capabilityOperation{
+		ID: "machine.status", Command: []string{"machine", "status"}, Mode: "processes",
+		Selectors: []string{"--processes"}, Formats: []string{"text", "json"},
+		Filters: []string{}, FilterPolicy: "none",
+		ResultSchemas: []capabilitySchema{{machine.StatusKind, &one}}, Effect: "read",
 	})
 	sort.Slice(extensions, func(i, j int) bool {
 		if extensions[i].ID != extensions[j].ID {

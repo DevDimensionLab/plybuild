@@ -304,7 +304,7 @@ func readDefaults(root string) (repoestablish.ProjectSetup, error) {
 	if err != nil {
 		return invalid(fmt.Sprintf("cannot be read: %v", err))
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	opened, err := file.Stat()
 	if err != nil || !os.SameFile(info, opened) {
 		return invalid("changed while it was opened")

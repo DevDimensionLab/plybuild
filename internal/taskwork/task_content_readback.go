@@ -355,7 +355,7 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 		}
 		return contentReadEnvelope("WorkspaceTaskSpecReadback@2", map[string]canonicaljson.Value{"workspace": work.Workspace, "task_id": string(q.TaskID), "registry_sha256": nullableDigest(r.RawSHA256), "revision": o, "goal": contentRefValue(goal), "assessments": assessments, "selection_history": selections, "integrity": integrity, "selection_freshness": "not_selected", "target_freshness": "late_bound", "required_inputs": contentRefValue(goal.RequiredInputs), "task_spec_binding": nil, "reasons": sortedContentStrings(sortedReasons(reasons)), "next_action": contentActionValue(TaskNextAction{Kind: "inspect", Reason: "Goal documents are available as input to an explicitly chosen operation.", Argv: []string{}})}), nil
 	}
-	_, selectionFresh := selectionReadback(d, work, r, q.TaskID)
+	selectionFresh := "unknown"
 	targetFresh := "unknown"
 	inputs := []TaskSpecRequiredInput{}
 	var basis *TaskSpecBasis
@@ -364,7 +364,6 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 		eval, e := currentTaskSpec(d, work, r, workspace.ProjectSnapshot{Projects: projects, Repos: repos}, *t, true)
 		reasons = append(reasons, eval.Reasons...)
 		if e != nil {
-			selectionFresh = "unknown"
 			reasons = append(reasons, contentIntegrityReason(contentIntegrity(e)))
 		} else {
 			selectionFresh = eval.SelectionFreshness
@@ -377,7 +376,6 @@ func ShowTaskSpec(d Dependencies, q TaskContentQuery) (TaskContentReadbackResult
 			}
 		}
 	} else {
-		selectionFresh = "unknown"
 		reasons = append(reasons, "task_content_observation_unknown")
 	}
 	if contentReadFreshness(d, work, r) != "fresh" {
@@ -453,7 +451,7 @@ func buildTaskContentReadback(d Dependencies, work workspace.ProjectWork, r Work
 			reasons = append(reasons, contentIntegrityReason(contentIntegrity(e)))
 		}
 	}
-	sel, sfresh := selectionReadback(d, work, r, t.ID)
+	sel, _ := selectionReadback(d, work, r, t.ID)
 	sol := contentFields(contentFields(sel)["solution"])
 	var specID canonicaljson.Value
 	for _, p := range r.TaskSpecRevisions {
@@ -464,13 +462,12 @@ func buildTaskContentReadback(d Dependencies, work workspace.ProjectWork, r Work
 	selected := valueRevision(sol["spec"])
 	newer := selected != nil && state.SpecHead != nil && state.SpecHead.Revision > selected.Revision
 	eval, e := currentTaskSpec(d, work, r, projects, t, true)
+	sfresh := eval.SelectionFreshness
 	if e != nil {
 		eval.ContentIntegrity = contentIntegrity(e)
 		eval.TargetFreshness = "unknown"
 		sfresh = "unknown"
 		reasons = append(reasons, contentIntegrityReason(contentIntegrity(e)))
-	} else {
-		sfresh = eval.SelectionFreshness
 	}
 	if eval.ContentIntegrity == "" {
 		eval.ContentIntegrity = "not_recorded"

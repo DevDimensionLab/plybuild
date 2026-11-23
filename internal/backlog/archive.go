@@ -438,7 +438,7 @@ func sameDirectory(a, b string) bool {
 func toArchived(item Item, at string) ArchivedItem {
 	notes := []ArchivedNote{}
 	for _, note := range item.Notes {
-		notes = append(notes, ArchivedNote{At: note.At, Text: note.Text, Author: note.Author, Repos: note.Repos, Topics: note.Topics})
+		notes = append(notes, ArchivedNote(note))
 	}
 	archived := ArchivedItem{ID: item.ID, Title: item.Title, Text: item.Text, CreatedAt: item.CreatedAt, Notes: notes, Repos: item.Repos, Topics: item.Topics, ArchivedAt: at}
 	if item.File != nil {
@@ -507,7 +507,7 @@ func (s Store) copyToArchive(item Item, archive Archive) error {
 	if err != nil {
 		return &Error{Class: ClassIOError, Detail: "open file copy"}
 	}
-	defer source.Close()
+	defer func() { _ = source.Close() }()
 	temp, size, err := copyToTemp(directory, source)
 	if err != nil {
 		return err
@@ -605,12 +605,12 @@ func sameContent(first, second string) (bool, error) {
 	if err != nil {
 		return false, &Error{Class: ClassIOError, Detail: "open file copy"}
 	}
-	defer a.Close()
+	defer func() { _ = a.Close() }()
 	b, err := openSource(second)
 	if err != nil {
 		return false, &Error{Class: ClassIOError, Detail: "open file copy"}
 	}
-	defer b.Close()
+	defer func() { _ = b.Close() }()
 	bufferA, bufferB := make([]byte, copyBufferBytes), make([]byte, copyBufferBytes)
 	for {
 		n, errA := io.ReadFull(a, bufferA)

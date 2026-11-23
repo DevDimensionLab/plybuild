@@ -99,7 +99,7 @@ func validCompact(r Request, fresh bool) bool {
 			if err != nil {
 				return false
 			}
-			dir.Close()
+			_ = dir.Close()
 		}
 	}
 	return utf8.RuneCountInString(compactMessage(r).Text) <= 480

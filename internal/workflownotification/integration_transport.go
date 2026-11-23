@@ -231,7 +231,7 @@ func ObserveIntegration(binding IntegrationRouteBinding, event IntegrationEvent)
 	if err != nil {
 		return unknownIntegrationTransport(event, err)
 	}
-	defer dir.Close()
+	defer func() { _ = dir.Close() }()
 	db, err := readIntegrationState(dir, binding)
 	if err != nil {
 		return unknownIntegrationTransport(event, err)
@@ -283,7 +283,7 @@ func RetryIntegration(d Dependencies, binding IntegrationRouteBinding, event Int
 	return sendIntegration(d, binding, event, confirmation)
 }
 
-func sendIntegration(d Dependencies, binding IntegrationRouteBinding, event IntegrationEvent, retry string) (IntegrationObservation, error) {
+func sendIntegration(d Dependencies, binding IntegrationRouteBinding, event IntegrationEvent, retry string) (observation IntegrationObservation, err error) {
 	if d.Now == nil || d.LookupEnv == nil || d.Transport == nil || !validIntegrationEvent(event) {
 		return unknownIntegrationTransport(event, invalid())
 	}
@@ -305,7 +305,11 @@ func sendIntegration(d Dependencies, binding IntegrationRouteBinding, event Inte
 	if err != nil {
 		return unknownIntegrationTransport(event, err)
 	}
-	defer dir.Close()
+	defer func() {
+		if closeErr := dir.Close(); err == nil {
+			err = closeErr
+		}
+	}()
 	unlock, err := lockState(dir)
 	if err != nil {
 		return unknownIntegrationTransport(event, err)
@@ -371,7 +375,7 @@ func sendIntegration(d Dependencies, binding IntegrationRouteBinding, event Inte
 	}
 	before, _ := dir.Stat()
 	after, _ := currentDir.Stat()
-	currentDir.Close()
+	_ = currentDir.Close()
 	if before == nil || after == nil || !os.SameFile(before, after) {
 		return integrationTransportObservation(event, r), conflict("state_changed", "The physical notification state root changed.")
 	}

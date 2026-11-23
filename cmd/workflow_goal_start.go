@@ -71,10 +71,11 @@ func journalInstruction(task string, link *taskjournal.PlyAction) string {
 		belongs, task, task, strings.Join(taskjournal.StepKinds, ", "), strings.Join(taskjournal.Outcomes, ", "), task)
 }
 
-// goalDocumentInstruction names the ply command that reads each document of
-// the Goal Spec revision; a Goal without documents gets none.
+// goalDocumentInstruction names the ply command for each required document
+// from the Goal Spec or its referenced problem revision.
 func goalDocumentInstruction(task, spec string, revision int, goal json.RawMessage) (string, error) {
 	var g struct {
+		Problem        taskwork.TaskRevisionRef `json:"problem"`
 		RequiredInputs []struct {
 			ID string `json:"id"`
 		} `json:"required_inputs"`
@@ -86,6 +87,8 @@ func goalDocumentInstruction(task, spec string, revision int, goal json.RawMessa
 	for _, in := range g.RequiredInputs {
 		if id, ok := strings.CutPrefix(in.ID, taskwork.GoalDocumentInputID); ok {
 			reads = append(reads, fmt.Sprintf("\n  ply workspace task spec show %s --spec %s --revision %d --document %s", task, spec, revision, id))
+		} else if id, ok := strings.CutPrefix(in.ID, taskwork.ProblemDocumentInputID); ok {
+			reads = append(reads, fmt.Sprintf("\n  ply workspace task problem show %s --revision %d --document %s", task, g.Problem.Revision, id))
 		}
 	}
 	if len(reads) == 0 {

@@ -240,7 +240,7 @@ func readIntelligenceInput(stdin io.Reader, file string) ([]byte, error) {
 		if err != nil {
 			return nil, intelligenceInvalidArguments("cannot read --file")
 		}
-		defer opened.Close()
+		defer func() { _ = opened.Close() }()
 		reader = opened
 	}
 	raw, err := io.ReadAll(io.LimitReader(reader, maxIntelligenceInput+1))

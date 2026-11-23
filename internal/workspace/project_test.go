@@ -419,7 +419,6 @@ func TestAddProjectWritesDefinitions(t *testing.T) {
 		t.Fatalf("projects %#v", defs.Projects)
 	}
 	path := filepath.Join(root, DefinitionsFile)
-	before, _ := os.ReadFile(path)
 	retry, err := AddProject(d, input)
 	if err != nil || retry.Created {
 		t.Fatalf("retry = %#v, %v", retry, err)
@@ -436,7 +435,7 @@ func TestAddProjectWritesDefinitions(t *testing.T) {
 	if _, err := UpdateProjectMetadata(d, ProjectMetadataInput{Operation: ProjectRepoWrapperSet, ProjectID: "trip", RepoID: "web", Locator: filepath.Join(root, "web")}); err != nil {
 		t.Fatal(err)
 	}
-	before, _ = os.ReadFile(path)
+	before, _ := os.ReadFile(path)
 	if retry, err := AddProject(d, input); err != nil || retry.Created {
 		t.Fatalf("retry with a repository wrapper = %#v, %v", retry, err)
 	}

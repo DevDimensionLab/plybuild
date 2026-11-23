@@ -122,7 +122,7 @@ func TestProjectMetadataSurvivesMissingDirectoriesAndClears(t *testing.T) {
 	if out := f.update(t, clear); !out.Changed || out.Repos[0].Wrapper != "" {
 		t.Fatalf("clear %+v", out)
 	}
-	if defs := f.definitions(t); defs.Projects[0].Companions != nil && len(defs.Projects[0].Companions) != 0 || defs.Projects[0].Repos[0].Wrapper != "" {
+	if defs := f.definitions(t); len(defs.Projects[0].Companions) != 0 || defs.Projects[0].Repos[0].Wrapper != "" {
 		t.Fatalf("definitions %+v", defs.Projects[0])
 	}
 	raw, err := os.ReadFile(filepath.Join(f.root, workspacedef.File))

@@ -434,7 +434,7 @@ func readLimited(path, name string, invalid func(string) error) ([]byte, error) 
 	if err != nil {
 		return nil, ioError("read "+name, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	if opened, err := file.Stat(); err != nil || !os.SameFile(info, opened) {
 		return nil, invalid("not a regular file")
 	}

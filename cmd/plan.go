@@ -31,7 +31,7 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		Short: "Add, update, show, list and trace the plans of a Project",
 		Long: "A plan describes one larger piece of work for agents and humans: PLAN-<n>, a goal, scope, owner, status and ordered steps. It grants no mandate, starts nothing and is never derived from Task, Assignment or agent status.\n" +
 			"Each plan is one JSON file holding every revision, in <project wrapper>/data/plans/.\n" +
-			"Without --project the single Project whose wrapper contains the current directory is used.\n" +
+			"Without --project the single Project whose wrapper contains the current directory or selected workspace root is used.\n" +
 			"add and update read one complete snapshot as JSON from stdin. To change a plan, read it with show --format json, edit .plan and write it back with update --revision <the revision read>.",
 		Example: "  ply plan add --project ply --actor ply-epic --reason 'Brukeren valgte oppdraget' < plan.json\n" +
 			"  ply plan list --project ply\n" +
@@ -53,9 +53,10 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		return planInvalidArguments("invalid flag")
 	})
 
-	var project, format, actor, reason, status string
+	var root, project, format, actor, reason, status string
 	var revision int
 	var details bool
+	command.PersistentFlags().StringVar(&root, "workspace", "", "physical workspace root (default: the workspace containing the current directory)")
 	addFlags := func(c *cobra.Command) *cobra.Command {
 		c.Flags().StringVar(&project, "project", "", "Project ID (default: the Project whose wrapper contains the current directory)")
 		c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
@@ -82,9 +83,16 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 		}
 	}
 	var resolved workspace.ProjectRecord
+	var rooted workspace.Dependencies
 	open := func() (plan.Store, error) {
 		var err error
-		if resolved, err = resolvePlanProject(d, project); err != nil {
+		rooted = d
+		if root != "" {
+			if rooted, err = workspace.AtRoot(d, root); err != nil {
+				return plan.Store{}, planInvalidArguments("workspace must be its physical root")
+			}
+		}
+		if resolved, err = resolvePlanProject(rooted, project); err != nil {
 			return plan.Store{}, err
 		}
 		directory, err := resolved.Data().Plans()
@@ -224,7 +232,7 @@ func newPlanCommand(d workspace.Dependencies) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			trace, err := plantrace.Read(d, resolved.ID, s, args[0])
+			trace, err := plantrace.Read(rooted, resolved.ID, s, args[0])
 			if err != nil {
 				return err
 			}

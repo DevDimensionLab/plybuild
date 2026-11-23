@@ -60,7 +60,7 @@ func (s Store) Attach(id, source string) ([]Attachment, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	files := s.filesDir()
 	if err := ensureDirectory(files, "files directory"); err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (s Store) Attach(id, source string) ([]Attachment, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer os.Remove(temp)
+	defer func() { _ = os.Remove(temp) }()
 	unlock, err := s.lock()
 	if err != nil {
 		return nil, err

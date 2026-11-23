@@ -208,6 +208,20 @@ func TestPlanShortTextShowsEveryNeededHumanAction(t *testing.T) {
 	}
 }
 
+func TestPlanListAndShowFromOutsideWorkspace(t *testing.T) {
+	root := newAssignmentWorkspace(t)
+	if _, err := runPlan(t, root, planV1Snapshot, "add", "--project", "a", "--actor", "tester", "--reason", "fixture"); err != nil {
+		t.Fatal(err)
+	}
+	outside := t.TempDir()
+	for _, args := range [][]string{{"--workspace", root, "list"}, {"show", "PLAN-1", "--workspace", root}} {
+		out, err := runPlan(t, outside, "", append(args, "--project", "a")...)
+		if err != nil || !strings.Contains(out, "PLAN-1") || !strings.Contains(out, "Planverk i Ply") {
+			t.Errorf("plan %v: %q, %v", args, out, err)
+		}
+	}
+}
+
 func TestPlanReadsCreateNothing(t *testing.T) {
 	root := newAssignmentWorkspace(t)
 	for _, args := range [][]string{

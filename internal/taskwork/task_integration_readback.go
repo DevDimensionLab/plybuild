@@ -424,7 +424,7 @@ func integrationConflictNextStep(registry WorkItemRegistry, ctx integrationConte
 
 func nullableStruct(v any) canonicaljson.Value {
 	rv := reflect.ValueOf(v)
-	if !rv.IsValid() || (rv.Kind() == reflect.Ptr && rv.IsNil()) {
+	if !rv.IsValid() || (rv.Kind() == reflect.Pointer && rv.IsNil()) {
 		return nil
 	}
 	return structCanonical(v)
@@ -516,7 +516,7 @@ func canonicalReflectValue(v reflect.Value) canonicaljson.Value {
 		}
 		return canonicalReflectValue(v.Elem())
 	}
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		if v.IsNil() {
 			return nil
 		}

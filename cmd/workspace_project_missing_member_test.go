@@ -168,8 +168,7 @@ func TestProjectWithMissingMemberDirectoryStaysReadable(t *testing.T) {
 		t.Fatalf("project show text = %s %v", out, err)
 	}
 
-	out, err = runBacklog(t, d, "list", "--project", "ply", "--format", "json")
-	if err != nil {
+	if _, err := runBacklog(t, d, "list", "--project", "ply", "--format", "json"); err != nil {
 		t.Fatalf("backlog list: %v", err)
 	}
 

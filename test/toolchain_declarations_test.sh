@@ -23,8 +23,8 @@ for declaration in "$go_mod" "$dockerfile" "$release_workflow" "$lint_workflow" 
 		fail "declaration is missing, non-regular, or symlinked: $declaration"
 done
 
-[[ $(awk '$1 == "go" { print $2 }' "$go_mod") == 1.18 ]] ||
-	fail 'go.mod does not preserve the Go 1.18 language-compatibility floor'
+[[ $(awk '$1 == "go" { print $2 }' "$go_mod") == 1.26 ]] ||
+	fail 'go.mod does not declare the Go 1.26 language-compatibility floor'
 [[ $(awk '$1 == "go" { count++ } END { print count + 0 }' "$go_mod") -eq 1 ]] ||
 	fail 'go.mod must contain exactly one go directive'
 [[ $(awk '$1 == "toolchain" { print $2 }' "$go_mod") == go1.26.10 ]] ||

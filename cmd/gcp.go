@@ -317,12 +317,16 @@ func gcpBillingLoad(env gcpBillingEnv) (*gcpConfig, *gcpbilling.Snapshot, *gcpBi
 
 // gcpBillingSyncSnapshot reads Google and replaces the snapshot under the
 // sync lock; a read failure is reported in the result.
-func gcpBillingSyncSnapshot(ctx context.Context, env gcpBillingEnv, config gcpConfig, path string, report *gcpBillingSync) (*gcpBillingError, error) {
+func gcpBillingSyncSnapshot(ctx context.Context, env gcpBillingEnv, config gcpConfig, path string, report *gcpBillingSync) (failure *gcpBillingError, err error) {
 	lock, err := gcpbilling.Lock(path)
 	if err != nil {
 		return nil, fmt.Errorf("lock the GCP billing snapshot: %v", err)
 	}
-	defer lock.Release()
+	defer func() {
+		if releaseErr := lock.Release(); releaseErr != nil && failure == nil && err == nil {
+			err = releaseErr
+		}
+	}()
 	snapshot, err := env.read(ctx, config.source())
 	if err != nil {
 		code := gcpbilling.ErrFailed

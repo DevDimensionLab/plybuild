@@ -74,6 +74,14 @@ preflight)
 	mkdir -p "$GOLANGCI_LINT_CACHE/read-only/child"
 	printf '%s\n' disposable >"$GOLANGCI_LINT_CACHE/read-only/child/sentinel"
 	chmod 0555 "$GOLANGCI_LINT_CACHE/read-only" "$GOLANGCI_LINT_CACHE/read-only/child"
+	for script in "$SCRIPTS_DIR"/test-mutate-*; do
+		printf 'preflight meta <%s>\n' "$script" >>"$QUALITY_TEST_CALLS"
+		case "${FAKE_QUALITY_MODE:-good}:${script##*/}" in
+		missing-meta-receipt:test-mutate-http) continue ;;
+		duplicate-meta-receipt:test-mutate-http) /bin/bash "$script" ;;
+		esac
+		/bin/bash "$script"
+	done
 	;;
 acceptance)
 	printf '%s\n' \
@@ -209,7 +217,7 @@ run_quality() {
 	local mode=${2:-good}
 	local makefile=${3:-$makefile_under_test}
 	local output="$tmp_dir/output-$label"
-	shift 3 || true
+	shift 3
 	: >"$calls_file"
 	FAKE_QUALITY_MODE="$mode" QUALITY_TEST_CALLS="$calls_file" \
 	QUALITY_TEST_PYTHON="$python_bin" \
@@ -229,8 +237,7 @@ expect_failure() {
 	local label=$1
 	local mode=${2:-good}
 	local makefile=${3:-$makefile_under_test}
-	shift 3 || true
-	if run_quality "$label" "$mode" "$makefile" "$@" \
+	if run_quality "$label" "$mode" "$makefile" "${@:4}" \
 		>"$tmp_dir/$label.stdout" 2>"$tmp_dir/$label.stderr"; then
 		fail "accepted $label"
 	fi
@@ -251,8 +258,8 @@ done
 expected_calls="$tmp_dir/expected-calls"
 {
 	printf 'make <--no-print-directory> <-C> <%s> <MAKEOVERRIDES=> <preflight>\n' "$repo_root"
-	for name in "${mutation_names[@]}"; do
-		printf 'bash <%s/test-mutate-%s>\n' "$fake_scripts" "$name"
+	for script in "$fake_scripts"/test-mutate-*; do
+		printf 'preflight meta <%s>\n' "$script"
 	done
 	for name in "${mutation_names[@]}"; do
 		printf 'bash <%s/mutate-%s>\n' "$fake_scripts" "$name"
@@ -278,6 +285,15 @@ mv "$fake_scripts/mutate-http" "$tmp_dir/mutate-http"
 expect_failure missing-mutation
 mv "$tmp_dir/mutate-http" "$fake_scripts/mutate-http"
 
+for mode in missing-meta-receipt duplicate-meta-receipt; do
+	expect_failure "$mode" "$mode"
+	grep -Fqx 'quality: mutation meta-stage has no exact non-empty receipt: http' \
+		"$tmp_dir/$mode.stderr" || {
+		cat "$tmp_dir/$mode.stderr" >&2
+		fail "quality did not reject $mode in preflight evidence"
+	}
+done
+
 expect_failure skipped-snapshot skip-snapshot
 expect_failure skipped-docker skip-docker
 expect_failure audit-exit-1 audit-exit-1
@@ -291,4 +307,4 @@ sed "s/--only 'Q0\.\*,Q1\.\*,Q2\.\*'/--only 'Q0.*,Q1.*'/" \
 	"$makefile_under_test" >"$wrong_scope"
 expect_failure wrong-scope good "$wrong_scope"
 
-printf 'make quality contract: PASS (complete ordered population and 12 fail-closed controls checked)\n'
+printf 'make quality contract: PASS (complete ordered population and 14 fail-closed controls checked)\n'

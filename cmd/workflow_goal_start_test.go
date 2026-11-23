@@ -269,7 +269,8 @@ func TestGoalStartStartsEitherProviderOnceThroughSharedOwner(t *testing.T) {
 			}
 			raw, _ := os.ReadFile(log)
 			lines := strings.Split(strings.TrimSpace(string(raw)), "\n")
-			if len(lines) < 5 || !strings.HasPrefix(lines[0], "tab create") || lines[1] != "pane process-info --pane w1:p2" || !strings.Contains(lines[2], "--kind "+provider+" --pane w1:p2") || strings.Contains(lines[2], " -- ") || lines[3] != "agent get w1:p2" || !strings.HasPrefix(lines[4], "agent prompt w1:p2 ") || strings.Count(string(raw), "agent prompt") != 1 {
+			nativeFlags := map[string]string{"claude": "", "codex": " -- --no-daemon"}[provider]
+			if len(lines) < 5 || !strings.HasPrefix(lines[0], "tab create") || lines[1] != "pane process-info --pane w1:p2" || !strings.HasSuffix(lines[2], "--kind "+provider+" --pane w1:p2 --timeout 30000"+nativeFlags) || lines[3] != "agent get w1:p2" || !strings.HasPrefix(lines[4], "agent prompt w1:p2 ") || strings.Count(string(raw), "agent prompt") != 1 {
 				t.Fatalf("argv: %q", lines)
 			}
 			if _, err = startGoal(context.Background(), plan, receipt, herdr, func() error { return nil }); err != nil {
@@ -405,21 +406,17 @@ func TestGoalStartPromptAsksAPlanLinkedTaskToRecordItsSteps(t *testing.T) {
 // Goal documents are preserved Ply data; the prompt names the ply command
 // that reads each one, and a Goal without documents gets no instruction.
 func TestGoalStartPromptNamesTheReaderOfEachGoalDocument(t *testing.T) {
-	goal := json.RawMessage(`{"required_inputs":[{"id":"task-basis/goal"},{"id":"task-goal-doc/goal/spec"},{"id":"task-goal-doc/goal/jvm-plan"},{"id":"task-goal-doc/problem/problem"}]}`)
+	goal := json.RawMessage(`{"problem":{"revision":3},"required_inputs":[{"id":"task-basis/goal"},{"id":"task-goal-doc/goal/spec"},{"id":"task-goal-doc/goal/jvm-plan"},{"id":"task-goal-doc/problem/problem"}]}`)
 	got, err := goalDocumentInstruction("task-1", "spec-v1", 2, goal)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document spec", "ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document jvm-plan"} {
-		if !strings.Contains(got, want) {
-			t.Errorf("instruction lacks %q: %q", want, got)
-		}
-	}
-	if !strings.HasSuffix(got, "\n  ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document jvm-plan") {
-		t.Errorf("each command must stand alone on its line: %q", got)
-	}
-	if strings.Contains(got, "--document problem") {
-		t.Errorf("problem document is not a Goal document: %q", got)
+	want := "\n\nRead each Goal document with ply:" +
+		"\n  ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document spec" +
+		"\n  ply workspace task spec show task-1 --spec spec-v1 --revision 2 --document jvm-plan" +
+		"\n  ply workspace task problem show task-1 --revision 3 --document problem"
+	if got != want {
+		t.Errorf("document instructions = %q, want %q", got, want)
 	}
 	if got, err = goalDocumentInstruction("task-1", "spec-v1", 2, json.RawMessage(`{"required_inputs":[{"id":"task-basis/goal"}]}`)); err != nil || got != "" {
 		t.Fatalf("%q %v", got, err)

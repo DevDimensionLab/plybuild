@@ -48,7 +48,7 @@ projects_before=$(shasum -a 256 "$workspace/ply-workspace.json")
 	run workspace task create task --title Task --description 'Task description' --epic epic --project ply --repo ply
 	run workspace task worktree create task --branch task --path "$task_worktree" --expected-parent-oid "$oid"
 	run workspace epic show epic --format json
-	run workspace task show task --format json
+	run workspace task show task --format json >"$temp_root/task.json"
 	run workspace epic list
 	run workspace task list --epic epic
 ) >"$temp_root/journey.stdout" 2>"$temp_root/journey.stderr" || fail 'happy path failed'
@@ -57,8 +57,20 @@ grep -F 'Adopted Epic epic: Epic' "$temp_root/journey.stdout" >/dev/null || fail
 grep -F 'Created Task task: Task' "$temp_root/journey.stdout" >/dev/null || fail 'Task output missing'
 grep -F 'Created Task worktree for task.' "$temp_root/journey.stdout" >/dev/null || fail 'worktree output missing'
 grep -F '"kind":"WorkspaceEpicReadback@2"' "$temp_root/journey.stdout" >/dev/null || fail 'Epic JSON missing'
-grep -F '"kind":"WorkspaceTaskIntegrationReadback@2"' "$temp_root/journey.stdout" >/dev/null || fail 'Task integration JSON missing'
-grep -F '"kind":"record_task_result"' "$temp_root/journey.stdout" >/dev/null || fail 'Task result next action missing'
+python3 - "$temp_root/task.json" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+task = json.loads(Path(sys.argv[1]).read_text())
+assert task["kind"] == "WorkspaceTaskReadback@3", task
+integration = task["integration"]
+assert integration["kind"] == "WorkspaceTaskIntegrationReadback@6", integration
+assert integration["classification"] == "already_integrated", integration["classification"]
+assert integration["next_action"]["kind"] == "none", integration["next_action"]
+assert integration["git_changed"] is False
+assert integration["integration_result"] is None
+PY
 
 [[ $(git -C "$epic" rev-parse HEAD) == "$oid" ]] || fail 'Epic HEAD changed'
 [[ $(git -C "$epic" rev-parse 'HEAD^{tree}') == "$tree" ]] || fail 'Epic tree changed'
@@ -73,7 +85,6 @@ grep -F 'format_version: 11' "$store" >/dev/null || fail 'work-item format versi
 grep -F 'task_results: []' "$store" >/dev/null || fail 'Task result collection missing'
 grep -F 'integration_results: []' "$store" >/dev/null || fail 'integration result collection missing'
 grep -F 'worktree_state: worktree_ready' "$store" >/dev/null || fail 'ready state missing'
-grep -F 'classification: exact_effect' "$store" >/dev/null || fail 'exact-effect observation missing'
 touch -t 200001010000 "$store"
 store_before=$(shasum -a 256 "$store")
 if [[ $(uname -s) == Darwin ]]; then

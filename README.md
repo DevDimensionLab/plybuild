@@ -156,7 +156,7 @@ ply workspace epic adopt ply-agentic-workflow-support \
   --title "Ply agentic workflow support" \
   --project ply \
   --repo ply \
-  --worktree /Users/perottochristensen/github/ply/ply_agentic_workflow_support \
+  --worktree "<workspace>/ply/ply_agentic_workflow_support" \
   --ref refs/heads/ply_agentic_workflow_support \
   --expected-oid 54f3631cbea789f25a4134945c7ca16d343139df
 ```
@@ -188,7 +188,7 @@ Create the Task worktree from the Epic branch's exact expected commit:
 ```shell script
 ply workspace task worktree create workspace-work-item-bootstrap \
   --branch ply_workspace_work_item_bootstrap \
-  --path /Users/perottochristensen/github/ply/ply_workspace_work_item_bootstrap \
+  --path "<workspace>/ply/ply_workspace_work_item_bootstrap" \
   --expected-parent-oid 54f3631cbea789f25a4134945c7ca16d343139df
 ```
 
@@ -1076,10 +1076,9 @@ Older checkouts may still contain `./ply` or `dist/` from earlier builds;
 those are not removed by `make clean`.
 
 `make compat-cli`, and therefore also `make compatibility` and
-`make preflight`, and the `test-workflow-handoff`, `test-workspace-work-items`
+`make preflight`, and the `test-workspace-work-items`
 and `test-workspace-task-integration` targets require `PLY_ROUNDTRIP_ROOT=<dir>`
-for the roundtrip scripts in `test/` (Task run, queue and removed source,
-workflow handoff, work items, Task integration and Goal delivery), and so do
+for the roundtrip scripts in `test/` (Task queue, work items and Goal delivery), and so do
 `make test-quality` and `make test`, whose `test/makefile_quality_test.sh` keeps
 its fake tools, caches and quality output (which `make quality` requires outside
 the repository) in one `ply-makefile-quality.XXXXXX` directory: an existing,
@@ -1160,9 +1159,9 @@ ID, route or state root to resend. The skill provides no crash watcher.
 During a separately authorized installation activity, run `make install-agent-notify`,
 then run the installed skill's `scripts/bootstrap.py`. Bootstrap accepts the existing
 webhook from `PLY_SLACK_WEBHOOK_URL` or hidden terminal input and stores it privately
-at `/Users/perottochristensen/.config/ply/notifications/ply-log/webhook`. It creates
+at `~/.config/ply/notifications/ply-log/webhook`. It creates
 the adjacent non-secret `route.json` for `ply-log` and uses the fixed private state
-root `/Users/perottochristensen/.local/state/ply/agent-notifications/ply-log`.
+root `~/.local/state/ply/agent-notifications/ply-log`.
 Normal helper invocations prefer the environment, otherwise read only that named
 0600 file in its 0700 directory, and pass the credential only to Ply send/check.
 Invalid environment values never fall back; conflicts and unsafe files are preserved.

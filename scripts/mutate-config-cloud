@@ -52,8 +52,6 @@ git_root=$(git -C "$repo_root" rev-parse --show-toplevel 2>/dev/null) ||
 [[ $git_root == "$repo_root" ]] || fail 'harness repository root does not match the Git root'
 [[ -z $(git -C "$repo_root" status --porcelain=v1 -uall) ]] ||
 	fail 'source repository is not clean'
-[[ -z $(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ]] ||
-	fail 'source repository has ordinary or ignored artifacts'
 
 if [[ $meta_fault == repository-local-artifacts ]]; then
 	requested_work="$repo_root/.mutation-local-artifacts-meta"

@@ -89,6 +89,9 @@ func discoverRepos(d Dependencies, root string) ([]workspacedef.Repo, []Discover
 	}
 	groups := map[string][]candidate{}
 	for _, entry := range entries {
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
 		path := filepath.Join(root, entry.Name())
 		omit := func(reason string) { omissions = append(omissions, DiscoveryOmission{path, reason}) }
 		info, err := d.Files.Lstat(path)
@@ -100,11 +103,7 @@ func discoverRepos(d Dependencies, root string) ([]workspacedef.Repo, []Discover
 		case info.Mode()&fs.ModeSymlink != 0:
 			omit("symlink; target not inspected")
 			continue
-		case strings.HasPrefix(entry.Name(), "."):
-			omit("hidden directory or file")
-			continue
 		case !info.IsDir():
-			omit("not a directory")
 			continue
 		}
 		worktree := path

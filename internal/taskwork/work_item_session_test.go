@@ -108,7 +108,7 @@ func TestWorkItemSessionPublicationRecovery(t *testing.T) {
 				if err != nil {
 					return err
 				}
-				want := "Epic"
+				var want string
 				if fault == "directory-sync" {
 					want = "New"
 				} else {

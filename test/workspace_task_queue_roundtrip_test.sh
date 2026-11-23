@@ -7,8 +7,6 @@ repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 . "$repo_root/test/roundtrip_root.sh"
 roundtrip_root 'workspace task queue roundtrip' ply-task-queue
 go_bin=${GO:-go}
-cp "$repo_root/test/fixtures/workspace_task_queue/lifecycle_helper.go.txt" "$run_root/lifecycle_helper.go"
 (cd "$repo_root" && "$go_bin" build -o "$run_root/ply" ./cmd/ply)
-"$go_bin" build -o "$run_root/lifecycle-helper" "$run_root/lifecycle_helper.go"
 python3 "$repo_root/test/fixtures/workspace_task_queue/journey.py" "$run_root"
 printf 'workspace task queue roundtrip: PASS\n'

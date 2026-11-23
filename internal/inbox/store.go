@@ -508,7 +508,7 @@ func readStrict(path string) ([]byte, error) {
 	if err != nil {
 		return nil, ioError("open store file", err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	info, err := file.Stat()
 	if err != nil {
 		return nil, ioError("stat store file", err)

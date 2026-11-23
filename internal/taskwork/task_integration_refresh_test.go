@@ -447,7 +447,7 @@ func TestPendingPlainAuthorityKeepsItsOwnContract(t *testing.T) {
 			if err != nil {
 				return err
 			}
-			plan, digest, _, err := buildIntegrationPlan(f.dependencies, f.root, projects, r, plain)
+			plan, _, _, err := buildIntegrationPlan(f.dependencies, f.root, projects, r, plain)
 			if err != nil {
 				return err
 			}
@@ -458,7 +458,7 @@ func TestPendingPlainAuthorityKeepsItsOwnContract(t *testing.T) {
 					plan.ObservedInventory[i].OID = f.a
 				}
 			}
-			digest = integrationPlanDigest(plan)
+			digest := integrationPlanDigest(plan)
 			a := IntegrationAuthority{ID: IntegrationAuthorityID("iauth_" + strings.Repeat("9", 32)), CreatedAtUTC: "2026-09-28T12:02:00Z", PlanSHA256: digest, Plan: plan, TaskID: "second", AllowedEffect: IntegrationAllowedEffect{Kind: "local_ff_only", ParentRef: plan.Epic.ParentRef, ExpectedParentOID: f.a, ResultOID: plan.Task.ResultOID, MaxOccurrences: 1}}
 			i := intentFromPlan(IntegrationIntentID("iint_"+strings.Repeat("9", 32)), a.ID, plan, digest)
 			i.IntentSHA256 = integrationIntentDigest(i)

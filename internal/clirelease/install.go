@@ -39,8 +39,15 @@ func syncDirectory(path string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	return f.Sync()
+	syncErr := f.Sync()
+	closeErr := f.Close()
+	if syncErr != nil {
+		if closeErr != nil {
+			return errors.Join(syncErr, closeErr)
+		}
+		return syncErr
+	}
+	return closeErr
 }
 
 func (i Installer) replace(path string, b []byte, mode fs.FileMode) error {

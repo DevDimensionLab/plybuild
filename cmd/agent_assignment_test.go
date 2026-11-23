@@ -5,6 +5,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -21,7 +22,7 @@ func TestAgentAssignmentBuildsPullPrompt(t *testing.T) {
 	called := false
 	command := newAgentAssignmentCommand(func(_ context.Context, in agentlaunch.Request) (agentlaunch.Result, error) {
 		called = true
-		if in.InitialPrompt != "/ply-assignment ASSIGNMENT-7 --project ply --workspace "+root || in.Agent != "claude" || in.Executable != exe || in.Workspace != "w7" || in.Label != "ASSIGNMENT-7" {
+		if in.InitialPrompt != "/ply-assignment ASSIGNMENT-7 --project ply --workspace "+root || in.Agent != "claude" || in.Executable != exe || in.Workspace != "w7" || in.Label != "ASSIGNMENT-7" || in.Args != nil {
 			t.Fatalf("%+v", in)
 		}
 		return agentlaunch.Result{State: "agent_observed", AgentStatus: "working"}, nil
@@ -78,7 +79,7 @@ func TestAgentAssignmentStartsCodexWithSkillMention(t *testing.T) {
 	called := false
 	command := newAgentAssignmentCommand(func(_ context.Context, in agentlaunch.Request) (agentlaunch.Result, error) {
 		called = true
-		if in.InitialPrompt != "$ply-assignment ASSIGNMENT-7 --project ply --workspace "+root || in.Agent != "codex" || in.Executable != codex {
+		if in.InitialPrompt != "$ply-assignment ASSIGNMENT-7 --project ply --workspace "+root || in.Agent != "codex" || in.Executable != codex || !slices.Equal(in.Args, []string{"--no-daemon"}) {
 			t.Fatalf("%+v", in)
 		}
 		return agentlaunch.Result{State: "agent_observed", Agent: "codex"}, nil

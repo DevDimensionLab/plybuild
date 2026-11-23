@@ -15,7 +15,8 @@ fail() {
 
 mkdir -p "$fake_repo/scripts" "$fake_repo/test/fixtures" "$temp_root/make-bin" "$temp_root/awk-bin"
 cp "$repo_root/Makefile" "$repo_root/go.mod" "$repo_root/.gitignore" "$repo_root/.golangci.yml" "$fake_repo/"
-cp "$repo_root/scripts/compat_root.sh" "$repo_root/scripts/search-replace.sh" "$repo_root/scripts/test-search-replace.sh" "$fake_repo/scripts/"
+cp "$repo_root/scripts/compat_root.sh" "$repo_root/scripts/with-go" \
+	"$repo_root/scripts/search-replace.sh" "$repo_root/scripts/test-search-replace.sh" "$fake_repo/scripts/"
 cp "$repo_root/test/fixtures/recording-go" "$fake_repo/test/fixtures/"
 printf 'package fixture\n' >"$fake_repo/fixture.go"
 cat >"$temp_root/make-bin/make" <<FAKE
@@ -38,8 +39,7 @@ compat_links='.build .build/compatibility'
 for name in install lint preflight; do
 	cp "$repo_root/test/makefile_${name}_test.sh" "$fake_repo/test/"
 	prefix=ply-makefile-$name test_script=test/makefile_${name}_test.sh bin=make-bin
-	# Known baseline failure: the preflight test still expects 18 calls.
-	pass_rc=0; [[ $name != preflight ]] || pass_rc=1
+	pass_rc=0
 	check_compat_root
 done
 prefix=ply-search-replace test_script=scripts/test-search-replace.sh bin=awk-bin pass_rc=0

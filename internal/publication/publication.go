@@ -1,6 +1,9 @@
 // Package publication stores runs that other applications publish through
 // Ply: <root>/<repo-id|_project>/<category>/[<agent>/]<run>/ holding the
-// producer's files unchanged and publication.json written by Ply. A run is
+// producer's files unchanged and publication.json written by Ply. A run of a
+// module of a repo lives under <repo-id>/_modules/<escaped module path>/ with
+// the same layout. Readers of the default paths skip directories that start
+// with "_", so module runs are listed only on request. A run is
 // copied to a dot-named temporary directory and renamed when complete, so
 // readers never see half a run; a published run is never changed. A
 // withdrawal writes withdrawn.json in the path directory and hides the runs up
@@ -19,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -34,6 +38,12 @@ import (
 
 // ProjectSegment is the directory of runs for the whole Project.
 const ProjectSegment = "_project"
+
+// ModulesSegment is the directory of a repo that holds its module paths.
+const ModulesSegment = "_modules"
+
+// RootModule is the module of a repo's own runs.
+const RootModule = "."
 
 // Fixed JSON contract names.
 const (
@@ -68,6 +78,7 @@ type Publication struct {
 	SchemaVersion int    `json:"schema_version"`
 	Project       string `json:"project"`
 	Repo          string `json:"repo,omitempty"`
+	Module        string `json:"module,omitempty"`
 	Category      string `json:"category"`
 	Agent         string `json:"agent,omitempty"`
 	Plan          string `json:"plan,omitempty"`
@@ -87,6 +98,7 @@ type Withdrawal struct {
 	SchemaVersion int    `json:"schema_version"`
 	Project       string `json:"project"`
 	Repo          string `json:"repo,omitempty"`
+	Module        string `json:"module,omitempty"`
 	Category      string `json:"category"`
 	Agent         string `json:"agent,omitempty"`
 	Through       string `json:"through"`
@@ -94,22 +106,38 @@ type Withdrawal struct {
 	Actor         string `json:"actor,omitempty"`
 }
 
-// View is one stored run with the absolute path of its directory.
+// View is one stored run with its module (RootModule for the repo's own) and
+// the absolute path of its directory.
 type View struct {
 	Publication
-	Path string `json:"path"`
+	Module string `json:"module"`
+	Path   string `json:"path"`
+}
+
+func newView(p Publication, path string) View {
+	return View{Publication: p, Module: DisplayModule(p.Module), Path: path}
+}
+
+// DisplayModule is the module as readbacks show it: RootModule for none.
+func DisplayModule(module string) string {
+	if module == "" {
+		return RootModule
+	}
+	return module
 }
 
 // Request is one publish. Repo and Plan are checked against the Project by
 // the caller; the store checks their format only.
 type Request struct {
-	Project, Repo, Category, Agent, Plan, Dir, Entry, Title, Source, Actor string
+	Project, Repo, Module, Category, Agent, Plan, Dir, Entry, Title, Source, Actor string
 }
 
-// Filter selects runs for List; empty fields match everything.
+// Filter selects runs for List; empty fields match everything. Without
+// Module or Modules only the runs of repos and the Project are listed; Module
+// selects one module of Repo, and Modules adds every module.
 type Filter struct {
-	Repo, Category, Agent, Plan string
-	All                         bool
+	Repo, Module, Category, Agent, Plan string
+	Modules, All                        bool
 }
 
 // InvalidRun is a run directory whose publication.json cannot be read; Run
@@ -144,6 +172,7 @@ const (
 	maxFiles     = 1000
 	keepWithout  = 5
 	maxTitle     = 200
+	maxModule    = 255
 )
 
 // invalidWithdrawal is the detail of a withdrawn.json that cannot be parsed.
@@ -179,14 +208,61 @@ func checkName(kind, value string) error {
 	return nil
 }
 
+// CheckModule validates the form of a module path: relative, slash-separated
+// and clean, without segments that start with a dot, and at most 255 bytes
+// when escaped. RootModule is valid. Whether the module exists is not checked.
+func CheckModule(module string) error {
+	if module == RootModule {
+		return nil
+	}
+	if module == "" || !utf8.ValidString(module) || strings.ContainsRune(module, '\\') || strings.IndexFunc(module, unicode.IsControl) >= 0 ||
+		path.Clean(module) != module || strings.HasPrefix(module, "/") {
+		return invalid("--module must be a clean relative path with /")
+	}
+	for _, segment := range strings.Split(module, "/") {
+		if strings.HasPrefix(segment, ".") {
+			return invalid("--module must not have a segment that starts with a dot")
+		}
+	}
+	if len(url.PathEscape(module)) > maxModule {
+		return invalid(fmt.Sprintf("--module must be at most %d bytes when escaped", maxModule))
+	}
+	return nil
+}
+
+// checkModuleOf checks a module selection; empty means none.
+func checkModuleOf(repo, module string) error {
+	if module == "" {
+		return nil
+	}
+	if repo == "" {
+		return invalid("--module requires --repo")
+	}
+	return CheckModule(module)
+}
+
+// storedModule is the module as stored: empty for the repo's own runs.
+func storedModule(module string) string {
+	if module == RootModule {
+		return ""
+	}
+	return module
+}
+
 // location validates the identity parts of a path and returns it relative to the root.
-func location(repo, category, agent string) (string, error) {
+func location(repo, module, category, agent string) (string, error) {
 	segment := ProjectSegment
 	if repo != "" {
 		if !repoPattern.MatchString(repo) {
 			return "", invalid("--repo is not a repo ID")
 		}
 		segment = repo
+	}
+	if err := checkModuleOf(repo, module); err != nil {
+		return "", err
+	}
+	if module != "" && module != RootModule {
+		segment = filepath.Join(segment, ModulesSegment, url.PathEscape(module))
 	}
 	if err := checkName("--category", category); err != nil {
 		return "", err
@@ -254,7 +330,7 @@ func collect(dir string) ([]sourceFile, error) {
 // and removes runs without plan beyond the newest five of the same path. A
 // failure of that removal is returned with the stored view.
 func (s Store) Publish(r Request) (View, error) {
-	relative, err := location(r.Repo, r.Category, r.Agent)
+	relative, err := location(r.Repo, r.Module, r.Category, r.Agent)
 	if err != nil {
 		return View{}, err
 	}
@@ -319,7 +395,7 @@ func (s Store) store(r Request, relative string, files []sourceFile) (View, erro
 	}
 	run := runName(at, hex.EncodeToString(random))
 	temp := filepath.Join(directory, "."+run+tempSuffix)
-	p := Publication{Kind: Kind, SchemaVersion: SchemaVersion, Project: r.Project, Repo: r.Repo, Category: r.Category, Agent: r.Agent,
+	p := Publication{Kind: Kind, SchemaVersion: SchemaVersion, Project: r.Project, Repo: r.Repo, Module: storedModule(r.Module), Category: r.Category, Agent: r.Agent,
 		Plan: r.Plan, Run: run, PublishedAt: at.Format(time.RFC3339), Actor: r.Actor, Title: r.Title, Entry: r.Entry, Source: r.Source}
 	if p.Files, err = copyRun(temp, files); err == nil {
 		err = writeMetadata(filepath.Join(temp, metadataName), p)
@@ -328,10 +404,10 @@ func (s Store) store(r Request, relative string, files []sourceFile) (View, erro
 		err = os.Rename(temp, filepath.Join(directory, run))
 	}
 	if err != nil {
-		os.RemoveAll(temp)
+		_ = os.RemoveAll(temp)
 		return View{}, err
 	}
-	v := View{Publication: p, Path: filepath.Join(directory, run)}
+	v := newView(p, filepath.Join(directory, run))
 	if err := s.prune(directory); err != nil {
 		return v, &Error{Class: ClassIOError, Detail: fmt.Sprintf("run %s was stored; removing older runs failed: %s", run, err)}
 	}
@@ -362,7 +438,7 @@ func copyFile(source, target string) (int64, string, error) {
 	if err != nil {
 		return 0, "", ioError("read --dir", err)
 	}
-	defer in.Close()
+	defer func() { _ = in.Close() }()
 	out, err := os.OpenFile(target, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
 	if err != nil {
 		return 0, "", ioError("write run", err)
@@ -398,8 +474,8 @@ func writeJSON(target, name string, value any) error {
 
 // Withdraw hides the runs of the path up to its newest run. Withdrawing a path
 // whose newest run is already withdrawn returns the stored withdrawal unchanged.
-func (s Store) Withdraw(project, repo, category, agent, actor string) (Withdrawal, error) {
-	relative, err := location(repo, category, agent)
+func (s Store) Withdraw(project, repo, module, category, agent, actor string) (Withdrawal, error) {
+	relative, err := location(repo, module, category, agent)
 	if err != nil {
 		return Withdrawal{}, err
 	}
@@ -414,14 +490,14 @@ func (s Store) Withdraw(project, repo, category, agent, actor string) (Withdrawa
 	if err != nil {
 		return Withdrawal{}, ioError("lock publications", err)
 	}
-	w, err := s.withdraw(project, repo, category, agent, actor, relative)
+	w, err := s.withdraw(project, repo, storedModule(module), category, agent, actor, relative)
 	if releaseErr := lock.Release(); releaseErr != nil && err == nil {
 		err = &Error{Class: ClassIOError, Detail: "the withdrawal was stored; releasing the lock failed"}
 	}
 	return w, err
 }
 
-func (s Store) withdraw(project, repo, category, agent, actor, relative string) (Withdrawal, error) {
+func (s Store) withdraw(project, repo, module, category, agent, actor, relative string) (Withdrawal, error) {
 	directory := filepath.Join(s.root, relative)
 	runs, err := runNames(directory)
 	if err != nil {
@@ -440,15 +516,15 @@ func (s Store) withdraw(project, repo, category, agent, actor, relative string) 
 	if found && previous.Through == newest {
 		return previous, nil
 	}
-	w := Withdrawal{Kind: WithdrawalKind, SchemaVersion: SchemaVersion, Project: project, Repo: repo, Category: category, Agent: agent,
+	w := Withdrawal{Kind: WithdrawalKind, SchemaVersion: SchemaVersion, Project: project, Repo: repo, Module: module, Category: category, Agent: agent,
 		Through: newest, WithdrawnAt: s.now().UTC().Format(time.RFC3339), Actor: actor}
 	temp := filepath.Join(directory, "."+withdrawName+tempSuffix)
 	if err := writeJSON(temp, withdrawName, w); err != nil {
-		os.Remove(temp)
+		_ = os.Remove(temp)
 		return Withdrawal{}, err
 	}
 	if err := os.Rename(temp, filepath.Join(directory, withdrawName)); err != nil {
-		os.Remove(temp)
+		_ = os.Remove(temp)
 		return Withdrawal{}, ioError("write "+withdrawName, err)
 	}
 	return w, nil
@@ -502,7 +578,7 @@ func (s Store) prune(directory string) error {
 	}
 	kept := 0
 	for i := len(runs) - 1; i >= 0; i-- {
-		p, err := readMetadata(filepath.Join(directory, runs[i]))
+		p, err := decodeMetadata(filepath.Join(directory, runs[i]))
 		if err != nil || p.Plan != "" {
 			continue // an unreadable run is reported by list, never removed
 		}
@@ -533,7 +609,17 @@ func runNames(directory string) ([]string, error) {
 	return runs, nil // ReadDir sorts by name
 }
 
-func readMetadata(run string) (Publication, error) {
+// readMetadata reads the publication.json of run, whose path belongs to module
+// (empty for the repo's own runs).
+func readMetadata(run, module string) (Publication, error) {
+	p, err := decodeMetadata(run)
+	if err == nil && p.Module != module {
+		return Publication{}, &Error{Class: ClassIOError, Detail: metadataName + " names another module than its directory"}
+	}
+	return p, err
+}
+
+func decodeMetadata(run string) (Publication, error) {
 	contents, err := os.ReadFile(filepath.Join(run, metadataName))
 	if err != nil {
 		return Publication{}, ioError("read "+metadataName, err)
@@ -546,8 +632,8 @@ func readMetadata(run string) (Publication, error) {
 }
 
 // Show returns the run of the path; the newest one when run is empty.
-func (s Store) Show(repo, category, agent, run string) (View, error) {
-	relative, err := location(repo, category, agent)
+func (s Store) Show(repo, module, category, agent, run string) (View, error) {
+	relative, err := location(repo, module, category, agent)
 	if err != nil {
 		return View{}, err
 	}
@@ -567,45 +653,50 @@ func (s Store) Show(repo, category, agent, run string) (View, error) {
 	if _, err := os.Stat(filepath.Join(directory, run)); errors.Is(err, fs.ErrNotExist) {
 		return View{}, &Error{Class: ClassNotFound, Detail: path.Join(filepath.ToSlash(relative), run)}
 	}
-	p, err := readMetadata(filepath.Join(directory, run))
+	p, err := readMetadata(filepath.Join(directory, run), storedModule(module))
 	if err != nil {
 		return View{}, err
 	}
-	return View{Publication: p, Path: filepath.Join(directory, run)}, nil
+	return newView(p, filepath.Join(directory, run)), nil
 }
 
 // List returns the runs matching f, newest first; without f.All only the
 // newest matching run of each path.
 func (s Store) List(f Filter) (ListResult, error) {
 	result := ListResult{Items: []View{}, Invalid: []InvalidRun{}}
-	directories, err := s.paths(f)
+	if f.Module != "" && f.Modules {
+		return result, invalid("--module and --modules exclude each other")
+	}
+	if err := checkModuleOf(f.Repo, f.Module); err != nil {
+		return result, err
+	}
+	directories, err := s.paths(f, &result)
 	if err != nil {
 		return result, err
 	}
-	for _, directory := range directories {
+	for _, d := range directories {
+		directory := d.directory
 		runs, err := runNames(directory)
 		if err != nil {
 			return result, err
 		}
 		if w, found, err := readWithdrawal(directory); err != nil {
 			// An unreadable withdrawal hides nothing and is reported like an unreadable run.
-			relative, _ := filepath.Rel(s.root, filepath.Join(directory, withdrawName))
-			result.Invalid = append(result.Invalid, InvalidRun{Run: filepath.ToSlash(relative), Error: err.Error()})
+			result.Invalid = append(result.Invalid, s.invalidRun(filepath.Join(directory, withdrawName), err))
 		} else if found {
 			runs = after(runs, w.Through)
 		}
 		for i := len(runs) - 1; i >= 0; i-- {
 			run := filepath.Join(directory, runs[i])
-			p, err := readMetadata(run)
+			p, err := readMetadata(run, d.module)
 			if err != nil {
-				relative, _ := filepath.Rel(s.root, run)
-				result.Invalid = append(result.Invalid, InvalidRun{Run: filepath.ToSlash(relative), Error: err.Error()})
+				result.Invalid = append(result.Invalid, s.invalidRun(run, err))
 				continue
 			}
 			if f.Plan != "" && p.Plan != f.Plan {
 				continue
 			}
-			result.Items = append(result.Items, View{Publication: p, Path: run})
+			result.Items = append(result.Items, newView(p, run))
 			if !f.All {
 				break
 			}
@@ -615,9 +706,22 @@ func (s Store) List(f Filter) (ListResult, error) {
 	return result, nil
 }
 
-// paths returns the directories that can hold runs matching f.
-func (s Store) paths(f Filter) ([]string, error) {
-	var found []string
+func (s Store) invalidRun(target string, err error) InvalidRun {
+	relative, _ := filepath.Rel(s.root, target)
+	return InvalidRun{Run: filepath.ToSlash(relative), Error: err.Error()}
+}
+
+// runDirectory is a directory that can hold runs, with the stored module its
+// runs must name.
+type runDirectory struct {
+	directory, module string
+}
+
+// paths returns the directories that can hold runs matching f. A directory
+// under _modules that is not a canonically escaped module path is reported in
+// result.Invalid.
+func (s Store) paths(f Filter, result *ListResult) ([]runDirectory, error) {
+	var found []runDirectory
 	segments, err := subdirectories(s.root)
 	if err != nil {
 		return nil, err
@@ -626,26 +730,59 @@ func (s Store) paths(f Filter) ([]string, error) {
 		if f.Repo != "" && segment != f.Repo {
 			continue
 		}
-		categories, err := subdirectories(filepath.Join(s.root, segment))
+		base := filepath.Join(s.root, segment)
+		module := storedModule(f.Module)
+		if module == "" {
+			if found, err = s.categoryPaths(found, base, "", f); err != nil {
+				return nil, err
+			}
+		}
+		if !f.Modules && module == "" {
+			continue
+		}
+		names := []string{url.PathEscape(module)}
+		if f.Modules {
+			if names, err = subdirectories(filepath.Join(base, ModulesSegment)); err != nil {
+				return nil, err
+			}
+		}
+		for _, name := range names {
+			directory := filepath.Join(base, ModulesSegment, name)
+			decoded, err := url.PathUnescape(name)
+			if err != nil || decoded == RootModule || CheckModule(decoded) != nil || url.PathEscape(decoded) != name {
+				result.Invalid = append(result.Invalid, s.invalidRun(directory, &Error{Class: ClassIOError, Detail: "not an escaped module path"}))
+				continue
+			}
+			if found, err = s.categoryPaths(found, directory, decoded, f); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return found, nil
+}
+
+// categoryPaths adds the category and agent directories of base whose runs
+// belong to module. Directories that start with "_" are not categories.
+func (s Store) categoryPaths(found []runDirectory, base, module string, f Filter) ([]runDirectory, error) {
+	categories, err := subdirectories(base)
+	if err != nil {
+		return nil, err
+	}
+	for _, category := range categories {
+		if strings.HasPrefix(category, "_") || f.Category != "" && category != f.Category {
+			continue
+		}
+		directory := filepath.Join(base, category)
+		if f.Agent == "" {
+			found = append(found, runDirectory{directory, module})
+		}
+		agents, err := subdirectories(directory)
 		if err != nil {
 			return nil, err
 		}
-		for _, category := range categories {
-			if f.Category != "" && category != f.Category {
-				continue
-			}
-			directory := filepath.Join(s.root, segment, category)
-			if f.Agent == "" {
-				found = append(found, directory)
-			}
-			agents, err := subdirectories(directory)
-			if err != nil {
-				return nil, err
-			}
-			for _, agent := range agents {
-				if namePattern.MatchString(agent) && (f.Agent == "" || agent == f.Agent) {
-					found = append(found, filepath.Join(directory, agent))
-				}
+		for _, agent := range agents {
+			if namePattern.MatchString(agent) && (f.Agent == "" || agent == f.Agent) {
+				found = append(found, runDirectory{filepath.Join(directory, agent), module})
 			}
 		}
 	}

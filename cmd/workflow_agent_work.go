@@ -104,7 +104,7 @@ func readAgentWorkInput(path string, out any) error {
 	if e != nil {
 		return fmt.Errorf("agent_work_input_unavailable")
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	b, e := io.ReadAll(io.LimitReader(f, (16<<10)+1))
 	if e != nil || len(b) > 16<<10 || !json.Valid(b) {
 		return fmt.Errorf("agent_work_input_invalid")

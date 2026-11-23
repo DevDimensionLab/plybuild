@@ -52,7 +52,7 @@ func (s Store) AddFile(title, source string) (Item, error) {
 	if err != nil {
 		return Item{}, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	if err := os.MkdirAll(s.dir, 0o755); err != nil {
 		return Item{}, ioError("create backlog directory", err)
 	}

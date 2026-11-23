@@ -279,3 +279,15 @@ func TestCommandPassesSkillMentionAsOneLiteralArgument(t *testing.T) {
 		t.Fatalf("%q %v", output, err)
 	}
 }
+
+func TestCommandPassesArgsBeforeThePrompt(t *testing.T) {
+	root := t.TempDir()
+	executable := filepath.Join(root, "fake codex")
+	if err := os.WriteFile(executable, []byte("#!/bin/sh\nprintf '%s|' \"$#\" \"$@\"\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	output, err := exec.Command("/bin/sh", "-c", launchCommand(Request{Cwd: root, Executable: executable, Args: []string{"--no-daemon"}, InitialPrompt: "hello"})).Output()
+	if err != nil || string(output) != "2|--no-daemon|hello|" {
+		t.Fatalf("%q %v", output, err)
+	}
+}

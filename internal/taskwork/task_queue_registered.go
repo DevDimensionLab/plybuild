@@ -255,13 +255,6 @@ func unknownRegisteredPending(row RegisteredQueuePending, err error) (Registered
 	return row, err
 }
 
-func registeredQueueString(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
-}
-
 func registeredQueueEvidence(ids []string) []string {
 	out := []string{}
 	seen := map[string]bool{}

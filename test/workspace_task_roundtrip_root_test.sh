@@ -73,11 +73,9 @@ temps_owned() {
 		fail "temp outside owned run dir: $(cat "$log")"
 }
 
-for script in workspace_task_run_roundtrip_test.sh workspace_task_queue_roundtrip_test.sh \
-	workflow_handoff_roundtrip_test.sh workspace_work_items_roundtrip_test.sh \
-	workspace_task_integration_roundtrip_test.sh workspace_goal_delivery_roundtrip_test.sh \
-	workspace_task_queue_removed_source_test.sh makefile_quality_test.sh; do
-	case $script in workflow_handoff_*|*_integration_*|*_goal_delivery_*|makefile_*) fail_rc=1 ;; *) fail_rc=7 ;; esac
+for script in workspace_task_queue_roundtrip_test.sh workspace_work_items_roundtrip_test.sh \
+	workspace_goal_delivery_roundtrip_test.sh makefile_quality_test.sh; do
+	case $script in workspace_task_queue_roundtrip_test.sh|workspace_work_items_roundtrip_test.sh) fail_rc=7 ;; *) fail_rc=1 ;; esac
 	fresh_root
 	mkdir "$work/git-root" "$work/ply-ws" "$work/ply-ws/.ply" "$work/ply-ws/sub"
 	git init -q "$work/git-root"
@@ -103,7 +101,7 @@ for script in workspace_task_run_roundtrip_test.sh workspace_task_queue_roundtri
 		fail "HUP ended the run while child $child still ran"
 	kill -TERM "$child"; finished "$pid" 129; only_other_data; temps_owned
 
-	case $script in workspace_task_run_*|workspace_task_queue_roundtrip_test.sh) ;; *) printf 'ok %s\n' "$script"; continue ;; esac
+	case $script in workspace_task_queue_roundtrip_test.sh) ;; *) printf 'ok %s\n' "$script"; continue ;; esac
 	fresh_root; expect 0 pass "$root"
 	grep -q 'roundtrip: PASS' "$work/out" || fail "missing PASS line"
 	only_other_data; temps_owned

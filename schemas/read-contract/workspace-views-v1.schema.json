@@ -711,6 +711,88 @@
         }
       },
       "additionalProperties": true
+    },
+    {
+      "type": "object",
+      "required": [
+        "kind",
+        "schema_version",
+        "project",
+        "repos"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "WorkspaceModuleListReadback@1"
+        },
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "project": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repos": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "repo",
+              "commit",
+              "modules",
+              "reason"
+            ],
+            "properties": {
+              "repo": {
+                "type": "string",
+                "minLength": 1
+              },
+              "commit": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[0-9a-f]{40,64}$"
+              },
+              "modules": {
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "module",
+                    "parent"
+                  ],
+                  "properties": {
+                    "module": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "parent": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "minLength": 1
+                    }
+                  }
+                }
+              },
+              "reason": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "minLength": 1,
+                "description": "repo_unavailable, no_commit, commit_unknown or git_failed; readers tolerate unknown codes."
+              }
+            }
+          }
+        }
+      }
     }
   ],
   "$defs": {

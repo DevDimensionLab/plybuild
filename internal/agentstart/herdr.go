@@ -240,6 +240,9 @@ func startArgs(in StartInput, pane string) []string {
 			flags = append(flags, "--permission-mode", *in.Permission)
 		}
 	} else {
+		// Codex's shared daemon keeps the Herdr pane of the session that
+		// started it, so this session would report to the wrong pane.
+		flags = append(flags, "--no-daemon")
 		if in.Effort != nil {
 			flags = append(flags, "-c", "model_reasoning_effort="+quoted(*in.Effort))
 		}

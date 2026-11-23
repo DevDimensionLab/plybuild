@@ -103,10 +103,23 @@ def main():
     parser.add_argument("--allowlist", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--base-ref", required=True)
+    parser.add_argument("--write-allowlist", action="store_true")
     args = parser.parse_args()
 
     base = load_json(args.base, "base command tree")
     current = load_json(args.current, "current command tree")
+    if args.write_allowlist:
+        deltas = {canonical(delta): delta for delta in compare(base, current)}
+        allowlist = {
+            "allowed_deltas": [deltas[key] for key in sorted(deltas)],
+            "base_ref": args.base_ref,
+            "schema_version": 1,
+        }
+        Path(args.allowlist).write_text(
+            json.dumps(allowlist, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
+        return
+
     allowlist = load_json(args.allowlist, "CLI allowlist")
     if set(allowlist) != {"allowed_deltas", "base_ref", "schema_version"}:
         fail("CLI allowlist keys are invalid")

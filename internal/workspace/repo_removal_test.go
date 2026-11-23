@@ -190,8 +190,6 @@ func TestCheckRepoRemovalRejectsReferencesWithoutWriting(t *testing.T) {
 			if err != nil && !strings.Contains(err.Error(), tc.reason) {
 				t.Fatalf("error %v, want reason %q", err, tc.reason)
 			}
-			if name != "legacy registry lists repository" {
-			}
 		})
 	}
 }

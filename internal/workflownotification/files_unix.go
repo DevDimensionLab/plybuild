@@ -28,7 +28,7 @@ func openDirectory(path string) (*os.File, error) {
 			continue
 		}
 		next, e := unix.Openat(fd, part, unix.O_RDONLY|unix.O_DIRECTORY|unix.O_NOFOLLOW|unix.O_CLOEXEC, 0)
-		unix.Close(fd)
+		_ = unix.Close(fd)
 		if e != nil {
 			return nil, e
 		}
@@ -46,7 +46,7 @@ func readAt(dir *os.File, name string, limit int64, private bool) ([]byte, error
 		return nil, err
 	}
 	f := os.NewFile(uintptr(fd), name)
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	before, e := f.Stat()
 	if e != nil {
 		return nil, e
@@ -86,7 +86,7 @@ func readFile(path string, limit int64, private bool) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer parent.Close()
+	defer func() { _ = parent.Close() }()
 	b, e := readAt(parent, filepath.Base(path), limit, private)
 	if e != nil {
 		return nil, e
@@ -95,7 +95,7 @@ func readFile(path string, limit int64, private bool) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer current.Close()
+	defer func() { _ = current.Close() }()
 	a, _ := parent.Stat()
 	c, _ := current.Stat()
 	if a == nil || c == nil || !os.SameFile(a, c) {
@@ -110,7 +110,7 @@ func stateDirectory(path string, create bool) (*os.File, error) {
 		if err != nil {
 			return nil, fail(2, "invalid_state_parent", "State root requires an existing physical parent directory.")
 		}
-		defer parent.Close()
+		defer func() { _ = parent.Close() }()
 		if !create {
 			return nil, os.ErrNotExist
 		}
@@ -127,7 +127,7 @@ func stateDirectory(path string, create bool) (*os.File, error) {
 	}
 	i, e := d.Stat()
 	if e != nil || !privateInfo(i) {
-		d.Close()
+		_ = d.Close()
 		return nil, fail(2, "unsafe_state", "Notification state must be private and owned by the current user.")
 	}
 	return d, nil
@@ -143,11 +143,11 @@ func lockState(dir *os.File) (func(), error) {
 	f := os.NewFile(uintptr(fd), ".lock")
 	i, e := f.Stat()
 	if e != nil || !i.Mode().IsRegular() || !privateInfo(i) {
-		f.Close()
+		_ = f.Close()
 		return nil, invalid()
 	}
 	if e = unix.Flock(fd, unix.LOCK_EX|unix.LOCK_NB); e != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, fail(4, "busy", "A notification operation is already holding this state root.")
 	}
 	return func() { _ = unix.Flock(fd, unix.LOCK_UN); _ = f.Close() }, nil
@@ -160,15 +160,18 @@ func atomicState(dir *os.File, data []byte) error {
 		return e
 	}
 	f := os.NewFile(uintptr(fd), name)
-	defer f.Close()
-	defer unix.Unlinkat(int(dir.Fd()), name, 0)
-	if _, e = f.Write(data); e != nil {
-		return e
+	defer func() { _ = unix.Unlinkat(int(dir.Fd()), name, 0) }()
+	if _, e = f.Write(data); e == nil {
+		e = f.Sync()
 	}
-	if e = f.Sync(); e != nil {
-		return e
+	if closeErr := f.Close(); closeErr != nil {
+		if e == nil {
+			e = closeErr
+		} else {
+			e = errors.Join(e, closeErr)
+		}
 	}
-	if e = f.Close(); e != nil {
+	if e != nil {
 		return e
 	}
 	if e = unix.Renameat(int(dir.Fd()), name, int(dir.Fd()), "state.json"); e != nil {
@@ -196,14 +199,17 @@ func bindRoot(dir *os.File, name, sha string) error {
 		return e
 	}
 	f := os.NewFile(uintptr(fd), "binding")
-	defer f.Close()
-	if _, e = f.Write(data); e != nil {
-		return e
+	if _, e = f.Write(data); e == nil {
+		e = f.Sync()
 	}
-	if e = f.Sync(); e != nil {
-		return e
+	if closeErr := f.Close(); closeErr != nil {
+		if e == nil {
+			e = closeErr
+		} else {
+			e = errors.Join(e, closeErr)
+		}
 	}
-	if e = f.Close(); e != nil {
+	if e != nil {
 		return e
 	}
 	return dir.Sync()

@@ -249,9 +249,9 @@ func TestHI02PaginationTraversesEveryStateWithoutLossOrDuplicate(t *testing.T) {
 		want[q.QuestionID] = StateWaiting
 	}
 	ids := sortedKeys(want)
-	r := f.answer(ids[0], "request-answered-0", "short")
+	f.answer(ids[0], "request-answered-0", "short")
 	want[ids[0]] = StateAnswered
-	r = f.answer(ids[1], "request-received-1", "full")
+	r := f.answer(ids[1], "request-received-1", "full")
 	if _, err := Acknowledge(f.d, f.root, ids[1], r.RequestID, digestOf(r)); err != nil {
 		t.Fatal(err)
 	}

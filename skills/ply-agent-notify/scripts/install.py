@@ -94,8 +94,13 @@ def main():
         install(Path(__file__).resolve().parent.parent, args.destination, args.upgrade_from, args.backup)
         print(json.dumps({'kind':'PlyAgentNotificationInstall@1', 'state':'installed', 'destination':args.destination}))
         return 0
-    except (Failure, OSError, ValueError):
-        print(json.dumps({'kind':'PlyAgentNotificationInstall@1', 'state':'unknown' if args.upgrade_from else 'not_attempted', 'reason':'Installation did not complete. Inspect the destination and any preserved backup before recovery; no automatic repair was attempted.'}))
+    except (Failure, OSError, ValueError) as err:
+        print(json.dumps({
+            'kind': 'PlyAgentNotificationInstall@1',
+            'state': 'unknown' if args.upgrade_from else 'not_attempted',
+            'reason': 'Installation did not complete. Inspect the destination and any preserved backup before recovery; no automatic repair was attempted.',
+            'code': err.reason if isinstance(err, Failure) else None,
+        }))
         return 2
 
 

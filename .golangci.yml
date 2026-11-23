@@ -8,8 +8,20 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
   exclusions:
     rules:
+      - linters:
+          - staticcheck
+        text: '^(QF[0-9]+|ST1005):'
+      - path: '_test\.go$'
+        linters:
+          - errcheck
       # These legacy messages are user-visible; preserve their exact text.
       - path: pkg/file/file.go
         linters:

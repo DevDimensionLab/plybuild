@@ -15,8 +15,10 @@ import (
 type Request struct {
 	// Agent is the Herdr agent identity the started executable must report.
 	Agent, Herdr, Executable, Cwd, Workspace, Label, InitialPrompt string
-	Env                                                            []string
-	Timeout                                                        time.Duration
+	// Args go to the executable before InitialPrompt.
+	Args    []string
+	Env     []string
+	Timeout time.Duration
 }
 type Result struct {
 	State         string `json:"state"`
@@ -55,7 +57,7 @@ func validate(in Request) error {
 	if in.Agent == "" || !filepath.IsAbs(in.Executable) || !filepath.IsAbs(in.Cwd) || in.Workspace == "" || in.InitialPrompt == "" || in.Timeout <= 0 {
 		return errors.New("agent, absolute executable/cwd, workspace, prompt and positive timeout required")
 	}
-	for _, s := range append([]string{in.Agent, in.Executable, in.Cwd, in.Workspace, in.Label, in.InitialPrompt}, in.Env...) {
+	for _, s := range append(append([]string{in.Agent, in.Executable, in.Cwd, in.Workspace, in.Label, in.InitialPrompt}, in.Args...), in.Env...) {
 		if strings.ContainsAny(s, "\x00\r\n") {
 			return errors.New("launch arguments must be single-line without NUL")
 		}
@@ -286,5 +288,9 @@ func diagnostic(raw []byte) string {
 }
 
 func launchCommand(in Request) string {
-	return "cd -- " + quote(in.Cwd) + " && exec " + quote(in.Executable) + " " + quote(in.InitialPrompt)
+	command := "cd -- " + quote(in.Cwd) + " && exec " + quote(in.Executable)
+	for _, a := range in.Args {
+		command += " " + quote(a)
+	}
+	return command + " " + quote(in.InitialPrompt)
 }

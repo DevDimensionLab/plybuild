@@ -221,7 +221,7 @@ func readInboxRequest(cmd *cobra.Command, file string) ([]byte, error) {
 	if err != nil {
 		return nil, inboxInvalidArguments("cannot open --file")
 	}
-	defer opened.Close()
+	defer func() { _ = opened.Close() }()
 	raw, err := io.ReadAll(io.LimitReader(opened, inboxRequestLimit))
 	if err != nil {
 		return nil, inboxInvalidArguments("cannot read --file")

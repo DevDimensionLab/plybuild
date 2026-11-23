@@ -19,7 +19,7 @@ func StrictDecode(b []byte, max int, out any) error { return decode(b, max, out)
 
 // WithPrivateLock creates the private directory and holds dir/store.lock
 // exclusively while fn runs.
-func WithPrivateLock(dir string, fn func() error) error {
+func WithPrivateLock(dir string, fn func() error) (err error) {
 	if e := privateDir(dir); e != nil {
 		return e
 	}
@@ -27,6 +27,10 @@ func WithPrivateLock(dir string, fn func() error) error {
 	if e != nil {
 		return e
 	}
-	defer unlockFile(f)
+	defer func() {
+		if unlockErr := unlockFile(f); err == nil {
+			err = unlockErr
+		}
+	}()
 	return fn()
 }

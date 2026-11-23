@@ -261,7 +261,7 @@ func sourceDigest(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	opened, err := f.Stat()
 	if err != nil || !os.SameFile(before, opened) {
 		return "", fmt.Errorf("source changed before read")

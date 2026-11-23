@@ -27,11 +27,11 @@ not use the work root; `--self-test` and `--corpus` use the upstream's own
 The stored baseline records the `wrapper_sha256` of the wrapper it was measured
 with. A wrapper change therefore makes `--baseline .quality/baseline/scorecard.json`
 and the baseline manual evidence fail as not comparable or stale (exit `2`)
-until a deliberate rebaseline. That rejection is intended. T15 of the meta-test
-reproduces the stored baseline with the parser from the `new`
-`instrument_source_commit` in `baseline/instrument-migration.json`, which still
-holds the recorded wrapper. It also requires the current parser, scanner, Q0.6
-contract and vendored files to be byte-identical to that instrument.
+until a deliberate rebaseline. T15 regenerates the stored baseline with the
+current parser, scanner, Q0.6 contract and vendored audit. The parser hashes
+the wrapper bytes recorded in the baseline from
+`baseline/reproduction-wrapper.sh`. The byte comparison checks the reproduced
+scorecard, including all instrument hashes.
 
 The wrapper writes deterministic `scorecard.json` and
 `raw-upstream-scorecard.md` under `target/quality-audit/`. The raw Markdown is

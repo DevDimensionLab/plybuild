@@ -31,6 +31,11 @@ fail() {
 [[ $(grep -Fxc '[ "$survived" -eq 0 ] || fail '\''surviving mutations remain'\''' "$harness") -eq 1 ]] ||
 	fail 'production harness zero-survivor gate is missing or duplicated'
 
+. "$repo_root/test/mutation_meta_source.sh"
+fixture="$work_root/source"
+mutation_meta_source "$repo_root" "$harness" "$fixture"
+harness="$fixture/scripts/mutate-template"
+
 run_failure() {
 	local name=$1 expected=$2
 	local output="$work_root/$name.log"
@@ -83,7 +88,7 @@ run_failure T8 'T8 surviving mutation lacks reachability, observability, or cont
 printf 'T9 every checkout cache report and artifact must be external\n'
 run_failure T9 'repository-local artifacts are forbidden' \
 	env MUTATION_TEMPLATE_META_FAULT=repository-local-artifacts
-[[ ! -e $repo_root/.mutation-local-artifacts-meta ]] ||
+[[ ! -e $fixture/.mutation-local-artifacts-meta ]] ||
 	fail 'T9 repository-local artifact probe created its rejected path'
 
 printf 'T10 declared mutations and totals must be deterministic\n'
@@ -91,7 +96,10 @@ run_failure T10 'T10 mutation manifest or declared totals are non-deterministic'
 	env MUTATION_TEMPLATE_META_FAULT=nondeterministic
 
 positive_log="$work_root/positive.log"
-"$harness" >"$positive_log"
+positive_root="$work_root/positive"
+MUTATION_TEMPLATE_KEEP_WORK=1 MUTATION_TEMPLATE_WORK_ROOT="$positive_root" \
+	"$harness" >"$positive_log"
+mutation_meta_check_copies "$positive_root"
 grep -Fxc 'subject=template' "$positive_log" >/dev/null || fail 'positive report lost its subject'
 grep -Fxc 'control=passed selections=10' "$positive_log" >/dev/null || fail 'positive report lost its clean control count'
 grep -Fxc 'declared=10 killed=10 survived=0 unusable=0' "$positive_log" >/dev/null ||

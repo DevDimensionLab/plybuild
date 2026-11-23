@@ -1,0 +1,32 @@
+{
+  "kind": "WorkspaceModuleListReadback@1",
+  "schema_version": "1",
+  "project": "p0",
+  "repos": [
+    {
+      "repo": "r0",
+      "commit": "c8d9a11986f4d04f6ad5fd0ddf449064a184bdf3",
+      "modules": [
+        {
+          "module": ".",
+          "parent": null
+        },
+        {
+          "module": "dom",
+          "parent": "."
+        },
+        {
+          "module": "dom/app",
+          "parent": "dom"
+        }
+      ],
+      "reason": null
+    },
+    {
+      "repo": "r1",
+      "commit": null,
+      "modules": null,
+      "reason": "no_commit"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		Long: "A run is a finished result of an application, such as a code map or a workflow view, stored unchanged with publication.json written by Ply.\n" +
 			"Runs live in <project wrapper>/data/publications/,\n" +
 			"as <repo-id or _project>/<category>/[<agent>/]<run>/. A published run is never changed; Ply keeps every run with --plan and the newest five without plan per path.\n" +
+			"--module <path> (with --repo) selects a module of the repo, such as a directory with pom.xml; its runs stand beside the repo's own and are listed only with --module or --modules.\n" +
 			"Withdraw hides the runs of a path from list until the next publish; it removes nothing.\n" +
 			"Without --project the single Project whose wrapper contains the current directory is used.",
 		Example: "  ply publication publish --project ply --repo ply-code-map --category code-map --dir out --entry index.html --title 'Kodekart'\n" +
@@ -56,6 +57,10 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 			}
 			if format != "text" && format != "json" {
 				return publicationInvalidArguments("--format must be text or json")
+			}
+			// The store reads an empty module as none, so the flag must say something.
+			if module := cmd.Flags().Lookup("module"); module != nil && module.Changed && module.Value.String() == "" {
+				return publicationInvalidArguments("--module must not be empty")
 			}
 			return nil
 		}
@@ -116,6 +121,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		},
 	})
 	publishCommand.Flags().StringVar(&request.Repo, "repo", "", "repo ID of the Project (default: the whole Project)")
+	publishCommand.Flags().StringVar(&request.Module, "module", "", "module path in the repo, such as dom/app (default: the repo itself)")
 	publishCommand.Flags().StringVar(&request.Category, "category", "", "category such as code-map or workflow (required)")
 	publishCommand.Flags().StringVar(&request.Agent, "agent", "", "agent that performed the work")
 	publishCommand.Flags().StringVar(&request.Plan, "plan", "", "PLAN-<n> of the Project the run belongs to")
@@ -152,12 +158,14 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		},
 	})
 	listCommand.Flags().StringVar(&filter.Repo, "repo", "", "only runs of this repo ID")
+	listCommand.Flags().StringVar(&filter.Module, "module", "", "only runs of this module of --repo, not its descendants")
+	listCommand.Flags().BoolVar(&filter.Modules, "modules", false, "also runs of every module of the selected repos")
 	listCommand.Flags().StringVar(&filter.Category, "category", "", "only runs of this category")
 	listCommand.Flags().StringVar(&filter.Agent, "agent", "", "only runs of this agent")
 	listCommand.Flags().StringVar(&filter.Plan, "plan", "", "only runs of this plan")
 	listCommand.Flags().BoolVar(&filter.All, "all", false, "every kept run, not only the newest per path")
 
-	var showRepo, showCategory, showAgent string
+	var showRepo, showModule, showCategory, showAgent string
 	showCommand := addFlags(&cobra.Command{
 		Use:   "show --category <category> [--run <run>]",
 		Short: "Show one run with the absolute path of its directory",
@@ -167,7 +175,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			v, err := s.Show(showRepo, showCategory, showAgent, run)
+			v, err := s.Show(showRepo, showModule, showCategory, showAgent, run)
 			if err != nil {
 				return err
 			}
@@ -175,11 +183,12 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 		},
 	})
 	showCommand.Flags().StringVar(&showRepo, "repo", "", "repo ID (default: the whole Project)")
+	showCommand.Flags().StringVar(&showModule, "module", "", "module path in the repo (default: the repo itself)")
 	showCommand.Flags().StringVar(&showCategory, "category", "", "category (required)")
 	showCommand.Flags().StringVar(&showAgent, "agent", "", "agent")
 	showCommand.Flags().StringVar(&run, "run", "", "run ID (default: the newest)")
 
-	var withdrawRepo, withdrawCategory, withdrawAgent, withdrawActor string
+	var withdrawRepo, withdrawModule, withdrawCategory, withdrawAgent, withdrawActor string
 	withdrawCommand := addFlags(&cobra.Command{
 		Use:   "withdraw --category <category>",
 		Short: "Hide the runs of a path from list and show until the next publish",
@@ -197,18 +206,22 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 			if withdrawActor == "" {
 				withdrawActor = os.Getenv("PLY_ACTOR")
 			}
-			w, err := s.Withdraw(string(resolved.ID), withdrawRepo, withdrawCategory, withdrawAgent, withdrawActor)
+			w, err := s.Withdraw(string(resolved.ID), withdrawRepo, withdrawModule, withdrawCategory, withdrawAgent, withdrawActor)
 			if err != nil {
 				return err
 			}
 			if format == "json" {
-				return writeAssignmentJSON(cmd.OutOrStdout(), w)
+				return writeAssignmentJSON(cmd.OutOrStdout(), struct {
+					publication.Withdrawal
+					Module string `json:"module"`
+				}{w, publication.DisplayModule(w.Module)})
 			}
 			_, err = io.WriteString(cmd.OutOrStdout(), withdrawalText(w))
 			return err
 		},
 	})
 	withdrawCommand.Flags().StringVar(&withdrawRepo, "repo", "", "repo ID of the Project (default: the whole Project)")
+	withdrawCommand.Flags().StringVar(&withdrawModule, "module", "", "module path in the repo (default: the repo itself)")
 	withdrawCommand.Flags().StringVar(&withdrawCategory, "category", "", "category (required)")
 	withdrawCommand.Flags().StringVar(&withdrawAgent, "agent", "", "agent")
 	withdrawCommand.Flags().StringVar(&withdrawActor, "actor", "", "who withdraws (default: PLY_ACTOR)")
@@ -247,6 +260,9 @@ func publicationSubject(v publication.View) string {
 	if subject == "" {
 		subject = publication.ProjectSegment
 	}
+	if v.Publication.Module != "" {
+		subject += "/" + v.Publication.Module
+	}
 	subject += "/" + v.Category
 	if v.Agent != "" {
 		subject += "/" + v.Agent
@@ -269,7 +285,7 @@ func publicationText(v publication.View) string {
 }
 
 func withdrawalText(w publication.Withdrawal) string {
-	subject := publicationSubject(publication.View{Publication: publication.Publication{Repo: w.Repo, Category: w.Category, Agent: w.Agent}})
+	subject := publicationSubject(publication.View{Publication: publication.Publication{Repo: w.Repo, Module: w.Module, Category: w.Category, Agent: w.Agent}})
 	text := fmt.Sprintf("%s withdrawn through %s at %s", subject, w.Through, w.WithdrawnAt)
 	if w.Actor != "" {
 		text += " by " + w.Actor

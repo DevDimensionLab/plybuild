@@ -3,6 +3,7 @@ package taskjournal
 import (
 	"crypto/rand"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -60,7 +61,7 @@ func readStore(work workspace.ProjectWork, task, ws string) ([]stored, error) {
 	if e != nil {
 		return out, e
 	}
-	defer d.Close()
+	defer func() { _ = d.Close() }()
 	entries, e := d.ReadDir(-1)
 	if e != nil {
 		return out, e
@@ -213,7 +214,7 @@ func keepSource(work workspace.ProjectWork, src SourceRef) error {
 		return e
 	}
 	if e = os.Rename(temp, target); e != nil {
-		os.Remove(temp)
+		_ = os.Remove(temp)
 		return e
 	}
 	return nil
@@ -432,7 +433,20 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if e != nil {
 		return result, e
 	}
-	defer d.Close()
+	published := false
+	defer func() {
+		if closeErr := d.Close(); closeErr != nil {
+			if err == nil {
+				err = closeErr
+			} else {
+				err = errors.Join(err, closeErr)
+			}
+		}
+		if err != nil && published {
+			result = AppendResult{}
+			err = fmt.Errorf("task_journal_publication_unknown: key %s; inspect journal show %s or retry the same input; record %s: %w", c.PublicationKey, task, p, err)
+		}
+	}()
 	for _, part := range []string{work.TaskProcess(), JournalDir(work), p} {
 		if e = regularMode(part); e != nil {
 			return result, e
@@ -445,7 +459,6 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 	if e != nil {
 		return result, e
 	}
-	published := false
 	defer func() {
 		u := unlock(l)
 		if u == nil {
@@ -453,10 +466,6 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 		}
 		if u != nil {
 			err = u
-		}
-		if err != nil && published {
-			result = AppendResult{}
-			err = fmt.Errorf("task_journal_publication_unknown: key %s; inspect journal show %s or retry the same input; record %s: %w", c.PublicationKey, task, p, err)
 		}
 	}()
 	// Recheck identity, key and relations after serialization; retry precedes
@@ -504,7 +513,7 @@ func (s Service) appendInput(task string, raw []byte, kind string) (result Appen
 		return result, e
 	}
 	temp := fmt.Sprintf(".publish-%x", nonce)
-	defer removeAt(d, temp)
+	defer func() { _ = removeAt(d, temp) }()
 	if e = s.check("write"); e != nil {
 		return result, e
 	}

@@ -29,6 +29,7 @@ type TaskExecutorAssignment struct {
 // Goal Spec revision.
 const goalDocumentInputPrefix = "task-goal-doc/"
 const GoalDocumentInputID = goalDocumentInputPrefix + "goal/"
+const ProblemDocumentInputID = goalDocumentInputPrefix + "problem/"
 
 func (a TaskExecutorAssignment) LocalInstallAllowed() bool {
 	return a.AllowLocalInstall != nil && *a.AllowLocalInstall
@@ -176,11 +177,11 @@ func loadTaskGoal(d Dependencies, work workspace.ProjectWork, r WorkItemRegistry
 			if e != nil || len(bytes) != contentInt(x, "size_bytes") {
 				return out, contentError("task_content_integrity_conflict", "goal document differs", e)
 			}
-			role := "other"
+			role, prefix := "other", ProblemDocumentInputID
 			if basis.name == "goal" {
-				role = "design"
+				role, prefix = "design", GoalDocumentInputID
 			}
-			out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: goalDocumentInputPrefix + basis.name + "/" + contentString(x, "id"), Role: role, Locator: taskContentPath(work, "objects", hash), SHA256: hash, SizeBytes: int64(len(bytes)), MediaType: contentString(x, "media_type")})
+			out.RequiredInputs = append(out.RequiredInputs, TaskSpecRequiredInput{ID: prefix + contentString(x, "id"), Role: role, Locator: taskContentPath(work, "objects", hash), SHA256: hash, SizeBytes: int64(len(bytes)), MediaType: contentString(x, "media_type")})
 		}
 	}
 	sort.Slice(out.RequiredInputs, func(i, j int) bool { return out.RequiredInputs[i].ID < out.RequiredInputs[j].ID })

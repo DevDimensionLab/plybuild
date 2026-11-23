@@ -53,8 +53,15 @@ func (s Store) AppendJournal(id string, e JournalEntry) (JournalEntry, error) {
 		if err != nil {
 			return View{}, ioError("open journal of "+id, err, nothingWritten)
 		}
-		defer file.Close()
-		if _, err = file.Write(append(line, '\n')); err != nil {
+		_, err = file.Write(append(line, '\n'))
+		if closeErr := file.Close(); closeErr != nil {
+			if err == nil {
+				err = closeErr
+			} else {
+				err = errors.Join(err, closeErr)
+			}
+		}
+		if err != nil {
 			return View{}, ioError("write journal of "+id, err, uncertainSuffix)
 		}
 		return View{}, nil
@@ -75,7 +82,7 @@ func (s Store) Journal(id string) ([]JournalEntry, error) {
 	if err != nil {
 		return nil, ioError("read journal of "+id, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		var e JournalEntry

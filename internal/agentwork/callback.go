@@ -48,7 +48,7 @@ func (s *Service) callbackExecutor() (string, error) {
 	if err != nil {
 		return "", invalid
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	info, err := f.Stat()
 	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 || !os.SameFile(before, info) {
 		return "", invalid

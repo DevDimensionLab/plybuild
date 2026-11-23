@@ -1,17 +1,13 @@
 package taskwork
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/devdimensionlab/plybuild/internal/canonicaljson"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
-	"strings"
 )
 
 func queueReasons(code, message string) []QueueReason { return []QueueReason{{code, message}} }
@@ -33,23 +29,6 @@ func queueTaskTitle(d Dependencies, work workspace.ProjectWork, r WorkItemRegist
 	}
 	return contentString(contentFields(m), "title"), nil
 }
-func queueTaskNames(qid string, id TaskID, title, parent string) (string, string) {
-	title = strings.ToLower(title)
-	slug := regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(title, "-")
-	slug = strings.Trim(slug, "-")
-	if len(slug) > 40 {
-		slug = strings.Trim(slug[:40], "-")
-	}
-	if slug == "" {
-		slug = "task"
-	}
-	h := sha256.Sum256([]byte(qid + "\n" + string(id)))
-	leaf := slug + "-" + hex.EncodeToString(h[:])[:12]
-	return "ply-task/" + leaf, filepath.Join(filepath.Dir(parent), "ply-task-"+leaf)
-}
-
-// The queue is a prioritized list of Goal references. An entry that names
-// only a selected solution was input to the removed preparation.
 func queuePendingEvaluation(d Dependencies, work workspace.ProjectWork, r WorkItemRegistry, entry TaskGoalQueueEntry, rank int) QueuePending {
 	if entry.Goal != nil {
 		return queueGoalEvaluation(d, work, r, entry, rank)

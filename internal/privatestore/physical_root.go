@@ -1,6 +1,7 @@
 package privatestore
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,10 +30,16 @@ func physicalRoot(path string, create bool) (*os.Root, error) {
 				dir, de := root.Open(".")
 				if de == nil {
 					de = dir.Sync()
-					dir.Close()
+					if closeErr := dir.Close(); closeErr != nil {
+						if de == nil {
+							de = closeErr
+						} else {
+							de = errors.Join(de, closeErr)
+						}
+					}
 				}
 				if de != nil {
-					root.Close()
+					_ = root.Close()
 					return nil, de
 				}
 			}
@@ -41,26 +48,26 @@ func physicalRoot(path string, create bool) (*os.Root, error) {
 			}
 		}
 		if err != nil {
-			root.Close()
+			_ = root.Close()
 			return nil, err
 		}
 		if !before.IsDir() || before.Mode()&os.ModeSymlink != 0 {
-			root.Close()
+			_ = root.Close()
 			return nil, conflict("directory component is not a physical directory")
 		}
 		next, err := root.OpenRoot(part)
 		if err != nil {
-			root.Close()
+			_ = root.Close()
 			return nil, err
 		}
 		actual, err := next.Stat(".")
 		after, ae := root.Lstat(part)
 		if err != nil || ae != nil || !os.SameFile(before, actual) || !os.SameFile(actual, after) || after.Mode()&os.ModeSymlink != 0 {
-			next.Close()
-			root.Close()
+			_ = next.Close()
+			_ = root.Close()
 			return nil, conflict("directory changed while opening")
 		}
-		root.Close()
+		_ = root.Close()
 		root = next
 	}
 	return root, nil
@@ -70,7 +77,7 @@ func physicalOpenFile(path string, flags int, mode os.FileMode) (*os.File, error
 	if e != nil {
 		return nil, e
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	name := filepath.Base(path)
 	before, be := root.Lstat(name)
 	if be != nil && !(os.IsNotExist(be) && flags&os.O_CREATE != 0) {
@@ -86,7 +93,7 @@ func physicalOpenFile(path string, flags int, mode os.FileMode) (*os.File, error
 	actual, e := f.Stat()
 	after, ae := root.Lstat(name)
 	if e != nil || ae != nil || !actual.Mode().IsRegular() || after.Mode()&os.ModeSymlink != 0 || !os.SameFile(actual, after) || be == nil && !os.SameFile(before, actual) {
-		f.Close()
+		_ = f.Close()
 		return nil, conflict("file changed while opening")
 	}
 	return f, nil

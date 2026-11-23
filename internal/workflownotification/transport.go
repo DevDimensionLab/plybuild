@@ -51,7 +51,7 @@ func postHTTP(ctx context.Context, endpoint string, payload []byte, rt http.Roun
 		}
 		return Observation{Failed: true, Dispatch: dispatch}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, e := io.ReadAll(io.LimitReader(resp.Body, 4097))
 	return Observation{Status: resp.StatusCode, Body: body, RetryAfter: resp.Header.Values("Retry-After"), Dispatch: "started", Failed: e != nil, Oversize: len(body) > 4096}
 }
@@ -76,10 +76,7 @@ func classify(o Observation, now time.Time) Attempt {
 	if o.Oversize || len(o.Body) > 4096 {
 		return a
 	}
-	body := string(o.Body)
-	if strings.HasSuffix(body, "\n") {
-		body = strings.TrimSuffix(body, "\n")
-	}
+	body := strings.TrimSuffix(string(o.Body), "\n")
 	switch {
 	case o.Status == 200 && body == "ok":
 		a.State = "transport_acknowledged"

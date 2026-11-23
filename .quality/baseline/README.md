@@ -84,12 +84,16 @@ structured_repo="$baseline_root/structured"
 reproduction_home="$baseline_root/home"
 audit_out="$baseline_root/audit"
 audit_gocache="$baseline_root/gocache"
+audit_instrument="$baseline_root/instrument"
 audit_gotmpdir="$baseline_root/gotmp"
 baseline_gomodcache="$baseline_root/gomodcache"
 mkdir "$execution_repo" "$structured_repo" "$reproduction_home" "$audit_out" \
-  "$audit_gocache" "$audit_gotmpdir" "$baseline_gomodcache"
+  "$audit_gocache" "$audit_gotmpdir" "$baseline_gomodcache" "$audit_instrument"
+cp "$quality_root/tools/scorecard.py" "$quality_root/tools/go-callscan.go.src" \
+  "$quality_root/tools/q06-contract_test.go.src" "$audit_instrument/"
+cp "$quality_root/baseline/reproduction-wrapper.sh" "$audit_instrument/quality-audit.sh"
 for baseline_repo in "$execution_repo" "$structured_repo"; do
-  git clone --shared --no-checkout "$PWD" "$baseline_repo"
+  git clone --shared --no-checkout -c core.abbrev=7 "$PWD" "$baseline_repo"
   git -C "$baseline_repo" checkout --detach 5635d50bd161a9a5aa81fc4332cc0c9d68885d08
   mkdir -p "$baseline_repo/.quality"
   cp "$quality_root/baseline/inventory" "$baseline_repo/.quality/inventory"
@@ -126,7 +130,7 @@ fi
 test "$upstream_rc" -eq 1
 
 if LC_ALL=C LANG=C HOME="$reproduction_home" \
-  python3 "$quality_root/tools/scorecard.py" \
+  python3 "$audit_instrument/scorecard.py" \
   --report "$audit_out/scorecard.md" \
   --output "$audit_out/scorecard.json" \
   --repo "$structured_repo" \
@@ -162,20 +166,13 @@ can create ignored files there. The structured parser reads an independently
 verified pristine replica of the same commit and inventory overlay, so those
 test effects cannot be mistaken for source present before measurement.
 
-The audit meta-test's T15 control is the reproducible old/new migration recipe.
-It extracts the old instrument and its schema-1 evidence from the recorded Git
-commit. Before using the pinned reproduction environment, it runs old and new
-vendored audits in separate clean-HOME replicas, records every changed path and
-raw byte digest, requires their path, mode, and relocation-independent content
-digests to match, and proves pre-existing source drift is rejected. Only the
-two disposable checkout roots are normalized for that comparison; the raw
-digests remain in the retained manifests. It then runs old and new instruments
-over equivalent `5635d50`
-execution and structured replicas under the exact build context above,
-reproduces both scorecard hashes byte-for-byte, compares normalized raw output,
-verifies both instrument identities, compares every denominator and criterion
-object, counts and compares all 228 numeric debt leaves, and asserts Q3.9
-remains PASS:
+T15 also checks that pre-existing source drift is rejected and that a separate
+clean-HOME execution exposes test-generated effects. It recreates the stored raw
+body and authoritative JSON byte-for-byte. The baseline's wrapper is a
+non-executable identity fixture hashed by the parser. Its bytes are used only
+for reproduction of the stored instrument identity. Each disposable clone pins
+`core.abbrev=7` to match the commit ID in the stored raw report. If the raw
+body differs, T15 reports an external directory containing both bodies.
 
 ```sh
 LC_ALL=C LANG=C bash .quality/tools/test-quality-audit.sh

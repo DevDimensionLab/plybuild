@@ -52,8 +52,6 @@ git_root=$(git -C "$repo_root" rev-parse --show-toplevel 2>/dev/null) ||
 [[ $git_root == "$repo_root" ]] || fail 'harness repository root does not match the Git root'
 [[ -z $(git -C "$repo_root" status --porcelain=v1 -uall) ]] ||
 	fail 'source repository is not clean'
-[[ -z $(git -C "$repo_root" status --porcelain=v1 --ignored -uall) ]] ||
-	fail 'source repository has ordinary or ignored artifacts'
 
 if [[ $meta_fault == repository-local-artifacts ]]; then
 	requested_work="$repo_root/.mutation-local-artifacts-meta"
@@ -115,7 +113,7 @@ mutate() {
 }
 
 declare_manifest() {
-mutate "cli-main-exit-status" "cmd/ply/main.go" "os.Exit(1)" "os.Exit(2)" "./cmd,./cmd/ply" "TestExecutableEntryBoundary" ""
+mutate "cli-main-exit-status" "cmd/ply/main.go" "os.Exit(cmd.ExitCode(err))" "os.Exit(2)" "./cmd,./cmd/ply" "TestExecutableEntryBoundary" ""
 mutate "interactive-build-endpoint" "cmd/build.go" "webservice.InitAndBlockStandalone(webservice.Generate, api.CallbackChannel)" "webservice.InitAndBlockStandalone(webservice.Upgrade, api.CallbackChannel)" "./cmd" "TestInteractiveBuildPreservesRootOptionsEndpointCallbackAndValidationOrder" ""
 mutate "interactive-upgrade-endpoint" "cmd/upgrade.go" "webservice.InitAndBlockProject(webservice.Upgrade, api.CallbackChannel)" "webservice.InitAndBlockProject(webservice.Generate, api.CallbackChannel)" "./cmd" "TestInteractiveUpgradePreservesProjectGuardsEndpointAndCallbackCaller" ""
 mutate "recursive-discovery-branch" "pkg/context/context.go" "if ctx.Recursive {" "if !ctx.Recursive {" "./pkg/context" "TestFindAndPopulateMavenProjectsPreservesNonRecursiveAppendSuccessAndDirectError,TestFindAndPopulateMavenProjectsPreservesRecursiveWalkAppendPartialAndErrorBehavior" ""

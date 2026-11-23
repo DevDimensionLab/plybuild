@@ -470,7 +470,7 @@ func (s Store) read(id string) (document, error) {
 	case err != nil:
 		return document{}, ioError("read "+id, err)
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 	info, err := file.Stat()
 	if err != nil {
 		return document{}, ioError("inspect "+id, err)

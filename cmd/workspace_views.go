@@ -226,6 +226,38 @@ func newWorkspaceWorktreesCommand(d taskwork.Dependencies) *cobra.Command {
 	return parent
 }
 
+func newWorkspaceModulesCommand(d taskwork.Dependencies) *cobra.Command {
+	parent := &cobra.Command{Use: "module", Short: "Read the JVM modules of registered repositories", Long: "A module is a directory with a regular pom.xml in a commit, outside directories that start with a dot, vendor, node_modules, testdata, and target or build before the first src. Its parent is the nearest enclosing module."}
+	c := &cobra.Command{Use: "list", Short: "List the module tree of each repository from a commit", Long: "Read the module tree from HEAD of each registered checkout, or from --commit for one repository; the work tree is never read and nothing is stored. A repository that cannot be read gets a reason (repo_unavailable, no_commit, commit_unknown or git_failed) on its row and does not stop the others.", Example: "  ply workspace module list --project ply --format json\n  ply workspace module list --project ply --repo trip-service --commit origin/main --format json", Args: viewNoArgs}
+	c.RunE = func(c *cobra.Command, args []string) error {
+		s, err := workspaceview.LoadSnapshot(d)
+		if err != nil {
+			return err
+		}
+		r, err := workspaceview.ListModules(d, s, workspaceview.ModuleOptions{ProjectID: viewString(c, "project"), RepoID: viewString(c, "repo"), Commit: viewString(c, "commit")})
+		if err != nil {
+			return err
+		}
+		rows := []string{}
+		for _, repo := range r.Repos {
+			if repo.Reason != nil {
+				rows = append(rows, repo.Repo+": "+*repo.Reason)
+				continue
+			}
+			for _, m := range repo.Modules {
+				rows = append(rows, repo.Repo+": "+m.Module)
+			}
+		}
+		return writeView(c, r, "Modules in Project "+r.Project+":", rows)
+	}
+	addViewFormat(c)
+	c.Flags().String("project", "", "Project ID (required)")
+	c.Flags().String("repo", "", "only this repository ID")
+	c.Flags().String("commit", "", "commit to read instead of HEAD (requires --repo)")
+	parent.AddCommand(c)
+	return parent
+}
+
 func addWorkspaceTaskProgressCommands(task *cobra.Command, d taskwork.Dependencies) {
 	for _, c := range task.Commands() {
 		if c.Name() != "list" && c.Name() != "show" {

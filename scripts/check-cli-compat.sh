@@ -19,6 +19,11 @@ fail() {
 	exit 1
 }
 
+case $#:${1-} in
+	0:|1:--write-allowlist) ;;
+	*) fail 'usage: check-cli-compat.sh [--write-allowlist]' ;;
+esac
+
 [[ -f "$repo_root/go.mod" && -f "$baseline" && -f "$allowlist" &&
 	-f "$exporter" && -f "$parser" ]] || fail 'CLI compatibility inputs are missing'
 
@@ -59,6 +64,10 @@ python3 "$parser" \
 	--current "$temp_root/current.json" \
 	--allowlist "$allowlist" \
 	--output "$report_out" \
-	--base-ref "$base_ref"
+	--base-ref "$base_ref" "$@"
 
-printf 'cli compatibility: PASS (Cobra tree against %s)\n' "$base_ref"
+if [[ -n ${1-} ]]; then
+	printf 'cli compatibility: wrote allowlist against %s to %s\n' "$base_ref" "$allowlist"
+else
+	printf 'cli compatibility: PASS (Cobra tree against %s)\n' "$base_ref"
+fi

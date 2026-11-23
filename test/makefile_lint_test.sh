@@ -37,7 +37,7 @@ set -euo pipefail
 
 case "$*" in
 	'version --short')
-		printf '%s\n' "${FAKE_LINT_VERSION:-2.12.2}"
+		printf '%s\n' "${FAKE_LINT_VERSION:-2.15.0}"
 		exit "${FAKE_LINT_VERSION_RC:-0}"
 		;;
 	'config verify --config .golangci.yml')
@@ -80,8 +80,20 @@ linters:
     - ineffassign
     - staticcheck
     - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
   exclusions:
     rules:
+      - linters:
+          - staticcheck
+        text: '^(QF[0-9]+|ST1005):'
+      - path: '_test\.go$'
+        linters:
+          - errcheck
       # These legacy messages are user-visible; preserve their exact text.
       - path: pkg/file/file.go
         linters:
@@ -157,8 +169,8 @@ if PATH="$path_bin_dir:$PATH" FAKE_LINT_CALLS="$calls_file" \
 	exit 1
 fi
 [[ ! -s "$calls_file" ]]
-grep -F 'golangci-lint 2.12.2 is required' "$tmp_dir/missing-error" >/dev/null
-grep -F 'curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.12.2' \
+grep -F 'golangci-lint 2.15.0 is required' "$tmp_dir/missing-error" >/dev/null
+grep -F 'curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.15.0' \
 	"$tmp_dir/missing-error" >/dev/null
 
 : >"$calls_file"
@@ -170,7 +182,7 @@ if PATH="$path_bin_dir:$PATH" FAKE_LINT_CALLS="$calls_file" \
 	exit 1
 fi
 [[ $(grep -c '^CALL$' "$calls_file") -eq 1 ]]
-grep -F 'expected 2.12.2, got 2.12.1' "$tmp_dir/version-error" >/dev/null
+grep -F 'expected 2.15.0, got 2.12.1' "$tmp_dir/version-error" >/dev/null
 
 : >"$format_calls_file"
 (

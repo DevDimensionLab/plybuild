@@ -54,9 +54,10 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			if !stat.IsDir() {
 				return fmt.Errorf("--cwd must be a directory")
 			}
-			binary := claude
+			binary, launchArgs := claude, []string(nil)
 			if provider == "codex" {
-				binary = codex
+				// See agentstart: Codex's shared daemon reports to the pane that started it.
+				binary, launchArgs = codex, []string{"--no-daemon"}
 			}
 			executable, err := exec.LookPath(binary)
 			if err != nil {
@@ -77,7 +78,7 @@ func newAgentAssignmentCommand(start func(context.Context, agentlaunch.Request) 
 			if label == "" {
 				label = args[0]
 			}
-			result, startErr := start(cmd.Context(), agentlaunch.Request{Agent: provider, Herdr: runtime, Executable: executable, Cwd: physical, Workspace: herdrWorkspace, Label: label, InitialPrompt: mention + " " + args[0] + " --project " + project + " --workspace " + observed.Root, Timeout: timeout})
+			result, startErr := start(cmd.Context(), agentlaunch.Request{Agent: provider, Herdr: runtime, Executable: executable, Args: launchArgs, Cwd: physical, Workspace: herdrWorkspace, Label: label, InitialPrompt: mention + " " + args[0] + " --project " + project + " --workspace " + observed.Root, Timeout: timeout})
 			if err = json.NewEncoder(cmd.OutOrStdout()).Encode(result); err != nil {
 				return err
 			}

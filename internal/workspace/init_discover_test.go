@@ -22,6 +22,17 @@ func TestInitDiscoverDefinesProjectFromRepositories(t *testing.T) {
 	if err := os.Mkdir(filepath.Join(root, "docs"), 0o755); err != nil {
 		t.Fatal(err)
 	}
+	discoverRepo(t, filepath.Join(root, ".hidden-repo"), "")
+	for _, name := range []string{"README.md", ".hidden-file"} {
+		if err := os.WriteFile(filepath.Join(root, name), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, name := range []string{"linked-repo", ".hidden-link"} {
+		if err := os.Symlink("api", filepath.Join(root, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
 
 	result, err := InitDiscover(d, "")
 	if err != nil {
@@ -42,7 +53,11 @@ func TestInitDiscoverDefinesProjectFromRepositories(t *testing.T) {
 	if !reflect.DeepEqual(defs.Projects, want) {
 		t.Fatalf("projects %#v", defs.Projects)
 	}
-	if len(result.Omissions) != 1 || result.Omissions[0].Path != filepath.Join(root, "docs") {
+	wantOmissions := []DiscoveryOmission{
+		{filepath.Join(root, "docs"), "no Git repository in docs or docs/main"},
+		{filepath.Join(root, "linked-repo"), "symlink; target not inspected"},
+	}
+	if !reflect.DeepEqual(result.Omissions, wantOmissions) {
 		t.Fatalf("omissions %#v", result.Omissions)
 	}
 	shown, err := ShowProject(d, "trip")

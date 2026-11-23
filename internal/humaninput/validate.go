@@ -198,7 +198,7 @@ func readInput(path string, max int) ([]byte, error) {
 	if e != nil {
 		return nil, e
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	// Lstat before and Stat after open detect a swapped path or symlink.
 	opened, e := f.Stat()
 	if e != nil || !os.SameFile(info, opened) {

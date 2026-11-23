@@ -139,6 +139,6 @@ func checkSources(r Request) error {
 	if err != nil {
 		return invalid()
 	}
-	d.Close()
+	_ = d.Close()
 	return nil
 }

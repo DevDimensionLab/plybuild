@@ -22,11 +22,11 @@ func lockFile(p string) (*os.File, error) {
 	}
 	info, e := f.Stat()
 	if e != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0077 != 0 {
-		f.Close()
+		_ = f.Close()
 		return nil, integrity("invalid lock file")
 	}
 	if e = unix.Flock(int(f.Fd()), unix.LOCK_EX); e != nil {
-		f.Close()
+		_ = f.Close()
 		return nil, e
 	}
 	return f, nil

@@ -246,7 +246,7 @@ func failureOutput(p *prepared, err error) any {
 }
 
 // Execute returns a public value independently of the executable exit status.
-func Execute(d Dependencies, in Input) (any, error) {
+func Execute(d Dependencies, in Input) (output any, err error) {
 	if d.Now == nil || d.LookupEnv == nil || d.Transport == nil {
 		return ErrorOutput(invalid()), invalid()
 	}
@@ -274,7 +274,11 @@ func Execute(d Dependencies, in Input) (any, error) {
 	if e != nil {
 		return failureOutput(p, localError(e)), localError(e)
 	}
-	defer dir.Close()
+	defer func() {
+		if closeErr := dir.Close(); closeErr != nil && err == nil {
+			err = localError(closeErr)
+		}
+	}()
 	unlock, e := lockState(dir)
 	if e != nil {
 		return failureOutput(p, localError(e)), localError(e)
@@ -299,7 +303,7 @@ func Execute(d Dependencies, in Input) (any, error) {
 	}
 	a, _ := dir.Stat()
 	b, _ := currentDir.Stat()
-	currentDir.Close()
+	_ = currentDir.Close()
 	if a == nil || b == nil || !os.SameFile(a, b) {
 		e = conflict("state_changed", "The physical state root changed.")
 		return failureOutput(p, e), e
@@ -345,7 +349,7 @@ func Execute(d Dependencies, in Input) (any, error) {
 		oldInfo, _ := dir.Stat()
 		newInfo, _ := latestDir.Stat()
 		sameRoot = oldInfo != nil && newInfo != nil && os.SameFile(oldInfo, newInfo)
-		latestDir.Close()
+		_ = latestDir.Close()
 	}
 	if guardErr != nil || !sameRoot || guard == nil || guard.prior == nil || guard.prior.Basis != r.Basis {
 		out := result(p.preview.ID, r, "changed")

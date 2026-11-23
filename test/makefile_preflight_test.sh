@@ -49,7 +49,7 @@ set -euo pipefail
 	printf '\n'
 } >>"$FAKE_PREFLIGHT_CALLS"
 case "$*" in
-	'version --short') printf '2.12.2\n' ;;
+	'version --short') printf '2.15.0\n' ;;
 	'config verify --config .golangci.yml') ;;
 	'run --config .golangci.yml --modules-download-mode=readonly ./...') ;;
 	*) exit 92 ;;
@@ -65,7 +65,7 @@ EOF
 
 chmod +x "$fake_bin/go" "$fake_bin/golangci-lint" "$fake_bin/bash"
 
-for script in alpha beta test-alpha test-beta; do
+for script in alpha beta test-alpha test-beta compat_root.sh compat_root_test.sh test-human-input-journey; do
 	touch "$complete_scripts/$script"
 done
 for script in alpha beta test-alpha; do
@@ -97,9 +97,9 @@ if ! run_preflight "$complete_scripts" "$tmp_dir/complete-output"; then
 	sed -n '1,200p' "$tmp_dir/complete-output" >&2
 	fail 'complete population did not pass'
 fi
-if [[ $(wc -l <"$calls_file" | tr -d '[:space:]') -ne 16 ]]; then
+if [[ $(wc -l <"$calls_file" | tr -d '[:space:]') -ne 19 ]]; then
 	sed -n '1,200p' "$calls_file" >&2
-	fail 'complete preflight did not execute exactly 16 required calls'
+	fail 'complete preflight did not execute exactly 19 required calls'
 fi
 assert_once 'go <build> <./...>'
 assert_once 'go <test> <./...> <-count=1>'
@@ -114,6 +114,9 @@ assert_once "bash <$repo_root/test/toolchain_declarations_test.sh>"
 assert_once "bash <$repo_root/scripts/check-api-compat.sh>"
 assert_once "bash <$repo_root/scripts/check-cli-compat.sh>"
 assert_once "bash <$repo_root/test/cli_surface_contract_test.sh>"
+assert_once "bash <$repo_root/test/workspace_work_items_roundtrip_test.sh>"
+assert_once "bash <$repo_root/test/workspace_task_roundtrip_root_test.sh>"
+assert_once "bash <$repo_root/test/workspace_task_queue_roundtrip_test.sh>"
 assert_once "bash <$complete_scripts/test-alpha>"
 assert_once "bash <$complete_scripts/test-beta>"
 assert_once "bash <$repo_root/.quality/tools/test-quality-audit.sh>"

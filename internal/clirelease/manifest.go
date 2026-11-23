@@ -81,7 +81,7 @@ func ReadRegular(path string, limit int64) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	opened, err := f.Stat()
 	if err != nil || !os.SameFile(st, opened) {
 		return nil, fmt.Errorf("file changed before read: %s", path)
@@ -108,7 +108,7 @@ func ValidateExecutable(path string, b []byte, m Manifest) error {
 	if err != nil {
 		return fmt.Errorf("release_platform_mismatch: not a Mach-O executable: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	if f.Cpu != macho.CpuArm64 || f.Type != macho.TypeExec {
 		return fmt.Errorf("release_platform_mismatch: expected an arm64 executable")
 	}

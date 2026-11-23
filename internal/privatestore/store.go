@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -200,7 +201,7 @@ func readFileAsWithRead(path, role string, max int, access fileAccess, read func
 	if e != nil {
 		return nil, e
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	actual, e := f.Stat()
 	if e != nil || !os.SameFile(before, actual) {
 		return nil, conflict(role + " " + path + ": file changed while opening; submit it again once its writer has finished")
@@ -239,7 +240,7 @@ func privateDir(path string) error {
 	if e != nil {
 		return e
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	info, e := root.Stat(".")
 	if e != nil {
 		return e
@@ -286,7 +287,7 @@ func publishFile(path string, b []byte, replace bool) error {
 	if e != nil {
 		return e
 	}
-	defer root.Close()
+	defer func() { _ = root.Close() }()
 	actual, e := root.Stat(".")
 	if e != nil || !os.SameFile(before, actual) {
 		return conflict("publication directory changed")
@@ -300,7 +301,7 @@ func publishFile(path string, b []byte, replace bool) error {
 	if e != nil {
 		return e
 	}
-	defer root.Remove(name)
+	defer func() { _ = root.Remove(name) }()
 	_, e = f.Write(b)
 	if e == nil {
 		e = f.Sync()
@@ -331,8 +332,15 @@ func publishFile(path string, b []byte, replace bool) error {
 	if e != nil {
 		return e
 	}
-	defer dir.Close()
-	return dir.Sync()
+	syncErr := dir.Sync()
+	closeErr := dir.Close()
+	if syncErr != nil {
+		if closeErr != nil {
+			return errors.Join(syncErr, closeErr)
+		}
+		return syncErr
+	}
+	return closeErr
 }
 
 type Error struct {

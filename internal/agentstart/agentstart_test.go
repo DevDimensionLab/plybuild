@@ -302,20 +302,20 @@ func TestAgentStartArgvPerProviderKeepsDefaults(t *testing.T) {
 		mutate func(*StartInput)
 		start  []string
 	}{
-		{"codex inherited defaults", func(in *StartInput) {}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000"}},
+		{"codex inherited defaults", func(in *StartInput) {}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--no-daemon"}},
 		{"claude inherited defaults", func(in *StartInput) { in.Provider = ProviderClaude }, []string{"agent", "start", wantName("fixture-key"), "--kind", "claude", "--pane", "w1:p2", "--timeout", "30000"}},
 		{"claude model and permission mode", func(in *StartInput) {
 			in.Provider, in.Model, in.Permission = ProviderClaude, str("opus"), str("auto")
 		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "claude", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "opus", "--permission-mode", "auto"}},
 		{"codex model permission profile", func(in *StartInput) {
 			in.Model, in.Permission, in.CodexProfile = str("gpt-x"), str("workspace"), str("fast")
-		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "gpt-x", "-c", `default_permissions="workspace"`, "--profile", "fast"}},
+		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "gpt-x", "--no-daemon", "-c", `default_permissions="workspace"`, "--profile", "fast"}},
 		{"claude model and effort", func(in *StartInput) {
 			in.Provider, in.Model, in.Effort = ProviderClaude, str("opus"), str("xhigh")
 		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "claude", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "opus", "--effort", "xhigh"}},
 		{"codex model and effort", func(in *StartInput) {
 			in.Model, in.Effort = str("gpt-x"), str("high")
-		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "gpt-x", "-c", `model_reasoning_effort="high"`}},
+		}, []string{"agent", "start", wantName("fixture-key"), "--kind", "codex", "--pane", "w1:p2", "--timeout", "30000", "--", "--model", "gpt-x", "--no-daemon", "-c", `model_reasoning_effort="high"`}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {

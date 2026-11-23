@@ -25,7 +25,7 @@ func TestPutRejectsFieldRuleViolations(t *testing.T) {
 		{"time impossible date", func(r *PutRequest) { r.RepliedAtUTC = "2026-02-30T14:05:00Z" }},
 		{"title newline", func(r *PutRequest) { r.Title = strPtr("to\nlinjer") }},
 		{"title control", func(r *PutRequest) { r.Title = strPtr("bell\a") }},
-		{"title format character", func(r *PutRequest) { r.Title = strPtr("zero​width") }},
+		{"title format character", func(r *PutRequest) { r.Title = strPtr("zero\u200bwidth") }},
 		{"title line separator", func(r *PutRequest) { r.Title = strPtr("a b") }},
 		{"title trailing newline", func(r *PutRequest) { r.Title = strPtr("Hello\n") }},
 		{"title leading next line", func(r *PutRequest) { r.Title = strPtr("\u0085Hello") }},

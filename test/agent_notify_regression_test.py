@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -217,6 +218,22 @@ class UpgradeRegression(unittest.TestCase):
         (new/'SKILL.md').write_bytes(b'new skill')
         install.install(old,dest)
         return install,old,new,dest,backup
+
+    def test_installer_cli_reports_conflict_code_and_recovery_guidance(self):
+        install,old,_,dest,backup=self.fixture()
+        self.addCleanup(shutil.rmtree, dest.parent)
+        (dest/'custom.txt').write_bytes(b'custom')
+        command=[sys.executable,'-B',install.__file__,'--destination',str(dest)]
+        upgrade=['--upgrade-from',str(old),'--backup',str(backup)]
+        for flags,state in [([], 'not_attempted'), (upgrade, 'unknown')]:
+            with self.subTest(state=state):
+                result=subprocess.run(command+flags,capture_output=True,text=True)
+                self.assertEqual(result.returncode,2,result.stderr)
+                payload=json.loads(result.stdout)
+                self.assertEqual(payload['state'],state)
+                self.assertEqual(payload.get('code'),'existing_install_conflict')
+                self.assertEqual(payload['reason'],
+                                 'Installation did not complete. Inspect the destination and any preserved backup before recovery; no automatic repair was attempted.')
 
     def test_exact_upgrade_preserves_private_backup(self):
         install,old,new,dest,backup=self.fixture()

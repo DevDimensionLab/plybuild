@@ -49,11 +49,11 @@ func (f *fakeGH) Run(c process.Command) error {
 }
 
 type fixture struct {
-	t                      *testing.T
-	root, projects, marker string
-	gh                     *fakeGH
-	ghMarker               string
-	template               string
+	t              *testing.T
+	root, projects string
+	gh             *fakeGH
+	ghMarker       string
+	template       string
 }
 
 func physical(t *testing.T, path string) string {

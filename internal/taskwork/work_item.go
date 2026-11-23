@@ -401,29 +401,6 @@ func projectAndRepo(snapshot workspace.ProjectSnapshot, projectID workspace.Proj
 	return workspace.ProjectRecord{}, workspace.RepoRecord{}, workspace.WorkError(workspace.ErrorWorkProjectConflict, fmt.Sprintf("repository %s is missing from the Project registry", repoID), nil)
 }
 
-func canonicalAbsentTarget(files workspace.FileSystem, cwd, value string) (string, error) {
-	abs := value
-	if !filepath.IsAbs(abs) {
-		abs = filepath.Join(cwd, abs)
-	}
-	abs = filepath.Clean(abs)
-	leaf := filepath.Base(abs)
-	if leaf == "." || leaf == string(filepath.Separator) || leaf == "" {
-		return "", workspace.WorkError(workspace.ErrorWorkPathConflict, fmt.Sprintf("target path %s has no ordinary leaf", value), nil)
-	}
-	parent, err := workspace.CanonicalDirectory(files, "", filepath.Dir(abs), "Task worktree parent")
-	if err != nil {
-		return "", workspace.WorkError(workspace.ErrorWorkPathConflict, err.Error(), err)
-	}
-	target := filepath.Join(parent, leaf)
-	if info, err := files.Lstat(target); err == nil {
-		return "", workspace.WorkError(workspace.ErrorWorkPathConflict, fmt.Sprintf("target path %s already exists as %s", target, info.Mode().Type()), nil)
-	} else if !errors.Is(err, fs.ErrNotExist) {
-		return "", workspace.WorkError(workspace.ErrorWorkPathConflict, fmt.Sprintf("cannot inspect target path %s", target), err)
-	}
-	return target, nil
-}
-
 func pathsOverlap(a, b string) bool {
 	return a == b || strings.HasPrefix(a, b+string(filepath.Separator)) || strings.HasPrefix(b, a+string(filepath.Separator))
 }
