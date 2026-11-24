@@ -28,22 +28,23 @@ Do not ask for:
 
 ## Card or conversation
 
-Use the card only when all of these hold:
+Use the card only when the question has 2-6 fixed choices (the PWA cannot
+answer a text question) and plyapp-server confirms that your pane gets it:
 
-- The question has 2-6 fixed choices. The PWA cannot answer a text question.
-- Your session is verified: your provider's session ID (`CLAUDE_CODE_SESSION_ID`
-  or `CODEX_THREAD_ID`) equals `agent_session.value` from
-  `herdr pane get "$HERDR_PANE_ID"`. An Assignment
-  label is never a session ID.
-- Your pane has a confirmed chat binding: `plyapp-server pane-chat list` shows
-  a target with `state` `active` whose `pane_id`, `terminal_id` and `provider`
-  equal `pane_id`, `terminal_id` and `agent` from the same `herdr pane get`.
-  plyapp shows the card and wakes you only through that binding. Its
-  `binding_state` does not matter; it reads `busy` while you work.
+```sh
+plyapp-server pane-chat card-ready --pane "$HERDR_PANE_ID" --project PROJECT
+```
 
-Otherwise, also when `plyapp-server` is missing or its list fails, ask the
-question in the active conversation and wait for the answer there; do not
-publish it in Ply.
+`PROJECT` is the question's Project from step 1. Use the card only when the
+command exits 0 with `ready: true` and its `session` equals your provider's
+session ID (`CLAUDE_CODE_SESSION_ID` or `CODEX_THREAD_ID`). An Assignment label
+is never a session ID. The draft takes `provider` and `session` from this answer.
+
+Otherwise ask the question in the active conversation and wait for the answer
+there; do not publish it in Ply. That covers every other outcome: exit 3 (this
+pane or Project gets no card; `reason` says why when JSON is printed), exit 4
+(the server cannot tell now), any other failure, and a missing `plyapp-server`
+or `HERDR_PANE_ID`.
 
 ## Steps
 
@@ -62,6 +63,8 @@ publish it in Ply.
    If neither source gives a registered project, stop; do not invent or
    create a registration. Set `task_id` only to an existing Task your
    assignment names, else `null`; never create a Task to ask a question.
+   Then run the card-ready check from Card or conversation with this
+   `PROJECT`; continue with step 2 only when the card applies.
    With a Task, `repo_id` is that Task's repository; otherwise it is the
    `repo_id` of your repository, or `null` when none matched.
 2. **Key.** Choose `activity_id`, a stable lowercase key for your assignment or
@@ -70,13 +73,14 @@ publish it in Ply.
    `question_id`, in your progress notes so that a resumed you reuses them.
 3. **Draft.** Write the draft JSON to a new private file outside the
    repository, for example under `mktemp -d`. Every field is required; use
-   `null` where allowed. `session_id` is your verified session ID.
+   `null` where allowed. `provider` and `session_id` are `provider` and
+   `session` from card-ready.
 
    ```json
    {"kind":"ply.workflow.human-input-question-draft","schema_version":1,
     "publication_key":"docs-export/format","project_id":"ply","repo_id":"ply","task_id":null,
     "activity_id":"docs-export","activity_title":"Document the export format",
-    "provider":"claude","session_id":"<agent_session.value>","origin_cwd":"<pwd -P>",
+    "provider":"claude","session_id":"<card-ready session>","origin_cwd":"<pwd -P>",
     "text":"Which README section should this task write?",
     "reason":"The goal leaves the scope of the README change open.",
     "answer_kind":"choice",
@@ -84,8 +88,7 @@ publish it in Ply.
                {"id":"full","label":"Full reference","consequence":"A new section with every flag."}]}
    ```
 
-   Set `provider` to `claude` or `codex` (what you are). Keep the question
-   self-contained: the human reads it without your conversation.
+   Keep the question self-contained: the human reads it without your conversation.
 4. **Publish.** Run
    `ply workflow input ask --workspace WS --file DRAFT --format json` and keep
    `question_id`. If the reply is lost or times out, run the same `ask` again

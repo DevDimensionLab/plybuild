@@ -66,17 +66,20 @@ Use ℹ️ for ordinary `done`/status notices and coordinator actions. The indic
 counts toward the title's 60-character limit; keep status and action readable in
 plain text too. Never add an icon or change a title on continuation.
 
-When `ply-human-input` has published a necessary Q, that skill owns the complete
-question and answer. Reuse this job's authorized route and activity with one Q-derived
-event ID `human-input/QUESTION_ID`. Immediately
+A necessary question with 2-6 fixed choices goes through `ply-human-input` first. When that
+skill publishes it as a Ply Q, it owns the complete question and answer, and you send
+`needs_answer` only after publication. Reuse this job's authorized route and activity with one
+Q-derived event ID `human-input/QUESTION_ID`. Immediately
 before invocation, the owner reads the same Q; answered/withdrawn needs no alert.
 For this branch only, the `needs_answer` summary is an alert containing
 `?`, such as `A necessary question is waiting. Can you answer it in the plyapp PWA?`;
 the next action is `Open the plyapp PWA and select <Herdr name> under Mine.`
 Keep the full question/reason/consequences in Ply/app rather than truncating or
 copying them into Slack. Do not export private details or answer text. Missing route
-authority is `not_attempted`, without setup or a new permission round. Other feedback
-continues to preserve the actual necessary question in full.
+authority is `not_attempted`, without setup or a new permission round. When
+`ply-human-input` does not publish the question, or is not installed, there is no Q: the
+`needs_answer` summary carries the actual question with its choices, as for other feedback,
+which continues to preserve the actual necessary question in full.
 
 Public text is single-line, with title/summary/action limits of 60/100/140 Unicode characters.
 The notice remains three lines and at most
