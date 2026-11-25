@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/devdimensionlab/plybuild/internal/ghapi"
 	"github.com/devdimensionlab/plybuild/internal/githubbilling"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
@@ -112,7 +113,7 @@ func TestGitHubActionsUsageWithoutMinutesIsAnEmptyList(t *testing.T) {
 }
 
 func TestGitHubActionsErrorIsReportedWithItsCodeOnly(t *testing.T) {
-	failure := fmt.Errorf("%w: billing usage needs the gh scope user", githubbilling.ErrScope)
+	failure := fmt.Errorf("%w: billing usage needs the gh scope user", ghapi.ErrScope)
 	for _, command := range []string{"quota", "usage"} {
 		stdout, err := executeGitHub(t, githubActionsTestEnv(githubActionsHome(t, 3000), failure), "actions", command, "--format", "json")
 		if err == nil {

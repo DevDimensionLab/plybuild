@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/devdimensionlab/plybuild/internal/agentlaunch"
-	"gopkg.in/yaml.v3"
 )
 
 func TestAgentAssignmentBuildsPullPrompt(t *testing.T) {
@@ -109,42 +108,5 @@ func TestAgentAssignmentRejectsUnknownProviderBeforeLookup(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "--provider") {
 			t.Fatalf("provider %q: %v", provider, err)
 		}
-	}
-}
-
-func TestAssignmentSkillLabelFollowsActualProvider(t *testing.T) {
-	skill, err := os.ReadFile(filepath.Join("..", "skills", "ply-assignment", "SKILL.md"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	text := string(skill)
-	for _, rule := range []string{
-		"`claude:${CLAUDE_SESSION_ID}`",
-		"`codex:` plus random hex",
-		"never another provider's prefix",
-		"Never send done in the same batch",
-		"`--workspace <root>`",
-	} {
-		if !strings.Contains(text, rule) {
-			t.Fatalf("skill lacks %q", rule)
-		}
-	}
-}
-
-func TestAssignmentSkillFrontmatterIsValidYAML(t *testing.T) {
-	skill, err := os.ReadFile(filepath.Join("..", "skills", "ply-assignment", "SKILL.md"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	parts := strings.SplitN(string(skill), "---\n", 3)
-	if len(parts) != 3 || parts[0] != "" {
-		t.Fatal("skill lacks a --- delimited frontmatter")
-	}
-	var meta struct{ Name, Description string }
-	if err = yaml.Unmarshal([]byte(parts[1]), &meta); err != nil {
-		t.Fatalf("frontmatter is not valid YAML: %v", err)
-	}
-	if meta.Name != "ply-assignment" || !strings.Contains(meta.Description, "$ply-assignment ASSIGNMENT-7 --project ply") {
-		t.Fatalf("frontmatter %+v", meta)
 	}
 }

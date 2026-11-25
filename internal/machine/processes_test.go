@@ -52,12 +52,12 @@ func TestWithProcessesJSON(t *testing.T) {
 	s, _ := Read(fakeReader{cores: 8, load: [3]float64{20, 1, 0.5}, level: 1}, now)
 	base, _ := json.Marshal(s)
 	b, _ := json.Marshal(WithProcesses(s, []Process{{PID: 1, Name: "x", CPUPercent: 1.5, RSSBytes: 2048}}, nil))
-	want := strings.TrimSuffix(string(base), "}") + `,"processes":[{"pid":1,"name":"x","cpu_percent":1.5,"rss_bytes":2048}],"processes_reason":null}`
+	want := strings.TrimSuffix(string(base), "}") + `,"processes":[{"pid":1,"name":"x","cpu_percent":1.5,"rss_bytes":2048,"display_name":null,"category":null}],"processes_reason":null,"process_labels_reason":null}`
 	if string(b) != want {
 		t.Fatalf("got  %s\nwant %s", b, want)
 	}
 	b, _ = json.Marshal(WithProcesses(s, nil, errors.New("boom")))
-	if !strings.HasSuffix(string(b), `"processes":null,"processes_reason":"read_failed"}`) || !strings.Contains(string(b), `"load_percent"`) {
+	if !strings.HasSuffix(string(b), `"processes":null,"processes_reason":"read_failed","process_labels_reason":null}`) || !strings.Contains(string(b), `"load_percent"`) {
 		t.Fatalf("got %s", b)
 	}
 }

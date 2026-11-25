@@ -14,7 +14,9 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
+	"github.com/devdimensionlab/plybuild/internal/ghapi"
 	"github.com/devdimensionlab/plybuild/internal/githubbilling"
+	"github.com/devdimensionlab/plybuild/internal/githubprs"
 	"github.com/devdimensionlab/plybuild/internal/githubrepo"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
@@ -29,9 +31,11 @@ const quotaLowPercent = 20
 
 var errGitHubActionsFailed = errors.New("reading GitHub Actions usage failed")
 
-// githubActionsEnv is the billing reader, clock and home directory of ply github actions.
+// githubActionsEnv is the billing reader, clock and home directory of ply github actions,
+// and the pull request reader of ply github prs.
 type githubActionsEnv struct {
 	read func(ctx context.Context, year int, month time.Month) (githubbilling.Usage, error)
+	prs  func(ctx context.Context) (githubprs.Result, error)
 	now  func() time.Time
 	home func() (string, error)
 }
@@ -41,6 +45,7 @@ func systemGitHubActionsEnv(runner process.Runner) githubActionsEnv {
 		read: func(ctx context.Context, year int, month time.Month) (githubbilling.Usage, error) {
 			return githubbilling.Read(ctx, runner, year, month)
 		},
+		prs:  func(ctx context.Context) (githubprs.Result, error) { return githubprs.Read(ctx, runner) },
 		now:  time.Now,
 		home: os.UserHomeDir,
 	}
@@ -177,7 +182,19 @@ func newGitHubCommand(env githubActionsEnv) *cobra.Command {
 		},
 	})
 	github.AddCommand(actions)
+	github.AddCommand(newGitHubPRsCommand(env))
 	return github
+}
+
+// githubError is the code and description of a failed ply github read.
+func githubError(err error) *githubActionsError {
+	code := ghapi.ErrFailed
+	for _, known := range []error{ghapi.ErrMissing, ghapi.ErrAuth, ghapi.ErrScope, ghapi.ErrTimeout} {
+		if errors.Is(err, known) {
+			code = known
+		}
+	}
+	return &githubActionsError{Code: code.Error(), Description: strings.TrimPrefix(err.Error(), code.Error()+": ")}
 }
 
 type githubActionsReport struct {
@@ -193,14 +210,7 @@ func githubActionsRead(ctx context.Context, env githubActionsEnv) (githubActions
 	report := githubActionsReport{githubActionsUsage: githubActionsUsage{Kind: "PlyGitHubActionsUsage@1", SchemaVersion: 1, Source: "github"}, period: period}
 	usage, err := env.read(ctx, period.Year(), period.Month())
 	if err != nil {
-		code := githubbilling.ErrFailed
-		for _, known := range []error{githubbilling.ErrMissing, githubbilling.ErrAuth, githubbilling.ErrScope, githubbilling.ErrTimeout} {
-			if errors.Is(err, known) {
-				code = known
-			}
-		}
-		report.Status = "error"
-		report.Error = &githubActionsError{Code: code.Error(), Description: strings.TrimPrefix(err.Error(), code.Error()+": ")}
+		report.Status, report.Error = "error", githubError(err)
 		return report, nil, errGitHubActionsFailed
 	}
 	report.Status, report.ObservedAt, report.Unit = "ok", githubActionsTime(now), "minutes"

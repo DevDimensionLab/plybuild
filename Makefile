@@ -208,7 +208,6 @@ preflight: compatibility
 	for test_script in "$$scripts_dir"/test-*; do \
 		[ -f "$$test_script" ] || continue; \
 		name=$${test_script##*/}; \
-		[ "$$name" != test-human-input-journey ] || continue; \
 		production_name=$${name#test-}; \
 		if [ -L "$$test_script" ]; then \
 			printf 'preflight: meta-test is a symlink: %s\n' "$$name" >&2; \
@@ -226,7 +225,6 @@ preflight: compatibility
 		exit 1; \
 	fi; \
 	for test_script in "$$scripts_dir"/test-*; do \
-		[ "$${test_script##*/}" != test-human-input-journey ] || continue; \
 		$(BASH) "$$test_script"; \
 	done
 	$(BASH) "$(REPO_ROOT)/.quality/tools/test-quality-audit.sh"
@@ -428,37 +426,3 @@ upgrade:
 	$(GO) clean
 
 all: build
-
-# Agent notification skill: installation is an explicit, separate effect.
-# Without AGENT_NOTIFY_DEST, install.py's own default (common.DEST) decides the path.
-AGENT_NOTIFY_DEST ?=
-AGENT_NOTIFY_TEST_ROOT ?=
-.PHONY: install-agent-notify test-agent-notify
-install-agent-notify:
-	$(PYTHON) skills/ply-agent-notify/scripts/install.py $(if $(AGENT_NOTIFY_DEST),--destination "$(AGENT_NOTIFY_DEST)",)
-
-test-agent-notify:
-	$(PYTHON) test/agent_notify_acceptance.py $(if $(AGENT_NOTIFY_TEST_ROOT),--root "$(AGENT_NOTIFY_TEST_ROOT)",)
-
-# Human-input skill: installation is an explicit, separate effect. A different
-# existing skill is replaced only with HUMAN_INPUT_SKILL_BACKUP=/new/path.
-HUMAN_INPUT_SKILL_DEST ?= $(HOME)/.agents/skills/ply-human-input
-HUMAN_INPUT_SKILL_BACKUP ?=
-.PHONY: install-human-input-skill test-human-input-skill
-install-human-input-skill:
-	scripts/install-human-input-skill --destination "$(HUMAN_INPUT_SKILL_DEST)" $(if $(HUMAN_INPUT_SKILL_BACKUP),--backup "$(HUMAN_INPUT_SKILL_BACKUP)",)
-
-test-human-input-skill:
-	scripts/test-install-human-input-skill
-
-# Assignment skill: installation is an explicit, separate effect with no default destination.
-ASSIGNMENT_SKILL_DEST ?=
-.PHONY: install-assignment-skill
-install-assignment-skill:
-	/bin/sh "$(REPO_ROOT)/scripts/install-assignment-skill.sh" "$(REPO_ROOT)/skills/ply-assignment/SKILL.md" "$(ASSIGNMENT_SKILL_DEST)"
-
-# Machine-load skill: installation is an explicit, separate effect with no default destination.
-MACHINE_LOAD_SKILL_DEST ?=
-.PHONY: install-machine-load-skill
-install-machine-load-skill:
-	/bin/sh "$(REPO_ROOT)/scripts/install-assignment-skill.sh" "$(REPO_ROOT)/skills/ply-machine-load/SKILL.md" "$(MACHINE_LOAD_SKILL_DEST)"

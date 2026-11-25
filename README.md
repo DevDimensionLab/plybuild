@@ -872,17 +872,12 @@ append-only record in `<assignments>/.lifecycle/ASSIGNMENT-<n>.json`. A record t
 cannot be read is listed under `invalid` as `assignment_lifecycle_invalid`, its
 Assignment appears in no view, and Ply refuses to change it; repair is a human task.
 
-The repository-owned skill [ply-assignment](skills/ply-assignment/SKILL.md) lets a
-human start an agent session on one Assignment: the agent reads it itself with
-`ply assignment show`, takes it, and marks it done or releases it. Install it explicitly; there is no default destination and an
-existing different `SKILL.md` is reported as `existing_install_conflict`, never
-overwritten:
+The skill ply-assignment lets a human start an agent session on one Assignment: the
+agent reads it itself with `ply assignment show`, takes it, and marks it done or
+releases it. The skill is maintained outside this repository, in
+`~/.agents/skills/ply-assignment`.
 
-```sh
-make install-assignment-skill ASSIGNMENT_SKILL_DEST=<repo>/.claude/skills/ply-assignment
-```
-
-Then start Claude in that repository with the Assignment as the initial prompt, either
+Start Claude in that repository with the Assignment as the initial prompt, either
 interactively, `claude "/ply-assignment ASSIGNMENT-7"`, or non-interactively. This
 form was qualified with Claude Code 2.1.309, as a project skill in an isolated
 workspace; add the tools the work itself needs, such as `Write`:
@@ -901,9 +896,7 @@ session with `claude -p --resume <session-id> "/ply-assignment ASSIGNMENT-7"` (s
 flags), which adopts the claim by its label, or, if the session is lost, a human
 revokes the claim as above.
 
-Codex finds the same skill under `.agents/skills`, for example
-`make install-assignment-skill ASSIGNMENT_SKILL_DEST=<repo>/.agents/skills/ply-assignment`
-(or `~/.agents/skills/ply-assignment`), and invokes it explicitly with `$skill-name`:
+Codex finds the same skill under `~/.agents/skills` and invokes it explicitly with `$skill-name`:
 `codex '$ply-assignment ASSIGNMENT-7 --project ply'`. Single quotes keep the shell
 from expanding `$`. Its take is labelled `codex:<random hex>`.
 
@@ -1148,16 +1141,16 @@ correctness, human acceptance, or that anyone read the message. Unknown outcomes
 resent. Requests v1–v3 of the removed delivery process are refused; their stored records are
 read as history and never sent again.
 
-The repository provides [ply-agent-notify](skills/ply-agent-notify/SKILL.md), with an
-[installation and diagnosis procedure](skills/ply-agent-notify/references/usage.md).
-An authorized task adopts that procedure to preserve its return/question, preview,
+The skill ply-agent-notify, maintained outside this repository in
+`~/.agents/skills/ply-agent-notify` (with its installation and diagnosis procedure in
+`references/usage.md`), is the agent procedure. An authorized task adopts that procedure to preserve its return/question, preview,
 apply at most once and read back through Ply. Optional questions, internal corrections
 and an ending still waiting for the same answer send nothing. The same logical event
 keeps its ID across restarts and port revisions. Unknown delivery never permits a new
 ID, route or state root to resend. The skill provides no crash watcher.
 
-During a separately authorized installation activity, run `make install-agent-notify`,
-then run the installed skill's `scripts/bootstrap.py`. Bootstrap accepts the existing
+During a separately authorized installation activity, run the installed skill's
+`scripts/bootstrap.py`. Bootstrap accepts the existing
 webhook from `PLY_SLACK_WEBHOOK_URL` or hidden terminal input and stores it privately
 at `~/.config/ply/notifications/ply-log/webhook`. It creates
 the adjacent non-secret `route.json` for `ply-log` and uses the fixed private state
@@ -1166,12 +1159,6 @@ Normal helper invocations prefer the environment, otherwise read only that named
 0600 file in its 0700 directory, and pass the credential only to Ply send/check.
 Invalid environment values never fall back; conflicts and unsafe files are preserved.
 No webhook belongs in a prompt, argv, repository, report or ordinary log.
-
-Run `make test-agent-notify` for isolated installation, bootstrap and actual
-helper/CLI interaction with controlled fake transport. Set `AGENT_NOTIFY_TEST_ROOT`
-to a new private fixture path and `AGENT_NOTIFY_DEST` for fixture-only installation.
-The technical tests use no Slack service. Personal installation and the useful,
-human-observed agent journey remain a separate QA activity.
 
 ### Human input from an ordinary agent
 
@@ -1182,14 +1169,7 @@ discovers questions with `list`/`show` and records the answer with
 `answer preview`/`apply`/`status`; the agent waits, acknowledges and reports its
 use. Nothing starts or wakes an agent, and no Task is created. The versioned
 contract is [schemas/workflow-human-input-v1](schemas/workflow-human-input-v1/README.md);
-the agent procedure is the [ply-human-input skill](skills/ply-human-input/SKILL.md).
-`make install-human-input-skill` installs it to `~/.agents/skills/ply-human-input`
-(identical install is a no-op; a different skill is replaced only with
-`HUMAN_INPUT_SKILL_BACKUP=/new/path`). `make test-human-input-skill` checks the
-installer in an isolated `/private/tmp` root. A copied directory is not evidence that an agent
-can use the skill: confirm that the Claude and Codex entry points actually
-discover it, or that a readable mandate pointer such as the existing
-`~/.agents/AGENTS.md` names it. That check is part of installation and needs no
-broad provider configuration change.
+the agent procedure is the ply-human-input skill, maintained outside this repository in
+`~/.agents/skills/ply-human-input`.
 
 Workspace Project/repository/Epic definitions can live outside disposable runtime data.

@@ -401,31 +401,7 @@ func TestAssignmentConcurrentTakeProcesses(t *testing.T) {
 	}
 }
 
-func TestAssignmentSkillAndReadmeDescribeLifecycle(t *testing.T) {
-	skill, err := os.ReadFile(filepath.Join("..", "skills", "ply-assignment", "SKILL.md"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	text := string(skill)
-	order := []string{
-		"ply assignment show ASSIGNMENT-<n>",
-		"ply assignment take ASSIGNMENT-<n> --revision <r> --as <label>",
-		"ply assignment done ASSIGNMENT-<n>",
-		"ply assignment release ASSIGNMENT-<n>",
-	}
-	last := -1
-	for _, step := range order {
-		at := strings.Index(text, step)
-		if at <= last {
-			t.Fatalf("skill step %q missing or out of order", step)
-		}
-		last = at
-	}
-	for _, rule := range []string{"Never revoke", "never start work without a claim"} {
-		if !strings.Contains(text, rule) {
-			t.Fatalf("skill lacks %q", rule)
-		}
-	}
+func TestReadmeAllowedToolsCoverTheAssignmentLifecycle(t *testing.T) {
 	readme, err := os.ReadFile(filepath.Join("..", "README.md"))
 	if err != nil {
 		t.Fatal(err)
@@ -439,51 +415,5 @@ func TestAssignmentSkillAndReadmeDescribeLifecycle(t *testing.T) {
 	}
 	if !found {
 		t.Fatalf("README --allowedTools lacks take, done and release: %v", example)
-	}
-}
-
-// TestAssignmentSkillStepJumpsFollowTheFlow checks that every "go to step N"
-// in the skill names an existing step, and that an adopted claim still reads
-// the Task references before working.
-func TestAssignmentSkillStepJumpsFollowTheFlow(t *testing.T) {
-	skill, err := os.ReadFile(filepath.Join("..", "skills", "ply-assignment", "SKILL.md"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	steps := map[string]string{}
-	for _, match := range regexp.MustCompile(`(?m)^## (\d+)\. (.+)$`).FindAllStringSubmatch(string(skill), -1) {
-		steps[match[1]] = match[2]
-	}
-	// A bullet and its indented continuation lines are one line here.
-	var lines []string
-	for _, line := range strings.Split(string(skill), "\n") {
-		if strings.HasPrefix(line, "  ") && len(lines) > 0 && strings.HasPrefix(lines[len(lines)-1], "- ") {
-			lines[len(lines)-1] += " " + strings.TrimSpace(line)
-			continue
-		}
-		lines = append(lines, line)
-	}
-	jumps := map[string]string{}
-	for _, line := range lines {
-		if match := regexp.MustCompile(`go to step (\d+)`).FindStringSubmatch(line); match != nil {
-			if _, ok := steps[match[1]]; !ok {
-				t.Fatalf("jump to missing step %s: %q", match[1], line)
-			}
-			jumps[line] = steps[match[1]]
-		}
-	}
-	targets := map[string]string{"own label": "", "`available`": ""}
-	for line, step := range jumps {
-		for key := range targets {
-			if strings.Contains(line, key) {
-				targets[key] = step
-			}
-		}
-	}
-	if !strings.HasPrefix(targets["own label"], "Follow references") {
-		t.Fatalf("adopted claim goes to %q, want the references step", targets["own label"])
-	}
-	if !strings.HasPrefix(targets["`available`"], "Take it") {
-		t.Fatalf("available goes to %q, want the take step", targets["`available`"])
 	}
 }

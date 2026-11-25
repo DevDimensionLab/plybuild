@@ -65,7 +65,7 @@ EOF
 
 chmod +x "$fake_bin/go" "$fake_bin/golangci-lint" "$fake_bin/bash"
 
-for script in alpha beta test-alpha test-beta compat_root.sh compat_root_test.sh test-human-input-journey; do
+for script in alpha beta test-alpha test-beta compat_root.sh compat_root_test.sh; do
 	touch "$complete_scripts/$script"
 done
 for script in alpha beta test-alpha; do

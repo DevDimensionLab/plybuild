@@ -4,30 +4,14 @@
 package githubbilling
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 	"regexp"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
-	"github.com/devdimensionlab/plybuild/internal/githubrepo"
-)
-
-// CallTimeout bounds each gh call.
-const CallTimeout = 20 * time.Second
-
-var (
-	ErrMissing = errors.New("gh_missing")
-	ErrAuth    = errors.New("gh_auth")
-	ErrScope   = errors.New("gh_scope")
-	ErrTimeout = errors.New("timeout")
-	ErrFailed  = errors.New("gh_failed")
+	"github.com/devdimensionlab/plybuild/internal/ghapi"
 )
 
 // Item is one billing usage row: one day, product, SKU and repository.
@@ -50,14 +34,14 @@ func Read(ctx context.Context, runner process.Runner, year int, month time.Month
 	var user struct {
 		Login string `json:"login"`
 	}
-	if err := call(ctx, runner, "/user", &user); err != nil {
-		if errors.Is(err, errNotPermitted) {
-			return Usage{}, fmt.Errorf("%w: gh could not read the logged-in user", ErrAuth)
+	if err := ghapi.Get(ctx, runner, "/user", nil, &user); err != nil {
+		if errors.Is(err, ghapi.ErrNotPermitted) {
+			return Usage{}, fmt.Errorf("%w: gh could not read the logged-in user", ghapi.ErrAuth)
 		}
 		return Usage{}, err
 	}
 	if !login.MatchString(user.Login) {
-		return Usage{}, fmt.Errorf("%w: unreadable login", ErrFailed)
+		return Usage{}, fmt.Errorf("%w: unreadable login", ghapi.ErrFailed)
 	}
 	var body struct {
 		UsageItems []struct {
@@ -69,9 +53,9 @@ func Read(ctx context.Context, runner process.Runner, year int, month time.Month
 		} `json:"usageItems"`
 	}
 	path := fmt.Sprintf("/users/%s/settings/billing/usage?year=%d&month=%d", user.Login, year, int(month))
-	if err := call(ctx, runner, path, &body); err != nil {
-		if errors.Is(err, errNotPermitted) {
-			return Usage{}, fmt.Errorf("%w: billing usage needs the gh scope user", ErrScope)
+	if err := ghapi.Get(ctx, runner, path, nil, &body); err != nil {
+		if errors.Is(err, ghapi.ErrNotPermitted) {
+			return Usage{}, fmt.Errorf("%w: billing usage needs the gh scope user", ghapi.ErrScope)
 		}
 		return Usage{}, err
 	}
@@ -80,41 +64,4 @@ func Read(ctx context.Context, runner process.Runner, year int, month time.Month
 		usage.Items = append(usage.Items, Item{Product: i.Product, SKU: i.SKU, UnitType: i.UnitType, Repository: i.RepositoryName, Quantity: i.Quantity})
 	}
 	return usage, nil
-}
-
-// errNotPermitted is an HTTP 403 or 404: ErrScope for billing, ErrAuth for the user.
-var errNotPermitted = errors.New("not permitted")
-
-// call runs one `gh api --method GET path` and decodes its stdout into out.
-func call(ctx context.Context, runner process.Runner, path string, out interface{}) error {
-	ctx, cancel := context.WithTimeout(ctx, CallTimeout)
-	defer cancel()
-	var stdout bytes.Buffer
-	err := runner.Run(process.Command{Name: "gh", Args: []string{"api", "--method", "GET", path}, Context: ctx,
-		Env: githubrepo.Env(os.Environ()), Stdout: &stdout, Stderr: io.Discard})
-	var exitErr *exec.ExitError
-	switch {
-	case errors.Is(err, exec.ErrNotFound):
-		return fmt.Errorf("%w: gh is not installed", ErrMissing)
-	case errors.Is(err, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded):
-		return fmt.Errorf("%w: gh api did not answer within %s", ErrTimeout, CallTimeout)
-	case errors.As(err, &exitErr) && exitErr.ExitCode() == 4:
-		return fmt.Errorf("%w: gh is not logged in", ErrAuth)
-	case err != nil:
-		var status struct {
-			Status string `json:"status"`
-		}
-		_ = json.Unmarshal(stdout.Bytes(), &status)
-		switch status.Status {
-		case "401":
-			return fmt.Errorf("%w: gh credentials were rejected", ErrAuth)
-		case "403", "404":
-			return errNotPermitted
-		}
-		return fmt.Errorf("%w: gh api failed", ErrFailed)
-	}
-	if json.Unmarshal(stdout.Bytes(), out) != nil {
-		return fmt.Errorf("%w: unreadable gh api response", ErrFailed)
-	}
-	return nil
 }

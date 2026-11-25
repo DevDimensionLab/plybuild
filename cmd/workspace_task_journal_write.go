@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/taskactor"
@@ -66,21 +67,25 @@ func addWorkspaceTaskJournalWriteCommands(journal *cobra.Command, d taskwork.Dep
 // newJournalWriteCommand builds step start, step finish or note. The record
 // gets Ply's current time; its outcome and text stay the reporter's claims.
 func newJournalWriteCommand(d taskwork.Dependencies, verb string) *cobra.Command {
-	var id, kind, parent, title, outcome, actor, role string
+	var id, kind, parent, title, outcome, actor, role, reason, dependency, nextActor string
 	var sources []string
 	use := map[string]string{
 		"start":  "start <task-id> --id <step-id> --kind <kind> --title <title>",
 		"finish": "finish <task-id> --id <step-id> --kind <kind> --title <title> [--outcome <outcome>]",
 		"note":   "note <task-id> --title <title> [--outcome <outcome>]",
 	}[verb]
+	long := "The record gets Ply's current time and needs no source; --source adds an existing file that Ply keeps a copy of.\n" +
+		"A finish repeats the --id and --kind of its start. A step inside another, such as a correction inside an implementation, names the outer step with --parent.\n" +
+		"Step kinds: " + strings.Join(taskjournal.StepKinds, ", ") + ". Outcomes: " + strings.Join(taskjournal.Outcomes, ", ") + "."
+	if verb == "start" {
+		long += "\nA waiting step names what it waits for with --reason, --dependency and --next-actor."
+	}
 	c := &cobra.Command{
 		Use:   use,
 		Short: map[string]string{"start": "Record that a work step started now", "finish": "Record that a work step finished now", "note": "Record a note now, for example at a return"}[verb],
-		Long: "The record gets Ply's current time and needs no source; --source adds an existing file that Ply keeps a copy of.\n" +
-			"A finish repeats the --id and --kind of its start. A step inside another, such as a correction inside an implementation, names the outer step with --parent.\n" +
-			"Step kinds: clarification, planning, implementation, verification, review, correction, coordination. Outcomes: pass, fail, complete, blocked, unknown, deferred, declined.",
+		Long:  long,
 		Example: map[string]string{
-			"start":  "  ply workspace task journal step start my-task --id impl --kind implementation --title 'Implement' --actor dev-1\n  ply workspace task journal step start my-task --id fix-1 --kind correction --parent impl --title 'Fix review finding'",
+			"start":  "  ply workspace task journal step start my-task --id impl --kind implementation --title 'Implement' --actor dev-1\n  ply workspace task journal step start my-task --id fix-1 --kind correction --parent impl --title 'Fix review finding'\n  ply workspace task journal step start my-task --id wait-1 --kind waiting --title 'Wait for storage choice' --reason 'Storage choice is open' --dependency 'user answer' --next-actor planner",
 			"finish": "  ply workspace task journal step finish my-task --id impl --kind implementation --title 'Implement' --outcome complete",
 			"note":   "  ply workspace task journal note my-task --title 'Returned to coordinator' --outcome complete",
 		}[verb],
@@ -104,6 +109,11 @@ func newJournalWriteCommand(d taskwork.Dependencies, verb string) *cobra.Command
 				if parent != "" {
 					in.Step.ParentStepID = &parent
 				}
+				w, err := stepWaiting(kind, reason, dependency, nextActor)
+				if err != nil {
+					return err
+				}
+				in.Waiting = w
 			}
 			if outcome != "" {
 				in.Outcome = &outcome
@@ -128,6 +138,11 @@ func newJournalWriteCommand(d taskwork.Dependencies, verb string) *cobra.Command
 		c.Flags().StringVar(&kind, "kind", "", "step kind (required)")
 		c.Flags().StringVar(&parent, "parent", "", "ID of the step this one is inside")
 	}
+	if verb == "start" {
+		c.Flags().StringVar(&reason, "reason", "", "kind waiting: why the step waits (required for waiting)")
+		c.Flags().StringVar(&dependency, "dependency", "", "kind waiting: what it waits for (required for waiting)")
+		c.Flags().StringVar(&nextActor, "next-actor", "", "kind waiting: who acts next (required for waiting)")
+	}
 	if verb != "start" {
 		c.Flags().StringVar(&outcome, "outcome", "", "reported outcome")
 	}
@@ -137,6 +152,21 @@ func newJournalWriteCommand(d taskwork.Dependencies, verb string) *cobra.Command
 	c.Flags().StringArrayVar(&sources, "source", nil, "existing file as evidence; Ply keeps a copy (repeatable)")
 	_ = c.MarkFlagRequired("title")
 	return c
+}
+
+// stepWaiting is what a waiting step waits for: all three fields for kind
+// waiting and none for other kinds.
+func stepWaiting(kind, reason, dependency, nextActor string) (*taskjournal.Waiting, error) {
+	if kind != "waiting" {
+		if reason+dependency+nextActor != "" {
+			return nil, workspace.WorkInvalidArguments("--reason, --dependency and --next-actor are only for --kind waiting")
+		}
+		return nil, nil
+	}
+	if reason == "" || dependency == "" || nextActor == "" {
+		return nil, workspace.WorkInvalidArguments("--kind waiting needs --reason, --dependency and --next-actor")
+	}
+	return &taskjournal.Waiting{Reason: reason, Dependency: dependency, NextActor: nextActor}, nil
 }
 
 // reporter is the actor and role of a record the Task's agent writes: the

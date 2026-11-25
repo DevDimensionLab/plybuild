@@ -18,6 +18,9 @@ type Process struct {
 	Name       string  `json:"name"`
 	CPUPercent float64 `json:"cpu_percent"`
 	RSSBytes   int64   `json:"rss_bytes"`
+	// DisplayName and Category come from the label table; null without a label.
+	DisplayName *string `json:"display_name"`
+	Category    *string `json:"category"`
 }
 
 // ProcessReader is the system seam for --processes.
@@ -31,6 +34,8 @@ type StatusWithProcesses struct {
 	Status
 	Processes       []Process `json:"processes"`
 	ProcessesReason *string   `json:"processes_reason"`
+	// ProcessLabelsReason is set when the label table exists but cannot be read.
+	ProcessLabelsReason *string `json:"process_labels_reason"`
 }
 
 // WithProcesses adds the processes to s; a read error leaves them null with a reason.
@@ -48,9 +53,22 @@ func (s StatusWithProcesses) Text() string {
 		fmt.Fprintf(&b, "\n  processes unknown (%s)", *s.ProcessesReason)
 	}
 	for _, p := range s.Processes {
-		fmt.Fprintf(&b, "\n  %.1f%%  %.0f MiB  %d %s", p.CPUPercent, float64(p.RSSBytes)/(1<<20), p.PID, p.Name)
+		fmt.Fprintf(&b, "\n  %.1f%%  %.0f MiB  %d %s%s", p.CPUPercent, float64(p.RSSBytes)/(1<<20), p.PID, p.Name, p.label())
+	}
+	if s.ProcessLabelsReason != nil {
+		fmt.Fprintf(&b, "\n  process labels unknown (%s)", *s.ProcessLabelsReason)
 	}
 	return b.String()
+}
+
+func (p Process) label() string {
+	switch {
+	case p.DisplayName == nil:
+		return ""
+	case p.Category == nil:
+		return " (" + *p.DisplayName + ")"
+	}
+	return " (" + *p.DisplayName + ", " + *p.Category + ")"
 }
 
 // parseProcesses reads `ps -Ao pid=,pcpu=,rss=,comm=` output: three numbers,

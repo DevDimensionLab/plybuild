@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/devdimensionlab/plybuild/internal/adapter/process"
+	"github.com/devdimensionlab/plybuild/internal/ghapi"
 )
 
 type reply struct {
@@ -72,8 +73,8 @@ func TestReadReturnsTheLoginAndTheMonthsRows(t *testing.T) {
 		t.Fatalf("args %q, want %q", gh.args, wantArgs)
 	}
 	for i, d := range gh.timeout {
-		if d != CallTimeout {
-			t.Fatalf("call %d timeout %v, want %v", i, d, CallTimeout)
+		if d != ghapi.CallTimeout {
+			t.Fatalf("call %d timeout %v, want %v", i, d, ghapi.CallTimeout)
 		}
 	}
 	if env := strings.Join(gh.env[0], "\n"); !strings.Contains(env, "GH_HOST=github.com") || !strings.Contains(env, "GH_PROMPT_DISABLED=1") {
@@ -87,16 +88,16 @@ func TestReadClassifiesFailuresWithoutGhOutput(t *testing.T) {
 		replies []reply
 		want    error
 	}{
-		"gh missing":        {[]reply{{err: &exec.Error{Name: "gh", Err: exec.ErrNotFound}}}, ErrMissing},
-		"not logged in":     {[]reply{{code: 4}}, ErrAuth},
-		"bad credentials":   {[]reply{{stdout: `{"message": "Bad credentials", "status": "401"}`, code: 1}}, ErrAuth},
-		"user not found":    {[]reply{{stdout: notFound, code: 1}}, ErrAuth},
-		"billing not found": {[]reply{{stdout: `{"login": "octo"}`}, {stdout: notFound, code: 1}}, ErrScope},
-		"billing forbidden": {[]reply{{stdout: `{"login": "octo"}`}, {stdout: `{"message": "x", "status": "403"}`, code: 1}}, ErrScope},
-		"timeout":           {[]reply{{err: context.DeadlineExceeded}}, ErrTimeout},
-		"server error":      {[]reply{{stdout: `{"login": "octo"}`}, {stdout: `{"status": "500"}`, code: 1}}, ErrFailed},
-		"unreadable usage":  {[]reply{{stdout: `{"login": "octo"}`}, {stdout: `<html>`}}, ErrFailed},
-		"unsafe login":      {[]reply{{stdout: `{"login": "a/b"}`}}, ErrFailed},
+		"gh missing":        {[]reply{{err: &exec.Error{Name: "gh", Err: exec.ErrNotFound}}}, ghapi.ErrMissing},
+		"not logged in":     {[]reply{{code: 4}}, ghapi.ErrAuth},
+		"bad credentials":   {[]reply{{stdout: `{"message": "Bad credentials", "status": "401"}`, code: 1}}, ghapi.ErrAuth},
+		"user not found":    {[]reply{{stdout: notFound, code: 1}}, ghapi.ErrAuth},
+		"billing not found": {[]reply{{stdout: `{"login": "octo"}`}, {stdout: notFound, code: 1}}, ghapi.ErrScope},
+		"billing forbidden": {[]reply{{stdout: `{"login": "octo"}`}, {stdout: `{"message": "x", "status": "403"}`, code: 1}}, ghapi.ErrScope},
+		"timeout":           {[]reply{{err: context.DeadlineExceeded}}, ghapi.ErrTimeout},
+		"server error":      {[]reply{{stdout: `{"login": "octo"}`}, {stdout: `{"status": "500"}`, code: 1}}, ghapi.ErrFailed},
+		"unreadable usage":  {[]reply{{stdout: `{"login": "octo"}`}, {stdout: `<html>`}}, ghapi.ErrFailed},
+		"unsafe login":      {[]reply{{stdout: `{"login": "a/b"}`}}, ghapi.ErrFailed},
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, err := Read(context.Background(), &fakeGH{replies: test.replies}, 2026, time.November)
@@ -114,7 +115,7 @@ func TestReadCanceledByTheCallerIsNotATimeout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 	_, err := Read(ctx, &fakeGH{replies: []reply{{err: context.Canceled}}}, 2026, time.November)
-	if !errors.Is(err, ErrFailed) {
-		t.Fatalf("error %v, want %v", err, ErrFailed)
+	if !errors.Is(err, ghapi.ErrFailed) {
+		t.Fatalf("error %v, want %v", err, ghapi.ErrFailed)
 	}
 }

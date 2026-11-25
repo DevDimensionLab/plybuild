@@ -143,7 +143,7 @@ func TestCapabilitiesRetainCoreAndAdvertiseReadExtensions(t *testing.T) {
 	}
 	want := map[string]bool{"task.list:progress": false, "task.show:progress": false, "attention:default": false, "epic.list:default": false, "journal.recent:default": false, "worktree.list:default": false, "module.list:default": false, "status:default": false, "workflow.status:default": false, "machine.status:default": false, "machine.status:processes": false}
 	tree := &cobra.Command{Use: "ply"}
-	tree.AddCommand(newWorkspaceCommand(taskwork.Dependencies{}), newWorkflowCommand(), newMachineCommand(nil, nil))
+	tree.AddCommand(newWorkspaceCommand(taskwork.Dependencies{}), newWorkflowCommand(), newMachineCommand(nil, nil, nil))
 	for _, op := range v.Extensions {
 		command, remaining, err := tree.Find(op.Command)
 		if err != nil || len(remaining) != 0 || command.Flags().Lookup("format") == nil {

@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -20,14 +22,66 @@ func runMachine(t *testing.T, read func() (machine.Status, error), args ...strin
 
 func runMachineWith(t *testing.T, read func() (machine.Status, error), processes func() ([]machine.Process, error), args ...string) (string, string, error) {
 	t.Helper()
-	c := newMachineCommand(read, processes)
+	path := filepath.Join(t.TempDir(), "process-labels.json")
+	return runMachineCommand(t, read, processes, path, append([]string{"status"}, args...)...)
+}
+
+func runMachineCommand(t *testing.T, read func() (machine.Status, error), processes func() ([]machine.Process, error), labels string, args ...string) (string, string, error) {
+	t.Helper()
+	c := newMachineCommand(read, processes, func() (string, error) { return labels, nil })
 	c.SilenceUsage, c.SilenceErrors = true, true // as ExecuteE sets on the root
 	var out, errOut bytes.Buffer
 	c.SetOut(&out)
 	c.SetErr(&errOut)
-	c.SetArgs(append([]string{"status"}, args...))
+	c.SetArgs(args)
 	err := c.Execute()
 	return out.String(), errOut.String(), err
+}
+
+func TestMachineProcessLabelNamesTheStatusRow(t *testing.T) {
+	labels := filepath.Join(t.TempDir(), "ply", "process-labels.json")
+	read := func() (machine.Status, error) {
+		return machine.Status{Kind: machine.StatusKind, SchemaVersion: 1, Cores: 1}, nil
+	}
+	processes := func() ([]machine.Process, error) {
+		return []machine.Process{{PID: 9, Name: "Google Chrome Helper (Renderer)", CPUPercent: 3}}, nil
+	}
+	run := func(args ...string) string {
+		t.Helper()
+		out, _, err := runMachineCommand(t, read, processes, labels, args...)
+		if err != nil {
+			t.Fatalf("%v: %v", args, err)
+		}
+		return out
+	}
+	run("status", "--processes", "--format", "json")
+	if _, err := os.Stat(filepath.Dir(labels)); err == nil {
+		t.Fatal("status created the label table")
+	}
+	if out := run("process-label", "set", "Google Chrome Helper (Renderer)", "--display-name", "Chrome tab", "--category", "browser", "--format", "json"); out != `{"name":"Google Chrome Helper (Renderer)","display_name":"Chrome tab","category":"browser"}`+"\n" {
+		t.Fatalf("set %q", out)
+	}
+	if out := run("status", "--processes", "--format", "json"); !strings.Contains(out, `"name":"Google Chrome Helper (Renderer)","cpu_percent":3,"rss_bytes":0,"display_name":"Chrome tab","category":"browser"}],"processes_reason":null,"process_labels_reason":null}`) {
+		t.Fatalf("status %q", out)
+	}
+	if out := run("process-label", "list", "--format", "json"); out != `{"kind":"MachineProcessLabels@1","schema_version":1,"labels":[{"name":"Google Chrome Helper (Renderer)","display_name":"Chrome tab","category":"browser"}]}`+"\n" {
+		t.Fatalf("list %q", out)
+	}
+	if out := run("process-label", "list"); out != "Google Chrome Helper (Renderer): Chrome tab (browser)\n" {
+		t.Fatalf("list text %q", out)
+	}
+	if out := run("process-label", "remove", "Google Chrome Helper (Renderer)", "--format", "json"); out != `{"name":"Google Chrome Helper (Renderer)","removed":true}`+"\n" {
+		t.Fatalf("remove %q", out)
+	}
+	if out := run("process-label", "remove", "Google Chrome Helper (Renderer)"); out != "No label for Google Chrome Helper (Renderer)\n" {
+		t.Fatalf("remove again %q", out)
+	}
+	if out, _, err := runMachineCommand(t, read, processes, labels, "process-label", "set", "x", "--display-name", "X", "--category", "antivirus"); err == nil || out != "" || !strings.HasPrefix(err.Error(), "invalid_arguments: ") {
+		t.Fatalf("bad category: %v %q", err, out)
+	}
+	if !strings.Contains(run("process-label", "set", "--help"), "security, agent, development, browser, sync, system") {
+		t.Fatal("help lacks the categories")
+	}
 }
 
 func TestMachineStatusFormats(t *testing.T) {
@@ -49,7 +103,7 @@ func TestMachineStatusFormats(t *testing.T) {
 	out, _, err = runMachineWith(t, read, func() ([]machine.Process, error) {
 		return []machine.Process{{PID: 7, Name: "node", CPUPercent: 99.5, RSSBytes: 1 << 20}}, nil
 	}, "--processes", "--format", "json")
-	if err != nil || !strings.Contains(out, `"processes":[{"pid":7,"name":"node","cpu_percent":99.5,"rss_bytes":1048576}],"processes_reason":null`) {
+	if err != nil || !strings.Contains(out, `"processes":[{"pid":7,"name":"node","cpu_percent":99.5,"rss_bytes":1048576,"display_name":null,"category":null}],"processes_reason":null,"process_labels_reason":null`) {
 		t.Fatalf("processes json: %v %q", err, out)
 	}
 	out, _, err = runMachineWith(t, read, func() ([]machine.Process, error) { return nil, errors.New("boom") }, "--processes")
