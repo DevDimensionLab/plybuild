@@ -17,7 +17,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/ghapi"
 )
 
-// Deadline bounds the whole read: four searches and one GraphQL call.
+// Deadline bounds the whole read: four searches and the details calls.
 const Deadline = 40 * time.Second
 
 // Reason says why a pull request is on the user.
@@ -175,17 +175,66 @@ func (it searchItem) pullRequest() PullRequest {
 		Reasons: []Reason{}, Detail: "unavailable"}
 }
 
-const detailsQuery = `query{viewer{login} nodes(ids:[%s]){... on PullRequest{id reviewDecision mergeable mergeStateStatus ` +
-	`commits(last:1){nodes{commit{statusCheckRollup{state}}}} reviewThreads(first:100){nodes{isResolved}}}}}`
+// batchSize bounds the pull requests of one details call; GitHub answered 502
+// when one call asked for dozens of pull requests with their review threads.
+const batchSize = 20
 
-// details fills the detail fields of prs, in the order of ids, and returns the
+const detailsQuery = `query{viewer{login} nodes(ids:[%s]){... on PullRequest{id reviewDecision mergeable mergeStateStatus ` +
+	`commits(last:1){nodes{commit{statusCheckRollup{state}}}}%s}}}`
+
+// reviewThreads is asked for only for the user's own pull requests, the only ones that use it.
+const reviewThreads = ` reviewThreads(first:100){nodes{isResolved}}`
+
+// details fills the detail fields of prs, whose node ids are ids, in batches:
+// first the others, then the user's own with review threads. It returns the
 // viewer. A node GitHub refuses stays unavailable; a call without data fails.
 func details(ctx context.Context, runner process.Runner, ids []string, prs []PullRequest) (string, error) {
-	quoted := make([]string, len(ids))
-	for i, id := range ids {
-		quoted[i] = `"` + id + `"`
+	var others, own []int
+	for i := range ids {
+		if hasReason(prs[i], "author") {
+			own = append(own, i)
+		} else {
+			others = append(others, i)
+		}
 	}
-	stdout, err := ghapi.Run(ctx, runner, []string{"api", "graphql", "-f", "query=" + fmt.Sprintf(detailsQuery, strings.Join(quoted, ","))})
+	batches := append(batched(others, ""), batched(own, reviewThreads)...)
+	if len(batches) == 0 {
+		batches = []batch{{}} // the viewer still comes from one call
+	}
+	viewer := ""
+	for _, b := range batches {
+		v, err := b.read(ctx, runner, ids, prs)
+		if err != nil {
+			return "", err
+		}
+		viewer = v
+	}
+	return viewer, nil
+}
+
+// batch is the indexes of at most batchSize pull requests and the extra fields to ask for.
+type batch struct {
+	indexes []int
+	extra   string
+}
+
+func batched(indexes []int, extra string) []batch {
+	var batches []batch
+	for len(indexes) > 0 {
+		n := min(batchSize, len(indexes))
+		batches = append(batches, batch{indexes[:n], extra})
+		indexes = indexes[n:]
+	}
+	return batches
+}
+
+// read runs one details call for the batch and fills its pull requests.
+func (b batch) read(ctx context.Context, runner process.Runner, ids []string, prs []PullRequest) (string, error) {
+	quoted := make([]string, len(b.indexes))
+	for i, at := range b.indexes {
+		quoted[i] = `"` + ids[at] + `"`
+	}
+	stdout, err := ghapi.Run(ctx, runner, []string{"api", "graphql", "-f", "query=" + fmt.Sprintf(detailsQuery, strings.Join(quoted, ","), b.extra)})
 	if errors.Is(err, ghapi.ErrNotPermitted) {
 		return "", fmt.Errorf("%w: GitHub refused the details", ghapi.ErrFailed)
 	}
@@ -200,12 +249,12 @@ func details(ctx context.Context, runner process.Runner, ids []string, prs []Pul
 			Nodes []*detailNode `json:"nodes"`
 		} `json:"data"`
 	}
-	if json.Unmarshal(stdout, &body) != nil || body.Data == nil || body.Data.Viewer.Login == "" || len(body.Data.Nodes) != len(ids) {
+	if json.Unmarshal(stdout, &body) != nil || body.Data == nil || body.Data.Viewer.Login == "" || len(body.Data.Nodes) != len(b.indexes) {
 		return "", fmt.Errorf("%w: unreadable GitHub details", ghapi.ErrFailed)
 	}
 	for i, n := range body.Data.Nodes {
-		if n != nil && n.ID == ids[i] {
-			n.fill(&prs[i])
+		if at := b.indexes[i]; n != nil && n.ID == ids[at] {
+			n.fill(&prs[at])
 		}
 	}
 	return body.Data.Viewer.Login, nil

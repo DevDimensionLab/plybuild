@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -24,11 +25,39 @@ type reply struct {
 	err    error
 }
 
-// fakeGH answers each search by its qualifier and the GraphQL call by "graphql".
+// fakeGH answers each search by its qualifier and the GraphQL call by
+// "graphql", or, with nodes, each GraphQL call from the ids it asks for: an id
+// without a node is refused as SAML refuses it.
 type fakeGH struct {
 	replies   map[string]reply
+	nodes     map[string]string
 	deadlines []time.Duration
 	graphql   string
+	graphqls  []string
+}
+
+var askedIDs = regexp.MustCompile(`ids:\[([^\]]*)\]`)
+
+func (f *fakeGH) answer(query string) reply {
+	m := askedIDs.FindStringSubmatch(query)
+	nodes, errs := []string{}, []string{}
+	for i, id := range strings.Split(m[1], ",") {
+		if id == "" {
+			continue
+		}
+		if n, ok := f.nodes[strings.Trim(id, `"`)]; ok {
+			nodes = append(nodes, n)
+		} else {
+			nodes = append(nodes, "null")
+			errs = append(errs, fmt.Sprintf(`{"type":"FORBIDDEN","path":["nodes",%d],"extensions":{"saml_failure":true}}`, i))
+		}
+	}
+	r := reply{stdout: `{"data":{"viewer":{"login":"me"},"nodes":[` + strings.Join(nodes, ",") + `]}`}
+	if len(errs) > 0 {
+		r.code, r.stdout = 1, r.stdout+`,"errors":[`+strings.Join(errs, ",")+`]`
+	}
+	r.stdout += "}"
+	return r
 }
 
 func (f *fakeGH) Run(c process.Command) error {
@@ -42,6 +71,7 @@ func (f *fakeGH) Run(c process.Command) error {
 		if a == "graphql" {
 			key = "graphql"
 			f.graphql = strings.Join(c.Args[i+1:], " ")
+			f.graphqls = append(f.graphqls, f.graphql)
 		}
 		if strings.HasPrefix(a, "q=") {
 			for _, q := range []string{"user-review-requested:@me", "review-requested:@me", "assignee:@me", "author:@me"} {
@@ -53,6 +83,9 @@ func (f *fakeGH) Run(c process.Command) error {
 		}
 	}
 	r, ok := f.replies[key]
+	if key == "graphql" && f.nodes != nil {
+		r, ok = f.answer(f.graphql), true
+	}
 	if !ok {
 		return fmt.Errorf("no reply for %q", c.Args)
 	}
@@ -107,10 +140,9 @@ func TestReadMergesTheSearchesAndTheDetails(t *testing.T) {
 		"user-review-requested:@me": search(1, false, item("PR_direct", "me/lib", 2, "bob")),
 		"assignee:@me":              search(1, false, item("PR_own", "me/tool", 3, "me")),
 		"author:@me":                search(1, false, item("PR_own", "me/tool", 3, "me")),
-		"graphql": {code: 1, stdout: `{"data":{"viewer":{"login":"me"},"nodes":[null,` +
-			node("PR_direct", "REVIEW_REQUIRED", "MERGEABLE", "BLOCKED", "SUCCESS", 0, 0) + `,` +
-			node("PR_own", "CHANGES_REQUESTED", "CONFLICTING", "DIRTY", "FAILURE", 2, 1) + `]},` +
-			`"errors":[{"type":"FORBIDDEN","path":["nodes",0],"extensions":{"saml_failure":true}}]}`},
+	}, nodes: map[string]string{
+		"PR_direct": node("PR_direct", "REVIEW_REQUIRED", "MERGEABLE", "BLOCKED", "SUCCESS", 0, 0),
+		"PR_own":    node("PR_own", "CHANGES_REQUESTED", "CONFLICTING", "DIRTY", "FAILURE", 2, 1),
 	}}
 	got, err := Read(context.Background(), gh)
 	if err != nil {
@@ -119,8 +151,8 @@ func TestReadMergesTheSearchesAndTheDetails(t *testing.T) {
 	if got.Viewer != "me" || len(got.IncompleteReasons) != 0 {
 		t.Fatalf("viewer %q incomplete %v", got.Viewer, got.IncompleteReasons)
 	}
-	if !strings.Contains(gh.graphql, `"PR_team","PR_direct","PR_own"`) {
-		t.Fatalf("graphql asked %s", gh.graphql)
+	if len(gh.graphqls) != 2 || !strings.Contains(gh.graphqls[0], `ids:["PR_team","PR_direct"]`) || !strings.Contains(gh.graphqls[1], `ids:["PR_own"]`) {
+		t.Fatalf("graphql asked %q", gh.graphqls)
 	}
 	want := []PullRequest{
 		{Repository: "org/app", Number: 1, Title: "T1", URL: "https://github.com/org/app/pull/1", Author: "ann", CreatedAt: "2026-11-01T00:00:00Z", UpdatedAt: "2026-11-21T00:00:00Z",
@@ -245,5 +277,60 @@ func TestReadHasOneDeadline(t *testing.T) {
 		if d > 5*time.Second {
 			t.Fatalf("call deadline %v beyond the caller's", d)
 		}
+	}
+}
+
+// Details come in batches of at most 20, and review threads, which only the
+// user's own pull requests use, are asked for only in their batches: GitHub
+// answered 502 when one query asked for the threads of dozens of pull requests.
+func TestDetailsComeInBatches(t *testing.T) {
+	var team, own []string
+	nodes := map[string]string{}
+	for n := 1; n <= 45; n++ {
+		id := fmt.Sprintf("PR_t%d", n)
+		team, nodes[id] = append(team, item(id, "org/app", n, "ann")), node(id, "", "MERGEABLE", "BLOCKED", "", 0, 0)
+	}
+	for n := 1; n <= 2; n++ {
+		id := fmt.Sprintf("PR_o%d", n)
+		own, nodes[id] = append(own, item(id, "me/tool", n, "me")), node(id, "", "MERGEABLE", "CLEAN", "", 1, 0)
+	}
+	gh := &fakeGH{replies: map[string]reply{
+		"review-requested:@me": search(45, false, team...), "user-review-requested:@me": search(0, false), "assignee:@me": search(0, false),
+		"author:@me": search(2, false, own...),
+	}, nodes: nodes}
+	got, err := Read(context.Background(), gh)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var sizes []int
+	for _, q := range gh.graphqls {
+		ids := strings.Count(askedIDs.FindStringSubmatch(q)[1], `"`) / 2
+		sizes = append(sizes, ids)
+		if threads := strings.Contains(q, "reviewThreads"); threads != strings.Contains(q, "PR_o") {
+			t.Fatalf("threads %v in %s", threads, q)
+		}
+	}
+	if fmt.Sprint(sizes) != "[20 20 5 2]" {
+		t.Fatalf("batches %v", sizes)
+	}
+	for _, pr := range got.PullRequests {
+		if pr.Detail != "available" || (pr.Author == "me") != (pr.UnresolvedThreads != nil) {
+			t.Fatalf("%+v", pr)
+		}
+	}
+}
+
+// A batch GitHub fails, as with 502 Bad Gateway, fails the read as before.
+func TestAFailedBatchFailsTheRead(t *testing.T) {
+	var team []string
+	for n := 1; n <= 25; n++ {
+		team = append(team, item(fmt.Sprintf("PR_t%d", n), "org/app", n, "ann"))
+	}
+	gh := &fakeGH{replies: map[string]reply{
+		"review-requested:@me": search(25, false, team...), "user-review-requested:@me": search(0, false), "assignee:@me": search(0, false), "author:@me": search(0, false),
+		"graphql": {code: 1, stdout: `{"message":"Bad Gateway","status":"502"}`},
+	}}
+	if _, err := Read(context.Background(), gh); !errors.Is(err, ghapi.ErrFailed) || len(gh.graphqls) != 1 {
+		t.Fatalf("%v after %d calls", err, len(gh.graphqls))
 	}
 }
