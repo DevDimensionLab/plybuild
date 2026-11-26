@@ -60,24 +60,152 @@ func newGitHubPRsCommand(env githubActionsEnv) *cobra.Command {
 		},
 	}
 	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	c.AddCommand(newGitHubPRsListCommand(env), newGitHubPRsDetailsCommand(env))
 	return c
+}
+
+type githubPRsList struct {
+	Kind              string              `json:"kind"`
+	SchemaVersion     int                 `json:"schema_version"`
+	Status            string              `json:"status"`
+	Error             *githubActionsError `json:"error,omitempty"`
+	ObservedAt        string              `json:"observed_at,omitempty"`
+	IncompleteReasons *[]string           `json:"incomplete_reasons,omitempty"`
+	PullRequests      *[]githubprs.Listed `json:"pull_requests,omitempty"`
+}
+
+type githubPRsDetails struct {
+	Kind          string                `json:"kind"`
+	SchemaVersion int                   `json:"schema_version"`
+	Status        string                `json:"status"`
+	Error         *githubActionsError   `json:"error,omitempty"`
+	ObservedAt    string                `json:"observed_at,omitempty"`
+	PullRequests  *[]githubprs.Detailed `json:"pull_requests,omitempty"`
+}
+
+func newGitHubPRsListCommand(env githubActionsEnv) *cobra.Command {
+	return githubPRsSubcommand("list", "List the open pull requests that are on you, from the searches only",
+		"List the open pull requests on you from GitHub's search alone, quickly also with many: id (GitHub's node id),\n"+
+			"repository, number, title, url, author, draft, times, reasons and needs_you (review_requested and assigned only;\n"+
+			"the reasons on your own pull requests come with ply github prs details). At most 20 seconds; nothing is kept.",
+		func(cmd *cobra.Command) (any, string, error) {
+			doc := githubPRsList{Kind: "PlyGitHubPullRequestList@1", SchemaVersion: 1, Status: "ok"}
+			result, err := env.list(cmd.Context())
+			if err != nil {
+				doc.Status, doc.Error = "error", githubError(err)
+				return doc, githubPRsFailureText(doc.Error), errGitHubPRsFailed
+			}
+			doc.ObservedAt, doc.IncompleteReasons, doc.PullRequests = githubActionsTime(env.now()), &result.IncompleteReasons, &result.PullRequests
+			var b strings.Builder
+			for _, pr := range result.PullRequests {
+				fmt.Fprintf(&b, "  %s#%d %s\n    %s", pr.Repository, pr.Number, pr.Title, reasonsText(pr.Reasons))
+				if pr.Draft {
+					b.WriteString("; draft")
+				}
+				if len(pr.NeedsYou) > 0 {
+					b.WriteString("; needs you: " + strings.Join(pr.NeedsYou, ", "))
+				}
+				b.WriteString("\n    " + pr.URL + "\n")
+			}
+			return doc, "Pull requests on you\n" + orNone(b.String()) + incompleteText(result.IncompleteReasons), nil
+		})
+}
+
+func newGitHubPRsDetailsCommand(env githubActionsEnv) *cobra.Command {
+	return githubPRsSubcommand("details", "Read the details of the open pull requests that are on you, in batches",
+		"Run the searches of ply github prs list and read the details of every hit in batches of at most 20, review threads\n"+
+			"only for your own: review_decision, checks, mergeable, merge_state, unresolved_threads and needs_you (changes_requested,\n"+
+			"checks_failed, conflict, unresolved_threads and ready_to_merge on your own pull requests). A pull request without\n"+
+			"details is unavailable with detail_reason refused (GitHub left it out, for example SAML), gh_failed or timeout (its\n"+
+			"batch failed or the deadline passed); the status is still ok. At most 40 seconds; nothing is kept.",
+		func(cmd *cobra.Command) (any, string, error) {
+			doc := githubPRsDetails{Kind: "PlyGitHubPullRequestDetails@1", SchemaVersion: 1, Status: "ok"}
+			rows, err := env.details(cmd.Context())
+			if err != nil {
+				doc.Status, doc.Error = "error", githubError(err)
+				return doc, githubPRsFailureText(doc.Error), errGitHubPRsFailed
+			}
+			doc.ObservedAt, doc.PullRequests = githubActionsTime(env.now()), &rows
+			var b strings.Builder
+			for _, pr := range rows {
+				fmt.Fprintf(&b, "  %s#%d %s\n", pr.Repository, pr.Number, detailText(pr))
+			}
+			return doc, "Pull request details\n" + orNone(b.String()), nil
+		})
+}
+
+// githubPRsSubcommand is one ply github prs subcommand that writes the
+// document run gives; a failure document exits with status 1.
+func githubPRsSubcommand(use, short, long string, run func(*cobra.Command) (any, string, error)) *cobra.Command {
+	var format string
+	c := &cobra.Command{Use: use, Short: short, Long: long, Args: cobra.NoArgs,
+		Example: "  ply github prs " + use + "\n  ply github prs " + use + " --format json",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if format != "text" && format != "json" {
+				return errors.New("--format must be text or json")
+			}
+			doc, text, failed := run(cmd)
+			if err := githubActionsWrite(cmd.OutOrStdout(), format, doc, text); err != nil {
+				return err
+			}
+			return failed
+		}}
+	c.Flags().StringVar(&format, "format", "text", "output format (text or json)")
+	return c
+}
+
+func detailText(pr githubprs.Detailed) string {
+	if pr.DetailReason != nil {
+		return "no details (" + *pr.DetailReason + ")"
+	}
+	var parts []string
+	for _, f := range []struct {
+		name  string
+		value *string
+	}{{"review", pr.ReviewDecision}, {"checks", pr.Checks}, {"mergeable", pr.Mergeable}, {"merge state", pr.MergeState}} {
+		if f.value != nil {
+			parts = append(parts, f.name+" "+*f.value)
+		}
+	}
+	if pr.UnresolvedThreads != nil {
+		parts = append(parts, fmt.Sprintf("%d unresolved threads", *pr.UnresolvedThreads))
+	}
+	if len(pr.NeedsYou) > 0 {
+		parts = append(parts, "needs you: "+strings.Join(pr.NeedsYou, ", "))
+	}
+	return strings.Join(parts, "; ")
+}
+
+func githubPRsFailureText(e *githubActionsError) string {
+	return fmt.Sprintf("GitHub pull requests: %s (%s)\n", e.Description, e.Code)
+}
+
+func reasonsText(reasons []githubprs.Reason) string {
+	var why []string
+	for _, r := range reasons {
+		if r.Via != "" {
+			why = append(why, r.Kind+" ("+r.Via+")")
+		} else {
+			why = append(why, r.Kind)
+		}
+	}
+	return strings.Join(why, ", ")
+}
+
+func incompleteText(reasons []string) string {
+	if len(reasons) == 0 {
+		return ""
+	}
+	return "Incomplete: " + strings.Join(reasons, ", ") + "\n"
 }
 
 func githubPRsText(doc githubPRs) string {
 	if doc.Error != nil {
-		return fmt.Sprintf("GitHub pull requests: %s (%s)\n", doc.Error.Description, doc.Error.Code)
+		return githubPRsFailureText(doc.Error)
 	}
 	var waiting, own strings.Builder
 	for _, pr := range *doc.PullRequests {
-		var why []string
-		for _, r := range pr.Reasons {
-			if r.Via != "" {
-				why = append(why, r.Kind+" ("+r.Via+")")
-			} else {
-				why = append(why, r.Kind)
-			}
-		}
-		line := fmt.Sprintf("  %s#%d %s\n    %s", pr.Repository, pr.Number, pr.Title, strings.Join(why, ", "))
+		line := fmt.Sprintf("  %s#%d %s\n    %s", pr.Repository, pr.Number, pr.Title, reasonsText(pr.Reasons))
 		if pr.Draft {
 			line += "; draft"
 		}
@@ -94,11 +222,7 @@ func githubPRsText(doc githubPRs) string {
 			own.WriteString(line)
 		}
 	}
-	text := "Waiting for you\n" + orNone(waiting.String()) + "Your pull requests\n" + orNone(own.String())
-	if len(*doc.IncompleteReasons) > 0 {
-		text += "Incomplete: " + strings.Join(*doc.IncompleteReasons, ", ") + "\n"
-	}
-	return text
+	return "Waiting for you\n" + orNone(waiting.String()) + "Your pull requests\n" + orNone(own.String()) + incompleteText(*doc.IncompleteReasons)
 }
 
 func orNone(lines string) string {

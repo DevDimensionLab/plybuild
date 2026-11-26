@@ -34,10 +34,12 @@ var errGitHubActionsFailed = errors.New("reading GitHub Actions usage failed")
 // githubActionsEnv is the billing reader, clock and home directory of ply github actions,
 // and the pull request reader of ply github prs.
 type githubActionsEnv struct {
-	read func(ctx context.Context, year int, month time.Month) (githubbilling.Usage, error)
-	prs  func(ctx context.Context) (githubprs.Result, error)
-	now  func() time.Time
-	home func() (string, error)
+	read    func(ctx context.Context, year int, month time.Month) (githubbilling.Usage, error)
+	prs     func(ctx context.Context) (githubprs.Result, error)
+	list    func(ctx context.Context) (githubprs.ListResult, error)
+	details func(ctx context.Context) ([]githubprs.Detailed, error)
+	now     func() time.Time
+	home    func() (string, error)
 }
 
 func systemGitHubActionsEnv(runner process.Runner) githubActionsEnv {
@@ -45,9 +47,11 @@ func systemGitHubActionsEnv(runner process.Runner) githubActionsEnv {
 		read: func(ctx context.Context, year int, month time.Month) (githubbilling.Usage, error) {
 			return githubbilling.Read(ctx, runner, year, month)
 		},
-		prs:  func(ctx context.Context) (githubprs.Result, error) { return githubprs.Read(ctx, runner) },
-		now:  time.Now,
-		home: os.UserHomeDir,
+		prs:     func(ctx context.Context) (githubprs.Result, error) { return githubprs.Read(ctx, runner) },
+		list:    func(ctx context.Context) (githubprs.ListResult, error) { return githubprs.List(ctx, runner) },
+		details: func(ctx context.Context) ([]githubprs.Detailed, error) { return githubprs.Details(ctx, runner) },
+		now:     time.Now,
+		home:    os.UserHomeDir,
 	}
 }
 

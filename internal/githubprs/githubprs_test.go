@@ -34,6 +34,9 @@ type fakeGH struct {
 	deadlines []time.Duration
 	graphql   string
 	graphqls  []string
+	// calls answers the nth GraphQL call (from 1) instead of nodes; onCall runs before each.
+	calls  map[int]reply
+	onCall func(n int)
 }
 
 var askedIDs = regexp.MustCompile(`ids:\[([^\]]*)\]`)
@@ -83,8 +86,14 @@ func (f *fakeGH) Run(c process.Command) error {
 		}
 	}
 	r, ok := f.replies[key]
+	if key == "graphql" && f.onCall != nil {
+		f.onCall(len(f.graphqls))
+	}
 	if key == "graphql" && f.nodes != nil {
 		r, ok = f.answer(f.graphql), true
+	}
+	if c, failed := f.calls[len(f.graphqls)]; key == "graphql" && failed {
+		r, ok = c, true
 	}
 	if !ok {
 		return fmt.Errorf("no reply for %q", c.Args)
@@ -332,5 +341,130 @@ func TestAFailedBatchFailsTheRead(t *testing.T) {
 	}}
 	if _, err := Read(context.Background(), gh); !errors.Is(err, ghapi.ErrFailed) || len(gh.graphqls) != 1 {
 		t.Fatalf("%v after %d calls", err, len(gh.graphqls))
+	}
+}
+
+func manyPRs(team, own int) (map[string]reply, map[string]string) {
+	var teamItems, ownItems []string
+	nodes := map[string]string{}
+	for n := 1; n <= team; n++ {
+		id := fmt.Sprintf("PR_t%d", n)
+		teamItems, nodes[id] = append(teamItems, item(id, "org/app", n, "ann")), node(id, "", "MERGEABLE", "BLOCKED", "", 0, 0)
+	}
+	for n := 1; n <= own; n++ {
+		id := fmt.Sprintf("PR_o%d", n)
+		ownItems, nodes[id] = append(ownItems, item(id, "me/tool", n, "me")), node(id, "CHANGES_REQUESTED", "MERGEABLE", "CLEAN", "", 1, 0)
+	}
+	return map[string]reply{
+		"review-requested:@me": search(team, false, teamItems...), "user-review-requested:@me": search(0, false), "assignee:@me": search(0, false),
+		"author:@me": search(own, false, ownItems...),
+	}, nodes
+}
+
+// The overview is the four searches only: no GraphQL and no other call.
+func TestListIsTheSearchesOnly(t *testing.T) {
+	replies, nodes := manyPRs(2, 1)
+	gh := &fakeGH{replies: replies, nodes: nodes}
+	got, err := List(context.Background(), gh)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(gh.deadlines) != 4 || len(gh.graphqls) != 0 || ListDeadline != 20*time.Second {
+		t.Fatalf("%d calls, %d graphql", len(gh.deadlines), len(gh.graphqls))
+	}
+	want := []Listed{
+		{ID: "PR_t1", Repository: "org/app", Number: 1, Title: "T1", URL: "https://github.com/org/app/pull/1", Author: "ann", CreatedAt: "2026-11-01T00:00:00Z", UpdatedAt: "2026-11-21T00:00:00Z",
+			Reasons: []Reason{{Kind: "review_requested", Via: "team"}}, NeedsYou: []string{"review_requested"}},
+		{ID: "PR_t2", Repository: "org/app", Number: 2, Title: "T2", URL: "https://github.com/org/app/pull/2", Author: "ann", CreatedAt: "2026-11-02T00:00:00Z", UpdatedAt: "2026-11-22T00:00:00Z",
+			Reasons: []Reason{{Kind: "review_requested", Via: "team"}}, NeedsYou: []string{"review_requested"}},
+		{ID: "PR_o1", Repository: "me/tool", Number: 1, Title: "T1", URL: "https://github.com/me/tool/pull/1", Author: "me", CreatedAt: "2026-11-01T00:00:00Z", UpdatedAt: "2026-11-21T00:00:00Z",
+			Reasons: []Reason{{Kind: "author"}}, NeedsYou: []string{}},
+	}
+	if !reflect.DeepEqual(got.PullRequests, want) || got.IncompleteReasons == nil {
+		t.Fatalf("got  %+v\nwant %+v", got, want)
+	}
+	if _, err := List(context.Background(), &fakeGH{replies: map[string]reply{"review-requested:@me": {code: 4}}}); !errors.Is(err, ghapi.ErrAuth) {
+		t.Fatalf("auth: %v", err)
+	}
+}
+
+func reasonsOf(rows []Detailed) map[string]int {
+	count := map[string]int{}
+	for _, r := range rows {
+		key := r.Detail
+		if r.DetailReason != nil {
+			key += "/" + *r.DetailReason
+		}
+		count[key]++
+	}
+	return count
+}
+
+// A batch that fails leaves only its own pull requests without details; a
+// pull request GitHub leaves out is refused; needs_you has the detail reasons only.
+func TestDetailsReportsEachPullRequest(t *testing.T) {
+	replies, nodes := manyPRs(45, 2)
+	delete(nodes, "PR_t45")
+	gh := &fakeGH{replies: replies, nodes: nodes, calls: map[int]reply{2: {code: 1, stdout: `{"message":"Bad Gateway","status":"502"}`}}}
+	got, err := Details(context.Background(), gh)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c := reasonsOf(got); len(got) != 47 || c["available"] != 26 || c["unavailable/gh_failed"] != 20 || c["unavailable/refused"] != 1 || len(gh.graphqls) != 4 {
+		t.Fatalf("%v after %d calls", c, len(gh.graphqls))
+	}
+	for _, r := range got {
+		switch {
+		case strings.HasPrefix(r.ID, "PR_o"):
+			if r.Repository != "me/tool" || r.Number == 0 || *r.UnresolvedThreads != 1 || !reflect.DeepEqual(r.NeedsYou, []string{"changes_requested", "unresolved_threads", "ready_to_merge"}) {
+				t.Fatalf("own %+v", r)
+			}
+		case r.Detail == "unavailable":
+			if r.ReviewDecision != nil || r.MergeState != nil || r.NeedsYou == nil || len(r.NeedsYou) != 0 {
+				t.Fatalf("unavailable %+v", r)
+			}
+		case r.UnresolvedThreads != nil || len(r.NeedsYou) != 0:
+			t.Fatalf("team %+v", r)
+		}
+	}
+	if Deadline != 40*time.Second {
+		t.Fatal(Deadline)
+	}
+}
+
+func TestDetailsWhenEveryBatchFails(t *testing.T) {
+	replies, nodes := manyPRs(25, 0)
+	bad := reply{code: 1, stdout: `{"message":"Bad Gateway","status":"502"}`}
+	got, err := Details(context.Background(), &fakeGH{replies: replies, nodes: nodes, calls: map[int]reply{1: bad, 2: bad}})
+	if c := reasonsOf(got); err != nil || c["unavailable/gh_failed"] != 25 {
+		t.Fatalf("%v %v", c, err)
+	}
+}
+
+// gh not logged in stops the whole read, whichever batch it comes in.
+func TestDetailsStopsWhenGhIsNotLoggedIn(t *testing.T) {
+	replies, nodes := manyPRs(25, 0)
+	if _, err := Details(context.Background(), &fakeGH{replies: replies, nodes: nodes, calls: map[int]reply{2: {code: 4}}}); !errors.Is(err, ghapi.ErrAuth) {
+		t.Fatalf("got %v", err)
+	}
+	replies["author:@me"] = reply{code: 1, stdout: `{"message":"API rate limit exceeded","status":"403"}`}
+	if _, err := Details(context.Background(), &fakeGH{replies: replies, nodes: nodes}); !errors.Is(err, ghapi.ErrFailed) {
+		t.Fatalf("search: %v", err)
+	}
+}
+
+// When the deadline passes, the pull requests left get timeout without more calls.
+func TestDetailsTimeoutLeavesTheRest(t *testing.T) {
+	replies, nodes := manyPRs(45, 0)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	gh := &fakeGH{replies: replies, nodes: nodes, onCall: func(n int) {
+		if n == 1 {
+			cancel()
+		}
+	}}
+	got, err := Details(ctx, gh)
+	if c := reasonsOf(got); err != nil || len(gh.graphqls) != 1 || c["available"] != 20 || c["unavailable/timeout"] != 25 {
+		t.Fatalf("%v %v after %d calls", c, err, len(gh.graphqls))
 	}
 }

@@ -17,8 +17,19 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/ghapi"
 )
 
-// Deadline bounds the whole read: four searches and the details calls.
+// Deadline bounds a read with details: four searches and the details calls.
 const Deadline = 40 * time.Second
+
+// ListDeadline bounds the overview: the four searches only.
+const ListDeadline = 20 * time.Second
+
+// Reasons a pull request has no details in Details.
+const (
+	DetailRefused = "refused"   // GitHub answered without it, for example SAML; lasting
+	DetailFailed  = "gh_failed" // its batch got no readable answer, for example 502
+	DetailTimeout = "timeout"   // the deadline passed before its batch was read
+	detailOK      = ""
+)
 
 // Reason says why a pull request is on the user.
 type Reason struct {
@@ -39,6 +50,43 @@ type PullRequest struct {
 	UpdatedAt         string   `json:"updated_at"`
 	Reasons           []Reason `json:"reasons"`
 	Detail            string   `json:"detail"`
+	ReviewDecision    *string  `json:"review_decision"`
+	Checks            *string  `json:"checks"`
+	Mergeable         *string  `json:"mergeable"`
+	MergeState        *string  `json:"merge_state"`
+	UnresolvedThreads *int     `json:"unresolved_threads"`
+	NeedsYou          []string `json:"needs_you"`
+}
+
+// Listed is one pull request of the overview: what the searches give.
+type Listed struct {
+	ID         string   `json:"id"`
+	Repository string   `json:"repository"`
+	Number     int      `json:"number"`
+	Title      string   `json:"title"`
+	URL        string   `json:"url"`
+	Author     string   `json:"author"`
+	Draft      bool     `json:"draft"`
+	CreatedAt  string   `json:"created_at"`
+	UpdatedAt  string   `json:"updated_at"`
+	Reasons    []Reason `json:"reasons"`
+	NeedsYou   []string `json:"needs_you"`
+}
+
+// ListResult is the overview.
+type ListResult struct {
+	IncompleteReasons []string
+	PullRequests      []Listed
+}
+
+// Detailed is the details of one pull request; NeedsYou has only the reasons
+// the details give.
+type Detailed struct {
+	ID                string   `json:"id"`
+	Repository        string   `json:"repository"`
+	Number            int      `json:"number"`
+	Detail            string   `json:"detail"`
+	DetailReason      *string  `json:"detail_reason"`
 	ReviewDecision    *string  `json:"review_decision"`
 	Checks            *string  `json:"checks"`
 	Mergeable         *string  `json:"mergeable"`
@@ -73,21 +121,25 @@ type searchItem struct {
 	} `json:"user"`
 }
 
-// Read runs the searches and the details call within Deadline. Errors carry
-// one of the ghapi codes.
-func Read(ctx context.Context, runner process.Runner) (Result, error) {
-	ctx, cancel := context.WithTimeout(ctx, Deadline)
-	defer cancel()
-	result := Result{IncompleteReasons: []string{}, PullRequests: []PullRequest{}}
+// found is the pull requests of the four searches, and their node ids in the same order.
+type found struct {
+	incomplete []string
+	prs        []PullRequest
+	ids        []string
+}
+
+// searchAll runs the four searches and merges their hits with their reasons.
+func searchAll(ctx context.Context, runner process.Runner) (found, error) {
+	f := found{incomplete: []string{}, prs: []PullRequest{}}
 	hits := map[string][]searchItem{}
 	for _, q := range searches {
 		items, incomplete, err := searchPRs(ctx, runner, q)
 		if err != nil {
-			return Result{}, err
+			return found{}, err
 		}
 		hits[q] = items
 		for _, reason := range incomplete {
-			result.IncompleteReasons = appendOnce(result.IncompleteReasons, reason)
+			f.incomplete = appendOnce(f.incomplete, reason)
 		}
 	}
 	direct := map[string]bool{}
@@ -95,30 +147,83 @@ func Read(ctx context.Context, runner process.Runner) (Result, error) {
 		direct[it.NodeID] = true
 	}
 	byID := map[string]int{}
-	var ids []string
 	for _, q := range searches {
 		for _, it := range hits[q] {
 			i, seen := byID[it.NodeID]
 			if !seen {
-				i = len(result.PullRequests)
+				i = len(f.prs)
 				byID[it.NodeID] = i
-				ids = append(ids, it.NodeID)
-				result.PullRequests = append(result.PullRequests, it.pullRequest())
+				f.ids = append(f.ids, it.NodeID)
+				f.prs = append(f.prs, it.pullRequest())
 			}
-			if r, ok := reasonOf(q, direct[it.NodeID]); ok && !hasReason(result.PullRequests[i], r.Kind) {
-				result.PullRequests[i].Reasons = append(result.PullRequests[i].Reasons, r)
+			if r, ok := reasonOf(q, direct[it.NodeID]); ok && !hasReason(f.prs[i], r.Kind) {
+				f.prs[i].Reasons = append(f.prs[i].Reasons, r)
 			}
 		}
 	}
-	viewer, err := details(ctx, runner, ids, result.PullRequests)
+	return f, nil
+}
+
+// Read runs the searches and the details calls within Deadline, for
+// PlyGitHubPullRequests@1: a batch without details fails the whole read.
+// Errors carry one of the ghapi codes.
+func Read(ctx context.Context, runner process.Runner) (Result, error) {
+	ctx, cancel := context.WithTimeout(ctx, Deadline)
+	defer cancel()
+	f, err := searchAll(ctx, runner)
 	if err != nil {
 		return Result{}, err
 	}
-	result.Viewer = viewer
-	for i := range result.PullRequests {
-		result.PullRequests[i].NeedsYou = needsYou(result.PullRequests[i])
+	viewer, _, err := details(ctx, runner, f.ids, f.prs, true)
+	if err != nil {
+		return Result{}, err
 	}
-	return result, nil
+	for i := range f.prs {
+		f.prs[i].NeedsYou = append(searchNeeds(f.prs[i]), detailNeeds(f.prs[i])...)
+	}
+	return Result{Viewer: viewer, IncompleteReasons: f.incomplete, PullRequests: f.prs}, nil
+}
+
+// List runs the four searches within ListDeadline.
+func List(ctx context.Context, runner process.Runner) (ListResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, ListDeadline)
+	defer cancel()
+	f, err := searchAll(ctx, runner)
+	if err != nil {
+		return ListResult{}, err
+	}
+	list := make([]Listed, len(f.prs))
+	for i, pr := range f.prs {
+		list[i] = Listed{ID: f.ids[i], Repository: pr.Repository, Number: pr.Number, Title: pr.Title, URL: pr.URL, Author: pr.Author,
+			Draft: pr.Draft, CreatedAt: pr.CreatedAt, UpdatedAt: pr.UpdatedAt, Reasons: pr.Reasons, NeedsYou: searchNeeds(pr)}
+	}
+	return ListResult{IncompleteReasons: f.incomplete, PullRequests: list}, nil
+}
+
+// Details runs the searches and reads the details of every hit within
+// Deadline. A batch without details leaves its pull requests unavailable
+// with a reason; only gh missing, gh not logged in or a failed search fail it.
+func Details(ctx context.Context, runner process.Runner) ([]Detailed, error) {
+	ctx, cancel := context.WithTimeout(ctx, Deadline)
+	defer cancel()
+	f, err := searchAll(ctx, runner)
+	if err != nil {
+		return nil, err
+	}
+	_, reasons, err := details(ctx, runner, f.ids, f.prs, false)
+	if err != nil {
+		return nil, err
+	}
+	rows := make([]Detailed, len(f.prs))
+	for i, pr := range f.prs {
+		rows[i] = Detailed{ID: f.ids[i], Repository: pr.Repository, Number: pr.Number, Detail: pr.Detail,
+			ReviewDecision: pr.ReviewDecision, Checks: pr.Checks, Mergeable: pr.Mergeable, MergeState: pr.MergeState,
+			UnresolvedThreads: pr.UnresolvedThreads, NeedsYou: detailNeeds(pr)}
+		if reasons[i] != detailOK {
+			rows[i].DetailReason = &reasons[i]
+		}
+	}
+	return rows, nil
 }
 
 // searchPRs runs one search and returns its pull requests and what it left out.
@@ -185,12 +290,30 @@ const detailsQuery = `query{viewer{login} nodes(ids:[%s]){... on PullRequest{id 
 // reviewThreads is asked for only for the user's own pull requests, the only ones that use it.
 const reviewThreads = ` reviewThreads(first:100){nodes{isResolved}}`
 
-// details fills the detail fields of prs, whose node ids are ids, in batches:
-// first the others, then the user's own with review threads. It returns the
-// viewer. A node GitHub refuses stays unavailable; a call without data fails.
-func details(ctx context.Context, runner process.Runner, ids []string, prs []PullRequest) (string, error) {
+// details fills the detail fields of prs, whose node ids are ids, in the
+// batches of batchesOf. It returns the viewer and, per pull request, why it
+// has no details. gh missing or not
+// logged in fails it; with stop, so does any batch without details.
+func details(ctx context.Context, runner process.Runner, ids []string, prs []PullRequest, stop bool) (string, []string, error) {
+	reasons := make([]string, len(ids))
+	viewer := ""
+	for _, b := range batchesOf(prs) {
+		v, err := b.readInto(ctx, runner, ids, prs, reasons)
+		if err != nil && (stop || errors.Is(err, ghapi.ErrMissing) || errors.Is(err, ghapi.ErrAuth)) {
+			return "", nil, err
+		}
+		if err == nil {
+			viewer = v
+		}
+	}
+	return viewer, reasons, nil
+}
+
+// batchesOf is the batches for prs: first the others, then the user's own
+// with review threads; one empty batch without pull requests, for the viewer.
+func batchesOf(prs []PullRequest) []batch {
 	var others, own []int
-	for i := range ids {
+	for i := range prs {
 		if hasReason(prs[i], "author") {
 			own = append(own, i)
 		} else {
@@ -199,17 +322,42 @@ func details(ctx context.Context, runner process.Runner, ids []string, prs []Pul
 	}
 	batches := append(batched(others, ""), batched(own, reviewThreads)...)
 	if len(batches) == 0 {
-		batches = []batch{{}} // the viewer still comes from one call
+		return []batch{{}}
 	}
-	viewer := ""
-	for _, b := range batches {
-		v, err := b.read(ctx, runner, ids, prs)
-		if err != nil {
-			return "", err
+	return batches
+}
+
+// readInto reads b, unless the deadline has passed, and records in reasons
+// why each of its pull requests has no details.
+func (b batch) readInto(ctx context.Context, runner process.Runner, ids []string, prs []PullRequest, reasons []string) (string, error) {
+	if ctx.Err() != nil {
+		b.mark(reasons, DetailTimeout)
+		return "", fmt.Errorf("%w: the details did not come within %s", ghapi.ErrTimeout, Deadline)
+	}
+	viewer, err := b.read(ctx, runner, ids, prs)
+	if err != nil {
+		b.mark(reasons, batchReason(err))
+		return "", err
+	}
+	for _, at := range b.indexes {
+		if prs[at].Detail != "available" {
+			reasons[at] = DetailRefused
 		}
-		viewer = v
 	}
 	return viewer, nil
+}
+
+func batchReason(err error) string {
+	if errors.Is(err, ghapi.ErrTimeout) {
+		return DetailTimeout
+	}
+	return DetailFailed
+}
+
+func (b batch) mark(reasons []string, reason string) {
+	for _, at := range b.indexes {
+		reasons[at] = reason
+	}
 }
 
 // batch is the indexes of at most batchSize pull requests and the extra fields to ask for.
@@ -299,8 +447,16 @@ func (n *detailNode) fill(pr *PullRequest) {
 	}
 }
 
-// needsYou follows the table in the contract; each reason comes from one field.
-func needsYou(pr PullRequest) []string {
+// searchNeeds and detailNeeds follow the table in the contract, in its order;
+// each reason comes from one field.
+func searchNeeds(pr PullRequest) []string {
+	return needs([]rule{
+		{"review_requested", hasReason(pr, "review_requested")},
+		{"assigned", hasReason(pr, "assigned")},
+	})
+}
+
+func detailNeeds(pr PullRequest) []string {
 	is := func(v *string, values ...string) bool {
 		for _, want := range values {
 			if v != nil && *v == want {
@@ -310,24 +466,28 @@ func needsYou(pr PullRequest) []string {
 		return false
 	}
 	own := hasReason(pr, "author")
-	needs := []string{}
-	for _, rule := range []struct {
-		name string
-		when bool
-	}{
-		{"review_requested", hasReason(pr, "review_requested")},
-		{"assigned", hasReason(pr, "assigned")},
+	return needs([]rule{
 		{"changes_requested", own && is(pr.ReviewDecision, "CHANGES_REQUESTED")},
 		{"checks_failed", own && is(pr.Checks, "FAILURE", "ERROR")},
 		{"conflict", own && is(pr.Mergeable, "CONFLICTING")},
 		{"unresolved_threads", own && pr.UnresolvedThreads != nil && *pr.UnresolvedThreads > 0},
 		{"ready_to_merge", own && is(pr.MergeState, "CLEAN")},
-	} {
-		if rule.when {
-			needs = append(needs, rule.name)
+	})
+}
+
+type rule struct {
+	name string
+	when bool
+}
+
+func needs(rules []rule) []string {
+	out := []string{}
+	for _, r := range rules {
+		if r.when {
+			out = append(out, r.name)
 		}
 	}
-	return needs
+	return out
 }
 
 func hasReason(pr PullRequest, kind string) bool {
