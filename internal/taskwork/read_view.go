@@ -180,18 +180,6 @@ func RegisteredEpicActivityTimes(r WorkItemRegistry) map[EpicID]*string {
 	return out
 }
 
-func registrationProjects(d Dependencies, root string) ([]workspace.ProjectRecord, []workspace.RepoRecord, error) {
-	registries, err := SnapshotWorkspace(d, root)
-	if err != nil {
-		return nil, nil, err
-	}
-	lifecycles, err := ReadWorkItemLifecycle(d, root)
-	if err != nil {
-		return nil, nil, err
-	}
-	return registryProjects(root, MergeRegistries(registries), lifecycles)
-}
-
 // registryProjects resolves the defined Projects statically, with the Git
 // common directories the registry recorded for their repositories.
 func registryProjects(root string, registry WorkItemRegistry, lifecycles WorkItemLifecycles) ([]workspace.ProjectRecord, []workspace.RepoRecord, error) {

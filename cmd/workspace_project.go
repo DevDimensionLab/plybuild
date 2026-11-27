@@ -7,6 +7,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/taskwork"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
+	"github.com/devdimensionlab/plybuild/internal/workspaceview"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +38,7 @@ func newWorkspaceProjectCommand(dependencies taskwork.Dependencies) *cobra.Comma
 			return workspace.ShowProject(dependencies.Dependencies, id)
 		},
 		list: func() (workspace.ProjectListResult, error) {
-			return workspace.ListProjects(dependencies.Dependencies)
+			return workspaceview.ListProjects(dependencies.Dependencies)
 		},
 	})
 	addWorkspaceProjectMetadataCommands(command, dependencies)

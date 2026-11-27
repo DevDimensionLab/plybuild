@@ -92,8 +92,9 @@ func (s Service) readEventBatch(in EventBatchInput) (EventBatch, error) {
 				snap.reason("source_changed", "Source changed during batch reading", snap.Sources[i].SourceID)
 			}
 		}
+		// A batch snapshot carries no SnapshotID: no batch reader uses it, and
+		// the digest of each Task's whole history was most of the batch's cost.
 		snap.deriveAxes()
-		snap.SnapshotID = snapshotDigest(snap)
 		out.Tasks[id] = snap
 	}
 	if len(changed) > 0 {

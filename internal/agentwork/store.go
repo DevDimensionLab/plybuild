@@ -139,7 +139,7 @@ func (s *Service) Show(id string) (Followup, error) {
 	return s.public(r.Value), nil
 }
 func (s *Service) List(due bool) (List, error) {
-	return s.list(due, s.native)
+	return s.list(due, func() NativeSnapshot { return NativeSnapshot{} })
 }
 
 // list projects each row against one request-local native basis.

@@ -69,6 +69,42 @@ func readProcessHistory(d taskwork.Dependencies, s *Snapshot) (*processHistory, 
 	return h, nil
 }
 
+// liveRegistries are the registries with only live Tasks: neither the Task
+// nor its Epic is archived. An archived Task is settled by its registration,
+// so the progress views read no journal for it.
+func liveRegistries(s *Snapshot) []taskwork.ProjectRegistry {
+	out := make([]taskwork.ProjectRegistry, 0, len(s.basis.Registries))
+	for _, r := range s.basis.Registries {
+		live := r
+		live.Registry.Tasks = []taskwork.TaskRecord{}
+		for _, task := range r.Registry.Tasks {
+			if s.Lifecycle.Task(task.ID) != taskwork.LifecycleArchived && s.Lifecycle.Epic(task.ParentEpicID) != taskwork.LifecycleArchived {
+				live.Registry.Tasks = append(live.Registry.Tasks, task)
+			}
+		}
+		out = append(out, live)
+	}
+	return out
+}
+
+// readLiveProcessFacts is ReadProcessFacts for the live Tasks only, memoized
+// apart from the full history that activity and --all read.
+func readLiveProcessFacts(d taskwork.Dependencies, s *Snapshot) (map[taskwork.TaskID]ProcessFacts, error) {
+	if s.liveProcess != nil {
+		return s.liveProcess, nil
+	}
+	j, err := taskjournal.ReadEventBatch(d, taskjournal.EventBatchInput{Workspace: s.Workspace, Projects: s.Projects, Registries: liveRegistries(s), Lifecycles: s.Lifecycle})
+	if err != nil {
+		return nil, err
+	}
+	facts := map[taskwork.TaskID]ProcessFacts{}
+	for id, snap := range j.Tasks {
+		facts[id] = processFactsFromJournal(snap)
+	}
+	s.liveProcess = facts
+	return facts, nil
+}
+
 // ReadProcessFacts is one memoized batch shared by Task progress, Epic counts
 // and Attention. It never derives native technical/human QA from agent claims.
 func ReadProcessFacts(d taskwork.Dependencies, s *Snapshot) (map[taskwork.TaskID]ProcessFacts, error) {

@@ -230,11 +230,7 @@ func newWorkspaceModulesCommand(d taskwork.Dependencies) *cobra.Command {
 	parent := &cobra.Command{Use: "module", Short: "Read the JVM modules of registered repositories", Long: "A module is a directory with a regular pom.xml in a commit, outside directories that start with a dot, vendor, node_modules, testdata, and target or build before the first src. Its parent is the nearest enclosing module."}
 	c := &cobra.Command{Use: "list", Short: "List the module tree of each repository from a commit", Long: "Read the module tree from HEAD of each registered checkout, or from --commit for one repository; the work tree is never read and nothing is stored. A repository that cannot be read gets a reason (repo_unavailable, no_commit, commit_unknown or git_failed) on its row and does not stop the others.", Example: "  ply workspace module list --project ply --format json\n  ply workspace module list --project ply --repo trip-service --commit origin/main --format json", Args: viewNoArgs}
 	c.RunE = func(c *cobra.Command, args []string) error {
-		s, err := workspaceview.LoadSnapshot(d)
-		if err != nil {
-			return err
-		}
-		r, err := workspaceview.ListModules(d, s, workspaceview.ModuleOptions{ProjectID: viewString(c, "project"), RepoID: viewString(c, "repo"), Commit: viewString(c, "commit")})
+		r, err := workspaceview.ListModules(d, workspaceview.ModuleOptions{ProjectID: viewString(c, "project"), RepoID: viewString(c, "repo"), Commit: viewString(c, "commit")})
 		if err != nil {
 			return err
 		}

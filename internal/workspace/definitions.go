@@ -140,17 +140,13 @@ func validateDefinitions(defs workspacedef.Definitions) error {
 	return nil
 }
 
-// Resolve definitions using the same physical paths, Git observer and identity
-// conflict checks as Project registration. No second copy is published in .ply.
-func definitionProjects(root string, defs workspacedef.Definitions) (projectRegistry, error) {
-	return resolveDefinitionProjects(root, defs, false)
-}
-
-// readableProjects resolves ply-workspace.json for reading: a repository whose
-// directory or Git identity cannot be read is kept as Unavailable, so its
-// Project stays readable. Every other failure, such as two members with one
-// Git identity, still stops the read.
-func readableProjects(root string) ([]ProjectRecord, []RepoRecord, error) {
+// readableProjects resolves ply-workspace.json for reading. A read pays only
+// for what its answer holds: only the members of Project only are observed in
+// Git, only member repo when it is set, and none when only is empty. A member
+// whose directory or Git identity cannot be read is kept as Unavailable, so
+// its Project stays readable. The whole registry, across Projects, is
+// validated when it is written.
+func readableProjects(root string, only ProjectID, repo RepoID) ([]ProjectRecord, []RepoRecord, error) {
 	defs, _, err := ReadDefinitions(root)
 	if err != nil {
 		return nil, nil, err
@@ -158,33 +154,49 @@ func readableProjects(root string) ([]ProjectRecord, []RepoRecord, error) {
 	if defs == nil {
 		return nil, nil, MissingDefinitions(root)
 	}
-	registry, err := resolveDefinitionProjects(root, *defs, true)
-	if err != nil {
-		return nil, nil, err
-	}
-	return registry.Projects, registry.Repos, nil
-}
-
-func resolveDefinitionProjects(root string, defs workspacedef.Definitions, keepUnavailable bool) (projectRegistry, error) {
 	files := systemFileSystem{}
 	observer := newSystemRepoObserver(files)
 	registry := projectRegistry{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
 	for _, p := range defs.Projects {
-		wrapper, err := CanonicalDirectory(files, root, p.Wrapper, "wrapper")
+		project, err := definitionProject(files, root, p)
+		if err != nil {
+			return nil, nil, err
+		}
+		repos := []RepoRecord{}
+		if project.ID == only {
+			for _, r := range p.Repos {
+				if repo == "" || RepoID(r.ID) == repo {
+					observed, _ := definitionRepo(files, observer, root, r)
+					repos = append(repos, observed)
+				}
+			}
+		}
+		if registry, _, _, _, err = applyProject(registry, project, repos); err != nil {
+			return nil, nil, err
+		}
+	}
+	return registry.Projects, registry.Repos, nil
+}
+
+// Resolve definitions using the same physical paths, Git observer and identity
+// conflict checks as Project registration. No second copy is published in .ply.
+func definitionProjects(root string, defs workspacedef.Definitions) (projectRegistry, error) {
+	files := systemFileSystem{}
+	observer := newSystemRepoObserver(files)
+	registry := projectRegistry{Projects: []ProjectRecord{}, Repos: []RepoRecord{}}
+	for _, p := range defs.Projects {
+		project, err := definitionProject(files, root, p)
 		if err != nil {
 			return registry, err
 		}
-		project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper, Companions: definitionCompanions(root, p)}
 		repos := []RepoRecord{}
 		for _, r := range p.Repos {
 			repo, err := definitionRepo(files, observer, root, r)
-			if err != nil && !keepUnavailable {
+			if err != nil {
 				return registry, err
 			}
-			project.RepoIDs = append(project.RepoIDs, RepoID(r.ID))
 			repos = append(repos, repo)
 		}
-		sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
 		var errApply error
 		registry, _, _, _, errApply = applyProject(registry, project, repos)
 		if errApply != nil {
@@ -192,6 +204,21 @@ func resolveDefinitionProjects(root string, defs workspacedef.Definitions, keepU
 		}
 	}
 	return registry, validateRegistry(registry)
+}
+
+// definitionProject is Project p as defined, with its physical wrapper and
+// sorted member IDs, without reading its members.
+func definitionProject(files FileSystem, root string, p workspacedef.Project) (ProjectRecord, error) {
+	wrapper, err := CanonicalDirectory(files, root, p.Wrapper, "wrapper")
+	if err != nil {
+		return ProjectRecord{}, err
+	}
+	project := ProjectRecord{ID: ProjectID(p.ID), Name: p.Name, Wrapper: wrapper, Companions: definitionCompanions(root, p)}
+	for _, r := range p.Repos {
+		project.RepoIDs = append(project.RepoIDs, RepoID(r.ID))
+	}
+	sort.Slice(project.RepoIDs, func(i, j int) bool { return project.RepoIDs[i] < project.RepoIDs[j] })
+	return project, nil
 }
 
 // definitionRepo resolves member r from its directory and Git identity. When

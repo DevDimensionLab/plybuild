@@ -90,8 +90,9 @@ type ProjectResult struct {
 }
 
 type ProjectListResult struct {
-	Workspace string
-	Projects  []ProjectRecord
+	Workspace      string
+	Projects       []ProjectRecord
+	RegistrySHA256 *string
 }
 
 const (
@@ -310,10 +311,16 @@ func defineProject(defined workspacedef.Project) func(*workspacedef.Definitions)
 }
 
 func ShowProject(dependencies Dependencies, id ProjectID) (ProjectResult, error) {
+	return ShowProjectMember(dependencies, id, "")
+}
+
+// ShowProjectMember is ShowProject with only member repo in Repos, or every
+// member when repo is empty.
+func ShowProjectMember(dependencies Dependencies, id ProjectID, repo RepoID) (ProjectResult, error) {
 	if err := ValidateIdentifier("project", string(id)); err != nil {
 		return ProjectResult{}, err
 	}
-	workspaceRoot, projects, repositories, err := projectSnapshot(dependencies)
+	workspaceRoot, projects, repositories, err := projectSnapshot(dependencies, id, repo)
 	if err != nil {
 		return ProjectResult{}, err
 	}
@@ -326,19 +333,19 @@ func ShowProject(dependencies Dependencies, id ProjectID) (ProjectResult, error)
 }
 
 func ListProjects(dependencies Dependencies) (ProjectListResult, error) {
-	workspaceRoot, projects, _, err := projectSnapshot(dependencies)
+	workspaceRoot, projects, _, err := projectSnapshot(dependencies, "", "")
 	if err != nil {
 		return ProjectListResult{}, err
 	}
 	return ProjectListResult{Workspace: workspaceRoot, Projects: projects}, nil
 }
 
-func projectSnapshot(dependencies Dependencies) (string, []ProjectRecord, []RepoRecord, error) {
+func projectSnapshot(dependencies Dependencies, only ProjectID, repo RepoID) (string, []ProjectRecord, []RepoRecord, error) {
 	workspaceRoot, err := projectWorkspaceRoot(dependencies)
 	if err != nil {
 		return "", nil, nil, err
 	}
-	projects, repositories, err := readableProjects(workspaceRoot)
+	projects, repositories, err := readableProjects(workspaceRoot, only, repo)
 	return workspaceRoot, projects, repositories, err
 }
 
@@ -463,7 +470,9 @@ func repositoriesForProject(project ProjectRecord, repositories []RepoRecord) []
 	}
 	result := make([]RepoRecord, 0, len(project.RepoIDs))
 	for _, id := range project.RepoIDs {
-		result = append(result, byID[id])
+		if repository, found := byID[id]; found {
+			result = append(result, repository)
+		}
 	}
 	return result
 }

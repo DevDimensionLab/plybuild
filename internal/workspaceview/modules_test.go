@@ -115,11 +115,7 @@ func writeFixtureFiles(t *testing.T, root string, names ...string) {
 
 func listModulesJSON(t *testing.T, d taskwork.Dependencies, o ModuleOptions) ModuleListResult {
 	t.Helper()
-	s, err := LoadSnapshot(d)
-	if err != nil {
-		t.Fatal(err)
-	}
-	out, err := ListModules(d, s, o)
+	out, err := ListModules(d, o)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,13 +227,38 @@ func TestListModulesRefusesUnknownProjectAndRepo(t *testing.T) {
 	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Modules", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
 		t.Fatal(err)
 	}
-	s, err := LoadSnapshot(d)
+	for _, o := range []ModuleOptions{{ProjectID: "other"}, {ProjectID: "project", RepoID: "other"}, {}, {ProjectID: "project", Commit: "HEAD"}} {
+		if _, err := ListModules(d, o); err == nil {
+			t.Fatalf("%+v was accepted", o)
+		}
+	}
+}
+
+// The module list is read from the Project's members and commits alone, so a
+// work-item registry it does not show neither costs nor stops it.
+func TestListModulesReadsNoWorkItemRegistry(t *testing.T) {
+	d, root, repo := moduleRepo(t)
+	writeFixtureFiles(t, repo, "pom.xml")
+	inventoryGit(t, repo, "add", ".")
+	inventoryGit(t, repo, "commit", "-m", "first")
+	if _, err := workspace.AddProject(d.Dependencies, workspace.ProjectAddInput{ProjectID: "project", Name: "Modules", Wrapper: root, Repos: []workspace.RepoInput{{RepoID: "repo", Path: repo}}}); err != nil {
+		t.Fatal(err)
+	}
+	works, err := workspace.DefinedWork(root)
+	if err != nil || len(works) != 1 {
+		t.Fatal(works, err)
+	}
+	if err := os.MkdirAll(filepath.Dir(works[0].Registry()), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(works[0].Registry(), []byte("not: [a registry\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := ListModules(d, ModuleOptions{ProjectID: "project"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, o := range []ModuleOptions{{ProjectID: "other"}, {ProjectID: "project", RepoID: "other"}, {}, {ProjectID: "project", Commit: "HEAD"}} {
-		if _, err := ListModules(d, s, o); err == nil {
-			t.Fatalf("%+v was accepted", o)
-		}
+	if len(out.Repos) != 1 || out.Repos[0].Reason != nil || len(out.Repos[0].Modules) != 1 {
+		t.Fatalf("modules: %+v", out.Repos)
 	}
 }

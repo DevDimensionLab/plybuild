@@ -72,7 +72,7 @@ func readChanges(d workspace.Dependencies, betweenPasses func()) (ChangesResult,
 		journals = append(journals, taskjournal.JournalDir(work))
 	}
 	owners := []changeOwner{
-		{"projects", []string{"ply-workspace.json"}, nil, nil},
+		projectsOwner,
 		{"work_items", nil, nil, workItems},
 		{"journal", nil, journals, nil},
 	}
@@ -113,6 +113,29 @@ func readChanges(d workspace.Dependencies, betweenPasses func()) (ChangesResult,
 		}{w.MarkerSHA256, result.Registers})
 		digest := fmt.Sprintf("sha256:%x", sha256.Sum256(b))
 		result.RegistrySHA256 = &digest
+	}
+	return result, nil
+}
+
+// projectsOwner is the projects register: the workspace definitions.
+var projectsOwner = changeOwner{"projects", []string{"ply-workspace.json"}, nil, nil}
+
+// ListProjects is the registered Projects with the revision of the projects
+// register, the value workspace status reports for it. The revision is null
+// when it cannot be read or the definitions changed during the read.
+func ListProjects(d workspace.Dependencies) (workspace.ProjectListResult, error) {
+	w, err := workspace.ObserveContaining(d)
+	if err != nil {
+		return workspace.ProjectListResult{}, err
+	}
+	before := fingerprintOwner(w.Root, projectsOwner).RegistrySHA256
+	result, err := workspace.ListProjects(d)
+	if err != nil {
+		return result, err
+	}
+	after := fingerprintOwner(w.Root, projectsOwner).RegistrySHA256
+	if before != nil && after != nil && *before == *after {
+		result.RegistrySHA256 = after
 	}
 	return result, nil
 }

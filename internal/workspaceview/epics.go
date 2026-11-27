@@ -73,7 +73,7 @@ func ReadEpics(d taskwork.Dependencies, filters EpicFilters) (EpicList, error) {
 	if err := ValidateTaskFilters(s, taskwork.TaskListFilters{ProjectID: filters.ProjectID}); err != nil {
 		return EpicList{}, err
 	}
-	process := readProgressProcess(d, s)
+	process := readProgressProcess(d, s, true)
 	s.RefreshFreshness(d)
 	return BuildEpics(s, filters, process)
 }

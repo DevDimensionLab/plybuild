@@ -42,7 +42,7 @@ type ModuleListResult struct {
 // ListModules reads the module tree of each selected repo from a commit:
 // HEAD of the registered checkout, or o.Commit for one repo. A repo that
 // cannot be read gets a reason on its row and does not stop the others.
-func ListModules(d taskwork.Dependencies, s *Snapshot, o ModuleOptions) (ModuleListResult, error) {
+func ListModules(d taskwork.Dependencies, o ModuleOptions) (ModuleListResult, error) {
 	out := ModuleListResult{Kind: ModuleListKind, SchemaVersion: 1, Project: o.ProjectID, Repos: []ModuleRepo{}}
 	if o.ProjectID == "" {
 		return out, workspace.WorkInvalidArguments("--project is required")
@@ -50,43 +50,70 @@ func ListModules(d taskwork.Dependencies, s *Snapshot, o ModuleOptions) (ModuleL
 	if o.Commit != "" && o.RepoID == "" {
 		return out, workspace.WorkInvalidArguments("--commit requires --repo")
 	}
-	if err := validateProjectFilter(s, o.ProjectID); err != nil {
+	id, err := moduleProject(d, o)
+	if err != nil {
 		return out, err
 	}
-	if o.RepoID != "" {
-		id := workspace.RepoID(o.RepoID)
-		if err := ValidateTaskFilters(s, taskwork.TaskListFilters{RepoID: &id}); err != nil {
-			return out, err
-		}
+	shown, err := workspace.ShowProjectMember(d.Dependencies, id, workspace.RepoID(o.RepoID))
+	if err != nil {
+		return out, err
 	}
 	repos := map[workspace.RepoID]workspace.RepoRecord{}
-	for _, r := range s.Projects.Repos {
+	for _, r := range shown.Repos {
 		repos[r.ID] = r
 	}
-	for _, project := range s.Projects.Projects {
-		if string(project.ID) != o.ProjectID {
+	for _, repoID := range shown.Project.RepoIDs {
+		if o.RepoID != "" && string(repoID) != o.RepoID {
 			continue
 		}
-		if o.RepoID != "" && !slices.Contains(project.RepoIDs, workspace.RepoID(o.RepoID)) {
-			return out, workspace.WorkInvalidArguments("--repo must be a repo ID of project " + o.ProjectID)
-		}
-		for _, id := range project.RepoIDs {
-			if o.RepoID != "" && string(id) != o.RepoID {
-				continue
-			}
-			out.Repos = append(out.Repos, readModuleRepo(d, repos, id, o.Commit))
-		}
+		out.Repos = append(out.Repos, readModuleRepo(d, repos, repoID, o.Commit))
 	}
 	return out, nil
 }
 
+// moduleProject is the Project of o, checked against the registered Projects
+// without Git: an unknown Project or repository is not found, and a repository
+// of another Project is an invalid argument.
+func moduleProject(d taskwork.Dependencies, o ModuleOptions) (workspace.ProjectID, error) {
+	id, err := workspace.ParseProjectID(o.ProjectID)
+	if err != nil {
+		return "", err
+	}
+	if o.RepoID != "" {
+		if err := workspace.ValidateIdentifier("repository", o.RepoID); err != nil {
+			return "", err
+		}
+	}
+	listed, err := workspace.ListProjects(d.Dependencies)
+	if err != nil {
+		return "", err
+	}
+	repo := workspace.RepoID(o.RepoID)
+	var members []workspace.RepoID
+	found, registered := false, repo == ""
+	for _, p := range listed.Projects {
+		if p.ID == id {
+			found, members = true, p.RepoIDs
+		}
+		registered = registered || slices.Contains(p.RepoIDs, repo)
+	}
+	switch {
+	case !found:
+		return "", notFound("project", o.ProjectID)
+	case !registered:
+		return "", notFound("repository", o.RepoID)
+	case repo != "" && !slices.Contains(members, repo):
+		return "", workspace.WorkInvalidArguments("--repo must be a repo ID of project " + o.ProjectID)
+	}
+	return id, nil
+}
+
+// readModuleRepo reads the module tree of member id, which project show has
+// already observed.
 func readModuleRepo(d taskwork.Dependencies, repos map[workspace.RepoID]workspace.RepoRecord, id workspace.RepoID, commit string) ModuleRepo {
 	row := ModuleRepo{Repo: string(id)}
 	repo, ok := repos[id]
-	if !ok {
-		return withReason(row, ModuleRepoUnavailable)
-	}
-	if availability, _ := workspace.ObserveMember(repo); availability != "" {
+	if !ok || repo.Unavailable != "" {
 		return withReason(row, ModuleRepoUnavailable)
 	}
 	tree := taskwork.ReadRegisteredCommitTree(d, repo, commit)

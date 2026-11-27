@@ -946,15 +946,15 @@ func ListTasksWithFilters(dependencies Dependencies, filters TaskListFilters) (T
 		return TaskListResult{}, err
 	}
 	registry := MergeRegistries(registries)
-	if err := validateTaskListProjectFilters(dependencies, root, filters); err != nil {
-		return TaskListResult{}, err
-	}
 	works := make([]workspace.ProjectWork, len(registries))
 	for i, r := range registries {
 		works[i] = r.Work
 	}
 	lifecycles, err := readLifecycles(works)
 	if err != nil {
+		return TaskListResult{}, err
+	}
+	if err := validateTaskListProjectFilters(root, registry, lifecycles, filters); err != nil {
 		return TaskListResult{}, err
 	}
 	result := TaskListResult{Workspace: root, Filters: filters, CurrentTitles: map[TaskID]string{}, Titles: map[TaskID]TaskListTitle{}, Lifecycles: lifecycles}

@@ -33,7 +33,7 @@ func ReadOverview(d taskwork.Dependencies, filters EpicFilters) (Overview, error
 	if err := ValidateTaskFilters(s, taskFilters); err != nil {
 		return Overview{}, err
 	}
-	process := readProgressProcess(d, s)
+	process := readProgressProcess(d, s, true)
 	s.RefreshFreshness(d)
 	tasks, err := BuildTaskList(s, taskFilters, process)
 	if err != nil {

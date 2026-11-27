@@ -78,7 +78,7 @@ func ReadTaskList(d taskwork.Dependencies, filters taskwork.TaskListFilters) (Ta
 	if err := ValidateTaskFilters(s, filters); err != nil {
 		return TaskList{}, err
 	}
-	process := readProgressProcess(d, s)
+	process := readProgressProcess(d, s, false)
 	s.RefreshFreshness(d)
 	return BuildTaskList(s, filters, process)
 }
@@ -98,7 +98,7 @@ func ReadTask(d taskwork.Dependencies, id taskwork.TaskID) (TaskReadback, error)
 	if !found {
 		return TaskReadback{}, notFound("Task", string(id))
 	}
-	process := readProgressProcess(d, s)
+	process := readProgressProcess(d, s, false)
 	s.RefreshFreshness(d)
 	list, err := BuildTaskList(s, taskwork.TaskListFilters{}, process)
 	if err != nil {
@@ -117,8 +117,14 @@ func ReadTaskProgress(d taskwork.Dependencies, id taskwork.TaskID) (Progress, er
 	return result.Task.Progress, err
 }
 
-func readProgressProcess(d taskwork.Dependencies, s *Snapshot) map[taskwork.TaskID]ProcessFacts {
-	process, err := ReadProcessFacts(d, s)
+// readProgressProcess reads the process facts of every Task, or with live only
+// those of live Tasks (see liveRegistries).
+func readProgressProcess(d taskwork.Dependencies, s *Snapshot, live bool) map[taskwork.TaskID]ProcessFacts {
+	read := ReadProcessFacts
+	if live {
+		read = readLiveProcessFacts
+	}
+	process, err := read(d, s)
 	if err == nil {
 		return process
 	}

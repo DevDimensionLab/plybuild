@@ -247,3 +247,34 @@ func TestProgressFiltersValidateKnownIDsBeforeIntersection(t *testing.T) {
 		t.Fatal("invalid filter was not rejected before reads")
 	}
 }
+
+// The progress views read the journal only for live work: a Task that is
+// archived, or whose Epic is, is settled by its registration.
+func TestLiveRegistriesLeaveArchivedWorkOut(t *testing.T) {
+	for _, tc := range []struct {
+		subject string
+		state   taskwork.LifecycleState
+		tasks   int
+	}{{"task", taskwork.LifecycleArchived, 0}, {"epic", taskwork.LifecycleArchived, 0}, {"task", taskwork.LifecycleParked, 1}, {"epic", taskwork.LifecycleFrozen, 1}} {
+		t.Run(tc.subject+"/"+string(tc.state), func(t *testing.T) {
+			d, items, _ := viewDiskFixture(t)
+			if _, err := taskwork.SetWorkItemLifecycle(withViewLocks(d), taskwork.WorkItemLifecycleInput{SubjectKind: tc.subject, SubjectID: tc.subject, State: tc.state, ActorClaim: "fixture owner"}); err != nil {
+				t.Fatal(err)
+			}
+			s, err := LoadSnapshot(d)
+			if err != nil {
+				t.Fatal(err)
+			}
+			tasks := 0
+			for _, r := range liveRegistries(s) {
+				tasks += len(r.Registry.Tasks)
+			}
+			if tasks != tc.tasks {
+				t.Fatalf("live Tasks %d; want %d", tasks, tc.tasks)
+			}
+			if len(items.registry.Tasks) != 1 {
+				t.Fatal("live registries changed the registration")
+			}
+		})
+	}
+}

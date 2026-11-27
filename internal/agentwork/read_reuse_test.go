@@ -139,3 +139,29 @@ func TestOverviewBasisDoesNotCrossOperationBoundary(t *testing.T) {
 		})
 	}
 }
+
+// The list carries no work facts, so it never pays for the native read, which
+// scans the journal of every Task in the workspace.
+func TestListReadsNoNativeBasis(t *testing.T) {
+	s, draft, _ := fixture(t)
+	if _, err := s.Register(s.onlyProject(), draft); err != nil {
+		t.Fatal(err)
+	}
+	calls := 0
+	native := s.Native
+	s.Native = func() NativeSnapshot { calls++; return native() }
+	for _, due := range []bool{false, true} {
+		out, err := s.List(due)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, f := range out.Items {
+			if f.Work != nil {
+				t.Error("list row carries work", f.Work)
+			}
+		}
+	}
+	if calls != 0 {
+		t.Errorf("list read native %d times; want 0", calls)
+	}
+}

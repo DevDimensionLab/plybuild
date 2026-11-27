@@ -29,6 +29,7 @@ type Snapshot struct {
 	ObservedAtUTC string
 	basis         taskwork.ReadViewBasisSnapshot
 	process       *processHistory
+	liveProcess   map[taskwork.TaskID]ProcessFacts
 }
 
 // ProcessFacts is a batch adapter's contribution to the registered progress

@@ -284,19 +284,20 @@ func TestBacklogAndInboxWriteWithUnavailableMember(t *testing.T) {
 }
 
 // Two members with one Git identity are a conflict of the Project itself, so
-// reading it still stops.
+// reading it still stops. The list reads no Git, so it shows the Project.
 func TestProjectMemberIdentityConflictStopsReads(t *testing.T) {
 	d, root := missingMemberFixture(t)
 	definitions := `{"format_version": 1, "projects": [{"id": "ply", "name": "Ply", "wrapper": "ply", "repos": [{"id": "gone", "path": "ply/kept"}, {"id": "kept", "path": "ply/kept"}]}]}`
 	if err := os.WriteFile(filepath.Join(root, workspace.DefinitionsFile), []byte(definitions), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	for _, args := range [][]string{{"project", "list", "--format", "json"}, {"project", "show", "--format", "json", "ply"}} {
-		_, err := runWorkspaceView(t, d, args...)
-		var projectErr *workspace.ProjectError
-		if !errors.As(err, &projectErr) || projectErr.Class != workspace.ErrorProjectConflict {
-			t.Fatalf("%v with an identity conflict: %v", args, err)
-		}
+	if out, err := runWorkspaceView(t, d, "project", "list", "--format", "json"); err != nil || !strings.Contains(out, `"project_id":"ply"`) {
+		t.Fatalf("project list with an identity conflict = %s %v", out, err)
+	}
+	_, err := runWorkspaceView(t, d, "project", "show", "--format", "json", "ply")
+	var projectErr *workspace.ProjectError
+	if !errors.As(err, &projectErr) || projectErr.Class != workspace.ErrorProjectConflict {
+		t.Fatalf("project show with an identity conflict: %v", err)
 	}
 	if out, err := runBacklog(t, d, "list", "--project", "ply", "--format", "json"); err == nil {
 		t.Fatalf("backlog list succeeded: %s", out)

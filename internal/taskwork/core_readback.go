@@ -36,14 +36,11 @@ func (f TaskListFilters) Validate() error {
 	return nil
 }
 
-func validateTaskListProjectFilters(d Dependencies, root string, f TaskListFilters) error {
+func validateTaskListProjectFilters(root string, registry WorkItemRegistry, lifecycles WorkItemLifecycles, f TaskListFilters) error {
 	if f.ProjectID == nil && f.RepoID == nil {
 		return nil
 	}
-	if d.Projects == nil {
-		return workspace.WorkError(workspace.ErrorWorkIO, "project store dependency is required", nil)
-	}
-	projects, repos, err := registrationProjects(d, root)
+	projects, repos, err := registryProjects(root, registry, lifecycles)
 	if err != nil {
 		return err
 	}

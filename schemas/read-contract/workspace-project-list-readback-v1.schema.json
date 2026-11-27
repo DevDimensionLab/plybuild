@@ -35,6 +35,18 @@
       },
       "additionalProperties": true
     },
+    "registry_sha256": {
+      "description": "Revision of the projects register, the value workspace status reports for it; null when it cannot be read or changed during the read.",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "projects": {
       "type": "array",
       "items": {

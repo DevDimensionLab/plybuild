@@ -22,7 +22,7 @@ func ReadWorkflowStatus(d taskwork.Dependencies, o WorkflowStatusOptions) (Workf
 	if err := ValidateTaskFilters(s, o.Filters); err != nil {
 		return WorkflowStatus{}, err
 	}
-	process := readProgressProcess(d, s)
+	process := readProgressProcess(d, s, !o.IncludeAll)
 	queues := taskwork.ReadRegisteredTaskQueues(d, s.Projects, s.basis.Registries)
 	s.RefreshFreshness(d)
 	return BuildWorkflowStatus(s, o, process, queues)

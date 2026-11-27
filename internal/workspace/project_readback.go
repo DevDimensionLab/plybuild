@@ -53,12 +53,13 @@ func MarshalProjectList(result ProjectListResult) ([]byte, error) {
 	}
 	sort.Slice(projects, func(i, j int) bool { return projects[i].ID < projects[j].ID })
 	return json.Marshal(struct {
-		Kind          string              `json:"kind"`
-		SchemaVersion int                 `json:"schema_version"`
-		Workspace     CoreReadWorkspace   `json:"workspace"`
-		Scope         projectReadScope    `json:"scope"`
-		Projects      []projectReadRecord `json:"projects"`
-	}{ProjectListReadbackKind, CoreReadSchemaVersion, CoreReadWorkspace{result.Workspace}, projectReadScope{}, projects})
+		Kind           string              `json:"kind"`
+		SchemaVersion  int                 `json:"schema_version"`
+		Workspace      CoreReadWorkspace   `json:"workspace"`
+		Scope          projectReadScope    `json:"scope"`
+		RegistrySHA256 *string             `json:"registry_sha256"`
+		Projects       []projectReadRecord `json:"projects"`
+	}{ProjectListReadbackKind, CoreReadSchemaVersion, CoreReadWorkspace{result.Workspace}, projectReadScope{}, result.RegistrySHA256, projects})
 }
 
 func MarshalProject(result ProjectResult) ([]byte, error) {

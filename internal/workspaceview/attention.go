@@ -48,7 +48,7 @@ func ReadAttention(d taskwork.Dependencies, filters taskwork.TaskListFilters) (A
 	if err := ValidateTaskFilters(s, filters); err != nil {
 		return AttentionList{}, err
 	}
-	process := readProgressProcess(d, s)
+	process := readProgressProcess(d, s, false)
 	s.RefreshFreshness(d)
 	return BuildAttention(s, filters, process)
 }

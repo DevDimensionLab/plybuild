@@ -68,7 +68,13 @@ func TestDurableConfigGuards(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			if _, err = workspace.ListProjects(d.Dependencies); err == nil {
+			// The list reads no Git, so a Git identity conflict shows on the
+			// Project's own read.
+			read := func() error { _, err := workspace.ListProjects(d.Dependencies); return err }
+			if test == "duplicate-git" {
+				read = func() error { _, err := workspace.ShowProject(d.Dependencies, "sample"); return err }
+			}
+			if err = read(); err == nil {
 				t.Fatal("invalid definitions accepted")
 			}
 		})
