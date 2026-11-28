@@ -18,6 +18,7 @@ import (
 	"github.com/devdimensionlab/plybuild/internal/githubbilling"
 	"github.com/devdimensionlab/plybuild/internal/githubprs"
 	"github.com/devdimensionlab/plybuild/internal/githubrepo"
+	"github.com/devdimensionlab/plybuild/internal/quotahistory"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
 	"github.com/devdimensionlab/plybuild/internal/workspacedef"
 	"github.com/spf13/cobra"
@@ -40,6 +41,8 @@ type githubActionsEnv struct {
 	details func(ctx context.Context) ([]githubprs.Detailed, error)
 	now     func() time.Time
 	home    func() (string, error)
+	// record appends a point to the quota history; nil records nothing.
+	record func(series string, p quotahistory.Point) error
 }
 
 func systemGitHubActionsEnv(runner process.Runner) githubActionsEnv {
@@ -52,6 +55,7 @@ func systemGitHubActionsEnv(runner process.Runner) githubActionsEnv {
 		details: func(ctx context.Context) ([]githubprs.Detailed, error) { return githubprs.Details(ctx, runner) },
 		now:     time.Now,
 		home:    os.UserHomeDir,
+		record:  recordQuotaHistory,
 	}
 }
 
@@ -108,7 +112,7 @@ func newGitHubCommand(env githubActionsEnv) *cobra.Command {
 		Use:   "actions",
 		Short: "Read the GitHub Actions minutes used this month",
 		Long: "Read the GitHub Actions minutes of the user gh is logged in as, from GitHub's billing usage (gh scope user).\n" +
-			"Each command reads GitHub when it runs and keeps nothing. Minutes count against the included quota as\n" +
+			"Each command reads GitHub when it runs; quota also adds the month's minutes to this machine's quota history (ply quota history). Minutes count against the included quota as\n" +
 			"Linux ×1, Windows ×2 and macOS ×10; storage and other runners are not counted. The included minutes per\n" +
 			"month are read from ~/" + githubConfigFile + `: {"actions": {"included_minutes": 3000}}.`,
 		Args: cobra.NoArgs,
@@ -152,6 +156,7 @@ func newGitHubCommand(env githubActionsEnv) *cobra.Command {
 					percent := remaining * 100 / limit
 					quota.Limit, quota.Remaining, quota.RemainingPercent, quota.Level = &limit, &remaining, &percent, quotaLevel(remaining <= 0, percent)
 				}
+				recordActionsHistory(env.record, quota)
 			}
 			if err := githubActionsWrite(cmd.OutOrStdout(), format, quota, githubActionsQuotaText(quota)); err != nil {
 				return err

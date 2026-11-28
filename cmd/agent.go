@@ -11,6 +11,7 @@ import (
 
 	"github.com/devdimensionlab/plybuild/internal/agentlaunch"
 	"github.com/devdimensionlab/plybuild/internal/agents/quota"
+	"github.com/devdimensionlab/plybuild/internal/quotahistory"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -30,6 +31,8 @@ type agentQuotaReaders struct {
 	codex  func(context.Context) (*quota.Snapshot, error)
 	claude func() (*quota.Snapshot, error)
 	now    func() time.Time
+	// record appends a point to the quota history; nil records nothing.
+	record func(series string, p quotahistory.Point) error
 }
 
 func systemAgentQuotaReaders() agentQuotaReaders {
@@ -37,6 +40,7 @@ func systemAgentQuotaReaders() agentQuotaReaders {
 		codex:  func(ctx context.Context) (*quota.Snapshot, error) { return quota.ReadCodex(ctx, quota.CodexOptions{}) },
 		claude: func() (*quota.Snapshot, error) { return quota.ReadClaude(quota.ClaudeOptions{}) },
 		now:    time.Now,
+		record: recordQuotaHistory,
 	}
 }
 
@@ -99,6 +103,9 @@ then set statusLine.command in ~/.claude/settings.json to
 single quotes) or just the quoted relay path. Undo by restoring the previous
 command. See README "Agent quota" for details.
 
+Each read snapshot also adds its shared 5-hour and 7-day windows to this
+machine's quota history (see ply quota history); that never changes the output.
+
 Status: ok, not_configured, waiting, not_reported, unsupported or error. The
 exit status is 1 when any source has status error. --json (before or after
 agent) prints one schema_version 1 document; raw provider data is never shown.`
@@ -118,6 +125,8 @@ func newAgentCommand(readers agentQuotaReaders) *cobra.Command {
 			codex, codexErr := readers.codex(cmd.Context())
 			claude, claudeErr := readers.claude()
 			now := readers.now()
+			recordAgentHistory(readers.record, codex, codexErr)
+			recordAgentHistory(readers.record, claude, claudeErr)
 			report := agentReport{SchemaVersion: 1, Providers: []agentProvider{
 				agentProviderResult(quota.SourceCodex, codex, codexErr, now),
 				agentProviderResult(quota.SourceClaude, claude, claudeErr, now),
@@ -141,6 +150,23 @@ func newAgentCommand(readers agentQuotaReaders) *cobra.Command {
 	}
 	command.AddCommand(newAgentAssignmentCommand(agentlaunch.Start))
 	return command
+}
+
+// agentHistorySeries names the history series of the shared five-hour and weekly windows.
+var agentHistorySeries = map[int]string{quota.MinutesFiveHour: "five_hour", quota.MinutesWeekly: "weekly"}
+
+// recordAgentHistory adds the shared windows of a read snapshot to the history.
+func recordAgentHistory(record func(string, quotahistory.Point) error, snapshot *quota.Snapshot, err error) {
+	if record == nil || err != nil || snapshot == nil {
+		return
+	}
+	for _, w := range snapshot.Windows {
+		window, ok := agentHistorySeries[w.ID.Minutes]
+		if !ok || w.Pool != "" {
+			continue
+		}
+		logHistoryError(record(string(snapshot.Source)+"."+window, quotahistory.Point{At: snapshot.ObservedAt, Used: w.UsedPercent, ResetsAt: w.ResetsAt}))
+	}
 }
 
 func agentProviderResult(source quota.Source, snapshot *quota.Snapshot, err error, now time.Time) agentProvider {
