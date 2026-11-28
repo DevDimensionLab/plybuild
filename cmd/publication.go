@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/devdimensionlab/plybuild/internal/agentlaunch"
 	"github.com/devdimensionlab/plybuild/internal/plan"
 	"github.com/devdimensionlab/plybuild/internal/publication"
 	"github.com/devdimensionlab/plybuild/internal/workspace"
@@ -15,6 +17,10 @@ import (
 )
 
 func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
+	return newPublicationCommandWith(d, agentlaunch.Start)
+}
+
+func newPublicationCommandWith(d workspace.Dependencies, start func(context.Context, agentlaunch.Request) (agentlaunch.Result, error)) *cobra.Command {
 	command := &cobra.Command{
 		Use:   "publication",
 		Short: "Publish, list, show and withdraw runs that other applications deliver through Ply",
@@ -225,6 +231,7 @@ func newPublicationCommand(d workspace.Dependencies) *cobra.Command {
 	withdrawCommand.Flags().StringVar(&withdrawCategory, "category", "", "category (required)")
 	withdrawCommand.Flags().StringVar(&withdrawAgent, "agent", "", "agent")
 	withdrawCommand.Flags().StringVar(&withdrawActor, "actor", "", "who withdraws (default: PLY_ACTOR)")
+	addShareCommands(command, addFlags, open, func() workspace.ProjectRecord { return resolved }, d, start, &format)
 	return command
 }
 
@@ -253,6 +260,14 @@ func checkPublicationPlan(project workspace.ProjectRecord, id string) error {
 		return &publication.Error{Class: publication.ClassIOError, Detail: "could not read plan " + id}
 	}
 	return nil
+}
+
+func publicationPathSubject(p publication.Path) string {
+	module := p.Module
+	if module == publication.RootModule {
+		module = ""
+	}
+	return publicationSubject(publication.View{Publication: publication.Publication{Repo: p.Repo, Module: module, Category: p.Category, Agent: p.Agent}})
 }
 
 func publicationSubject(v publication.View) string {

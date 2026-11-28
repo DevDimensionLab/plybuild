@@ -106,12 +106,13 @@ type Withdrawal struct {
 	Actor         string `json:"actor,omitempty"`
 }
 
-// View is one stored run with its module (RootModule for the repo's own) and
-// the absolute path of its directory.
+// View is one stored run with its module (RootModule for the repo's own), the
+// absolute path of its directory and the share of its path, if any.
 type View struct {
 	Publication
-	Module string `json:"module"`
-	Path   string `json:"path"`
+	Module string       `json:"module"`
+	Path   string       `json:"path"`
+	Share  *ShareRecord `json:"share"`
 }
 
 func newView(p Publication, path string) View {
@@ -657,7 +658,9 @@ func (s Store) Show(repo, module, category, agent, run string) (View, error) {
 	if err != nil {
 		return View{}, err
 	}
-	return newView(p, filepath.Join(directory, run)), nil
+	v := newView(p, filepath.Join(directory, run))
+	v.Share, _ = shareOf(directory) // an unreadable share is shown as none
+	return v, nil
 }
 
 // List returns the runs matching f, newest first; without f.All only the
@@ -686,6 +689,10 @@ func (s Store) List(f Filter) (ListResult, error) {
 		} else if found {
 			runs = after(runs, w.Through)
 		}
+		share, err := shareOf(directory)
+		if err != nil {
+			result.Invalid = append(result.Invalid, s.invalidRun(filepath.Join(directory, shareName), err))
+		}
 		for i := len(runs) - 1; i >= 0; i-- {
 			run := filepath.Join(directory, runs[i])
 			p, err := readMetadata(run, d.module)
@@ -696,7 +703,9 @@ func (s Store) List(f Filter) (ListResult, error) {
 			if f.Plan != "" && p.Plan != f.Plan {
 				continue
 			}
-			result.Items = append(result.Items, newView(p, run))
+			v := newView(p, run)
+			v.Share = share
+			result.Items = append(result.Items, v)
 			if !f.All {
 				break
 			}
